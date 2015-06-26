@@ -17,7 +17,8 @@ namespace {
    //______________________________________________________________________________
    //
    // Helper struct to hold one dimension's bin range for THnBinIter.
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+
    struct CounterRange_t {
       Int_t i;
       Int_t first;
@@ -29,7 +30,8 @@ namespace {
    //______________________________________________________________________________
    //
    // THnBinIter iterates over all bins of a THn, recursing over all dimensions.
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+
    class THnBinIter: public ROOT::THnBaseBinIter {
    public:
       THnBinIter(Int_t dim, const TObjArray* axes, const TNDArray* arr,
@@ -50,12 +52,13 @@ namespace {
    };
 
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Construct a THnBinIter.
+
    THnBinIter::THnBinIter(Int_t dim, const TObjArray* axes,
                               const TNDArray* arr, Bool_t respectAxisRange):
       ROOT::THnBaseBinIter(respectAxisRange),
       fNdimensions(dim), fIndex(-1), fArray(arr) {
-      // Construct a THnBinIter.
       fCounter = new CounterRange_t[dim]();
       for (Int_t i = 0; i < dim; ++i) {
          TAxis *axis = (TAxis*) axes->At(i);
@@ -86,10 +89,11 @@ namespace {
       --fCounter[dim - 1].i;
    }
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Return the current linear bin index (in range), then go to the next bin.
+   /// If all bins have been visited, return -1.
+
    Long64_t THnBinIter::Next(Int_t* coord /*= 0*/) {
-      // Return the current linear bin index (in range), then go to the next bin.
-      // If all bins have been visited, return -1.
       if (fNdimensions < 0) return -1; // end
       ++fCounter[fNdimensions - 1].i;
       ++fIndex;
@@ -170,35 +174,39 @@ namespace {
 
 ClassImp(THn);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a THn.
+
 THn::THn(const char* name, const char* title,
          Int_t dim, const Int_t* nbins,
          const Double_t* xmin, const Double_t* xmax):
    THnBase(name, title, dim, nbins, xmin, xmax),
    fSumw2(dim, nbins, kTRUE /*overflow*/),
    fCoordBuf() {
-   // Construct a THn.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destruct a THn
+
 THn::~THn()
 {
-   // Destruct a THn
    delete [] fCoordBuf;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an iterator over all bins. Public interface is THnIter.
+
 ROOT::THnBaseBinIter* THn::CreateIter(Bool_t respectAxisRange) const
 {
-   // Create an iterator over all bins. Public interface is THnIter.
    return new THnBinIter(GetNdimensions(), GetListOfAxes(), &GetArray(),
                          respectAxisRange);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable calculation of errors
+
 void THn::Sumw2() {
-   // Enable calculation of errors
    if (!GetCalculateErrors()) {
       fTsumw2 = 0.;
    }
@@ -210,27 +218,30 @@ void THn::Sumw2() {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the coordinate buffer. Outlined to hide allocation
+/// from inlined functions.
+
 void THn::AllocCoordBuf() const
 {
-   // Create the coordinate buffer. Outlined to hide allocation
-   // from inlined functions.
    fCoordBuf = new Int_t[fNdimensions]();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the storage of a histogram created via Init()
+
 void THn::InitStorage(Int_t* nbins, Int_t /*chunkSize*/)
 {
-   // Initialize the storage of a histogram created via Init()
    fCoordBuf = new Int_t[fNdimensions]();
    GetArray().Init(fNdimensions, nbins, true /*addOverflow*/);
    fSumw2.Init(fNdimensions, nbins, true /*addOverflow*/);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the contents of a THn.
+
 void THn::Reset(Option_t* option /*= ""*/)
 {
-   // Reset the contents of a THn.
    GetArray().Reset(option);
    fSumw2.Reset(option);
 }

@@ -49,23 +49,23 @@
 
 ClassImp(TEveJetCone);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveJetCone::TEveJetCone(const Text_t* n, const Text_t* t) :
    TEveShape(n, t),
    fApex(),
    fLimits(), fThetaC(10),
    fEta(0), fPhi(0), fDEta(0), fDPhi(0), fNDiv(72)
 {
-   // Constructor.
-
    fColor = kGreen;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding-box of the data.
+
 void TEveJetCone::ComputeBBox()
 {
-   // Compute bounding-box of the data.
-
    BBoxInit();
    BBoxCheckPoint(fApex);
    BBoxCheckPoint(CalcBaseVec(0));
@@ -74,44 +74,44 @@ void TEveJetCone::ComputeBBox()
    BBoxCheckPoint(CalcBaseVec(TMath::Pi() + TMath::PiOver2()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveProjectable, returns TEveJetConeProjected class.
+
 TClass* TEveJetCone::ProjectedClass(const TEveProjection*) const
 {
-   // Virtual from TEveProjectable, returns TEveJetConeProjected class.
-
    return TEveJetConeProjected::Class();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add jet cone.
+/// parameters are :
+/// * (eta,phi)    : of the center/leading particle
+/// * cone_r       : cone radius in eta-phi space
+/// * length       : length of the cone
+///   * if cylinder is set and length is adapted to cylinder.
+///     - if length is given, it will be used as scalar factor
+///   * if cylinder is not set, length is used as length of the cone
+/// Return 0 on sucess.
+
 Int_t TEveJetCone::AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t length)
 {
-   // Add jet cone.
-   // parameters are :
-   // * (eta,phi)    : of the center/leading particle
-   // * cone_r       : cone radius in eta-phi space
-   // * length       : length of the cone
-   //   * if cylinder is set and length is adapted to cylinder.
-   //     - if length is given, it will be used as scalar factor
-   //   * if cylinder is not set, length is used as length of the cone
-   // Return 0 on sucess.
-
    return AddEllipticCone(eta, phi, cone_r, cone_r, length);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add jet cone.
+/// parameters are :
+/// * (eta,phi)    : of the center/leading particle
+/// * (reta, rphi) : radius of cone in eta-phi space
+/// * length       : length of the cone
+///   * if cylinder is set and length is adapted to cylinder.
+///     - if length is given, it will be used as scalar factor
+///   * if cylinder is not set, length is used as length of the cone
+/// Returns 0 on sucess.
+
 Int_t TEveJetCone::AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t length)
 {
-   // Add jet cone.
-   // parameters are :
-   // * (eta,phi)    : of the center/leading particle
-   // * (reta, rphi) : radius of cone in eta-phi space
-   // * length       : length of the cone
-   //   * if cylinder is set and length is adapted to cylinder.
-   //     - if length is given, it will be used as scalar factor
-   //   * if cylinder is not set, length is used as length of the cone
-   // Returns 0 on sucess.
-
    using namespace TMath;
 
    if (length != 0) fLimits.fX = length;
@@ -124,21 +124,21 @@ Int_t TEveJetCone::AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill TEveVector with eta and phi, magnitude 1.
+
 TEveVector TEveJetCone::CalcEtaPhiVec(Float_t eta, Float_t phi) const
 {
-   // Fill TEveVector with eta and phi, magnitude 1.
-
    using namespace TMath;
 
    return TEveVector(Cos(phi) / CosH(eta), Sin(phi) / CosH(eta), TanH(eta));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns point on the base of the cone with given eta and phi.
+
 TEveVector TEveJetCone::CalcBaseVec(Float_t eta, Float_t phi) const
 {
-   // Returns point on the base of the cone with given eta and phi.
-
    using namespace TMath;
 
    TEveVector vec = CalcEtaPhiVec(eta, phi);
@@ -164,22 +164,22 @@ TEveVector TEveJetCone::CalcBaseVec(Float_t eta, Float_t phi) const
    return vec;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns point on the base of the cone with internal angle alpha:
+/// alpha = 0 -> max eta,  alpha = pi/2 -> max phi, ...
+
 TEveVector TEveJetCone::CalcBaseVec(Float_t alpha) const
 {
-   // Returns point on the base of the cone with internal angle alpha:
-   // alpha = 0 -> max eta,  alpha = pi/2 -> max phi, ...
-
    using namespace TMath;
 
    return CalcBaseVec(fEta + fDEta * Cos(alpha), fPhi + fDPhi * Sin(alpha));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if the cone is in barrel / endcap transition region.
+
 Bool_t TEveJetCone::IsInTransitionRegion() const
 {
-   // Returns true if the cone is in barrel / endcap transition region.
-
    using namespace TMath;
 
    Float_t tm = CalcBaseVec(0).Theta();
@@ -197,28 +197,31 @@ Bool_t TEveJetCone::IsInTransitionRegion() const
 //
 // Projection of TEveJetCone.
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveJetConeProjected::TEveJetConeProjected(const char* n, const char* t) :
    TEveShape(n, t)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveJetConeProjected::~TEveJetConeProjected()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding-box, virtual from TAttBBox.
+
 void TEveJetConeProjected::ComputeBBox()
 {
-   // Compute bounding-box, virtual from TAttBBox.
-
    BBoxInit();
 
    TEveJetCone    *cone = dynamic_cast<TEveJetCone*>(fProjectable);
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    TEveProjection *proj = GetManager()->GetProjection();
    TEveVector v;
    v = cone->fApex;                                       proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
@@ -228,26 +231,26 @@ void TEveJetConeProjected::ComputeBBox()
    v = cone->CalcBaseVec(TMath::Pi() + TMath::PiOver2()); proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is virtual method from base-class TEveProjected.
+
 void TEveJetConeProjected::SetDepthLocal(Float_t d)
 {
-   // This is virtual method from base-class TEveProjected.
-
    SetDepthCommon(d, this, fBBox);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is virtual method from base-class TEveProjected.
+
 void TEveJetConeProjected::SetProjection(TEveProjectionManager* mng, TEveProjectable* model)
 {
-   // This is virtual method from base-class TEveProjected.
-
    TEveProjected::SetProjection(mng, model);
    CopyVizParams(dynamic_cast<TEveElement*>(model));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Re-project the jet-cone.
+
 void TEveJetConeProjected::UpdateProjection()
 {
-   // Re-project the jet-cone.
-
 }

@@ -79,14 +79,15 @@
 ClassImp(TDSetElement)
 ClassImp(TDSet)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TDSetElement::TDSetElement() : TNamed("",""),
                                fDirectory(), fFirst(0), fNum(0), fMsd(),
                                fTDSetOffset(0), fEntryList(0), fValid(kFALSE),
                                fEntries(0), fFriends(0), fDataSet(), fAssocObjList(0),
                                fMaxProcTime(-1)
 {
-   // Default constructor
    ResetBit(kWriteV3);
    ResetBit(kHasBeenLookedUp);
    ResetBit(kEmpty);
@@ -95,14 +96,14 @@ TDSetElement::TDSetElement() : TNamed("",""),
    ResetBit(kNewPacket);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TDSet element.
+
 TDSetElement::TDSetElement(const char *file, const char *objname, const char *dir,
                            Long64_t first, Long64_t num,
                            const char *msd, const char *dataset)
              : TNamed(file, objname)
 {
-   // Create a TDSet element.
-
    if (first < 0) {
       Warning("TDSetElement", "first must be >= 0, %lld is not allowed - setting to 0", first);
       fFirst = 0;
@@ -135,11 +136,12 @@ TDSetElement::TDSetElement(const char *file, const char *objname, const char *di
    ResetBit(kNewPacket);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor
+
 TDSetElement::TDSetElement(const TDSetElement& elem)
              : TNamed(elem.GetFileName(), elem.GetObjName())
 {
-   // copy constructor
    fDirectory = elem.GetDirectory();
    fFirst = elem.fFirst;
    fNum = elem.fNum;
@@ -160,10 +162,11 @@ TDSetElement::TDSetElement(const TDSetElement& elem)
    ResetBit(kNewPacket);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up the element.
+
 TDSetElement::~TDSetElement()
 {
-   // Clean up the element.
    DeleteFriends();
    if (fAssocObjList) {
       fAssocObjList->SetOwner(kTRUE);
@@ -171,16 +174,16 @@ TDSetElement::~TDSetElement()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if 'elem' is overlapping or subsequent and, if the case, return
+/// a merged element.
+/// Returns:
+///     1    if the elements are overlapping
+///     0    if the elements are subsequent
+///    -1    if the elements are neither overlapping nor subsequent
+
 Int_t TDSetElement::MergeElement(TDSetElement *elem)
 {
-   // Check if 'elem' is overlapping or subsequent and, if the case, return
-   // a merged element.
-   // Returns:
-   //     1    if the elements are overlapping
-   //     0    if the elements are subsequent
-   //    -1    if the elements are neither overlapping nor subsequent
-
    // The element must be defined
    if (!elem) return -1;
 
@@ -225,11 +228,11 @@ Int_t TDSetElement::MergeElement(TDSetElement *elem)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the content of this element in the form of a TFileInfo
+
 TFileInfo *TDSetElement::GetFileInfo(const char *type)
 {
-   // Return the content of this element in the form of a TFileInfo
-
    // Create the TFileInfoMeta object
    TFileInfoMeta *meta = 0;
    Long64_t entries = (fEntries < 0 && fNum > 0) ? fNum : fEntries;
@@ -247,19 +250,19 @@ TFileInfo *TDSetElement::GetFileInfo(const char *type)
    return fi;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return directory where to look for object.
+
 const char *TDSetElement::GetDirectory() const
 {
-   // Return directory where to look for object.
-
    return fDirectory;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TDSetElement. When option="a" print full data.
+
 void TDSetElement::Print(Option_t *opt) const
 {
-   // Print a TDSetElement. When option="a" print full data.
-
    if (opt && opt[0] == 'a') {
       Printf("%s file=\"%s\" dir=\"%s\" obj=\"%s\" first=%lld num=%lld msd=\"%s\"",
              IsA()->GetName(), GetName(), fDirectory.Data(), GetTitle(),
@@ -269,11 +272,11 @@ void TDSetElement::Print(Option_t *opt) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Validate by opening the file.
+
 void TDSetElement::Validate(Bool_t isTree)
 {
-   // Validate by opening the file.
-
    Long64_t entries = GetEntries(isTree);
    if (entries < 0) return; // Error should be reported by GetEntries()
    if (fFirst < entries) {
@@ -295,11 +298,11 @@ void TDSetElement::Validate(Bool_t isTree)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Validate by checking against another element.
+
 void TDSetElement::Validate(TDSetElement *elem)
 {
-   // Validate by checking against another element.
-
    // NOTE: Since this function validates against another TDSetElement,
    //       if the other TDSetElement (elem) did not use -1 to request all
    //       entries, this TDSetElement may get less than all entries if it
@@ -345,11 +348,11 @@ void TDSetElement::Validate(TDSetElement *elem)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Compare elements by filename (and the fFirst).
+
 Int_t TDSetElement::Compare(const TObject *obj) const
 {
-   //Compare elements by filename (and the fFirst).
-
    if (this == obj) return 0;
 
    const TDSetElement *elem = dynamic_cast<const TDSetElement*>(obj);
@@ -370,11 +373,11 @@ Int_t TDSetElement::Compare(const TObject *obj) const
    return order;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add friend TDSetElement to this set. The friend element will be copied to this object.
+
 void TDSetElement::AddFriend(TDSetElement *friendElement, const char *alias)
 {
-   // Add friend TDSetElement to this set. The friend element will be copied to this object.
-
    if (!friendElement) {
       Error("AddFriend", "The friend TDSetElement is null!");
       return;
@@ -394,10 +397,11 @@ void TDSetElement::AddFriend(TDSetElement *friendElement, const char *alias)
    fFriends->Add(new TDSetElement(*friendElement));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes the list of friends and all the friends on the list.
+
 void TDSetElement::DeleteFriends()
 {
-   // Deletes the list of friends and all the friends on the list.
    if (!fFriends)
       return;
 
@@ -406,11 +410,11 @@ void TDSetElement::DeleteFriends()
    fFriends = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns next TDSetElement.
+
 TDSetElement *TDSet::Next(Long64_t /*totalEntries*/)
 {
-   // Returns next TDSetElement.
-
    if (!fIterator) {
       fIterator = new TIter(fElements);
    }
@@ -419,14 +423,14 @@ TDSetElement *TDSet::Next(Long64_t /*totalEntries*/)
    return fCurrent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of entries in tree or objects in file.
+/// If not yet defined and 'openfile' is TRUE, get the number from the file
+/// (may considerably slow down the application).
+/// Returns -1 in case of error.
+
 Long64_t TDSetElement::GetEntries(Bool_t isTree, Bool_t openfile)
 {
-   // Returns number of entries in tree or objects in file.
-   // If not yet defined and 'openfile' is TRUE, get the number from the file
-   // (may considerably slow down the application).
-   // Returns -1 in case of error.
-
    if (fEntries > -1 || !openfile)
       return fEntries;
 
@@ -526,11 +530,12 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree, Bool_t openfile)
    return fEntries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resolve end-point URL for this element
+/// Return 0 on success and -1 otherwise
+
 Int_t TDSetElement::Lookup(Bool_t force)
 {
-   // Resolve end-point URL for this element
-   // Return 0 on success and -1 otherwise
    static Int_t xNetPluginOK = -1;
    static TFileStager *xStager = 0;
    Int_t retVal = 0;
@@ -591,11 +596,11 @@ Int_t TDSetElement::Lookup(Bool_t force)
    return retVal;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set entry (or event) list for this element
+
 void TDSetElement::SetEntryList(TObject *aList, Long64_t first, Long64_t num)
 {
-   // Set entry (or event) list for this element
-
    if (!aList)
       return;
 
@@ -623,28 +628,29 @@ void TDSetElement::SetEntryList(TObject *aList, Long64_t first, Long64_t num)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an associated object to the list
+
 void TDSetElement::AddAssocObj(TObject *assocobj)
 {
-   // Add an associated object to the list
    if (assocobj) {
       if (!fAssocObjList) fAssocObjList = new TList;
       if (fAssocObjList) fAssocObjList->Add(assocobj);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get i-th associated object.
+/// If 'isentry' fFirst is subtracted, so that i == fFirst returns the first
+/// object in the list.
+/// If there are not enough elements in the list, the element i%list_size is
+/// returned (if the list has only one element this only one element is always
+/// returned.
+/// This method is used when packet processing consist in processing the objects
+/// in the associated object list.
+
 TObject *TDSetElement::GetAssocObj(Long64_t i, Bool_t isentry)
 {
-   // Get i-th associated object.
-   // If 'isentry' fFirst is subtracted, so that i == fFirst returns the first
-   // object in the list.
-   // If there are not enough elements in the list, the element i%list_size is
-   // returned (if the list has only one element this only one element is always
-   // returned.
-   // This method is used when packet processing consist in processing the objects
-   // in the associated object list.
-
    TObject *o = 0;
    if (!fAssocObjList || fAssocObjList->GetSize() <= 0) return o;
 
@@ -663,11 +669,11 @@ TObject *TDSetElement::GetAssocObj(Long64_t i, Bool_t isentry)
    return fAssocObjList->At(pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TDSet::TDSet()
 {
-   // Default ctor.
-
    fElements = new THashList;
    fElements->SetOwner();
    fIsTree    = kFALSE;
@@ -687,25 +693,25 @@ TDSet::TDSet()
    gROOT->GetListOfDataSets()->Add(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a named TDSet object. The "type" defines the class of which objects
+/// will be processed (default 'TTree'). The optional "objname" argument
+/// specifies the name of the objects of the specified class.
+/// If the "objname" is not given the behaviour depends on the 'type':
+/// for 'TTree' the first TTree is analyzed; for other types, all objects of
+/// the class found in the specified directory are processed.
+/// The "dir" argument specifies in which directory the objects are
+/// to be found, the top level directory ("/") is the default.
+/// Directories can be specified using wildcards, e.g. "*" or "/*"
+/// means to look in all top level directories, "/dir/*" in all
+/// directories under "/dir", and "/*/*" to look in all directories
+/// two levels deep.
+/// For backward compatibility the type can also be passed via 'name',
+/// in which case 'type' is ignored.
+
 TDSet::TDSet(const char *name,
              const char *objname, const char *dir, const char *type)
 {
-   // Create a named TDSet object. The "type" defines the class of which objects
-   // will be processed (default 'TTree'). The optional "objname" argument
-   // specifies the name of the objects of the specified class.
-   // If the "objname" is not given the behaviour depends on the 'type':
-   // for 'TTree' the first TTree is analyzed; for other types, all objects of
-   // the class found in the specified directory are processed.
-   // The "dir" argument specifies in which directory the objects are
-   // to be found, the top level directory ("/") is the default.
-   // Directories can be specified using wildcards, e.g. "*" or "/*"
-   // means to look in all top level directories, "/dir/*" in all
-   // directories under "/dir", and "/*/*" to look in all directories
-   // two levels deep.
-   // For backward compatibility the type can also be passed via 'name',
-   // in which case 'type' is ignored.
-
    fElements = new THashList;
    fElements->SetOwner();
    fIterator = 0;
@@ -767,14 +773,14 @@ TDSet::TDSet(const char *name,
    gROOT->GetListOfDataSets()->Add(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a named TDSet object from existing TChain 'chain'.
+/// If 'withfriends' is kTRUE add also friends.
+/// This constructor substituted the static methods TChain::MakeTDSet
+/// removing any residual dependence of 'tree' on 'proof'.
+
 TDSet::TDSet(const TChain &chain, Bool_t withfriends)
 {
-   // Create a named TDSet object from existing TChain 'chain'.
-   // If 'withfriends' is kTRUE add also friends.
-   // This constructor substituted the static methods TChain::MakeTDSet
-   // removing any residual dependence of 'tree' on 'proof'.
-
    fElements = new THashList;
    fElements->SetOwner();
    fIterator = 0;
@@ -860,11 +866,11 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TDSet::~TDSet()
 {
-   // Cleanup.
-
    SafeDelete(fElements);
    SafeDelete(fIterator);
    SafeDelete(fProofChain);
@@ -874,16 +880,16 @@ TDSet::~TDSet()
    gROOT->GetListOfDataSets()->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process TDSet on currently active PROOF session.
+/// The last argument 'enl' specifies an entry- or event-list to be used as
+/// event selection.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TDSet::Process(TSelector *selector, Option_t *option, Long64_t nentries,
                         Long64_t first, TObject *enl)
 {
-   // Process TDSet on currently active PROOF session.
-   // The last argument 'enl' specifies an entry- or event-list to be used as
-   // event selection.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    if (!IsValid() || !fElements->GetSize()) {
       Error("Process", "not a correctly initialized TDSet");
       return -1;
@@ -899,16 +905,16 @@ Long64_t TDSet::Process(TSelector *selector, Option_t *option, Long64_t nentries
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process TDSet on currently active PROOF session.
+/// The last argument 'enl' specifies an entry- or event-list to be used as
+/// event selection.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TDSet::Process(const char *selector, Option_t *option, Long64_t nentries,
                         Long64_t first, TObject *enl)
 {
-   // Process TDSet on currently active PROOF session.
-   // The last argument 'enl' specifies an entry- or event-list to be used as
-   // event selection.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    if (!IsValid() || !fElements->GetSize()) {
       Error("Process", "not a correctly initialized TDSet");
       return -1;
@@ -924,12 +930,12 @@ Long64_t TDSet::Process(const char *selector, Option_t *option, Long64_t nentrie
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add objects that might be needed during the processing of
+/// the selector (see Process()).
+
 void TDSet::AddInput(TObject *obj)
 {
-   // Add objects that might be needed during the processing of
-   // the selector (see Process()).
-
    if (gProof) {
       gProof->AddInput(obj);
    } else {
@@ -937,41 +943,41 @@ void TDSet::AddInput(TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear input object list.
+
 void TDSet::ClearInput()
 {
-   // Clear input object list.
-
    if (gProof)
       gProof->ClearInput();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get specified object that has been produced during the processing
+/// (see Process()).
+
 TObject *TDSet::GetOutput(const char *name)
 {
-   // Get specified object that has been produced during the processing
-   // (see Process()).
-
    if (gProof)
       return gProof->GetOutput(name);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list with all object created during processing (see Process()).
+
 TList *TDSet::GetOutputList()
 {
-   // Get list with all object created during processing (see Process()).
-
    if (gProof)
       return gProof->GetOutputList();
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print TDSet basic or full data. When option="a" print full data.
+
 void TDSet::Print(const Option_t *opt) const
 {
-   // Print TDSet basic or full data. When option="a" print full data.
-
    const char *clnm = (IsA()) ? IsA()->GetName() : "TDSet";
    Printf("OBJ: %s\ttype %s\t%s\tin %s\telements %d", clnm, GetName(),
           fObjName.Data(), GetTitle(), GetListOfElements()->GetSize());
@@ -985,11 +991,11 @@ void TDSet::Print(const Option_t *opt) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set/change object name.
+
 void TDSet::SetObjName(const char *objname)
 {
-   // Set/change object name.
-
    if (objname) {
       fObjName = objname;
       TIter next(GetListOfElements());
@@ -1000,23 +1006,23 @@ void TDSet::SetObjName(const char *objname)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set/change directory.
+
 void TDSet::SetDirectory(const char *dir)
 {
-   // Set/change directory.
-
    if (dir)
       fDir = dir;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add file to list of files to be analyzed. Optionally with the
+/// objname and dir arguments the default, TDSet wide, objname and
+/// dir can be overridden.
+
 Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
                   Long64_t first, Long64_t num, const char *msd)
 {
-   // Add file to list of files to be analyzed. Optionally with the
-   // objname and dir arguments the default, TDSet wide, objname and
-   // dir can be overridden.
-
    if (!file || !*file) {
       Error("Add", "file name must be specified");
       return kFALSE;
@@ -1054,11 +1060,11 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add specified data set to the this set.
+
 Bool_t TDSet::Add(TDSet *dset)
 {
-   // Add specified data set to the this set.
-
    if (!dset)
       return kFALSE;
 
@@ -1084,19 +1090,19 @@ Bool_t TDSet::Add(TDSet *dset)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add files passed as list of TFileInfo, TUrl or TObjString objects .
+/// If TFileInfo, the first entry and the number of entries are also filled.
+/// The argument 'meta' can be used to specify one of the subsets in the
+/// file as described in the metadata of TFileInfo. By default the first one
+/// is taken.
+/// If 'availableOnly' is true only files available ('staged' and non corrupted)
+/// are taken: those not satisfying this requirement are added to 'badlist', if
+/// the latter is defined. By default availableOnly is false.
+
 Bool_t TDSet::Add(TCollection *filelist, const char *meta, Bool_t availableOnly,
                   TCollection *badlist)
 {
-   // Add files passed as list of TFileInfo, TUrl or TObjString objects .
-   // If TFileInfo, the first entry and the number of entries are also filled.
-   // The argument 'meta' can be used to specify one of the subsets in the
-   // file as described in the metadata of TFileInfo. By default the first one
-   // is taken.
-   // If 'availableOnly' is true only files available ('staged' and non corrupted)
-   // are taken: those not satisfying this requirement are added to 'badlist', if
-   // the latter is defined. By default availableOnly is false.
-
    if (!filelist)
       return kFALSE;
 
@@ -1129,26 +1135,26 @@ Bool_t TDSet::Add(TCollection *filelist, const char *meta, Bool_t availableOnly,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set (or unset) the list for mapping servers coordinate for files.
+/// Reinitialize the related iterator if needed.
+/// Used by TProof.
+
 void TDSet::SetSrvMaps(TList *srvmaps)
 {
-   // Set (or unset) the list for mapping servers coordinate for files.
-   // Reinitialize the related iterator if needed.
-   // Used by TProof.
-
    fSrvMaps = srvmaps;
    SafeDelete(fSrvMapsIter);
    if (fSrvMaps) fSrvMapsIter = new TIter(fSrvMaps);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add file described by 'fi' to list of files to be analyzed.
+/// The argument 'meta' can be used to specify a subsets in the
+/// file as described in the metadata of TFileInfo. By default the first one
+/// is taken.
+
 Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
 {
-   // Add file described by 'fi' to list of files to be analyzed.
-   // The argument 'meta' can be used to specify a subsets in the
-   // file as described in the metadata of TFileInfo. By default the first one
-   // is taken.
-
    if (!fi) {
       Error("Add", "TFileInfo object name must be specified");
       return kFALSE;
@@ -1233,14 +1239,14 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Export TDSetElements files as list of TFileInfo objects in file
+/// 'fpath'. If the file exists already the action fails, unless
+/// 'opt == "F"'.
+/// Return 0 on success, -1 otherwise
+
 Int_t TDSet::ExportFileList(const char *fpath, Option_t *opt)
 {
-   // Export TDSetElements files as list of TFileInfo objects in file
-   // 'fpath'. If the file exists already the action fails, unless
-   // 'opt == "F"'.
-   // Return 0 on success, -1 otherwise
-
    if (!fElements)
       return -1;
    if (fElements->GetSize() <= 0)
@@ -1292,13 +1298,13 @@ Int_t TDSet::ExportFileList(const char *fpath, Option_t *opt)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add friend dataset to this set. Only possible if the TDSet type is
+/// a TTree or derived class. The friendset will be owned by this class
+/// and deleted in its destructor.
+
 void TDSet::AddFriend(TDSet *friendset, const char* alias)
 {
-   // Add friend dataset to this set. Only possible if the TDSet type is
-   // a TTree or derived class. The friendset will be owned by this class
-   // and deleted in its destructor.
-
    if (!friendset) {
       Error("AddFriend", "The friend TDSet is null!");
       return;
@@ -1328,11 +1334,11 @@ void TDSet::AddFriend(TDSet *friendset, const char* alias)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset or initialize access to the elements.
+
 void TDSet::Reset()
 {
-   // Reset or initialize access to the elements.
-
    if (!fIterator) {
       fIterator = new TIter(fElements);
    } else {
@@ -1340,13 +1346,13 @@ void TDSet::Reset()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of entries in tree or objects in file. Returns -1 in
+/// case of error.
+
 Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path,
                            TString &objname)
 {
-   // Returns number of entries in tree or objects in file. Returns -1 in
-   // case of error.
-
    Double_t start = 0;
    if (gPerfStats) start = TTimeStamp();
 
@@ -1444,28 +1450,28 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
    return entries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw expression varexp for specified entries.
+/// Returns -1 in case of error or number of selected events in case of success.
+/// This function accepts a TCut objects as argument.
+/// Use the operator+ to concatenate cuts.
+/// Example:
+///   dset.Draw("x",cut1+cut2+cut3);
+
 Long64_t TDSet::Draw(const char *varexp, const TCut &selection, Option_t *option,
                      Long64_t nentries, Long64_t firstentry)
 {
-   // Draw expression varexp for specified entries.
-   // Returns -1 in case of error or number of selected events in case of success.
-   // This function accepts a TCut objects as argument.
-   // Use the operator+ to concatenate cuts.
-   // Example:
-   //   dset.Draw("x",cut1+cut2+cut3);
-
    return Draw(varexp, selection.GetTitle(), option, nentries, firstentry);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw expression varexp for specified entries.
+/// Returns -1 in case of error or number of selected events in case of success.
+/// For more see TTree::Draw().
+
 Long64_t TDSet::Draw(const char *varexp, const char *selection, Option_t *option,
                      Long64_t nentries, Long64_t firstentry)
 {
-   // Draw expression varexp for specified entries.
-   // Returns -1 in case of error or number of selected events in case of success.
-   // For more see TTree::Draw().
-
    if (!IsValid() || !fElements->GetSize()) {
       Error("Draw", "not a correctly initialized TDSet");
       return -1;
@@ -1479,11 +1485,11 @@ Long64_t TDSet::Draw(const char *varexp, const char *selection, Option_t *option
    return -1;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start the TTreeViewer on this TTree.
+
 void TDSet::StartViewer()
 {
-   // Start the TTreeViewer on this TTree.
-
    if (gROOT->IsBatch()) {
       Warning("StartViewer", "viewer cannot run in batch mode");
       return;
@@ -1507,19 +1513,19 @@ void TDSet::StartViewer()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a tree header containing the branches' structure of the dataset.
+
 TTree* TDSet::GetTreeHeader(TProof* proof)
 {
-   // Returns a tree header containing the branches' structure of the dataset.
-
    return proof->GetTreeHeader(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if all elements are valid.
+
 Bool_t TDSet::ElementsValid()
 {
-   // Check if all elements are valid.
-
    if (TestBit(TDSet::kValidityChecked))
       return (TestBit(TDSet::kSomeInvalid) ? kFALSE : kTRUE);
 
@@ -1535,12 +1541,12 @@ Bool_t TDSet::ElementsValid()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove TDSetElement 'elem' from the list.
+/// Return 0 on success, -1 if the element is not in the list
+
 Int_t TDSet::Remove(TDSetElement *elem, Bool_t deleteElem)
 {
-   // Remove TDSetElement 'elem' from the list.
-   // Return 0 on success, -1 if the element is not in the list
-
    if (!elem || !(((THashList *)(GetListOfElements()))->Remove(elem)))
       return -1;
 
@@ -1549,11 +1555,11 @@ Int_t TDSet::Remove(TDSetElement *elem, Bool_t deleteElem)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Validate the TDSet by opening files.
+
 void TDSet::Validate()
 {
-   // Validate the TDSet by opening files.
-
    TIter nextElem(GetListOfElements());
    while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem())) {
       if (!elem->GetValid())
@@ -1561,15 +1567,15 @@ void TDSet::Validate()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resolve the end-point URL for the current elements of this data set
+/// If the removeMissing option is set to kTRUE, remove the TDSetElements
+/// that can not be located.
+/// The method returns the list of removed TDSetElements in *listOfMissingFiles
+/// if the latter is defined (the list must be created outside).
+
 void TDSet::Lookup(Bool_t removeMissing, TList **listOfMissingFiles)
 {
-   // Resolve the end-point URL for the current elements of this data set
-   // If the removeMissing option is set to kTRUE, remove the TDSetElements
-   // that can not be located.
-   // The method returns the list of removed TDSetElements in *listOfMissingFiles
-   // if the latter is defined (the list must be created outside).
-
    // If an entry- or event- list has been given, assign the relevant portions
    // to each element; this allows to look-up only for the elements which have
    // something to be processed, so it is better to do it before the real look-up
@@ -1616,23 +1622,23 @@ void TDSet::Lookup(Bool_t removeMissing, TList **listOfMissingFiles)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Flag all the elements as looked-up, so to avoid opening the files
+/// if the functionality is not supported
+
 void TDSet::SetLookedUp()
 {
-   // Flag all the elements as looked-up, so to avoid opening the files
-   // if the functionality is not supported
-
    TIter nextElem(GetListOfElements());
    while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem()))
       elem->SetLookedUp();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Validate the TDSet against another TDSet.
+/// Only validates elements in common from input TDSet.
+
 void TDSet::Validate(TDSet* dset)
 {
-   // Validate the TDSet against another TDSet.
-   // Only validates elements in common from input TDSet.
-
    THashList bestElements;
    bestElements.SetOwner();
    TList namedHolder;
@@ -1682,11 +1688,11 @@ void TDSet::Validate(TDSet* dset)
 //
 // To handle requests coming from version 3 client / masters we need
 // a special streamer
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TDSetElement.
+
 void TDSetElement::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TDSetElement.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -1773,11 +1779,11 @@ void TDSetElement::Streamer(TBuffer &R__b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TDSet.
+
 void TDSet::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TDSet.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -1833,12 +1839,12 @@ void TDSet::Streamer(TBuffer &R__b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set/Reset the 'OldStreamer' bit in this instance and its elements.
+/// Needed for backward compatibility in talking to old client / masters.
+
 void TDSet::SetWriteV3(Bool_t on)
 {
-   // Set/Reset the 'OldStreamer' bit in this instance and its elements.
-   // Needed for backward compatibility in talking to old client / masters.
-
    if (on)
       SetBit(TDSet::kWriteV3);
    else
@@ -1853,11 +1859,11 @@ void TDSet::SetWriteV3(Bool_t on)
          o->ResetBit(TDSetElement::kWriteV3);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set entry (or event) list for this data set
+
 void TDSet::SetEntryList(TObject *aList)
 {
-   // Set entry (or event) list for this data set
-
    if (!aList)
       return;
 
@@ -1889,12 +1895,12 @@ void TDSet::SetEntryList(TObject *aList)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Splits the main entry (or event) list into sub-lists for the elements of
+/// thet data set
+
 void TDSet::SplitEntryList()
 {
-   // Splits the main entry (or event) list into sub-lists for the elements of
-   // thet data set
-
    if (TestBit(TDSet::kMultiDSet)) {
       // Global entry list for all the datasets
       TIter nxds(fElements);
@@ -1967,11 +1973,11 @@ void TDSet::SplitEntryList()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of files in the dataset
+
 Int_t TDSet::GetNumOfFiles()
 {
-   // Return the number of files in the dataset
-
    Int_t nf = -1;
    if (fElements) {
       nf = 0;

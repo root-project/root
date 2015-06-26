@@ -47,11 +47,11 @@ ClassImp(RooIntegrator1D)
 
 // Register this class with RooNumIntConfig
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register RooIntegrator1D, is parameters and capabilities with RooNumIntFactory
+
 void RooIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
-  // Register RooIntegrator1D, is parameters and capabilities with RooNumIntFactory
-
   RooCategory sumRule("sumRule","Summation Rule") ;
   sumRule.defineType("Trapezoid",RooIntegrator1D::Trapezoid) ;
   sumRule.defineType("Midpoint",RooIntegrator1D::Midpoint) ;
@@ -71,30 +71,36 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// coverity[UNINIT_CTOR]
+/// Default constructor
+
 RooIntegrator1D::RooIntegrator1D() :
   _h(0), _s(0), _c(0), _d(0), _x(0)
 {
-  // coverity[UNINIT_CTOR]
-  // Default constructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct integrator on given function binding, using specified summation
+/// rule, maximum number of steps and conversion tolerance. The integration
+/// limits are taken from the function binding
+
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, SummationRule rule,
 				 Int_t maxSteps, Double_t eps) : 
   RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps),  _minStepsZero(999), _fixSteps(0), _epsAbs(eps), _epsRel(eps), _doExtrap(kTRUE)
 {
-  // Construct integrator on given function binding, using specified summation
-  // rule, maximum number of steps and conversion tolerance. The integration
-  // limits are taken from the function binding
-
   _useIntegrandLimits= kTRUE;
   _valid= initialize();
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct integrator on given function binding for given range,
+/// using specified summation rule, maximum number of steps and
+/// conversion tolerance. The integration limits are taken from the
+/// function binding
+
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				 SummationRule rule, Int_t maxSteps, Double_t eps) : 
   RooAbsIntegrator(function), 
@@ -106,11 +112,6 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
   _epsRel(eps),
   _doExtrap(kTRUE)
 {
-  // Construct integrator on given function binding for given range,
-  // using specified summation rule, maximum number of steps and
-  // conversion tolerance. The integration limits are taken from the
-  // function binding
-
   _useIntegrandLimits= kFALSE;
   _xmin= xmin;
   _xmax= xmax;
@@ -118,16 +119,16 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct integrator on given function binding, using specified
+/// configuration object. The integration limits are taken from the
+/// function binding
+
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function,config.printEvalCounter()), 
   _epsAbs(config.epsAbs()),
   _epsRel(config.epsRel())
 {
-  // Construct integrator on given function binding, using specified
-  // configuration object. The integration limits are taken from the
-  // function binding
-
   // Extract parameters from config object
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;  
   _rule = (SummationRule) configSet.getCatIndex("sumRule",Trapezoid) ;
@@ -147,16 +148,16 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConf
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct integrator on given function binding, using specified
+/// configuration object and integration range
+
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				const RooNumIntConfig& config) :
   RooAbsIntegrator(function,config.printEvalCounter()), 
   _epsAbs(config.epsAbs()),
   _epsRel(config.epsRel())
 {
-  // Construct integrator on given function binding, using specified
-  // configuration object and integration range
-
   // Extract parameters from config object
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;  
   _rule = (SummationRule) configSet.getCatIndex("sumRule",Trapezoid) ;
@@ -173,20 +174,21 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clone integrator with new function binding and configuration. Needed by RooNumIntFactory
+
 RooAbsIntegrator* RooIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
-  // Clone integrator with new function binding and configuration. Needed by RooNumIntFactory
   return new RooIntegrator1D(function,config) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the integrator
+
 Bool_t RooIntegrator1D::initialize()
 {
-  // Initialize the integrator
-
   // apply defaults if necessary
   if(_maxSteps <= 0) {
     _maxSteps= (_rule == Trapezoid) ? 20 : 14;
@@ -215,11 +217,11 @@ Bool_t RooIntegrator1D::initialize()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooIntegrator1D::~RooIntegrator1D()
 {
-  // Destructor
-
   // Release integrator workspace
   if(_h) delete[] _h;
   if(_s) delete[] _s;
@@ -229,13 +231,13 @@ RooIntegrator1D::~RooIntegrator1D()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change our integration limits. Return kTRUE if the new limits are
+/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// if this object was constructed to always use our integrand's limits.
+
 Bool_t RooIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax) 
 {
-  // Change our integration limits. Return kTRUE if the new limits are
-  // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
-  // if this object was constructed to always use our integrand's limits.
-
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
@@ -246,12 +248,12 @@ Bool_t RooIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that our integration range is finite and otherwise return kFALSE.
+/// Update the limits from the integrand if requested.
+
 Bool_t RooIntegrator1D::checkLimits() const 
 {
-  // Check that our integration range is finite and otherwise return kFALSE.
-  // Update the limits from the integrand if requested.
-
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
     _xmin= integrand()->getMinLimit(0);
@@ -266,11 +268,11 @@ Bool_t RooIntegrator1D::checkLimits() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate numeric integral at given set of function binding parameters
+
 Double_t RooIntegrator1D::integral(const Double_t *yvec) 
 {
-  // Calculate numeric integral at given set of function binding parameters
-
   assert(isValid());
 
   // Copy yvec to xvec if provided
@@ -341,15 +343,15 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the n-th stage of refinement of the Second Euler-Maclaurin
+/// summation rule which has the useful property of not evaluating the
+/// integrand at either of its endpoints but requires more function
+/// evaluations than the trapezoidal rule. This rule can be used with
+/// a suitable change of variables to estimate improper integrals.
+
 Double_t RooIntegrator1D::addMidpoints(Int_t n)
 {
-  // Calculate the n-th stage of refinement of the Second Euler-Maclaurin
-  // summation rule which has the useful property of not evaluating the
-  // integrand at either of its endpoints but requires more function
-  // evaluations than the trapezoidal rule. This rule can be used with
-  // a suitable change of variables to estimate improper integrals.
-
   Double_t x,tnm,sum,del,ddel;
   Int_t it,j;
 
@@ -374,14 +376,14 @@ Double_t RooIntegrator1D::addMidpoints(Int_t n)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the n-th stage of refinement of the extended trapezoidal
+/// summation rule. This is the most efficient rule for a well behaved
+/// integrand that can be evaluated over its entire range, including the
+/// endpoints.
+
 Double_t RooIntegrator1D::addTrapezoids(Int_t n)
 {
-  // Calculate the n-th stage of refinement of the extended trapezoidal
-  // summation rule. This is the most efficient rule for a well behaved
-  // integrand that can be evaluated over its entire range, including the
-  // endpoints.
-
   Double_t x,tnm,sum,del;
   Int_t it,j;
 
@@ -403,11 +405,11 @@ Double_t RooIntegrator1D::addTrapezoids(Int_t n)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extrapolate result to final value
+
 void RooIntegrator1D::extrapolate(Int_t n)
 {
-  // Extrapolate result to final value
-
   Double_t *xa= &_h[n-_nPoints];
   Double_t *ya= &_s[n-_nPoints];
   Int_t i,m,ns=1;

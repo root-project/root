@@ -57,7 +57,8 @@ using namespace std;
 ClassImp(RooGamma)
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGamma::RooGamma(const char *name, const char *title,
 			 RooAbsReal& _x, RooAbsReal& _gamma,
 			 RooAbsReal& _beta, RooAbsReal& _mu) :
@@ -71,7 +72,8 @@ RooGamma::RooGamma(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGamma::RooGamma(const RooGamma& other, const char* name) : 
   RooAbsPdf(other,name), x("x",this,other.x), gamma("mean",this,other.gamma),
   beta("beta",this,other.beta), mu("mu",this,other.mu)
@@ -80,10 +82,10 @@ RooGamma::RooGamma(const RooGamma& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooGamma::evaluate() const
 {
-
   Double_t arg= x ;  
   Double_t ret = TMath::GammaDist(arg, gamma, mu, beta) ;
   return ret ;
@@ -91,7 +93,8 @@ Double_t RooGamma::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooGamma::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
@@ -100,7 +103,8 @@ Int_t RooGamma::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, c
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooGamma::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   R__ASSERT(code==1) ;
@@ -115,7 +119,8 @@ Double_t RooGamma::analyticalIntegral(Int_t code, const char* rangeName) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooGamma::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
@@ -124,7 +129,8 @@ Int_t RooGamma::getGenerator(const RooArgSet& directVars, RooArgSet &generateVar
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooGamma::generateEvent(Int_t code)
 {
   R__ASSERT(code==1) ;

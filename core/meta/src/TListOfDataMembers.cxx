@@ -35,28 +35,30 @@ constexpr unsigned int idsSize=19;
 
 ClassImp(TListOfDataMembers)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TListOfDataMembers::TListOfDataMembers(TClass *cl /*=0*/) :
    fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE), fLastLoadMarker(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TListOfDataMembers::~TListOfDataMembers()
 {
-   // Destructor.
-
    THashList::Delete();
    delete fIds;
    if (fUnloaded) fUnloaded->Delete();
    delete fUnloaded;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a pair<id, object> to the map of data members and their ids.
+
 void TListOfDataMembers::MapObject(TObject* obj)
 {
-   // Add a pair<id, object> to the map of data members and their ids.
    if (!fIds) fIds = new TExMap(idsSize);
 
    if (fClass) {
@@ -72,123 +74,123 @@ void TListOfDataMembers::MapObject(TObject* obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the beginning of the list.
+
 void TListOfDataMembers::AddFirst(TObject *obj)
 {
-   // Add object at the beginning of the list.
-
    THashList::AddFirst(obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the beginning of the list and also store option.
+/// Storing an option is useful when one wants to change the behaviour
+/// of an object a little without having to create a complete new
+/// copy of the object. This feature is used, for example, by the Draw()
+/// method. It allows the same object to be drawn in different ways.
+
 void TListOfDataMembers::AddFirst(TObject *obj, Option_t *opt)
 {
-   // Add object at the beginning of the list and also store option.
-   // Storing an option is useful when one wants to change the behaviour
-   // of an object a little without having to create a complete new
-   // copy of the object. This feature is used, for example, by the Draw()
-   // method. It allows the same object to be drawn in different ways.
-
    THashList::AddFirst(obj,opt);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the end of the list.
+
 void TListOfDataMembers::AddLast(TObject *obj)
 {
-   // Add object at the end of the list.
-
    THashList::AddLast(obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the end of the list and also store option.
+/// Storing an option is useful when one wants to change the behaviour
+/// of an object a little without having to create a complete new
+/// copy of the object. This feature is used, for example, by the Draw()
+/// method. It allows the same object to be drawn in different ways.
+
 void TListOfDataMembers::AddLast(TObject *obj, Option_t *opt)
 {
-   // Add object at the end of the list and also store option.
-   // Storing an option is useful when one wants to change the behaviour
-   // of an object a little without having to create a complete new
-   // copy of the object. This feature is used, for example, by the Draw()
-   // method. It allows the same object to be drawn in different ways.
-
    THashList::AddLast(obj, opt);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object at location idx in the list.
+
 void TListOfDataMembers::AddAt(TObject *obj, Int_t idx)
 {
-   // Insert object at location idx in the list.
-
    THashList::AddAt(obj, idx);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list.
+
 void TListOfDataMembers::AddAfter(const TObject *after, TObject *obj)
 {
-   // Insert object after object after in the list.
-
    THashList::AddAfter(after, obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list.
+
 void TListOfDataMembers::AddAfter(TObjLink *after, TObject *obj)
 {
-   // Insert object after object after in the list.
-
    THashList::AddAfter(after, obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list.
+
 void TListOfDataMembers::AddBefore(const TObject *before, TObject *obj)
 {
-   // Insert object before object before in the list.
-
    THashList::AddBefore(before, obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list.
+
 void TListOfDataMembers::AddBefore(TObjLink *before, TObject *obj)
 {
-   // Insert object before object before in the list.
-
    THashList::AddBefore(before, obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all objects from the list. Does not delete the objects unless
+/// the THashList is the owner (set via SetOwner()).
+
 void TListOfDataMembers::Clear(Option_t *option)
 {
-   // Remove all objects from the list. Does not delete the objects unless
-   // the THashList is the owner (set via SetOwner()).
-
    if (fUnloaded) fUnloaded->Clear(option);
    if (fIds) fIds->Clear();
    THashList::Clear(option);
    fIsLoaded = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete all TDataMember object files.
+
 void TListOfDataMembers::Delete(Option_t *option /* ="" */)
 {
-   // Delete all TDataMember object files.
-
    if (fUnloaded) fUnloaded->Delete(option);
    THashList::Delete(option);
    fIsLoaded = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specialize FindObject to do search for the
+/// a data member just by name or create it if its not already in the list
+
 TObject *TListOfDataMembers::FindObject(const char *name) const
 {
-   // Specialize FindObject to do search for the
-   // a data member just by name or create it if its not already in the list
-
    TObject *result = THashList::FindObject(name);
    if (!result) {
       if (IsLoaded() && fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
@@ -206,12 +208,12 @@ TObject *TListOfDataMembers::FindObject(const char *name) const
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return (after creating it if necessary) the TDataMember
+/// describing the data member corresponding to the Decl 'id'.
+
 TDictionary *TListOfDataMembers::Get(DeclId_t id)
 {
-   // Return (after creating it if necessary) the TDataMember
-   // describing the data member corresponding to the Decl 'id'.
-
    if (!id) return 0;
 
    TDictionary *dm = fIds ? (TDataMember*)fIds->GetValue((Long64_t)id) : 0;
@@ -259,16 +261,16 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
    return dm;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return (after creating it if necessary) the TDataMember
+/// describing the data member corresponding to the Decl 'id'.
+/// The skipChecks flag controls the consistency checks performed inspecting
+/// the AST. In some cases, we explicitely alter the datamembers in the
+/// typesystem with respect to the AST and therefore we must not enforce
+/// consistency.
+
 TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info, bool skipChecks)
 {
-   // Return (after creating it if necessary) the TDataMember
-   // describing the data member corresponding to the Decl 'id'.
-   // The skipChecks flag controls the consistency checks performed inspecting
-   // the AST. In some cases, we explicitely alter the datamembers in the
-   // typesystem with respect to the AST and therefore we must not enforce
-   // consistency.
-
    if (!info) return 0;
 
    TDictionary::DeclId_t id = gInterpreter->GetDeclId(info);
@@ -313,10 +315,11 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info, bool skipChecks)
    return dm;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a pair<id, object> from the map of data members and their ids.
+
 void TListOfDataMembers::UnmapObject(TObject* obj)
 {
-   // Remove a pair<id, object> from the map of data members and their ids.
    if (!fIds) return;
    if (fClass) {
       TDataMember *d = dynamic_cast<TDataMember*>(obj);
@@ -337,17 +340,17 @@ void TListOfDataMembers::UnmapObject(TObject* obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from this collection and recursively remove the object
+/// from all other objects (and collections).
+/// This function overrides TCollection::RecursiveRemove that calls
+/// the Remove function. THashList::Remove cannot be called because
+/// it uses the hash value of the hash table. This hash value
+/// is not available anymore when RecursiveRemove is called from
+/// the TObject destructor.
+
 void TListOfDataMembers::RecursiveRemove(TObject *obj)
 {
-   // Remove object from this collection and recursively remove the object
-   // from all other objects (and collections).
-   // This function overrides TCollection::RecursiveRemove that calls
-   // the Remove function. THashList::Remove cannot be called because
-   // it uses the hash value of the hash table. This hash value
-   // is not available anymore when RecursiveRemove is called from
-   // the TObject destructor.
-
    if (!obj) return;
 
    THashList::RecursiveRemove(obj);
@@ -356,11 +359,11 @@ void TListOfDataMembers::RecursiveRemove(TObject *obj)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from the list.
+
 TObject* TListOfDataMembers::Remove(TObject *obj)
 {
-   // Remove object from the list.
-
    Bool_t found;
 
    found = THashList::Remove(obj);
@@ -372,11 +375,11 @@ TObject* TListOfDataMembers::Remove(TObject *obj)
    else return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object via its objlink from the list.
+
 TObject* TListOfDataMembers::Remove(TObjLink *lnk)
 {
-   // Remove object via its objlink from the list.
-
    if (!lnk) return 0;
 
    TObject *obj = lnk->GetObject();
@@ -388,12 +391,12 @@ TObject* TListOfDataMembers::Remove(TObjLink *lnk)
    return obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load all the DataMembers known to the intepreter for the scope 'fClass'
+/// into this collection.
+
 void TListOfDataMembers::Load()
 {
-   // Load all the DataMembers known to the intepreter for the scope 'fClass'
-   // into this collection.
-
    if (fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
       // Class and union are not extendable, if we already
       // loaded all the data member there is no need to recheck
@@ -473,11 +476,11 @@ void TListOfDataMembers::Load()
    if (!fClass) gInterpreter->ClassInfo_Delete(info);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TListOfDataMembers.
+
 void TListOfDataMembers::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TListOfDataMembers.
-
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TListOfDataMembers::Class(),this);
       fIsLoaded = kTRUE;
@@ -486,10 +489,10 @@ void TListOfDataMembers::Streamer(TBuffer &R__b)
    }
 }
 
-//______________________________________________________________________________
-void TListOfDataMembers::Update(TDictionary *member) {
-   // Move the member or data member to the expect set of list.
+////////////////////////////////////////////////////////////////////////////////
+/// Move the member or data member to the expect set of list.
 
+void TListOfDataMembers::Update(TDictionary *member) {
    if (fClass) {
       TDataMember *d = dynamic_cast<TDataMember*>(member);
       if (d) {
@@ -528,14 +531,14 @@ void TListOfDataMembers::Update(TDictionary *member) {
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark 'all func' as being unloaded.
+/// After the unload, the data member can no longer be found directly,
+/// until the decl can be found again in the interpreter (in which
+/// the func object will be reused.
+
 void TListOfDataMembers::Unload()
 {
-   // Mark 'all func' as being unloaded.
-   // After the unload, the data member can no longer be found directly,
-   // until the decl can be found again in the interpreter (in which
-   // the func object will be reused.
-
    TObjLink *lnk = FirstLink();
    while (lnk) {
       TDictionary *data = (TDictionary *)lnk->GetObject();
@@ -550,14 +553,14 @@ void TListOfDataMembers::Unload()
    fIsLoaded = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark 'func' as being unloaded.
+/// After the unload, the data member can no longer be found directly,
+/// until the decl can be found again in the interpreter (in which
+/// the func object will be reused.
+
 void TListOfDataMembers::Unload(TDictionary *mem)
 {
-   // Mark 'func' as being unloaded.
-   // After the unload, the data member can no longer be found directly,
-   // until the decl can be found again in the interpreter (in which
-   // the func object will be reused.
-
    if (THashList::Remove(mem)) {
       // We contains the object, let remove it from the other internal
       // list and move it to the list of unloaded objects.

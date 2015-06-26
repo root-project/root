@@ -41,30 +41,31 @@ ClassImp(TGLSurfacePainter)
 
 TRandom *TGLSurfacePainter::fgRandom = new TRandom(0);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 void TGLSurfacePainter::Projection_t::Swap(Projection_t &rhs)
 {
-   // Constructor.
-
    fRGBA[0] = rhs.fRGBA[0], fRGBA[1] = rhs.fRGBA[1], fRGBA[2] = rhs.fRGBA[2], fRGBA[3] = rhs.fRGBA[3];
    fVertices.swap(rhs.fVertices);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLSurfacePainter::TGLSurfacePainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
                                      : TGLPlotPainter(hist, camera, coord, kTRUE, kTRUE, kTRUE),
                                        fType(kSurf),
                                        fSectionPass(kFALSE),
                                        fUpdateTexMap(kTRUE)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Coords for point on surface under cursor.
+
 char *TGLSurfacePainter::GetPlotInfo(Int_t px, Int_t py)
 {
-   //Coords for point on surface under cursor.
-
    static char null[] = { "" };
    if (fSelectedPart) {
       if (fHighColor)
@@ -74,10 +75,11 @@ char *TGLSurfacePainter::GetPlotInfo(Int_t px, Int_t py)
    return null;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set mesh, normals.
+
 Bool_t TGLSurfacePainter::InitGeometry()
 {
-   //Set mesh, normals.
    Bool_t ret = kFALSE;
    switch (fCoord->GetCoordType()) {
    case kGLCartesian:
@@ -95,21 +97,23 @@ Bool_t TGLSurfacePainter::InitGeometry()
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///User clicks right mouse button (in a pad).
+
 void TGLSurfacePainter::StartPan(Int_t px, Int_t py)
 {
-   //User clicks right mouse button (in a pad).
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
    fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///User's moving mouse cursor, with middle mouse button pressed (for pad).
+///Calculate 3d shift related to 2d mouse movement.
+
 void TGLSurfacePainter::Pan(Int_t px, Int_t py)
 {
-   //User's moving mouse cursor, with middle mouse button pressed (for pad).
-   //Calculate 3d shift related to 2d mouse movement.
    if (fSelectedPart >= fSelectionBase) {//Pan camera.
       SaveModelviewMatrix();
       SaveProjectionMatrix();
@@ -148,10 +152,11 @@ void TGLSurfacePainter::Pan(Int_t px, Int_t py)
    fUpdateSelection = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Additional options for surfaces.
+
 void TGLSurfacePainter::AddOption(const TString &option)
 {
-   //Additional options for surfaces.
    using namespace std;
    const Ssiz_t surfPos = option.Index("surf");//"surf" _already_ _exists_ in a string.
    if (surfPos + 4 < option.Length() && isdigit(option[surfPos + 4])) {
@@ -184,10 +189,11 @@ void TGLSurfacePainter::AddOption(const TString &option)
    option.Index("z") == kNPOS ? fDrawPalette = kFALSE : fDrawPalette = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Remove all profiles/sections.
+
 void TGLSurfacePainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
-   //Remove all profiles/sections.
    const TGLVertex3 *frame = fBackBox.Get3DBox();
    if (py == kKey_P || py == kKey_p) {
 
@@ -224,10 +230,11 @@ void TGLSurfacePainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize some OpenGL state variables.
+
 void TGLSurfacePainter::InitGL()const
 {
-   //Initialize some OpenGL state variables.
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
    glEnable(GL_DEPTH_TEST);
@@ -235,10 +242,11 @@ void TGLSurfacePainter::InitGL()const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize some OpenGL state variables.
+
 void TGLSurfacePainter::DeInitGL()const
 {
-   //Initialize some OpenGL state variables.
    glDisable(GL_LIGHTING);
    glDisable(GL_LIGHT0);
    glDisable(GL_DEPTH_TEST);
@@ -247,12 +255,13 @@ void TGLSurfacePainter::DeInitGL()const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///One normal per vertex;
+///this normal is average of
+///neighbouring triangles normals.
+
 void TGLSurfacePainter::SetNormals()
 {
-   //One normal per vertex;
-   //this normal is average of
-   //neighbouring triangles normals.
    const Int_t nX = fCoord->GetNXBins();
    const Int_t nY = fCoord->GetNYBins();
 
@@ -297,10 +306,11 @@ void TGLSurfacePainter::SetNormals()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set color for surface.
+
 void TGLSurfacePainter::SetSurfaceColor()const
 {
-   //Set color for surface.
    Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.35f};
 
    if (fHist->GetFillColor() != kWhite && fType != kSurf1 && fType != kSurf2 && fType != kSurf5)
@@ -313,11 +323,11 @@ void TGLSurfacePainter::SetSurfaceColor()const
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 70.f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw surf/surf1/surf2/surf4
+
 void TGLSurfacePainter::DrawPlot()const
 {
-   //Draw surf/surf1/surf2/surf4
-
    //Shift plot to point of origin.
    const Rgl::PlotTranslation trGuard(this);
 
@@ -474,15 +484,15 @@ void TGLSurfacePainter::DrawPlot()const
       DrawPalette();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find bin ranges for X and Y axes,
+///axes ranges for X, Y and Z.
+///Function returns false, if logarithmic scale for
+///some axis was requested, but we cannot
+///find correct range.
+
 Bool_t TGLSurfacePainter::InitGeometryCartesian()
 {
-   //Find bin ranges for X and Y axes,
-   //axes ranges for X, Y and Z.
-   //Function returns false, if logarithmic scale for
-   //some axis was requested, but we cannot
-   //find correct range.
-
    if (!fCoord->SetRanges(fHist, kFALSE, kFALSE)) //the second arg must be drawErrors, the third is always kFALSE.
       return kFALSE;
 
@@ -542,15 +552,15 @@ Bool_t TGLSurfacePainter::InitGeometryCartesian()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find bin ranges for X and Y axes,
+///axes ranges for X, Y and Z.
+///Function returns false, if logarithmic scale for
+///some axis was requested, but we cannot
+///find correct range.
+
 Bool_t TGLSurfacePainter::InitGeometryPolar()
 {
-   //Find bin ranges for X and Y axes,
-   //axes ranges for X, Y and Z.
-   //Function returns false, if logarithmic scale for
-   //some axis was requested, but we cannot
-   //find correct range.
-
    if (!fCoord->SetRanges(fHist, kFALSE, kFALSE))
       return kFALSE;
 
@@ -609,15 +619,15 @@ Bool_t TGLSurfacePainter::InitGeometryPolar()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find bin ranges for X and Y axes,
+///axes ranges for X, Y and Z.
+///Function returns false, if logarithmic scale for
+///some axis was requested, but we cannot
+///find correct range.
+
 Bool_t TGLSurfacePainter::InitGeometryCylindrical()
 {
-   //Find bin ranges for X and Y axes,
-   //axes ranges for X, Y and Z.
-   //Function returns false, if logarithmic scale for
-   //some axis was requested, but we cannot
-   //find correct range.
-
    if (!fCoord->SetRanges(fHist, kFALSE, kFALSE))
       return kFALSE;
 
@@ -682,15 +692,15 @@ Bool_t TGLSurfacePainter::InitGeometryCylindrical()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find bin ranges for X and Y axes,
+///axes ranges for X, Y and Z.
+///Function returns false, if logarithmic scale for
+///some axis was requested, but we cannot
+///find correct range.
+
 Bool_t TGLSurfacePainter::InitGeometrySpherical()
 {
-   //Find bin ranges for X and Y axes,
-   //axes ranges for X, Y and Z.
-   //Function returns false, if logarithmic scale for
-   //some axis was requested, but we cannot
-   //find correct range.
-
    if (!fCoord->SetRanges(fHist, kFALSE, kFALSE))
       return kFALSE;
 
@@ -761,11 +771,11 @@ Bool_t TGLSurfacePainter::InitGeometrySpherical()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw projections.
+
 void TGLSurfacePainter::DrawProjections()const
 {
-   // Draw projections.
-
    const TGLDisableGuard lightGuard(GL_LIGHTING);
    const TGLEnableGuard  blendGuard(GL_BLEND);
    const TGLEnableGuard  lineSmooth(GL_LINE_SMOOTH);
@@ -850,11 +860,11 @@ void TGLSurfacePainter::DrawProjections()const
    glLineWidth(1.f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw section X.
+
 void TGLSurfacePainter::DrawSectionXOZ()const
 {
-   // Draw section X.
-
    using namespace std;
    //XOZ parallel section.
    Int_t binY = -1;
@@ -901,11 +911,11 @@ void TGLSurfacePainter::DrawSectionXOZ()const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw section Y.
+
 void TGLSurfacePainter::DrawSectionYOZ()const
 {
-   // Draw section Y.
-
    using namespace std;
    //YOZ parallel section.
    Int_t binX = -1;
@@ -952,11 +962,11 @@ void TGLSurfacePainter::DrawSectionYOZ()const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw section Z.
+
 void TGLSurfacePainter::DrawSectionXOY()const
 {
-   // Draw section Z.
-
    using namespace std;
    //XOY parallel section.
    const Int_t nX = fCoord->GetNXBins();
@@ -1049,10 +1059,11 @@ void TGLSurfacePainter::DrawSectionXOY()const
       glLineWidth(1.f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Clamp z value.
+
 void TGLSurfacePainter::ClampZ(Double_t &zVal)const
 {
-   //Clamp z value.
    const TGLVertex3 *frame = fBackBox.Get3DBox();
 
    if (fCoord->GetZLog())
@@ -1069,10 +1080,11 @@ void TGLSurfacePainter::ClampZ(Double_t &zVal)const
       zVal = frame[0].Z();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find 3d coords using mouse cursor coords.
+
 char *TGLSurfacePainter::WindowPointTo3DPoint(Int_t px, Int_t py)const
 {
-   //Find 3d coords using mouse cursor coords.
 /*   if (!MakeGLContextCurrent()) {
       static char err[] = { "Apocalipshit!" };
       return err;
@@ -1120,10 +1132,11 @@ char *TGLSurfacePainter::WindowPointTo3DPoint(Int_t px, Int_t py)const
    return (char *)fObjectInfo.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Generate palette.
+
 Bool_t TGLSurfacePainter::PreparePalette()const
 {
-   //Generate palette.
    if (!fUpdateTexMap)
       return kTRUE;
 
@@ -1148,10 +1161,11 @@ Bool_t TGLSurfacePainter::PreparePalette()const
    return rez;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find texture coordinates.
+
 void TGLSurfacePainter::GenTexMap()const
 {
-   //Find texture coordinates.
    const Int_t nX = fCoord->GetNXBins();
    const Int_t nY = fCoord->GetNYBins();
 
@@ -1168,10 +1182,11 @@ void TGLSurfacePainter::GenTexMap()const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw flat textured surface.
+
 void TGLSurfacePainter::DrawContoursProjection()const
 {
-   //Draw flat textured surface.
    static const Float_t whiteDiffuse[] = {0.8f, 0.8f, 0.8f, 0.65f};
    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, whiteDiffuse);
    for (Int_t i = 0, ei = fCoord->GetNXBins() - 1; i < ei; ++i) {
@@ -1186,10 +1201,11 @@ void TGLSurfacePainter::DrawContoursProjection()const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Checks, if surf requires texture.
+
 Bool_t TGLSurfacePainter::Textured()const
 {
-   //Checks, if surf requires texture.
    switch (fType) {
    case kSurf1:
    case kSurf2:
@@ -1202,27 +1218,30 @@ Bool_t TGLSurfacePainter::Textured()const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Any section exists.
+
 Bool_t TGLSurfacePainter::HasSections()const
 {
-   //Any section exists.
    return fXOZSectionPos > fBackBox.Get3DBox()[0].Y() || fYOZSectionPos > fBackBox.Get3DBox()[0].X() ||
           fXOYSectionPos > fBackBox.Get3DBox()[0].Z();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Any projection exists.
+
 Bool_t TGLSurfacePainter::HasProjections()const
 {
-   //Any projection exists.
    return fXOZProj.size() || fYOZProj.size() || fXOYProj.size();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw. Palette.
+///Originally, fCamera was never null.
+///It can be a null now because of gl-viewer.
+
 void TGLSurfacePainter::DrawPalette()const
 {
-   //Draw. Palette.
-   //Originally, fCamera was never null.
-   //It can be a null now because of gl-viewer.
    if (!fCamera) {
       //Thank you, gl-viewer!
       return;
@@ -1236,10 +1255,11 @@ void TGLSurfacePainter::DrawPalette()const
    fCamera->Apply(fPadPhi, fPadTheta);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw. Palette. Axis.
+
 void TGLSurfacePainter::DrawPaletteAxis()const
 {
-   //Draw. Palette. Axis.
    gVirtualX->SetDrawMode(TVirtualX::kCopy);//TCanvas by default sets in kInverse
    Rgl::DrawPaletteAxis(fCamera, fMinMaxVal, fCoord->GetCoordType() == kGLCartesian ? fCoord->GetZLog() : kFALSE);
 }

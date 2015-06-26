@@ -57,11 +57,11 @@
 #include <TSystem.h>
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prototype of filter... does nothing right now.
+
 int main(int argc, char *argv[])
 {
-   // prototype of filter... does nothing right now.
-
    FILE *fin;
    int ch;
 

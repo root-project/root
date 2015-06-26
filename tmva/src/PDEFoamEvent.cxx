@@ -45,33 +45,36 @@
 
 ClassImp(TMVA::PDEFoamEvent)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer, user should not use it.
+
 TMVA::PDEFoamEvent::PDEFoamEvent()
    : PDEFoam()
 {
-   // Default constructor for streamer, user should not use it.
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::PDEFoamEvent::PDEFoamEvent(const TString& name)
    : PDEFoam(name)
 {}
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy Constructor  NOT IMPLEMENTED (NEVER USED)
+
 TMVA::PDEFoamEvent::PDEFoamEvent(const PDEFoamEvent &from)
    : PDEFoam(from)
 {
-   // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function fills an event weight 'wt' into the PDEFoam.  Cell
+/// element 0 is filled with the weight 'wt', and element 1 is
+/// filled with the squared weight.
+
 void TMVA::PDEFoamEvent::FillFoamCells(const Event* ev, Float_t wt)
 {
-   // This function fills an event weight 'wt' into the PDEFoam.  Cell
-   // element 0 is filled with the weight 'wt', and element 1 is
-   // filled with the squared weight.
-
    // find corresponding foam cell
    std::vector<Float_t> values  = ev->GetValues();
    std::vector<Float_t> tvalues = VarTransform(values);

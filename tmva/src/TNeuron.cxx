@@ -51,10 +51,11 @@ using std::vector;
 
 ClassImp(TMVA::TNeuron)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
 TMVA::TNeuron::TNeuron()
 {
-   // standard constructor
    InitNeuron();
 }
 
@@ -80,27 +81,29 @@ void TMVA::TNeuron::InitNeuron()
    fInputCalculator = NULL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// force the value, typically for input and bias neurons
+
 void TMVA::TNeuron::ForceValue(Double_t value)
 {
-   // force the value, typically for input and bias neurons
    fValue = value;
    fForcedValue = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate neuron input
+
 void TMVA::TNeuron::CalculateValue()
 {
-   // calculate neuron input
    if (fForcedValue) return;
    fValue = fInputCalculator->GetInput(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate neuron activation/output
+
 void TMVA::TNeuron::CalculateActivationValue()
 {
-   // calculate neuron activation/output
-
    if (fActivation == NULL) {
       PrintMessage( kWARNING ,"No activation equation specified." );
       fActivationValue = UNINITIALIZED;
@@ -110,11 +113,11 @@ void TMVA::TNeuron::CalculateActivationValue()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate error field
+
 void TMVA::TNeuron::CalculateDelta()
 {
-   // calculate error field
-
    // no need to adjust input neurons
    if (IsInputNeuron()) {
       fDelta = 0.0;
@@ -147,50 +150,55 @@ void TMVA::TNeuron::CalculateDelta()
    fDelta = error * fActivation->EvalDerivative(GetValue());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set input calculator
+
 void TMVA::TNeuron::SetInputCalculator(TNeuronInput* calculator)
 {
-   // set input calculator
    if (fInputCalculator != NULL) delete fInputCalculator;
    fInputCalculator = calculator;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set activation equation
+
 void TMVA::TNeuron::SetActivationEqn(TActivation* activation)
 {
-   // set activation equation
    if (fActivation != NULL) delete fActivation;
    fActivation = activation;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add synapse as a pre-link to this neuron
+
 void TMVA::TNeuron::AddPreLink(TSynapse* pre)
 {
-   // add synapse as a pre-link to this neuron
    if (IsInputNeuron()) return;
    fLinksIn->Add(pre);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add synapse as a post-link to this neuron
+
 void TMVA::TNeuron::AddPostLink(TSynapse* post)
 {
-   // add synapse as a post-link to this neuron
    if (IsOutputNeuron()) return;
    fLinksOut->Add(post);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// delete all pre-links
+
 void TMVA::TNeuron::DeletePreLinks()
 {
-   // delete all pre-links
    DeleteLinksArray(fLinksIn);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// delete an array of TSynapses
+
 void TMVA::TNeuron::DeleteLinksArray(TObjArray*& links)
 {
-   // delete an array of TSynapses
-
    if (links == NULL) return;
 
    TSynapse* synapse = NULL;
@@ -203,22 +211,23 @@ void TMVA::TNeuron::DeleteLinksArray(TObjArray*& links)
    links = NULL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set error, this should only be done for an output neuron
+
 void TMVA::TNeuron::SetError(Double_t error)
 {
-   // set error, this should only be done for an output neuron
    if (!IsOutputNeuron())
       PrintMessage( kWARNING, "Warning! Setting an error on a non-output neuron is probably not what you want to do." );
 
    fError = error;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// update and adjust the pre-synapses for each neuron (input neuron has no pre-synapse)
+/// this method should only be called in batch mode
+
 void TMVA::TNeuron::UpdateSynapsesBatch()
 {
-   // update and adjust the pre-synapses for each neuron (input neuron has no pre-synapse)
-   // this method should only be called in batch mode
-
    if (IsInputNeuron()) return;
 
    TSynapse* synapse = NULL;
@@ -231,12 +240,12 @@ void TMVA::TNeuron::UpdateSynapsesBatch()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// update the pre-synapses for each neuron (input neuron has no pre-synapse)
+/// this method should only be called in sequential mode
+
 void TMVA::TNeuron::UpdateSynapsesSequential()
 {
-   // update the pre-synapses for each neuron (input neuron has no pre-synapse)
-   // this method should only be called in sequential mode
-
    if (IsInputNeuron()) return;
 
    TSynapse* synapse = NULL;
@@ -252,12 +261,12 @@ void TMVA::TNeuron::UpdateSynapsesSequential()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// adjust the pre-synapses' weights for each neuron (input neuron has no pre-synapse)
+/// this method should only be called in batch mode
+
 void TMVA::TNeuron::AdjustSynapseWeights()
 {
-   // adjust the pre-synapses' weights for each neuron (input neuron has no pre-synapse)
-   // this method should only be called in batch mode
-
    if (IsInputNeuron()) return;
 
    TSynapse* synapse = NULL;
@@ -272,12 +281,12 @@ void TMVA::TNeuron::AdjustSynapseWeights()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialize the error fields of all pre-neurons
+/// this method should only be called in batch mode
+
 void TMVA::TNeuron::InitSynapseDeltas()
 {
-   // initialize the error fields of all pre-neurons
-   // this method should only be called in batch mode
-
    // an input neuron has no pre-weights to adjust
    if (IsInputNeuron()) return;
 
@@ -293,11 +302,11 @@ void TMVA::TNeuron::InitSynapseDeltas()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print an array of TSynapses, for debugging
+
 void TMVA::TNeuron::PrintLinks(TObjArray* links) const
 {
-   // print an array of TSynapses, for debugging
-
    if (links == NULL) {
       Log() << kDEBUG << "\t\t\t<none>" << Endl;
       return;
@@ -317,22 +326,25 @@ void TMVA::TNeuron::PrintLinks(TObjArray* links) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print activation equation, for debugging
+
 void TMVA::TNeuron::PrintActivationEqn()
 {
-   // print activation equation, for debugging
    if (fActivation != NULL) Log() << kDEBUG << fActivation->GetExpression() << Endl;
    else                     Log() << kDEBUG << "<none>" << Endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print message, for debugging
+
 void TMVA::TNeuron::PrintMessage( EMsgType type, TString message)
 {
-   // print message, for debugging
    Log() << type << message << Endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::MsgLogger& TMVA::TNeuron::Log() const
 {
    TTHREAD_TLS_DECL_ARG2(MsgLogger,logger,"TNeuron",kDEBUG);    //! message logger, static to save resources

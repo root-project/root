@@ -78,10 +78,11 @@ TPyMultiGenFunction::TPyMultiGenFunction( PyObject* self ) : fPySelf( 0 )
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Only deref if still holding on to Py_None (circular otherwise).
+
 TPyMultiGenFunction::~TPyMultiGenFunction()
 {
-// Destructor. Only deref if still holding on to Py_None (circular otherwise).
    if ( fPySelf == Py_None ) {
       Py_DECREF( fPySelf );
    }
@@ -105,10 +106,11 @@ unsigned int TPyMultiGenFunction::NDim() const
    return cppresult;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simply forward the call to python self.
+
 double TPyMultiGenFunction::DoEval( const double* x ) const
 {
-// Simply forward the call to python self.
    PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
    PyObject* pyresult = DispatchCall( fPySelf, "DoEval", NULL, xbuf );
    Py_DECREF( xbuf );
@@ -139,10 +141,11 @@ TPyMultiGradFunction::TPyMultiGradFunction( PyObject* self )
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Only deref if still holding on to Py_None (circular otherwise).
+
 TPyMultiGradFunction::~TPyMultiGradFunction()
 {
-// Destructor. Only deref if still holding on to Py_None (circular otherwise).
    if ( fPySelf == Py_None ) {
       Py_DECREF( fPySelf );
    }
@@ -166,10 +169,11 @@ unsigned int TPyMultiGradFunction::NDim() const
    return cppresult;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simply forward the call to python self.
+
 double TPyMultiGradFunction::DoEval( const double* x ) const
 {
-// Simply forward the call to python self.
    PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
    PyObject* pyresult = DispatchCall( fPySelf, "DoEval", NULL, xbuf );
    Py_DECREF( xbuf );
@@ -185,9 +189,10 @@ double TPyMultiGradFunction::DoEval( const double* x ) const
    return cppresult;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simply forward the call to python self.
+
 void TPyMultiGradFunction::Gradient( const double* x, double* grad ) const {
-// Simply forward the call to python self.
    PyObject* pymethod = GetOverriddenPyMethod( fPySelf, "Gradient" );
 
    if ( pymethod ) {
@@ -208,10 +213,11 @@ void TPyMultiGradFunction::Gradient( const double* x, double* grad ) const {
       return ROOT::Math::IMultiGradFunction::Gradient( x, grad );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simply forward the call to python self.
+
 void TPyMultiGradFunction::FdF( const double* x, double& f, double* df ) const
 {
-// Simply forward the call to python self.
    PyObject* pymethod = GetOverriddenPyMethod( fPySelf, "FdF" );
 
    if ( pymethod ) {
@@ -238,10 +244,11 @@ void TPyMultiGradFunction::FdF( const double* x, double& f, double* df ) const
       return ROOT::Math::IMultiGradFunction::FdF( x, f, df );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simply forward the call to python self.
+
 double TPyMultiGradFunction::DoDerivative( const double * x, unsigned int icoord ) const
 {
-// Simply forward the call to python self.
    PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
    PyObject* pycoord = PyLong_FromLong( icoord );
 

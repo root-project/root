@@ -23,11 +23,11 @@
 #include "TNetFile.h"
 #include "TNetFileStager.h"
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. Init a TNetSystem instance to the remote rootd.
+
 TNetFileStager::TNetFileStager(const char *url) : TFileStager("net")
 {
-   // Constructor. Init a TNetSystem instance to the remote rootd.
-
    fSystem = 0;
    if (url && strlen(url) > 0) {
       GetPrefix(url, fPrefix);
@@ -36,20 +36,20 @@ TNetFileStager::TNetFileStager(const char *url) : TFileStager("net")
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TNetFileStager::~TNetFileStager()
 {
-   // Destructor
-
    SafeDelete(fSystem);
    fPrefix = "";
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the file defined by 'path' is ready to be used.
+
 Bool_t TNetFileStager::IsStaged(const char *path)
 {
-   // Check if the file defined by 'path' is ready to be used.
-
    if (!IsValid()) {
       GetPrefix(path, fPrefix);
       fSystem = new TNetSystem(path);
@@ -66,11 +66,11 @@ Bool_t TNetFileStager::IsStaged(const char *path)
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Isolate prefix in url
+
 void TNetFileStager::GetPrefix(const char *url, TString &pfx)
 {
-   // Isolate prefix in url
-
    if (gDebug > 1)
       ::Info("TNetFileStager::GetPrefix", "enter: %s", url);
 
@@ -87,20 +87,20 @@ void TNetFileStager::GetPrefix(const char *url, TString &pfx)
       ::Info("TNetFileStager::GetPrefix", "found prefix: %s", pfx.Data());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print basic info about this stager
+
 void TNetFileStager::Print(Option_t *) const
 {
-   // Print basic info about this stager
-
    Printf("+++ stager: %s  %s", GetName(), fPrefix.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get actual end-point url for a path
+/// Returns 0 in case of success and 1 if any error occured
+
 Int_t TNetFileStager::Locate(const char *path, TString &eurl)
 {
-   // Get actual end-point url for a path
-   // Returns 0 in case of success and 1 if any error occured
-
    if (!IsValid()) {
       GetPrefix(path, fPrefix);
       fSystem = new TNetSystem(path);
@@ -119,12 +119,12 @@ Int_t TNetFileStager::Locate(const char *path, TString &eurl)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if stager 's' is compatible with current stager.
+/// Avoids multiple instantiations of the potentially the same TNetSystem.
+
 Bool_t TNetFileStager::Matches(const char *s)
 {
-   // Returns kTRUE if stager 's' is compatible with current stager.
-   // Avoids multiple instantiations of the potentially the same TNetSystem.
-
    if (IsValid()) {
       TString pfx;
       GetPrefix(s, pfx);

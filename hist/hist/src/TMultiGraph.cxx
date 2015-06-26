@@ -37,7 +37,8 @@ extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, I
 ClassImp(TMultiGraph)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TMultiGraph class</h2></center>
 
@@ -275,11 +276,11 @@ Begin_Html
 End_Html */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TMultiGraph default constructor.
+
 TMultiGraph::TMultiGraph(): TNamed()
 {
-   // TMultiGraph default constructor.
-
    fGraphs    = 0;
    fFunctions = 0;
    fHistogram = 0;
@@ -288,12 +289,12 @@ TMultiGraph::TMultiGraph(): TNamed()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with name and title.
+
 TMultiGraph::TMultiGraph(const char *name, const char *title)
        : TNamed(name,title)
 {
-   // Constructor with name and title.
-
    fGraphs    = 0;
    fFunctions = 0;
    fHistogram = 0;
@@ -302,7 +303,9 @@ TMultiGraph::TMultiGraph(const char *name, const char *title)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TMultiGraph::TMultiGraph(const TMultiGraph& mg) :
   TNamed (mg),
   fGraphs(mg.fGraphs),
@@ -311,15 +314,14 @@ TMultiGraph::TMultiGraph(const TMultiGraph& mg) :
   fMaximum(mg.fMaximum),
   fMinimum(mg.fMinimum)
 {
-   // Copy constructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignement operator.
+
 TMultiGraph& TMultiGraph::operator=(const TMultiGraph& mg)
 {
-   // Assignement operator.
-
    if (this!=&mg) {
       TNamed::operator=(mg);
       fGraphs=mg.fGraphs;
@@ -332,11 +334,11 @@ TMultiGraph& TMultiGraph::operator=(const TMultiGraph& mg)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TMultiGraph destructor.
+
 TMultiGraph::~TMultiGraph()
 {
-   // TMultiGraph destructor.
-
    if (!fGraphs) return;
    TGraph *g;
    TIter   next(fGraphs);
@@ -364,29 +366,29 @@ TMultiGraph::~TMultiGraph()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new graph to the list of graphs.
+/// Note that the graph is now owned by the TMultigraph.
+/// Deleting the TMultiGraph object will automatically delete the graphs.
+/// You should not delete the graphs when the TMultigraph is still active.
+
 void TMultiGraph::Add(TGraph *graph, Option_t *chopt)
 {
-   // Add a new graph to the list of graphs.
-   // Note that the graph is now owned by the TMultigraph.
-   // Deleting the TMultiGraph object will automatically delete the graphs.
-   // You should not delete the graphs when the TMultigraph is still active.
-
    if (!fGraphs) fGraphs = new TList();
    graph->SetBit(kMustCleanup);
    fGraphs->Add(graph,chopt);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add all the graphs in "multigraph" to the list of graphs.
+/// If "chopt" is defined all the graphs in "multigraph" will be added with
+/// the "chopt" option.
+/// If "chopt" is undefined each graph will be added with the option it had
+/// in "multigraph".
+
 void TMultiGraph::Add(TMultiGraph *multigraph, Option_t *chopt)
 {
-   // Add all the graphs in "multigraph" to the list of graphs.
-   // If "chopt" is defined all the graphs in "multigraph" will be added with
-   // the "chopt" option.
-   // If "chopt" is undefined each graph will be added with the option it had
-   // in "multigraph".
-
    TList *graphlist = multigraph->GetListOfGraphs();
    if (!graphlist) return;
 
@@ -404,11 +406,11 @@ void TMultiGraph::Add(TMultiGraph *multigraph, Option_t *chopt)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse multigraph.
+
 void TMultiGraph::Browse(TBrowser *b)
 {
-   // Browse multigraph.
-
    TString opt = gEnv->GetValue("TGraph.BrowseOption", "");
    if (opt.IsNull()) {
       opt = b ? b->GetDrawOption() : "alp";
@@ -419,11 +421,11 @@ void TMultiGraph::Browse(TBrowser *b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to each graph.
+
 Int_t TMultiGraph::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to each graph.
-
    // Are we on the axis?
    const Int_t kMaxDiff = 10;
    Int_t distance = 9999;
@@ -445,21 +447,21 @@ Int_t TMultiGraph::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this multigraph with its current attributes.
+///
+///   Options to draw a graph are described in TGraphPainter.
+///
+///  The drawing option for each TGraph may be specified as an optional
+///  second argument of the Add function. You can use GetGraphDrawOption
+///  to return this option.
+///  If a draw option is specified, it will be used to draw the graph,
+///  otherwise the graph will be drawn with the option specified in
+///  TMultiGraph::Draw. Use GetDrawOption to return the option specified
+///  when drawing the TMultiGraph.
+
 void TMultiGraph::Draw(Option_t *option)
 {
-   // Draw this multigraph with its current attributes.
-   //
-   //   Options to draw a graph are described in TGraphPainter.
-   //
-   //  The drawing option for each TGraph may be specified as an optional
-   //  second argument of the Add function. You can use GetGraphDrawOption
-   //  to return this option.
-   //  If a draw option is specified, it will be used to draw the graph,
-   //  otherwise the graph will be drawn with the option specified in
-   //  TMultiGraph::Draw. Use GetDrawOption to return the option specified
-   //  when drawing the TMultiGraph.
-
    TString opt = option;
    opt.ToLower();
 
@@ -471,13 +473,13 @@ void TMultiGraph::Draw(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fit this graph with function with name fname.
+///
+///  interface to TF1::Fit(TF1 *f1...
+
 TFitResultPtr TMultiGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
 {
-   // Fit this graph with function with name fname.
-   //
-   //  interface to TF1::Fit(TF1 *f1...
-
    char *linear;
    linear= (char*)strstr(fname, "++");
    TF1 *f1=0;
@@ -492,147 +494,147 @@ TFitResultPtr TMultiGraph::Fit(const char *fname, Option_t *option, Option_t *, 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fit this multigraph with function f1.
+///
+///   In this function all graphs of the multigraph are fitted simultaneously
+///
+///   f1 is an already predefined function created by TF1.
+///   Predefined functions such as gaus, expo and poln are automatically
+///   created by ROOT.
+///
+///   The list of fit options is given in parameter option.
+///      option = "W"  Set all errors to 1
+///             = "U" Use a User specified fitting algorithm (via SetFCN)
+///             = "Q" Quiet mode (minimum printing)
+///             = "V" Verbose mode (default is between Q and V)
+///             = "B" Use this option when you want to fix one or more parameters
+///                   and the fitting function is like "gaus","expo","poln","landau".
+///             = "R" Use the Range specified in the function range
+///             = "N" Do not store the graphics function, do not draw
+///             = "0" Do not plot the result of the fit. By default the fitted function
+///                   is drawn unless the option"N" above is specified.
+///             = "+" Add this new fitted function to the list of fitted functions
+///                   (by default, any previous function is deleted)
+///             = "C" In case of linear fitting, not calculate the chisquare
+///                    (saves time)
+///             = "F" If fitting a polN, switch to minuit fitter
+///             = "ROB" In case of linear fitting, compute the LTS regression
+///                     coefficients (robust(resistant) regression), using
+///                     the default fraction of good points
+///               "ROB=0.x" - compute the LTS regression coefficients, using
+///                           0.x as a fraction of good points
+///
+///   When the fit is drawn (by default), the parameter goption may be used
+///   to specify a list of graphics options. See TGraph::Paint for a complete
+///   list of these options.
+///
+///   In order to use the Range option, one must first create a function
+///   with the expression to be fitted. For example, if your graph
+///   has a defined range between -4 and 4 and you want to fit a gaussian
+///   only in the interval 1 to 3, you can do:
+///        TF1 *f1 = new TF1("f1","gaus",1,3);
+///        graph->Fit("f1","R");
+///
+///
+///   who is calling this function
+///   ============================
+///   Note that this function is called when calling TGraphErrors::Fit
+///   or TGraphAsymmErrors::Fit ot TGraphBentErrors::Fit
+///   see the discussion below on the errors calulation.
+///
+///   Setting initial conditions
+///   ==========================
+///   Parameters must be initialized before invoking the Fit function.
+///   The setting of the parameter initial values is automatic for the
+///   predefined functions : poln, expo, gaus, landau. One can however disable
+///   this automatic computation by specifying the option "B".
+///   You can specify boundary limits for some or all parameters via
+///        f1->SetParLimits(p_number, parmin, parmax);
+///   if parmin>=parmax, the parameter is fixed
+///   Note that you are not forced to fix the limits for all parameters.
+///   For example, if you fit a function with 6 parameters, you can do:
+///     func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
+///     func->SetParLimits(4,-10,-4);
+///     func->SetParLimits(5, 1,1);
+///   With this setup, parameters 0->3 can vary freely
+///   Parameter 4 has boundaries [-10,-4] with initial value -8
+///   Parameter 5 is fixed to 100.
+///
+///  Fit range
+///  =========
+///  The fit range can be specified in two ways:
+///    - specify rxmax > rxmin (default is rxmin=rxmax=0)
+///    - specify the option "R". In this case, the function will be taken
+///      instead of the full graph range.
+///
+///  Changing the fitting function
+///  =============================
+///   By default a chi2 fitting function is used for fitting the TGraphs's.
+///   The function is implemented in FitUtil::EvaluateChi2.
+///   In case of TGraphErrors an effective chi2 is used
+///   (see TGraphErrors fit in TGraph::Fit) and is implemented in
+///   FitUtil::EvaluateChi2Effective
+///   To specify a User defined fitting function, specify option "U" and
+///   call the following functions:
+///     TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
+///   where MyFittingFunction is of type:
+///   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+///
+///  Access to the fit result
+///  ========================
+///  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
+///  By default the TFitResultPtr contains only the status of the fit and it converts
+///  automatically to an integer. If the option "S" is instead used, TFitResultPtr contains
+///  the TFitResult and behaves as a smart pointer to it. For example one can do:
+///     TFitResultPtr r = graph->Fit("myFunc","S");
+///     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
+///     Double_t par0   = r->Parameter(0); // retrieve the value for the parameter 0
+///     Double_t err0   = r->ParError(0); // retrieve the error for the parameter 0
+///     r->Print("V");     // print full information of fit including covariance matrix
+///     r->Write();        // store the result in a file
+///
+///   The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
+///   from the fitted function.
+///
+///
+///   Associated functions
+///   ====================
+///  One or more object (typically a TF1*) can be added to the list
+///  of functions (fFunctions) associated to each graph.
+///  When TGraph::Fit is invoked, the fitted function is added to this list.
+///  Given a graph gr, one can retrieve an associated function
+///  with:  TF1 *myfunc = gr->GetFunction("myfunc");
+///
+///  If the graph is made persistent, the list of
+///  associated functions is also persistent. Given a pointer (see above)
+///  to an associated function myfunc, one can retrieve the function/fit
+///  parameters with calls such as:
+///    Double_t chi2 = myfunc->GetChisquare();
+///    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
+///    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
+///
+///   Fit Statistics
+///   ==============
+///  You can change the statistics box to display the fit parameters with
+///  the TStyle::SetOptFit(mode) method. This mode has four digits.
+///  mode = pcev  (default = 0111)
+///    v = 1;  print name/values of parameters
+///    e = 1;  print errors (if e=1, v must be 1)
+///    c = 1;  print Chisquare/Number of degress of freedom
+///    p = 1;  print Probability
+///
+///  For example: gStyle->SetOptFit(1011);
+///  prints the fit probability, parameter names/values, and errors.
+///  You can change the position of the statistics box with these lines
+///  (where g is a pointer to the TGraph):
+///
+///  Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
+///  Root > st->SetX1NDC(newx1); //new x start position
+///  Root > st->SetX2NDC(newx2); //new x end position
+
 TFitResultPtr TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Axis_t rxmax)
 {
-   // Fit this multigraph with function f1.
-   //
-   //   In this function all graphs of the multigraph are fitted simultaneously
-   //
-   //   f1 is an already predefined function created by TF1.
-   //   Predefined functions such as gaus, expo and poln are automatically
-   //   created by ROOT.
-   //
-   //   The list of fit options is given in parameter option.
-   //      option = "W"  Set all errors to 1
-   //             = "U" Use a User specified fitting algorithm (via SetFCN)
-   //             = "Q" Quiet mode (minimum printing)
-   //             = "V" Verbose mode (default is between Q and V)
-   //             = "B" Use this option when you want to fix one or more parameters
-   //                   and the fitting function is like "gaus","expo","poln","landau".
-   //             = "R" Use the Range specified in the function range
-   //             = "N" Do not store the graphics function, do not draw
-   //             = "0" Do not plot the result of the fit. By default the fitted function
-   //                   is drawn unless the option"N" above is specified.
-   //             = "+" Add this new fitted function to the list of fitted functions
-   //                   (by default, any previous function is deleted)
-   //             = "C" In case of linear fitting, not calculate the chisquare
-   //                    (saves time)
-   //             = "F" If fitting a polN, switch to minuit fitter
-   //             = "ROB" In case of linear fitting, compute the LTS regression
-   //                     coefficients (robust(resistant) regression), using
-   //                     the default fraction of good points
-   //               "ROB=0.x" - compute the LTS regression coefficients, using
-   //                           0.x as a fraction of good points
-   //
-   //   When the fit is drawn (by default), the parameter goption may be used
-   //   to specify a list of graphics options. See TGraph::Paint for a complete
-   //   list of these options.
-   //
-   //   In order to use the Range option, one must first create a function
-   //   with the expression to be fitted. For example, if your graph
-   //   has a defined range between -4 and 4 and you want to fit a gaussian
-   //   only in the interval 1 to 3, you can do:
-   //        TF1 *f1 = new TF1("f1","gaus",1,3);
-   //        graph->Fit("f1","R");
-   //
-   //
-   //   who is calling this function
-   //   ============================
-   //   Note that this function is called when calling TGraphErrors::Fit
-   //   or TGraphAsymmErrors::Fit ot TGraphBentErrors::Fit
-   //   see the discussion below on the errors calulation.
-   //
-   //   Setting initial conditions
-   //   ==========================
-   //   Parameters must be initialized before invoking the Fit function.
-   //   The setting of the parameter initial values is automatic for the
-   //   predefined functions : poln, expo, gaus, landau. One can however disable
-   //   this automatic computation by specifying the option "B".
-   //   You can specify boundary limits for some or all parameters via
-   //        f1->SetParLimits(p_number, parmin, parmax);
-   //   if parmin>=parmax, the parameter is fixed
-   //   Note that you are not forced to fix the limits for all parameters.
-   //   For example, if you fit a function with 6 parameters, you can do:
-   //     func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
-   //     func->SetParLimits(4,-10,-4);
-   //     func->SetParLimits(5, 1,1);
-   //   With this setup, parameters 0->3 can vary freely
-   //   Parameter 4 has boundaries [-10,-4] with initial value -8
-   //   Parameter 5 is fixed to 100.
-   //
-   //  Fit range
-   //  =========
-   //  The fit range can be specified in two ways:
-   //    - specify rxmax > rxmin (default is rxmin=rxmax=0)
-   //    - specify the option "R". In this case, the function will be taken
-   //      instead of the full graph range.
-   //
-   //  Changing the fitting function
-   //  =============================
-   //   By default a chi2 fitting function is used for fitting the TGraphs's.
-   //   The function is implemented in FitUtil::EvaluateChi2.
-   //   In case of TGraphErrors an effective chi2 is used
-   //   (see TGraphErrors fit in TGraph::Fit) and is implemented in
-   //   FitUtil::EvaluateChi2Effective
-   //   To specify a User defined fitting function, specify option "U" and
-   //   call the following functions:
-   //     TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
-   //   where MyFittingFunction is of type:
-   //   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-   //
-   //  Access to the fit result
-   //  ========================
-   //  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
-   //  By default the TFitResultPtr contains only the status of the fit and it converts
-   //  automatically to an integer. If the option "S" is instead used, TFitResultPtr contains
-   //  the TFitResult and behaves as a smart pointer to it. For example one can do:
-   //     TFitResultPtr r = graph->Fit("myFunc","S");
-   //     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
-   //     Double_t par0   = r->Parameter(0); // retrieve the value for the parameter 0
-   //     Double_t err0   = r->ParError(0); // retrieve the error for the parameter 0
-   //     r->Print("V");     // print full information of fit including covariance matrix
-   //     r->Write();        // store the result in a file
-   //
-   //   The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
-   //   from the fitted function.
-   //
-   //
-   //   Associated functions
-   //   ====================
-   //  One or more object (typically a TF1*) can be added to the list
-   //  of functions (fFunctions) associated to each graph.
-   //  When TGraph::Fit is invoked, the fitted function is added to this list.
-   //  Given a graph gr, one can retrieve an associated function
-   //  with:  TF1 *myfunc = gr->GetFunction("myfunc");
-   //
-   //  If the graph is made persistent, the list of
-   //  associated functions is also persistent. Given a pointer (see above)
-   //  to an associated function myfunc, one can retrieve the function/fit
-   //  parameters with calls such as:
-   //    Double_t chi2 = myfunc->GetChisquare();
-   //    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
-   //    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
-   //
-   //   Fit Statistics
-   //   ==============
-   //  You can change the statistics box to display the fit parameters with
-   //  the TStyle::SetOptFit(mode) method. This mode has four digits.
-   //  mode = pcev  (default = 0111)
-   //    v = 1;  print name/values of parameters
-   //    e = 1;  print errors (if e=1, v must be 1)
-   //    c = 1;  print Chisquare/Number of degress of freedom
-   //    p = 1;  print Probability
-   //
-   //  For example: gStyle->SetOptFit(1011);
-   //  prints the fit probability, parameter names/values, and errors.
-   //  You can change the position of the statistics box with these lines
-   //  (where g is a pointer to the TGraph):
-   //
-   //  Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
-   //  Root > st->SetX1NDC(newx1); //new x start position
-   //  Root > st->SetX2NDC(newx2); //new x end position
-
    // internal multigraph fitting methods
    Foption_t fitOption;
    ROOT::Fit::FitOptionsMake(ROOT::Fit::kGraph,option,fitOption);
@@ -644,12 +646,12 @@ TFitResultPtr TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axi
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display a panel with all histogram fit options.
+/// See class TFitPanel for example
+
 void TMultiGraph::FitPanel()
 {
-   // Display a panel with all histogram fit options.
-   // See class TFitPanel for example
-
    if (!gPad)
       gROOT->MakeDefCanvas();
 
@@ -668,12 +670,12 @@ void TMultiGraph::FitPanel()
          Error("FitPanel", "Unable to find the FitPanel plug-in");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the draw option for the TGraph gr in this TMultiGraph.
+/// The return option is the one specified when calling TMultiGraph::Add(gr,option).
+
 Option_t *TMultiGraph::GetGraphDrawOption(const TGraph *gr) const
 {
-   // Return the draw option for the TGraph gr in this TMultiGraph.
-   // The return option is the one specified when calling TMultiGraph::Add(gr,option).
-
    if (!fGraphs || !gr) return "";
    TListIter next(fGraphs);
    TObject *obj;
@@ -684,11 +686,11 @@ Option_t *TMultiGraph::GetGraphDrawOption(const TGraph *gr) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute Initial values of parameters for a gaussian.
+
 void TMultiGraph::InitGaus(Double_t xmin, Double_t xmax)
 {
-   // Compute Initial values of parameters for a gaussian.
-
    Double_t allcha, sumx, sumx2, x, val, rms, mean;
    Int_t bin;
    const Double_t sqrtpi = 2.506628;
@@ -729,11 +731,11 @@ void TMultiGraph::InitGaus(Double_t xmin, Double_t xmax)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute Initial values of parameters for an exponential.
+
 void TMultiGraph::InitExpo(Double_t xmin, Double_t xmax)
 {
-   // Compute Initial values of parameters for an exponential.
-
    Double_t constant, slope;
    Int_t ifail;
 
@@ -746,11 +748,11 @@ void TMultiGraph::InitExpo(Double_t xmin, Double_t xmax)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute Initial values of parameters for a polynom.
+
 void TMultiGraph::InitPolynom(Double_t xmin, Double_t xmax)
 {
-   // Compute Initial values of parameters for a polynom.
-
    Double_t fitpar[25];
 
    TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
@@ -763,18 +765,18 @@ void TMultiGraph::InitPolynom(Double_t xmin, Double_t xmax)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Least squares lpolynomial fitting without weights.
+///
+///  m     number of parameters
+///  a     array of parameters
+///  first 1st point number to fit (default =0)
+///  last  last point number to fit (default=fNpoints-1)
+///
+///   based on CERNLIB routine LSQ: Translated to C++ by Rene Brun
+
 void TMultiGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t xmax)
 {
-   // Least squares lpolynomial fitting without weights.
-   //
-   //  m     number of parameters
-   //  a     array of parameters
-   //  first 1st point number to fit (default =0)
-   //  last  last point number to fit (default=fNpoints-1)
-   //
-   //   based on CERNLIB routine LSQ: Translated to C++ by Rene Brun
-
    const Double_t zero = 0.;
    const Double_t one = 1.;
    const Int_t idim = 20;
@@ -856,20 +858,20 @@ void TMultiGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t x
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Least square linear fit without weights.
+///
+///  Fit a straight line (a0 + a1*x) to the data in this graph.
+///  ndata:  number of points to fit
+///  first:  first point number to fit
+///  last:   last point to fit O(ndata should be last-first
+///  ifail:  return parameter indicating the status of the fit (ifail=0, fit is OK)
+///
+///   extracted from CERNLIB LLSQ: Translated to C++ by Rene Brun
+
 void TMultiGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1,
                                        Int_t &ifail, Double_t xmin, Double_t xmax)
 {
-   // Least square linear fit without weights.
-   //
-   //  Fit a straight line (a0 + a1*x) to the data in this graph.
-   //  ndata:  number of points to fit
-   //  first:  first point number to fit
-   //  last:   last point to fit O(ndata should be last-first
-   //  ifail:  return parameter indicating the status of the fit (ifail=0, fit is OK)
-   //
-   //   extracted from CERNLIB LLSQ: Translated to C++ by Rene Brun
-
    Double_t xbar, ybar, x2bar;
    Int_t i;
    Double_t xybar;
@@ -917,11 +919,11 @@ void TMultiGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return 1 if the point (x,y) is inside one of the graphs 0 otherwise.
+
 Int_t TMultiGraph::IsInside(Double_t x, Double_t y) const
 {
-   // Return 1 if the point (x,y) is inside one of the graphs 0 otherwise.
-
    Int_t in = 0;
    if (!fGraphs) return in;
    TGraph *g;
@@ -934,14 +936,14 @@ Int_t TMultiGraph::IsInside(Double_t x, Double_t y) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a pointer to the histogram used to draw the axis.
+/// Takes into account the two following cases.
+///    1- option 'A' was specified in TMultiGraph::Draw. Return fHistogram
+///    2- user had called TPad::DrawFrame. return pointer to hframe histogram
+
 TH1F *TMultiGraph::GetHistogram() const
 {
-   // Returns a pointer to the histogram used to draw the axis.
-   // Takes into account the two following cases.
-   //    1- option 'A' was specified in TMultiGraph::Draw. Return fHistogram
-   //    2- user had called TPad::DrawFrame. return pointer to hframe histogram
-
    if (fHistogram) return fHistogram;
    if (!gPad) return 0;
    gPad->Modified();
@@ -952,35 +954,35 @@ TH1F *TMultiGraph::GetHistogram() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to function with name.
+///
+/// Functions such as TGraph::Fit store the fitted function in the list of
+/// functions of this graph.
+
 TF1 *TMultiGraph::GetFunction(const char *name) const
 {
-   // Return pointer to function with name.
-   //
-   // Functions such as TGraph::Fit store the fitted function in the list of
-   // functions of this graph.
-
    if (!fFunctions) return 0;
    return (TF1*)fFunctions->FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to list of functions.
+/// If pointer is null create the list
+
 TList *TMultiGraph::GetListOfFunctions()
 {
-   // Return pointer to list of functions.
-   // If pointer is null create the list
-
    if (!fFunctions) fFunctions = new TList();
    return fFunctions;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get x axis of the graph.
+/// This method returns a valid axis only after the TMultigraph has been drawn.
+
 TAxis *TMultiGraph::GetXaxis() const
 {
-   // Get x axis of the graph.
-   // This method returns a valid axis only after the TMultigraph has been drawn.
-
    if (!gPad) return 0;
    TH1 *h = GetHistogram();
    if (!h) return 0;
@@ -988,12 +990,12 @@ TAxis *TMultiGraph::GetXaxis() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get y axis of the graph.
+/// This method returns a valid axis only after the TMultigraph has been drawn.
+
 TAxis *TMultiGraph::GetYaxis() const
 {
-   // Get y axis of the graph.
-   // This method returns a valid axis only after the TMultigraph has been drawn.
-
    if (!gPad) return 0;
    TH1 *h = GetHistogram();
    if (!h) return 0;
@@ -1001,11 +1003,11 @@ TAxis *TMultiGraph::GetYaxis() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint all the graphs of this multigraph.
+
 void TMultiGraph::Paint(Option_t *option)
 {
-   // Paint all the graphs of this multigraph.
-
    const TPickerStackGuard pushGuard(this);
 
    if (!fGraphs) return;
@@ -1208,11 +1210,11 @@ void TMultiGraph::Paint(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divides the active pad and draws all Graphs in the Multigraph separately.
+
 void TMultiGraph::PaintPads(Option_t *option)
 {
-   // Divides the active pad and draws all Graphs in the Multigraph separately.
-
    TIter next(fGraphs);
    Int_t neededPads = fGraphs->GetSize();
    Int_t existingPads = 0;
@@ -1257,11 +1259,11 @@ void TMultiGraph::PaintPads(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint all the graphs of this multigraph as 3D lines.
+
 void TMultiGraph::PaintPolyLine3D(Option_t *option)
 {
-   // Paint all the graphs of this multigraph as 3D lines.
-
    Int_t i, npt=0;
    char *l;
    Double_t rwxmin=0., rwxmax=0., rwymin=0., rwymax=0.;
@@ -1336,11 +1338,11 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the list of graphs.
+
 void TMultiGraph::Print(Option_t *option) const
 {
-   // Print the list of graphs.
-
    TGraph *g;
    if (fGraphs) {
       TIter   next(fGraphs);
@@ -1351,12 +1353,12 @@ void TMultiGraph::Print(Option_t *option) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove this object from a list. Typically implemented
+/// by classes that can contain multiple references to a same object.
+
 void TMultiGraph::RecursiveRemove(TObject *obj)
 {
-   // Recursively remove this object from a list. Typically implemented
-   // by classes that can contain multiple references to a same object.
-
    if (!fGraphs) return;
    TObject *objr = fGraphs->Remove(obj);
    if (!objr) return;
@@ -1365,11 +1367,11 @@ void TMultiGraph::RecursiveRemove(TObject *obj)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out.
+
 void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out.
-
    char quote = '"';
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TMultiGraph::Class())) {
@@ -1405,21 +1407,21 @@ void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set multigraph maximum.
+
 void TMultiGraph::SetMaximum(Double_t maximum)
 {
-   // Set multigraph maximum.
-
    fMaximum = maximum;
    if (fHistogram)  fHistogram->SetMaximum(maximum);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set multigraph minimum.
+
 void TMultiGraph::SetMinimum(Double_t minimum)
 {
-   // Set multigraph minimum.
-
    fMinimum = minimum;
    if (fHistogram) fHistogram->SetMinimum(minimum);
 }

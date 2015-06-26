@@ -166,7 +166,9 @@ TTabCom *gTabCom = 0;
 //              constructors
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TTabCom::TTabCom():
    fpClasses(0),
    fPrevInterpMarker(0),
@@ -182,8 +184,6 @@ TTabCom::TTabCom():
    fVarIsPointer(kFALSE),
    fLastIter(0)
 {
-   // Default constructor.
-
    InitPatterns();
 }
 
@@ -207,11 +207,11 @@ TTabCom::~TTabCom()
 //
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear classes and namespace collections.
+
 void TTabCom::ClearClasses()
 {
-   // Clear classes and namespace collections.
-
    if (fpClasses) {
       delete fpClasses;
       fpClasses = 0;
@@ -219,11 +219,11 @@ void TTabCom::ClearClasses()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forget all Cpp directives seen so far.
+
 void TTabCom::ClearCppDirectives()
 {
-   // Forget all Cpp directives seen so far.
-
    if (!fpDirectives)
       return;
    fpDirectives->Delete(0);
@@ -231,10 +231,11 @@ void TTabCom::ClearCppDirectives()
    fpDirectives = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forget all environment variables seen so far.
+
 void TTabCom::ClearEnvVars()
 {
-   // Forget all environment variables seen so far.
    if (!fpEnvVars)
       return;
    fpEnvVars->Delete(0);
@@ -242,10 +243,11 @@ void TTabCom::ClearEnvVars()
    fpEnvVars = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close all files.
+
 void TTabCom::ClearFiles()
 {
-   // Close all files.
    if (!fpFiles)
       return;
    fpFiles->Delete(0);
@@ -253,24 +255,27 @@ void TTabCom::ClearFiles()
    fpFiles = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forget all global functions seen so far.
+/// Not needed anymore. Use gROOT->GetListOfGlobalFunctions()
+
 void TTabCom::ClearGlobalFunctions()
 {
-   // Forget all global functions seen so far.
-   // Not needed anymore. Use gROOT->GetListOfGlobalFunctions()
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forget all global variables seen so far.
+/// With teh new implamentation the list is gROOT->GetListOfGlobals(true).
+
 void TTabCom::ClearGlobals()
 {
-   // Forget all global variables seen so far.
-   // With teh new implamentation the list is gROOT->GetListOfGlobals(true).
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forget all pragmas seen so far.
+
 void TTabCom::ClearPragmas()
 {
-   // Forget all pragmas seen so far.
    if (!fpPragmas)
       return;
    fpPragmas->Delete(0);
@@ -278,10 +283,11 @@ void TTabCom::ClearPragmas()
    fpPragmas = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close system files.
+
 void TTabCom::ClearSysIncFiles()
 {
-   // Close system files.
    if (!fpSysIncFiles)
       return;
    fpSysIncFiles->Delete(0);
@@ -289,10 +295,11 @@ void TTabCom::ClearSysIncFiles()
    fpSysIncFiles = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forget all user seen so far.
+
 void TTabCom::ClearUsers()
 {
-   // Forget all user seen so far.
    if (!fpUsers)
       return;
    fpUsers->Delete(0);
@@ -300,12 +307,12 @@ void TTabCom::ClearUsers()
    fpUsers = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// clears all lists
+/// except for user names and system include files.
+
 void TTabCom::ClearAll()
 {
-   // clears all lists
-   // except for user names and system include files.
-
    ClearClasses();
    ClearCppDirectives();
    ClearEnvVars();
@@ -317,82 +324,91 @@ void TTabCom::ClearAll()
 //   ClearUsers();       <-- this one stays cached
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do the class rehash.
+
 void TTabCom::RehashClasses()
 {
-   // Do the class rehash.
    ClearClasses();
    GetListOfClasses();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cpp rehashing.
+
 void TTabCom::RehashCppDirectives()
 {
-   // Cpp rehashing.
    ClearCppDirectives();
    GetListOfCppDirectives();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Environemnt variables rehashing.
+
 void TTabCom::RehashEnvVars()
 {
-   // Environemnt variables rehashing.
    ClearEnvVars();
    GetListOfEnvVars();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close files.
+
 void TTabCom::RehashFiles()
 {
-   // Close files.
    ClearFiles();                /* path unknown */
 }                               // think about this
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reload global functions.
+
 void TTabCom::RehashGlobalFunctions()
 {
-   // Reload global functions.
    GetListOfGlobalFunctions();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reload globals.
+
 void TTabCom::RehashGlobals()
 {
-   // Reload globals.
    ClearGlobals();
    GetListOfGlobals();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reload pragmas.
+
 void TTabCom::RehashPragmas()
 {
-   // Reload pragmas.
    ClearPragmas();
    GetListOfPragmas();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reload system include files.
+
 void TTabCom::RehashSysIncFiles()
 {
-   // Reload system include files.
    ClearSysIncFiles();
    GetListOfSysIncFiles();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reload users.
+
 void TTabCom::RehashUsers()
 {
-   // Reload users.
    ClearUsers();
    GetListOfUsers();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// clears and then rebuilds all lists
+/// except for user names and system include files.
+
 void TTabCom::RehashAll()
 {
-   // clears and then rebuilds all lists
-   // except for user names and system include files.
-
    RehashClasses();
    RehashCppDirectives();
    RehashEnvVars();
@@ -404,10 +420,11 @@ void TTabCom::RehashAll()
 //   RehashUsers();       <-- this one stays cached
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the list of classes.
+
 const TSeqCollection *TTabCom::GetListOfClasses()
 {
-   // Return the list of classes.
    if (!fpClasses) {
       fpClasses = new TContainer;
       // Iterate over the table from the map file.
@@ -440,10 +457,11 @@ const TSeqCollection *TTabCom::GetListOfClasses()
    return fpClasses;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the list of CPP directives.
+
 const TSeqCollection *TTabCom::GetListOfCppDirectives()
 {
-   // Return the list of CPP directives.
    if (!fpDirectives) {
       fpDirectives = new TContainer;
 
@@ -464,12 +482,12 @@ const TSeqCollection *TTabCom::GetListOfCppDirectives()
    return fpDirectives;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// "path" should be initialized with a colon separated list of
+/// system directories
+
 const TSeqCollection *TTabCom::GetListOfFilesInPath(const char path[])
 {
-   // "path" should be initialized with a colon separated list of
-   // system directories
-
    static TString previousPath;
 
    if (path && fpFiles && strcmp(path, previousPath) == 0) {
@@ -484,11 +502,11 @@ const TSeqCollection *TTabCom::GetListOfFilesInPath(const char path[])
    return fpFiles;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Uses "env" (Unix) or "set" (Windows) to get list of environment variables.
+
 const TSeqCollection *TTabCom::GetListOfEnvVars()
 {
-   // Uses "env" (Unix) or "set" (Windows) to get list of environment variables.
-
    if (!fpEnvVars) {
       TString outf = ".TTabCom-";
       FILE *fout = gSystem->TempFileName(outf);
@@ -537,24 +555,27 @@ const TSeqCollection *TTabCom::GetListOfEnvVars()
    return fpEnvVars;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the list of globals.
+
 const TSeqCollection *TTabCom::GetListOfGlobals()
 {
-   // Return the list of globals.
    return (TSeqCollection*)gROOT->GetListOfGlobals(true);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the list of global functions.
+
 TCollection *TTabCom::GetListOfGlobalFunctions()
 {
-   // Return the list of global functions.
    return gROOT->GetListOfGlobalFunctions(true);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the list of pragmas
+
 const TSeqCollection *TTabCom::GetListOfPragmas()
 {
-   // Return the list of pragmas
    if (!fpPragmas) {
       fpPragmas = new TContainer;
 
@@ -581,10 +602,11 @@ const TSeqCollection *TTabCom::GetListOfPragmas()
    return fpPragmas;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the list of system include files.
+
 const TSeqCollection *TTabCom::GetListOfSysIncFiles()
 {
-   // Return the list of system include files.
    if (!fpSysIncFiles) {
       fpSysIncFiles = NewListOfFilesInPath(GetSysIncludePath());
    }
@@ -592,11 +614,11 @@ const TSeqCollection *TTabCom::GetListOfSysIncFiles()
    return fpSysIncFiles;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reads from "/etc/passwd"
+
 const TSeqCollection *TTabCom::GetListOfUsers()
 {
-   // reads from "/etc/passwd"
-
    if (!fpUsers) {
       fpUsers = new TContainer;
 
@@ -625,25 +647,25 @@ const TSeqCollection *TTabCom::GetListOfUsers()
 //                           static utility functions
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///[static utility function]///////////////////////////////////////////
+///
+///  if all the strings in "*pList" have the same ith character,
+///  that character is returned.
+///  otherwise 0 is returned.
+///
+///  any string "s" for which "ExcludedByFignore(s)" is true
+///  will be ignored unless All the strings in "*pList"
+///  are "ExcludedByFignore()"
+///
+///  in addition, the number of strings which were not
+///  "ExcludedByFignore()" is returned in "nGoodStrings".
+///
+//////////////////////////////////////////////////////////////////////////
+
 Char_t TTabCom::AllAgreeOnChar(int i, const TSeqCollection * pList,
                                Int_t & nGoodStrings)
 {
-   //[static utility function]///////////////////////////////////////////
-   //
-   //  if all the strings in "*pList" have the same ith character,
-   //  that character is returned.
-   //  otherwise 0 is returned.
-   //
-   //  any string "s" for which "ExcludedByFignore(s)" is true
-   //  will be ignored unless All the strings in "*pList"
-   //  are "ExcludedByFignore()"
-   //
-   //  in addition, the number of strings which were not
-   //  "ExcludedByFignore()" is returned in "nGoodStrings".
-   //
-   /////////////////////////////////////////////////////////////////////////
-
    assert(pList != 0);
 
    TIter next(pList);
@@ -696,19 +718,19 @@ Char_t TTabCom::AllAgreeOnChar(int i, const TSeqCollection * pList,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///[static utility function]/////////////////////////////
+///
+///  adds a TObjString to "*pList"
+///  for each entry found in the system directory "dirName"
+///
+///  directories that do not exist are silently ignored.
+///
+///////////////////////////////////////////////////////////
+
 void TTabCom::AppendListOfFilesInDirectory(const char dirName[],
                                            TSeqCollection * pList)
 {
-   //[static utility function]/////////////////////////////
-   //
-   //  adds a TObjString to "*pList"
-   //  for each entry found in the system directory "dirName"
-   //
-   //  directories that do not exist are silently ignored.
-   //
-   //////////////////////////////////////////////////////////
-
    assert(dirName != 0);
    assert(pList != 0);
 
@@ -745,18 +767,18 @@ void TTabCom::AppendListOfFilesInDirectory(const char dirName[],
 }
 
 // -----\/-------- homemade RTTI ---------------\/------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///[static utility function]/////////////////////////////
+///
+///  returns empty string on failure.
+///  otherwise returns something like this: "TROOT*".
+///  fails for non-class types (ie, int, char, etc).
+///  fails for pointers to functions.
+///
+////////////////////////////////////
+
 TString TTabCom::DetermineClass(const char varName[])
 {
-   //[static utility function]/////////////////////////////
-   //
-   //  returns empty string on failure.
-   //  otherwise returns something like this: "TROOT*".
-   //  fails for non-class types (ie, int, char, etc).
-   //  fails for pointers to functions.
-   //
-   ///////////////////////////////////
-
 
    ///////////////////////////////////
    //
@@ -840,16 +862,16 @@ cleanup:
    return type;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///[static utility function]/////////////////////////////
+///
+///  returns true iff "s" ends with one of
+///  the strings listed in the "TabCom.FileIgnore" resource.
+///
+//////////////////////////////////////////////////////////////
+
 Bool_t TTabCom::ExcludedByFignore(TString s)
 {
-   //[static utility function]/////////////////////////////
-   //
-   //  returns true iff "s" ends with one of
-   //  the strings listed in the "TabCom.FileIgnore" resource.
-   //
-   /////////////////////////////////////////////////////////////
-
    const char *fignore = gEnv->GetValue("TabCom.FileIgnore", (char *) 0);
 
    if (!fignore) {
@@ -874,18 +896,18 @@ Bool_t TTabCom::ExcludedByFignore(TString s)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///[static utility function]/////////////////////////////
+///
+///  returns a colon-separated string of directories
+///  that CINT will search when you call #include<...>
+///
+///  returns empty string on failure.
+///
+////////////////////////////////////////////////////////////
+
 TString TTabCom::GetSysIncludePath()
 {
-   //[static utility function]/////////////////////////////
-   //
-   //  returns a colon-separated string of directories
-   //  that CINT will search when you call #include<...>
-   //
-   //  returns empty string on failure.
-   //
-   ///////////////////////////////////////////////////////////
-
    // >i noticed that .include doesn't list the standard directories like
    // >/usr/include or /usr/include/CC.
    // >
@@ -977,16 +999,16 @@ TString TTabCom::GetSysIncludePath()
    return path;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///[static utility function]/////////////////////////////
+///
+///  calls TSystem::GetPathInfo() to see if "fileName"
+///  is a system directory.
+///
+////////////////////////////////////////////////////////
+
 Bool_t TTabCom::IsDirectory(const char fileName[])
 {
-   //[static utility function]/////////////////////////////
-   //
-   //  calls TSystem::GetPathInfo() to see if "fileName"
-   //  is a system directory.
-   //
-   ///////////////////////////////////////////////////////
-
    FileStat_t stat;
    if (!gSystem->GetPathInfo(fileName, stat))
       return R_ISDIR(stat.fMode);
@@ -994,19 +1016,19 @@ Bool_t TTabCom::IsDirectory(const char fileName[])
       return false;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///[static utility function]/////////////////////////////
+///
+///  creates a list containing the full path name for each file
+///  in the (colon separated) string "path1"
+///
+///  memory is allocated with "new", so
+///  whoever calls this function takes responsibility for deleting it.
+///
+///////////////////////////////////////////////////////////////////////
+
 TSeqCollection *TTabCom::NewListOfFilesInPath(const char path1[])
 {
-   //[static utility function]/////////////////////////////
-   //
-   //  creates a list containing the full path name for each file
-   //  in the (colon separated) string "path1"
-   //
-   //  memory is allocated with "new", so
-   //  whoever calls this function takes responsibility for deleting it.
-   //
-   //////////////////////////////////////////////////////////////////////
-
    assert(path1 != 0);
    if (!path1[0]) path1 = ".";
 
@@ -1033,39 +1055,39 @@ TSeqCollection *TTabCom::NewListOfFilesInPath(const char path1[])
    return pList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///[static utility function]/////////////////////////////
+///
+///  true if "fileName"
+///  1. is an absolute path ("/tmp/a")
+///  2. is a relative path  ("../whatever", "./test")
+///  3. starts with user name ("~/mail")
+///  4. starts with an environment variable ("$ROOTSYS/bin")
+///
+///////////////////////////////////////////////////////////////////////////
+
 Bool_t TTabCom::PathIsSpecifiedInFileName(const TString & fileName)
 {
-   //[static utility function]/////////////////////////////
-   //
-   //  true if "fileName"
-   //  1. is an absolute path ("/tmp/a")
-   //  2. is a relative path  ("../whatever", "./test")
-   //  3. starts with user name ("~/mail")
-   //  4. starts with an environment variable ("$ROOTSYS/bin")
-   //
-   //////////////////////////////////////////////////////////////////////////
-
    char c1 = (fileName.Length() > 0) ? fileName[0] : 0;
    return c1 == '/' || c1 == '~' || c1 == '$' || fileName.BeginsWith("./")
        || fileName.BeginsWith("../");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///[static utility function]/////////////////////////////
+///
+///  calling "NoMsg( errorLevel )",
+///  sets "gErrorIgnoreLevel" to "errorLevel+1" so that
+///  all errors with "level < errorLevel" will be ignored.
+///
+///  calling the function with a negative argument
+///  (e.g., "NoMsg( -1 )")
+///  resets gErrorIgnoreLevel to its previous value.
+///
+///////////////////////////////////////////////////////////////////
+
 void TTabCom::NoMsg(Int_t errorLevel)
 {
-   //[static utility function]/////////////////////////////
-   //
-   //  calling "NoMsg( errorLevel )",
-   //  sets "gErrorIgnoreLevel" to "errorLevel+1" so that
-   //  all errors with "level < errorLevel" will be ignored.
-   //
-   //  calling the function with a negative argument
-   //  (e.g., "NoMsg( -1 )")
-   //  resets gErrorIgnoreLevel to its previous value.
-   //
-   //////////////////////////////////////////////////////////////////
-
    ////////////////////////////////////////////////////////////////
    //
    // if you call the function twice with a non-negative argument
@@ -1116,15 +1138,15 @@ void TTabCom::NoMsg(Int_t errorLevel)
 //
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [private]
+
 Int_t TTabCom::Complete(const TRegexp & re,
                         const TSeqCollection * pListOfCandidates,
                         const char appendage[],
                         std::ostream& out,
                         TString::ECaseCompare cmp)
 {
-   // [private]
-
    // returns position of first change in buffer
    // ------------------------------------------
    // -2 ==> new line altogether (whole thing needs to be redrawn, including prompt)
@@ -1364,13 +1386,13 @@ done:                         // <----- goto label
    return pos;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [private]
+
 void TTabCom::CopyMatch(char dest[], const char localName[],
                         const char appendage[],
                         const char fullName[]) const
 {
-   // [private]
-
    // if "appendage" is 0, no appendage is applied.
    //
    // if "appendage" is of the form "filenameXXX" then,
@@ -1416,11 +1438,11 @@ void TTabCom::CopyMatch(char dest[], const char localName[],
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [private]
+
 TTabCom::EContext_t TTabCom::DetermineContext() const
 {
-   // [private]
-
    assert(fBuf != 0);
 
    const char *pStart;          // start of match
@@ -1440,12 +1462,12 @@ TTabCom::EContext_t TTabCom::DetermineContext() const
    return kUNKNOWN_CONTEXT;     //* RETURN *//
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [private]
+
 TString TTabCom::DeterminePath(const TString & fileName,
                                const char defaultPath[]) const
 {
-   // [private]
-
    if (PathIsSpecifiedInFileName(fileName)) {
       TString path = fileName;
       gSystem->ExpandPathName(path);
@@ -1484,11 +1506,11 @@ TString TTabCom::DeterminePath(const TString & fileName,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [private]
+
 TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
 {
-   // [private]
-
    if (newBase.BeginsWith("/"))
       newBase.Remove(TString::kLeading, '/');
 #ifdef R__SSTREAM
@@ -1516,11 +1538,11 @@ TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
    return newPath.Strip(TString::kTrailing, kDelim);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [private]
+
 Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
 {
-   // [private]
-
    // initialize
    fBuf = buf;
    fpLoc = pLoc;
@@ -2090,11 +2112,11 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
    return pos;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [private]
+
 void TTabCom::InitPatterns()
 {
-   // [private]
-
    // add more patterns somewhere below.
    // add corresponding enum to "EContext_t"
    //
@@ -2153,15 +2175,15 @@ void TTabCom::InitPatterns()
    SetPattern(kCXX_GlobalProto, "[_a-zA-Z][_a-zA-Z0-9]* *($");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [private]
+///   (does some specific error handling that makes the function unsuitable for general use.)
+///   returns a new'd TClass given the name of a class.
+///   user must delete.
+///   returns 0 in case of error.
+
 TClass *TTabCom::MakeClassFromClassName(const char className[]) const
 {
-   // [private]
-   //   (does some specific error handling that makes the function unsuitable for general use.)
-   //   returns a new'd TClass given the name of a class.
-   //   user must delete.
-   //   returns 0 in case of error.
-
    // the TClass constructor will print a Warning message for classes that don't exist
    // so, ignore warnings temporarily.
    NoMsg(kWarning);
@@ -2182,11 +2204,11 @@ TClass *TTabCom::MakeClassFromClassName(const char className[]) const
    return pClass;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Same as above but does not print the error message.
+
 TClass *TTabCom::TryMakeClassFromClassName(const char className[]) const
 {
-   // Same as above but does not print the error message.
-
    // the TClass constructor will print a Warning message for classes that don't exist
    // so, ignore warnings temporarily.
    NoMsg(kWarning);
@@ -2196,18 +2218,18 @@ TClass *TTabCom::TryMakeClassFromClassName(const char className[]) const
    return pClass;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [private]
+///   (does some specific error handling that makes the function unsuitable for general use.)
+///   returns a new'd TClass given the name of a variable.
+///   user must delete.
+///   returns 0 in case of error.
+///   if user has operator.() or operator->() backwards, will modify: context, *fpLoc and fBuf.
+///   context sensitive behavior.
+
 TClass *TTabCom::MakeClassFromVarName(const char varName[],
                                       EContext_t & context, int iter)
 {
-   // [private]
-   //   (does some specific error handling that makes the function unsuitable for general use.)
-   //   returns a new'd TClass given the name of a variable.
-   //   user must delete.
-   //   returns 0 in case of error.
-   //   if user has operator.() or operator->() backwards, will modify: context, *fpLoc and fBuf.
-   //   context sensitive behavior.
-
    // frodo:
    // Because of the Member and Proto recursion, this has become a bit
    // complicated, so here is how it works:
@@ -2490,11 +2512,11 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
    return TClass::GetClass(className);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [private]
+
 void TTabCom::SetPattern(EContext_t handle, const char regexp[])
 {
-   // [private]
-
    // prevent overflow
    if (handle >= kNUM_PAT) {
       std::cerr << std::endl
@@ -2509,13 +2531,14 @@ void TTabCom::SetPattern(EContext_t handle, const char regexp[])
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Returns the place in the string where to put the \0, starting the search
+/// from "start"
+///
+
 int TTabCom::ParseReverse(const char *var_str, int start)
 {
-   //
-   // Returns the place in the string where to put the \0, starting the search
-   // from "start"
-   //
    int end = 0;
    if (start > (int)strlen(var_str)) start = strlen(var_str);
 

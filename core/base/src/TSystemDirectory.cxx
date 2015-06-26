@@ -29,38 +29,40 @@
 
 ClassImp(TSystemDirectory);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a system directory object.
+
 TSystemDirectory::TSystemDirectory()
 {
-   // Create a system directory object.
-
    fDirsInBrowser  = 0;
    fFilesInBrowser = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a system directory object.
+
 TSystemDirectory::TSystemDirectory(const char *dirname, const char *path) :
    TSystemFile(dirname, path)
 {
-   // Create a system directory object.
-
    fDirsInBrowser  = 0;
    fFilesInBrowser = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TSystemDirectory::TSystemDirectory(const TSystemDirectory& sd) :
   TSystemFile(sd),
   fDirsInBrowser(sd.fDirsInBrowser),
   fFilesInBrowser(sd.fFilesInBrowser)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TSystemDirectory& TSystemDirectory::operator=(const TSystemDirectory& sd)
 {
-   //assignment operator
    if(this!=&sd) {
       TSystemFile::operator=(sd);
       fDirsInBrowser=sd.fDirsInBrowser;
@@ -69,23 +71,23 @@ TSystemDirectory& TSystemDirectory::operator=(const TSystemDirectory& sd)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete system directory object.
+
 TSystemDirectory::~TSystemDirectory()
 {
-   // Delete system directory object.
-
    delete fDirsInBrowser;
    delete fFilesInBrowser;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a TList of TSystemFile objects representing the contents
+/// of the directory. It's the responsibility of the user to delete
+/// the list (the list owns the contained objects).
+/// Returns 0 in case of errors.
+
 TList *TSystemDirectory::GetListOfFiles() const
 {
-   // Returns a TList of TSystemFile objects representing the contents
-   // of the directory. It's the responsibility of the user to delete
-   // the list (the list owns the contained objects).
-   // Returns 0 in case of errors.
-
    void *dir = gSystem->OpenDirectory(GetTitle());
    if (!dir) return 0;
 
@@ -113,20 +115,20 @@ TList *TSystemDirectory::GetListOfFiles() const
    return contents;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a system directory object.
+
 void TSystemDirectory::SetDirectory(const char *name)
 {
-   // Create a system directory object.
-
    SetName(name);
    SetTitle(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if name is a directory.
+
 Bool_t TSystemDirectory::IsItDirectory(const char *name) const
 {
-   // Check if name is a directory.
-
    Long64_t size;
    Long_t id, flags, modtime;
    const char *dirfile = GetTitle();
@@ -141,11 +143,11 @@ Bool_t TSystemDirectory::IsItDirectory(const char *name) const
    return isdir ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse OS system directories.
+
 void TSystemDirectory::Browse(TBrowser *b)
 {
-   // Browse OS system directories.
-
    // Collections to keep track of all browser objects that have been
    // generated. It's main goal is to prevent the contineous
    // allocations of new objects with the same names during browsing.
@@ -198,12 +200,12 @@ void TSystemDirectory::Browse(TBrowser *b)
    gSystem->FreeDirectory(dir);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method that returns system directory object if it
+/// exists in list, 0 otherwise.
+
 TSystemDirectory *TSystemDirectory::FindDirObj(const char *name)
 {
-   // Method that returns system directory object if it
-   // exists in list, 0 otherwise.
-
    int size = fDirsInBrowser->GetSize();
    for (int i = 0; i < size; i++) {
       TSystemDirectory *obj = (TSystemDirectory *) fDirsInBrowser->At(i);
@@ -213,12 +215,12 @@ TSystemDirectory *TSystemDirectory::FindDirObj(const char *name)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method that returns system file object if it exists in
+/// list, 0 otherwise.
+
 TSystemFile *TSystemDirectory::FindFileObj(const char *name, const char *dir)
 {
-   // Method that returns system file object if it exists in
-   // list, 0 otherwise.
-
    int size = fFilesInBrowser->GetSize();
    for (int i = 0; i < size; i++) {
       TSystemFile *obj = (TSystemFile *) fFilesInBrowser->At(i);

@@ -32,7 +32,9 @@
 
 ClassImp(TEveLineEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveLineEditor::TEveLineEditor(const TGWindow *p, Int_t width, Int_t height,
                                UInt_t options, Pixel_t back) :
    TGedFrame  (p, width, height, options | kVerticalFrame, back),
@@ -41,8 +43,6 @@ TEveLineEditor::TEveLineEditor(const TGWindow *p, Int_t width, Int_t height,
    fRnrPoints (0),
    fSmooth    (0)
 {
-   // Constructor.
-
    fPriority = 20;
    {
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
@@ -64,11 +64,11 @@ TEveLineEditor::TEveLineEditor(const TGWindow *p, Int_t width, Int_t height,
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveLineEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveLine*>(obj);
 
    fRnrLine  ->SetState(fM->fRnrLine  ? kButtonDown : kButtonUp);
@@ -78,29 +78,29 @@ void TEveLineEditor::SetModel(TObject* obj)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrLine.
+
 void TEveLineEditor::DoRnrLine()
 {
-   // Slot for RnrLine.
-
    fM->SetRnrLine(fRnrLine->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrPoints.
+
 void TEveLineEditor::DoRnrPoints()
 {
-   // Slot for RnrPoints.
-
    fM->SetRnrPoints(fRnrPoints->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for anti-alias.
+
 void TEveLineEditor::DoSmooth()
 {
-   // Slot for anti-alias.
-
    fM->SetSmooth(fSmooth->IsOn());
    Update();
 }

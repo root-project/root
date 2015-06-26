@@ -46,14 +46,16 @@
 
 using namespace std;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TClingTypeInfo::TClingTypeInfo(cling::Interpreter *interp, const char *name)
    : fInterp(interp)
 {
    Init(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TClingTypeInfo::Init(const char *name)
 {
    fQualType = clang::QualType();
@@ -99,7 +101,8 @@ void TClingTypeInfo::Init(const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *TClingTypeInfo::Name() const
 {
    if (!IsValid()) {
@@ -114,7 +117,8 @@ const char *TClingTypeInfo::Name() const
    return buf.c_str();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 long TClingTypeInfo::Property() const
 {
    if (!IsValid()) {
@@ -185,7 +189,8 @@ long TClingTypeInfo::Property() const
    return property;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int TClingTypeInfo::RefType() const
 {
    if (!IsValid()) {
@@ -230,7 +235,8 @@ int TClingTypeInfo::RefType() const
    return val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int TClingTypeInfo::Size() const
 {
    if (!IsValid()) {
@@ -253,7 +259,8 @@ int TClingTypeInfo::Size() const
    return static_cast<int>(Quantity);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *TClingTypeInfo::StemName() const
 {
    if (!IsValid()) {
@@ -288,12 +295,12 @@ const char *TClingTypeInfo::StemName() const
    return buf.c_str();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the normalized name of the type (i.e. fully qualified and without
+/// the non-opaque typedefs.
+
 const char *TClingTypeInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
-   // Return the normalized name of the type (i.e. fully qualified and without
-   // the non-opaque typedefs.
-
    if (!IsValid()) {
       return 0;
    }
@@ -306,12 +313,12 @@ const char *TClingTypeInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &no
    return buf.c_str();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the normalized name of the type (i.e. fully qualified and without
+/// the non-opaque typedefs.
+
 std::string TClingTypeInfo::NormalizedName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
-   // Return the normalized name of the type (i.e. fully qualified and without
-   // the non-opaque typedefs.
-
    if (!IsValid()) {
       return "";
    }

@@ -33,7 +33,8 @@ templateClassImp(THilbertMatrixT)
 templateClassImp(THilbertMatrixTSym)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 THaarMatrixT<Element>::THaarMatrixT(Int_t order,Int_t no_cols)
     : TMatrixTLazy<Element>(1<<order, no_cols == 0 ? 1<<order : no_cols)
@@ -44,19 +45,19 @@ THaarMatrixT<Element>::THaarMatrixT(Int_t order,Int_t no_cols)
       Error("THaarMatrixT","#cols(%d) in Haar should be >= 0",no_cols);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an orthonormal (2^n)*(no_cols) Haar (sub)matrix, whose columns
+/// are Haar functions. If no_cols is 0, create the complete matrix with
+/// 2^n columns. Example, the complete Haar matrix of the second order is:
+/// column 1: [ 1  1  1  1]/2
+/// column 2: [ 1  1 -1 -1]/2
+/// column 3: [ 1 -1  0  0]/sqrt(2)
+/// column 4: [ 0  0  1 -1]/sqrt(2)
+/// Matrix m is assumed to be zero originally.
+
 template<class Element>
 void MakeHaarMat(TMatrixT<Element> &m)
 {
-   // Create an orthonormal (2^n)*(no_cols) Haar (sub)matrix, whose columns
-   // are Haar functions. If no_cols is 0, create the complete matrix with
-   // 2^n columns. Example, the complete Haar matrix of the second order is:
-   // column 1: [ 1  1  1  1]/2
-   // column 2: [ 1  1 -1 -1]/2
-   // column 3: [ 1 -1  0  0]/sqrt(2)
-   // column 4: [ 0  0  1 -1]/sqrt(2)
-   // Matrix m is assumed to be zero originally.
-
    R__ASSERT(m.IsValid());
    const Int_t no_rows = m.GetNrows();
    const Int_t no_cols = m.GetNcols();
@@ -108,14 +109,16 @@ void MakeHaarMat(TMatrixT<Element> &m)
    m.Transpose(mtr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 void THaarMatrixT<Element>::FillIn(TMatrixT<Element> &m) const
 {
    MakeHaarMat(m);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 THilbertMatrixT<Element>::THilbertMatrixT(Int_t no_rows,Int_t no_cols)
     : TMatrixTLazy<Element>(no_rows,no_cols)
@@ -126,7 +129,8 @@ THilbertMatrixT<Element>::THilbertMatrixT(Int_t no_rows,Int_t no_cols)
       Error("THilbertMatrixT","#cols(%d) in Hilbert should be > 0",no_cols);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 THilbertMatrixT<Element>::THilbertMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
     : TMatrixTLazy<Element>(row_lwb,row_upb,col_lwb,col_upb)
@@ -137,13 +141,13 @@ THilbertMatrixT<Element>::THilbertMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_
       Error("THilbertMatrixT","col_upb(%d) in Hilbert should be >= col_lwb(%d)",col_upb,col_lwb);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a Hilbert matrix. Hilb[i,j] = 1/(i+j+1),
+/// i,j=0...max-1 (matrix need not be a square one).
+
 template<class Element>
 void MakeHilbertMat(TMatrixT<Element> &m)
 {
-   // Make a Hilbert matrix. Hilb[i,j] = 1/(i+j+1),
-   // i,j=0...max-1 (matrix need not be a square one).
-
    R__ASSERT(m.IsValid());
    const Int_t no_rows = m.GetNrows();
    const Int_t no_cols = m.GetNcols();
@@ -163,14 +167,16 @@ void MakeHilbertMat(TMatrixT<Element> &m)
          *cp++ = 1.0/(i+j+1.0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 void THilbertMatrixT<Element>::FillIn(TMatrixT<Element> &m) const
 {
    MakeHilbertMat(m);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 THilbertMatrixTSym<Element>::THilbertMatrixTSym(Int_t no_rows)
     : TMatrixTSymLazy<Element>(no_rows)
@@ -179,7 +185,8 @@ THilbertMatrixTSym<Element>::THilbertMatrixTSym(Int_t no_rows)
       Error("THilbertMatrixTSym","#rows(%d) in Hilbert should be > 0",no_rows);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 THilbertMatrixTSym<Element>::THilbertMatrixTSym(Int_t row_lwb,Int_t row_upb)
     : TMatrixTSymLazy<Element>(row_lwb,row_upb)
@@ -188,13 +195,13 @@ THilbertMatrixTSym<Element>::THilbertMatrixTSym(Int_t row_lwb,Int_t row_upb)
       Error("THilbertMatrixTSym","row_upb(%d) in Hilbert should be >= row_lwb(%d)",row_upb,row_lwb);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a Hilbert matrix. Hilb[i,j] = 1/(i+j+1),
+/// i,j=0...max-1 (matrix must be square).
+
 template<class Element>
 void MakeHilbertMat(TMatrixTSym<Element> &m)
 {
-   // Make a Hilbert matrix. Hilb[i,j] = 1/(i+j+1),
-   // i,j=0...max-1 (matrix must be square).
-
    R__ASSERT(m.IsValid());
    const Int_t no_rows = m.GetNrows();
    if (no_rows <= 0) {
@@ -208,7 +215,8 @@ void MakeHilbertMat(TMatrixTSym<Element> &m)
          *cp++ = 1.0/(i+j+1.0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 void THilbertMatrixTSym<Element>::FillIn(TMatrixTSym<Element> &m) const
 {

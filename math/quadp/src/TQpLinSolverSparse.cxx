@@ -54,12 +54,12 @@
 
 ClassImp(TQpLinSolverSparse)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQpLinSolverSparse::TQpLinSolverSparse(TQpProbSparse *factory,TQpDataSparse *data) :
                     TQpLinSolverBase(factory,data)
 {
-// Constructor
-
    const Int_t n = factory->fNx+factory->fMy+factory->fMz;
    fKkt.ResizeTo(n,n);
 
@@ -76,64 +76,64 @@ TQpLinSolverSparse::TQpLinSolverSparse(TQpProbSparse *factory,TQpDataSparse *dat
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TQpLinSolverSparse::TQpLinSolverSparse(const TQpLinSolverSparse &another) :
 TQpLinSolverBase(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets up the matrix for the main linear system in "augmented system" form.
+
 void TQpLinSolverSparse::Factor(TQpDataBase *prob,TQpVar *vars)
 {
-// Sets up the matrix for the main linear system in "augmented system" form.
-
    TQpLinSolverBase::Factor(prob,vars);
    fSolveSparse.SetMatrix(fKkt);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Places the diagonal resulting from the bounds on x into the augmented system matrix
+
 void TQpLinSolverSparse::PutXDiagonal(TVectorD &xdiag)
 {
-// Places the diagonal resulting from the bounds on x into the augmented system matrix
-
    TMatrixDSparseDiag diag(fKkt);
    for (Int_t i = 0; i < xdiag.GetNrows(); i++)
       diag[i] = xdiag[i];
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Places the diagonal resulting from the bounds on Cx into the augmented system matrix
+
 void TQpLinSolverSparse::PutZDiagonal(TVectorD &zdiag)
 {
-// Places the diagonal resulting from the bounds on Cx into the augmented system matrix
-
    TMatrixDSparseDiag diag(fKkt);
    for (Int_t i = 0; i < zdiag.GetNrows(); i++)
       diag[i+fNx+fMy] = zdiag[i];
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the actual solve using the factors produced in factor.
+/// rhs on input contains the aggregated right-hand side of the augmented system;
+///  on output contains the solution in aggregated form .
+
 void TQpLinSolverSparse::SolveCompressed(TVectorD &compressedRhs)
 {
-// Perform the actual solve using the factors produced in factor.
-// rhs on input contains the aggregated right-hand side of the augmented system;
-//  on output contains the solution in aggregated form .
-
    fSolveSparse.Solve(compressedRhs);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TQpLinSolverSparse &TQpLinSolverSparse::operator=(const TQpLinSolverSparse &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TQpLinSolverBase::operator=(source);
       fKkt.ResizeTo(source.fKkt); fKkt = source.fKkt;

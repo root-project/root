@@ -169,11 +169,11 @@ ClassImp(TClassTree)
 //  to be displayed.
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TClassTree default constructor.
+
 TClassTree::TClassTree()
 {
-   // TClassTree default constructor.
-
    fShowCod  = 0;
    fShowHas  = 0;
    fShowMul  = 0;
@@ -199,12 +199,12 @@ TClassTree::TClassTree()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TClassTree constructor.
+
 TClassTree::TClassTree(const char *name, const char *classes)
            :TNamed(name,classes)
 {
-   // TClassTree constructor.
-
    fShowCod  = 0;
    fShowHas  = 0;
    fShowMul  = 0;
@@ -236,11 +236,11 @@ TClassTree::TClassTree(const char *name, const char *classes)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TClassTree default destructor.
+
 TClassTree::~TClassTree()
 {
-   // TClassTree default destructor.
-
    for (Int_t i=0;i<fNclasses;i++) {
       //delete fOptions[i];
       if (fLinks[i]) fLinks[i]->Delete();
@@ -260,12 +260,12 @@ TClassTree::~TClassTree()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the inheritance tree and relations for the list of classes
+/// see this class header for the syntax and examples
+
 void TClassTree::Draw(const char *classes)
 {
-   // Draw the inheritance tree and relations for the list of classes
-   // see this class header for the syntax and examples
-
    if (!gPad) {
       gROOT->MakeDefCanvas();
    }
@@ -279,11 +279,11 @@ void TClassTree::Draw(const char *classes)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Find class number corresponding to classname in list of local classes
+
 Int_t TClassTree::FindClass(const char *classname)
 {
-   //  Find class number corresponding to classname in list of local classes
-
    for (Int_t i=0;i<fNclasses;i++) {
       if(!fCnames[i]->CompareTo(classname)) return i;
    }
@@ -291,11 +291,11 @@ Int_t TClassTree::FindClass(const char *classname)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Select all classes used/referenced by the class number iclass
+
 void TClassTree::FindClassesUsedBy(Int_t iclass)
 {
-   //  Select all classes used/referenced by the class number iclass
-
    fCstatus[iclass] = 1;
    Int_t i;
    TObjString *os;
@@ -316,11 +316,11 @@ void TClassTree::FindClassesUsedBy(Int_t iclass)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Select all classes using/referencing the class number iclass
+
 void TClassTree::FindClassesUsing(Int_t iclass)
 {
-   //  Select all classes using/referencing the class number iclass
-
    // loop on all classes
    fCstatus[iclass] = 1;
    Int_t i;
@@ -342,12 +342,12 @@ void TClassTree::FindClassesUsing(Int_t iclass)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search the TPaveClass object in the pad with label=classname
+/// returns the x and y position of the center of the pave.
+
 void TClassTree::FindClassPosition(const char *classname, Float_t &x, Float_t &y)
 {
-   // Search the TPaveClass object in the pad with label=classname
-   // returns the x and y position of the center of the pave.
-
    TIter next(gPad->GetListOfPrimitives());
    TObject *obj;
    TPaveClass *pave;
@@ -365,11 +365,11 @@ void TClassTree::FindClassPosition(const char *classname, Float_t &x, Float_t &y
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the data structures
+
 void TClassTree::Init()
 {
-   // Initialize the data structures
-
    if (fNclasses) return;
 
    // fill the classes structures
@@ -431,11 +431,11 @@ void TClassTree::Init()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// list classes names and titles
+
 void TClassTree::ls(Option_t *) const
 {
-   // list classes names and titles
-
    char line[500];
    for (Int_t i=0;i<fNclasses;i++) {
       snprintf(line,500,"%s%s",fCnames[i]->Data(),"...........................");
@@ -446,11 +446,11 @@ void TClassTree::ls(Option_t *) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set bit abit in class classname in list los
+
 TObjString *TClassTree::Mark(const char *classname, TList *los, Int_t abit)
 {
-   // set bit abit in class classname in list los
-
    if (!los) return 0;
    TObjString *os = (TObjString*)los->FindObject(classname);
    if (!os) {
@@ -462,11 +462,11 @@ TObjString *TClassTree::Mark(const char *classname, TList *los, Int_t abit)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the current class setting in fClasses and fStatus
+
 void TClassTree::Paint(Option_t *)
 {
-   // Draw the current class setting in fClasses and fStatus
-
    //delete primitives belonging to a previous paint
    if (gPad) {
       TIter next(gPad->GetListOfPrimitives());
@@ -644,11 +644,11 @@ void TClassTree::Paint(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint one class level
+
 void TClassTree::PaintClass(Int_t iclass, Float_t xleft, Float_t y)
 {
-   // Paint one class level
-
    Float_t u[2],yu=0,yl=0;
    Int_t ns = gNsons[iclass];
    u[0] = xleft;
@@ -688,26 +688,26 @@ void TClassTree::PaintClass(Int_t iclass, Float_t xleft, Float_t y)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// save current configuration in a Root file
+/// if filename is blank, the name of the file will be the current objectname.root
+/// all the current settings are preserved
+/// the Root file produced can be looked at by a another Root session
+/// with no access to the original classes.
+/// By default a message is printed. Specify option "Q" to remove the message
+
 void TClassTree::SaveAs(const char *filename, Option_t *option) const
 {
-   // save current configuration in a Root file
-   // if filename is blank, the name of the file will be the current objectname.root
-   // all the current settings are preserved
-   // the Root file produced can be looked at by a another Root session
-   // with no access to the original classes.
-   // By default a message is printed. Specify option "Q" to remove the message
-
    if (gDirectory) gDirectory->SaveObjectAs(this,filename,option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Select all classes used by/referenced/referencing the class number iclass
+///  and build the list of these classes
+
 void TClassTree::ScanClasses(Int_t iclass)
 {
-   //  Select all classes used by/referenced/referencing the class number iclass
-   //  and build the list of these classes
-
    Int_t ic, icl;
    TList *los = fLinks[iclass];
    TList *losref = 0;
@@ -869,12 +869,12 @@ void TClassTree::ScanClasses(Int_t iclass)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the list of classes for which the hierarchy is to be drawn
+/// See Paint for the syntax
+
 void TClassTree::SetClasses(const char *classes, Option_t *)
 {
-   // Set the list of classes for which the hierarchy is to be drawn
-   // See Paint for the syntax
-
    if (classes == 0) return;
    fClasses = classes;
    for (Int_t i=0;i<fNclasses;i++) {
@@ -885,33 +885,33 @@ void TClassTree::SetClasses(const char *classes, Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the size along x of the TPavellabel showing the class name
+
 void TClassTree::SetLabelDx(Float_t labeldx)
 {
-   // Set the size along x of the TPavellabel showing the class name
-
    fLabelDx = labeldx;
    if (gPad) Paint();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the offset at the top of the picture
+/// The default offset is computed automatically taking into account
+/// classes not inheriting from TObject.
+
 void TClassTree::SetYoffset(Float_t offset)
 {
-   // Set the offset at the top of the picture
-   // The default offset is computed automatically taking into account
-   // classes not inheriting from TObject.
-
    fYoffset = offset;
    if (gPad) Paint();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// mark classes used by the list of classes in classes
+
 void TClassTree::ShowClassesUsedBy(const char *classes)
 {
-   // mark classes used by the list of classes in classes
-
    Int_t i,j;
    Int_t nch = strlen(classes);
    char *ptr = new char[nch+1];
@@ -939,11 +939,11 @@ void TClassTree::ShowClassesUsedBy(const char *classes)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// mark classes using any class in the list of classes in classes
+
 void TClassTree::ShowClassesUsing(const char *classes)
 {
-   // mark classes using any class in the list of classes in classes
-
    Int_t i,j;
    Int_t nch = strlen(classes);
    char *ptr = new char[nch+1];
@@ -971,11 +971,11 @@ void TClassTree::ShowClassesUsing(const char *classes)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the Code References relationships
+
 void TClassTree::ShowCod()
 {
-   // Draw the Code References relationships
-
    TIter next(gPad->GetListOfPrimitives());
    TObject *obj;
    TObjString *os;
@@ -1010,11 +1010,11 @@ void TClassTree::ShowCod()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the "Has a" relationships
+
 void TClassTree::ShowHas()
 {
-   // Draw the "Has a" relationships
-
    TIter next(gPad->GetListOfPrimitives());
    TObject *obj;
    TObjString *os;
@@ -1051,16 +1051,16 @@ void TClassTree::ShowHas()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set link options in the ClassTree object
+///
+///   "C"  show References from code
+///   "H"  show Has a relations
+///   "M"  show Multiple Inheritance
+///   "R"  show References from data members
+
 void TClassTree::ShowLinks(Option_t *option)
 {
-   // Set link options in the ClassTree object
-   //
-   //   "C"  show References from code
-   //   "H"  show Has a relations
-   //   "M"  show Multiple Inheritance
-   //   "R"  show References from data members
-
    TString opt = option;
    opt.ToUpper();
    fShowCod = fShowHas = fShowMul = fShowRef = 0;
@@ -1072,11 +1072,11 @@ void TClassTree::ShowLinks(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the Multiple inheritance relationships
+
 void TClassTree::ShowMul()
 {
-   // Draw the Multiple inheritance relationships
-
    TIter next(gPad->GetListOfPrimitives());
    TObject *obj;
    TObjString *os;
@@ -1111,11 +1111,11 @@ void TClassTree::ShowMul()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the References relationships (other than inheritance or composition)
+
 void TClassTree::ShowRef()
 {
-   // Draw the References relationships (other than inheritance or composition)
-
    TIter next(gPad->GetListOfPrimitives());
    TObject *obj;
    TObjString *os;
@@ -1155,12 +1155,12 @@ void TClassTree::ShowRef()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TClassTree.
+/// the status of the object is saved and can be replayed in a subsequent session
+
 void TClassTree::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TClassTree.
-   // the status of the object is saved and can be replayed in a subsequent session
-
    Int_t i;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(); if (R__v) { }

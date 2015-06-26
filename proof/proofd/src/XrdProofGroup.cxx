@@ -25,11 +25,11 @@
 
 // Functions used in scanning hash tables
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if user 'u' is memmebr of group 'grp'
+
 static int CheckUser(const char *, XrdProofGroup *g, void *u)
 {
-   // Check if user 'u' is memmebr of group 'grp'
-
    const char *usr = (const char *)u;
 
    if (g && usr && g->HasMember(usr))
@@ -40,11 +40,11 @@ static int CheckUser(const char *, XrdProofGroup *g, void *u)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a string describing group 'g' to a global string
+
 static int ExportGroup(const char *, XrdProofGroup *g, void *u)
 {
-   // Add a string describing group 'g' to a global string
-
    XrdOucString *msg = (XrdOucString *)u;
 
    if (msg->length() > 0)
@@ -59,22 +59,22 @@ static int ExportGroup(const char *, XrdProofGroup *g, void *u)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info describing group 'g' to stdout
+
 static int PrintGroup(const char *, XrdProofGroup *g, void *)
 {
-   // Print info describing group 'g' to stdout
-
    if (g)
       g->Print();
 
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generic function used for auxiliary purpose
+
 static int AuxFunc(const char *, XrdProofGroup *g, void *s)
 {
-   // Generic function used for auxiliary purpose
-
    XrdOucString *opt = (XrdOucString *)s;
 
    if (!opt || opt->length() <= 0 || (*opt) == "getfirst")
@@ -94,32 +94,33 @@ static int AuxFunc(const char *, XrdProofGroup *g, void *s)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 XrdProofGroup::XrdProofGroup(const char *n, const char *m)
               : fName(n), fMembers(m)
 {
-   // Constructor
-
    fSize = 0;
    fPriority = -1;
    fFraction = -1;
    fFracEff = 0;
    fMutex = new XrdSysRecMutex;
 }
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 XrdProofGroup::~XrdProofGroup()
 {
-   // Destructor
-
    if (fMutex)
       delete fMutex;
    fMutex = 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump group content
+
 void XrdProofGroup::Print()
 {
-   // Dump group content
    XPDLOC(GMGR, "Group::Print")
 
    XrdSysMutexHelper mhp(fMutex);
@@ -135,11 +136,11 @@ void XrdProofGroup::Print()
    }
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modify the active count
+
 void XrdProofGroup::Count(const char *usr, int n)
 {
-   // Modify the active count
-
    // A username must be defined and an action required
    if (!usr || !usr[0] || n == 0)
       return;
@@ -164,12 +165,12 @@ void XrdProofGroup::Count(const char *usr, int n)
    }
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of active groups (usr = 0) or the number of
+/// active sessions for user 'usr'
+
 int XrdProofGroup::Active(const char *usr)
 {
-   // Return the number of active groups (usr = 0) or the number of
-   // active sessions for user 'usr'
-
    XrdSysMutexHelper mhp(fMutex);
 
    int na = 0;
@@ -183,11 +184,11 @@ int XrdProofGroup::Active(const char *usr)
    return na;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if 'usr' is member of this group
+
 bool XrdProofGroup::HasMember(const char *usr)
 {
-   // Check if 'usr' is member of this group
-
    XrdSysMutexHelper mhp(fMutex);
    XrdOucString u(usr); u += ",";
    int iu = fMembers.find(u);
@@ -197,34 +198,34 @@ bool XrdProofGroup::HasMember(const char *usr)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 XrdProofGroupMgr::XrdProofGroupMgr(const char *fn)
 {
-   // Constructor
-
    ResetIter();
    Config(fn);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply function 'f' to the hash table of groups; 'arg' is passed to 'f'
+/// in the last argument. After applying 'f', the action depends on the
+/// return value with the following rule:
+///         < 0 - the hash table item is deleted.
+///         = 0 - the next hash table item is processed.
+///         > 0 - processing stops and the hash table item is returned.
+
 XrdProofGroup *XrdProofGroupMgr::Apply(int (*f)(const char *, XrdProofGroup *,
                                                 void *), void *arg)
 {
-   // Apply function 'f' to the hash table of groups; 'arg' is passed to 'f'
-   // in the last argument. After applying 'f', the action depends on the
-   // return value with the following rule:
-   //         < 0 - the hash table item is deleted.
-   //         = 0 - the next hash table item is processed.
-   //         > 0 - processing stops and the hash table item is returned.
-
    return (fGroups.Num() > 0 ? fGroups.Apply(f,arg) : (XrdProofGroup *)0);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a string describing the group
+
 XrdOucString XrdProofGroupMgr::Export(const char *grp)
 {
-   // Return a string describing the group
-
    XrdSysMutexHelper mhp(fMutex);
 
    XrdOucString msg;
@@ -239,11 +240,11 @@ XrdOucString XrdProofGroupMgr::Export(const char *grp)
    return msg;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a string describing the group
+
 void XrdProofGroupMgr::Print(const char *grp)
 {
-   // Return a string describing the group
-
    XrdSysMutexHelper mhp(fMutex);
 
    if (!grp) {
@@ -256,12 +257,12 @@ void XrdProofGroupMgr::Print(const char *grp)
    return;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the instance of for group 'grp.
+/// Return 0 in the case the group does not exist
+
 XrdProofGroup *XrdProofGroupMgr::GetGroup(const char *grp)
 {
-   // Returns the instance of for group 'grp.
-   // Return 0 in the case the group does not exist
-
    // If the group is defined and exists, check it
    if (grp && strlen(grp) > 0) {
       XrdSysMutexHelper mhp(fMutex);
@@ -270,15 +271,15 @@ XrdProofGroup *XrdProofGroupMgr::GetGroup(const char *grp)
    return (XrdProofGroup *)0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the instance of the first group to which this user belongs;
+/// if grp != 0, return the instance corresponding to group 'grp', if
+/// existing and the // user belongs to it.
+/// Return 0 in the case the user does not belong to any group or does not
+/// belong to 'grp'.
+
 XrdProofGroup *XrdProofGroupMgr::GetUserGroup(const char *usr, const char *grp)
 {
-   // Returns the instance of the first group to which this user belongs;
-   // if grp != 0, return the instance corresponding to group 'grp', if
-   // existing and the // user belongs to it.
-   // Return 0 in the case the user does not belong to any group or does not
-   // belong to 'grp'.
-
    XrdProofGroup *g = 0;
 
    // Check inputs
@@ -303,25 +304,26 @@ XrdProofGroup *XrdProofGroupMgr::GetUserGroup(const char *usr, const char *grp)
    return ((!g) ? fGroups.Find("default") : g);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the instance of next group in the pseudo-iterator
+/// functionality. To scan over all the groups do the following:
+///         ResetIter();
+///         while ((g = Next())) {
+///            // ... Process group
+///         }
+/// Return 0 when there are no more groups
+
 XrdProofGroup *XrdProofGroupMgr::Next()
 {
-   // Returns the instance of next group in the pseudo-iterator
-   // functionality. To scan over all the groups do the following:
-   //         ResetIter();
-   //         while ((g = Next())) {
-   //            // ... Process group
-   //         }
-   // Return 0 when there are no more groups
-
    return fGroups.Apply(AuxFunc,&fIterator);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// (Re-)configure the group info using the file 'fn'.
+/// Return the number of active groups or -1 in case of error.
+
 int XrdProofGroupMgr::Config(const char *fn)
 {
-   // (Re-)configure the group info using the file 'fn'.
-   // Return the number of active groups or -1 in case of error.
    XPDLOC(GMGR, "GroupMgr::Config")
 
    if ((!fn || strlen(fn) <= 0)) {
@@ -381,12 +383,13 @@ int XrdProofGroupMgr::Config(const char *fn)
    return fGroups.Num();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse config information from the open file 'fin'. Can be called
+/// recursively following 'include sub-file' lines.
+/// Return 0 or -1 in case of error.
+
 int XrdProofGroupMgr::ParseInfoFrom(const char *fn)
 {
-   // Parse config information from the open file 'fin'. Can be called
-   // recursively following 'include sub-file' lines.
-   // Return 0 or -1 in case of error.
    XPDLOC(GMGR, "GroupMgr::ParseInfoFrom")
 
    // Check input
@@ -504,12 +507,13 @@ int XrdProofGroupMgr::ParseInfoFrom(const char *fn)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read update priorities from the file defined at configuration time.
+/// Return 1 if the file did not change, 0 if the file has been read
+/// correctly, or -1 in case of error.
+
 int XrdProofGroupMgr::ReadPriorities()
 {
-   // Read update priorities from the file defined at configuration time.
-   // Return 1 if the file did not change, 0 if the file has been read
-   // correctly, or -1 in case of error.
    XPDLOC(GMGR, "GroupMgr::ReadPriorities")
 
    // Get the modification time
@@ -575,11 +579,11 @@ int XrdProofGroupMgr::ReadPriorities()
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the global group structure
+
 static int GetGroupsInfo(const char *, XrdProofGroup *g, void *s)
 {
-   // Fill the global group structure
-
    XpdGroupGlobal_t *glo = (XpdGroupGlobal_t *)s;
 
    if (glo) {
@@ -606,11 +610,11 @@ static int GetGroupsInfo(const char *, XrdProofGroup *g, void *s)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if user 'u' is memmebr of group 'grp'
+
 static int SetGroupFracEff(const char *, XrdProofGroup *g, void *s)
 {
-   // Check if user 'u' is memmebr of group 'grp'
-
    XpdGroupEff_t *eff = (XpdGroupEff_t *)s;
 
    if (eff && eff->glo) {
@@ -645,15 +649,15 @@ static int SetGroupFracEff(const char *, XrdProofGroup *g, void *s)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go through the list of active groups (those having at least a non-idle
+/// member) and determine the effective resource fraction on the base of
+/// the scheduling option and of priorities or nominal fractions.
+/// Return 0 in case of success, -1 in case of error, 1 if every group
+/// has the same priority so that the system scheduler should do the job.
+
 int XrdProofGroupMgr::SetEffectiveFractions(bool opri)
 {
-   // Go through the list of active groups (those having at least a non-idle
-   // member) and determine the effective resource fraction on the base of
-   // the scheduling option and of priorities or nominal fractions.
-   // Return 0 in case of success, -1 in case of error, 1 if every group
-   // has the same priority so that the system scheduler should do the job.
-
    // Loop over groupd
    XpdGroupGlobal_t glo = {-1., -1., 0, 0.};
    Apply(GetGroupsInfo, &glo);

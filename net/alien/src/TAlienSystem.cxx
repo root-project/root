@@ -29,34 +29,36 @@
 
 ClassImp(TAlienSystem)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new OS interface.
+
 TAlienSystem::TAlienSystem(const char *name, const char *title) : TSystem(name, title)
 {
-   // Create a new OS interface.
-
    fWorkingDirectory[0] = '\0';
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the OS interface.
+
 TAlienSystem::~TAlienSystem()
 {
-   // Delete the OS interface.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the OS interface.
+
 Bool_t TAlienSystem::Init()
 {
-   // Initialize the OS interface.
   return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a directory. Returns 0 in case of success and
+/// -1 if the directory could not be created (either already exists or
+/// illegal path name).
+
 int TAlienSystem::MakeDirectory(const char* dirname)
 {
-   // Make a directory. Returns 0 in case of success and
-   // -1 if the directory could not be created (either already exists or
-   // illegal path name).
-
   if (!gGrid)
     return -1;
 
@@ -74,11 +76,11 @@ int TAlienSystem::MakeDirectory(const char* dirname)
   return gapi_mkdir(url.GetUrl(),0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a directory. Returns 0 if directory does not exist.
+
 void *TAlienSystem::OpenDirectory(const char* name)
 {
-   // Open a directory. Returns 0 if directory does not exist.
-
    TUrl url(name);
    url.CleanRelativePath();
    if (strcmp(url.GetProtocol(),"alien")) {
@@ -88,19 +90,20 @@ void *TAlienSystem::OpenDirectory(const char* name)
    return (void*) gapi_opendir(url.GetUrl());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free a directory.
+
 void TAlienSystem::FreeDirectory(void* ptr)
 {
-   // Free a directory.
-
    gapi_closedir( (GAPI_DIR*)ptr);
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a directory entry. Returns 0 if no more entries.
+
 const char *TAlienSystem::GetDirEntry(void* ptr)
 {
-   // Get a directory entry. Returns 0 if no more entries.
    struct dirent* retdir;
    retdir = gapi_readdir( (GAPI_DIR*) ptr);
    //   AbstractMethod("GetDirEntry");
@@ -109,13 +112,13 @@ const char *TAlienSystem::GetDirEntry(void* ptr)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change directory.
+///   AbstractMethod("ChangeDirectory");
+///   return kFALSE;
+
 Bool_t TAlienSystem::ChangeDirectory(const char* dirname)
 {
-   // Change directory.
-   //   AbstractMethod("ChangeDirectory");
-   //   return kFALSE;
-
   TUrl url(dirname);
   url.CleanRelativePath();
   if (strcmp(url.GetProtocol(),"alien")) {
@@ -126,17 +129,19 @@ Bool_t TAlienSystem::ChangeDirectory(const char* dirname)
   //  return gGrid->Cd(url.GetFile(),kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return working directory.
+
 const char *TAlienSystem::WorkingDirectory()
 {
-   // Return working directory.
   return gapi_getcwd(fWorkingDirectory,1024);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the user's home directory.
+
 const char *TAlienSystem::HomeDirectory(const char*)
 {
-   // Return the user's home directory.
   if (!gGrid)
     return 0;
 
@@ -147,14 +152,14 @@ const char *TAlienSystem::HomeDirectory(const char*)
   return (gGrid->GetHomeDirectory());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a file system directory. Returns 0 in case of success and
+/// -1 if the directory could not be created (either already exists or
+/// illegal path name).
+/// If 'recursive' is true, makes parent directories as needed.
+
 int TAlienSystem::mkdir(const char *name, Bool_t recursive)
 {
-   // Make a file system directory. Returns 0 in case of success and
-   // -1 if the directory could not be created (either already exists or
-   // illegal path name).
-   // If 'recursive' is true, makes parent directories as needed.
-
    if (recursive) {
       TString dirname = DirName(name);
       if (dirname.Length()==0) {
@@ -174,68 +179,69 @@ int TAlienSystem::mkdir(const char *name, Bool_t recursive)
    return MakeDirectory(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a file. If overwrite is true and file already exists the
+/// file will be overwritten. Returns 0 when successful, -1 in case
+/// of failure, -2 in case the file already exists and overwrite was false.
+
 int TAlienSystem::CopyFile(const char *, const char *, Bool_t)
 {
-   // Copy a file. If overwrite is true and file already exists the
-   // file will be overwritten. Returns 0 when successful, -1 in case
-   // of failure, -2 in case the file already exists and overwrite was false.
-
    AbstractMethod("CopyFile");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rename a file.
+
 int TAlienSystem::Rename(const char *oldname, const char *newname)
 {
-   // Rename a file.
    return gapi_rename(oldname,newname);
    //  AbstractMethod("Rename");
    //   return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a link from file1 to file2.
+
 int TAlienSystem::Link(const char *, const char *)
 {
-   // Create a link from file1 to file2.
-
    AbstractMethod("Link");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a symbolic link from file1 to file2.
+
 int TAlienSystem::Symlink(const char *, const char *)
 {
-   // Create a symbolic link from file1 to file2.
-
    AbstractMethod("Symlink");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlink, i.e. remove, a file.
+
 int TAlienSystem::Unlink(const char * filename)
 {
-   // Unlink, i.e. remove, a file.
-
    return gapi_unlink(filename);
    //   AbstractMethod("Unlink");
    //   return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file: id, size, flags, modification time.
+/// Id      is (statbuf.st_dev << 24) + statbuf.st_ino
+/// Size    is the file size
+/// Flags   is file type: 0 is regular file, bit 0 set executable,
+///                       bit 1 set directory, bit 2 set special file
+///                       (socket, fifo, pipe, etc.)
+/// Modtime is modification time.
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 int TAlienSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
                          Long_t *flags, Long_t *modtime)
 {
-   // Get info about a file: id, size, flags, modification time.
-   // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
-   // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
-   // Modtime is modification time.
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    Long64_t lsize;
 
    int res = GetPathInfo(path, id, &lsize, flags, modtime);
@@ -252,20 +258,20 @@ int TAlienSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file: id, size, flags, modification time.
+/// Id      is (statbuf.st_dev << 24) + statbuf.st_ino
+/// Size    is the file size
+/// Flags   is file type: 0 is regular file, bit 0 set executable,
+///                       bit 1 set directory, bit 2 set special file
+///                       (socket, fifo, pipe, etc.)
+/// Modtime is modification time.
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 int TAlienSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
                          Long_t *flags, Long_t *modtime)
 {
-   // Get info about a file: id, size, flags, modification time.
-   // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
-   // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
-   // Modtime is modification time.
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    FileStat_t buf;
 
    int res = GetPathInfo(path, buf);
@@ -291,26 +297,26 @@ int TAlienSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 int TAlienSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    //   AbstractMethod("GetPathInfo(const char*, FileStat_t&)");
   return AlienFilestat(path,buf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 int TAlienSystem::AlienFilestat(const char *fpath, FileStat_t &buf)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    TUrl url(fpath);
    url.CleanRelativePath();
    if (strcmp(url.GetProtocol(),"alien")) {
@@ -338,20 +344,21 @@ int TAlienSystem::AlienFilestat(const char *fpath, FileStat_t &buf)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file system: fs type, block size, number of blocks,
+/// number of free blocks.
+
 int TAlienSystem::GetFsInfo(const char *, Long_t *, Long_t *, Long_t *, Long_t *)
 {
-   // Get info about a file system: fs type, block size, number of blocks,
-   // number of free blocks.
-
    AbstractMethod("GetFsInfo");
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the file permission bits. Returns -1 in case or error, 0 otherwise.
+
 int TAlienSystem::Chmod(const char *file, UInt_t mode)
 {
-   // Set the file permission bits. Returns -1 in case or error, 0 otherwise.
    TUrl url(file);
    url.CleanRelativePath();
    if (strcmp(url.GetProtocol(),"alien")) {
@@ -361,43 +368,43 @@ int TAlienSystem::Chmod(const char *file, UInt_t mode)
    return gapi_chmod(url.GetUrl(),mode);
  }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the process file creation mode mask.
+
 int TAlienSystem::Umask(Int_t)
 {
-   // Set the process file creation mode mask.
-
    AbstractMethod("Umask");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the a files modification and access times. If actime = 0 it will be
+/// set to the modtime. Returns 0 on success and -1 in case of error.
+
 int TAlienSystem::Utime(const char *, Long_t, Long_t)
 {
-   // Set the a files modification and access times. If actime = 0 it will be
-   // set to the modtime. Returns 0 on success and -1 in case of error.
-
    AbstractMethod("Utime");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find location of file in a search path.
+/// Returns 0 in case file is not found.
+
 const char *TAlienSystem::FindFile(const char *, TString&, EAccessMode)
 {
-   // Find location of file in a search path.
-   // Returns 0 in case file is not found.
-
    AbstractMethod("Which");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns FALSE if one can access a file using the specified access mode.
+/// The file name must not contain any special shell characters line ~ or $,
+/// in those cases first call ExpandPathName().
+/// Attention, bizarre convention of return value!!
+
 Bool_t TAlienSystem::AccessPathName(const char *path, EAccessMode mode)
 {
-   // Returns FALSE if one can access a file using the specified access mode.
-   // The file name must not contain any special shell characters line ~ or $,
-   // in those cases first call ExpandPathName().
-   // Attention, bizarre convention of return value!!
-
    if (!gGrid)
       return -1;
 
@@ -426,87 +433,87 @@ Bool_t TAlienSystem::AccessPathName(const char *path, EAccessMode mode)
 
 //---- Users & Groups ----------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the user's id. If user = 0, returns current user's id.
+
 Int_t TAlienSystem::GetUid(const char * /*user*/)
 {
-   // Returns the user's id. If user = 0, returns current user's id.
-
    AbstractMethod("GetUid");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the effective user id. The effective id corresponds to the
+/// set id bit on the file being executed.
+
 Int_t TAlienSystem::GetEffectiveUid()
 {
-   // Returns the effective user id. The effective id corresponds to the
-   // set id bit on the file being executed.
-
    AbstractMethod("GetEffectiveUid");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the group's id. If group = 0, returns current user's group.
+
 Int_t TAlienSystem::GetGid(const char * /*group*/)
 {
-   // Returns the group's id. If group = 0, returns current user's group.
-
    AbstractMethod("GetGid");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the effective group id. The effective group id corresponds
+/// to the set id bit on the file being executed.
+
 Int_t TAlienSystem::GetEffectiveGid()
 {
-   // Returns the effective group id. The effective group id corresponds
-   // to the set id bit on the file being executed.
-
    AbstractMethod("GetEffectiveGid");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all user info in the UserGroup_t structure. The returned
+/// structure must be deleted by the user. In case of error 0 is returned.
+
 UserGroup_t *TAlienSystem::GetUserInfo(Int_t /*uid*/)
 {
-   // Returns all user info in the UserGroup_t structure. The returned
-   // structure must be deleted by the user. In case of error 0 is returned.
-
    AbstractMethod("GetUserInfo");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all user info in the UserGroup_t structure. If user = 0, returns
+/// current user's id info. The returned structure must be deleted by the
+/// user. In case of error 0 is returned.
+
 UserGroup_t *TAlienSystem::GetUserInfo(const char * /*user*/)
 {
-   // Returns all user info in the UserGroup_t structure. If user = 0, returns
-   // current user's id info. The returned structure must be deleted by the
-   // user. In case of error 0 is returned.
-
    AbstractMethod("GetUserInfo");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all group info in the UserGroup_t structure. The only active
+/// fields in the UserGroup_t structure for this call are:
+///    fGid and fGroup
+/// The returned structure must be deleted by the user. In case of
+/// error 0 is returned.
+
 UserGroup_t *TAlienSystem::GetGroupInfo(Int_t /*gid*/)
 {
-   // Returns all group info in the UserGroup_t structure. The only active
-   // fields in the UserGroup_t structure for this call are:
-   //    fGid and fGroup
-   // The returned structure must be deleted by the user. In case of
-   // error 0 is returned.
-
    AbstractMethod("GetGroupInfo");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all group info in the UserGroup_t structure. The only active
+/// fields in the UserGroup_t structure for this call are:
+///    fGid and fGroup
+/// If group = 0, returns current user's group. The returned structure
+/// must be deleted by the user. In case of error 0 is returned.
+
 UserGroup_t *TAlienSystem::GetGroupInfo(const char * /*group*/)
 {
-   // Returns all group info in the UserGroup_t structure. The only active
-   // fields in the UserGroup_t structure for this call are:
-   //    fGid and fGroup
-   // If group = 0, returns current user's group. The returned structure
-   // must be deleted by the user. In case of error 0 is returned.
-
    AbstractMethod("GetGroupInfo");
    return 0;
 }

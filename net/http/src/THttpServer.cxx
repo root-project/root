@@ -41,7 +41,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 THttpCallArg::THttpCallArg() :
    TObject(),
    fTopName(),
@@ -56,25 +58,24 @@ THttpCallArg::THttpCallArg() :
    fBinData(0),
    fBinDataLength(0)
 {
-   // constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 THttpCallArg::~THttpCallArg()
 {
-   // destructor
-
    if (fBinData) {
       free(fBinData);
       fBinData = 0;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set binary data, which will be returned as reply body
+
 void THttpCallArg::SetBinData(void* data, Long_t length)
 {
-   // set binary data, which will be returned as reply body
-
    if (fBinData) free(fBinData);
    fBinData = data;
    fBinDataLength = length;
@@ -83,14 +84,14 @@ void THttpCallArg::SetBinData(void* data, Long_t length)
    fContent.Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set complete path of requested http element
+/// For instance, it could be "/folder/subfolder/get.bin"
+/// Here "/folder/subfolder/" is element path and "get.bin" requested file.
+/// One could set path and file name separately
+
 void THttpCallArg::SetPathAndFileName(const char *fullpath)
 {
-   // set complete path of requested http element
-   // For instance, it could be "/folder/subfolder/get.bin"
-   // Here "/folder/subfolder/" is element path and "get.bin" requested file.
-   // One could set path and file name separately
-
    fPathName.Clear();
    fFileName.Clear();
 
@@ -107,11 +108,11 @@ void THttpCallArg::SetPathAndFileName(const char *fullpath)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fill HTTP header
+
 void THttpCallArg::FillHttpHeader(TString &hdr, const char* kind)
 {
-   // fill HTTP header
-
    if (kind==0) kind = "HTTP/1.1";
 
    if ((fContentType.Length() == 0) || Is404()) {
@@ -131,11 +132,11 @@ void THttpCallArg::FillHttpHeader(TString &hdr, const char* kind)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compress reply data with gzip compression
+
 Bool_t THttpCallArg::CompressWithGzip()
 {
-   // compress reply data with gzip compression
-
    char *objbuf = (char*) GetContent();
    Long_t objlen = GetContentLength();
 
@@ -203,7 +204,8 @@ Bool_t THttpCallArg::CompressWithGzip()
 //////////////////////////////////////////////////////////////////////////
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class THttpTimer : public TTimer {
 public:
 
@@ -270,7 +272,9 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 THttpServer::THttpServer(const char *engine) :
    TNamed("http", "ROOT http server"),
    fEngines(),
@@ -286,8 +290,6 @@ THttpServer::THttpServer(const char *engine) :
    fMutex(),
    fCallArgs()
 {
-   // constructor
-
    // As argument, one specifies engine kind which should be
    // created like "http:8080". One could specify several engines
    // at once, separating them with ; like "http:8080;fastcgi:9000"
@@ -353,12 +355,12 @@ THttpServer::THttpServer(const char *engine) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+/// delete all http engines and sniffer
+
 THttpServer::~THttpServer()
 {
-   // destructor
-   // delete all http engines and sniffer
-
    fEngines.Delete();
 
    SetSniffer(0);
@@ -366,46 +368,46 @@ THttpServer::~THttpServer()
    SetTimer(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set TRootSniffer to the server
+/// Server takes ownership over sniffer
+
 void THttpServer::SetSniffer(TRootSniffer *sniff)
 {
-   // Set TRootSniffer to the server
-   // Server takes ownership over sniffer
-
    if (fSniffer) delete fSniffer;
    fSniffer = sniff;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns read-only mode
+
 Bool_t THttpServer::IsReadOnly() const
 {
-   // returns read-only mode
-
    return fSniffer ? fSniffer->IsReadOnly() : kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set read-only mode for the server (default on)
+/// In read-only server is not allowed to change any ROOT object, registered to the server
+/// Server also cannot execute objects method via exe.json request
+
 void THttpServer::SetReadOnly(Bool_t readonly)
 {
-   // Set read-only mode for the server (default on)
-   // In read-only server is not allowed to change any ROOT object, registered to the server
-   // Server also cannot execute objects method via exe.json request
-
    if (fSniffer) fSniffer->SetReadOnly(readonly);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// factory method to create different http engines
+/// At the moment two engine kinds are supported:
+///  civetweb (default) and fastcgi
+/// Examples:
+///   "civetweb:8080" or "http:8080" or ":8080" - creates civetweb web server with http port 8080
+///   "fastcgi:9000" - creates fastcgi server with port 9000
+///   "dabc:1237"    - create DABC server with port 1237 (only available with DABC installed)
+///   "dabc:master_host:port" - attach to DABC master, running on master_host:port (only available with DABC installed)
+
 Bool_t THttpServer::CreateEngine(const char *engine)
 {
-   // factory method to create different http engines
-   // At the moment two engine kinds are supported:
-   //  civetweb (default) and fastcgi
-   // Examples:
-   //   "civetweb:8080" or "http:8080" or ":8080" - creates civetweb web server with http port 8080
-   //   "fastcgi:9000" - creates fastcgi server with port 9000
-   //   "dabc:1237"    - create DABC server with port 1237 (only available with DABC installed)
-   //   "dabc:master_host:port" - attach to DABC master, running on master_host:port (only available with DABC installed)
-
    if (engine == 0) return kFALSE;
 
    const char *arg = strchr(engine, ':');
@@ -440,17 +442,17 @@ Bool_t THttpServer::CreateEngine(const char *engine)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create timer which will invoke ProcessRequests() function periodically
+/// Timer is required to perform all actions in main ROOT thread
+/// Method arguments are the same as for TTimer constructor
+/// By default, sync timer with 100 ms period is created
+///
+/// If milliSec == 0, no timer will be created.
+/// In this case application should regularly call ProcessRequests() method.
+
 void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 {
-   // create timer which will invoke ProcessRequests() function periodically
-   // Timer is required to perform all actions in main ROOT thread
-   // Method arguments are the same as for TTimer constructor
-   // By default, sync timer with 100 ms period is created
-   //
-   // If milliSec == 0, no timer will be created.
-   // In this case application should regularly call ProcessRequests() method.
-
    if (fTimer) {
       fTimer->Stop();
       delete fTimer;
@@ -462,12 +464,12 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checked that filename does not contains relative path below current directory
+/// Used to prevent access to files below current directory
+
 Bool_t THttpServer::VerifyFilePath(const char* fname)
 {
-   // Checked that filename does not contains relative path below current directory
-   // Used to prevent access to files below current directory
-
    if ((fname==0) || (*fname==0)) return kFALSE;
 
    Int_t level = 0;
@@ -504,15 +506,15 @@ Bool_t THttpServer::VerifyFilePath(const char* fname)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Verifies that request is just file name
+/// File names typically contains prefix like "jsrootsys/"
+/// If true, method returns real name of the file,
+/// which should be delivered to the client
+/// Method is thread safe and can be called from any thread
+
 Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 {
-   // Verifies that request is just file name
-   // File names typically contains prefix like "jsrootsys/"
-   // If true, method returns real name of the file,
-   // which should be delivered to the client
-   // Method is thread safe and can be called from any thread
-
    if ((uri == 0) || (strlen(uri) == 0)) return kFALSE;
 
    TString fname = uri;
@@ -532,13 +534,13 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Executes http request, specified in THttpCallArg structure
+/// Method can be called from any thread
+/// Actual execution will be done in main ROOT thread, where analysis code is running.
+
 Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 {
-   // Executes http request, specified in THttpCallArg structure
-   // Method can be called from any thread
-   // Actual execution will be done in main ROOT thread, where analysis code is running.
-
    if (fMainThrdId == TThread::SelfId()) {
       // should not happen, but one could process requests directly without any signaling
 
@@ -558,14 +560,14 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process requests, submitted for execution
+/// Regularly invoked by THttpTimer, when somewhere in the code
+/// gSystem->ProcessEvents() is called.
+/// User can call serv->ProcessRequests() directly, but only from main analysis thread.
+
 void THttpServer::ProcessRequests()
 {
-   // Process requests, submitted for execution
-   // Regularly invoked by THttpTimer, when somewhere in the code
-   // gSystem->ProcessEvents() is called.
-   // User can call serv->ProcessRequests() directly, but only from main analysis thread.
-
    if (fMainThrdId != TThread::SelfId()) {
       Error("ProcessRequests", "Should be called only from main ROOT thread");
       return;
@@ -595,13 +597,13 @@ void THttpServer::ProcessRequests()
       engine->Process();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process single http request
+/// Depending from requested path and filename different actions will be performed.
+/// In most cases information is provided by TRootSniffer class
+
 void THttpServer::ProcessRequest(THttpCallArg *arg)
 {
-   // Process single http request
-   // Depending from requested path and filename different actions will be performed.
-   // In most cases information is provided by TRootSniffer class
-
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
 
       if (fDefaultPageCont.Length()==0) {
@@ -743,32 +745,32 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register object in folders hierarchy
+///
+/// See TRootSniffer::RegisterObject() for more details
+
 Bool_t THttpServer::Register(const char *subfolder, TObject *obj)
 {
-   // Register object in folders hierarchy
-   //
-   // See TRootSniffer::RegisterObject() for more details
-
    return fSniffer->RegisterObject(subfolder, obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unregister object in folders hierarchy
+///
+/// See TRootSniffer::UnregisterObject() for more details
+
 Bool_t THttpServer::Unregister(TObject *obj)
 {
-   // Unregister object in folders hierarchy
-   //
-   // See TRootSniffer::UnregisterObject() for more details
-
    return fSniffer->UnregisterObject(obj);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns MIME type base on file extension
+
 const char *THttpServer::GetMimeType(const char *path)
 {
-   // Returns MIME type base on file extension
-
    static const struct {
       const char *extension;
       int ext_len;
@@ -838,11 +840,11 @@ const char *THttpServer::GetMimeType(const char *path)
    return "text/plain";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reads file content
+
 char* THttpServer::ReadFileContent(const char* filename, Int_t& len)
 {
-   // reads file content
-
    len = 0;
 
    std::ifstream is(filename);

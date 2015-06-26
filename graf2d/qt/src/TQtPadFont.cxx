@@ -27,11 +27,12 @@ TString TQtPadFont::fgCourierFontName = "Courier New";
 TString TQtPadFont::fgSymbolFontFamily= "Symbol";
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use the ROOT font with ID=1 to calibrate the current font on fly;
+/// Environment variable ROOTFONTFACTOR allows to set the factor manually
+
 static float CalibrateFont()
 {
-    // Use the ROOT font with ID=1 to calibrate the current font on fly;
-    // Environment variable ROOTFONTFACTOR allows to set the factor manually
     static float fontCalibFactor = -1;
     if (fontCalibFactor  < 0 ) {
 
@@ -76,23 +77,25 @@ static float CalibrateFont()
     return fontCalibFactor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adjust the font size to match that for Postscipt format
+
 static inline float FontMagicFactor(float size)
 {
-   // Adjust the font size to match that for Postscipt format
    static float calibration =0;
    if (calibration == 0) calibration = CalibrateFont();
    return TMath::Max(calibration*size,Float_t(1.0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQtPadFont::TQtPadFont(): TAttText()
 {fTextFont = -1;fTextSize = -1; }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void  TQtPadFont::SetTextFont(const char *fontname, int italic_, int bold_)
 {
-
    //*-*    mode              : Option message
    //*-*    italic   : Italic attribut of the TTF font
    //*-*    bold     : Weight attribute of the TTF font
@@ -128,29 +131,29 @@ void  TQtPadFont::SetTextFont(const char *fontname, int italic_, int bold_)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*Set current text font number*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                      ===========================
+///*-*  List of the currently supported fonts (screen and PostScript)
+///*-*  =============================================================
+///*-*   Font ID       X11                       Win32 TTF       lfItalic  lfWeight x 10
+///*-*        1 : times-medium-i-normal      "Times New Roman"      1           5
+///*-*        2 : times-bold-r-normal        "Times New Roman"      0           8
+///*-*        3 : times-bold-i-normal        "Times New Roman"      1           8
+///*-*        4 : helvetica-medium-r-normal  "Arial"                0           5
+///*-*        5 : helvetica-medium-o-normal  "Arial"                1           5
+///*-*        6 : helvetica-bold-r-normal    "Arial"                0           8
+///*-*        7 : helvetica-bold-o-normal    "Arial"                1           8
+///*-*        8 : courier-medium-r-normal    "Courier New"          0           5
+///*-*        9 : courier-medium-o-normal    "Courier New"          1           5
+///*-*       10 : courier-bold-r-normal      "Courier New"          0           8
+///*-*       11 : courier-bold-o-normal      "Courier New"          1           8
+///*-*       12 : symbol-medium-r-normal     "Symbol"               0           6
+///*-*       13 : times-medium-r-normal      "Times New Roman"      0           5
+///*-*       14 :                            "Wingdings"            0           5
+
 void  TQtPadFont::SetTextFont(Font_t fontnumber)
 {
-   //*-*-*-*-*-*-*-*-*-*-*-*-*Set current text font number*-*-*-*-*-*-*-*-*-*-*-*
-   //*-*                      ===========================
-   //*-*  List of the currently supported fonts (screen and PostScript)
-   //*-*  =============================================================
-   //*-*   Font ID       X11                       Win32 TTF       lfItalic  lfWeight x 10
-   //*-*        1 : times-medium-i-normal      "Times New Roman"      1           5
-   //*-*        2 : times-bold-r-normal        "Times New Roman"      0           8
-   //*-*        3 : times-bold-i-normal        "Times New Roman"      1           8
-   //*-*        4 : helvetica-medium-r-normal  "Arial"                0           5
-   //*-*        5 : helvetica-medium-o-normal  "Arial"                1           5
-   //*-*        6 : helvetica-bold-r-normal    "Arial"                0           8
-   //*-*        7 : helvetica-bold-o-normal    "Arial"                1           8
-   //*-*        8 : courier-medium-r-normal    "Courier New"          0           5
-   //*-*        9 : courier-medium-o-normal    "Courier New"          1           5
-   //*-*       10 : courier-bold-r-normal      "Courier New"          0           8
-   //*-*       11 : courier-bold-o-normal      "Courier New"          1           8
-   //*-*       12 : symbol-medium-r-normal     "Symbol"               0           6
-   //*-*       13 : times-medium-r-normal      "Times New Roman"      0           5
-   //*-*       14 :                            "Wingdings"            0           5
-
    if ( (fTextFont == fontnumber)  || (fontnumber <0) ) return;
    TAttText::SetTextFont(fontnumber);
 
@@ -239,11 +242,12 @@ void  TQtPadFont::SetTextFont(Font_t fontnumber)
    SetTextFont(fontName, it, bld);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*Set current text size*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                      =====================
+
 void  TQtPadFont::SetTextSize(Float_t textsize)
 {
-   //*-*-*-*-*-*-*-*-*-*-*-*-*Set current text size*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   //*-*                      =====================
    if ( fTextSize != textsize ) {
       TAttText::SetTextSize(textsize);
       if (fTextSize > 0) {
@@ -252,54 +256,61 @@ void  TQtPadFont::SetTextSize(Float_t textsize)
       }
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the text pixel size
+
  void  TQtPadFont::SetTextSizePixels(Int_t npixels)
  {
-    // Set the text pixel size
     SetTextSize(static_cast<float>(npixels));
  }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the system name for the "Roman" font
+
 const char *TQtPadFont::RomanFontName()
 {
-   // Get the system name for the "Roman" font
    return fgRomanFontName;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the system name for the "Arial" font
+
 const char *TQtPadFont::ArialFontName()
 {
-   // Get the system name for the "Arial" font
    return fgArialFontName;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the system name for the "Courier" font
+
 const char *TQtPadFont::CourierFontName()
 {
-   // Get the system name for the "Courier" font
    return fgCourierFontName;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the system name for the "Symbol" font
+
 const char *TQtPadFont::SymbolFontFamily()
 {
-   // Get the system name for the "Symbol" font
    return fgSymbolFontFamily;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the system name for the "Symbol" font
+
 void TQtPadFont::SetSymbolFontFamily(const char *symbolFnName)
 {
-   // Set the system name for the "Symbol" font
    fgSymbolFontFamily = symbolFnName;  // we need the TString here !!!
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Scale the font accroding the inout mgn magnification factor
+/// mgn        : magnification factor
+/// -------
+/// see: TVirtualX::DrawText(int x, int y, float angle, float mgn, const char *text, TVirtualX::ETextMode /*mode*/)
+///
+
 void   TQtPadFont::SetTextMagnify(Float_t  mgn)
 {
-   //
-   // Scale the font accroding the inout mgn magnification factor
-   // mgn        : magnification factor
-   // -------
-   // see: TVirtualX::DrawText(int x, int y, float angle, float mgn, const char *text, TVirtualX::ETextMode /*mode*/)
-   //
     Int_t tsize = (Int_t)(fTextSize+0.5);
     if (TMath::Abs(mgn-1) >0.05)  {
        int pxSize = int(mgn*FontMagicFactor(tsize));

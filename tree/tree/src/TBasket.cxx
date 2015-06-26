@@ -44,11 +44,11 @@ ClassImp(TBasket)
 //  See picture in TTree.
 //
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default contructor.
+
 TBasket::TBasket() : fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
 {
-   // Default contructor.
-
    fDisplacement  = 0;
    fEntryOffset   = 0;
    fBufferRef     = 0;
@@ -61,10 +61,11 @@ TBasket::TBasket() : fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLa
    fBranch        = 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor used during reading.
+
 TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
 {
-   // Constructor used during reading.
    fDisplacement  = 0;
    fEntryOffset   = 0;
    fBufferRef     = 0;
@@ -77,12 +78,12 @@ TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0
    fBranch        = 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Basket normal constructor, used during writing.
+
 TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
    TKey(branch->GetDirectory()),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
 {
-   // Basket normal constructor, used during writing.
-
    SetName(name);
    SetTitle(title);
    fClassName   = "TBasket";
@@ -122,11 +123,11 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Basket destructor.
+
 TBasket::~TBasket()
 {
-   // Basket destructor.
-
    if (fDisplacement) delete [] fDisplacement;
    if (fEntryOffset)  delete [] fEntryOffset;
    if (fBufferRef) delete fBufferRef;
@@ -141,11 +142,11 @@ TBasket::~TBasket()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increase the size of the current fBuffer up to newsize.
+
 void TBasket::AdjustSize(Int_t newsize)
 {
-   // Increase the size of the current fBuffer up to newsize.
-
    if (fBuffer == fBufferRef->Buffer()) {
       fBufferRef->Expand(newsize);
       fBuffer = fBufferRef->Buffer();
@@ -156,11 +157,11 @@ void TBasket::AdjustSize(Int_t newsize)
    fBufferSize  = newsize;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the basket of this branch onto the file to.
+
 Long64_t TBasket::CopyTo(TFile *to)
 {
-   // Copy the basket of this branch onto the file to.
-
    fBufferRef->SetWriteMode();
    Int_t nout = fNbytes - fKeylen;
    fBuffer = fBufferRef->Buffer();
@@ -174,21 +175,22 @@ Long64_t TBasket::CopyTo(TFile *to)
    return nBytes>0 ? nBytes : -1;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Delete fEntryOffset array.
+
 void TBasket::DeleteEntryOffset()
 {
-   //  Delete fEntryOffset array.
-
    if (fEntryOffset) delete [] fEntryOffset;
    fEntryOffset = 0;
    fNevBufSize  = 0;
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drop buffers of this basket if it is not the current basket.
+
 Int_t TBasket::DropBuffers()
 {
-   // Drop buffers of this basket if it is not the current basket.
    if (!fBuffer && !fBufferRef) return 0;
 
    if (fDisplacement) delete [] fDisplacement;
@@ -204,11 +206,11 @@ Int_t TBasket::DropBuffers()
    return fBufferSize;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get pointer to buffer for internal entry.
+
 Int_t TBasket::GetEntryPointer(Int_t entry)
 {
-   // Get pointer to buffer for internal entry.
-
    Int_t offset;
    if (fEntryOffset) offset = fEntryOffset[entry];
    else              offset = fKeylen + entry*fNevBufSize;
@@ -216,13 +218,13 @@ Int_t TBasket::GetEntryPointer(Int_t entry)
    return offset;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load basket buffers in memory without unziping.
+/// This function is called by TTreeCloner.
+/// The function returns 0 in case of success, 1 in case of error.
+
 Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tree)
 {
-   // Load basket buffers in memory without unziping.
-   // This function is called by TTreeCloner.
-   // The function returns 0 in case of success, 1 in case of error.
-
    if (fBufferRef) {
       // Reuse the buffer if it exist.
       fBufferRef->Reset();
@@ -282,12 +284,12 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tr
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the first dentries of this basket, moving entries at
+/// dentries to the start of the buffer.
+
 void TBasket::MoveEntries(Int_t dentries)
 {
-   // Remove the first dentries of this basket, moving entries at
-   // dentries to the start of the buffer.
-
    Int_t i;
 
    if (dentries >= fNevBuf) return;
@@ -329,11 +331,12 @@ void TBasket::MoveEntries(Int_t dentries)
 }
 
 #define OLD_CASE_EXPRESSION fObjlen==fNbytes-fKeylen && GetBranch()->GetCompressionLevel()!=0 && file->GetVersion()<=30401
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// By-passing buffer unzipping has been requested and is
+/// possible (only 1 entry in this basket).
+
 Int_t TBasket::ReadBasketBuffersUncompressedCase()
 {
-   // By-passing buffer unzipping has been requested and is
-   // possible (only 1 entry in this basket).
    fBuffer = fBufferRef->Buffer();
 
    // Make sure that the buffer is set at the END of the data
@@ -351,10 +354,11 @@ Int_t TBasket::ReadBasketBuffersUncompressedCase()
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// We always create the TBuffer for the basket but it hold the buffer from the cache.
+
 Int_t TBasket::ReadBasketBuffersUnzip(char* buffer, Int_t size, Bool_t mustFree, TFile* file)
 {
-   // We always create the TBuffer for the basket but it hold the buffer from the cache.
    if (fBufferRef) {
       fBufferRef->SetBuffer(buffer, size, mustFree);
       fBufferRef->SetReadMode();
@@ -380,11 +384,11 @@ Int_t TBasket::ReadBasketBuffersUnzip(char* buffer, Int_t size, Bool_t mustFree,
    return fObjlen+fKeylen;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a buffer for reading if it is not already initialized
+
 static inline TBuffer* R__InitializeReadBasketBuffer(TBuffer* bufferRef, Int_t len, TFile* file)
 {
-   // Initialize a buffer for reading if it is not already initialized
-
    TBuffer* result;
    if (R__likely(bufferRef)) {
       bufferRef->SetReadMode();
@@ -402,11 +406,11 @@ static inline TBuffer* R__InitializeReadBasketBuffer(TBuffer* bufferRef, Int_t l
    return result;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the compressed buffer; either from the TTree or create a local one.
+
 void inline TBasket::InitializeCompressedBuffer(Int_t len, TFile* file)
 {
-   // Initialize the compressed buffer; either from the TTree or create a local one.
-
    Bool_t compressedBufferExists = fCompressedBufferRef != NULL;
    fCompressedBufferRef = R__InitializeReadBasketBuffer(fCompressedBufferRef, len, file);
    if (R__unlikely(!compressedBufferExists)) {
@@ -414,23 +418,23 @@ void inline TBasket::InitializeCompressedBuffer(Int_t len, TFile* file)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read basket buffers in memory and cleanup.
+///
+/// Read a basket buffer. Check if buffers of previous ReadBasket
+/// should not be dropped. Remember, we keep buffers in memory up to
+/// fMaxVirtualSize.
+/// The function returns 0 in case of success, 1 in case of error
+/// This function was modified with the addition of the parallel
+/// unzipping, it will try to get the unzipped file from the cache
+/// receiving only a pointer to that buffer (so we shall not
+/// delete that pointer), although we get a new buffer in case
+/// it's not found in the cache.
+/// There is a lot of code duplication but it was necesary to assure
+/// the expected behavior when there is no cache.
+
 Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
 {
-   // Read basket buffers in memory and cleanup.
-   //
-   // Read a basket buffer. Check if buffers of previous ReadBasket
-   // should not be dropped. Remember, we keep buffers in memory up to
-   // fMaxVirtualSize.
-   // The function returns 0 in case of success, 1 in case of error
-   // This function was modified with the addition of the parallel
-   // unzipping, it will try to get the unzipped file from the cache
-   // receiving only a pointer to that buffer (so we shall not
-   // delete that pointer), although we get a new buffer in case
-   // it's not found in the cache.
-   // There is a lot of code duplication but it was necesary to assure
-   // the expected behavior when there is no cache.
-
    if(!fBranch->GetDirectory()) {
       return -1;
    }
@@ -633,14 +637,14 @@ AfterBuffer:
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read basket buffers in memory and cleanup
+///
+/// Read first bytes of a logical record starting at position pos
+/// return record length (first 4 bytes of record).
+
 Int_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
 {
-   // Read basket buffers in memory and cleanup
-   //
-   // Read first bytes of a logical record starting at position pos
-   // return record length (first 4 bytes of record).
-
    const Int_t len = 128;
    char buffer[len];
    Int_t keylen;
@@ -649,13 +653,13 @@ Int_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
    return fNbytes;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the basket to the starting state. i.e. as it was after calling
+/// the constructor (and potentially attaching a TBuffer.)
+/// Reduce memory used by fEntryOffset and the TBuffer if needed ..
+
 void TBasket::Reset()
 {
-   // Reset the basket to the starting state. i.e. as it was after calling
-   // the constructor (and potentially attaching a TBuffer.)
-   // Reduce memory used by fEntryOffset and the TBuffer if needed ..
-
    // Name, Title, fClassName, fBranch
    // stay the same.
 
@@ -736,29 +740,29 @@ void TBasket::Reset()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set read mode of basket.
+
 void TBasket::SetReadMode()
 {
-   // Set read mode of basket.
-
    fLast = fBufferRef->Length();
    fBufferRef->SetReadMode();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set write mode of basket.
+
 void TBasket::SetWriteMode()
 {
-   // Set write mode of basket.
-
    fBufferRef->SetWriteMode();
    fBufferRef->SetBufferOffset(fLast);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object.
+
 void TBasket::Streamer(TBuffer &b)
 {
-   // Stream a class object.
-
    char flag;
    if (b.IsReading()) {
       TKey::Streamer(b); //this must be first
@@ -868,11 +872,11 @@ void TBasket::Streamer(TBuffer &b)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update basket header and EntryOffset table.
+
 void TBasket::Update(Int_t offset, Int_t skipped)
 {
-   // Update basket header and EntryOffset table.
-
    if (fEntryOffset) {
       if (fNevBuf+1 >= fNevBufSize) {
          Int_t newsize = TMath::Max(10,2*fNevBufSize);
@@ -906,16 +910,16 @@ void TBasket::Update(Int_t offset, Int_t skipped)
    fNevBuf++;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write buffer of this basket on the current file.
+///
+/// The function returns the number of bytes committed to the memory.
+/// If a write error occurs, the number of bytes returned is -1.
+/// If no data are written, the number of bytes returned is 0.
+///
+
 Int_t TBasket::WriteBuffer()
 {
-   // Write buffer of this basket on the current file.
-   //
-   // The function returns the number of bytes committed to the memory.
-   // If a write error occurs, the number of bytes returned is -1.
-   // If no data are written, the number of bytes returned is 0.
-   //
-
    const Int_t kWrite = 1;
 
    TFile *file = fBranch->GetFile(kWrite);

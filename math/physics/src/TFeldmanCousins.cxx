@@ -50,10 +50,11 @@
 
 ClassImp(TFeldmanCousins)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TFeldmanCousins::TFeldmanCousins(Double_t newFC, TString options)
 {
-   //constructor
    fCL          = newFC;
    fUpperLimit  = 0.0;
    fLowerLimit  = 0.0;
@@ -71,35 +72,36 @@ TFeldmanCousins::TFeldmanCousins(Double_t newFC, TString options)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TFeldmanCousins::~TFeldmanCousins()
 {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+/// given Nobserved and Nbackground, try different values of mu that give lower limits that//
+/// are consistent with Nobserved.  The closed interval (plus any stragglers) corresponds  //
+/// to the F&C interval                                                                    //
+/////////////////////////////////////////////////////////////////////////////////////////////
+
 Double_t TFeldmanCousins::CalculateLowerLimit(Double_t Nobserved, Double_t Nbackground)
 {
-////////////////////////////////////////////////////////////////////////////////////////////
-// given Nobserved and Nbackground, try different values of mu that give lower limits that//
-// are consistent with Nobserved.  The closed interval (plus any stragglers) corresponds  //
-// to the F&C interval                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////
-
    CalculateUpperLimit(Nobserved, Nbackground);
    return fLowerLimit;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+/// given Nobserved and Nbackground, try different values of mu that give upper limits that//
+/// are consistent with Nobserved.  The closed interval (plus any stragglers) corresponds  //
+/// to the F&C interval                                                                    //
+/////////////////////////////////////////////////////////////////////////////////////////////
+
 Double_t TFeldmanCousins::CalculateUpperLimit(Double_t Nobserved, Double_t Nbackground)
 {
-////////////////////////////////////////////////////////////////////////////////////////////
-// given Nobserved and Nbackground, try different values of mu that give upper limits that//
-// are consistent with Nobserved.  The closed interval (plus any stragglers) corresponds  //
-// to the F&C interval                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////////
-
    fNobserved   = Nobserved;
    fNbackground = Nbackground;
 
@@ -149,15 +151,15 @@ Double_t TFeldmanCousins::CalculateUpperLimit(Double_t Nobserved, Double_t Nback
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+/// calculate the probability table for a given mu for n = 0, NMAX//
+/// and return 1 if the number of observed events is consistent   //
+/// with the CL bad                                               //
+////////////////////////////////////////////////////////////////////
+
 Int_t TFeldmanCousins::FindLimitsFromTable( Double_t mu )
 {
-///////////////////////////////////////////////////////////////////
-// calculate the probability table for a given mu for n = 0, NMAX//
-// and return 1 if the number of observed events is consistent   //
-// with the CL bad                                               //
-///////////////////////////////////////////////////////////////////
-
    Double_t *p          = new Double_t[fNMax];   //the array of probabilities in the interval MUMIN-MUMAX
    Double_t *r          = new Double_t[fNMax];   //the ratio of likliehoods = P(Mu|Nobserved)/P(MuBest|Nobserved)
    Int_t    *rank       = new Int_t[fNMax];      //the ranked array corresponding to R (largest first)
@@ -200,30 +202,32 @@ Int_t TFeldmanCousins::FindLimitsFromTable( Double_t mu )
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
+/// calculate the poissonian probability for   //
+/// a mean of mu+B events with a variance of N //
+/////////////////////////////////////////////////
+
 Double_t TFeldmanCousins::Prob(Int_t N, Double_t mu, Double_t B)
 {
-////////////////////////////////////////////////
-// calculate the poissonian probability for   //
-// a mean of mu+B events with a variance of N //
-////////////////////////////////////////////////
-
    return TMath::Poisson( N, mu+B);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set maximum value of signal to use in calculating the tables
+
 void TFeldmanCousins::SetMuMax(Double_t newMax)
 {
-   //set maximum value of signal to use in calculating the tables
    fMuMax   = newMax;
    fNMax    = (Int_t)newMax;
    SetMuStep(fMuStep);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set the step in signal to use when generating tables
+
 void TFeldmanCousins::SetMuStep(Double_t newMuStep)
 {
-   //set the step in signal to use when generating tables
    if(newMuStep == 0.0) {
       std::cout << "TFeldmanCousins::SetMuStep ERROR New step size is zero - unable to change value"<< std::endl;
       return;

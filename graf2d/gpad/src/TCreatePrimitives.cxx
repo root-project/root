@@ -51,28 +51,30 @@ TPaveLabel *TCreatePrimitives::fgPaveLabel = 0;
 TGraph *TCreatePrimitives::fgPolyLine = 0;
 TBox *TCreatePrimitives::fgPadBBox = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TCreatePrimitives default constructor
+
 TCreatePrimitives::TCreatePrimitives()
 {
-   // TCreatePrimitives default constructor
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TCreatePrimitives destructor
+
 TCreatePrimitives::~TCreatePrimitives()
 {
-   // TCreatePrimitives destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Create a new arc/ellipse in this gPad
+///
+///  Click left button to indicate arrow starting position.
+///  Release left button to terminate the arrow.
+///
+
 void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
-   //  Create a new arc/ellipse in this gPad
-   //
-   //  Click left button to indicate arrow starting position.
-   //  Release left button to terminate the arrow.
-   //
-
    static Double_t x0, y0, x1, y1;
    Double_t xc,yc,r1,r2,xold,yold;
 
@@ -156,15 +158,15 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new line/arrow in this gPad
+///
+///  Click left button to indicate arrow starting position.
+///  Release left button to terminate the arrow.
+///
+
 void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
-   // Create a new line/arrow in this gPad
-   //
-   //  Click left button to indicate arrow starting position.
-   //  Release left button to terminate the arrow.
-   //
-
    static Double_t x0, y0;
 
    static Int_t pxold, pyold;
@@ -279,17 +281,17 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new pad in gPad
+///
+///  Click left button to indicate one corner of the pad
+///  Click left button to indicate the opposite corner
+///
+///  The new pad is inserted in the pad where the first point is selected.
+///
+
 void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 {
-   // Create a new pad in gPad
-   //
-   //  Click left button to indicate one corner of the pad
-   //  Click left button to indicate the opposite corner
-   //
-   //  The new pad is inserted in the pad where the first point is selected.
-   //
-
    static Int_t px1old, py1old, px2old, py2old;
    static Int_t px1, py1, px2, py2, pxl, pyl, pxt, pyt;
    static TPad *padsav;
@@ -365,15 +367,15 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new pavetext in gPad
+///
+///  Click left button to indicate one corner of the pavelabel.
+///  Release left button at the opposite corner.
+///
+
 void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
-   // Create a new pavetext in gPad
-   //
-   //  Click left button to indicate one corner of the pavelabel.
-   //  Release left button at the opposite corner.
-   //
-
    static Double_t x0, y0;
    Double_t xp0,xp1,yp0,yp1,xold,yold;
 
@@ -597,15 +599,15 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new PolyLine in gPad
+///
+///  Click left button to indicate a new point
+///  Click left button at same place or double click to close the polyline
+///
+
 void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
-   // Create a new PolyLine in gPad
-   //
-   //  Click left button to indicate a new point
-   //  Click left button at same place or double click to close the polyline
-   //
-
    static Int_t pxnew, pynew;
    Double_t xnew, ynew, xold, yold;
    static Int_t npoints = 0;
@@ -695,14 +697,14 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new TLatex at the cursor position in gPad
+///
+/// Click left button to indicate the text position
+///
+
 void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
-   // Create a new TLatex at the cursor position in gPad
-   //
-   // Click left button to indicate the text position
-   //
-
    static Double_t x, y;
 
    switch (event) {

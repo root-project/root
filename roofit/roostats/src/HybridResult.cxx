@@ -13,7 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 HybridResult class: this class is a fresh rewrite in RooStats of
 	RooStatsCms/LimitResults developped by D. Piparo and G. Schott

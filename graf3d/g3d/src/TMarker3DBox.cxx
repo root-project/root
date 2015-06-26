@@ -44,11 +44,11 @@ ClassImp(TMarker3DBox)
 // Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/Marker3DBox.gif"> </P> End_Html
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Marker3DBox  default constructor
+
 TMarker3DBox::TMarker3DBox()
 {
-   // Marker3DBox  default constructor
-
    fRefObject = 0;
    fDx        = 1;
    fDy        = 1;
@@ -62,14 +62,14 @@ TMarker3DBox::TMarker3DBox()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Marker3DBox normal constructor
+
 TMarker3DBox::TMarker3DBox( Float_t x, Float_t y, Float_t z,
                             Float_t dx, Float_t dy, Float_t dz,
                             Float_t theta, Float_t phi)
               :TAttLine(1,1,1), TAttFill(1,0)
 {
-   // Marker3DBox normal constructor
-
    fDx        = dx;
    fDy        = dy;
    fDz        = dz;
@@ -82,7 +82,9 @@ TMarker3DBox::TMarker3DBox( Float_t x, Float_t y, Float_t z,
    SetBit(kTemporary,kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TMarker3DBox::TMarker3DBox(const TMarker3DBox& m3d) :
  TObject(m3d),
  TAttLine(m3d),
@@ -98,13 +100,13 @@ TMarker3DBox::TMarker3DBox(const TMarker3DBox& m3d) :
  fPhi(m3d.fPhi),
  fRefObject(m3d.fRefObject)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignement operator
+
 TMarker3DBox& TMarker3DBox::operator=(const TMarker3DBox& m3d)
 {
-   //assignement operator
    if(this!=&m3d) {
       TObject::operator=(m3d);
       TAttLine::operator=(m3d);
@@ -123,21 +125,22 @@ TMarker3DBox& TMarker3DBox::operator=(const TMarker3DBox& m3d)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Marker3DBox shape default destructor
+
 TMarker3DBox::~TMarker3DBox()
 {
-   // Marker3DBox shape default destructor
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a Marker3DBox
+///
+/// Compute the closest distance of approach from point px,py to each corner
+/// point of the Marker3DBox.
+
 Int_t TMarker3DBox::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a Marker3DBox
-   //
-   // Compute the closest distance of approach from point px,py to each corner
-   // point of the Marker3DBox.
-
    const Int_t numPoints = 8;
    Int_t dist = 9999;
    Double_t points[3*numPoints];
@@ -173,23 +176,23 @@ Int_t TMarker3DBox::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event
+///
+/// This member function must be implemented to realize the action
+/// corresponding to the mouse click on the object in the window
+
 void TMarker3DBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event
-   //
-   // This member function must be implemented to realize the action
-   // corresponding to the mouse click on the object in the window
-
    if (gPad->GetView()) gPad->GetView()->ExecuteRotateView(event, px, py);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint marker 3D box.
+
 void TMarker3DBox::Paint(Option_t * /* option */ )
 {
-   // Paint marker 3D box.
-
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    buffer.ClearSectionsValid();
@@ -287,11 +290,11 @@ void TMarker3DBox::Paint(Option_t * /* option */ )
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint 3-d histogram h with marker3dboxes
+
 void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
 {
-   // Paint 3-d histogram h with marker3dboxes
-
    Int_t bin,ix,iy,iz;
    Double_t xmin,xmax,ymin,ymax,zmin,zmax,wmin,wmax,w;
    TAxis *xaxis = h->GetXaxis();
@@ -356,11 +359,11 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TMarker3DBox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TMarker3DBox::Class())) {
       out<<"   ";
@@ -383,43 +386,43 @@ void TMarker3DBox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set direction.
+
 void TMarker3DBox::SetDirection(Float_t theta, Float_t phi)
 {
-   // Set direction.
-
    fTheta = theta;
    fPhi   = phi;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size.
+
 void TMarker3DBox::SetSize(Float_t dx, Float_t dy, Float_t dz)
 {
-   // Set size.
-
    fDx = dx;
    fDy = dy;
    fDz = dz;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position.
+
 void TMarker3DBox::SetPosition(Float_t x, Float_t y, Float_t z)
 {
-   // Set position.
-
    fX  = x;
    fY  = y;
    fZ  = z;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set points.
+
 void TMarker3DBox::SetPoints(Double_t *points) const
 {
-   // Set points.
-
    if (points) {
       points[ 0] = -fDx ; points[ 1] = -fDy ; points[ 2] = -fDz;
       points[ 3] = -fDx ; points[ 4] =  fDy ; points[ 5] = -fDz;
@@ -457,11 +460,11 @@ void TMarker3DBox::SetPoints(Double_t *points) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TMarker3DBox.
+
 void TMarker3DBox::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TMarker3DBox.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

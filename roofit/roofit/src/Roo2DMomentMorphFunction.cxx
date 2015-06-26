@@ -70,7 +70,9 @@ using namespace std;
 ClassImp(Roo2DMomentMorphFunction) 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// cross-check that we have enough reference points
+
 Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const char *name, const char *title, 
                         		       RooAbsReal& _m1, RooAbsReal& _m2,
                                                const TMatrixD& mrefpoints, const Setting& setting, const Bool_t& verbose ) :
@@ -82,7 +84,6 @@ Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const char *name, const char 
   _npoints( mrefpoints.GetNrows() ),
   _mref(mrefpoints)
 {
-  // cross-check that we have enough reference points
   if ( mrefpoints.GetNrows()<4 ) {
     cerr << "Roo2DMomentMorphFunction::constructor(" << GetName() << ") ERROR: less than four reference points provided." << endl ;
     assert(0);
@@ -100,7 +101,9 @@ Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const char *name, const char 
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// cross-check that we have enough reference points
+
 Roo2DMomentMorphFunction::Roo2DMomentMorphFunction( const char *name, const char *title,
 					       RooAbsReal& _m1, RooAbsReal& _m2,
 					       const Int_t& nrows, const Double_t* dm1arr, const Double_t* dm2arr, const Double_t* dvalarr, 
@@ -112,7 +115,6 @@ Roo2DMomentMorphFunction::Roo2DMomentMorphFunction( const char *name, const char
   _verbose( verbose ),
   _npoints( nrows )
 {
-  // cross-check that we have enough reference points
   if ( nrows<4 ) {
     cerr << "Roo2DMomentMorphFunction::constructor(" << GetName() << ") ERROR: less than four reference points provided." << endl ;
     assert(0);
@@ -132,7 +134,8 @@ Roo2DMomentMorphFunction::Roo2DMomentMorphFunction( const char *name, const char
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const Roo2DMomentMorphFunction& other, const char* name) :  
   RooAbsReal(other,name), 
   m1("m1",this,other.m1),
@@ -147,13 +150,15 @@ Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const Roo2DMomentMorphFunctio
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Roo2DMomentMorphFunction::~Roo2DMomentMorphFunction()
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void 
 Roo2DMomentMorphFunction::initialize() 
 {
@@ -173,7 +178,8 @@ Roo2DMomentMorphFunction::initialize()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t 
 Roo2DMomentMorphFunction::evaluate() const 
 { 
@@ -192,7 +198,8 @@ Roo2DMomentMorphFunction::evaluate() const
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void 
 Roo2DMomentMorphFunction::calculateFractions(Bool_t verbose) const
 {
@@ -233,7 +240,8 @@ Roo2DMomentMorphFunction::calculateFractions(Bool_t verbose) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t 
 Roo2DMomentMorphFunction::findSquare(const double& x, const double& y) const
 {
@@ -322,10 +330,11 @@ Roo2DMomentMorphFunction::findSquare(const double& x, const double& y) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// p1 and p2 on same side of line b-a ?
+
 Bool_t Roo2DMomentMorphFunction::onSameSide(const double& p1x, const double& p1y, const double& p2x, const double& p2y, const double& ax, const double& ay, const double& bx, const double& by) const
 {   
-  // p1 and p2 on same side of line b-a ?
   Double_t cp1 = myCrossProduct(bx-ax, by-ay, p1x-ax, p1y-ay);
   Double_t cp2 = myCrossProduct(bx-ax, by-ay, p2x-ax, p2y-ay);
   if (cp1*cp2 >= 0) return true;
@@ -333,7 +342,8 @@ Bool_t Roo2DMomentMorphFunction::onSameSide(const double& p1x, const double& p1y
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t 
 Roo2DMomentMorphFunction::pointInSquare(const double& px, const double& py, const double& ax, const double& ay, const double& bx, const double& by, const double& cx, const double& cy, const double& dx, const double& dy) const
 {   
@@ -352,7 +362,8 @@ Roo2DMomentMorphFunction::pointInSquare(const double& px, const double& py, cons
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t 
 Roo2DMomentMorphFunction::pointInTriangle(const double& px, const double& py, const double& ax, const double& ay, const double& bx, const double& by, const double& cx, const double& cy) const
 {
@@ -361,7 +372,8 @@ Roo2DMomentMorphFunction::pointInTriangle(const double& px, const double& py, co
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t 
 Roo2DMomentMorphFunction::myCrossProduct(const double& ax, const double& ay, const double& bx, const double& by) const
 {
@@ -369,11 +381,12 @@ Roo2DMomentMorphFunction::myCrossProduct(const double& ax, const double& ay, con
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reject kinked shapes
+
 Bool_t 
 Roo2DMomentMorphFunction::isAcceptableSquare(const double& ax, const double& ay, const double& bx, const double& by, const double& cx, const double& cy, const double& dx, const double& dy) const
 {
-  // reject kinked shapes
   if ( pointInTriangle(dx,dy,ax,ax,bx,by,cx,cy) ||
        pointInTriangle(cx,cy,ax,ay,bx,by,dx,dy) ||
        pointInTriangle(bx,by,ax,ay,cx,cy,dx,dy) ||

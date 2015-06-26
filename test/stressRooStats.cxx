@@ -53,18 +53,20 @@ using namespace RooFit ;
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Print test program number and its title
+
 void StatusPrint(const Int_t id, const TString &title, const Int_t status, const Int_t lineWidth)
 {
-   // Print test program number and its title
    TString header = TString::Format("Test %d : %s ", id, title.Data());
    cout << left << setw(lineWidth) << setfill('.') << header << " " << (status > 0 ? "OK" : (status < 0 ? "SKIPPED" : "FAILED")) << endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// width of lines when printing test results
+
 Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t allTests, Bool_t oneTest, Int_t testNumber, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
 {
-   // width of lines when printing test results
    const Int_t lineWidth = 120;
 
    // Save memory directory location

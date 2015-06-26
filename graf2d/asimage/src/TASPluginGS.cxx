@@ -46,11 +46,11 @@ extern "C" {
 ClassImp(TASPluginGS)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ctor
+
 TASPluginGS::TASPluginGS(const char *ext) : TASImagePlugin(ext)
 {
-   // ctor
-
 #ifndef WIN32
    fInterpreter = gSystem->Which(gSystem->Getenv("PATH"), "gs", kExecutePermission);
 #else
@@ -63,20 +63,20 @@ TASPluginGS::TASPluginGS(const char *ext) : TASImagePlugin(ext)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dtor
+
 TASPluginGS::~TASPluginGS()
 {
-   // dtor
-
    delete [] fInterpreter;
    fInterpreter = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read PS/EPS/PDF file and convert it to ASImage
+
 ASImage *TASPluginGS::File2ASImage(const char *filename)
 {
-   // read PS/EPS/PDF file and convert it to ASImage
-
    if (!fInterpreter) {
       Warning("File2ASImage", "GhostScript is not available");
       return 0;

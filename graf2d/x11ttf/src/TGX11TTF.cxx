@@ -140,11 +140,11 @@ static TTFX11Init gTTFX11Init;
 
 ClassImp(TGX11TTF)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create copy of TGX11 but now use TrueType fonts.
+
 TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
 {
-   // Create copy of TGX11 but now use TrueType fonts.
-
    SetName("X11TTF");
    SetTitle("ROOT interface to X11 with TrueType fonts");
 
@@ -162,11 +162,11 @@ TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method setting TGX11TTF as the acting gVirtualX.
+
 void TGX11TTF::Activate()
 {
-   // Static method setting TGX11TTF as the acting gVirtualX.
-
    if (gVirtualX && dynamic_cast<TGX11*>(gVirtualX)) {
       TGX11 *oldg = (TGX11 *) gVirtualX;
       gVirtualX = new TGX11TTF(*oldg);
@@ -174,11 +174,11 @@ void TGX11TTF::Activate()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize X11 system. Returns kFALSE in case of failure.
+
 Bool_t TGX11TTF::Init(void *display)
 {
-   // Initialize X11 system. Returns kFALSE in case of failure.
-
    Bool_t r = TGX11::Init(display);
 
    if (fDepth > 8) {
@@ -190,13 +190,13 @@ Bool_t TGX11TTF::Init(void *display)
    return r;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute alignment variables. The alignment is done on the horizontal string
+/// then the rotation is applied on the alignment variables.
+/// SetRotation and LayoutGlyphs should have been called before.
+
 void TGX11TTF::Align(void)
 {
-   // Compute alignment variables. The alignment is done on the horizontal string
-   // then the rotation is applied on the alignment variables.
-   // SetRotation and LayoutGlyphs should have been called before.
-
    EAlign align = (EAlign) fTextAlign;
 
    // vertical alignment
@@ -222,13 +222,13 @@ void TGX11TTF::Align(void)
    fAlign.y = fAlign.y >> 6;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw FT_Bitmap bitmap to xim image at position bx,by using specified
+/// foreground color.
+
 void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
                          RXImage *xim, Int_t bx, Int_t by)
 {
-   // Draw FT_Bitmap bitmap to xim image at position bx,by using specified
-   // foreground color.
-
    UChar_t d = 0, *s = source->buffer;
 
    if (TTF::fgSmoothing) {
@@ -345,13 +345,13 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text using TrueType fonts. If TrueType fonts are not available the
+/// text is drawn with TGX11::DrawText.
+
 void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                         const char *text, ETextMode mode)
 {
-   // Draw text using TrueType fonts. If TrueType fonts are not available the
-   // text is drawn with TGX11::DrawText.
-
    if (!fHasTTFonts) {
       TGX11::DrawText(x, y, angle, mgn, text, mode);
    } else {
@@ -364,13 +364,13 @@ void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text using TrueType fonts. If TrueType fonts are not available the
+/// text is drawn with TGX11::DrawText.
+
 void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                         const wchar_t *text, ETextMode mode)
 {
-   // Draw text using TrueType fonts. If TrueType fonts are not available the
-   // text is drawn with TGX11::DrawText.
-
    if (!fHasTTFonts) {
       TGX11::DrawText(x, y, angle, mgn, text, mode);
    } else {
@@ -383,11 +383,11 @@ void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the background of the current window in an XImage.
+
 RXImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Get the background of the current window in an XImage.
-
    Window_t cws = GetCurrentWindow();
    UInt_t width;
    UInt_t height;
@@ -409,11 +409,11 @@ RXImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
    return (RXImage*)XGetImage((Display*)fDisplay, cws, x, y, w, h, AllPlanes, ZPixmap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test if there is really something to render.
+
 Bool_t TGX11TTF::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Test if there is really something to render.
-
    Window_t cws = GetCurrentWindow();
    UInt_t width;
    UInt_t height;
@@ -436,12 +436,12 @@ Bool_t TGX11TTF::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the string rendering in the pad.
+/// LayoutGlyphs should have been called before.
+
 void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
 {
-   // Perform the string rendering in the pad.
-   // LayoutGlyphs should have been called before.
-
    TTGlyph* glyph = TTF::fgGlyphs;
    GC *gc;
 
@@ -527,11 +527,11 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
    XDestroyImage(xim);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set specified font.
+
 void TGX11TTF::SetTextFont(Font_t fontnumber)
 {
-   // Set specified font.
-
    fTextFont = fontnumber;
    if (!fHasTTFonts) {
       TGX11::SetTextFont(fontnumber);
@@ -540,18 +540,18 @@ void TGX11TTF::SetTextFont(Font_t fontnumber)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text font to specified name.
+/// mode       : loading flag
+/// mode=0     : search if the font exist (kCheck)
+/// mode=1     : search the font and load it if it exists (kLoad)
+/// font       : font name
+///
+/// Set text font to specified name. This function returns 0 if
+/// the specified font is found, 1 if not.
+
 Int_t TGX11TTF::SetTextFont(char *fontname, ETextSetMode mode)
 {
-   // Set text font to specified name.
-   // mode       : loading flag
-   // mode=0     : search if the font exist (kCheck)
-   // mode=1     : search the font and load it if it exists (kLoad)
-   // font       : font name
-   //
-   // Set text font to specified name. This function returns 0 if
-   // the specified font is found, 1 if not.
-
    if (!fHasTTFonts) {
       return TGX11::SetTextFont(fontname, mode);
    } else {
@@ -559,11 +559,11 @@ Int_t TGX11TTF::SetTextFont(char *fontname, ETextSetMode mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current text size.
+
 void TGX11TTF::SetTextSize(Float_t textsize)
 {
-   // Set current text size.
-
    fTextSize = textsize;
    if (!fHasTTFonts) {
       TGX11::SetTextSize(textsize);
@@ -575,11 +575,11 @@ void TGX11TTF::SetTextSize(Float_t textsize)
 #ifdef R__HAS_XFT
 
 ///////////////////////////// Xft font methods /////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parses an XLFD name and opens a font.
+
 FontStruct_t TGX11TTF::LoadQueryFont(const char *font_name)
 {
-   // Parses an XLFD name and opens a font.
-
    if (!fXftFontHash) {
       return TGX11::LoadQueryFont(font_name);
    }
@@ -607,11 +607,11 @@ FontStruct_t TGX11TTF::LoadQueryFont(const char *font_name)
    return font;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitely delete font structure obtained with LoadQueryFont().
+
 void TGX11TTF::DeleteFont(FontStruct_t fs)
 {
-   // Explicitely delete font structure obtained with LoadQueryFont().
-
    if (!fXftFontHash) {
       TGX11::DeleteFont(fs);
       return;
@@ -627,11 +627,11 @@ void TGX11TTF::DeleteFont(FontStruct_t fs)
    fXftFontHash->FreeFont(data);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return length of string in pixels. Size depends on font
+
 Int_t TGX11TTF::TextWidth(FontStruct_t font, const char *s, Int_t len)
 {
-   // Return length of string in pixels. Size depends on font
-
    if (!fXftFontHash) {
       return TGX11::TextWidth(font, s, len);
    }
@@ -654,11 +654,11 @@ Int_t TGX11TTF::TextWidth(FontStruct_t font, const char *s, Int_t len)
    return glyph_info.xOff;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Return some font properties
+
 void TGX11TTF::GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent)
 {
-   //  Return some font properties
-
    if (!fXftFontHash) {
       TGX11::GetFontProperties(font, max_ascent, max_descent);
       return;
@@ -682,12 +682,12 @@ void TGX11TTF::GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &ma
    max_descent = xftfont->descent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text string
+
 void TGX11TTF::DrawString(Drawable_t xwindow, GContext_t gc, Int_t x, Int_t y,
                           const char *text, Int_t len)
 {
-   // Draw text string
-
    XftDraw  *xftdraw;
    XftColor  xftcolor;
    XColor    xcolor;

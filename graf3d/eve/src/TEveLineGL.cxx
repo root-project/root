@@ -26,33 +26,33 @@
 
 ClassImp(TEveLineGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveLineGL::TEveLineGL() : TPointSet3DGL(), fM(0)
 {
-   // Constructor.
-
    // fDLCache = false; // Disable display list.
    fMultiColor = kTRUE;
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveLineGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveLine>(obj);
    return kTRUE;
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Direct GL rendering for TEveLine.
+
 void TEveLineGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Direct GL rendering for TEveLine.
-
    // printf("TEveLineGL::DirectDraw Style %d, LOD %d\n", rnrCtx.Style(), rnrCtx.LOD());
 
    TEveLine& q = *fM;

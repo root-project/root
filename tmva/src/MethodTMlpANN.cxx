@@ -24,7 +24,8 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 
   This is the TMVA TMultiLayerPerceptron interface class. It provides the
@@ -80,7 +81,9 @@ REGISTER_METHOD(TMlpANN)
 
 ClassImp(TMVA::MethodTMlpANN)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
 TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
                                     const TString& methodTitle,
                                     DataSetInfo& theData,
@@ -93,10 +96,11 @@ TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
    fValidationFraction(0.5),
    fLearningMethod( "" )
 {
-   // standard constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from weight file
+
 TMVA::MethodTMlpANN::MethodTMlpANN( DataSetInfo& theData,
                                     const TString& theWeightFile,
                                     TDirectory* theTargetDir ) :
@@ -107,37 +111,39 @@ TMVA::MethodTMlpANN::MethodTMlpANN( DataSetInfo& theData,
    fValidationFraction(0.5),
    fLearningMethod( "" )
 {
-   // constructor from weight file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TMlpANN can handle classification with 2 classes
+
 Bool_t TMVA::MethodTMlpANN::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses,
                                              UInt_t /*numberTargets*/ )
 {
-   // TMlpANN can handle classification with 2 classes
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    return kFALSE;
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initialisations
+
 void TMVA::MethodTMlpANN::Init( void )
 {
-   // default initialisations
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodTMlpANN::~MethodTMlpANN( void )
 {
-   // destructor
    if (fMLP) delete fMLP;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// translates options from option string into TMlpANN language
+
 void TMVA::MethodTMlpANN::CreateMLPOptions( TString layerSpec )
 {
-   // translates options from option string into TMlpANN language
-
    fHiddenLayer = ":";
 
    while (layerSpec.Length()>0) {
@@ -176,19 +182,20 @@ void TMVA::MethodTMlpANN::CreateMLPOptions( TString layerSpec )
    Log() << kINFO << "Use configuration (nodes per hidden layer): " << fHiddenLayer << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define the options (their key words) that can be set in the option string
+/// know options:
+/// NCycles       <integer>    Number of training cycles (too many cycles could overtrain the network)
+/// HiddenLayers  <string>     Layout of the hidden layers (nodes per layer)
+///   * specifiactions for each hidden layer are separated by commata
+///   * for each layer the number of nodes can be either absolut (simply a number)
+///        or relative to the number of input nodes to the neural net (N)
+///   * there is always a single node in the output layer
+///   example: a net with 6 input nodes and "Hiddenlayers=N-1,N-2" has 6,5,4,1 nodes in the
+///   layers 1,2,3,4, repectively
+
 void TMVA::MethodTMlpANN::DeclareOptions()
 {
-   // define the options (their key words) that can be set in the option string
-   // know options:
-   // NCycles       <integer>    Number of training cycles (too many cycles could overtrain the network)
-   // HiddenLayers  <string>     Layout of the hidden layers (nodes per layer)
-   //   * specifiactions for each hidden layer are separated by commata
-   //   * for each layer the number of nodes can be either absolut (simply a number)
-   //        or relative to the number of input nodes to the neural net (N)
-   //   * there is always a single node in the output layer
-   //   example: a net with 6 input nodes and "Hiddenlayers=N-1,N-2" has 6,5,4,1 nodes in the
-   //   layers 1,2,3,4, repectively
    DeclareOptionRef( fNcycles    = 200,       "NCycles",      "Number of training cycles" );
    DeclareOptionRef( fLayerSpec  = "N,N-1",   "HiddenLayers", "Specification of hidden layer architecture (N stands for number of variables; any integers may also be used)" );
 
@@ -204,10 +211,11 @@ void TMVA::MethodTMlpANN::DeclareOptions()
    AddPreDefVal( TString("BFGS") );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// builds the neural network as specified by the user
+
 void TMVA::MethodTMlpANN::ProcessOptions()
 {
-   // builds the neural network as specified by the user
    CreateMLPOptions(fLayerSpec);
 
    if (IgnoreEventsWithNegWeightsInTraining()) {
@@ -218,10 +226,11 @@ void TMVA::MethodTMlpANN::ProcessOptions()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the value of the neural net for the current event
+
 Double_t TMVA::MethodTMlpANN::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // calculate the value of the neural net for the current event
    const Event* ev = GetEvent();
    TTHREAD_TLS_DECL_ARG(Double_t*, d, new Double_t[Data()->GetNVariables()]);
 
@@ -236,22 +245,22 @@ Double_t TMVA::MethodTMlpANN::GetMvaValue( Double_t* err, Double_t* errUpper )
    return mvaVal;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// performs TMlpANN training
+/// available learning methods:
+///
+///       TMultiLayerPerceptron::kStochastic
+///       TMultiLayerPerceptron::kBatch
+///       TMultiLayerPerceptron::kSteepestDescent
+///       TMultiLayerPerceptron::kRibierePolak
+///       TMultiLayerPerceptron::kFletcherReeves
+///       TMultiLayerPerceptron::kBFGS
+///
+/// TMultiLayerPerceptron wants test and training tree at once
+/// so merge the training and testing trees from the MVA factory first:
+
 void TMVA::MethodTMlpANN::Train( void )
 {
-   // performs TMlpANN training
-   // available learning methods:
-   //
-   //       TMultiLayerPerceptron::kStochastic
-   //       TMultiLayerPerceptron::kBatch
-   //       TMultiLayerPerceptron::kSteepestDescent
-   //       TMultiLayerPerceptron::kRibierePolak
-   //       TMultiLayerPerceptron::kFletcherReeves
-   //       TMultiLayerPerceptron::kBFGS
-   //
-   // TMultiLayerPerceptron wants test and training tree at once
-   // so merge the training and testing trees from the MVA factory first:
-
    Int_t type;
    Float_t weight;
    const Long_t basketsize = 128000;
@@ -334,11 +343,11 @@ void TMVA::MethodTMlpANN::Train( void )
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write weights to xml file
+
 void TMVA::MethodTMlpANN::AddWeightsXMLTo( void* parent ) const
 {
-   // write weights to xml file
-
    // first the architecture
    void *wght = gTools().AddChild(parent, "Weights");
    void* arch = gTools().AddChild( wght, "Architecture" );
@@ -368,11 +377,12 @@ void TMVA::MethodTMlpANN::AddWeightsXMLTo( void* parent ) const
    inf.close();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// rebuild temporary textfile from xml weightfile and load this
+/// file into MLP
+
 void  TMVA::MethodTMlpANN::ReadWeightsFromXML( void* wghtnode )
 {
-   // rebuild temporary textfile from xml weightfile and load this
-   // file into MLP
    void* ch = gTools().GetChild(wghtnode);
    gTools().ReadAttr( ch, "BuildOptions", fMLPBuildOptions );
 
@@ -429,12 +439,13 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromXML( void* wghtnode )
    fMLP->LoadWeights( fname );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read weights from stream
+/// since the MLP can not read from the stream, we
+/// 1st: write the weights to temporary file
+
 void  TMVA::MethodTMlpANN::ReadWeightsFromStream( std::istream& istr )
 {
-   // read weights from stream
-   // since the MLP can not read from the stream, we
-   // 1st: write the weights to temporary file
    std::ofstream fout( "./TMlp.nn.weights.temp" );
    fout << istr.rdbuf();
    fout.close();
@@ -461,12 +472,12 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromStream( std::istream& istr )
    delete [] d;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create reader class for classifier -> overwrites base class function
+/// create specific class for TMultiLayerPerceptron
+
 void TMVA::MethodTMlpANN::MakeClass( const TString& theClassFileName ) const
 {
-   // create reader class for classifier -> overwrites base class function
-   // create specific class for TMultiLayerPerceptron
-
    // the default consists of
    TString classFileName = "";
    if (theClassFileName == "")
@@ -479,20 +490,22 @@ void TMVA::MethodTMlpANN::MakeClass( const TString& theClassFileName ) const
    fMLP->Export( classFileName.Data() );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write specific classifier response
+/// nothing to do here - all taken care of by TMultiLayerPerceptron
+
 void TMVA::MethodTMlpANN::MakeClassSpecific( std::ostream& /*fout*/, const TString& /*className*/ ) const
 {
-   // write specific classifier response
-   // nothing to do here - all taken care of by TMultiLayerPerceptron
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get help message text
+///
+/// typical length of text line:
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodTMlpANN::GetHelpMessage() const
 {
-   // get help message text
-   //
-   // typical length of text line:
-   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;

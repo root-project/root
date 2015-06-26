@@ -35,7 +35,8 @@ using namespace std;
 ClassImp(RooLandau)
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooLandau::RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma) :
   RooAbsPdf(name,title),
   x("x","Dependent",this,_x),
@@ -45,7 +46,8 @@ RooLandau::RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbs
 }
  
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooLandau::RooLandau(const RooLandau& other, const char* name) : 
   RooAbsPdf(other,name),
   x("x",this,other.x),
@@ -55,14 +57,16 @@ RooLandau::RooLandau(const RooLandau& other, const char* name) :
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooLandau::evaluate() const
 {
   return TMath::Landau(x, mean, sigma);
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
@@ -70,7 +74,8 @@ Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooLandau::generateEvent(Int_t code)
 {
   R__ASSERT(code==1) ;

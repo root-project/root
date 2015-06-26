@@ -19,17 +19,17 @@
 
 ClassImp(TSQLiteServer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a connection to an SQLite DB server. The db arguments should be
+/// of the form "sqlite://<database>", e.g.:
+/// "sqlite://test.sqlite" or "sqlite://:memory:" for a temporary database
+/// in memory.
+/// Note that for SQLite versions >= 3.7.7 the full string behind
+/// "sqlite://" is handed to sqlite3_open_v2() with SQLITE_OPEN_URI activated,
+/// so all URI accepted by it can be used.
+
 TSQLiteServer::TSQLiteServer(const char *db, const char* /*uid*/, const char* /*pw*/)
 {
-   // Open a connection to an SQLite DB server. The db arguments should be
-   // of the form "sqlite://<database>", e.g.:
-   // "sqlite://test.sqlite" or "sqlite://:memory:" for a temporary database
-   // in memory.
-   // Note that for SQLite versions >= 3.7.7 the full string behind
-   // "sqlite://" is handed to sqlite3_open_v2() with SQLITE_OPEN_URI activated,
-   // so all URI accepted by it can be used.
-
    fSQLite = NULL;
    fSrvInfo = "SQLite ";
    fSrvInfo += sqlite3_libversion();
@@ -68,21 +68,21 @@ TSQLiteServer::TSQLiteServer(const char *db, const char* /*uid*/, const char* /*
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close SQLite DB.
+
 TSQLiteServer::~TSQLiteServer()
 {
-   // Close SQLite DB.
-
    if (IsConnected()) {
       sqlite3_close(fSQLite);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to SQLite DB.
+
 void TSQLiteServer::Close(Option_t *)
 {
-   // Close connection to SQLite DB.
-
    if (!fSQLite) {
       return;
    }
@@ -95,22 +95,22 @@ void TSQLiteServer::Close(Option_t *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// submit "START TRANSACTION" query to database
+/// return kTRUE, if successful
+
 Bool_t TSQLiteServer::StartTransaction()
 {
-   // submit "START TRANSACTION" query to database
-   // return kTRUE, if successful
-
    return Exec("BEGIN TRANSACTION");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute SQL command. Result object must be deleted by the user.
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TSQLiteServer::Query(const char *sql)
 {
-   // Execute SQL command. Result object must be deleted by the user.
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    if (!IsConnected()) {
       Error("Query", "not connected");
       return 0;
@@ -133,12 +133,12 @@ TSQLResult *TSQLiteServer::Query(const char *sql)
    return new TSQLiteResult(preparedStmt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute SQL command which does not produce any result sets.
+/// Returns kTRUE if successful.
+
 Bool_t TSQLiteServer::Exec(const char *sql)
 {
-   // Execute SQL command which does not produce any result sets.
-   // Returns kTRUE if successful.
-
    if (!IsConnected()) {
       Error("Exec", "not connected");
       return kFALSE;
@@ -155,34 +155,34 @@ Bool_t TSQLiteServer::Exec(const char *sql)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select a database. Always returns non-zero for SQLite,
+/// as only one DB exists per file.
+
 Int_t TSQLiteServer::SelectDataBase(const char* /*dbname*/)
 {
-   // Select a database. Always returns non-zero for SQLite,
-   // as only one DB exists per file.
-
    Error("SelectDataBase", "SelectDataBase command makes no sense for SQLite!");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all available databases. Always returns 0 for SQLite,
+/// as only one DB exists per file.
+
 TSQLResult *TSQLiteServer::GetDataBases(const char* /*wild*/)
 {
-   // List all available databases. Always returns 0 for SQLite,
-   // as only one DB exists per file.
-
    Error("GetDataBases", "GetDataBases command makes no sense for SQLite!");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all tables in the specified database. Wild is for wildcarding
+/// "t%" list all tables starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TSQLiteServer::GetTables(const char* /*dbname*/, const char *wild)
 {
-   // List all tables in the specified database. Wild is for wildcarding
-   // "t%" list all tables starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    if (!IsConnected()) {
       Error("GetTables", "not connected");
       return 0;
@@ -195,18 +195,18 @@ TSQLResult *TSQLiteServer::GetTables(const char* /*dbname*/, const char *wild)
    return Query(sql);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all columns in specified table (database argument is ignored).
+/// Wild is for wildcarding "t%" list all columns starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+/// For SQLite, this fails with wildcard, as the column names are not queryable!
+/// If no wildcard is used, the result of PRAGMA table_info(table) is returned,
+/// which contains the names in field 1.
+
 TSQLResult *TSQLiteServer::GetColumns(const char* /*dbname*/, const char* table,
       const char* wild)
 {
-   // List all columns in specified table (database argument is ignored).
-   // Wild is for wildcarding "t%" list all columns starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-   // For SQLite, this fails with wildcard, as the column names are not queryable!
-   // If no wildcard is used, the result of PRAGMA table_info(table) is returned,
-   // which contains the names in field 1.
-
    if (!IsConnected()) {
       Error("GetColumns", "not connected");
       return 0;
@@ -221,12 +221,12 @@ TSQLResult *TSQLiteServer::GetColumns(const char* /*dbname*/, const char* table,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produces SQL table info.
+/// Object must be deleted by user.
+
 TSQLTableInfo *TSQLiteServer::GetTableInfo(const char* tablename)
 {
-   // Produces SQL table info.
-   // Object must be deleted by user.
-
    if (!IsConnected()) {
       Error("GetTableInfo", "not connected");
       return 0;
@@ -272,32 +272,32 @@ TSQLTableInfo *TSQLiteServer::GetTableInfo(const char* tablename)
    return info;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a database. Always returns non-zero for SQLite,
+/// as it has only one DB per file.
+
 Int_t TSQLiteServer::CreateDataBase(const char* /*dbname*/)
 {
-   // Create a database. Always returns non-zero for SQLite,
-   // as it has only one DB per file.
-
    Error("CreateDataBase", "CreateDataBase command makes no sense for SQLite!");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drop (i.e. delete) a database. Always returns non-zero for SQLite,
+/// as it has only one DB per file.
+
 Int_t TSQLiteServer::DropDataBase(const char* /*dbname*/)
 {
-   // Drop (i.e. delete) a database. Always returns non-zero for SQLite,
-   // as it has only one DB per file.
-
    Error("DropDataBase", "DropDataBase command makes no sense for SQLite!");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reload permission tables. Returns 0 if successful, non-zero
+/// otherwise. User must have reload permissions.
+
 Int_t TSQLiteServer::Reload()
 {
-   // Reload permission tables. Returns 0 if successful, non-zero
-   // otherwise. User must have reload permissions.
-
    if (!IsConnected()) {
       Error("Reload", "not connected");
       return -1;
@@ -307,12 +307,12 @@ Int_t TSQLiteServer::Reload()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shutdown the database server. Returns 0 if successful, non-zero
+/// otherwise. Makes no sense for SQLite, always returns -1.
+
 Int_t TSQLiteServer::Shutdown()
 {
-   // Shutdown the database server. Returns 0 if successful, non-zero
-   // otherwise. Makes no sense for SQLite, always returns -1.
-
    if (!IsConnected()) {
       Error("Shutdown", "not connected");
       return -1;
@@ -322,22 +322,22 @@ Int_t TSQLiteServer::Shutdown()
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// We assume prepared statements work for all SQLite-versions.
+/// As we actually use the recommended sqlite3_prepare(),
+/// or, if possible, sqlite3_prepare_v2(),
+/// this already introduces the "compile time check".
+
 Bool_t TSQLiteServer::HasStatement() const
 {
-   // We assume prepared statements work for all SQLite-versions.
-   // As we actually use the recommended sqlite3_prepare(),
-   // or, if possible, sqlite3_prepare_v2(),
-   // this already introduces the "compile time check".
-
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce TSQLiteStatement.
+
 TSQLStatement* TSQLiteServer::Statement(const char *sql, Int_t)
 {
-   // Produce TSQLiteStatement.
-
    if (!sql || !*sql) {
       SetError(-1, "no query string specified", "Statement");
       return 0;
@@ -369,11 +369,11 @@ TSQLStatement* TSQLiteServer::Statement(const char *sql, Int_t)
    return new TSQLiteStatement(stmt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return server info, must be deleted by user.
+
 const char *TSQLiteServer::ServerInfo()
 {
-   // Return server info, must be deleted by user.
-
    if (!IsConnected()) {
       Error("ServerInfo", "not connected");
       return 0;

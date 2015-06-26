@@ -54,13 +54,13 @@ extern "C" {
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor: get AFS token for usr using credentials from file 'fpw'.
+/// If 'usr' is undefined the current user is used.
+/// If 'fpw' is undefined the caller is prompt for a password.
+
 TAFS::TAFS(const char *fpw, const char *user, int life)
 {
-   // Constructor: get AFS token for usr using credentials from file 'fpw'.
-   // If 'usr' is undefined the current user is used.
-   // If 'fpw' is undefined the caller is prompt for a password.
-
    // Used to test validity
    fToken = 0;
 
@@ -163,27 +163,27 @@ TAFS::TAFS(const char *fpw, const char *user, int life)
    return;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TAFS::~TAFS()
 {
-   // Destructor
-
    if (fToken)
       DeleteAFSToken(fToken);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return seconds to expiration (negative means expired)
+
 Int_t TAFS::Verify()
 {
-   // Return seconds to expiration (negative means expired)
-
    return (fToken ? VerifyAFSToken(fToken) : -1);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switch on/off usage of password dialog box
+
 void TAFS::SetUsePwdDialog(Bool_t on)
 {
-   // Switch on/off usage of password dialog box
-
    fgUsePwdDialog = on;
 }

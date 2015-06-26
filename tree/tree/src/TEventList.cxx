@@ -46,12 +46,12 @@
 
 ClassImp(TEventList)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Default constructor for a EventList*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*        ==================================
+
 TEventList::TEventList(): TNamed()
 {
-//*-*-*-*-*-*Default constructor for a EventList*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ==================================
-
    fN          = 0;
    fSize       = 100;
    fDelta      = 100;
@@ -60,14 +60,14 @@ TEventList::TEventList(): TNamed()
    fReapply    = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a EventList.
+///
+/// This Eventlist is added to the list of objects in current directory.
+
 TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_t delta)
   :TNamed(name,title), fReapply(kFALSE)
 {
-   // Create a EventList.
-   //
-   // This Eventlist is added to the list of objects in current directory.
-
    fN = 0;
    if (initsize > 100) fSize  = initsize;
    else                fSize  = 100;
@@ -78,11 +78,11 @@ TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_
    if (fDirectory) fDirectory->Append(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TEventList::TEventList(const TEventList &list) : TNamed(list)
 {
-   // Copy constructor.
-
    fN     = list.fN;
    fSize  = list.fSize;
    fDelta = list.fDelta;
@@ -93,23 +93,23 @@ TEventList::TEventList(const TEventList &list) : TNamed(list)
    fDirectory = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default destructor for a EventList.
+
 TEventList::~TEventList()
 {
-   // Default destructor for a EventList.
-
    delete [] fList;  fList = 0;
    if (fDirectory) fDirectory->Remove(this);
    fDirectory  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge contents of alist with this list.
+///
+/// Both alist and this list are assumed to be sorted prior to this call
+
 void TEventList::Add(const TEventList *alist)
 {
-   // Merge contents of alist with this list.
-   //
-   // Both alist and this list are assumed to be sorted prior to this call
-
    Int_t i;
    Int_t an = alist->GetN();
    if (!an) return;
@@ -151,20 +151,20 @@ void TEventList::Add(const TEventList *alist)
    SetTitle(updated.GetTitle());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return TRUE if list contains entry.
+
 Bool_t TEventList::Contains(Long64_t entry)
 {
-   // Return TRUE if list contains entry.
-
    if (GetIndex(entry) < 0) return kFALSE;
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return TRUE if list contains entries from entrymin to entrymax included.
+
 Bool_t TEventList::ContainsRange(Long64_t entrymin, Long64_t entrymax)
 {
-   // Return TRUE if list contains entries from entrymin to entrymax included.
-
    Long64_t imax = TMath::BinarySearch(fN,fList,entrymax);
    //printf("ContainsRange: entrymin=%lld, entrymax=%lld,imax=%lld, fList[imax]=%lld\n",entrymin,entrymax,imax,fList[imax]);
 
@@ -172,19 +172,19 @@ Bool_t TEventList::ContainsRange(Long64_t entrymin, Long64_t entrymax)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called by TKey and others to automatically add us to a directory when we are read from a file.
+
 void TEventList::DirectoryAutoAdd(TDirectory* dir)
 {
-   // Called by TKey and others to automatically add us to a directory when we are read from a file.
-
    SetDirectory(dir);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enter element entry into the list.
+
 void TEventList::Enter(Long64_t entry)
 {
-   // Enter element entry into the list.
-
    if (!fList) {
       fList = new Long64_t[fSize];
       fList[0] = entry;
@@ -210,25 +210,25 @@ void TEventList::Enter(Long64_t entry)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return value of entry at index in the list.
+/// Return -1 if index is not in the list range.
+
 Long64_t TEventList::GetEntry(Int_t index) const
 {
-   // Return value of entry at index in the list.
-   // Return -1 if index is not in the list range.
-
    if (!fList)   return -1;
    if (index < 0 || index >= fN)   return -1;
    return fList[index];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return index in the list of element with value entry
+/// array is supposed  to be sorted prior to this call.
+/// If match is found, function returns position of element.
+/// If no match found, function returns -1.
+
 Int_t TEventList::GetIndex(Long64_t entry) const
 {
-   // Return index in the list of element with value entry
-   // array is supposed  to be sorted prior to this call.
-   // If match is found, function returns position of element.
-   // If no match found, function returns -1.
-
    Long64_t nabove, nbelow, middle;
    nabove = fN+1;
    nbelow = 0;
@@ -241,11 +241,11 @@ Int_t TEventList::GetIndex(Long64_t entry) const
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove elements from this list that are NOT present in alist.
+
 void TEventList::Intersect(const TEventList *alist)
 {
-   // Remove elements from this list that are NOT present in alist.
-
    if (!alist) return;
    if (!fList) return;
 
@@ -268,11 +268,11 @@ void TEventList::Intersect(const TEventList *alist)
    SetTitle(updated.GetTitle());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge entries in all the TEventList in the collection in this event list
+
 Int_t TEventList::Merge(TCollection *list)
 {
-// Merge entries in all the TEventList in the collection in this event list
-
    if (!list) return -1;
    TIter next(list);
 
@@ -291,11 +291,11 @@ Int_t TEventList::Merge(TCollection *list)
    return nevents;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///          Print contents of this list
+
 void TEventList::Print(Option_t *option) const
 {
-//          Print contents of this list
-
    printf("EventList:%s/%s, number of entries =%d, size=%d\n",GetName(),GetTitle(),fN,fSize);
    if (!strstr(option,"all")) return;
    Int_t i;
@@ -317,19 +317,19 @@ void TEventList::Print(Option_t *option) const
    delete [] line;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///          Reset number of entries in event list
+
 void TEventList::Reset(Option_t *)
 {
-//          Reset number of entries in event list
-
    fN = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///          Resize list by delta entries
+
 void TEventList::Resize(Int_t delta)
 {
-//          Resize list by delta entries
-
    if (!delta) delta = fDelta;
    fSize += delta;
    Long64_t *newlist = new Long64_t[fSize];
@@ -338,24 +338,24 @@ void TEventList::Resize(Int_t delta)
    fList = newlist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove reference to this EventList from current directory and add
+/// reference to new directory dir. dir can be 0 in which case the list
+/// does not belong to any directory.
+
 void TEventList::SetDirectory(TDirectory *dir)
 {
-   // Remove reference to this EventList from current directory and add
-   // reference to new directory dir. dir can be 0 in which case the list
-   // does not belong to any directory.
-
    if (fDirectory == dir) return;
    if (fDirectory) fDirectory->Remove(this);
    fDirectory = dir;
    if (fDirectory) fDirectory->Append(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the name of this TEventList
+
 void TEventList::SetName(const char *name)
 {
-   // Change the name of this TEventList
-
    //  TEventLists are named objects in a THashList.
    //  We must update the hashlist if we change the name
    if (fDirectory) fDirectory->Remove(this);
@@ -363,11 +363,11 @@ void TEventList::SetName(const char *name)
    if (fDirectory) fDirectory->Append(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///          Sort list entries in increasing order
+
 void TEventList::Sort()
 {
-//          Sort list entries in increasing order
-
    Int_t    *index   = new Int_t[fN];
    Long64_t *newlist = new Long64_t[fSize];
    Int_t i,ind;
@@ -384,11 +384,11 @@ void TEventList::Sort()
    fList = newlist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TEventList.
+
 void TEventList::Streamer(TBuffer &b)
 {
-   // Stream an object of class TEventList.
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
@@ -419,11 +419,11 @@ void TEventList::Streamer(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove elements from this list that are present in alist.
+
 void TEventList::Subtract(const TEventList *alist)
 {
-   // Remove elements from this list that are present in alist.
-
    if (!alist) return;
    if (!fList) return;
 
@@ -446,11 +446,11 @@ void TEventList::Subtract(const TEventList *alist)
    SetTitle(updated.GetTitle());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assingment.
+
 TEventList& TEventList::operator=(const TEventList &list)
 {
-   // Assingment.
-
    if (this != &list) {
       TNamed::operator=(list);
       if (fSize < list.fSize) {
@@ -466,31 +466,31 @@ TEventList& TEventList::operator=(const TEventList &list)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Addition.
+
 TEventList operator+(const TEventList &list1, const TEventList &list2)
 {
-   // Addition.
-
    TEventList newlist = list1;
    newlist.Add(&list2);
    return newlist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Substraction
+
 TEventList operator-(const TEventList &list1, const TEventList &list2)
 {
-   // Substraction
-
    TEventList newlist = list1;
    newlist.Subtract(&list2);
    return newlist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Intersection.
+
 TEventList operator*(const TEventList &list1, const TEventList &list2)
 {
-   // Intersection.
-
    TEventList newlist = list1;
    newlist.Intersect(&list2);
    return newlist;

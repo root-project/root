@@ -42,17 +42,17 @@
 
 ClassImp(TMVA::GiniIndexWithLaplace)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///     Gini(Sample M) = 1 - (c(1)/N)^2 - (c(2)/N)^2 .... - (c(k)/N)^2    
+///              Where: M is a smaple of whatever N elements (events)              
+///                      that belong to K different classes                         
+///                      c(k) is the number of elements that belong to class k      
+///               Laplace's correction to the prob.density c/N --> (c+1)/(N+2)      
+///               for just Signal and Background classes this then boils down to:   
+///               Gini(Sample) = 2(s*b+s+b+1)/(s+b+2)^2                               
+
 Double_t TMVA::GiniIndexWithLaplace::GetSeparationIndex( const Double_t &s, const Double_t &b )
 {
-   //     Gini(Sample M) = 1 - (c(1)/N)^2 - (c(2)/N)^2 .... - (c(k)/N)^2    
-   //              Where: M is a smaple of whatever N elements (events)              
-   //                      that belong to K different classes                         
-   //                      c(k) is the number of elements that belong to class k      
-   //               Laplace's correction to the prob.density c/N --> (c+1)/(N+2)      
-   //               for just Signal and Background classes this then boils down to:   
-   //               Gini(Sample) = 2(s*b+s+b+1)/(s+b+2)^2                               
-   
    if (s+b <= 0)      return 0;
    if (s<=0 || b <=0) return 0;
    else               return (s*b+s+b+1)/(s+b+2)/(s+b+2); 

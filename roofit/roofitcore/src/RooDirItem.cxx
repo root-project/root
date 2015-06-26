@@ -38,34 +38,37 @@ using namespace std;
 ClassImp(RooDirItem) ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooDirItem::RooDirItem() : _dir(0) 
 {
-  // Default constructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooDirItem::RooDirItem(const RooDirItem& /*other*/) : _dir(0) 
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooDirItem::~RooDirItem() 
 {  
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from directory it was added to
+
 void RooDirItem::removeFromDir(TObject* obj) 
 {
-  // Remove object from directory it was added to
-
   if (_dir) {
     if (!_dir->TestBit(TDirectoryFile::kCloseDirectory))
       _dir->GetList()->Remove(obj) ;
@@ -74,13 +77,13 @@ void RooDirItem::removeFromDir(TObject* obj)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append object to directory. If forceMemoryResident is
+/// true, force addition to ROOT memory directory if that
+/// is not the current directory
+
 void RooDirItem::appendToDir(TObject* obj, Bool_t forceMemoryResident) 
 {
-  // Append object to directory. If forceMemoryResident is
-  // true, force addition to ROOT memory directory if that
-  // is not the current directory
-
   if (forceMemoryResident) {
     // Append self forcibly to memory directory
 

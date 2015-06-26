@@ -36,26 +36,29 @@
 
 ClassImp(TMVA::TSpline1)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from TGraph
+/// TSpline is a TNamed object
+
 TMVA::TSpline1::TSpline1( const TString& title, TGraph* theGraph )
    : fGraph( theGraph )
 {
-   // constructor from TGraph
-   // TSpline is a TNamed object
    SetNameTitle( title, title );  
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::TSpline1::~TSpline1( void )
 {
-   // destructor
    if (fGraph) delete fGraph; // ROOT's spline classes also own the TGraph
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns linearly interpolated TGraph entry around x
+
 Double_t TMVA::TSpline1::Eval( Double_t x ) const
 {  
-   // returns linearly interpolated TGraph entry around x
    Int_t ibin = TMath::BinarySearch( fGraph->GetN(),
                                      fGraph->GetX(),
                                      x );
@@ -77,15 +80,17 @@ Double_t TMVA::TSpline1::Eval( Double_t x ) const
    return fGraph->GetY()[ibin] + (x - fGraph->GetX()[ibin]) * dy/dx;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// no coefficients to precompute
+
 void TMVA::TSpline1::BuildCoeff( void )
 {
-   // no coefficients to precompute
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// no knots
+
 void TMVA::TSpline1::GetKnot( Int_t /* i*/, Double_t&  /*x*/, Double_t& /*y*/ ) const
 {
-   // no knots
 }
 

@@ -63,11 +63,11 @@ static XSlaveInit xslave_init;
 //---- error handling ----------------------------------------------------------
 //---- Needed to avoid blocking on the CINT mutex in printouts -----------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to ErrorHandler (protected).
+
 void TXSlave::DoError(int level, const char *location, const char *fmt, va_list va) const
 {
-   // Interface to ErrorHandler (protected).
-
    ::ErrorHandler(level, Form("TXSlave::%s", location), fmt, va);
 }
 
@@ -83,11 +83,11 @@ public:
    Bool_t Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TXSlave interrupt handler.
+
 Bool_t TXSlaveInterruptHandler::Notify()
 {
-   // TXSlave interrupt handler.
-
    Info("Notify","Processing interrupt signal ...");
 
    // Handle also interrupt condition on socket(s)
@@ -97,12 +97,13 @@ Bool_t TXSlaveInterruptHandler::Notify()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a PROOF slave object. Called via the TProof ctor.
+
 TXSlave::TXSlave(const char *url, const char *ord, Int_t perf,
                const char *image, TProof *proof, Int_t stype,
                const char *workdir, const char *msd, Int_t nwk) : TSlave()
 {
-   // Create a PROOF slave object. Called via the TProof ctor.
    fImage = image;
    fProofWorkDir = workdir;
    fWorkDir = workdir;
@@ -124,13 +125,13 @@ TXSlave::TXSlave(const char *url, const char *ord, Int_t perf,
    Init(url, stype);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a PROOF slave object. Called via the TXSlave ctor.
+/// The Init method is technology specific and is overwritten by derived
+/// classes.
+
 void TXSlave::Init(const char *host, Int_t stype)
 {
-   // Init a PROOF slave object. Called via the TXSlave ctor.
-   // The Init method is technology specific and is overwritten by derived
-   // classes.
-
    // Url string with host, port information; 'host' may contain 'user' information
    // in the usual form 'user@host'
 
@@ -299,11 +300,11 @@ void TXSlave::Init(const char *host, Int_t stype)
    fValid = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse fBuffer after a connection attempt
+
 void TXSlave::ParseBuffer()
 {
-   // Parse fBuffer after a connection attempt
-
    // Set URL entry point for the default data pool
    TString buffer(((TXSocket *)fSocket)->fBuffer);
    if (!buffer.IsNull()) {
@@ -328,13 +329,13 @@ void TXSlave::ParseBuffer()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a PROOF slave object. Called via the TXSlave ctor.
+/// The Init method is technology specific and is overwritten by derived
+/// classes.
+
 Int_t TXSlave::SetupServ(Int_t, const char *)
 {
-   // Init a PROOF slave object. Called via the TXSlave ctor.
-   // The Init method is technology specific and is overwritten by derived
-   // classes.
-
    // Get back startup message of proofserv (we are now talking with
    // the real proofserver and not anymore with the proofd front-end)
    Int_t what;
@@ -371,19 +372,19 @@ Int_t TXSlave::SetupServ(Int_t, const char *)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy slave.
+
 TXSlave::~TXSlave()
 {
-   // Destroy slave.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close slave socket.
+
 void TXSlave::Close(Option_t *opt)
 {
-   // Close slave socket.
-
    if (fSocket)
       // Closing socket ...
       fSocket->Close(opt);
@@ -392,34 +393,34 @@ void TXSlave::Close(Option_t *opt)
    SafeDelete(fSocket);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ping the remote master or slave servers.
+/// Returns 0 if ok, -1 if it did not ping or in case of error
+
 Int_t TXSlave::Ping()
 {
-   // Ping the remote master or slave servers.
-   // Returns 0 if ok, -1 if it did not ping or in case of error
-
    if (!IsValid()) return -1;
 
    return (((TXSocket *)fSocket)->Ping(GetOrdinal()) ? 0 : -1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Touch the client admin file to proof we are alive.
+
 void TXSlave::Touch()
 {
-   // Touch the client admin file to proof we are alive.
-
    if (!IsValid()) return;
 
    ((TXSocket *)fSocket)->RemoteTouch();
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send interrupt to master or slave servers.
+/// Returns 0 if ok, -1 in case of error
+
 void TXSlave::Interrupt(Int_t type)
 {
-   // Send interrupt to master or slave servers.
-   // Returns 0 if ok, -1 in case of error
-
    if (!IsValid()) return;
 
    if (type == TProof::kLocalInterrupt) {
@@ -454,11 +455,12 @@ void TXSlave::Interrupt(Int_t type)
    Info("Interrupt","Interrupt of type %d sent", type);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sent stop/abort request to PROOF server. It will be
+/// processed asynchronously by a separate thread.
+
 void TXSlave::StopProcess(Bool_t abort, Int_t timeout)
 {
-   // Sent stop/abort request to PROOF server. It will be
-   // processed asynchronously by a separate thread.
    if (!IsValid()) return;
 
    ((TXSocket *)fSocket)->SendUrgent(TXSocket::kStopProcess, (Int_t)abort, timeout);
@@ -466,12 +468,12 @@ void TXSlave::StopProcess(Bool_t abort, Int_t timeout)
       Info("StopProcess", "Request of type %d sent over", abort);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find out the remote proofd protocol version.
+/// Returns -1 in case of error.
+
 Int_t TXSlave::GetProofdProtocol(TSocket *s)
 {
-   // Find out the remote proofd protocol version.
-   // Returns -1 in case of error.
-
    Int_t rproto = -1;
 
    UInt_t cproto = 0;
@@ -522,22 +524,22 @@ Int_t TXSlave::GetProofdProtocol(TSocket *s)
    return rproto;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send message to intermediate coordinator.
+/// If any output is due, this is returned as a generic message
+
 TObjString *TXSlave::SendCoordinator(Int_t kind, const char *msg, Int_t int2)
 {
-   // Send message to intermediate coordinator.
-   // If any output is due, this is returned as a generic message
-
    return ((TXSocket *)fSocket)->SendCoordinator(kind, msg, int2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set an alias for this session. If reconnection is supported, the alias
+/// will be communicated to the remote coordinator so that it can be recovered
+/// when reconnecting
+
 void TXSlave::SetAlias(const char *alias)
 {
-   // Set an alias for this session. If reconnection is supported, the alias
-   // will be communicated to the remote coordinator so that it can be recovered
-   // when reconnecting
-
    // Nothing to do if not in contact with coordinator
    if (!IsValid()) return;
 
@@ -546,13 +548,13 @@ void TXSlave::SetAlias(const char *alias)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Communicate to the coordinator the priprity of the group to which the
+/// user belongs
+/// Return 0 on success
+
 Int_t TXSlave::SendGroupPriority(const char *grp, Int_t priority)
 {
-   // Communicate to the coordinator the priprity of the group to which the
-   // user belongs
-   // Return 0 on success
-
    // Nothing to do if not in contact with coordinator
    if (!IsValid()) return -1;
 
@@ -561,11 +563,11 @@ Int_t TXSlave::SendGroupPriority(const char *grp, Int_t priority)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle error on the input socket
+
 Bool_t TXSlave::HandleError(const void *in)
 {
-   // Handle error on the input socket
-
    XHandleErr_t *herr = in ? (XHandleErr_t *)in : 0;
 
    // Try reconnection
@@ -634,11 +636,11 @@ Bool_t TXSlave::HandleError(const void *in)
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle asynchronous input on the socket
+
 Bool_t TXSlave::HandleInput(const void *)
 {
-   // Handle asynchronous input on the socket
-
    if (fProof) {
 
       // Attach to the monitor instance, if any
@@ -678,11 +680,11 @@ Bool_t TXSlave::HandleInput(const void *)
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set/Unset the interrupt handler
+
 void TXSlave::SetInterruptHandler(Bool_t on)
 {
-   // Set/Unset the interrupt handler
-
    if (gDebug > 1)
       Info("SetInterruptHandler", "enter: %d", on);
 
@@ -696,11 +698,11 @@ void TXSlave::SetInterruptHandler(Bool_t on)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean any input on the socket
+
 void TXSlave::FlushSocket()
 {
-   // Clean any input on the socket
-
    if (gDebug > 1)
       Info("FlushSocket", "enter: %p", fSocket);
 

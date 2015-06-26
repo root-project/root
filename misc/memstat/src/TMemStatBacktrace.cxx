@@ -58,11 +58,11 @@ void *g_global_stack_end = NULL;
 namespace Memstat {
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// we have a limit on the depth = 35
+
    static void *return_address(int _frame)
    {
-      // we have a limit on the depth = 35
-
 #if defined(SUPPORTS_MEMSTAT)
       switch(_frame) {
             _RET_ADDR(0);
@@ -110,7 +110,8 @@ namespace Memstat {
 #endif
    }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    size_t builtin_return_address(void **_container, size_t _limit)
    {
       size_t i(0);
@@ -120,16 +121,16 @@ namespace Memstat {
 
       return i;
    }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the backtrace
+/// _trace - array of pointers
+/// _size - maximal deepness of stack information
+/// _bUseGNUBuiltinBacktrace - whether to use gcc builtin backtrace or C library one.
+/// The builtin version is much faster, but very sensitive and in some conditions could fail to return a proper result.
+/// return value =  min(stack deepness, dsize)
+
    size_t getBacktrace(void **_trace, size_t _size, Bool_t _bUseGNUBuiltinBacktrace)
    {
-      // Get the backtrace
-      // _trace - array of pointers
-      // _size - maximal deepness of stack information
-      // _bUseGNUBuiltinBacktrace - whether to use gcc builtin backtrace or C library one.
-      // The builtin version is much faster, but very sensitive and in some conditions could fail to return a proper result.
-      // return value =  min(stack deepness, dsize)
-
 #if defined(SUPPORTS_MEMSTAT)
       if(_bUseGNUBuiltinBacktrace) {
          // Initialize the stack end variable.
@@ -142,12 +143,12 @@ namespace Memstat {
 #endif
    }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the name of the function and library
+
    int getSymbols(void *_pAddr,
                   TString &/*_strInfo*/, TString &_strLib, TString &_strSymbol)
    {
-      // get the name of the function and library
-
 #if defined(SUPPORTS_MEMSTAT)
       Dl_info info;
       if(0 ==  dladdr(_pAddr, &info)) {
@@ -173,10 +174,10 @@ namespace Memstat {
       return 0;
    }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    void getSymbolFullInfo(void *_pAddr, TString *_retInfo, const char *const _separator)
    {
-
       if(!_retInfo)
          return;
 
@@ -198,11 +199,11 @@ namespace Memstat {
 #endif
    }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// demangle symbols
+
    void demangle(char *_codeInfo, TString &_str)
    {
-      // demangle symbols
-
 #if defined(SUPPORTS_MEMSTAT)
       int status = 0;
       char *ch = abi::__cxa_demangle(_codeInfo, 0, 0, &status);

@@ -51,11 +51,11 @@
 ClassImp(TImageDump)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default SVG constructor
+
 TImageDump::TImageDump() : TVirtualPS()
 {
-   // Default SVG constructor
-
    fStream    = 0;
    fImage     = 0;
    gVirtualPS = this;
@@ -63,39 +63,39 @@ TImageDump::TImageDump() : TVirtualPS()
    SetTitle("IMG");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize batch image interface
+///
+///  fname : image file name
+///
+///    The possible workstation types are:
+///  111 - Portrait
+///  112 - Landscape
+///  114 - preview, keep in memory (do not write on delete)
+
 TImageDump::TImageDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
-   // Initialize batch image interface
-   //
-   //  fname : image file name
-   //
-   //    The possible workstation types are:
-   //  111 - Portrait
-   //  112 - Landscape
-   //  114 - preview, keep in memory (do not write on delete)
-
    Open(fname, wtype);
    gVirtualPS = this;
    SetTitle("IMG");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a image file
+
 void TImageDump::Open(const char *fname, Int_t type)
 {
-   // Open a image file
-
    fStream = 0;
    fImage  = TImage::Create();
    fType   = type;
    SetName(fname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TImageDump::~TImageDump()
 {
-   // destructor
-
    Close();
 
    delete fImage;
@@ -104,11 +104,11 @@ TImageDump::~TImageDump()
    gVirtualPS = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close a image file
+
 void TImageDump::Close(Option_t *)
 {
-   // Close a image file
-
    // if fType == 114 - do not write image
    if (!fImage || (fType == 114)) {
       return;
@@ -118,11 +118,11 @@ void TImageDump::Close(Option_t *)
    fImage->WriteImage(GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a Box
+
 void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
-   // Draw a Box
-
    if (!gPad || !fImage) {
       return;
    }
@@ -185,18 +185,18 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a Frame around a box
+///
+/// mode = -1  the box looks as it is behind the screen
+/// mode =  1  the box looks as it is in front of the screen
+/// border is the border size in already pre-computed dark is the
+/// color for the dark part of the frame light is the color for the light
+/// part of the frame
+
 void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
                             Int_t mode, Int_t bordersize, Int_t dark, Int_t light)
 {
-   // Draw a Frame around a box
-   //
-   // mode = -1  the box looks as it is behind the screen
-   // mode =  1  the box looks as it is in front of the screen
-   // border is the border size in already pre-computed dark is the
-   // color for the dark part of the frame light is the color for the light
-   // part of the frame
-
    if (!gPad || !fImage) {
       return;
    }
@@ -272,21 +272,21 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    fImage->DrawFillArea(6, frame, col->AsHexString());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// not used
+
 void TImageDump::DrawPolyMarker(Int_t, Float_t *, Float_t *)
 {
-   // not used
-
    if (!gPad || !fImage) {
       return;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// draw polymarker
+
 void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
-   // draw polymarker
-
    if (!gPad || !fImage) {
       return;
    }
@@ -443,15 +443,15 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function defines a path with xw and yw and draw it according the
+/// value of nn:
+///
+///  If nn > 0 a line is drawn.
+///  If nn < 0 a closed polygon is drawn.
+
 void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 {
-   // This function defines a path with xw and yw and draw it according the
-   // value of nn:
-   //
-   //  If nn > 0 a line is drawn.
-   //  If nn < 0 a closed polygon is drawn.
-
    if (!gPad || !fImage || !nn) {
       return;
    }
@@ -606,21 +606,21 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    if (del) delete [] pt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// not used
+
 void TImageDump::DrawPS(Int_t, Float_t *, Float_t *)
 {
-   // not used
-
    if (!gPad || !fImage) {
       return;
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// draw dashed polyline
+
 void TImageDump::DrawDashPolyLine(Int_t nn, TPoint *xy, UInt_t nDash,
                                     const char* pDash, const char* col, UInt_t thick)
 {
-   // draw dashed polyline
-
    Int_t x0 = xy[0].GetX();
    Int_t y0 = xy[0].GetY();
    Int_t x = 0;
@@ -637,11 +637,11 @@ void TImageDump::DrawDashPolyLine(Int_t nn, TPoint *xy, UInt_t nDash,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// new page
+
 void TImageDump::NewPage()
 {
-   // new page
-
    if (gPad && fImage) {
       UInt_t w = UInt_t(gPad->GetWw()*gPad->GetWNDC());
       UInt_t h = UInt_t(gPad->GetWh()*gPad->GetHNDC());
@@ -650,14 +650,14 @@ void TImageDump::NewPage()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text
+///
+/// x: x position of the text
+/// y: y position of the text
+
 void TImageDump::Text(Double_t x, Double_t y, const char *chars)
 {
-   // Draw text
-   //
-   // x: x position of the text
-   // y: y position of the text
-
    if (!gPad || !fImage) {
       return;
    }
@@ -674,14 +674,14 @@ void TImageDump::Text(Double_t x, Double_t y, const char *chars)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text
+///
+/// x: x position of the text
+/// y: y position of the text
+
 void TImageDump::Text(Double_t x, Double_t y, const wchar_t *chars)
 {
-   // Draw text
-   //
-   // x: x position of the text
-   // y: y position of the text
-
    if (!gPad || !fImage) {
       return;
    }
@@ -709,12 +709,12 @@ static Int_t   gCellArrayY1 = 0;
 static Int_t   gCellArrayY2 = 0;
 static Int_t   gCellArrayIdx = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///cell array begin
+
 void TImageDump::CellArrayBegin(Int_t w, Int_t h, Double_t x1, Double_t x2,
                                 Double_t y1, Double_t y2)
 {
-   //cell array begin
-
    if (!gPad || !fImage || (w <= 0) || (h <= 0)) {
       return;
    }
@@ -738,11 +738,11 @@ void TImageDump::CellArrayBegin(Int_t w, Int_t h, Double_t x1, Double_t x2,
    gCellArrayIdx = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Cell array fill
+
 void TImageDump::CellArrayFill(Int_t r, Int_t g, Int_t b)
 {
-   //Cell array fill
-
    if (gCellArrayIdx >= gCellArrayN) return;
 
    fImage->BeginPaint();
@@ -751,11 +751,11 @@ void TImageDump::CellArrayFill(Int_t r, Int_t g, Int_t b)
    gCellArrayIdx++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Cell array end
+
 void TImageDump::CellArrayEnd()
 {
-   //Cell array end
-
    if (!fImage || !gCellArrayColors || !gCellArrayW || !gCellArrayH) {
       return;
    }
@@ -777,29 +777,29 @@ void TImageDump::CellArrayEnd()
    gCellArrayIdx = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color with its R G B components
+///
+///  r: % of red in [0,1]
+///  g: % of green in [0,1]
+///  b: % of blue in [0,1]
+
 void TImageDump::SetColor(Float_t /*r*/, Float_t /*g*/, Float_t /*b*/)
 {
-   // Set color with its R G B components
-   //
-   //  r: % of red in [0,1]
-   //  g: % of green in [0,1]
-   //  b: % of blue in [0,1]
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// x to pixel
+
 Int_t TImageDump::XtoPixel(Double_t x)
 {
-   // x to pixel
-
    return  gPad->XtoAbsPixel(x);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// y to pixel
+
 Int_t TImageDump::YtoPixel(Double_t y)
 {
-   // y to pixel
-
    return  gPad->YtoAbsPixel(y);
 }

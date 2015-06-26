@@ -25,21 +25,22 @@ const Int_t  kExtraSpace        = 8;   // extra space at end of buffer (used for
 
 ClassImp(TBuffer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The user has provided memory than we don't own, thus we can not extent it
+/// either.
+
 static char *R__NoReAllocChar(char *, size_t, size_t)
 {
-   // The user has provided memory than we don't own, thus we can not extent it
-   // either.
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an I/O buffer object. Mode should be either TBuffer::kRead or
+/// TBuffer::kWrite. By default the I/O buffer has a size of
+/// TBuffer::kInitialSize (1024) bytes.
+
 TBuffer::TBuffer(EMode mode)
 {
-   // Create an I/O buffer object. Mode should be either TBuffer::kRead or
-   // TBuffer::kWrite. By default the I/O buffer has a size of
-   // TBuffer::kInitialSize (1024) bytes.
-
    fBufSize      = kInitialSize;
    fMode         = mode;
    fVersion      = 0;
@@ -55,12 +56,12 @@ TBuffer::TBuffer(EMode mode)
    SetReAllocFunc( 0 );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an I/O buffer object. Mode should be either TBuffer::kRead or
+/// TBuffer::kWrite.
+
 TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 {
-   // Create an I/O buffer object. Mode should be either TBuffer::kRead or
-   // TBuffer::kWrite.
-
    if (bufsiz < kMinimalSize) bufsiz = kMinimalSize;
    fBufSize  = bufsiz;
    fMode     = mode;
@@ -77,18 +78,18 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
    SetReAllocFunc( 0 );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an I/O buffer object. Mode should be either TBuffer::kRead or
+/// TBuffer::kWrite. By default the I/O buffer has a size of
+/// TBuffer::kInitialSize (1024) bytes. An external buffer can be passed
+/// to TBuffer via the buf argument. By default this buffer will be adopted
+/// unless adopt is false.
+/// If the new buffer is _not_ adopted and no memory allocation routine
+/// is provided, a Fatal error will be issued if the Buffer attempts to
+/// expand.
+
 TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
-   // Create an I/O buffer object. Mode should be either TBuffer::kRead or
-   // TBuffer::kWrite. By default the I/O buffer has a size of
-   // TBuffer::kInitialSize (1024) bytes. An external buffer can be passed
-   // to TBuffer via the buf argument. By default this buffer will be adopted
-   // unless adopt is false.
-   // If the new buffer is _not_ adopted and no memory allocation routine
-   // is provided, a Fatal error will be issued if the Buffer attempts to
-   // expand.
-
    fBufSize  = bufsiz;
    fMode     = mode;
    fVersion  = 0;
@@ -118,11 +119,11 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete an I/O buffer object.
+
 TBuffer::~TBuffer()
 {
-   // Delete an I/O buffer object.
-
    if (TestBit(kIsOwner)) {
       //printf("Deleting fBuffer=%lx\n", fBuffer);
       delete [] fBuffer;
@@ -132,15 +133,15 @@ TBuffer::~TBuffer()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Automatically calculate a new size and expand the buffer to fit at least size_needed.
+/// The goals is to minimize the number of memory allocation and the memory allocation
+/// which avoiding too much memory wastage.
+/// If the size_needed is larger than the current size, the policy
+/// is to expand to double the current size or the size_needed which ever is largest.
+
 void TBuffer::AutoExpand(Int_t size_needed)
 {
-   // Automatically calculate a new size and expand the buffer to fit at least size_needed.
-   // The goals is to minimize the number of memory allocation and the memory allocation
-   // which avoiding too much memory wastage.
-   // If the size_needed is larger than the current size, the policy
-   // is to expand to double the current size or the size_needed which ever is largest.
-
    if (size_needed > fBufSize) {
       if (size_needed > 2*fBufSize) {
          Expand(size_needed);
@@ -150,19 +151,19 @@ void TBuffer::AutoExpand(Int_t size_needed)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets a new buffer in an existing TBuffer object. If newsiz=0 then the
+/// new buffer is expected to have the same size as the previous buffer.
+/// The current buffer position is reset to the start of the buffer.
+/// If the TBuffer owned the previous buffer, it will be deleted prior
+/// to accepting the new buffer. By default the new buffer will be
+/// adopted unless adopt is false.
+/// If the new buffer is _not_ adopted and no memory allocation routine
+/// is provided, a Fatal error will be issued if the Buffer attempts to
+/// expand.
+
 void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
-   // Sets a new buffer in an existing TBuffer object. If newsiz=0 then the
-   // new buffer is expected to have the same size as the previous buffer.
-   // The current buffer position is reset to the start of the buffer.
-   // If the TBuffer owned the previous buffer, it will be deleted prior
-   // to accepting the new buffer. By default the new buffer will be
-   // adopted unless adopt is false.
-   // If the new buffer is _not_ adopted and no memory allocation routine
-   // is provided, a Fatal error will be issued if the Buffer attempts to
-   // expand.
-
    if (fBuffer && TestBit(kIsOwner))
       delete [] fBuffer;
 
@@ -189,16 +190,16 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand (or shrink) the I/O buffer to newsize bytes.
+/// If copy is true (the default), the existing content of the
+/// buffer is preserved, otherwise the buffer is returned zero-ed out.
+///
+/// In order to avoid losing data, if the current length is greater than
+/// the requested size, we only shrink down to the current length.
+
 void TBuffer::Expand(Int_t newsize, Bool_t copy)
 {
-   // Expand (or shrink) the I/O buffer to newsize bytes.
-   // If copy is true (the default), the existing content of the
-   // buffer is preserved, otherwise the buffer is returned zero-ed out.
-   //
-   // In order to avoid losing data, if the current length is greater than
-   // the requested size, we only shrink down to the current length.
-
    Int_t l  = Length();
    if ( l > newsize ) {
       newsize = l;
@@ -224,34 +225,35 @@ void TBuffer::Expand(Int_t newsize, Bool_t copy)
    fBufMax  = fBuffer + fBufSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to parent of this buffer.
+
 TObject *TBuffer::GetParent() const
 {
-   // Return pointer to parent of this buffer.
-
    return fParent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parent owning this buffer.
+
 void TBuffer::SetParent(TObject *parent)
 {
-   // Set parent owning this buffer.
-
    fParent = parent;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the reallocation method currently used.
+
 ReAllocCharFun_t TBuffer::GetReAllocFunc() const
 {
-   // Return the reallocation method currently used.
    return fReAllocFunc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set which memory reallocation method to use.  If reallocafunc is null,
+/// reset it to the defaul value (TStorage::ReAlloc)
+
 void  TBuffer::SetReAllocFunc(ReAllocCharFun_t reallocfunc )
 {
-   // Set which memory reallocation method to use.  If reallocafunc is null,
-   // reset it to the defaul value (TStorage::ReAlloc)
-
    if (reallocfunc) {
       fReAllocFunc = reallocfunc;
    } else {
@@ -263,11 +265,11 @@ void  TBuffer::SetReAllocFunc(ReAllocCharFun_t reallocfunc )
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set buffer in read mode.
+
 void TBuffer::SetReadMode()
 {
-   // Set buffer in read mode.
-
    if ( (fMode&kWrite)!=0 ) {
       // We had reserved space for the free block count,
       // release it,
@@ -276,11 +278,11 @@ void TBuffer::SetReadMode()
    fMode = kRead;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set buffer in write mode.
+
 void TBuffer::SetWriteMode()
 {
-   // Set buffer in write mode.
-
    if ( (fMode&kWrite)==0 ) {
       // We had not yet reserved space for the free block count,
       // reserve it now.
@@ -289,64 +291,64 @@ void TBuffer::SetWriteMode()
    fMode = kWrite;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forward to TROOT::GetClass().
+
 TClass *TBuffer::GetClass(const type_info &typeinfo)
 {
-   // Forward to TROOT::GetClass().
-
    return TClass::GetClass(typeinfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forward to TROOT::GetClass().
+
 TClass *TBuffer::GetClass(const char *className)
 {
-   // Forward to TROOT::GetClass().
-
    return TClass::GetClass(className);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current PRocessID.
+
 TProcessID *TBuffer::ReadProcessID(UShort_t pidf)
 {
-   // Return the current PRocessID.
-
    if (!pidf) return TProcessID::GetPID(); //may happen when cloning an object
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Always return 0 (current processID).
+
 UShort_t TBuffer::WriteProcessID(TProcessID *)
 {
-   // Always return 0 (current processID).
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Push a new data cache area onto the list of area to be used for
+/// temporarily store 'missing' data members.
+
 void TBuffer::PushDataCache(TVirtualArray *obj)
 {
-   // Push a new data cache area onto the list of area to be used for
-   // temporarily store 'missing' data members.
-
    fCacheStack.push_back(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the 'current' data cache area from the list of area to be used for
+/// temporarily store 'missing' data members.
+
 TVirtualArray *TBuffer::PeekDataCache() const
 {
-   // Return the 'current' data cache area from the list of area to be used for
-   // temporarily store 'missing' data members.
-
    if (fCacheStack.empty()) return 0;
    return fCacheStack.back();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pop and Return the 'current' data cache area from the list of area to be used for
+/// temporarily store 'missing' data members.
+
 TVirtualArray *TBuffer::PopDataCache()
 {
-   // Pop and Return the 'current' data cache area from the list of area to be used for
-   // temporarily store 'missing' data members.
-
    TVirtualArray *val = PeekDataCache();
    fCacheStack.pop_back();
    return val;

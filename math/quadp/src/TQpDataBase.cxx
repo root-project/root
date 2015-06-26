@@ -60,22 +60,22 @@
 
 ClassImp(TQpDataBase)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TQpDataBase::TQpDataBase()
 {
-// Default constructor
-
    fNx = 0;
    fMy = 0;
    fMz = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQpDataBase::TQpDataBase(Int_t nx,Int_t my,Int_t mz)
 {
-// Constructor
-
    fNx = nx;
    fMy = my;
    fMz = mz;
@@ -96,23 +96,23 @@ TQpDataBase::TQpDataBase(Int_t nx,Int_t my,Int_t mz)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TQpDataBase::TQpDataBase(const TQpDataBase &another) : TObject(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Randomly choose  x and its boundaries
+
 void TQpDataBase::RandomlyChooseBoundedVariables(
                            TVectorD &x,TVectorD &dualx,TVectorD &xlow,TVectorD &ixlow,
                            TVectorD &xupp,TVectorD &ixupp,Double_t &ix,Double_t percentLowerOnly,
                            Double_t percentUpperOnly,Double_t percentBound)
 {
-// Randomly choose  x and its boundaries
-
    const Int_t n = x.GetNrows();
 
    // Initialize the upper and lower bounds on x
@@ -203,11 +203,11 @@ void TQpDataBase::RandomlyChooseBoundedVariables(
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TQpDataBase &TQpDataBase::operator=(const TQpDataBase &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TObject::operator=(source);
       fNx = source.fNx;

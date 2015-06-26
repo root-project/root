@@ -28,7 +28,8 @@
 
 ClassImp(TH2Poly)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TH2Poly: 2D Histogram with Polygonal Bins</h2></center>
 
@@ -146,11 +147,11 @@ End_Html */
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default Constructor. No boundaries specified.
+
 TH2Poly::TH2Poly()
 {
-   // Default Constructor. No boundaries specified.
-
    Initialize(0., 0., 0., 0., 25, 25);
    SetName("NoName");
    SetTitle("NoTitle");
@@ -158,13 +159,13 @@ TH2Poly::TH2Poly()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with specified name and boundaries,
+/// but no partition cell number.
+
 TH2Poly::TH2Poly(const char *name,const char *title, Double_t xlow,Double_t xup
                                              , Double_t ylow,Double_t yup)
 {
-   // Constructor with specified name and boundaries,
-   // but no partition cell number.
-
    Initialize(xlow, xup, ylow, yup, 25, 25);
    SetName(name);
    SetTitle(title);
@@ -172,13 +173,13 @@ TH2Poly::TH2Poly(const char *name,const char *title, Double_t xlow,Double_t xup
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with specified name and boundaries and partition cell number.
+
 TH2Poly::TH2Poly(const char *name,const char *title,
            Int_t nX, Double_t xlow, Double_t xup,
            Int_t nY, Double_t ylow, Double_t yup)
 {
-   // Constructor with specified name and boundaries and partition cell number.
-
    Initialize(xlow, xup, ylow, yup, nX, nY);
    SetName(name);
    SetTitle(title);
@@ -186,11 +187,11 @@ TH2Poly::TH2Poly(const char *name,const char *title,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TH2Poly::~TH2Poly()
 {
-   // Destructor.
-
    delete[] fCells;
    delete[] fIsEmpty;
    delete[] fCompletelyInside;
@@ -199,14 +200,14 @@ TH2Poly::~TH2Poly()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a new bin to the histogram. It can be any object having the method
+/// IsInside(). It returns the bin number in the histogram. It returns 0 if
+/// it failed to add. To allow the histogram limits to expand when a bin
+/// outside the limits is added, call SetFloat() before adding the bin.
+
 Int_t TH2Poly::AddBin(TObject *poly)
 {
-   // Adds a new bin to the histogram. It can be any object having the method
-   // IsInside(). It returns the bin number in the histogram. It returns 0 if
-   // it failed to add. To allow the histogram limits to expand when a bin
-   // outside the limits is added, call SetFloat() before adding the bin.
-
    if (!poly) return 0;
 
    if (fBins == 0) {
@@ -252,25 +253,25 @@ Int_t TH2Poly::AddBin(TObject *poly)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a new bin to the histogram. The number of vertices and their (x,y)
+/// coordinates are required as input. It returns the bin number in the
+/// histogram.
+
 Int_t TH2Poly::AddBin(Int_t n, const Double_t *x, const Double_t *y)
 {
-   // Adds a new bin to the histogram. The number of vertices and their (x,y)
-   // coordinates are required as input. It returns the bin number in the
-   // histogram.
-
    TGraph *g = new TGraph(n, x, y);
    Int_t bin = AddBin(g);
    return bin;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new bin to the histogram. The bin shape is a rectangle.
+/// It returns the bin number of the bin in the histogram.
+
 Int_t TH2Poly::AddBin(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
-   // Add a new bin to the histogram. The bin shape is a rectangle.
-   // It returns the bin number of the bin in the histogram.
-
    Double_t x[] = {x1, x1, x2, x2, x1};
    Double_t y[] = {y1, y2, y2, y1, y1};
    TGraph *g = new TGraph(5, x, y);
@@ -279,11 +280,11 @@ Int_t TH2Poly::AddBin(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: this = this + c1*h1.
+
 Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
 {
-   // Performs the operation: this = this + c1*h1.
-
    Int_t bin;
 
    TH2Poly *h1p = (TH2Poly *)h1;
@@ -329,32 +330,32 @@ Bool_t TH2Poly::Add(const TH1 *h1, Double_t c1)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: this = this + c1*f1.
+
 Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
 {
-   // Performs the operation: this = this + c1*f1.
-
    Warning("Add","Not implement for TH2Poly");
    return kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace contents of this histogram by the addition of h1 and h2.
+
 Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
 {
-   // Replace contents of this histogram by the addition of h1 and h2.
-
    Warning("Add","Not implement for TH2Poly");
    return kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds the input bin into the partition cell matrix. This method is called
+/// in AddBin() and ChangePartition().
+
 void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
 {
-   // Adds the input bin into the partition cell matrix. This method is called
-   // in AddBin() and ChangePartition().
-
    // Cell Info
    Int_t nl, nr, mb, mt; // Max/min indices of the cells that contain the bin
    Double_t xclipl, xclipr, yclipb, yclipt; // x and y coordinates of a cell
@@ -422,12 +423,12 @@ void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes the number of partition cells in the histogram.
+/// Deletes the old partition and constructs a new one.
+
 void TH2Poly::ChangePartition(Int_t n, Int_t m)
 {
-   // Changes the number of partition cells in the histogram.
-   // Deletes the old partition and constructs a new one.
-
    fCellX = n;                          // Set the number of cells
    fCellY = m;                          // Set the number of cells
 
@@ -461,12 +462,12 @@ void TH2Poly::ChangePartition(Int_t n, Int_t m)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a complete copy of the underlying object.  If 'newname' is set,
+/// the copy's name will be set to that name.
+
 TObject* TH2Poly::Clone(const char* newname) const
 {
-   // Make a complete copy of the underlying object.  If 'newname' is set,
-   // the copy's name will be set to that name.
-
    // TH1::Clone relies on ::Copy to implemented by the derived class.
    // Until this is implemented, revert to the much slower default version
    // (and possibly non-thread safe).
@@ -474,11 +475,11 @@ TObject* TH2Poly::Clone(const char* newname) const
    return TNamed::Clone(newname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clears the contents of all bins in the histogram.
+
 void TH2Poly::ClearBinContents()
 {
-   // Clears the contents of all bins in the histogram.
-
    TIter next(fBins);
    TObject *obj;
    TH2PolyBin *bin;
@@ -499,11 +500,11 @@ void TH2Poly::ClearBinContents()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this histogram: contents, errors, etc.
+
 void TH2Poly::Reset(Option_t *opt)
 {
-   // Reset this histogram: contents, errors, etc.
-
    TIter next(fBins);
    TObject *obj;
    TH2PolyBin *bin;
@@ -517,23 +518,23 @@ void TH2Poly::Reset(Option_t *opt)
    TH2::Reset(opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the bin number of the bin at the given coordinate. -1 to -9 are
+/// the overflow and underflow bins.  overflow bin -5 is the unbinned areas in
+/// the histogram (also called "the sea"). The third parameter can be left
+/// blank.
+/// The overflow/underflow bins are:
+///
+/// -1 | -2 | -3
+/// -------------
+/// -4 | -5 | -6
+/// -------------
+/// -7 | -8 | -9
+///
+/// where -5 means is the "sea" bin (i.e. unbinned areas)
+
 Int_t TH2Poly::FindBin(Double_t x, Double_t y, Double_t)
 {
-   // Returns the bin number of the bin at the given coordinate. -1 to -9 are
-   // the overflow and underflow bins.  overflow bin -5 is the unbinned areas in
-   // the histogram (also called "the sea"). The third parameter can be left
-   // blank.
-   // The overflow/underflow bins are:
-   //
-   // -1 | -2 | -3
-   // -------------
-   // -4 | -5 | -6
-   // -------------
-   // -7 | -8 | -9
-   //
-   // where -5 means is the "sea" bin (i.e. unbinned areas)
-
 
    // Checks for overflow/underflow
    Int_t overflow = 0;
@@ -572,22 +573,22 @@ Int_t TH2Poly::FindBin(Double_t x, Double_t y, Double_t)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment the bin containing (x,y) by 1.
+/// Uses the partitioning algorithm.
+
 Int_t TH2Poly::Fill(Double_t x, Double_t y)
 {
-   // Increment the bin containing (x,y) by 1.
-   // Uses the partitioning algorithm.
-
    return Fill(x, y, 1.0);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment the bin containing (x,y) by w.
+/// Uses the partitioning algorithm.
+
 Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
 {
-   // Increment the bin containing (x,y) by w.
-   // Uses the partitioning algorithm.
-
    if (fNcells==0) return 0;
    Int_t overflow = 0;
    if      (y > fYaxis.GetXmax()) overflow += -1;
@@ -647,11 +648,11 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment the bin named "name" by w.
+
 Int_t TH2Poly::Fill(const char* name, Double_t w)
 {
-   // Increment the bin named "name" by w.
-
    TString sname(name);
 
    TIter    next(fBins);
@@ -672,33 +673,33 @@ Int_t TH2Poly::Fill(const char* name, Double_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a 2-D histogram with an array of values and weights.
+///
+/// ntimes:  number of entries in arrays x and w
+///          (array size must be ntimes*stride)
+/// x:       array of x values to be histogrammed
+/// y:       array of y values to be histogrammed
+/// w:       array of weights
+/// stride:  step size through arrays x, y and w
+
 void TH2Poly::FillN(Int_t ntimes, const Double_t* x, const Double_t* y,
                                const Double_t* w, Int_t stride)
 {
-   // Fills a 2-D histogram with an array of values and weights.
-   //
-   // ntimes:  number of entries in arrays x and w
-   //          (array size must be ntimes*stride)
-   // x:       array of x values to be histogrammed
-   // y:       array of y values to be histogrammed
-   // w:       array of weights
-   // stride:  step size through arrays x, y and w
-
    for (int i = 0; i < ntimes; i += stride) {
       Fill(x[i], y[i], w[i]);
    }
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the integral of bin contents.
+/// By default the integral is computed as the sum of bin contents.
+/// If option "width" or "area" is specified, the integral is the sum of
+/// the bin contents multiplied by the area of the bin.
+
 Double_t TH2Poly::Integral(Option_t* option) const
 {
-   // Returns the integral of bin contents.
-   // By default the integral is computed as the sum of bin contents.
-   // If option "width" or "area" is specified, the integral is the sum of
-   // the bin contents multiplied by the area of the bin.
-
    TString opt = option;
    opt.ToLower();
 
@@ -722,33 +723,33 @@ Double_t TH2Poly::Integral(Option_t* option) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the content of the input bin
+/// For the overflow/underflow/sea bins:
+///
+/// -1 | -2 | -3
+/// ---+----+----
+/// -4 | -5 | -6
+/// ---+----+----
+/// -7 | -8 | -9
+///
+/// where -5 is the "sea" bin (i.e. unbinned areas)
+
 Double_t TH2Poly::GetBinContent(Int_t bin) const
 {
-   // Returns the content of the input bin
-   // For the overflow/underflow/sea bins:
-   //
-   // -1 | -2 | -3
-   // ---+----+----
-   // -4 | -5 | -6
-   // ---+----+----
-   // -7 | -8 | -9
-   //
-   // where -5 is the "sea" bin (i.e. unbinned areas)
-
    if (bin > fNcells || bin == 0 || bin < -9) return 0; 
    if (bin<0) return fOverflow[-bin - 1];
    return ((TH2PolyBin*) fBins->At(bin-1))->GetContent();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the value of error associated to bin number bin.
+/// If the sum of squares of weights has been defined (via Sumw2),
+/// this function returns the sqrt(sum of w2).
+/// otherwise it returns the sqrt(contents) for this bin.
+
 Double_t TH2Poly::GetBinError(Int_t bin) const
 {
-   // Returns the value of error associated to bin number bin.
-   // If the sum of squares of weights has been defined (via Sumw2),
-   // this function returns the sqrt(sum of w2).
-   // otherwise it returns the sqrt(contents) for this bin.
-
    if (bin < 0) bin = 0;
    if (bin > (fNcells)) return 0;
    if (fBuffer) ((TH1*)this)->BufferEmpty();
@@ -761,33 +762,33 @@ Double_t TH2Poly::GetBinError(Int_t bin) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the bin name.
+
 const char *TH2Poly::GetBinName(Int_t bin) const
 {
-   // Returns the bin name.
-
    if (bin > (fNcells))  return "";
    if (bin < 0)          return "";
    return ((TH2PolyBin*) fBins->At(bin-1))->GetPolygon()->GetName();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the bin title.
+
 const char *TH2Poly::GetBinTitle(Int_t bin) const
 {
-   // Returns the bin title.
-
    if (bin > (fNcells))  return "";
    if (bin < 0)          return "";
    return ((TH2PolyBin*) fBins->At(bin-1))->GetPolygon()->GetTitle();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the maximum value of the histogram.
+
 Double_t TH2Poly::GetMaximum() const
 {
-   // Returns the maximum value of the histogram.
-
    if (fNcells==0) return 0;
    if (fMaximum != -1111) return fMaximum;
 
@@ -808,11 +809,11 @@ Double_t TH2Poly::GetMaximum() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the maximum value of the histogram that is less than maxval.
+
 Double_t TH2Poly::GetMaximum(Double_t maxval) const
 {
-   // Returns the maximum value of the histogram that is less than maxval.
-
    if (fNcells==0) return 0;
    if (fMaximum != -1111) return fMaximum;
 
@@ -833,11 +834,11 @@ Double_t TH2Poly::GetMaximum(Double_t maxval) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the minimum value of the histogram.
+
 Double_t TH2Poly::GetMinimum() const
 {
-   // Returns the minimum value of the histogram.
-
    if (fNcells==0) return 0;
    if (fMinimum != -1111) return fMinimum;
 
@@ -858,11 +859,11 @@ Double_t TH2Poly::GetMinimum() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the minimum value of the histogram that is greater than minval.
+
 Double_t TH2Poly::GetMinimum(Double_t minval) const
 {
-   // Returns the minimum value of the histogram that is greater than minval.
-
    if (fNcells==0) return 0;
    if (fMinimum != -1111) return fMinimum;
 
@@ -883,12 +884,12 @@ Double_t TH2Poly::GetMinimum(Double_t minval) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bins the histogram using a honeycomb structure
+
 void TH2Poly::Honeycomb(Double_t xstart, Double_t ystart, Double_t a,
                      Int_t k, Int_t s)
 {
-   // Bins the histogram using a honeycomb structure
-
    // Add the bins
    Double_t numberOfHexagonsInTheRow;
    Double_t x[6], y[6];
@@ -932,12 +933,12 @@ void TH2Poly::Honeycomb(Double_t xstart, Double_t ystart, Double_t a,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initializes the TH2Poly object.  This method is called by the constructor.
+
 void TH2Poly::Initialize(Double_t xlow, Double_t xup,
                       Double_t ylow, Double_t yup, Int_t n, Int_t m)
 {
-   // Initializes the TH2Poly object.  This method is called by the constructor.
-
    Int_t i;
    fDimension = 2;  //The dimesion of the histogram
 
@@ -982,14 +983,14 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if the input bin is intersecting with the
+/// input rectangle (xclipl, xclipr, yclipb, yclipt)
+
 Bool_t TH2Poly::IsIntersecting(TH2PolyBin *bin,
                                Double_t xclipl, Double_t xclipr,
                                Double_t yclipb, Double_t yclipt)
 {
-   // Returns kTRUE if the input bin is intersecting with the
-   // input rectangle (xclipl, xclipr, yclipb, yclipt)
-
    Int_t     gn;
    Double_t *gx;
    Double_t *gy;
@@ -1023,14 +1024,14 @@ Bool_t TH2Poly::IsIntersecting(TH2PolyBin *bin,
    return inter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if the input polygon (bn, x, y) is intersecting with the
+/// input rectangle (xclipl, xclipr, yclipb, yclipt)
+
 Bool_t TH2Poly::IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y,
                                       Double_t xclipl, Double_t xclipr,
                                       Double_t yclipb, Double_t yclipt)
 {
-   // Returns kTRUE if the input polygon (bn, x, y) is intersecting with the
-   // input rectangle (xclipl, xclipr, yclipb, yclipt)
-
    Bool_t p0R, p0L, p0T, p0B, p0xM, p0yM, p1R, p1L, p1T;
    Bool_t p1B, p1xM, p1yM, p0In, p1In;
 
@@ -1138,7 +1139,8 @@ Bool_t TH2Poly::IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Long64_t TH2Poly::Merge(TCollection *)
 {
    Error("Merge","Cannot merge TH2Poly");
@@ -1146,11 +1148,11 @@ Long64_t TH2Poly::Merge(TCollection *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    out <<"   "<<std::endl;
    out <<"   "<< ClassName() <<" *";
 
@@ -1207,23 +1209,23 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply this histogram by a constant c1.
+
 void TH2Poly::Scale(Double_t c1, Option_t*)
 {
-   // Multiply this histogram by a constant c1.
-
    for( int i = 0; i < this->GetNumberOfBins(); i++ ) {
       this->SetBinContent(i+1, c1*this->GetBinContent(i+1));
    }
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the contents of the input bin to the input content
+/// Negative values between -1 and -9 are for the overflows and the sea 
+
 void TH2Poly::SetBinContent(Int_t bin, Double_t content)
 {
-   // Sets the contents of the input bin to the input content
-   // Negative values between -1 and -9 are for the overflows and the sea 
-
    if (bin > (fNcells) || bin == 0 || bin < -9 ) return;
    if (bin > 0) 
       ((TH2PolyBin*) fBins->At(bin-1))->SetContent(content);
@@ -1232,21 +1234,21 @@ void TH2Poly::SetBinContent(Int_t bin, Double_t content)
    SetBinContentChanged(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// When set to kTRUE, allows the histogram to expand if a bin outside the
+/// limits is added.
+
 void TH2Poly::SetFloat(Bool_t flag)
 {
-   // When set to kTRUE, allows the histogram to expand if a bin outside the
-   // limits is added.
-
    fFloat = flag;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TH2PolyBin::TH2PolyBin()
 {
-   // Default constructor.
-
    fPoly    = 0;
    fContent = 0.;
    fNumber  = 0;
@@ -1259,11 +1261,11 @@ TH2PolyBin::TH2PolyBin()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+
 TH2PolyBin::TH2PolyBin(TObject *poly, Int_t bin_number)
 {
-   // Normal constructor.
-
    fContent = 0.;
    fNumber  = bin_number;
    fArea    = 0.;
@@ -1276,20 +1278,20 @@ TH2PolyBin::TH2PolyBin(TObject *poly, Int_t bin_number)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TH2PolyBin::~TH2PolyBin()
 {
-   // Destructor.
-
    if (fPoly) delete fPoly;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the area of the bin.
+
 Double_t TH2PolyBin::GetArea()
 {
-   // Returns the area of the bin.
-
    Int_t     bn;
 
    if (fArea == 0) {
@@ -1316,11 +1318,11 @@ Double_t TH2PolyBin::GetArea()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the maximum value for the x coordinates of the bin.
+
 Double_t TH2PolyBin::GetXMax()
 {
-   // Returns the maximum value for the x coordinates of the bin.
-
    if (fXmax != -1111) return fXmax;
 
    Int_t     bn,i;
@@ -1353,11 +1355,11 @@ Double_t TH2PolyBin::GetXMax()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the minimum value for the x coordinates of the bin.
+
 Double_t TH2PolyBin::GetXMin()
 {
-   // Returns the minimum value for the x coordinates of the bin.
-
    if (fXmin != -1111) return fXmin;
 
    Int_t     bn,i;
@@ -1390,11 +1392,11 @@ Double_t TH2PolyBin::GetXMin()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the maximum value for the y coordinates of the bin.
+
 Double_t TH2PolyBin::GetYMax()
 {
-   // Returns the maximum value for the y coordinates of the bin.
-
    if (fYmax != -1111) return fYmax;
 
    Int_t     bn,i;
@@ -1427,11 +1429,11 @@ Double_t TH2PolyBin::GetYMax()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the minimum value for the y coordinates of the bin.
+
 Double_t TH2PolyBin::GetYMin()
 {
-   // Returns the minimum value for the y coordinates of the bin.
-
    if (fYmin != -1111) return fYmin;
 
    Int_t     bn,i;
@@ -1464,11 +1466,11 @@ Double_t TH2PolyBin::GetYMin()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return "true" if the point (x,y) is inside the bin.
+
 Bool_t TH2PolyBin::IsInside(Double_t x, Double_t y) const
 {
-   // Return "true" if the point (x,y) is inside the bin.
-
    Int_t in=0;
 
    if (fPoly->IsA() == TGraph::Class()) {

@@ -40,20 +40,20 @@
 
 ClassImp(TBonjourRegistrar)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TBonjourRegistrar::TBonjourRegistrar() : fDNSRef(0), fBonjourSocketHandler(0)
 {
-   // Default ctor.
-
    // silence Avahi about using Bonjour compat layer
    gSystem->Setenv("AVAHI_COMPAT_NOWARN", "1");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TBonjourRegistrar::~TBonjourRegistrar()
 {
-   // Cleanup.
-
    delete fBonjourSocketHandler;
 
    if (fDNSRef) {
@@ -62,12 +62,12 @@ TBonjourRegistrar::~TBonjourRegistrar()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register Bonjour service.
+/// Return -1 in case or error, 0 otherwise.
+
 Int_t TBonjourRegistrar::RegisterService(const TBonjourRecord &record, UShort_t servicePort)
 {
-   // Register Bonjour service.
-   // Return -1 in case or error, 0 otherwise.
-
    if (fDNSRef) {
       Warning("RegisterService", "already registered a service");
       return 0;
@@ -106,34 +106,34 @@ Int_t TBonjourRegistrar::RegisterService(const TBonjourRecord &record, UShort_t 
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit ServiceRegistered signal.
+
 void TBonjourRegistrar::ServiceRegistered(TBonjourRecord *record)
 {
-   // Emit ServiceRegistered signal.
-
    Emit("ServiceRegistered(TBonjourRecord*)", (Long_t)record);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Bonjour socket is ready for reading. Tell Bonjour to process the
+/// information on the socket, this will invoke the BonjourRegisterService
+/// callback. This is a private slot, used in RegisterService.
+
 void TBonjourRegistrar::BonjourSocketReadyRead()
 {
-   // The Bonjour socket is ready for reading. Tell Bonjour to process the
-   // information on the socket, this will invoke the BonjourRegisterService
-   // callback. This is a private slot, used in RegisterService.
-
    DNSServiceErrorType err = DNSServiceProcessResult(fDNSRef);
    if (err != kDNSServiceErr_NoError)
       Error("BonjourSocketReadyRead", "error in DNSServiceProcessResult");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static Bonjour register callback function.
+
 void TBonjourRegistrar::BonjourRegisterService(DNSServiceRef, DNSServiceFlags,
                                                DNSServiceErrorType errCode,
                                                const char *name, const char *regType,
                                                const char *domain, void *context)
 {
-   // Static Bonjour register callback function.
-
    TBonjourRegistrar *registrar = static_cast<TBonjourRegistrar*>(context);
    if (errCode != kDNSServiceErr_NoError) {
       ::Error("TBonjourRegistrar::BonjourRegisterService", "error in BonjourRegisterService");

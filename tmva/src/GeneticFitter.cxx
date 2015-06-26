@@ -36,25 +36,25 @@
 
 ClassImp(TMVA::GeneticFitter)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::GeneticFitter::GeneticFitter( IFitterTarget& target, 
                                     const TString& name, 
                                     const std::vector<TMVA::Interval*>& ranges, 
                                     const TString& theOption ) 
    : FitterBase( target, name, ranges, theOption )
 {
-   // constructor
-
    // default parameters settings for Genetic Algorithm
    DeclareOptions();
    ParseOptions();
 }            
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// declare GA options
+
 void TMVA::GeneticFitter::DeclareOptions() 
 {
-   // declare GA options
-
    DeclareOptionRef( fPopSize=300,    "PopSize",   "Population size for GA" );  
    DeclareOptionRef( fNsteps=40,      "Steps",     "Number of steps for convergence" );  
    DeclareOptionRef( fCycles=3,       "Cycles",    "Independent cycles of GA fitting" );  
@@ -73,7 +73,9 @@ void TMVA::GeneticFitter::DeclareOptions()
    DeclareOptionRef( fSeed=100, "Seed", "Set seed of random generator (0 gives random seeds)" );  
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set GA configuration parameters
+
 void TMVA::GeneticFitter::SetParameters(  Int_t cycles,
                                           Int_t nsteps,
                                           Int_t popSize,
@@ -82,7 +84,6 @@ void TMVA::GeneticFitter::SetParameters(  Int_t cycles,
                                           Double_t SC_factor,
                                           Double_t convCrit)
 {
-   // set GA configuration parameters
    fNsteps    = nsteps;
    fCycles    = cycles;
    fPopSize   = popSize;
@@ -92,10 +93,11 @@ void TMVA::GeneticFitter::SetParameters(  Int_t cycles,
    fConvCrit  = convCrit;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute fitting
+
 Double_t TMVA::GeneticFitter::Run( std::vector<Double_t>& pars )
 {
-   // Execute fitting
    Log() << kINFO << "<GeneticFitter> Optimisation, please be patient "
          << "... (inaccurate progress timing for GA)" << Endl;
 

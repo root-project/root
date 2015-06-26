@@ -24,11 +24,11 @@ ClassImp(TBenchmark)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Benchmark default constructor
+
 TBenchmark::TBenchmark(): TNamed()
 {
-   // Benchmark default constructor
-
    fNbench   = 0;
    fNmax     = 20;
    fNames    = 0;
@@ -37,7 +37,9 @@ TBenchmark::TBenchmark(): TNamed()
    fTimer    = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TBenchmark::TBenchmark(const TBenchmark& bm) :
   TNamed(bm),
   fNbench(bm.fNbench),
@@ -47,8 +49,6 @@ TBenchmark::TBenchmark(const TBenchmark& bm) :
   fCpuTime(0),
   fTimer(0)
 {
-   // Copy constructor.
-
    fNames    = new TString[fNmax];
    fRealTime = new Float_t[fNmax];
    fCpuTime  = new Float_t[fNmax];
@@ -62,11 +62,11 @@ TBenchmark::TBenchmark(const TBenchmark& bm) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TBenchmark& TBenchmark::operator=(const TBenchmark& bm)
 {
-   // Assignment operator.
-
    if (this!=&bm) {
       TNamed::operator=(bm);
       fNbench=bm.fNbench;
@@ -92,11 +92,11 @@ TBenchmark& TBenchmark::operator=(const TBenchmark& bm)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Benchmark destructor.
+
 TBenchmark::~TBenchmark()
 {
-   // Benchmark destructor.
-
    fNbench   = 0;
    if (fNames)    { delete [] fNames;    fNames  = 0;}
    if (fRealTime) { delete [] fRealTime; fRealTime  = 0;}
@@ -104,77 +104,77 @@ TBenchmark::~TBenchmark()
    if (fTimer  )  { delete [] fTimer;    fTimer  = 0;}
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns index of Benchmark name.
+
 Int_t TBenchmark::GetBench(const char *name) const
 {
-   // Returns index of Benchmark name.
-
    for (Int_t i=0;i<fNbench;i++) {
       if (!strcmp(name,(const char*)fNames[i])) return i;
    }
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns Cpu time used by Benchmark name.
+
 Float_t TBenchmark::GetCpuTime(const char *name)
 {
-   // Returns Cpu time used by Benchmark name.
-
    Int_t bench = GetBench(name);
    if (bench >= 0) return fCpuTime[bench];
    else            return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns Realtime used by Benchmark name.
+
 Float_t TBenchmark::GetRealTime(const char *name)
 {
-   // Returns Realtime used by Benchmark name.
-
    Int_t bench = GetBench(name);
    if (bench >= 0) return fRealTime[bench];
    else            return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints parameters of Benchmark name.
+
 void TBenchmark::Print(const char *name) const
 {
-   // Prints parameters of Benchmark name.
-
    Int_t bench = GetBench(name);
    if (bench < 0) return;
    Printf("%-10s: Real Time = %6.2f seconds Cpu Time = %6.2f seconds",name,fRealTime[bench],fCpuTime[bench]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset all Benchmarks
+
 void TBenchmark::Reset()
 {
-   // Reset all Benchmarks
-
    fNbench = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stops Benchmark name and Prints results
+
 void TBenchmark::Show(const char *name)
 {
-   // Stops Benchmark name and Prints results
-
    Stop(name);
    Print((char*)name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Starts Benchmark with the specified name.
+///
+/// An independent timer (see class TStopwatch) is started.
+/// The name of the benchmark is entered into the list of benchmarks.
+/// Benchmark can be stopped via TBenchmark::Stop().
+/// Results can be printed via TBenchmark::Print().
+/// TBenchmark::Show() can be used to stop benchmark and print results.
+/// If name is an already existing benchmark, timing will resume.
+/// A summary of all benchmarks can be seen via TBenchmark::Summary().
+
 void TBenchmark::Start(const char *name)
 {
-   // Starts Benchmark with the specified name.
-   //
-   // An independent timer (see class TStopwatch) is started.
-   // The name of the benchmark is entered into the list of benchmarks.
-   // Benchmark can be stopped via TBenchmark::Stop().
-   // Results can be printed via TBenchmark::Print().
-   // TBenchmark::Show() can be used to stop benchmark and print results.
-   // If name is an already existing benchmark, timing will resume.
-   // A summary of all benchmarks can be seen via TBenchmark::Summary().
-
    if (!fNames) {
       fNames    = new TString[fNmax];
       fRealTime = new Float_t[fNmax];
@@ -199,11 +199,11 @@ void TBenchmark::Start(const char *name)
       Warning("Start","too many benchemarks");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminates Benchmark with specified name.
+
 void TBenchmark::Stop(const char *name)
 {
-   // Terminates Benchmark with specified name.
-
    Int_t bench = GetBench(name);
    if (bench < 0) return;
 
@@ -212,11 +212,11 @@ void TBenchmark::Stop(const char *name)
    fCpuTime[bench]  = fTimer[bench].CpuTime();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints a summary of all benchmarks.
+
 void TBenchmark::Summary(Float_t &rt, Float_t &cp)
 {
-   // Prints a summary of all benchmarks.
-
    rt = 0;
    cp = 0;
    for (Int_t i=0;i<fNbench;i++) {

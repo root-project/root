@@ -33,12 +33,12 @@ PyROOT::TSetItemHolder::TSetItemHolder( const TScopeAdapter& klass, const TMembe
 }
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prepare executor with a buffer for the return value.
+
 PyObject* PyROOT::TSetItemHolder::FilterArgs(
       ObjectProxy*& self, PyObject* args, PyObject* kwds )
 {
-// Prepare executor with a buffer for the return value.
-
    int nArgs = PyTuple_GET_SIZE( args );
    if ( nArgs <= 1 ) {
       PyErr_SetString( PyExc_TypeError, "insufficient arguments to __setitem__" );

@@ -28,7 +28,8 @@
 //_______________________________________________________________________
 //
 // Implementation of Simulated Annealing fitter
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #include "TMVA/SimulatedAnnealing.h"
 
 #include "TRandom3.h"
@@ -42,7 +43,9 @@
 
 ClassImp(TMVA::SimulatedAnnealing)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::SimulatedAnnealing::SimulatedAnnealing( IFitterTarget& target, const std::vector<Interval*>& ranges )
    : fKernelTemperature     (kIncreasingAdaptive),
      fFitterTarget          ( target ),
@@ -60,11 +63,12 @@ TMVA::SimulatedAnnealing::SimulatedAnnealing( IFitterTarget& target, const std::
      fLogger( new MsgLogger("SimulatedAnnealing") ),
      fProgress(0.0)
 {
-   // constructor
    fKernelTemperature = kIncreasingAdaptive;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// option setter
+
 void TMVA::SimulatedAnnealing::SetOptions( Int_t    maxCalls,
                                            Double_t initialTemperature,
                                            Double_t minTemperature,
@@ -76,8 +80,6 @@ void TMVA::SimulatedAnnealing::SetOptions( Int_t    maxCalls,
                                            Bool_t   useDefaultScale,
                                            Bool_t   useDefaultTemperature)   
 {
-   // option setter
-
    fMaxCalls = maxCalls;
    fInitialTemperature = initialTemperature;
    fMinTemperature = minTemperature;
@@ -115,33 +117,37 @@ void TMVA::SimulatedAnnealing::SetOptions( Int_t    maxCalls,
    fUseDefaultScale         = useDefaultScale;
    fUseDefaultTemperature   = useDefaultTemperature;
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::SimulatedAnnealing::~SimulatedAnnealing()
 {
-   // destructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// random starting parameters
+
 void TMVA::SimulatedAnnealing::FillWithRandomValues( std::vector<Double_t>& parameters )
 {
-   // random starting parameters
    for (UInt_t rIter = 0; rIter < parameters.size(); rIter++) {
       parameters[rIter] = fRandom->Uniform(0.0,1.0)*(fRanges[rIter]->GetMax() - fRanges[rIter]->GetMin()) + fRanges[rIter]->GetMin();
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy parameters
+
 void TMVA::SimulatedAnnealing::ReWriteParameters( std::vector<Double_t>& from, std::vector<Double_t>& to)
 {
-   // copy parameters
    for (UInt_t rIter = 0; rIter < from.size(); rIter++) to[rIter] = from[rIter];
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// generate adjacent parameters
+
 void TMVA::SimulatedAnnealing::GenerateNeighbour( std::vector<Double_t>& parameters, std::vector<Double_t>& oldParameters, 
                                                   Double_t currentTemperature )
 {
-   // generate adjacent parameters
    ReWriteParameters( parameters, oldParameters );
 
    for (UInt_t rIter=0;rIter<parameters.size();rIter++) {
@@ -155,10 +161,11 @@ void TMVA::SimulatedAnnealing::GenerateNeighbour( std::vector<Double_t>& paramet
       while (parameters[rIter] < fRanges[rIter]->GetMin() || parameters[rIter] > fRanges[rIter]->GetMax() );
    }
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// generate adjacent parameters
+
 std::vector<Double_t> TMVA::SimulatedAnnealing::GenerateNeighbour( std::vector<Double_t>& parameters, Double_t currentTemperature )
 {
-   // generate adjacent parameters
    std::vector<Double_t> newParameters( fRanges.size() );   
 
    for (UInt_t rIter=0; rIter<parameters.size(); rIter++) {
@@ -175,10 +182,11 @@ std::vector<Double_t> TMVA::SimulatedAnnealing::GenerateNeighbour( std::vector<D
    return newParameters;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// generate new temperature
+
 void TMVA::SimulatedAnnealing::GenerateNewTemperature( Double_t& currentTemperature, Int_t Iter )
 {
-   // generate new temperature
    if      (fKernelTemperature == kSqrt) {
          currentTemperature = fInitialTemperature/(Double_t)TMath::Sqrt(Iter+2) * fTemperatureScale;
    }
@@ -203,20 +211,22 @@ void TMVA::SimulatedAnnealing::GenerateNewTemperature( Double_t& currentTemperat
    else Log() << kFATAL << "No such kernel!" << Endl;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// result checker
+
 Bool_t TMVA::SimulatedAnnealing::ShouldGoIn( Double_t currentFit, Double_t localFit, Double_t currentTemperature )
 {
-   // result checker
    if (currentTemperature < fEps) return kFALSE;
    Double_t lim  = TMath::Exp( -TMath::Abs( currentFit - localFit ) / currentTemperature );
    Double_t prob = fRandom->Uniform(0.0, 1.0);
    return (prob < lim) ? kTRUE : kFALSE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// setting of default scale
+
 void TMVA::SimulatedAnnealing::SetDefaultScale()
 {
-   // setting of default scale
    if      (fKernelTemperature == kSqrt) fTemperatureScale = 1.0;
    else if (fKernelTemperature == kLog)  fTemperatureScale = 1.0;
    else if (fKernelTemperature == kHomo) fTemperatureScale = 1.0;
@@ -233,10 +243,11 @@ void TMVA::SimulatedAnnealing::SetDefaultScale()
    else Log() << kFATAL << "No such kernel!" << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// maximum temperature
+
 Double_t TMVA::SimulatedAnnealing::GenerateMaxTemperature( std::vector<Double_t>& parameters  )
 {
-   // maximum temperature
    Int_t equilibrium;
    Bool_t stopper = 0; 
    Double_t t, dT, cold, delta, deltaY, y, yNew, yBest, yOld;
@@ -293,10 +304,11 @@ Double_t TMVA::SimulatedAnnealing::GenerateMaxTemperature( std::vector<Double_t>
    return t;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// minimisation algorithm
+
 Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
 {
-   // minimisation algorithm
    std::vector<Double_t> bestParameters(fRanges.size());
    std::vector<Double_t> oldParameters (fRanges.size());
 

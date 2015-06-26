@@ -185,7 +185,11 @@ ClassImp(TLinearFitter)
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default c-tor, input data is stored
+///If you don't want to store the input data,
+///run the function StoreData(kFALSE) after constructor
+
 TLinearFitter::TLinearFitter() :
 TVirtualFitter(),
    fParams(),
@@ -205,10 +209,6 @@ TVirtualFitter(),
    fE(),
    fVal()
 {
-   //default c-tor, input data is stored
-   //If you don't want to store the input data,
-   //run the function StoreData(kFALSE) after constructor
-
    fChisquare =0;
    fNpoints   =0;
    fNdim      =0;
@@ -227,14 +227,14 @@ TVirtualFitter(),
    fH = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///The parameter stands for number of dimensions in the fitting formula
+///The input data is stored. If you don't want to store the input data,
+///run the function StoreData(kFALSE) after constructor
+
 TLinearFitter::TLinearFitter(Int_t ndim) :
    fVal()
 {
-   //The parameter stands for number of dimensions in the fitting formula
-   //The input data is stored. If you don't want to store the input data,
-   //run the function StoreData(kFALSE) after constructor
-
    fNdim    =ndim;
    fNpoints =0;
    fY2      =0;
@@ -253,16 +253,16 @@ TLinearFitter::TLinearFitter(Int_t ndim) :
    fH = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///First parameter stands for number of dimensions in the fitting formula
+///Second parameter is the fitting formula: see class description for formula syntax
+///Options:
+///The option is to store or not to store the data
+///If you don't want to store the data, choose "" for the option, or run
+///StoreData(kFalse) member function after the constructor
+
 TLinearFitter::TLinearFitter(Int_t ndim, const char *formula, Option_t *opt)
 {
-   //First parameter stands for number of dimensions in the fitting formula
-   //Second parameter is the fitting formula: see class description for formula syntax
-   //Options:
-   //The option is to store or not to store the data
-   //If you don't want to store the data, choose "" for the option, or run
-   //StoreData(kFalse) member function after the constructor
-
    fNdim=ndim;
    fNpoints=0;
    fChisquare=0;
@@ -282,20 +282,20 @@ TLinearFitter::TLinearFitter(Int_t ndim, const char *formula, Option_t *opt)
    SetFormula(formula);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///This constructor uses a linear function. How to create it?
+///TFormula now accepts formulas of the following kind:
+///TFormula("f", "x++y++z++x*x") or
+///TFormula("f", "x[0]++x[1]++x[2]*x[2]");
+///Other than the look, it's in no
+///way different from the regular formula, it can be evaluated,
+///drawn, etc.
+///The option is to store or not to store the data
+///If you don't want to store the data, choose "" for the option, or run
+///StoreData(kFalse) member function after the constructor
+
 TLinearFitter::TLinearFitter(TFormula *function, Option_t *opt)
 {
-   //This constructor uses a linear function. How to create it?
-   //TFormula now accepts formulas of the following kind:
-   //TFormula("f", "x++y++z++x*x") or
-   //TFormula("f", "x[0]++x[1]++x[2]*x[2]");
-   //Other than the look, it's in no
-   //way different from the regular formula, it can be evaluated,
-   //drawn, etc.
-   //The option is to store or not to store the data
-   //If you don't want to store the data, choose "" for the option, or run
-   //StoreData(kFalse) member function after the constructor
-
    fNdim=function->GetNdim();
    if (!function->IsLinear()){
       Int_t number=function->GetNumber();
@@ -324,7 +324,9 @@ TLinearFitter::TLinearFitter(TFormula *function, Option_t *opt)
    SetFormula(function);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor
+
 TLinearFitter::TLinearFitter(const TLinearFitter& tlf) :
    TVirtualFitter(tlf),
    fParams(tlf.fParams),
@@ -362,8 +364,6 @@ TLinearFitter::TLinearFitter(const TLinearFitter& tlf) :
    fFitsample(tlf.fFitsample),
    fFixedParams(0)
 {
-   // Copy ctor
-
    // make a deep  copy of managed objects
    // fFormula, fFixedParams and fFunctions
 
@@ -380,11 +380,11 @@ TLinearFitter::TLinearFitter(const TLinearFitter& tlf) :
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Linear fitter cleanup.
+
 TLinearFitter::~TLinearFitter()
 {
-   // Linear fitter cleanup.
-
    if (fFormula) {
       delete [] fFormula;
       fFormula = 0;
@@ -398,11 +398,11 @@ TLinearFitter::~TLinearFitter()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
 {
-   // Assignment operator
-
    if(this!=&tlf) {
 
       TVirtualFitter::operator=(tlf);
@@ -466,13 +466,13 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Add another linear fitter to this linear fitter. Points and Design matrices
+///are added, but the previos fitting results (if any) are deleted.
+///Fitters must have same formulas (this is not checked). Fixed parameters are not changed
+
 void TLinearFitter::Add(TLinearFitter *tlf)
 {
-//Add another linear fitter to this linear fitter. Points and Design matrices
-//are added, but the previos fitting results (if any) are deleted.
-//Fitters must have same formulas (this is not checked). Fixed parameters are not changed
-
    fParams.Zero();
    fParCovar.Zero();
    fTValues.Zero();
@@ -514,14 +514,14 @@ void TLinearFitter::Add(TLinearFitter *tlf)
    fRobust=0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Adds 1 point to the fitter.
+///First parameter stands for the coordinates of the point, where the function is measured
+///Second parameter - the value being fitted
+///Third parameter - weight(measurement error) of this point (=1 by default)
+
 void TLinearFitter::AddPoint(Double_t *x, Double_t y, Double_t e)
 {
-   //Adds 1 point to the fitter.
-   //First parameter stands for the coordinates of the point, where the function is measured
-   //Second parameter - the value being fitted
-   //Third parameter - weight(measurement error) of this point (=1 by default)
-
    Int_t size;
    fNpoints++;
    if (fStoreData){
@@ -549,17 +549,17 @@ void TLinearFitter::AddPoint(Double_t *x, Double_t y, Double_t e)
    if (!fRobust) AddToDesign(x, y, e);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///This function is to use when you already have all the data in arrays
+///and don't want to copy them into the fitter. In this function, the Use() method
+///of TVectorD and TMatrixD is used, so no bytes are physically moved around.
+///First parameter - number of points to fit
+///Second parameter - number of variables in the model
+///Third parameter - the variables of the model, stored in the following way:
+///(x0(0), x1(0), x2(0), x3(0), x0(1), x1(1), x2(1), x3(1),...
+
 void TLinearFitter::AssignData(Int_t npoints, Int_t xncols, Double_t *x, Double_t *y, Double_t *e)
 {
-   //This function is to use when you already have all the data in arrays
-   //and don't want to copy them into the fitter. In this function, the Use() method
-   //of TVectorD and TMatrixD is used, so no bytes are physically moved around.
-   //First parameter - number of points to fit
-   //Second parameter - number of variables in the model
-   //Third parameter - the variables of the model, stored in the following way:
-   //(x0(0), x1(0), x2(0), x3(0), x0(1), x1(1), x2(1), x3(1),...
-
    if (npoints<fNpoints){
       Error("AddData", "Those points are already added");
       return;
@@ -593,11 +593,11 @@ void TLinearFitter::AssignData(Int_t npoints, Int_t xncols, Double_t *x, Double_
    fNpoints=npoints;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Add a point to the AtA matrix and to the Atb vector.
+
 void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
 {
-   //Add a point to the AtA matrix and to the Atb vector.
-
 
 
    Int_t i, j, ii;
@@ -668,7 +668,8 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TLinearFitter::AddTempMatrices()
 {
    if (fDesignTemp3.GetNrows()>0){
@@ -690,11 +691,11 @@ void TLinearFitter::AddTempMatrices()
       }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Clears everything. Used in TH1::Fit and TGraph::Fit().
+
 void TLinearFitter::Clear(Option_t * /*option*/)
 {
-   //Clears everything. Used in TH1::Fit and TGraph::Fit().
-
    fParams.Clear();
    fParCovar.Clear();
    fTValues.Clear();
@@ -730,11 +731,11 @@ void TLinearFitter::Clear(Option_t * /*option*/)
    fFitsample.Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///To be used when different sets of points are fitted with the same formula.
+
 void TLinearFitter::ClearPoints()
 {
-   //To be used when different sets of points are fitted with the same formula.
-
    fDesign.Zero();
    fAtb.Zero();
    fDesignTemp.Zero();
@@ -756,11 +757,11 @@ void TLinearFitter::ClearPoints()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Calculates the chisquare.
+
 void TLinearFitter::Chisquare()
 {
-   //Calculates the chisquare.
-
    Int_t i, j;
    Double_t sumtotal2;
    Double_t temp, temp2;
@@ -821,23 +822,23 @@ void TLinearFitter::Chisquare()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes parameters' t-values and significance
+
 void TLinearFitter::ComputeTValues()
 {
-   // Computes parameters' t-values and significance
-
    for (Int_t i=0; i<fNfunctions; i++){
       fTValues(i) = fParams(i)/(TMath::Sqrt(fParCovar(i, i)));
       fParSign(i) = 2*(1-TMath::StudentI(TMath::Abs(fTValues(i)),fNpoints-fNfunctions+fNfixed));
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the fit and evaluate the parameters
+/// Returns 0 if the fit is ok, 1 if there are errors
+
 Int_t TLinearFitter::Eval()
 {
-   // Perform the fit and evaluate the parameters
-   // Returns 0 if the fit is ok, 1 if there are errors
-
    Double_t e;
    if (fFunctions.IsEmpty()&&(!fInputFunction)&&(fSpecial<=200)){
       Error("TLinearFitter::Eval", "The formula hasn't been set");
@@ -960,11 +961,11 @@ Int_t TLinearFitter::Eval()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Fixes paramter #ipar at its current value.
+
 void TLinearFitter::FixParameter(Int_t ipar)
 {
-   //Fixes paramter #ipar at its current value.
-
    if (fParams.NonZeros()<1){
       Error("FixParameter", "no value available to fix the parameter");
       return;
@@ -983,11 +984,11 @@ void TLinearFitter::FixParameter(Int_t ipar)
    fNfixed++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Fixes parameter #ipar at value parvalue.
+
 void TLinearFitter::FixParameter(Int_t ipar, Double_t parvalue)
 {
-   //Fixes parameter #ipar at value parvalue.
-
    if (ipar>fNfunctions || ipar<0){
       Error("FixParameter", "illegal parameter value");
       return;
@@ -1005,11 +1006,11 @@ void TLinearFitter::FixParameter(Int_t ipar, Double_t parvalue)
    fNfixed++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Releases parameter #ipar.
+
 void TLinearFitter::ReleaseParameter(Int_t ipar)
 {
-   //Releases parameter #ipar.
-
    if (ipar>fNfunctions || ipar<0){
       Error("ReleaseParameter", "illegal parameter value");
       return;
@@ -1023,21 +1024,21 @@ void TLinearFitter::ReleaseParameter(Int_t ipar)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Get the Atb vector - a vector, used for internal computations
+
 void TLinearFitter::GetAtbVector(TVectorD &v)
 {
-   //Get the Atb vector - a vector, used for internal computations
-
    if (v.GetNoElements()!=fAtb.GetNoElements())
       v.ResizeTo(fAtb.GetNoElements());
    v = fAtb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the Chisquare.
+
 Double_t TLinearFitter::GetChisquare()
 {
-   // Get the Chisquare.
-
    if (fChisquare > 1e-16)
       return fChisquare;
    else {
@@ -1046,21 +1047,21 @@ Double_t TLinearFitter::GetChisquare()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Computes point-by-point confidence intervals for the fitted function
+///Parameters:
+///n - number of points
+///ndim - dimensions of points
+///x - points, at which to compute the intervals, for ndim > 1
+///    should be in order: (x0,y0, x1, y1, ... xn, yn)
+///ci - computed intervals are returned in this array
+///cl - confidence level, default=0.95
+///
+///NOTE, that this method can only be used when the fitting function inherits from a TF1,
+///so it's not possible when the fitting function was set as a string or as a pure TFormula
+
 void TLinearFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl)
 {
-//Computes point-by-point confidence intervals for the fitted function
-//Parameters:
-//n - number of points
-//ndim - dimensions of points
-//x - points, at which to compute the intervals, for ndim > 1
-//    should be in order: (x0,y0, x1, y1, ... xn, yn)
-//ci - computed intervals are returned in this array
-//cl - confidence level, default=0.95
-//
-//NOTE, that this method can only be used when the fitting function inherits from a TF1,
-//so it's not possible when the fitting function was set as a string or as a pure TFormula
-
    if (fInputFunction){
       Double_t *grad = new Double_t[fNfunctions];
       Double_t *sum_vector = new Double_t[fNfunctions];
@@ -1090,28 +1091,28 @@ void TLinearFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Computes confidence intervals at level cl. Default is 0.95
+///The TObject parameter can be a TGraphErrors, a TGraph2DErrors or a TH123.
+///For Graphs, confidence intervals are computed for each point,
+///the value of the graph at that point is set to the function value at that
+///point, and the graph y-errors (or z-errors) are set to the value of
+///the confidence interval at that point
+///For Histograms, confidence intervals are computed for each bin center
+///The bin content of this bin is then set to the function value at the bin
+///center, and the bin error is set to the confidence interval value.
+///Allowed combinations:
+///Fitted object               Passed object
+///TGraph                      TGraphErrors, TH1
+///TGraphErrors, AsymmErrors   TGraphErrors, TH1
+///TH1                         TGraphErrors, TH1
+///TGraph2D                    TGraph2DErrors, TH2
+///TGraph2DErrors              TGraph2DErrors, TH2
+///TH2                         TGraph2DErrors, TH2
+///TH3                         TH3
+
 void TLinearFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
 {
-//Computes confidence intervals at level cl. Default is 0.95
-//The TObject parameter can be a TGraphErrors, a TGraph2DErrors or a TH123.
-//For Graphs, confidence intervals are computed for each point,
-//the value of the graph at that point is set to the function value at that
-//point, and the graph y-errors (or z-errors) are set to the value of
-//the confidence interval at that point
-//For Histograms, confidence intervals are computed for each bin center
-//The bin content of this bin is then set to the function value at the bin
-//center, and the bin error is set to the confidence interval value.
-//Allowed combinations:
-//Fitted object               Passed object
-//TGraph                      TGraphErrors, TH1
-//TGraphErrors, AsymmErrors   TGraphErrors, TH1
-//TH1                         TGraphErrors, TH1
-//TGraph2D                    TGraph2DErrors, TH2
-//TGraph2DErrors              TGraph2DErrors, TH2
-//TH2                         TGraph2DErrors, TH2
-//TH3                         TH3
-
    if (!fInputFunction) {
       Error("GetConfidenceIntervals", "The case of fitting not with a TFormula is not yet implemented");
       return;
@@ -1256,41 +1257,42 @@ void TLinearFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns covariance matrix
+
 Double_t* TLinearFitter::GetCovarianceMatrix() const
 {
-//Returns covariance matrix
-
    Double_t *p = const_cast<Double_t*>(fParCovar.GetMatrixArray());
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns covariance matrix
+
 void TLinearFitter::GetCovarianceMatrix(TMatrixD &matr)
 {
-//Returns covariance matrix
-
    if (matr.GetNrows()!=fNfunctions || matr.GetNcols()!=fNfunctions){
       matr.ResizeTo(fNfunctions, fNfunctions);
    }
    matr = fParCovar;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the internal design matrix
+
 void TLinearFitter::GetDesignMatrix(TMatrixD &matr)
 {
-//Returns the internal design matrix
    if (matr.GetNrows()!=fNfunctions || matr.GetNcols()!=fNfunctions){
       matr.ResizeTo(fNfunctions, fNfunctions);
    }
    matr = fDesign;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns parameter errors
+
 void TLinearFitter::GetErrors(TVectorD &vpar)
 {
-//Returns parameter errors
-
    if (vpar.GetNoElements()!=fNfunctions) {
       vpar.ResizeTo(fNfunctions);
    }
@@ -1299,23 +1301,23 @@ void TLinearFitter::GetErrors(TVectorD &vpar)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns parameter values
+
 void TLinearFitter::GetParameters(TVectorD &vpar)
 {
-//Returns parameter values
-
    if (vpar.GetNoElements()!=fNfunctions) {
       vpar.ResizeTo(fNfunctions);
    }
    vpar=fParams;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the value and the name of the parameter #ipar
+///NB: In the calling function the argument name must be set large enough
+
 Int_t TLinearFitter::GetParameter(Int_t ipar,char* name,Double_t& value,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const
 {
-//Returns the value and the name of the parameter #ipar
-//NB: In the calling function the argument name must be set large enough
-
    if (ipar<0 || ipar>fNfunctions) {
       Error("GetParError", "illegal value of parameter");
       return 0;
@@ -1329,11 +1331,11 @@ Int_t TLinearFitter::GetParameter(Int_t ipar,char* name,Double_t& value,Double_t
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the error of parameter #ipar
+
 Double_t TLinearFitter::GetParError(Int_t ipar) const
 {
-//Returns the error of parameter #ipar
-
    if (ipar<0 || ipar>fNfunctions) {
       Error("GetParError", "illegal value of parameter");
       return 0;
@@ -1343,11 +1345,11 @@ Double_t TLinearFitter::GetParError(Int_t ipar) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns name of parameter #ipar
+
 const char *TLinearFitter::GetParName(Int_t ipar) const
 {
-//Returns name of parameter #ipar
-
    if (ipar<0 || ipar>fNfunctions) {
       Error("GetParError", "illegal value of parameter");
       return 0;
@@ -1357,11 +1359,11 @@ const char *TLinearFitter::GetParName(Int_t ipar) const
    return "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the t-value for parameter #ipar
+
 Double_t TLinearFitter::GetParTValue(Int_t ipar)
 {
-//Returns the t-value for parameter #ipar
-
    if (ipar<0 || ipar>fNfunctions) {
       Error("GetParTValue", "illegal value of parameter");
       return 0;
@@ -1371,11 +1373,11 @@ Double_t TLinearFitter::GetParTValue(Int_t ipar)
    return fTValues(ipar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the significance of parameter #ipar
+
 Double_t TLinearFitter::GetParSignificance(Int_t ipar)
 {
-//Returns the significance of parameter #ipar
-
    if (ipar<0 || ipar>fNfunctions) {
       Error("GetParSignificance", "illegal value of parameter");
       return 0;
@@ -1385,11 +1387,11 @@ Double_t TLinearFitter::GetParSignificance(Int_t ipar)
    return fParSign(ipar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///For robust lts fitting, returns the sample, on which the best fit was based
+
 void TLinearFitter::GetFitSample(TBits &bits)
 {
-//For robust lts fitting, returns the sample, on which the best fit was based
-
    if (!fRobust){
       Error("GetFitSample", "there is no fit sample in ordinary least-squares fit");
       return;
@@ -1399,10 +1401,11 @@ void TLinearFitter::GetFitSample(TBits &bits)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Merge objects in list
+
 Int_t TLinearFitter::Merge(TCollection *list)
 {
-   //Merge objects in list
    if (!list) return -1;
    TIter next(list);
    TLinearFitter *lfit = 0;
@@ -1415,13 +1418,13 @@ Int_t TLinearFitter::Merge(TCollection *list)
    }
    return 0;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set the basis functions in case the fitting function is not
+/// set directly
+/// The TLinearFitter will manage and delete the functions contained in the list
+
 void TLinearFitter::SetBasisFunctions(TObjArray * functions)
 {
-   //set the basis functions in case the fitting function is not
-   // set directly
-   // The TLinearFitter will manage and delete the functions contained in the list
-
    fFunctions = *(functions);
    int size = fFunctions.GetEntries();
 
@@ -1456,11 +1459,11 @@ void TLinearFitter::SetBasisFunctions(TObjArray * functions)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set the number of dimensions
+
 void TLinearFitter::SetDim(Int_t ndim)
 {
-   //set the number of dimensions
-
    fNdim=ndim;
    fY.ResizeTo(ndim+1);
    fX.ResizeTo(ndim+1, ndim);
@@ -1470,18 +1473,18 @@ void TLinearFitter::SetDim(Int_t ndim)
    fIsSet=kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Additive parts should be separated by "++".
+///Examples (ai are parameters to fit):
+///1.fitting function: a0*x0 + a1*x1 + a2*x2
+///  input formula "x[0]++x[1]++x[2]"
+///2.TMath functions can be used:
+///  fitting function: a0*TMath::Gaus(x, 0, 1) + a1*y
+///  input formula:    "TMath::Gaus(x, 0, 1)++y"
+///fills the array of functions
+
 void TLinearFitter::SetFormula(const char *formula)
 {
-  //Additive parts should be separated by "++".
-  //Examples (ai are parameters to fit):
-  //1.fitting function: a0*x0 + a1*x1 + a2*x2
-  //  input formula "x[0]++x[1]++x[2]"
-  //2.TMath functions can be used:
-  //  fitting function: a0*TMath::Gaus(x, 0, 1) + a1*y
-  //  input formula:    "TMath::Gaus(x, 0, 1)++y"
-  //fills the array of functions
-
    Int_t size, special = 0;
    Int_t i;
    //Int_t len = strlen(formula);
@@ -1581,11 +1584,11 @@ void TLinearFitter::SetFormula(const char *formula)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set the fitting function.
+
 void TLinearFitter::SetFormula(TFormula *function)
 {
-   //Set the fitting function.
-
    Int_t special, size;
    fInputFunction=function;
    fNfunctions=fInputFunction->GetNpar();
@@ -1648,11 +1651,11 @@ void TLinearFitter::SetFormula(TFormula *function)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Update the design matrix after the formula has been changed.
+
 Bool_t TLinearFitter::UpdateMatrix()
 {
-   //Update the design matrix after the formula has been changed.
-
    if (fStoreData) {
       for (Int_t i=0; i<fNpoints; i++) {
          AddToDesign(TMatrixDRow(fX, i).GetPtr(), fY(i), fE(i));
@@ -1663,11 +1666,11 @@ Bool_t TLinearFitter::UpdateMatrix()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///To use in TGraph::Fit and TH1::Fit().
+
 Int_t TLinearFitter::ExecuteCommand(const char *command, Double_t *args, Int_t /*nargs*/)
 {
-   //To use in TGraph::Fit and TH1::Fit().
-
    if (!strcmp(command, "FitGraph")){
       if (args)      return GraphLinearFitter(args[0]);
       else           return GraphLinearFitter(0);
@@ -1686,12 +1689,12 @@ Int_t TLinearFitter::ExecuteCommand(const char *command, Double_t *args, Int_t /
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Level = 3 (to be consistent with minuit)  prints parameters and parameter
+/// errors.
+
 void TLinearFitter::PrintResults(Int_t level, Double_t /*amin*/) const
 {
-   // Level = 3 (to be consistent with minuit)  prints parameters and parameter
-   // errors.
-
    if (level==3){
       if (!fRobust){
          printf("Fitting results:\nParameters:\nNO.\t\tVALUE\t\tERROR\n");
@@ -1707,11 +1710,11 @@ void TLinearFitter::PrintResults(Int_t level, Double_t /*amin*/) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Used in TGraph::Fit().
+
 Int_t TLinearFitter::GraphLinearFitter(Double_t h)
 {
-   //Used in TGraph::Fit().
-
    StoreData(kFALSE);
    TGraph *grr=(TGraph*)GetObjectFit();
    TF1 *f1=(TF1*)GetUserFunc();
@@ -1769,10 +1772,11 @@ Int_t TLinearFitter::GraphLinearFitter(Double_t h)
    return fitResult;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Minimisation function for a TGraph2D
+
 Int_t TLinearFitter::Graph2DLinearFitter(Double_t h)
 {
-   //Minimisation function for a TGraph2D
    StoreData(kFALSE);
 
    TGraph2D *gr=(TGraph2D*)GetObjectFit();
@@ -1841,10 +1845,11 @@ Int_t TLinearFitter::Graph2DLinearFitter(Double_t h)
    return fitResult;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Minimisation function for a TMultiGraph
+
 Int_t TLinearFitter::MultiGraphLinearFitter(Double_t h)
 {
-   //Minimisation function for a TMultiGraph
    Int_t n, i;
    Double_t *gx, *gy;
    Double_t e;
@@ -1911,11 +1916,11 @@ Int_t TLinearFitter::MultiGraphLinearFitter(Double_t h)
    return fitResult;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Minimization function for H1s using a Chisquare method.
+
 Int_t TLinearFitter::HistLinearFitter()
 {
-   // Minimization function for H1s using a Chisquare method.
-
    StoreData(kFALSE);
    Double_t cu,eu;
    // Double_t dersum[100], grad[100];
@@ -2003,7 +2008,8 @@ Int_t TLinearFitter::HistLinearFitter()
    return fitResult;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TLinearFitter::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
@@ -2025,17 +2031,17 @@ void TLinearFitter::Streamer(TBuffer &R__b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Finds the parameters of the fitted function in case data contains
+///outliers.
+///Parameter h stands for the minimal fraction of good points in the
+///dataset (h < 1, i.e. for 70% of good points take h=0.7).
+///The default value of h*Npoints is  (Npoints + Nparameters+1)/2
+///If the user provides a value of h smaller than above, default is taken
+///See class description for the algorithm details
+
 Int_t TLinearFitter::EvalRobust(Double_t h)
 {
-   //Finds the parameters of the fitted function in case data contains
-   //outliers.
-   //Parameter h stands for the minimal fraction of good points in the
-   //dataset (h < 1, i.e. for 70% of good points take h=0.7).
-   //The default value of h*Npoints is  (Npoints + Nparameters+1)/2
-   //If the user provides a value of h smaller than above, default is taken
-   //See class description for the algorithm details
-
    fRobust = kTRUE;
    Double_t kEps = 1e-13;
    Int_t nmini = 300;
@@ -2226,12 +2232,12 @@ Int_t TLinearFitter::EvalRobust(Double_t h)
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Creates a p-subset to start
+///ntotal - total number of points from which the subset is chosen
+
 void TLinearFitter::CreateSubset(Int_t ntotal, Int_t h, Int_t *index)
 {
-   //Creates a p-subset to start
-   //ntotal - total number of points from which the subset is chosen
-
    Int_t i, j;
    Bool_t repeat=kFALSE;
    Int_t nindex=0;
@@ -2290,11 +2296,11 @@ void TLinearFitter::CreateSubset(Int_t ntotal, Int_t h, Int_t *index)
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///The CStep procedure, as described in the article
+
 Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *index, Int_t *subdat, Int_t start, Int_t end)
 {
-   //The CStep procedure, as described in the article
-
    R__ASSERT( !fFunctions.IsEmpty() || fInputFunction ||  fSpecial>200);
 
    Int_t i, j, itemp, n;
@@ -2452,10 +2458,10 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
    return sum;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TLinearFitter::Linf()
 {
-
    //currently without the intercept term
    fDesignTemp2+=fDesignTemp3;
    fDesignTemp+=fDesignTemp2;
@@ -2488,13 +2494,13 @@ Bool_t TLinearFitter::Linf()
    return ok;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///divides the elements into approximately equal subgroups
+///number of elements in each subgroup is stored in indsubdat
+///number of subgroups is returned
+
 Int_t TLinearFitter::Partition(Int_t nmini, Int_t *indsubdat)
 {
-   //divides the elements into approximately equal subgroups
-   //number of elements in each subgroup is stored in indsubdat
-   //number of subgroups is returned
-
    Int_t nsub;
 
    if ((fNpoints>=2*nmini) && (fNpoints<=(3*nmini-1))) {
@@ -2541,12 +2547,12 @@ Int_t TLinearFitter::Partition(Int_t nmini, Int_t *indsubdat)
    return nsub;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draws ngroup nonoverlapping subdatasets out of a dataset of size n
+///such that the selected case numbers are uniformly distributed from 1 to n
+
 void TLinearFitter::RDraw(Int_t *subdat, Int_t *indsubdat)
 {
-   //Draws ngroup nonoverlapping subdatasets out of a dataset of size n
-   //such that the selected case numbers are uniformly distributed from 1 to n
-
    Int_t jndex = 0;
    Int_t nrand;
    Int_t i, k, m, j;

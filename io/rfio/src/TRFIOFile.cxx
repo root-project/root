@@ -74,21 +74,21 @@
 ClassImp(TRFIOFile)
 ClassImp(TRFIOSystem)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a RFIO file object. A RFIO file is the same as a TFile
+/// except that it is being accessed via a rfiod server. The url
+/// argument must be of the form: rfio:/path/file.root (where file.root
+/// is a symlink of type /shift/aaa/bbb/ccc) or rfio:server:/path/file.root.
+/// If the file specified in the URL does not exist, is not accessable
+/// or can not be created the kZombie bit will be set in the TRFIOFile
+/// object. Use IsZombie() to see if the file is accessable.
+/// For a description of the option and other arguments see the TFile ctor.
+/// The preferred interface to this constructor is via TFile::Open().
+
 TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
                      Int_t compress)
    : TFile(url, "NET", ftitle, compress)
 {
-   // Create a RFIO file object. A RFIO file is the same as a TFile
-   // except that it is being accessed via a rfiod server. The url
-   // argument must be of the form: rfio:/path/file.root (where file.root
-   // is a symlink of type /shift/aaa/bbb/ccc) or rfio:server:/path/file.root.
-   // If the file specified in the URL does not exist, is not accessable
-   // or can not be created the kZombie bit will be set in the TRFIOFile
-   // object. Use IsZombie() to see if the file is accessable.
-   // For a description of the option and other arguments see the TFile ctor.
-   // The preferred interface to this constructor is via TFile::Open().
-
    fOption = option;
    fOption.ToUpper();
 
@@ -195,20 +195,20 @@ zombie:
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// RFIO file dtor. Close and flush directory structure.
+
 TRFIOFile::~TRFIOFile()
 {
-   // RFIO file dtor. Close and flush directory structure.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a list of buffers given in pos[] and len[] and return it
+/// in a single buffer. Returns kTRUE in case of error.
+
 Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 {
-   // Read a list of buffers given in pos[] and len[] and return it
-   // in a single buffer. Returns kTRUE in case of error.
-
    TTHREAD_TLS(struct iovec64 *) iov = 0;
    TTHREAD_TLS(Int_t) iovsize = 128;
    Int_t n;
@@ -297,56 +297,57 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system open. All arguments like in POSIX open.
+
 Int_t TRFIOFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
-   // Interface to system open. All arguments like in POSIX open.
    Int_t ret = ::rfio_open64((char*)pathname, flags, (Int_t) mode);
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system close. All arguments like in POSIX close.
+
 Int_t TRFIOFile::SysClose(Int_t fd)
 {
-   // Interface to system close. All arguments like in POSIX close.
-
    Int_t ret = ::rfio_close(fd);
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system read. All arguments like in POSIX read.
+
 Int_t TRFIOFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
-   // Interface to system read. All arguments like in POSIX read.
-
    Int_t ret = ::rfio_read(fd, (char *)buf, len);
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system write. All arguments like in POSIX write.
+
 Int_t TRFIOFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
-   // Interface to system write. All arguments like in POSIX write.
-
    Int_t ret = ::rfio_write(fd, (char *)buf, len);
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system lseek. All arguments like in POSIX lseek
+/// except that the offset and return value are Long_t to be able to
+/// handle 64 bit file systems.
+
 Long64_t TRFIOFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
-   // Interface to system lseek. All arguments like in POSIX lseek
-   // except that the offset and return value are Long_t to be able to
-   // handle 64 bit file systems.
-
    Long64_t ret = ::rfio_lseek64(fd, offset, whence);
 
    if (ret < 0)
@@ -355,13 +356,13 @@ Long64_t TRFIOFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to TSystem:GetPathInfo(). Generally implemented via
+/// stat() or fstat().
+
 Int_t TRFIOFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
                          Long_t *modtime)
 {
-   // Interface to TSystem:GetPathInfo(). Generally implemented via
-   // stat() or fstat().
-
    struct stat64 statbuf;
 
    if (::rfio_fstat64(fd, &statbuf) >= 0) {
@@ -388,12 +389,12 @@ Int_t TRFIOFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method returning rfio_errno. For RFIO files must use this
+/// function since we need to check rfio_errno then serrno and finally errno.
+
 Int_t TRFIOFile::GetErrno() const
 {
-   // Method returning rfio_errno. For RFIO files must use this
-   // function since we need to check rfio_errno then serrno and finally errno.
-
    if (rfio_errno)
       return rfio_errno;
    if (serrno)
@@ -401,33 +402,33 @@ Int_t TRFIOFile::GetErrno() const
    return TSystem::GetErrno();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method resetting the rfio_errno, serrno and errno.
+
 void TRFIOFile::ResetErrno() const
 {
-   // Method resetting the rfio_errno, serrno and errno.
-
    rfio_errno = 0;
    serrno = 0;
    TSystem::ResetErrno();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create helper class that allows directory access via rfiod.
+/// The name must start with '-' to bypass the TSystem singleton check.
+
 TRFIOSystem::TRFIOSystem() : TSystem("-rfio", "RFIO Helper System")
 {
-   // Create helper class that allows directory access via rfiod.
-   // The name must start with '-' to bypass the TSystem singleton check.
-
    SetName("rfio");
 
    fDirp = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a directory via rfiod.
+
 Int_t TRFIOSystem::MakeDirectory(const char *dir)
 {
-   // Make a directory via rfiod.
-
    TUrl url(dir);
    Int_t ret = ::rfio_mkdir((char*)url.GetFileAndOptions(), 0755);
    if (ret < 0)
@@ -435,12 +436,12 @@ Int_t TRFIOSystem::MakeDirectory(const char *dir)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a directory via rfiod. Returns an opaque pointer to a dir
+/// structure. Returns 0 in case of error.
+
 void *TRFIOSystem::OpenDirectory(const char *dir)
 {
-   // Open a directory via rfiod. Returns an opaque pointer to a dir
-   // structure. Returns 0 in case of error.
-
    if (fDirp) {
       Error("OpenDirectory", "invalid directory pointer (should never happen)");
       fDirp = 0;
@@ -463,11 +464,11 @@ void *TRFIOSystem::OpenDirectory(const char *dir)
    return fDirp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free directory via rfiod.
+
 void TRFIOSystem::FreeDirectory(void *dirp)
 {
-   // Free directory via rfiod.
-
    if (dirp != fDirp) {
       Error("FreeDirectory", "invalid directory pointer (should never happen)");
       return;
@@ -479,11 +480,11 @@ void TRFIOSystem::FreeDirectory(void *dirp)
    fDirp = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get directory entry via rfiod. Returns 0 in case no more entries.
+
 const char *TRFIOSystem::GetDirEntry(void *dirp)
 {
-   // Get directory entry via rfiod. Returns 0 in case no more entries.
-
    if (dirp != fDirp) {
       Error("GetDirEntry", "invalid directory pointer (should never happen)");
       return 0;
@@ -500,14 +501,14 @@ const char *TRFIOSystem::GetDirEntry(void *dirp)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 Int_t TRFIOSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    TUrl url(path);
 
    struct stat64 sbuf;
@@ -527,13 +528,13 @@ Int_t TRFIOSystem::GetPathInfo(const char *path, FileStat_t &buf)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns FALSE if one can access a file using the specified access mode.
+/// Mode is the same as for the Unix access(2) function.
+/// Attention, bizarre convention of return value!!
+
 Bool_t TRFIOSystem::AccessPathName(const char *path, EAccessMode mode)
 {
-   // Returns FALSE if one can access a file using the specified access mode.
-   // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
-
    TUrl url(path);
    if (::rfio_access((char*)url.GetFileAndOptions(), mode) == 0)
       return kFALSE;
@@ -541,12 +542,12 @@ Bool_t TRFIOSystem::AccessPathName(const char *path, EAccessMode mode)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlink, i.e. remove, a file or directory. Returns 0 when successful,
+/// -1 in case of failure.
+
 Int_t TRFIOSystem::Unlink(const char *path)
 {
-   // Unlink, i.e. remove, a file or directory. Returns 0 when successful,
-   // -1 in case of failure.
-
    TUrl url(path);
 
    struct stat finfo;

@@ -40,20 +40,22 @@ ClassImp(RooBernstein)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooBernstein::RooBernstein()
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooBernstein::RooBernstein(const char* name, const char* title, 
                            RooAbsReal& x, const RooArgList& coefList): 
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
   _coefList("coefficients","List of coefficients",this)
 {
-  // Constructor
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsArg* coef ;
   while((coef = (RooAbsArg*)coefIter->Next())) {
@@ -69,7 +71,8 @@ RooBernstein::RooBernstein(const char* name, const char* title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
   RooAbsPdf(other, name), 
   _x("x", this, other._x), 
@@ -78,10 +81,10 @@ RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooBernstein::evaluate() const 
 {
-
   Double_t xmin = _x.min();
   Double_t x = (_x - xmin) / (_x.max() - xmin); // rescale to [0,1]
   Int_t degree = _coefList.getSize() - 1; // n+1 polys of degree n
@@ -124,10 +127,11 @@ Double_t RooBernstein::evaluate() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// No analytical calculation available (yet) of integrals over subranges
+
 Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
-  // No analytical calculation available (yet) of integrals over subranges
   if (rangeName && strlen(rangeName)) {
     return 0 ;
   }
@@ -137,7 +141,8 @@ Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   R__ASSERT(code==1) ;

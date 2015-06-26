@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 BEGIN_HTML
 <p>
@@ -41,10 +42,11 @@ ClassImp(RooStats::HistFactory::FlexibleInterpVar)
 using namespace RooStats;
 using namespace HistFactory;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 FlexibleInterpVar::FlexibleInterpVar()
 {
-  // Default constructor
   _paramIter = _paramList.createIterator() ;
   _nominal = 0;
   _interpBoundary=1.;
@@ -53,7 +55,8 @@ FlexibleInterpVar::FlexibleInterpVar()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title, 
 		       const RooArgList& paramList, 
 		       Double_t nominal, vector<double> low, vector<double> high) :
@@ -61,7 +64,6 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _paramList("paramList","List of paramficients",this),
   _nominal(nominal), _low(low), _high(high), _interpBoundary(1.)
 {
-
   _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
 
@@ -82,7 +84,8 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title, 
 		       const RooArgList& paramList, 
 		       double nominal, const RooArgList& low, const RooArgList& high) :
@@ -90,7 +93,6 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _paramList("paramList","List of paramficients",this),
   _nominal(nominal), _interpBoundary(1.)
 {
-
   RooFIter lowIter = low.fwdIterator() ;
   RooAbsReal* val ; 
   while ((val = (RooAbsReal*) lowIter.next())) {
@@ -126,7 +128,8 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title, 
 				     const RooArgList& paramList, 
 				     double nominal, vector<double> low, vector<double> high,
@@ -135,7 +138,6 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _paramList("paramList","List of paramficients",this),
   _nominal(nominal), _low(low), _high(high), _interpCode(code), _interpBoundary(1.)
 {
-
   _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
 
@@ -155,19 +157,21 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of flat polynomial function
+
 FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title) :
   RooAbsReal(name, title),
   _paramList("paramList","List of coefficients",this), 
   _nominal(0), _interpBoundary(1.)
 {
-  // Constructor of flat polynomial function
   _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
   TRACE_CREATE
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char* name) :
   RooAbsReal(other, name), 
   _paramList("paramList",this,other._paramList),
@@ -182,18 +186,19 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 FlexibleInterpVar::~FlexibleInterpVar() 
 {
-  // Destructor
   delete _paramIter ;
   TRACE_DESTROY
 }
 
 
-//_____________________________________________________________________________
-void FlexibleInterpVar::setInterpCode(RooAbsReal& param, int code){
+////////////////////////////////////////////////////////////////////////////////
 
+void FlexibleInterpVar::setInterpCode(RooAbsReal& param, int code){
   int index = _paramList.index(&param);
   if(index<0){
       coutE(InputArguments) << "FlexibleInterpVar::setInterpCode ERROR:  " << param.GetName() 
@@ -208,9 +213,9 @@ void FlexibleInterpVar::setInterpCode(RooAbsReal& param, int code){
   setValueDirty();
 }
 
-//_____________________________________________________________________________
-void FlexibleInterpVar::setAllInterpCodes(int code){
+////////////////////////////////////////////////////////////////////////////////
 
+void FlexibleInterpVar::setAllInterpCodes(int code){
   for(unsigned int i=0; i<_interpCode.size(); ++i){
     _interpCode.at(i) = code;
   }
@@ -220,9 +225,9 @@ void FlexibleInterpVar::setAllInterpCodes(int code){
 
 }
 
-//_____________________________________________________________________________
-void FlexibleInterpVar::setNominal(Double_t newNominal){
+////////////////////////////////////////////////////////////////////////////////
 
+void FlexibleInterpVar::setNominal(Double_t newNominal){
   coutW(InputArguments) << "FlexibleInterpVar::setNominal : nominal is now " << newNominal << endl ;
   _nominal = newNominal;
 
@@ -231,9 +236,9 @@ void FlexibleInterpVar::setNominal(Double_t newNominal){
   setValueDirty();
 }
 
-//_____________________________________________________________________________
-void FlexibleInterpVar::setLow(RooAbsReal& param, Double_t newLow){
+////////////////////////////////////////////////////////////////////////////////
 
+void FlexibleInterpVar::setLow(RooAbsReal& param, Double_t newLow){
   int index = _paramList.index(&param);
   if(index<0){
       coutE(InputArguments) << "FlexibleInterpVar::setLow ERROR:  " << param.GetName() 
@@ -249,9 +254,9 @@ void FlexibleInterpVar::setLow(RooAbsReal& param, Double_t newLow){
   setValueDirty();
 }
 
-//_____________________________________________________________________________
-void FlexibleInterpVar::setHigh(RooAbsReal& param, Double_t newHigh){
+////////////////////////////////////////////////////////////////////////////////
 
+void FlexibleInterpVar::setHigh(RooAbsReal& param, Double_t newHigh){
   int index = _paramList.index(&param);
   if(index<0){
       coutE(InputArguments) << "FlexibleInterpVar::setHigh ERROR:  " << param.GetName() 
@@ -266,9 +271,9 @@ void FlexibleInterpVar::setHigh(RooAbsReal& param, Double_t newHigh){
   setValueDirty();
 }
 
-//_____________________________________________________________________________
-void FlexibleInterpVar::printAllInterpCodes(){
+////////////////////////////////////////////////////////////////////////////////
 
+void FlexibleInterpVar::printAllInterpCodes(){
   for(unsigned int i=0; i<_interpCode.size(); ++i){
     coutI(InputArguments) <<"interp code for " << _paramList.at(i)->GetName() << " = " << _interpCode.at(i) <<endl;
     // GHL: Adding suggestion by Swagato:
@@ -278,9 +283,9 @@ void FlexibleInterpVar::printAllInterpCodes(){
 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 double FlexibleInterpVar::PolyInterpValue(int i, double x) const { 
-   
    // code for polynomial interpolation used when interpCode=4
 
    double boundary = _interpBoundary;
@@ -355,11 +360,11 @@ double FlexibleInterpVar::PolyInterpValue(int i, double x) const {
    return value; 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return value of polynomial
+
 Double_t FlexibleInterpVar::evaluate() const 
 {
-  // Calculate and return value of polynomial
-
   Double_t total(_nominal) ;
   _paramIter->Reset() ;
 

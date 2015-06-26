@@ -21,7 +21,9 @@
 
 ClassImp(TLeafB)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Default constructor.
+
 TLeafB::TLeafB()
 : TLeaf()
 , fMinimum(0)
@@ -29,11 +31,12 @@ TLeafB::TLeafB()
 , fValue(0)
 , fPointer(0)
 {
-   // -- Default constructor.
    fLenType = 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Create a LeafB.
+
 TLeafB::TLeafB(TBranch *parent, const char* name, const char* type)
    : TLeaf(parent, name, type)
    , fMinimum(0)
@@ -41,14 +44,14 @@ TLeafB::TLeafB(TBranch *parent, const char* name, const char* type)
    , fValue(0)
    , fPointer(0)
 {
-   // -- Create a LeafB.
    fLenType = 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Destructor.
+
 TLeafB::~TLeafB()
 {
-   // -- Destructor.
    if (ResetAddress(0, kTRUE)) {
       delete[] fValue;
       fValue = 0;
@@ -57,21 +60,21 @@ TLeafB::~TLeafB()
    fPointer = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Export element from local leaf buffer to a ClonesArray.
+
 void TLeafB::Export(TClonesArray* list, Int_t n)
 {
-   // -- Export element from local leaf buffer to a ClonesArray.
-
    for (Int_t i = 0, j = 0; i < n; i++, j += fLen) {
       memcpy(((char*) list->UncheckedAt(i)) + fOffset, &fValue[j], fLen);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Pack leaf elements into Basket output buffer.
+
 void TLeafB::FillBasket(TBuffer& b)
 {
-   // -- Pack leaf elements into Basket output buffer.
-
    Int_t len = GetLen();
    if (fPointer) {
       fValue = *fPointer;
@@ -90,32 +93,32 @@ void TLeafB::FillBasket(TBuffer& b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Returns name of leaf type.
+
 const char *TLeafB::GetTypeName() const
 {
-   // -- Returns name of leaf type.
-
    if (fIsUnsigned) {
       return "UChar_t";
    }
    return "Char_t";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Import element from ClonesArray into local leaf buffer.
+
 void TLeafB::Import(TClonesArray *list, Int_t n)
 {
-   // -- Import element from ClonesArray into local leaf buffer.
-
    for (Int_t i = 0, j = 0; i < n; i++, j+= fLen) {
       memcpy(&fValue[j], ((char*) list->UncheckedAt(i)) + fOffset, fLen);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Prints leaf value.
+
 void TLeafB::PrintValue(Int_t l) const
 {
-   // -- Prints leaf value.
-
    if (fIsUnsigned) {
       UChar_t *uvalue = (UChar_t*) GetValuePointer();
       printf("%u", uvalue[l]);
@@ -125,11 +128,11 @@ void TLeafB::PrintValue(Int_t l) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Read leaf elements from Basket input buffer.
+
 void TLeafB::ReadBasket(TBuffer &b)
 {
-   // -- Read leaf elements from Basket input buffer.
-
    if (!fLeafCount && (fNdata == 1)) {
       b.ReadChar(fValue[0]);
    } else {
@@ -151,11 +154,11 @@ void TLeafB::ReadBasket(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Read leaf elements from Basket input buffer and export buffer to TClonesArray objects.
+
 void TLeafB::ReadBasketExport(TBuffer& b, TClonesArray* list, Int_t n)
 {
-   // -- Read leaf elements from Basket input buffer and export buffer to TClonesArray objects.
-
    b.ReadFastArray(fValue, n*fLen);
 
    for (Int_t i = 0, j = 0; i < n; i++, j += fLen) {
@@ -163,10 +166,11 @@ void TLeafB::ReadBasketExport(TBuffer& b, TClonesArray* list, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Read a 8 bit integer from std::istream s and store it into the branch buffer.
+
 void TLeafB::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 {
-   // -- Read a 8 bit integer from std::istream s and store it into the branch buffer.
    if (fIsUnsigned) {
       UChar_t *uvalue = (UChar_t*)GetValuePointer();
       for (Int_t i=0;i<fLen;i++) {
@@ -184,11 +188,11 @@ void TLeafB::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Set value buffer address.
+
 void TLeafB::SetAddress(void *addr)
 {
-   // -- Set value buffer address.
-
    // Check ownership of the value buffer and
    // calculate a new size for it.
    if (ResetAddress(addr)) {

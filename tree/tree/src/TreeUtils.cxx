@@ -76,7 +76,8 @@ struct InvalidTupleType<TNtupleD>
    }
 };
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class DataType, class Tuple>
 Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char delimiter, bool strictMode)
 {
@@ -237,11 +238,11 @@ template Long64_t FillNtupleFromStream<Double_t, TNtupleD>(std::istream &, TNtup
 //
 //newline-character:
 // '\r' | '\n'
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Skips everything from '#' to (including) '\r' or '\n'.
+
 void SkipComment(std::istream &input)
 {
-   //Skips everything from '#' to (including) '\r' or '\n'.
-
    while (input.good()) {
       const char next = input.peek();
       if (input.good()) {
@@ -256,11 +257,11 @@ void SkipComment(std::istream &input)
 //    newline-character
 //    ws-sequence newline-character
 //    ws-sequence comment
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Skips empty lines (newline-characters), ws-lines (consisting only of whitespace characters + newline-characters).
+
 void SkipEmptyLines(std::istream &input)
 {
-   //Skips empty lines (newline-characters), ws-lines (consisting only of whitespace characters + newline-characters).
-
    while (input.good()) {
       const char c = input.peek();
       if (!input.good())
@@ -277,10 +278,11 @@ void SkipEmptyLines(std::istream &input)
 
 //ws-sequence:
 //    c such that isspace(c) and c is not a newline-character.
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Skip whitespace characters, but not newline-characters we support ('\r' or '\n').
+
 void SkipWSCharacters(std::istream &input)
 {
-   //Skip whitespace characters, but not newline-characters we support ('\r' or '\n').
    while (input.good()) {
       const char next = input.peek();
       if (input.good()) {
@@ -294,10 +296,11 @@ void SkipWSCharacters(std::istream &input)
 
 //Next character is either newline-character, eof or we have some problems reading
 //the next symbol.
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Either '\r' | '\n' or eof of some problem.
+
 bool NextCharacterIsEOL(std::istream &input)
 {
-   //Either '\r' | '\n' or eof of some problem.
    if (!input.good())
       return true;
 

@@ -31,7 +31,8 @@ PyROOT::TConstructorHolder::TConstructorHolder( const TScopeAdapter& klass ) :
 {
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyROOT::TConstructorHolder::TConstructorHolder( const TScopeAdapter& klass, const TMemberAdapter& method ) :
       TMethodHolder( klass, method )
 {
@@ -46,11 +47,12 @@ PyObject* PyROOT::TConstructorHolder::GetDocString()
       clName.c_str(), clName.c_str(), this->GetMethod() ? this->GetSignatureString().c_str() : "()" );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// preliminary check in case keywords are accidently used (they are ignored otherwise)
+
 PyObject* PyROOT::TConstructorHolder::operator()(
       ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user, Bool_t release_gil )
 {
-// preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {
       PyErr_SetString( PyExc_TypeError, "keyword arguments are not yet supported" );
       return 0;

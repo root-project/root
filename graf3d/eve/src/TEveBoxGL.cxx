@@ -27,29 +27,29 @@
 
 ClassImp(TEveBoxGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveBoxGL::TEveBoxGL() :
    TGLObject(), fM(0)
 {
-   // Constructor.
-
    // fDLCache = kFALSE; // Disable display list.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveBoxGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveBox>(obj);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box.
+
 void TEveBoxGL::SetBBox()
 {
-   // Set bounding box.
-
    // !! This ok if master sub-classed from TAttBBox
    SetAxisAlignedBBox(((TEveBox*)fExternalObj)->AssertBBox());
 }
@@ -76,12 +76,12 @@ namespace
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render box with without normals.
+/// To be used with lightning off, for outline.
+
 void TEveBoxGL::RenderOutline(const Float_t p[8][3]) const
 {
-   // Render box with without normals.
-   // To be used with lightning off, for outline.
-
    glBegin(GL_LINE_STRIP);
    glVertex3fv(p[0]); glVertex3fv(p[1]);
    glVertex3fv(p[5]); glVertex3fv(p[6]);
@@ -97,11 +97,11 @@ void TEveBoxGL::RenderOutline(const Float_t p[8][3]) const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render box with standard axis-aligned normals.
+
 void TEveBoxGL::RenderBoxStdNorm(const Float_t p[8][3]) const
 {
-   // Render box with standard axis-aligned normals.
-
    glBegin(GL_QUADS);
 
    // bottom: 0123
@@ -132,11 +132,11 @@ void TEveBoxGL::RenderBoxStdNorm(const Float_t p[8][3]) const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render box, calculate normals on the fly from first three points.
+
 void TEveBoxGL::RenderBoxAutoNorm(const Float_t p[8][3]) const
 {
-   // Render box, calculate normals on the fly from first three points.
-
    Float_t e[6][3], n[3];
    subtract_and_normalize(p[1], p[0], e[0]);
    subtract_and_normalize(p[3], p[0], e[1]);
@@ -175,11 +175,11 @@ void TEveBoxGL::RenderBoxAutoNorm(const Float_t p[8][3]) const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render with OpenGL.
+
 void TEveBoxGL::Draw(TGLRnrCtx& rnrCtx) const
 {
-   // Render with OpenGL.
-
    if (rnrCtx.IsDrawPassOutlineLine())
    {
       RenderOutline(fM->fVertices);
@@ -202,11 +202,11 @@ void TEveBoxGL::Draw(TGLRnrCtx& rnrCtx) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render with OpenGL, create display-list.
+
 void TEveBoxGL::DirectDraw(TGLRnrCtx&) const
 {
-   // Render with OpenGL, create display-list.
-
    fMultiColor = (fM->fDrawFrame && fM->fFillColor != fM->fLineColor);
 
    glPushAttrib(GL_ENABLE_BIT);
@@ -239,43 +239,43 @@ void TEveBoxGL::DirectDraw(TGLRnrCtx&) const
 
 ClassImp(TEveBoxProjectedGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveBoxProjectedGL::TEveBoxProjectedGL() :
    TGLObject(), fM(0)
 {
-   // Constructor.
-
    // fDLCache = kFALSE; // Disable display list.
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveBoxProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveBoxProjected>(obj);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box.
+
 void TEveBoxProjectedGL::SetBBox()
 {
-   // Set bounding box.
-
    SetAxisAlignedBBox(((TEveBoxProjected*)fExternalObj)->AssertBBox());
 }
 
 //------------------------------------------------------------------------------
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render points with given GL mode.
+/// This is used for polygon and outline drawing.
+
 void TEveBoxProjectedGL::RenderPoints(Int_t mode) const
 {
-   // Render points with given GL mode.
-   // This is used for polygon and outline drawing.
-
    Int_t B = fM->fBreakIdx;
    Int_t N = fM->fPoints.size();
    if (B != 0)
@@ -295,11 +295,11 @@ void TEveBoxProjectedGL::RenderPoints(Int_t mode) const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render with OpenGL.
+
 void TEveBoxProjectedGL::Draw(TGLRnrCtx& rnrCtx) const
 {
-   // Render with OpenGL.
-
    if (rnrCtx.IsDrawPassOutlineLine())
       return;
 
@@ -337,11 +337,11 @@ void TEveBoxProjectedGL::Draw(TGLRnrCtx& rnrCtx) const
    glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render with OpenGL, create display-list.
+
 void TEveBoxProjectedGL::DirectDraw(TGLRnrCtx&) const
 {
-   // Render with OpenGL, create display-list.
-
    fMultiColor = (fM->fDrawFrame && fM->fFillColor != fM->fLineColor);
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);

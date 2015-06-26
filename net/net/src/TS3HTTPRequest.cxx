@@ -52,19 +52,20 @@
 
 ClassImp(TS3HTTPRequest)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TS3HTTPRequest::TS3HTTPRequest()
                : fAuthType(kNoAuth), fHost("NoHost")
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TS3HTTPRequest::TS3HTTPRequest(EHTTPVerb httpVerb, const TString& host,
    const TString& bucket, const TString& objectKey, EAuthType authType,
    const TString& accessKey, const TString& secretKey)
 {
-   // Default constructor
-
    fVerb      = httpVerb;
    fHost      = host;
    fBucket    = bucket;
@@ -74,12 +75,12 @@ TS3HTTPRequest::TS3HTTPRequest(EHTTPVerb httpVerb, const TString& host,
    fSecretKey = secretKey;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TS3HTTPRequest::TS3HTTPRequest(const TS3HTTPRequest& r)
                : TObject(r)
 {
-   // Copy constructor
-
    fVerb      = r.fVerb;
    fHost      = r.fHost;
    fBucket    = r.fBucket;
@@ -90,11 +91,11 @@ TS3HTTPRequest::TS3HTTPRequest(const TS3HTTPRequest& r)
    fTimeStamp = r.fTimeStamp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns this request's signature
+
 TString TS3HTTPRequest::ComputeSignature(TS3HTTPRequest::EHTTPVerb httpVerb) const
 {
-   // Returns this request's signature
-
    // Please note, the order of the fields used for computing
    // the signature is important. Make sure that the changes you
    // make are compatible with the reference documentation.
@@ -129,7 +130,8 @@ TString TS3HTTPRequest::ComputeSignature(TS3HTTPRequest::EHTTPVerb httpVerb) con
    return TBase64::Encode((const char *)digest, SHA_DIGEST_LENGTH);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TString TS3HTTPRequest::HTTPVerbToTString(TS3HTTPRequest::EHTTPVerb httpVerb) const
 {
    switch (httpVerb) {
@@ -143,12 +145,12 @@ TString TS3HTTPRequest::HTTPVerbToTString(TS3HTTPRequest::EHTTPVerb httpVerb) co
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets this request's time stamp according to:
+///   http://code.google.com/apis/storage/docs/reference-headers.html#date
+
 TS3HTTPRequest& TS3HTTPRequest::SetTimeStamp()
 {
-   // Sets this request's time stamp according to:
-   //   http://code.google.com/apis/storage/docs/reference-headers.html#date
-
    time_t now = time(NULL);
    char result[128];
 #ifdef _REENTRANT
@@ -163,44 +165,44 @@ TS3HTTPRequest& TS3HTTPRequest::SetTimeStamp()
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the first line of a HTTP request for this object. Note that since
+/// we don't use the virtual host syntax which is supported by Amazon, we
+/// must include the bucket name in thr resource. For example, we don't use
+/// http://mybucket.s3.amazonaws.com/path/to/my/file but instead
+/// http://s3.amazonaws.com/mybucket/path/to/my/file so the HTTP request
+/// will be of the form "GET /mybucket/path/to/my/file HTTP/1.1"
+/// Also note that the path must include the leading '/'.
+
 TString TS3HTTPRequest::MakeRequestLine(TS3HTTPRequest::EHTTPVerb httpVerb) const
 {
-   // Returns the first line of a HTTP request for this object. Note that since
-   // we don't use the virtual host syntax which is supported by Amazon, we
-   // must include the bucket name in thr resource. For example, we don't use
-   // http://mybucket.s3.amazonaws.com/path/to/my/file but instead
-   // http://s3.amazonaws.com/mybucket/path/to/my/file so the HTTP request
-   // will be of the form "GET /mybucket/path/to/my/file HTTP/1.1"
-   // Also note that the path must include the leading '/'.
-
    return TString::Format("%s /%s%s HTTP/1.1",
                           (const char*)HTTPVerbToTString(httpVerb),
                           (const char*)fBucket,
                           (const char*)fObjectKey);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the 'Host' header to include in the HTTP request.
+
 TString TS3HTTPRequest::MakeHostHeader() const
 {
-   // Returns the 'Host' header to include in the HTTP request.
-
    return "Host: " + fHost;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the date header for this HTTP request
+
 TString TS3HTTPRequest::MakeDateHeader() const
 {
-   // Returns the date header for this HTTP request
-
    return "Date: " + fTimeStamp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the authentication prefix
+
 TString TS3HTTPRequest::MakeAuthPrefix() const
 {
-   // Returns the authentication prefix
-
    switch (fAuthType) {
       case kNoAuth: return "";
       case kGoogle: return "GOOG1";
@@ -209,11 +211,11 @@ TString TS3HTTPRequest::MakeAuthPrefix() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the authentication header for this HTTP request
+
 TString TS3HTTPRequest::MakeAuthHeader(TS3HTTPRequest::EHTTPVerb httpVerb) const
 {
-   // Returns the authentication header for this HTTP request
-
    if (fAuthType == kNoAuth)
       return "";
 
@@ -224,11 +226,11 @@ TString TS3HTTPRequest::MakeAuthHeader(TS3HTTPRequest::EHTTPVerb httpVerb) const
       (fAuthType == kGoogle) ? "\r\nx-goog-api-version: 1" : "");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the HTTP request ready to be sent to the server
+
 TString TS3HTTPRequest::GetRequest(TS3HTTPRequest::EHTTPVerb httpVerb, Bool_t appendCRLF)
 {
-   // Returns the HTTP request ready to be sent to the server
-
    // Set time stamp before computing this request's signature. The signature
    // includes the date.
    SetTimeStamp();

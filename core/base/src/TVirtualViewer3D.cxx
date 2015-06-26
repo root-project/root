@@ -260,11 +260,11 @@ indicating if children (contained within the one just sent) are worth adding.</p
 
 ClassImp(TVirtualViewer3D)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a Viewer 3D of specified type.
+
 TVirtualViewer3D* TVirtualViewer3D::Viewer3D(TVirtualPad *pad, Option_t *type)
 {
-   // Create a Viewer 3D of specified type.
-
    TVirtualViewer3D *viewer = 0;
    TPluginHandler *h;
    if ((h = gPluginMgr->FindHandler("TVirtualViewer3D", type))) {

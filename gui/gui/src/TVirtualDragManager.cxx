@@ -30,19 +30,19 @@ ClassImp(TVirtualDragManager)
 
 TVirtualDragManager *gDragManager = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TVirtualDragManager::TVirtualDragManager()
 {
-   // Constructor.
-
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load plugin and create drag manager object.
+
 TVirtualDragManager *TVirtualDragManager::Instance()
 {
-   // Load plugin and create drag manager object.
-
    if (gDragManager) return gDragManager;
 
    static Bool_t loaded = kFALSE;
@@ -61,11 +61,11 @@ TVirtualDragManager *TVirtualDragManager::Instance()
    return gDragManager;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization.
+
 void TVirtualDragManager::Init()
 {
-   // Initialization.
-
    fDragging = kFALSE;
    fMoveWaiting = kFALSE;
    fDropping = kFALSE;

@@ -29,12 +29,12 @@
 
 ClassImp(TFunction)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TFunction ctor. TFunctions are constructed in TROOT via
+/// a call to TCling::UpdateListOfGlobalFunctions().
+
 TFunction::TFunction(MethodInfo_t *info) : TDictionary()
 {
-   // Default TFunction ctor. TFunctions are constructed in TROOT via
-   // a call to TCling::UpdateListOfGlobalFunctions().
-
    fInfo       = info;
    fMethodArgs = 0;
    if (fInfo) {
@@ -44,11 +44,11 @@ TFunction::TFunction(MethodInfo_t *info) : TDictionary()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy operator.
+
 TFunction::TFunction(const TFunction &orig) : TDictionary(orig)
 {
-   // Copy operator.
-
    if (orig.fInfo) {
       R__LOCKGUARD(gInterpreterMutex);
       fInfo = gCling->MethodInfo_FactoryCopy(orig.fInfo);
@@ -58,11 +58,11 @@ TFunction::TFunction(const TFunction &orig) : TDictionary(orig)
    fMethodArgs = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TFunction& TFunction::operator=(const TFunction &rhs)
 {
-   // Assignment operator.
-
    if (this != &rhs) {
       R__LOCKGUARD(gInterpreterMutex);
       gCling->MethodInfo_Delete(fInfo);
@@ -80,11 +80,11 @@ TFunction& TFunction::operator=(const TFunction &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TFunction dtor deletes adopted CINT MethodInfo.
+
 TFunction::~TFunction()
 {
-   // TFunction dtor deletes adopted CINT MethodInfo.
-
    R__LOCKGUARD(gInterpreterMutex);
    gCling->MethodInfo_Delete(fInfo);
 
@@ -92,41 +92,41 @@ TFunction::~TFunction()
    delete fMethodArgs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clone method.
+
 TObject *TFunction::Clone(const char *newname) const
 {
-   // Clone method.
-
    TNamed *newobj = new TFunction(*this);
    if (newname && strlen(newname)) newobj->SetName(newname);
    return newobj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Using the CINT method arg information to create a complete signature string.
+
 void TFunction::CreateSignature()
 {
-   // Using the CINT method arg information to create a complete signature string.
-
    R__LOCKGUARD(gInterpreterMutex);
    gCling->MethodInfo_CreateSignature(fInfo, fSignature);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return signature of function.
+
 const char *TFunction::GetSignature()
 {
-   // Return signature of function.
-
    if (fInfo && fSignature.IsNull())
       CreateSignature();
 
    return fSignature.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list containing the TMethodArgs of a TFunction.
+
 TList *TFunction::GetListOfMethodArgs()
 {
-   // Return list containing the TMethodArgs of a TFunction.
-
    if (!fMethodArgs && fInfo) {
       if (!gInterpreter)
          Fatal("GetListOfMethodArgs", "gInterpreter not initialized");
@@ -136,88 +136,89 @@ TList *TFunction::GetListOfMethodArgs()
    return fMethodArgs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get full type description of function return type, e,g.: "class TDirectory*".
+
 const char *TFunction::GetReturnTypeName() const
 {
-   // Get full type description of function return type, e,g.: "class TDirectory*".
-
    R__LOCKGUARD2(gInterpreterMutex);
    if (fInfo == 0 || gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
    return gCling->MethodInfo_TypeName(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the normalized name of the return type.  A normalized name is fully
+/// qualified and has all typedef desugared except for the 'special' typedef
+/// which include Double32_t, Float16_t, [U]Long64_t and std::string.  It
+/// also has std:: removed [This is subject to change].
+///
+
 std::string TFunction::GetReturnTypeNormalizedName() const
 {
-   // Get the normalized name of the return type.  A normalized name is fully
-   // qualified and has all typedef desugared except for the 'special' typedef
-   // which include Double32_t, Float16_t, [U]Long64_t and std::string.  It
-   // also has std:: removed [This is subject to change].
-   //
-
    R__LOCKGUARD2(gInterpreterMutex);
    if (fInfo == 0 || gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
    return gCling->MethodInfo_TypeNormalizedName(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Number of function arguments.
+
 Int_t TFunction::GetNargs() const
 {
-   // Number of function arguments.
-
    if (fInfo) return gCling->MethodInfo_NArg(fInfo);
    else if (fMethodArgs) return fMethodArgs->GetEntries();
    else return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Number of function optional (default) arguments.
+
 Int_t TFunction::GetNargsOpt() const
 {
-   // Number of function optional (default) arguments.
-
    // FIXME: when unload this is an over-estimate.
    return fInfo ? gCling->MethodInfo_NDefaultArg(fInfo) : GetNargs();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get property description word. For meaning of bits see EProperty.
+
 Long_t TFunction::Property() const
 {
-   // Get property description word. For meaning of bits see EProperty.
-
    return fInfo ? gCling->MethodInfo_Property(fInfo) : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get property description word. For meaning of bits see EProperty.
+
 Long_t TFunction::ExtraProperty() const
 {
-   // Get property description word. For meaning of bits see EProperty.
-
    return fInfo ? gCling->MethodInfo_ExtraProperty(fInfo) : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDictionary::DeclId_t TFunction::GetDeclId() const
 {
    return gInterpreter->GetDeclId(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to the interface method. Using this pointer we
+/// can find which TFunction belongs to a CINT MethodInfo object.
+/// Both need to have the same InterfaceMethod pointer.
+
 void *TFunction::InterfaceMethod() const
 {
-   // Return pointer to the interface method. Using this pointer we
-   // can find which TFunction belongs to a CINT MethodInfo object.
-   // Both need to have the same InterfaceMethod pointer.
-
    return fInfo ? gCling->MethodInfo_InterfaceMethod(fInfo) : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if this function object is pointing to a currently
+/// loaded function.  If a function is unloaded after the TFunction
+/// is created, the TFunction will be set to be invalid.
+
 Bool_t TFunction::IsValid()
 {
-   // Return true if this function object is pointing to a currently
-   // loaded function.  If a function is unloaded after the TFunction
-   // is created, the TFunction will be set to be invalid.
-
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
       // Only for global functions. For data member functions TMethod does it.
@@ -231,20 +232,20 @@ Bool_t TFunction::IsValid()
    return fInfo != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the mangled name as defined by CINT, or 0 in case of error.
+
 const char *TFunction::GetMangledName() const
 {
-   // Returns the mangled name as defined by CINT, or 0 in case of error.
-
    return fMangledName;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the prototype of a function as defined by CINT, or 0 in
+/// case of error.
+
 const char *TFunction::GetPrototype() const
 {
-   // Returns the prototype of a function as defined by CINT, or 0 in
-   // case of error.
-
    if (fInfo) {
       R__LOCKGUARD2(gInterpreterMutex);
       return gCling->MethodInfo_GetPrototype(fInfo);
@@ -252,32 +253,32 @@ const char *TFunction::GetPrototype() const
       return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List TFunction name and title.
+
 void TFunction::ls(Option_t *options /* ="" */) const
 {
-   // List TFunction name and title.
-
    TDictionary::ls(options);
    TROOT::IndentLevel();
    std::cout << "     " << GetPrototype() << '\n';
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print TFunction name and title.
+
 void TFunction::Print(Option_t *options /* ="" */) const
 {
-   // Print TFunction name and title.
-
    TDictionary::Print(options);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the TFunction to reflect the new info.
+///
+/// This can be used to implement unloading (info == 0) and then reloading
+/// (info being the 'new' decl address).
+
 Bool_t TFunction::Update(MethodInfo_t *info)
 {
-   // Update the TFunction to reflect the new info.
-   //
-   // This can be used to implement unloading (info == 0) and then reloading
-   // (info being the 'new' decl address).
-
    if (info == 0) {
 
       if (fInfo) {

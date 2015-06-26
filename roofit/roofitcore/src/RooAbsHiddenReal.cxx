@@ -44,59 +44,63 @@ ClassImp(RooAbsHiddenReal)
 RooCategory* RooAbsHiddenReal::_dummyBlindState = 0;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsHiddenReal::RooAbsHiddenReal(const char *name, const char *title, const char* unit)
   : RooAbsReal(name,title,unit),
     _state("state","Blinding state",this,dummyBlindState())
 {  
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsHiddenReal::RooAbsHiddenReal(const char *name, const char *title, RooAbsCategory& blindState, const char* unit)
   : RooAbsReal(name,title,unit),
   _state("state","Blinding state",this,blindState)
 {  
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAbsHiddenReal::RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* name) : 
   RooAbsReal(other, name),
   _state("state",this,other._state)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor 
+
 RooAbsHiddenReal::~RooAbsHiddenReal() 
 {
-  // Destructor 
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special version of printValue that doesn't reveal the objects value
+
 void RooAbsHiddenReal::printValue(ostream& os) const
 {
-  // Special version of printValue that doesn't reveal the objects value
-
   os << "(hidden)" ;
 } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special version of readFromStream that disallows reading from stream
+
 Bool_t RooAbsHiddenReal::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 {
-  // Special version of readFromStream that disallows reading from stream
-
   if (isHidden()) {
     // No-op version of readFromStream 
     coutE(InputArguments) << "RooAbsHiddenReal::readFromStream(" << GetName() << "): not allowed" << endl ;
@@ -108,11 +112,11 @@ Bool_t RooAbsHiddenReal::readFromStream(istream& is, Bool_t compact, Bool_t verb
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special version of writeToStream that disallows reading from stream
+
 void RooAbsHiddenReal::writeToStream(ostream& os, Bool_t compact) const
 {
-  // Special version of writeToStream that disallows reading from stream
-
   if (isHidden()) {
     // No-op version of writeToStream 
     coutE(InputArguments) << "RooAbsHiddenReal::writeToStream(" << GetName() << "): not allowed" << endl ;
@@ -123,12 +127,12 @@ void RooAbsHiddenReal::writeToStream(ostream& os, Bool_t compact) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return reference to internal dummy RooCategory implementation
+/// blinding state switch
+
 RooAbsCategory& RooAbsHiddenReal::dummyBlindState() const 
 {
-  // Return reference to internal dummy RooCategory implementation
-  // blinding state switch
-
   if (!_dummyBlindState) {
     _dummyBlindState = new RooCategory("dummyBlindState","dummy blinding state") ;
     _dummyBlindState->defineType("Normal",0) ;

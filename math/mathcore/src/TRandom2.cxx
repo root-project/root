@@ -27,33 +27,33 @@
 
 ClassImp(TRandom2)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ===================
+
 TRandom2::TRandom2(UInt_t seed)
 {
-//*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===================
-
    SetName("Random2");
    SetTitle("Random number generator with period of about  10**26");
    SetSeed(seed);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ==================
+
 TRandom2::~TRandom2()
 {
-//*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==================
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  TausWorth generator from L'Ecuyer, uses as seed 3x32bits integers
+///  Use a mask of 0xffffffffUL to make in work on 64 bit machines
+///  Periodicity of about  10**26
+///  Generate number in interval (0,1)  : 0 and 1 are not included in the interval
+
 Double_t TRandom2::Rndm(Int_t)
 {
-   //  TausWorth generator from L'Ecuyer, uses as seed 3x32bits integers
-   //  Use a mask of 0xffffffffUL to make in work on 64 bit machines
-   //  Periodicity of about  10**26
-   //  Generate number in interval (0,1)  : 0 and 1 are not included in the interval
-
 #define TAUSWORTHE(s,a,b,c,d) (((s &c) <<d) & 0xffffffffUL ) ^ ((((s <<a) & 0xffffffffUL )^s) >>b)
 
    // scale by 1./(Max<UINT> + 1) = 1./4294967296
@@ -68,11 +68,11 @@ Double_t TRandom2::Rndm(Int_t)
    return Rndm();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an array of n random numbers uniformly distributed in ]0,1]
+
 void TRandom2::RndmArray(Int_t n, Float_t *array)
 {
-   // Return an array of n random numbers uniformly distributed in ]0,1]
-
    const double kScale = 2.3283064365386963e-10;    // range in 32 bit ( 1/(2**32)
 
    UInt_t iy;
@@ -88,11 +88,11 @@ void TRandom2::RndmArray(Int_t n, Float_t *array)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an array of n random numbers uniformly distributed in ]0,1]
+
 void TRandom2::RndmArray(Int_t n, Double_t *array)
 {
-   // Return an array of n random numbers uniformly distributed in ]0,1]
-
    const double kScale = 2.3283064365386963e-10;    // range in 32 bit ( 1/(2**32)
 
    UInt_t iy;
@@ -107,17 +107,17 @@ void TRandom2::RndmArray(Int_t n, Double_t *array)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the generator seed.
+/// If the seed given is zero, generate automatically seed values which
+/// are different every time by using TRandom3  and TUUID
+/// If a seed is given generate the other two needed for the generator state using
+/// a linear congruential generator
+/// The only condition, stated at the end of the 1999 L'Ecuyer paper is that the seeds
+/// must be greater than 1,7 and 15.
+
 void TRandom2::SetSeed(UInt_t seed)
 {
-   // Set the generator seed.
-   // If the seed given is zero, generate automatically seed values which
-   // are different every time by using TRandom3  and TUUID
-   // If a seed is given generate the other two needed for the generator state using
-   // a linear congruential generator
-   // The only condition, stated at the end of the 1999 L'Ecuyer paper is that the seeds
-   // must be greater than 1,7 and 15.
-
 #define LCG(n) ((69069 * n) & 0xffffffffUL)  // linear congurential generator
 
    if (seed > 0) {

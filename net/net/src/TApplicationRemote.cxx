@@ -41,11 +41,11 @@
 
 //
 // TApplicationRemote Interrupt signal handler
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TApplicationRemote interrupt handler.
+
 Bool_t TARInterruptHandler::Notify()
 {
-   // TApplicationRemote interrupt handler.
-
    Info("Notify","Processing interrupt signal ...");
 
    // Handle interrupt condition on socket(s)
@@ -85,15 +85,15 @@ Int_t TApplicationRemote::fgPortAttempts = 100; // number of attempts to find a 
 Int_t TApplicationRemote::fgPortLower =  49152; // lower bound for ports
 Int_t TApplicationRemote::fgPortUpper =  65535; // upper bound for ports
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor: start a remote session at 'url' accepting callbacks
+/// on local port 'port'; if port is already in use scan up to 'scan - 1'
+/// ports starting from port + 1, i.e. port + 1, ... , port + scan - 1
+
 TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
                                        const char *script)
                    : TApplication(), fUrl(url)
 {
-   // Main constructor: start a remote session at 'url' accepting callbacks
-   // on local port 'port'; if port is already in use scan up to 'scan - 1'
-   // ports starting from port + 1, i.e. port + 1, ... , port + scan - 1
-
    // Unique name (used also in the prompt)
    fName = fUrl.GetHost();
    if (strlen(fUrl.GetOptions()) > 0)
@@ -248,21 +248,21 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TApplicationRemote::~TApplicationRemote()
 {
-   // Destructor
-
    gROOT->GetListOfSockets()->Remove(this);
    Terminate(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast a message to the remote session.
+/// Returns 0 on success, -1 in case of error.
+
 Int_t TApplicationRemote::Broadcast(const TMessage &mess)
 {
-   // Broadcast a message to the remote session.
-   // Returns 0 on success, -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (fSocket->Send(mess) == -1) {
@@ -273,13 +273,13 @@ Int_t TApplicationRemote::Broadcast(const TMessage &mess)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast a character string buffer to the remote session.
+/// Use kind to set the TMessage what field.
+/// Returns 0 on success, -1 in case of error.
+
 Int_t TApplicationRemote::Broadcast(const char *str, Int_t kind, Int_t type)
 {
-   // Broadcast a character string buffer to the remote session.
-   // Use kind to set the TMessage what field.
-   // Returns 0 on success, -1 in case of error.
-
    TMessage mess(kind);
    if (kind == kMESS_ANY)
       mess << type;
@@ -287,24 +287,24 @@ Int_t TApplicationRemote::Broadcast(const char *str, Int_t kind, Int_t type)
    return Broadcast(mess);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast an object to the remote session.
+/// Use kind to set the TMessage what field.
+/// Returns 0 on success, -1 in case of error.
+
 Int_t TApplicationRemote::BroadcastObject(const TObject *obj, Int_t kind)
 {
-   // Broadcast an object to the remote session.
-   // Use kind to set the TMessage what field.
-   // Returns 0 on success, -1 in case of error.
-
    TMessage mess(kind);
    mess.WriteObject(obj);
    return Broadcast(mess);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast a raw buffer of specified length to the remote session.
+/// Returns 0 on success, -1 in case of error.
+
 Int_t TApplicationRemote::BroadcastRaw(const void *buffer, Int_t length)
 {
-   // Broadcast a raw buffer of specified length to the remote session.
-   // Returns 0 on success, -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (fSocket->SendRaw(buffer, length) == -1) {
@@ -315,14 +315,14 @@ Int_t TApplicationRemote::BroadcastRaw(const void *buffer, Int_t length)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect responses from the remote server.
+/// Returns the number of messages received.
+/// If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
+/// which means wait forever).
+
 Int_t TApplicationRemote::Collect(Long_t timeout)
 {
-   // Collect responses from the remote server.
-   // Returns the number of messages received.
-   // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
-   // which means wait forever).
-
    // Activate monitoring
    fMonitor->ActivateAll();
    if (!fMonitor->GetActive())
@@ -385,12 +385,12 @@ Int_t TApplicationRemote::Collect(Long_t timeout)
    return cnt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect and analyze available input from the socket.
+/// Returns 0 on success, -1 if any failure occurs.
+
 Int_t TApplicationRemote::CollectInput()
 {
-   // Collect and analyze available input from the socket.
-   // Returns 0 on success, -1 if any failure occurs.
-
    TMessage *mess;
    Int_t rc = 0;
 
@@ -594,11 +594,11 @@ Int_t TApplicationRemote::CollectInput()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive the log file from the server
+
 void TApplicationRemote::RecvLogFile(Int_t size)
 {
-   // Receive the log file from the server
-
    const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
    char buf[kMAXBUF];
 
@@ -643,12 +643,12 @@ void TApplicationRemote::RecvLogFile(Int_t size)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send object to server.
+/// Return 0 on success, -1 in case of error.
+
 Int_t TApplicationRemote::SendObject(const TObject *obj)
 {
-   // Send object to server.
-   // Return 0 on success, -1 in case of error.
-
    if (!IsValid() || !obj) return -1;
 
    TMessage mess(kMESS_OBJECT);
@@ -656,21 +656,21 @@ Int_t TApplicationRemote::SendObject(const TObject *obj)
    return Broadcast(mess);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a file needs to be send to the server. Use the following
+/// algorithm:
+///   - check if file appears in file map
+///     - if yes, get file's modtime and check against time in map,
+///       if modtime not same get md5 and compare against md5 in map,
+///       if not same return kTRUE.
+///     - if no, get file's md5 and modtime and store in file map, ask
+///       slave if file exists with specific md5, if yes return kFALSE,
+///       if no return kTRUE.
+/// Returns kTRUE in case file needs to be send, returns kFALSE in case
+/// file is already on remote node.
+
 Bool_t TApplicationRemote::CheckFile(const char *file, Long_t modtime)
 {
-   // Check if a file needs to be send to the server. Use the following
-   // algorithm:
-   //   - check if file appears in file map
-   //     - if yes, get file's modtime and check against time in map,
-   //       if modtime not same get md5 and compare against md5 in map,
-   //       if not same return kTRUE.
-   //     - if no, get file's md5 and modtime and store in file map, ask
-   //       slave if file exists with specific md5, if yes return kFALSE,
-   //       if no return kTRUE.
-   // Returns kTRUE in case file needs to be send, returns kFALSE in case
-   // file is already on remote node.
-
    Bool_t sendto = kFALSE;
 
    if (!IsValid()) return -1;
@@ -744,21 +744,21 @@ Bool_t TApplicationRemote::CheckFile(const char *file, Long_t modtime)
    return sendto;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a file to the server. Return 0 on success, -1 in case of error.
+/// If defined, the full path of the remote path will be rfile.
+/// The mask 'opt' is an or of ESendFileOpt:
+///
+///       kAscii  (0x0)      if set true ascii file transfer is used
+///       kBinary (0x1)      if set true binary file transfer is used
+///       kForce  (0x2)      if not set an attempt is done to find out
+///                          whether the file really needs to be downloaded
+///                          (a valid copy may already exist in the cache
+///                          from a previous run)
+///
+
 Int_t TApplicationRemote::SendFile(const char *file, Int_t opt, const char *rfile)
 {
-   // Send a file to the server. Return 0 on success, -1 in case of error.
-   // If defined, the full path of the remote path will be rfile.
-   // The mask 'opt' is an or of ESendFileOpt:
-   //
-   //       kAscii  (0x0)      if set true ascii file transfer is used
-   //       kBinary (0x1)      if set true binary file transfer is used
-   //       kForce  (0x2)      if not set an attempt is done to find out
-   //                          whether the file really needs to be downloaded
-   //                          (a valid copy may already exist in the cache
-   //                          from a previous run)
-   //
-
    if (!IsValid()) return -1;
 
 #ifndef R__WIN32
@@ -844,11 +844,11 @@ Int_t TApplicationRemote::SendFile(const char *file, Int_t opt, const char *rfil
    return IsValid() ? 0 : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate this session
+
 void TApplicationRemote::Terminate(Int_t status)
 {
-   // Terminate this session
-
    TMessage mess(kMESS_ANY);
    mess << (Int_t)kRRT_Terminate << status;
    Broadcast(mess);
@@ -858,11 +858,11 @@ void TApplicationRemote::Terminate(Int_t status)
    SafeDelete(fSocket);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set port parameters for tunnelling. A value of -1 means unchanged
+
 void TApplicationRemote::SetPortParam(Int_t lower, Int_t upper, Int_t attempts)
 {
-   // Set port parameters for tunnelling. A value of -1 means unchanged
-
    if (lower > -1)
       fgPortLower = lower;
    if (upper > -1)
@@ -874,14 +874,14 @@ void TApplicationRemote::SetPortParam(Int_t lower, Int_t upper, Int_t attempts)
           fgPortAttempts, fgPortLower, fgPortUpper);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse a single command line and forward the request to the remote server
+/// where it will be processed. The line is either a C++ statement or an
+/// interpreter command starting with a ".".
+/// Return the return value of the command casted to a long.
+
 Long_t TApplicationRemote::ProcessLine(const char *line, Bool_t, Int_t *)
 {
-   // Parse a single command line and forward the request to the remote server
-   // where it will be processed. The line is either a C++ statement or an
-   // interpreter command starting with a ".".
-   // Return the return value of the command casted to a long.
-
    if (!line || !*line) return 0;
 
    if (!strncasecmp(line, ".q", 2)) {
@@ -911,11 +911,11 @@ Long_t TApplicationRemote::ProcessLine(const char *line, Bool_t, Int_t *)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print some info about this instance
+
 void TApplicationRemote::Print(Option_t *opt) const
 {
-   // Print some info about this instance
-
    TString s(Form("OBJ: TApplicationRemote     %s", fName.Data()));
    Printf("%s", s.Data());
    if (opt && opt[0] == 'F') {
@@ -927,12 +927,12 @@ void TApplicationRemote::Print(Option_t *opt) const
       Printf("%s", s.Data());
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send interrupt OOB byte to server.
+/// Returns 0 if ok, -1 in case of error
+
 void TApplicationRemote::Interrupt(Int_t type)
 {
-   // Send interrupt OOB byte to server.
-   // Returns 0 if ok, -1 in case of error
-
    if (!IsValid()) return;
 
    fInterrupt = kTRUE;
@@ -1047,11 +1047,11 @@ void TApplicationRemote::Interrupt(Int_t type)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse remote application (working directory and ROOT files).
+
 void TApplicationRemote::Browse(TBrowser *b)
 {
-   // Browse remote application (working directory and ROOT files).
-
    b->Add(fRootFiles, "ROOT Files");
    b->Add(fWorkingDir, fWorkingDir->GetTitle());
    gROOT->RefreshBrowsers();

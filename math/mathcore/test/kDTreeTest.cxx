@@ -40,23 +40,25 @@ Float_t Mem()
   return procInfo.fMemVirtual;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///
+///
+
 void kDTreeTest()
 {
-  //
-  //
-  //
   printf("\n\tTesting kDTree memory usage ...\n");
   TestBuild();
   printf("\n\tTesting kDTree speed ...\n");
   TestSpeed();
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Test kdTree for memory leaks
+///
+
 void TestBuild(const Int_t npoints, const Int_t bsize){
-  //
-  // Test kdTree for memory leaks
-  //
    Float_t *data0 =  new Float_t[npoints*2];
    Float_t *data[2];
    data[0] = &data0[0];
@@ -77,15 +79,15 @@ void TestBuild(const Int_t npoints, const Int_t bsize){
    return;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///This is not really a test, it's a function that illustrates the internal
+///behaviour of the kd-tree.
+///
+///Print out the internal kd-tree data-members, like fCrossNode, for
+///better understading
+
 void TestMembers()
 {
-   //This is not really a test, it's a function that illustrates the internal
-   //behaviour of the kd-tree.
-   //
-   //Print out the internal kd-tree data-members, like fCrossNode, for
-   //better understading
-
 
    TKDTreeIF *kdtree = 0x0;
    Int_t npoints = 33;
@@ -173,13 +175,13 @@ void TestMembers()
 
 
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///compare the results of different data setting functions
+///nothing printed - all works correctly
+
 void TestConstr(const Int_t npoints, const Int_t bsize)
 {
-//
-//compare the results of different data setting functions
-//nothing printed - all works correctly
-
    Float_t *data0 =  new Float_t[npoints*2];
    Float_t *data[2];
    data[0] = &data0[0];
@@ -216,12 +218,13 @@ void TestConstr(const Int_t npoints, const Int_t bsize)
 }
 
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Test of building time of kdTree
+///
+
 void TestSpeed(Int_t npower2, Int_t bsize)
 {
-  //
-  // Test of building time of kdTree
-  //
   if(npower2 < 10){
     printf("Please specify a power of 2 greater than 10\n");
     return;
@@ -263,12 +266,13 @@ void TestSpeed(Int_t npower2, Int_t bsize)
 }
 
 /*
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Test size to build kdtree
+///
+
 void TestSizeIF(Int_t nsec, Int_t nrows, Int_t npoints,  Int_t bsize, Int_t mode)
 {
-  //
-  // Test size to build kdtree
-  //
   Float_t before =Mem();
   for (Int_t isec=0; isec<nsec;isec++)
     for (Int_t irow=0;irow<nrows;irow++){
@@ -280,19 +284,19 @@ void TestSizeIF(Int_t nsec, Int_t nrows, Int_t npoints,  Int_t bsize, Int_t mode
 */
 
 /*
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Test speed and functionality of 2D kdtree.
+/// Input parametrs:
+/// npoints - number of data points
+/// bsize   - bucket size
+/// nloop   - number of loops
+/// mode    - tasks to be performed by the kdTree
+///         - 0  : time building the tree
+///
+
 void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
 {
-//
-// Test speed and functionality of 2D kdtree.
-// Input parametrs:
-// npoints - number of data points
-// bsize   - bucket size
-// nloop   - number of loops
-// mode    - tasks to be performed by the kdTree
-//         - 0  : time building the tree
-//
-
 
   Float_t rangey  = 100;
   Float_t rangez  = 100;
@@ -374,11 +378,11 @@ void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
 }
 */
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Test TKDTree::FindNearestNeighbors() function
+
 void TestNeighbors()
 {
-//Test TKDTree::FindNearestNeighbors() function
-
 //Generate some 3d points
    Int_t npoints = 10000;
    Int_t nn = 100;
@@ -462,10 +466,10 @@ void TestNeighbors()
    delete [] dist2;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TestRange()
 {
-
 //Test TKDTree::FindInRange() function
 
    Int_t npoints = Int_t(gRandom->Uniform(0, 100000));
@@ -548,9 +552,9 @@ void TestRange()
 
 
 
-//______________________________________________________________________
-int main(int argc, char **argv) {
+////////////////////////////////////////////////////////////////////////////////
 
+int main(int argc, char **argv) {
   // Parse command line arguments
   for (Int_t i=1 ;  i<argc ; i++) {
      std::string arg = argv[i] ;

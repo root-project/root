@@ -35,24 +35,27 @@ ClassImp(RooCategorySharedProperties)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooCategorySharedProperties::RooCategorySharedProperties()
 {
-  // Constructor
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with unique-id string
+
 RooCategorySharedProperties::RooCategorySharedProperties(const char* uuidstr) : RooSharedProperties(uuidstr)
 {
-  // Constructor with unique-id string
 } 
 
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooCategorySharedProperties::RooCategorySharedProperties(const RooCategorySharedProperties& other) :
   RooSharedProperties(other)
 {
@@ -79,10 +82,11 @@ RooCategorySharedProperties::RooCategorySharedProperties(const RooCategoryShared
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooCategorySharedProperties::~RooCategorySharedProperties() 
 {
-  // Destructor
   _altRanges.Delete() ;
 } 
 

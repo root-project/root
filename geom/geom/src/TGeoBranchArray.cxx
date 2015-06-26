@@ -33,7 +33,9 @@
 
 ClassImp(TGeoBranchArray)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. Alocates the array with a size given by level.
+
 TGeoBranchArray::TGeoBranchArray(Int_t level)
                 :fLevel(level),
                  fMaxLevel(0),
@@ -41,21 +43,23 @@ TGeoBranchArray::TGeoBranchArray(Int_t level)
                  fMatrix(NULL),
                  fClient(NULL)
 {
-// Constructor. Alocates the array with a size given by level.
    fMaxLevel = (fLevel+1 > 10) ? fLevel+1:10;
    fArray = new TGeoNode*[fMaxLevel];
    fMatrix = new TGeoHMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoBranchArray::~TGeoBranchArray()
 {
-// Destructor.
    delete [] fArray;
    delete fMatrix;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TGeoBranchArray::TGeoBranchArray(const TGeoBranchArray&  other)
                 :TObject(other),
                  fLevel(other.fLevel),
@@ -64,7 +68,6 @@ TGeoBranchArray::TGeoBranchArray(const TGeoBranchArray&  other)
                  fMatrix(NULL),
                  fClient(other.fClient)
 {
-// Copy constructor.
    if (fMaxLevel) {
       fArray = new TGeoNode*[fMaxLevel];
       if (fLevel+1) memcpy(fArray, other.fArray, (fLevel+1)*sizeof(TGeoNode*));
@@ -72,10 +75,11 @@ TGeoBranchArray::TGeoBranchArray(const TGeoBranchArray&  other)
    if (other.fMatrix) fMatrix = new TGeoHMatrix(*(other.fMatrix));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment.
+
 TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
 {
-// Assignment.
    if (&other == this) return *this;
 //   TThread::Lock();
    TObject::operator=(other);
@@ -101,10 +105,11 @@ TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add and extra daughter to the current path array. No validity check performed !
+
 void TGeoBranchArray::AddLevel(Int_t dindex)
 {
-// Add and extra daughter to the current path array. No validity check performed !
    if (fLevel<=0) {
       Error("AddLevel", "You must initialize from navigator or copy from another branch array first.");
       return;
@@ -119,65 +124,72 @@ void TGeoBranchArray::AddLevel(Int_t dindex)
    fArray[fLevel] = fArray[fLevel-1]->GetVolume()->GetNode(dindex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is equal operator.
+
 Bool_t TGeoBranchArray::operator ==(const TGeoBranchArray& other) const
 {
-// Is equal operator.
    Int_t value = Compare(&other);
    if (value==0) return kTRUE;
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not equal operator.
+
 Bool_t TGeoBranchArray::operator !=(const TGeoBranchArray& other) const
 {
-// Not equal operator.
    Int_t value = Compare(&other);
    if (value!=0) return kTRUE;
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is equal operator.
+
 Bool_t TGeoBranchArray::operator >(const TGeoBranchArray& other) const
 {
-// Is equal operator.
    Int_t value = Compare(&other);
    if (value>0) return kTRUE;
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is equal operator.
+
 Bool_t TGeoBranchArray::operator <(const TGeoBranchArray& other) const
 {
-// Is equal operator.
    Int_t value = Compare(&other);
    if (value<0) return kTRUE;
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is equal operator.
+
 Bool_t TGeoBranchArray::operator >=(const TGeoBranchArray& other) const
 {
-// Is equal operator.
    Int_t value = Compare(&other);
    if (value>=0) return kTRUE;
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is equal operator.
+
 Bool_t TGeoBranchArray::operator <=(const TGeoBranchArray& other) const
 {
-// Is equal operator.
    Int_t value = Compare(&other);
    if (value<=0) return kTRUE;
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Binary search in an array of n pointers to branch arrays, to locate value.
+/// Returns element index or index of nearest element smaller than value
+
 Long64_t TGeoBranchArray::BinarySearch(Long64_t n, const TGeoBranchArray **array, TGeoBranchArray *value)
 {
-// Binary search in an array of n pointers to branch arrays, to locate value.
-// Returns element index or index of nearest element smaller than value
    Long64_t nabove, nbelow, middle;
    const TGeoBranchArray *pind;
    nabove = n+1;
@@ -192,12 +204,13 @@ Long64_t TGeoBranchArray::BinarySearch(Long64_t n, const TGeoBranchArray **array
    return nbelow-1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare with other object of same type. Returns -1 if this is smaller (first
+/// smaller array value prevails), 0 if equal (size and values) and 1 if this is
+/// larger.
+
 Int_t TGeoBranchArray::Compare(const TObject *obj) const
 {
-// Compare with other object of same type. Returns -1 if this is smaller (first
-// smaller array value prevails), 0 if equal (size and values) and 1 if this is
-// larger.
    Int_t i;
    TGeoBranchArray *other = (TGeoBranchArray*)obj;
    Int_t otherLevel = other->GetLevel();
@@ -213,18 +226,20 @@ Int_t TGeoBranchArray::Compare(const TObject *obj) const
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Garbage collect the stored matrix.
+
 void TGeoBranchArray::CleanMatrix()
 {
-// Garbage collect the stored matrix.
    delete fMatrix; fMatrix = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init the branch array from an array of nodes, the global matrix for the path and
+/// the level.
+
 void TGeoBranchArray::Init(TGeoNode **branch, TGeoMatrix *global, Int_t level)
 {
-// Init the branch array from an array of nodes, the global matrix for the path and
-// the level.
    if (!fMatrix) fMatrix = new TGeoHMatrix();
    fMatrix->CopyFrom(global);
    if (!fArray || level+1>fMaxLevel) {
@@ -236,10 +251,11 @@ void TGeoBranchArray::Init(TGeoNode **branch, TGeoMatrix *global, Int_t level)
    memcpy(fArray, branch, (fLevel+1)*sizeof(TGeoNode*));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init the branch array from current navigator state.
+
 void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
 {
-// Init the branch array from current navigator state.
    TGeoNodeCache *cache = nav->GetCache();
    const TGeoNode **branch = (const TGeoNode**)cache->GetBranch();
    Int_t level = cache->GetLevel();
@@ -255,10 +271,11 @@ void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
    if (nav->IsOutside()) fLevel = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill path pointed by the array.
+
 void TGeoBranchArray::GetPath(TString &path) const
 {
-// Fill path pointed by the array.
    path = "";
    if (!fArray) return;
    for (Int_t i=0; i<fLevel+1; i++) {
@@ -267,19 +284,21 @@ void TGeoBranchArray::GetPath(TString &path) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print branch information
+
 void TGeoBranchArray::Print(Option_t *) const
 {
-// Print branch information
    TString path;
    GetPath(path);
    printf("branch:    %s\n", path.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sorting of an array of branch array pointers.
+
 void TGeoBranchArray::Sort(Int_t n, TGeoBranchArray **array, Int_t *index, Bool_t down)
 {
-// Sorting of an array of branch array pointers.
    for (Int_t i=0; i<n; i++) index[i] = i;
    if (down)
       std::sort(index, index + n, compareBAdesc(array));
@@ -287,10 +306,11 @@ void TGeoBranchArray::Sort(Int_t n, TGeoBranchArray **array, Int_t *index, Bool_
       std::sort(index, index + n, compareBAasc(array));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the navigator to reflect the branch.
+
 void TGeoBranchArray::UpdateNavigator(TGeoNavigator *nav) const
 {
-// Update the navigator to reflect the branch.
    nav->CdTop();
    if (fLevel<0) {nav->SetOutside(kTRUE); return;}
    for (Int_t i=1; i<fLevel+1; i++) nav->CdDown(fArray[i]);

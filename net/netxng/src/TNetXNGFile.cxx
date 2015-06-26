@@ -33,13 +33,15 @@
 
 //------------------------------------------------------------------------------
 // Open handler for async open requests
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 class TAsyncOpenHandler: public XrdCl::ResponseHandler
 {
    public:
       //------------------------------------------------------------------------
       // Constructor
-      //------------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       TAsyncOpenHandler(TNetXNGFile *file)
       {
          fFile = file;
@@ -48,7 +50,8 @@ class TAsyncOpenHandler: public XrdCl::ResponseHandler
 
       //------------------------------------------------------------------------
       // Called when a response to open arrives
-      //------------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       virtual void HandleResponse(XrdCl::XRootDStatus *status,
                                   XrdCl::AnyObject    *response)
       {
@@ -72,13 +75,15 @@ class TAsyncOpenHandler: public XrdCl::ResponseHandler
 
 //------------------------------------------------------------------------------
 // Async readv handler
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 class TAsyncReadvHandler: public XrdCl::ResponseHandler
 {
    public:
       //------------------------------------------------------------------------
       // Constructor
-      //------------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       TAsyncReadvHandler(std::vector<XrdCl::XRootDStatus*> *statuses,
                          Int_t                              statusIndex,
                          TSemaphore                        *semaphore):
@@ -87,7 +92,8 @@ class TAsyncReadvHandler: public XrdCl::ResponseHandler
 
       //------------------------------------------------------------------------
       // Handle readv response
-      //------------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       virtual void HandleResponse(XrdCl::XRootDStatus *status,
                                   XrdCl::AnyObject    *response)
       {
@@ -106,7 +112,16 @@ class TAsyncReadvHandler: public XrdCl::ResponseHandler
 
 ClassImp(TNetXNGFile);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+///
+/// param url:          URL of the entry-point server to be contacted
+/// param mode:         initial file access mode
+/// param title:        title of the file (shown by ROOT browser)
+/// param compress:     compression level and algorithm
+/// param netopt:       TCP window size in bytes (unused)
+/// param parallelopen: open asynchronously
+
 TNetXNGFile::TNetXNGFile(const char *url,
                          Option_t   *mode,
                          const char *title,
@@ -115,15 +130,6 @@ TNetXNGFile::TNetXNGFile(const char *url,
                          Bool_t      parallelopen) :
    TFile(url, "NET", title, compress)
 {
-   // Constructor
-   //
-   // param url:          URL of the entry-point server to be contacted
-   // param mode:         initial file access mode
-   // param title:        title of the file (shown by ROOT browser)
-   // param compress:     compression level and algorithm
-   // param netopt:       TCP window size in bytes (unused)
-   // param parallelopen: open asynchronously
-
    using namespace XrdCl;
 
    // Remove any anchor from the url. It may have been used by the base TFile
@@ -202,11 +208,11 @@ TNetXNGFile::TNetXNGFile(const char *url,
    GetVectorReadLimits();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TNetXNGFile::~TNetXNGFile()
 {
-   // Destructor
-
    if (IsOpen())
       Close();
    delete fFile;
@@ -214,12 +220,12 @@ TNetXNGFile::~TNetXNGFile()
    delete fInitCondVar;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the file. Makes sure that the file is really open before
+/// calling TFile::Init. It may block.
+
 void TNetXNGFile::Init(Bool_t create)
 {
-   // Initialize the file. Makes sure that the file is really open before
-   // calling TFile::Init. It may block.
-
    using namespace XrdCl;
 
    if (fInitDone) {
@@ -249,12 +255,12 @@ void TNetXNGFile::Init(Bool_t create)
    GetVectorReadLimits();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the file size. Returns -1 in the case that the file could not be
+/// stat'ed.
+
 Long64_t TNetXNGFile::GetSize() const
 {
-   // Get the file size. Returns -1 in the case that the file could not be
-   // stat'ed.
-
    using namespace XrdCl;
 
    // Check the file isn't a zombie or closed
@@ -273,32 +279,32 @@ Long64_t TNetXNGFile::GetSize() const
    return size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the file is open
+
 Bool_t TNetXNGFile::IsOpen() const
 {
-   // Check if the file is open
-
    return fFile->IsOpen();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the status of an asynchronous file open
+
 void TNetXNGFile::SetAsyncOpenStatus(EAsyncOpenStatus status)
 {
-   // Set the status of an asynchronous file open
-
    fAsyncOpenStatus = status;
    // Unblock Init() if it is waiting
    fInitCondVar->Signal();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the file
+///
+/// param option: if == "R", all TProcessIDs referenced by this file are
+///               deleted (is this valid in xrootd context?)
+
 void TNetXNGFile::Close(const Option_t */*option*/)
 {
-   // Close the file
-   //
-   // param option: if == "R", all TProcessIDs referenced by this file are
-   //               deleted (is this valid in xrootd context?)
-
    TFile::Close();
 
    XrdCl::XRootDStatus status = fFile->Close();
@@ -308,17 +314,17 @@ void TNetXNGFile::Close(const Option_t */*option*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reopen the file with the new access mode
+///
+/// param mode: the new access mode
+/// returns:    0 in case the mode was successfully modified, 1 in case
+///             the mode did not change (was already as requested or wrong
+///             input arguments) and -1 in case of failure, in which case
+///             the file cannot be used anymore
+
 Int_t TNetXNGFile::ReOpen(Option_t *modestr)
 {
-   // Reopen the file with the new access mode
-   //
-   // param mode: the new access mode
-   // returns:    0 in case the mode was successfully modified, 1 in case
-   //             the mode did not change (was already as requested or wrong
-   //             input arguments) and -1 in case of failure, in which case
-   //             the file cannot be used anymore
-
    using namespace XrdCl;
    TString newOpt;
    OpenFlags::Flags mode;
@@ -350,28 +356,28 @@ Int_t TNetXNGFile::ReOpen(Option_t *modestr)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a data chunk of the given size
+///
+/// param buffer: a pointer to a buffer big enough to hold the data
+/// param length: number of bytes to be read
+/// returns:      kTRUE in case of failure
+
 Bool_t TNetXNGFile::ReadBuffer(char *buffer, Int_t length)
 {
-   // Read a data chunk of the given size
-   //
-   // param buffer: a pointer to a buffer big enough to hold the data
-   // param length: number of bytes to be read
-   // returns:      kTRUE in case of failure
-
    return ReadBuffer(buffer, GetRelOffset(), length);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a data chunk of the given size, starting from the given offset
+///
+/// param buffer:   a pointer to a buffer big enough to hold the data
+/// param position: offset from the beginning of the file
+/// param length:   number of bytes to be read
+/// returns:        kTRUE in case of failure
+
 Bool_t TNetXNGFile::ReadBuffer(char *buffer, Long64_t position, Int_t length)
 {
-   // Read a data chunk of the given size, starting from the given offset
-   //
-   // param buffer:   a pointer to a buffer big enough to hold the data
-   // param position: offset from the beginning of the file
-   // param length:   number of bytes to be read
-   // returns:        kTRUE in case of failure
-
    using namespace XrdCl;
    if (gDebug > 0)
       Info("ReadBuffer", "offset: %lld length: %d", position, length);
@@ -413,21 +419,21 @@ Bool_t TNetXNGFile::ReadBuffer(char *buffer, Long64_t position, Int_t length)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read scattered data chunks in one operation
+///
+/// param buffer:   a pointer to a buffer big enough to hold all of the
+///                 requested data
+/// param position: position[i] is the seek position of chunk i of len
+///                 length[i]
+/// param length:   length[i] is the length of the chunk at offset
+///                 position[i]
+/// param nbuffs:   number of chunks
+/// returns:        kTRUE in case of failure
+
 Bool_t TNetXNGFile::ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
       Int_t nbuffs)
 {
-   // Read scattered data chunks in one operation
-   //
-   // param buffer:   a pointer to a buffer big enough to hold all of the
-   //                 requested data
-   // param position: position[i] is the seek position of chunk i of len
-   //                 length[i]
-   // param length:   length[i] is the length of the chunk at offset
-   //                 position[i]
-   // param nbuffs:   number of chunks
-   // returns:        kTRUE in case of failure
-
    using namespace XrdCl;
 
    // Check the file isn't a zombie or closed
@@ -553,15 +559,15 @@ Bool_t TNetXNGFile::ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write a data chunk
+///
+/// param buffer: the data to be written
+/// param length: the size of the buffer
+/// returns:      kTRUE in case of failure
+
 Bool_t TNetXNGFile::WriteBuffer(const char *buffer, Int_t length)
 {
-   // Write a data chunk
-   //
-   // param buffer: the data to be written
-   // param length: the size of the buffer
-   // returns:      kTRUE in case of failure
-
    using namespace XrdCl;
 
    // Check the file isn't a zombie or closed
@@ -597,7 +603,8 @@ Bool_t TNetXNGFile::WriteBuffer(const char *buffer, Int_t length)
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TNetXNGFile::Flush()
 {
    if (!IsUseable())
@@ -621,32 +628,32 @@ void TNetXNGFile::Flush()
       Info("Flush", "XrdClient::Sync succeeded.");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the position within the file
+///
+/// param offset:   the new offset relative to position
+/// param position: the relative position, either kBeg, kCur or kEnd
+
 void TNetXNGFile::Seek(Long64_t offset, ERelativeTo position)
 {
-   // Set the position within the file
-   //
-   // param offset:   the new offset relative to position
-   // param position: the relative position, either kBeg, kCur or kEnd
-
    SetOffset(offset, position);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse a file open mode given as a string into a canonically formatted
+/// output mode string and an integer code that the xroot client can use
+///
+/// param    in:         the file open mode as a string (in)
+///          modestr:    open mode string after parsing (out)
+///          mode:       correctly parsed option mode code (out)
+///          assumeRead: if the open mode is not recognised assume read (in)
+/// returns:             0 in case the mode was successfully parsed,
+///                     -1 in case of failure
+
 Int_t TNetXNGFile::ParseOpenMode(Option_t *in, TString &modestr,
                                  XrdCl::OpenFlags::Flags &mode,
                                  Bool_t assumeRead)
 {
-   // Parse a file open mode given as a string into a canonically formatted
-   // output mode string and an integer code that the xroot client can use
-   //
-   // param    in:         the file open mode as a string (in)
-   //          modestr:    open mode string after parsing (out)
-   //          mode:       correctly parsed option mode code (out)
-   //          assumeRead: if the open mode is not recognised assume read (in)
-   // returns:             0 in case the mode was successfully parsed,
-   //                     -1 in case of failure
-
    using namespace XrdCl;
    modestr = ToUpper(TString(in));
 
@@ -665,11 +672,11 @@ Int_t TNetXNGFile::ParseOpenMode(Option_t *in, TString &modestr,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the file is open and isn't a zombie
+
 Bool_t TNetXNGFile::IsUseable() const
 {
-   // Check the file is open and isn't a zombie
-
    if (IsZombie()) {
       Error("TNetXNGFile", "Object is in 'zombie' state");
       return kFALSE;
@@ -683,12 +690,12 @@ Bool_t TNetXNGFile::IsUseable() const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the server-specific readv config params. Returns kFALSE in case of
+/// error, kTRUE otherwise.
+
 Bool_t TNetXNGFile::GetVectorReadLimits()
 {
-   // Find the server-specific readv config params. Returns kFALSE in case of
-   // error, kTRUE otherwise.
-
    using namespace XrdCl;
 
    // Check the file isn't a zombie or closed
@@ -744,11 +751,11 @@ Bool_t TNetXNGFile::GetVectorReadLimits()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map ROOT and xrootd environment variables
+
 void TNetXNGFile::SetEnv()
 {
-   // Map ROOT and xrootd environment variables
-
    XrdCl::Env *env  = XrdCl::DefaultEnv::GetEnv();
    const char *cenv = 0;
    TString     val;

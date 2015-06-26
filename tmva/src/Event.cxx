@@ -39,7 +39,9 @@
 Bool_t TMVA::Event::fgIsTraining = kFALSE;
 Bool_t TMVA::Event::fgIgnoreNegWeightsInTraining = kFALSE;
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor
+
 TMVA::Event::Event()
    : fValues(),
      fValuesDynamic(0),
@@ -52,10 +54,11 @@ TMVA::Event::Event()
      fDynamic(kFALSE),
      fDoNotBoost(kFALSE)
 {
-   // copy constructor
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::Event::Event( const std::vector<Float_t>& ev,
                     const std::vector<Float_t>& tg,
                     UInt_t cls,
@@ -72,10 +75,11 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
      fDynamic(kFALSE),
      fDoNotBoost(kFALSE)
 {
-   // constructor
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::Event::Event( const std::vector<Float_t>& ev,
                     const std::vector<Float_t>& tg,
                     const std::vector<Float_t>& vi,
@@ -93,10 +97,11 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
      fDynamic(kFALSE),
      fDoNotBoost(kFALSE)
 {
-   // constructor
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::Event::Event( const std::vector<Float_t>& ev,
                     UInt_t cls,
                     Double_t weight,
@@ -112,10 +117,11 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
      fDynamic(kFALSE),
      fDoNotBoost(kFALSE)
 {
-   // constructor
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor for single events
+
 TMVA::Event::Event( const std::vector<Float_t*>*& evdyn, UInt_t nvar )
    : fValues(nvar),
      fValuesDynamic(0),
@@ -128,11 +134,12 @@ TMVA::Event::Event( const std::vector<Float_t*>*& evdyn, UInt_t nvar )
      fDynamic(true),
      fDoNotBoost(kFALSE)
 {
-   // constructor for single events
    fValuesDynamic = (std::vector<Float_t*>*) evdyn;
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor
+
 TMVA::Event::Event( const Event& event ) 
    : fValues(event.fValues),
      fValuesDynamic(event.fValuesDynamic),
@@ -145,7 +152,6 @@ TMVA::Event::Event( const Event& event )
      fDynamic(event.fDynamic),
      fDoNotBoost(kFALSE)
 {
-   // copy constructor
    if (event.fDynamic){
       fValues.clear();
       UInt_t nvar = event.GetNVariables();
@@ -168,15 +174,16 @@ TMVA::Event::Event( const Event& event )
    }
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Event destructor
+
 TMVA::Event::~Event()
 {
-   // Event destructor
 }
-//____________________________________________________________
-void TMVA::Event::SetVariableArrangement( std::vector<UInt_t>* const m ) const {
-   // set the variable arrangement
+////////////////////////////////////////////////////////////////////////////////
+/// set the variable arrangement
 
+void TMVA::Event::SetVariableArrangement( std::vector<UInt_t>* const m ) const {
    // mapping from global variable index (the position in the vector)
    // to the new index in the subset of variables used by the
    // composite classifier
@@ -184,10 +191,11 @@ void TMVA::Event::SetVariableArrangement( std::vector<UInt_t>* const m ) const {
 }
 
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copies only the variable values
+
 void TMVA::Event::CopyVarValues( const Event& other )
 {
-   // copies only the variable values
    fValues      = other.fValues;
    fTargets     = other.fTargets;
    fSpectators  = other.fSpectators;
@@ -216,10 +224,11 @@ void TMVA::Event::CopyVarValues( const Event& other )
    fBoostWeight = other.fBoostWeight;
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return value of i'th variable
+
 Float_t TMVA::Event::GetValue( UInt_t ivar ) const
 {
-   // return value of i'th variable
    Float_t retval;
    if (fVariableArrangement==0) {
       retval = fDynamic ? ( *((*fValuesDynamic).at(ivar)) ) : fValues.at(ivar); 
@@ -240,18 +249,20 @@ Float_t TMVA::Event::GetValue( UInt_t ivar ) const
    return retval;
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return spectator content
+
 Float_t TMVA::Event::GetSpectator( UInt_t ivar) const 
 {
-   // return spectator content
    if (fDynamic) return *(fValuesDynamic->at(GetNVariables()+ivar));
    else          return fSpectators.at(ivar);
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return value vector
+
 const std::vector<Float_t>& TMVA::Event::GetValues() const
 {
-   // return value vector
    if (fVariableArrangement==0) {
 
       if (fDynamic) {
@@ -285,29 +296,30 @@ const std::vector<Float_t>& TMVA::Event::GetValues() const
    return fValues;
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// accessor to the number of variables 
+
 UInt_t TMVA::Event::GetNVariables() const 
 {
-   // accessor to the number of variables 
-
    // if variables have to arranged (as it is the case for the
    // composite classifier) the number of the variables changes
    if (fVariableArrangement==0) return fValues.size();
    else                         return fVariableArrangement->size();
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// accessor to the number of targets
+
 UInt_t TMVA::Event::GetNTargets() const 
 {
-   // accessor to the number of targets
    return fTargets.size();
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// accessor to the number of spectators 
+
 UInt_t TMVA::Event::GetNSpectators() const 
 {
-   // accessor to the number of spectators 
-
    // if variables have to arranged (as it is the case for the
    // composite classifier) the number of the variables changes
 
@@ -316,76 +328,79 @@ UInt_t TMVA::Event::GetNSpectators() const
 }
 
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set variable ivar to val
+
 void TMVA::Event::SetVal( UInt_t ivar, Float_t val ) 
 {
-   // set variable ivar to val
    if ((fDynamic ?( (*fValuesDynamic).size() ) : fValues.size())<=ivar)
       (fDynamic ?( (*fValuesDynamic).resize(ivar+1) ) : fValues.resize(ivar+1));
 
    (fDynamic ?( *(*fValuesDynamic)[ivar] ) : fValues[ivar])=val;
 }
 
-//____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print method
+
 void TMVA::Event::Print( std::ostream& o ) const
 {
-   // print method
    o << *this << std::endl;
 }
 
-//_____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the target value (dimension itgt) to value
+
 void TMVA::Event::SetTarget( UInt_t itgt, Float_t value ) 
 { 
-   // set the target value (dimension itgt) to value
-
    if (fTargets.size() <= itgt) fTargets.resize( itgt+1 );
    fTargets.at(itgt) = value;
 }
 
-//_____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set spectator value (dimension ivar) to value
+
 void TMVA::Event::SetSpectator( UInt_t ivar, Float_t value ) 
 { 
-   // set spectator value (dimension ivar) to value
-
    if (fSpectators.size() <= ivar) fSpectators.resize( ivar+1 );
    fSpectators.at(ivar) = value;
 }
 
-//_____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the event weight - depending on whether the flag 
+/// *IgnoreNegWeightsInTraining* is or not. If it is set AND it is 
+/// used for training, then negetive event weights are set to zero !
+/// NOTE! For events used in Testing, the ORIGINAL possibly negative
+/// event weight is used  no matter what 
+
 Double_t TMVA::Event::GetWeight() const 
 {
-   // return the event weight - depending on whether the flag 
-   // *IgnoreNegWeightsInTraining* is or not. If it is set AND it is 
-   // used for training, then negetive event weights are set to zero !
-   // NOTE! For events used in Testing, the ORIGINAL possibly negative
-   // event weight is used  no matter what 
-
    return (fgIgnoreNegWeightsInTraining && fgIsTraining && fWeight < 0) ? 0. : fWeight*fBoostWeight;
 }
 
-//_____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// when this static function is called, it sets the flag whether 
+/// events with negative event weight should be ignored in the 
+/// training, or not.
+
 void TMVA::Event::SetIsTraining(Bool_t b)
 {
-   // when this static function is called, it sets the flag whether 
-   // events with negative event weight should be ignored in the 
-   // training, or not.
-
    fgIsTraining=b;
 }
-//_____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// when this static function is called, it sets the flag whether 
+/// events with negative event weight should be ignored in the 
+/// training, or not.
+
 void TMVA::Event::SetIgnoreNegWeightsInTraining(Bool_t b)
 {
-   // when this static function is called, it sets the flag whether 
-   // events with negative event weight should be ignored in the 
-   // training, or not.
-
    fgIgnoreNegWeightsInTraining=b;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Outputs the data of an event
+
 std::ostream& TMVA::operator << ( std::ostream& os, const TMVA::Event& event )
 { 
-   // Outputs the data of an event
    os << "Variables [" << event.fValues.size() << "]:";
    for (UInt_t ivar=0; ivar<event.fValues.size(); ++ivar)
       os << " " << std::setw(10) << event.GetValue(ivar);

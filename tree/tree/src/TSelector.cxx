@@ -78,11 +78,11 @@
 
 ClassImp(TSelector)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default selector ctor.
+
 TSelector::TSelector() : TObject()
 {
-   // Default selector ctor.
-
    fStatus = 0;
    fAbort  = kContinue;
    fObject = 0;
@@ -91,25 +91,25 @@ TSelector::TSelector() : TObject()
    fOutput->SetOwner();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Selector destructor.
+
 TSelector::~TSelector()
 {
-   // Selector destructor.
-
    delete fOutput;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Abort processing. If what = kAbortProcess, the Process() loop will be
+/// aborted. If what = kAbortFile, the current file in a chain will be
+/// aborted and the processing will continue with the next file, if there
+/// is no next file then Process() will be aborted. Abort() can also  be
+/// called from Begin(), SlaveBegin(), Init() and Notify(). After abort
+/// the SlaveTerminate() and Terminate() are always called. The abort flag
+/// can be checked in these methods using GetAbort().
+
 void TSelector::Abort(const char *why, EAbort what)
 {
-   // Abort processing. If what = kAbortProcess, the Process() loop will be
-   // aborted. If what = kAbortFile, the current file in a chain will be
-   // aborted and the processing will continue with the next file, if there
-   // is no next file then Process() will be aborted. Abort() can also  be
-   // called from Begin(), SlaveBegin(), Init() and Notify(). After abort
-   // the SlaveTerminate() and Terminate() are always called. The abort flag
-   // can be checked in these methods using GetAbort().
-
    fAbort = what;
    TString mess = "Abort";
    if (fAbort == kAbortProcess)
@@ -120,22 +120,22 @@ void TSelector::Abort(const char *why, EAbort what)
    Info(mess, "%s", why);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The code in filename is loaded (interpreted or compiled, see below),
+/// filename must contain a valid class implementation derived from TSelector.
+///
+/// If filename is of the form file.C, the file will be interpreted.
+/// If filename is of the form file.C++, the file file.C will be compiled
+/// and dynamically loaded. The corresponding binary file and shared
+/// library will be deleted at the end of the function.
+/// If filename is of the form file.C+, the file file.C will be compiled
+/// and dynamically loaded. At next call, if file.C is older than file.o
+/// and file.so, the file.C is not compiled, only file.so is loaded.
+///
+/// The static function returns a pointer to a TSelector object
+
 TSelector *TSelector::GetSelector(const char *filename)
 {
-   // The code in filename is loaded (interpreted or compiled, see below),
-   // filename must contain a valid class implementation derived from TSelector.
-   //
-   // If filename is of the form file.C, the file will be interpreted.
-   // If filename is of the form file.C++, the file file.C will be compiled
-   // and dynamically loaded. The corresponding binary file and shared
-   // library will be deleted at the end of the function.
-   // If filename is of the form file.C+, the file file.C will be compiled
-   // and dynamically loaded. At next call, if file.C is older than file.o
-   // and file.so, the file.C is not compiled, only file.so is loaded.
-   //
-   // The static function returns a pointer to a TSelector object
-
    // If the filename does not contain "." assume class is compiled in
    TString localname;
    Bool_t fromFile = kFALSE;
@@ -212,12 +212,12 @@ TSelector *TSelector::GetSelector(const char *filename)
    return select;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find out if this is a standard selection used for Draw actions
+/// (either TSelectorDraw, TProofDraw or deriving from them).
+
 Bool_t TSelector::IsStandardDraw(const char *selec)
 {
-   // Find out if this is a standard selection used for Draw actions
-   // (either TSelectorDraw, TProofDraw or deriving from them).
-
    // Make sure we have a name
    if (!selec) {
       ::Info("TSelector::IsStandardDraw",

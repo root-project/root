@@ -232,9 +232,10 @@ void PyROOT::InitRoot()
    AddToGlobalScope( "gInterpreter", "TInterpreter.h", gInterpreter, gInterpreter->IsA() );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the unscoped class name
+
 int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) {
-// get the unscoped class name
    std::string clName = TClassEdit::ShortType(
       klass.Name().c_str(), TClassEdit::kDropAlloc );
 
@@ -433,10 +434,11 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build a tuple of python shadow classes of all the bases of the given 'klass'.
+
 PyObject* PyROOT::BuildRootClassBases( const TScopeAdapter& klass )
 {
-// Build a tuple of python shadow classes of all the bases of the given 'klass'.
    size_t nbases = klass.BaseSize();
 
 // collect bases while removing duplicates
@@ -477,10 +479,11 @@ PyObject* PyROOT::BuildRootClassBases( const TScopeAdapter& klass )
    return pybases;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build a python shadow class for the given ROOT class.
+
 PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
 {
-// Build a python shadow class for the given ROOT class.
    std::string cname = PyROOT_PyUnicode_AsString( PyTuple_GetItem( args, 0 ) );
 
    if ( PyErr_Occurred() )
@@ -489,10 +492,11 @@ PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
    return MakeRootClassFromString( cname );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// force building of the class if a scope is specified (prevents loops)
+
 PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject* scope )
 {
-// force building of the class if a scope is specified (prevents loops)
    Bool_t force = scope != 0;
 
 // working copy
@@ -690,10 +694,11 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
    return pyclass;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the requested name
+
 PyObject* PyROOT::GetRootGlobal( PyObject*, PyObject* args )
 {
-// get the requested name
    std::string ename = PyROOT_PyUnicode_AsString( PyTuple_GetItem( args, 0 ) );
 
    if ( PyErr_Occurred() )
@@ -702,10 +707,11 @@ PyObject* PyROOT::GetRootGlobal( PyObject*, PyObject* args )
    return GetRootGlobalFromString( ename );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// try named global variable/enum (first ROOT, then Cling: sync is too slow)
+
 PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
 {
-// try named global variable/enum (first ROOT, then Cling: sync is too slow)
    TGlobal* gb = (TGlobal*)gROOT->GetListOfGlobals( kFALSE )->FindObject( name.c_str() );
    if ( gb && gb->GetAddress() && gb->GetAddress() != (void*)-1 )
       return BindRootGlobal( gb );
@@ -753,10 +759,11 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// only known or knowable objects will be bound (null object is ok)
+
 PyObject* PyROOT::BindRootObjectNoCast(
       void* address, TClass* klass, Bool_t isRef, Bool_t isValue ) {
-// only known or knowable objects will be bound (null object is ok)
    if ( ! klass ) {
       PyErr_SetString( PyExc_TypeError, "attempt to bind ROOT object w/o class" );
       return 0;
@@ -785,10 +792,11 @@ PyObject* PyROOT::BindRootObjectNoCast(
    return (PyObject*)pyobj;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// if the object is a null pointer, return a typed one (as needed for overloading)
+
 PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 {
-// if the object is a null pointer, return a typed one (as needed for overloading)
    if ( ! address )
       return BindRootObjectNoCast( address, klass, kFALSE );
 
@@ -840,23 +848,26 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
    return (PyObject*)pyobj;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TODO: this function exists for symmetry; need to figure out if it's useful
+
 PyObject* PyROOT::BindRootObjectArray( void* address, TClass* klass, Int_t size ) {
-// TODO: this function exists for symmetry; need to figure out if it's useful
    return TTupleOfInstances_New( address, klass, size );
 }
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyObject* PyROOT::BindRootGlobal( DataMemberInfo_t* dmi ) {
    TGlobal gbl( gInterpreter->DataMemberInfo_FactoryCopy( dmi ) );
    return BindRootGlobal( &gbl );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// gbl == 0 means global does not exist (rather than gbl is NULL pointer)
+
 PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 {
-// gbl == 0 means global does not exist (rather than gbl is NULL pointer)
    if ( ! gbl || strcmp(gbl->GetName(), "") == 0 ) {
       Py_INCREF( Py_None );
       return Py_None;

@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 BEGIN_HTML
 <p>
@@ -64,7 +65,8 @@ using namespace std;
 
 
 /*
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 FeldmanCousins::FeldmanCousins() : 
   //  fModel(NULL),
    fData(0),
@@ -85,7 +87,9 @@ FeldmanCousins::FeldmanCousins() :
 }
 */
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
 FeldmanCousins::FeldmanCousins(RooAbsData& data, ModelConfig& model) : 
   fSize(0.05), 
   fModel(model),
@@ -102,36 +106,38 @@ FeldmanCousins::FeldmanCousins(RooAbsData& data, ModelConfig& model) :
   fSaveBeltToFile(false),
   fCreateBelt(false)
 {
-   // standard constructor
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+///if(fOwnsWorkspace && fWS) delete fWS;
+
 FeldmanCousins::~FeldmanCousins() {
-   // destructor
-   //if(fOwnsWorkspace && fWS) delete fWS;
   if(fPointsToTest) delete fPointsToTest;
   if(fPOIToTest) delete fPOIToTest;
   if(fTestStatSampler) delete fTestStatSampler;
 }
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the model
+
 void FeldmanCousins::SetModel(const ModelConfig & model) { 
-   // set the model
   fModel = model;
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TestStatSampler*  FeldmanCousins::GetTestStatSampler() const{
   if(!fTestStatSampler)
     this->CreateTestStatSampler();
   return fTestStatSampler; 
 }
 
-//_______________________________________________________
-void FeldmanCousins::CreateTestStatSampler() const{
-  // specify the Test Statistic and create a ToyMC test statistic sampler
+////////////////////////////////////////////////////////////////////////////////
+/// specify the Test Statistic and create a ToyMC test statistic sampler
 
+void FeldmanCousins::CreateTestStatSampler() const{
   // use the profile likelihood ratio as the test statistic
   ProfileLikelihoodTestStat* testStatistic = new ProfileLikelihoodTestStat(*fModel.GetPdf());
   
@@ -156,11 +162,11 @@ void FeldmanCousins::CreateTestStatSampler() const{
 }
 
 
-//_______________________________________________________
-void FeldmanCousins::CreateParameterPoints() const{
-  // specify the parameter points to perform the construction.
-  // allow ability to profile on some nuisance paramters
+////////////////////////////////////////////////////////////////////////////////
+/// specify the parameter points to perform the construction.
+/// allow ability to profile on some nuisance paramters
 
+void FeldmanCousins::CreateParameterPoints() const{
   // get ingredients
   RooAbsPdf* pdf   = fModel.GetPdf(); 
   if (!pdf ){
@@ -241,11 +247,11 @@ void FeldmanCousins::CreateParameterPoints() const{
 }
 
 
-//_______________________________________________________
-PointSetInterval* FeldmanCousins::GetInterval() const {
-  // Main interface to get a RooStats::ConfInterval.  
-  // It constructs a RooStats::PointSetInterval.
+////////////////////////////////////////////////////////////////////////////////
+/// Main interface to get a RooStats::ConfInterval.  
+/// It constructs a RooStats::PointSetInterval.
 
+PointSetInterval* FeldmanCousins::GetInterval() const {
   // local variables
   //  RooAbsData* data = fData; //fWS->data(fDataName);
 

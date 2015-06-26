@@ -26,12 +26,12 @@ TGLLockable::TGLLockable() :
    // Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lock the object in mode 'lock'. Return TRUE if successful, FALSE
+/// if the object is already locked.
+
 Bool_t TGLLockable::TakeLock(ELock lock) const
 {
-   // Lock the object in mode 'lock'. Return TRUE if successful, FALSE
-   // if the object is already locked.
-
    if (LockValid(lock) && fLock == kUnlocked) {
       fLock = lock;
       if (gDebug>3) {
@@ -45,12 +45,12 @@ Bool_t TGLLockable::TakeLock(ELock lock) const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release current lock, make sure it the same as the 'lock' argument.
+/// Returns TRUE on success, FALSE on failure.
+
 Bool_t TGLLockable::ReleaseLock(ELock lock) const
 {
-   // Release current lock, make sure it the same as the 'lock' argument.
-   // Returns TRUE on success, FALSE on failure.
-
    if (LockValid(lock) && fLock == lock) {
       fLock = kUnlocked;
       if (gDebug>3) {
@@ -64,11 +64,11 @@ Bool_t TGLLockable::ReleaseLock(ELock lock) const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return name-string for given lock-type.
+
 const char* TGLLockable::LockName(ELock lock)
 {
-   // Return name-string for given lock-type.
-
    static const char* names[] =
       { "Unlocked", "DrawLock", "SelectLock", "ModifyLock" };
 
@@ -79,12 +79,12 @@ const char* TGLLockable::LockName(ELock lock)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test if lock is a valid type to take/release.
+/// kUnlocked is never valid in these cases.
+
 Bool_t TGLLockable::LockValid(ELock lock)
 {
-   // Test if lock is a valid type to take/release.
-   // kUnlocked is never valid in these cases.
-
    switch(lock) {
       case kDrawLock:
       case kSelectLock:

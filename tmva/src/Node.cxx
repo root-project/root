@@ -25,7 +25,8 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
   Node for the BinarySearch or Decision Trees.
   
@@ -61,7 +62,9 @@ TMVA::Node::Node()
    fgCount++;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor of a daughter node as a daughter of 'p'
+
 TMVA::Node::Node( Node* p, char pos ) 
    : fParent ( p ), 
      fLeft ( NULL ), 
@@ -70,14 +73,16 @@ TMVA::Node::Node( Node* p, char pos )
      fDepth( p->GetDepth() + 1), 
      fParentTree(p->GetParentTree()) 
 {
-   // constructor of a daughter node as a daughter of 'p'
-
    fgCount++;
    if (fPos == 'l' ) p->SetLeft(this);
    else if (fPos == 'r' ) p->SetRight(this);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor, make sure you don't just copy the poiter to the node, but
+/// that the parents/daugthers are initialized to 0 (and set by the copy 
+/// constructors of the derived classes 
+
 TMVA::Node::Node ( const Node &n ) 
    : fParent( NULL ), 
      fLeft  ( NULL), 
@@ -86,30 +91,30 @@ TMVA::Node::Node ( const Node &n )
      fDepth ( n.fDepth ), 
      fParentTree( NULL )
 {
-   // copy constructor, make sure you don't just copy the poiter to the node, but
-   // that the parents/daugthers are initialized to 0 (and set by the copy 
-   // constructors of the derived classes 
    fgCount++;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// node destructor
+
 TMVA::Node::~Node()
 {
-   // node destructor
    fgCount--;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// retuns the global number of instantiated nodes
+
 int TMVA::Node::GetCount()
 {
-   // retuns the global number of instantiated nodes
    return fgCount;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///recursively go through the part of the tree below this node and count all daughters
+
 Int_t TMVA::Node::CountMeAndAllDaughters() const 
 {
-   //recursively go through the part of the tree below this node and count all daughters
    Int_t n=1;
    if (this->GetLeft() != NULL) 
       n+= this->GetLeft()->CountMeAndAllDaughters(); 
@@ -120,26 +125,29 @@ Int_t TMVA::Node::CountMeAndAllDaughters() const
 }
 
 // print a node
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// output operator for a node  
+
 std::ostream& TMVA::operator<<( std::ostream& os, const TMVA::Node& node )
 { 
-   // output operator for a node  
    node.Print(os);
    return os;                // Return the output stream.
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// output operator with a pointer to the node (which still prints the node itself)
+
 std::ostream& TMVA::operator<<( std::ostream& os, const TMVA::Node* node )
 { 
-   // output operator with a pointer to the node (which still prints the node itself)
    if (node!=NULL) node->Print(os);
    return os;                // Return the output stream.
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add attributes to XML
+
 void* TMVA::Node::AddXMLTo( void* parent ) const
 {
-   // add attributes to XML
    std::stringstream s("");
    AddContentToNode(s);
    void* node = gTools().AddChild(parent, "Node", s.str().c_str());
@@ -151,10 +159,11 @@ void* TMVA::Node::AddXMLTo( void* parent ) const
    return node;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read attributes from XML
+
 void TMVA::Node::ReadXML( void* node,  UInt_t tmva_Version_Code )
 {
-   // read attributes from XML
    ReadAttributes(node, tmva_Version_Code);
    const char* content = gTools().GetContent(node);
    if (content) {

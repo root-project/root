@@ -34,23 +34,26 @@
 
 ClassImp(TMVA::VariableIdentityTransform)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
    TMVA::VariableIdentityTransform::VariableIdentityTransform( DataSetInfo& dsi )
       : VariableTransformBase( dsi, Types::kIdentity, "Id" )
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// nothing to initialize
+
 void TMVA::VariableIdentityTransform::Initialize()
 {
-   // nothing to initialize
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the identity does not need to be prepared, only calculate the normalization
+
 Bool_t TMVA::VariableIdentityTransform::PrepareTransformation (const std::vector<Event*>& events)
 {
-   // the identity does not need to be prepared, only calculate the normalization
    Initialize();
 
    if (!IsEnabled() || IsCreated()) return kTRUE;
@@ -67,33 +70,36 @@ Bool_t TMVA::VariableIdentityTransform::PrepareTransformation (const std::vector
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// identity transformation to write to XML
+///Log() << kFATAL << "Please implement writing of transformation as XML" << Endl;
+
 void TMVA::VariableIdentityTransform::AttachXMLTo( void* ) 
 {
-   // identity transformation to write to XML
-   //Log() << kFATAL << "Please implement writing of transformation as XML" << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reding the identity transformation from XML
+
 void TMVA::VariableIdentityTransform::ReadFromXML( void* ) 
 {
-   // reding the identity transformation from XML
    return;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// identity transform returns same event
+
 const TMVA::Event* TMVA::VariableIdentityTransform::Transform (const TMVA::Event* const ev, Int_t ) const 
 {
-   // identity transform returns same event
    return ev;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates C++ code fragment of the indentity transform for inclusion in standalone C++ class
+
 void TMVA::VariableIdentityTransform::MakeFunction( std::ostream& fout, const TString& fncName, 
                                                     Int_t , UInt_t trCounter, Int_t ) 
 {
-   // creates C++ code fragment of the indentity transform for inclusion in standalone C++ class
-
    fout << "inline void " << fncName << "::InitTransform_Identity_" << trCounter << "() {}" << std::endl;
    fout << std::endl;
    fout << "inline void " << fncName << "::Transform_Identity_" << trCounter << "(const std::vector<double> &, int) const {}" << std::endl;

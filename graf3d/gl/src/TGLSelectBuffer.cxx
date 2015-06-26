@@ -23,46 +23,48 @@
 
 Int_t TGLSelectBuffer::fgMaxBufSize = 1 << 20; // 1MByte
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLSelectBuffer::TGLSelectBuffer() :
    fBufSize  (1024),
    fBuf      (new UInt_t [fBufSize]),
    fNRecords (-1)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLSelectBuffer::~TGLSelectBuffer()
 {
-   // Destructor.
-
    delete [] fBuf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///static: return true if current buffer is smaller than the max buffer size
+
 Bool_t TGLSelectBuffer::CanGrow()
 {
-   //static: return true if current buffer is smaller than the max buffer size
    return fBufSize < fgMaxBufSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increase size of the select buffer.
+
 void TGLSelectBuffer::Grow()
 {
-   // Increase size of the select buffer.
-
    delete [] fBuf;
    fBufSize = TMath::Min(2*fBufSize, fgMaxBufSize);
    fBuf = new UInt_t[fBufSize];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process result of GL-selection: sort the hits by their minimum
+/// z-coordinate.
+
 void TGLSelectBuffer::ProcessResult(Int_t glResult)
 {
-   // Process result of GL-selection: sort the hits by their minimum
-   // z-coordinate.
-
    // The '-1' case should be handled on the caller side.
    // Here we just assume no hits were recorded.
 
@@ -86,12 +88,12 @@ void TGLSelectBuffer::ProcessResult(Int_t glResult)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill select record rec with data on (sorted) position i.
+/// Returns depth of name-stack for this record.
+
 Int_t TGLSelectBuffer::SelectRecord(TGLSelectRecordBase& rec, Int_t i)
 {
-   // Fill select record rec with data on (sorted) position i.
-   // Returns depth of name-stack for this record.
-
    rec.Set(fSortedRecords[i].second);
    return rec.GetN();
 }

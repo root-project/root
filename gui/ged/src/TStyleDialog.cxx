@@ -43,16 +43,16 @@ enum EStyleDialogWid {
    kButCancel
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Constructor. Create the dialog window and draw it centered over the
+/// main window 'mf'. A pointer to the style to copy or rename is given
+/// by 'cur' and the parameter 'mode' specify the mode:
+///    1 = copy  |  2 = rename  |  3 = import from canvas.
+
 TStyleDialog::TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode,
                               TVirtualPad *currentPad)
                      : TGTransientFrame(0, sm)
 {
-   //  Constructor. Create the dialog window and draw it centered over the
-   // main window 'mf'. A pointer to the style to copy or rename is given
-   // by 'cur' and the parameter 'mode' specify the mode:
-   //    1 = copy  |  2 = rename  |  3 = import from canvas.
-
    fStyleManager = sm;
 
    // Create the main frame.
@@ -193,11 +193,11 @@ TStyleDialog::TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode,
    gClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TStyleDialog::~TStyleDialog()
 {
-   // Destructor.
-
    Disconnect("DoCloseWindow()");
    fName->Disconnect("TextChanged(const char *)");
    fOK->Disconnect("Clicked()");
@@ -233,32 +233,32 @@ TStyleDialog::~TStyleDialog()
    delete fTrashListLayout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called when the Cancel button is clicked. Close the window
+/// without saving submitted changes.
+
 void TStyleDialog::DoCancel()
 {
-   //  Slot called when the Cancel button is clicked. Close the window
-   // without saving submitted changes.
-
    fStyleManager->SetLastChoice(kFALSE);
 
    SendCloseMessage();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called when the window is closed via the window manager.
+/// Close the window without saving submitted changes.
+
 void TStyleDialog::DoCloseWindow()
 {
-   //  Slot called when the window is closed via the window manager.
-   // Close the window without saving submitted changes.
-
    delete this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called when the OK button is clicked. Rename or create the style
+/// before closing the window.
+
 void TStyleDialog::DoOK()
 {
-   //  Slot called when the OK button is clicked. Rename or create the style
-   // before closing the window.
-
    if (fMode == 2) {
       // Update the name and the title of the style.
       fCurStyle->SetName(fName->GetText());
@@ -289,13 +289,13 @@ void TStyleDialog::DoOK()
    SendCloseMessage();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called every time the name is changed. Provide some protection
+/// to avoid letting the user use an empty name or an already used one.
+///  A warning message can be shown and the OK button disabled.
+
 void TStyleDialog::DoUpdate()
 {
-   //  Slot called every time the name is changed. Provide some protection
-   // to avoid letting the user use an empty name or an already used one.
-   //  A warning message can be shown and the OK button disabled.
-
    if (!strlen(fName->GetText())) {
       fWarnLabel->SetText("That name is empty");
       fOK->SetEnabled(kFALSE);

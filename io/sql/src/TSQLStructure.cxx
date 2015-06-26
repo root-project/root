@@ -159,7 +159,9 @@ Long64_t sqlio::atol64(const char* value)
 
 ClassImp(TSQLColumnData)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
    TSQLColumnData::TSQLColumnData() :
       TObject(),
       fName(),
@@ -167,10 +169,12 @@ ClassImp(TSQLColumnData)
       fValue(),
       fNumeric(kFALSE)
 {
-   // default constructor
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normal constructor of TSQLColumnData class
+/// specifies name, type and value for one column
+
 TSQLColumnData::TSQLColumnData(const char* name,
                                const char* sqltype,
                                const char* value,
@@ -181,11 +185,11 @@ TSQLColumnData::TSQLColumnData(const char* name,
    fValue(value),
    fNumeric(numeric)
 {
-   // normal constructor of TSQLColumnData class
-   // specifies name, type and value for one column
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructs TSQLColumnData object for integer column
+
 TSQLColumnData::TSQLColumnData(const char* name, Long64_t value) :
    TObject(),
    fName(name),
@@ -193,21 +197,22 @@ TSQLColumnData::TSQLColumnData(const char* name, Long64_t value) :
    fValue(),
    fNumeric(kTRUE)
 {
-   // constructs TSQLColumnData object for integer column
-
    fValue.Form("%lld",value);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TSQLColumnData destructor
+
 TSQLColumnData::~TSQLColumnData()
 {
-   // TSQLColumnData destructor
 }
 
 
 ClassImp(TSQLTableData);
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normal constructor
+
 TSQLTableData::TSQLTableData(TSQLFile* f, TSQLClassInfo* info) :
    TObject(),
    fFile(f),
@@ -215,17 +220,15 @@ TSQLTableData::TSQLTableData(TSQLFile* f, TSQLClassInfo* info) :
    fColumns(),
    fColInfos(0)
 {
-   // normal constructor
-
    if (info && !info->IsClassTableExist())
       fColInfos = new TObjArray;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TSQLTableData::~TSQLTableData()
 {
-   // destructor
-
    fColumns.Delete();
    if (fColInfos!=0) {
       fColInfos->Delete();
@@ -233,11 +236,11 @@ TSQLTableData::~TSQLTableData()
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add INT column to list of columns
+
 void TSQLTableData::AddColumn(const char* name, Long64_t value)
 {
-   // Add INT column to list of columns
-
    TObjString* v = new TObjString(Form("%lld",value));
    v->SetBit(BIT(20), kTRUE);
    fColumns.Add(v);
@@ -249,14 +252,14 @@ void TSQLTableData::AddColumn(const char* name, Long64_t value)
      fColInfos->Add(new TSQLClassColumnInfo(name, DefineSQLName(name), "INT"));
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add nomral column to list of columns
+
 void TSQLTableData::AddColumn(const char* name,
                               const char* sqltype,
                               const char* value,
                               Bool_t numeric)
 {
-   // Add nomral column to list of columns
-
    TObjString* v = new TObjString(value);
    v->SetBit(BIT(20), numeric);
    fColumns.Add(v);
@@ -268,11 +271,11 @@ void TSQLTableData::AddColumn(const char* name,
      fColInfos->Add(new TSQLClassColumnInfo(name, DefineSQLName(name), sqltype));
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// produce suitable name for column, taking into account length limitation
+
 TString TSQLTableData::DefineSQLName(const char* fullname)
 {
-   // produce suitable name for column, taking into account length limitation
-
    Int_t maxlen = fFile->SQLMaxIdentifierLength();
 
    Int_t len = strlen(fullname);
@@ -305,11 +308,11 @@ TString TSQLTableData::DefineSQLName(const char* fullname)
    return TString(fullname);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// checks if columns list already has that sql name
+
 Bool_t TSQLTableData::HasSQLName(const char* sqlname)
 {
-   // checks if columns list already has that sql name
-
    TIter next(fColInfos);
 
    TSQLClassColumnInfo* col = 0;
@@ -323,34 +326,35 @@ Bool_t TSQLTableData::HasSQLName(const char* sqlname)
 
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns number of columns in provided set
+
 Int_t TSQLTableData::GetNumColumns()
 {
-   // returns number of columns in provided set
-
    return fColumns.GetLast() +1;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returm column value
+
 const char* TSQLTableData::GetColumn(Int_t n)
 {
-   // returm column value
    return fColumns[n]->GetName();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// identifies if column has numeric value
+
 Bool_t TSQLTableData::IsNumeric(Int_t n)
 {
-   // identifies if column has numeric value
-
    return fColumns[n]->TestBit(BIT(20));
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// take ownership over colinfos
+
 TObjArray* TSQLTableData::TakeColInfos()
 {
-   // take ownership over colinfos
-
    TObjArray* res = fColInfos;
    fColInfos = 0;
    return res;
@@ -373,11 +377,11 @@ TSQLStructure::TSQLStructure() :
    // default constructor
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TSQLStructure::~TSQLStructure()
 {
-   // destructor
-
    fChilds.Delete();
    if (GetType()==kSqlObjectData) {
       TSQLObjectData* objdata = (TSQLObjectData*) fPointer;
@@ -389,215 +393,216 @@ TSQLStructure::~TSQLStructure()
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// number of child structures
+
 Int_t TSQLStructure::NumChilds() const
 {
-   // number of child structures
-
    return fChilds.GetLast()+1;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return child structure of index n
+
 TSQLStructure* TSQLStructure::GetChild(Int_t n) const
 {
-   // return child structure of index n
-
    return (n<0) || (n>fChilds.GetLast()) ? 0 : (TSQLStructure*) fChilds[n];
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set structure type as kSqlObject
+
 void TSQLStructure::SetObjectRef(Long64_t refid, const TClass* cl)
 {
-   // set structure type as kSqlObject
-
    fType = kSqlObject;
    fValue.Form("%lld",refid);
    fPointer = cl;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set structure type as kSqlPointer
+
 void TSQLStructure::SetObjectPointer(Long64_t ptrid)
 {
-   // set structure type as kSqlPointer
-
    fType = kSqlPointer;
    fValue.Form("%lld",ptrid);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set structure type as kSqlVersion
+
 void TSQLStructure::SetVersion(const TClass* cl, Int_t version)
 {
-   // set structure type as kSqlVersion
-
    fType = kSqlVersion;
    fPointer = cl;
    if (version<0) version = cl->GetClassVersion();
    fValue.Form("%d",version);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set structure type as kSqlClassStreamer
+
 void TSQLStructure::SetClassStreamer(const TClass* cl)
 {
-   // set structure type as kSqlClassStreamer
-
    fType = kSqlClassStreamer;
    fPointer = cl;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set structure type as kSqlStreamerInfo
+
 void TSQLStructure::SetStreamerInfo(const TStreamerInfo* info)
 {
-   // set structure type as kSqlStreamerInfo
-
    fType = kSqlStreamerInfo;
    fPointer = info;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set structure type as kSqlElement
+
 void TSQLStructure::SetStreamerElement(const TStreamerElement* elem, Int_t number)
 {
-   // set structure type as kSqlElement
-
    fType = kSqlElement;
    fPointer = elem;
    fArrayIndex = number;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set structure type as kSqlCustomClass
+
 void TSQLStructure::SetCustomClass(const TClass* cl, Version_t version)
 {
-   // set structure type as kSqlCustomClass
-
    fType = kSqlCustomClass;
    fPointer = (void*) cl;
    fArrayIndex = version;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set structure type as kSqlCustomElement
+
 void TSQLStructure::SetCustomElement(TStreamerElement* elem)
 {
-   // set structure type as kSqlCustomElement
-
    fType = kSqlCustomElement;
    fPointer = elem;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set structure type as kSqlValue
+
 void TSQLStructure::SetValue(const char* value, const char* tname)
 {
-   // set structure type as kSqlValue
-
    fType = kSqlValue;
    fValue = value;
    fPointer = tname;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// change value of this structure
+/// used as "workaround" to keep object id in kSqlElement node
+
 void TSQLStructure::ChangeValueOnly(const char* value)
 {
-   // change value of this structure
-   // used as "workaround" to keep object id in kSqlElement node
-
    fValue = value;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set array index for this structure
+
 void TSQLStructure::SetArrayIndex(Int_t indx, Int_t cnt)
 {
-   // set array index for this structure
-
    fArrayIndex = indx;
    fRepeatCnt = cnt;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set array index for last child element
+///   if (cnt<=1) return;
+
 void TSQLStructure::ChildArrayIndex(Int_t index, Int_t cnt)
 {
-   // set array index for last child element
-   //   if (cnt<=1) return;
    TSQLStructure* last = (TSQLStructure*) fChilds.Last();
    if ((last!=0) && (last->GetType()==kSqlValue))
       last->SetArrayIndex(index, cnt);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set structure as array element
+
 void TSQLStructure::SetArray(Int_t sz)
 {
-   // Set structure as array element
-
    fType = kSqlArray;
    if (sz>=0) fValue.Form("%d",sz);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return object class if type kSqlObject
+
 TClass* TSQLStructure::GetObjectClass() const
 {
-   // return object class if type kSqlObject
-
    return (fType==kSqlObject) ? (TClass*) fPointer : 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return class for version tag if type is kSqlVersion
+
 TClass* TSQLStructure::GetVersionClass() const
 {
-   // return class for version tag if type is kSqlVersion
-
    return (fType==kSqlVersion) ? (TClass*) fPointer : 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return TStreamerInfo* if type is kSqlStreamerInfo
+
 TStreamerInfo*  TSQLStructure::GetStreamerInfo() const
 {
-   // return TStreamerInfo* if type is kSqlStreamerInfo
-
    return (fType==kSqlStreamerInfo) ? (TStreamerInfo*) fPointer : 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return TStremerElement* if type is kSqlElement
+
 TStreamerElement* TSQLStructure::GetElement() const
 {
-   // return TStremerElement* if type is kSqlElement
-
    return (fType==kSqlElement) || (fType==kSqlCustomElement) ? (TStreamerElement*) fPointer : 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns number of TStremerElement in TStreamerInfo
+
 Int_t TSQLStructure::GetElementNumber() const
 {
-   // returns number of TStremerElement in TStreamerInfo
-
    return (fType==kSqlElement) ? fArrayIndex : 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return value type if structure is kSqlValue
+
 const char* TSQLStructure::GetValueType() const
 {
-   // return value type if structure is kSqlValue
-
    return (fType==kSqlValue) ? (const char*) fPointer : 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return element custom class if strutures is kSqlCustomClass
+
 TClass* TSQLStructure::GetCustomClass() const
 {
-   // return element custom class if strutures is kSqlCustomClass
-
    return (fType==kSqlCustomClass) ? (TClass*) fPointer : 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return custom class version if strutures is kSqlCustomClass
+
 Version_t TSQLStructure::GetCustomClassVersion() const
 {
-   // return custom class version if strutures is kSqlCustomClass
-
    return (fType==kSqlCustomClass) ? fArrayIndex : 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// provides class info if structure kSqlStreamerInfo or kSqlCustomClass
+
 Bool_t TSQLStructure::GetClassInfo(TClass* &cl, Version_t &version)
 {
-   // provides class info if structure kSqlStreamerInfo or kSqlCustomClass
-
    if (GetType()==kSqlStreamerInfo) {
       TStreamerInfo* info = GetStreamerInfo();
       if (info==0) return kFALSE;
@@ -612,54 +617,54 @@ Bool_t TSQLStructure::GetClassInfo(TClass* &cl, Version_t &version)
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns value
+/// for different structure kinds has different sense
+/// For kSqlVersion it version, for kSqlReference it is object id and so on
+
 const char* TSQLStructure::GetValue() const
 {
-   // returns value
-   // for different structure kinds has different sense
-   // For kSqlVersion it version, for kSqlReference it is object id and so on
-
    return fValue.Data();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add child strucure
+
 void TSQLStructure::Add(TSQLStructure* child)
 {
-   // Add child strucure
-
    if (child!=0) {
       child->SetParent(this);
       fChilds.Add(child);
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add child as version
+
 void TSQLStructure::AddVersion(const TClass* cl, Int_t version)
 {
-   // add child as version
-
    TSQLStructure* ver = new TSQLStructure;
    ver->SetVersion(cl, version);
    Add(ver);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add child structure as value
+
 void TSQLStructure::AddValue(const char* value, const char* tname)
 {
-   // Add child structure as value
-
    TSQLStructure* child = new TSQLStructure;
    child->SetValue(value, tname);
    Add(child);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// defines current object id, to which this structure belong
+/// make life complicated, because some objects do not get id
+/// automatically in TBufferSQL, but afterwards
+
 Long64_t TSQLStructure::DefineObjectId(Bool_t recursive)
 {
-   // defines current object id, to which this structure belong
-   // make life complicated, because some objects do not get id
-   // automatically in TBufferSQL, but afterwards
-
    TSQLStructure* curr = this;
    while (curr!=0) {
       if ((curr->GetType()==kSqlObject) ||
@@ -679,30 +684,30 @@ Long64_t TSQLStructure::DefineObjectId(Bool_t recursive)
    return -1;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set element to be used for object data
+
 void TSQLStructure::SetObjectData(TSQLObjectData* objdata)
 {
-   // set element to be used for object data
-
    fType = kSqlObjectData;
    fPointer = objdata;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add element with pointer to object data
+
 void TSQLStructure::AddObjectData(TSQLObjectData* objdata)
 {
-   // add element with pointer to object data
-
    TSQLStructure* child = new TSQLStructure;
    child->SetObjectData(objdata);
    Add(child);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// searchs for objects data
+
 TSQLObjectData* TSQLStructure::GetObjectData(Bool_t search)
 {
-   // searchs for objects data
-
    TSQLStructure* child = GetChild(0);
    if ((child!=0) && (child->GetType()==kSqlObjectData))
       return (TSQLObjectData*) child->fPointer;
@@ -711,19 +716,19 @@ TSQLObjectData* TSQLStructure::GetObjectData(Bool_t search)
    return 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print content of complete structure
+
 void TSQLStructure::Print(Option_t*) const
 {
-   // print content of complete structure
-
    PrintLevel(0);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print content of current structure
+
 void TSQLStructure::PrintLevel(Int_t level) const
 {
-   // print content of current structure
-
    for(Int_t n=0;n<level;n++) std::cout << " ";
    switch (fType) {
    case 0: std::cout << "Undefined type"; break;
@@ -770,11 +775,11 @@ void TSQLStructure::PrintLevel(Int_t level) const
       GetChild(n)->PrintLevel(level+2);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// defines if value is numeric and not requires quotes when writing
+
 Bool_t TSQLStructure::IsNumericType(Int_t typ)
 {
-   // defines if value is numeric and not requires quotes when writing
-
    switch(typ) {
    case TStreamerInfo::kShort   : return kTRUE;
    case TStreamerInfo::kInt     : return kTRUE;
@@ -796,12 +801,12 @@ Bool_t TSQLStructure::IsNumericType(Int_t typ)
    return kFALSE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// provides name for basic types
+/// used as suffix for column name or field suffix in raw table
+
 const char* TSQLStructure::GetSimpleTypeName(Int_t typ)
 {
-   // provides name for basic types
-   // used as suffix for column name or field suffix in raw table
-
    switch(typ) {
    case TStreamerInfo::kChar    : return sqlio::Char;
    case TStreamerInfo::kShort   : return sqlio::Short;
@@ -1229,11 +1234,11 @@ public:
    Int_t fMaxStrSize;
 };
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define maximum reference id, used for objects
+
 Long64_t TSQLStructure::FindMaxObjectId()
 {
-   // define maximum reference id, used for objects
-
    Long64_t max = DefineObjectId(kFALSE);
 
    for (Int_t n=0;n<NumChilds();n++) {
@@ -1244,14 +1249,14 @@ Long64_t TSQLStructure::FindMaxObjectId()
    return max;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert structure to sql statements
+/// This function is called immidiately after TBufferSQL2 produces
+/// this structure with object data
+/// Should be only called for toplevel structure
+
 Bool_t TSQLStructure::ConvertToTables(TSQLFile* file, Long64_t keyid, TObjArray* cmds)
 {
-   // Convert structure to sql statements
-   // This function is called immidiately after TBufferSQL2 produces
-   // this structure with object data
-   // Should be only called for toplevel structure
-
    if ((file==0) || (cmds==0)) return kFALSE;
 
    TSqlRegistry reg;
@@ -1272,13 +1277,13 @@ Bool_t TSQLStructure::ConvertToTables(TSQLFile* file, Long64_t keyid, TObjArray*
    return res;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// perform conversion of structure to sql statements
+/// first tries convert it to normal form
+/// if fails, produces data for raw table
+
 void TSQLStructure::PerformConversion(TSqlRegistry* reg, TSqlRawBuffer* blobs, const char* topname, Bool_t useblob)
 {
-   // perform conversion of structure to sql statements
-   // first tries convert it to normal form
-   // if fails, produces data for raw table
-
    TString sbuf;
    const char* ns = reg->fFile->SQLNameSeparator();
 
@@ -1379,13 +1384,13 @@ void TSQLStructure::PerformConversion(TSqlRegistry* reg, TSqlRawBuffer* blobs, c
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert object data to sql statements
+/// if normal (columnwise) representation is not possible,
+/// complete object will be converted to raw format
+
 Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, Long64_t objid, TClass* cl, Bool_t registerobj)
 {
-   // convert object data to sql statements
-   // if normal (columnwise) representation is not possible,
-   // complete object will be converted to raw format
-
    if ((cl==0) || (objid<0)) return kFALSE;
 
    if (gDebug>1) {
@@ -1445,12 +1450,12 @@ Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, Long64_t objid, TClass* cl,
    return res;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// this function verify object child elements and
+/// calls transformation to class table
+
 Bool_t TSQLStructure::StoreObjectInNormalForm(TSqlRegistry* reg)
 {
-   // this function verify object child elements and
-   // calls transformation to class table
-
    if (fChilds.GetLast()!=1) return kFALSE;
 
    TSQLStructure* s_ver = GetChild(0);
@@ -1462,12 +1467,12 @@ Bool_t TSQLStructure::StoreObjectInNormalForm(TSqlRegistry* reg)
    return s_info->StoreClassInNormalForm(reg);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// produces data for complete class table
+/// where not possible, raw data for some elements are created
+
 Bool_t TSQLStructure::StoreClassInNormalForm(TSqlRegistry* reg)
 {
-   // produces data for complete class table
-   // where not possible, raw data for some elements are created
-
    TClass* cl = 0;
    Version_t version = 0;
    if (!GetClassInfo(cl, version)) return kFALSE;
@@ -1538,11 +1543,11 @@ Bool_t TSQLStructure::StoreClassInNormalForm(TSqlRegistry* reg)
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// produce string with complete index like [1][2][0]
+
 TString TSQLStructure::MakeArrayIndex(TStreamerElement* elem, Int_t index)
 {
-   // produce string with complete index like [1][2][0]
-
    TString res;
    if ((elem==0) || (elem->GetArrayLength()==0)) return res;
 
@@ -1556,11 +1561,11 @@ TString TSQLStructure::MakeArrayIndex(TStreamerElement* elem, Int_t index)
    return res;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// tries to store element data in column
+
 Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TSQLTableData* columns)
 {
-   // tries to store element data in column
-
    TStreamerElement* elem = GetElement();
    if (elem==0) return kFALSE;
 
@@ -1762,14 +1767,14 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TSQLTableData*
    return kFALSE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// tries to write array of objects as lis of object refereneces
+/// in _streamer_ table, while objects itself will be stored in
+/// other tables. If not successfull, object data will be stored
+/// in _streamer_ table
+
 Bool_t TSQLStructure::TryConvertObjectArray(TSqlRegistry* reg, TSqlRawBuffer* blobs)
 {
-   // tries to write array of objects as lis of object refereneces
-   // in _streamer_ table, while objects itself will be stored in
-   // other tables. If not successfull, object data will be stored
-   // in _streamer_ table
-
    TStreamerElement* elem = GetElement();
    if (elem==0) return kFALSE;
 
@@ -1805,12 +1810,12 @@ Bool_t TSQLStructure::TryConvertObjectArray(TSqlRegistry* reg, TSqlRawBuffer* bl
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check if pair of two element corresponds
+/// to start of object, stored in normal form
+
 Bool_t TSQLStructure::CheckNormalClassPair(TSQLStructure* s_ver, TSQLStructure* s_info)
 {
-   // check if pair of two element corresponds
-   // to start of object, stored in normal form
-
    if ((s_ver==0) || (s_info==0) || (s_ver->GetType()!=kSqlVersion)) return kFALSE;
 
    TClass* ver_cl = s_ver->GetVersionClass();
@@ -1825,12 +1830,12 @@ Bool_t TSQLStructure::CheckNormalClassPair(TSQLStructure* s_ver, TSQLStructure* 
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// store data of TObject in special table
+/// workaround custom TObject streamer
+
 Bool_t TSQLStructure::StoreTObject(TSqlRegistry* reg)
 {
-   // store data of TObject in special table
-   // workaround custom TObject streamer
-
    // check if it is really Looks like TObject data
    if ((NumChilds()<3) || (NumChilds()>4)) return kFALSE;
 
@@ -1869,12 +1874,12 @@ Bool_t TSQLStructure::StoreTObject(TSqlRegistry* reg)
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// store data of TString in special table
+/// it is required when TString stored as pointer and reference to it possible
+
 Bool_t TSQLStructure::StoreTString(TSqlRegistry* reg)
 {
-   // store data of TString in special table
-   // it is required when TString stored as pointer and reference to it possible
-
    const char* value = 0;
    if (!RecognizeTString(value)) return kFALSE;
 
@@ -1892,11 +1897,11 @@ Bool_t TSQLStructure::StoreTString(TSqlRegistry* reg)
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prove that structure containes TString data
+
 Bool_t TSQLStructure::RecognizeTString(const char* &value)
 {
-   // prove that structure containes TString data
-
    value = 0;
 
    if ((NumChilds()==0) || (NumChilds()>3)) return kFALSE;
@@ -1925,19 +1930,19 @@ Bool_t TSQLStructure::RecognizeTString(const char* &value)
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// defines which kind of column can be assigned for this element
+/// Possible cases
+///    kColSimple       -  basic data type
+///    kColSimpleArray  -  fixed arary of basic types
+///    kColParent       -  parent class
+///    kColObject       -  object as data memeber
+///    kColObjectPtr    -  object as pointer
+///    kColTString      -  TString
+///    kColRawData      -  anything else as raw data
+
 Int_t TSQLStructure::DefineElementColumnType(TStreamerElement* elem, TSQLFile* f)
 {
-   // defines which kind of column can be assigned for this element
-   // Possible cases
-   //    kColSimple       -  basic data type
-   //    kColSimpleArray  -  fixed arary of basic types
-   //    kColParent       -  parent class
-   //    kColObject       -  object as data memeber
-   //    kColObjectPtr    -  object as pointer
-   //    kColTString      -  TString
-   //    kColRawData      -  anything else as raw data
-
    if (elem==0) return kColUnknown;
 
    Int_t typ = elem->GetType();
@@ -2037,11 +2042,11 @@ Int_t TSQLStructure::DefineElementColumnType(TStreamerElement* elem, TSQLFile* f
    return kColRawData;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns name of the column in class table for that element
+
 TString TSQLStructure::DefineElementColumnName(TStreamerElement* elem, TSQLFile* f, Int_t indx)
 {
-   // returns name of the column in class table for that element
-
    TString colname = "";
 
    Int_t coltype = DefineElementColumnType(elem, f);
@@ -2126,11 +2131,11 @@ TString TSQLStructure::DefineElementColumnName(TStreamerElement* elem, TSQLFile*
    return colname;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// find column in TSQLObjectData object, which correspond to current element
+
 Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TBufferSQL2* buf, TSQLObjectData* data)
 {
-   // find column in TSQLObjectData object, which correspond to current element
-
    TStreamerElement* elem = GetElement();
    if ((elem==0) || (data==0)) return kColUnknown;
 
@@ -2307,11 +2312,11 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TBufferSQL2* buf, TSQLObje
    return coltype;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unpack TObject data in form, understodable by custom TObject streamer
+
 Bool_t TSQLStructure::UnpackTObject(TSQLFile* f, TBufferSQL2* buf, TSQLObjectData* data, Long64_t objid, Int_t clversion)
 {
-   // Unpack TObject data in form, understodable by custom TObject streamer
-
    TSQLClassInfo* sqlinfo = f->FindSQLClassInfo(TObject::Class()->GetName(), clversion);
    if (sqlinfo==0) return kFALSE;
 
@@ -2338,11 +2343,11 @@ Bool_t TSQLStructure::UnpackTObject(TSQLFile* f, TBufferSQL2* buf, TSQLObjectDat
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unpack TString data in form, understodable by custom TString streamer
+
 Bool_t TSQLStructure::UnpackTString(TSQLFile* f, TBufferSQL2* buf, TSQLObjectData* data, Long64_t objid, Int_t clversion)
 {
-   // Unpack TString data in form, understodable by custom TString streamer
-
    TSQLClassInfo* sqlinfo = f->FindSQLClassInfo(TString::Class()->GetName(), clversion);
    if (sqlinfo==0) return kFALSE;
 
@@ -2368,10 +2373,11 @@ Bool_t TSQLStructure::UnpackTString(TSQLFile* f, TBufferSQL2* buf, TSQLObjectDat
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// adds quotes arround string value and replaces some special symbols
+
 void TSQLStructure::AddStrBrackets(TString &s, const char* quote)
 {
-   // adds quotes arround string value and replaces some special symbols
    if (strcmp(quote,"\"")==0) s.ReplaceAll("\"","\\\"");
                         else  s.ReplaceAll("'","''");
    s.Prepend(quote);

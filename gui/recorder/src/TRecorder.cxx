@@ -190,12 +190,12 @@ static TGCursorWindow *gCursorWin = 0;
 static Int_t gDecorWidth  = 0;
 static Int_t gDecorHeight = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGCursorWindow constructor.
+
 TGCursorWindow::TGCursorWindow() :
       TGFrame(gClient->GetDefaultRoot(), 32, 32, kTempFrame)
 {
-   // TGCursorWindow constructor.
-
    SetWindowAttributes_t wattr;
    const TGPicture *pbg = fClient->GetPicture("recursor.png");
    fPic  = pbg->GetPicture();
@@ -211,29 +211,29 @@ TGCursorWindow::TGCursorWindow() :
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGCursorWindow::~TGCursorWindow()
 {
-   // Destructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates initial INACTIVE state for the recorder
+
 TRecorder::TRecorder()
 {
-   // Creates initial INACTIVE state for the recorder
-
    fFilename = "";
    fRecorderState = new TRecorderInactive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a recorder with filename to replay or to record,
+/// depending on option (NEW or RECREATE will start recording,
+/// READ will start replaying)
+
 TRecorder::TRecorder(const char *filename, Option_t *option)
 {
-   // Creates a recorder with filename to replay or to record,
-   // depending on option (NEW or RECREATE will start recording,
-   // READ will start replaying)
-
    TString opt(option);
    fFilename = "";
    fRecorderState = new TRecorderInactive();
@@ -243,115 +243,115 @@ TRecorder::TRecorder(const char *filename, Option_t *option)
       Replay(filename);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TRecorder::~TRecorder()
 {
-   // Destructor.
-
    delete fRecorderState;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse the recorder from a ROOT file. This allows to replay a
+/// session from the browser.
+
 void TRecorder::Browse(TBrowser *)
 {
-   // Browse the recorder from a ROOT file. This allows to replay a
-   // session from the browser.
-
    Replay(fFilename);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Starts recording events
+
 void TRecorder::Start(const char *filename, Option_t *option, Window_t *w,
                       Int_t winCount)
 {
-   // Starts recording events
-
    fRecorderState->Start(this, filename, option, w, winCount);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stopps recording events
+
 void TRecorder::Stop(Bool_t guiCommand)
 {
-   // Stopps recording events
-
    fRecorderState->Stop(this, guiCommand);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replays events from 'filename'
+
 Bool_t TRecorder::Replay(const char *filename, Bool_t showMouseCursor,
                          TRecorder::EReplayModes mode)
 {
-   // Replays events from 'filename'
-
    return fRecorderState->Replay(this, filename, showMouseCursor, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pauses replaying
+
 void TRecorder::Pause()
 {
-   // Pauses replaying
-
    fRecorderState->Pause(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resumes replaying
+
 void TRecorder::Resume()
 {
-   // Resumes replaying
-
    fRecorderState->Resume(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cancells replaying
+
 void TRecorder::ReplayStop()
 {
-   // Cancells replaying
-
    fRecorderState->ReplayStop(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints out recorded commandline events
+
 void TRecorder::ListCmd(const char *filename)
 {
-   // Prints out recorded commandline events
-
    fRecorderState->ListCmd(filename);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints out recorded GUI events
+
 void TRecorder::ListGui(const char *filename)
 {
-   // Prints out recorded GUI events
-
    fRecorderState->ListGui(filename);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes state from the current to the passed one (newstate)
+/// Deletes the old state if delPreviousState = KTRUE
+
 void TRecorder::ChangeState(TRecorderState *newstate, Bool_t delPreviousState)
 {
-   // Changes state from the current to the passed one (newstate)
-   // Deletes the old state if delPreviousState = KTRUE
-
    if (delPreviousState)
       delete fRecorderState;
 
    fRecorderState = newstate;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current state of recorder.
+
 TRecorder::ERecorderState TRecorder::GetState() const
 {
-   // Get current state of recorder.
-
    return fRecorderState->GetState();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save previous canvases in a .root file
+
 void TRecorder::PrevCanvases(const char *filename, Option_t *option)
 {
-   // Save previous canvases in a .root file
-
    fRecorderState->PrevCanvases(filename,option);
 }
 
@@ -360,12 +360,12 @@ void TRecorder::PrevCanvases(const char *filename, Option_t *option)
 
 ClassImp(TRecorderReplaying)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocates all necessary data structures used for replaying
+/// What is allocated here is deleted in destructor
+
 TRecorderReplaying::TRecorderReplaying(const char *filename)
 {
-   // Allocates all necessary data structures used for replaying
-   // What is allocated here is deleted in destructor
-
    fCanv = 0;
    fCmdTree = 0;
    fCmdTreeCounter = 0;
@@ -394,12 +394,12 @@ TRecorderReplaying::TRecorderReplaying(const char *filename)
       gCursorWin  = new TGCursorWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Closes all signal-slot connections
+/// Frees all memory allocated in contructor.
+
 TRecorderReplaying::~TRecorderReplaying()
 {
-   // Closes all signal-slot connections
-   // Frees all memory allocated in contructor.
-
    fTimer->Disconnect(fTimer, "Timeout()", this, "ReplayRealtime()");
    fTimer->TurnOff();
    // delete fTimer;
@@ -422,17 +422,17 @@ TRecorderReplaying::~TRecorderReplaying()
    gCursorWin = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization of data structures for replaying.
+/// Start of replaying.
+///
+/// Return value:
+///  - kTRUE  = everything is OK and replaying has begun
+///  - kFALSE = non existing or invalid log file, replaying has not started
+
 Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor,
                                       TRecorder::EReplayModes)
 {
-   // Initialization of data structures for replaying.
-   // Start of replaying.
-   //
-   // Return value:
-   //  - kTRUE  = everything is OK and replaying has begun
-   //  - kFALSE = non existing or invalid log file, replaying has not started
-
    fWin              = 0;
    fGuiTreeCounter   = 0;
    fCmdTreeCounter   = 0;
@@ -524,19 +524,19 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates mapping for the newly registered window w and adds this
+/// mapping to fWindowList
+///
+/// Called by signal whenever a new window is registered during replaying.
+///
+/// The new window ID is mapped to the old one with the same number in the
+/// list of registered windows.
+/// It means that 1st new window is mapped to the 1st original,
+/// 2nd to the 2nd, Nth new to the Nth original.
+
 void TRecorderReplaying::RegisterWindow(Window_t w)
 {
-   // Creates mapping for the newly registered window w and adds this
-   // mapping to fWindowList
-   //
-   // Called by signal whenever a new window is registered during replaying.
-   //
-   // The new window ID is mapped to the old one with the same number in the
-   // list of registered windows.
-   // It means that 1st new window is mapped to the 1st original,
-   // 2nd to the 2nd, Nth new to the Nth original.
-
    if (fFilterStatusBar) {
       TGWindow *win = gClient->GetWindowById(w);
       if (win) {
@@ -599,12 +599,12 @@ void TRecorderReplaying::RegisterWindow(Window_t w)
    fMutex->UnLock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// All references to the old windows (IDs) in fNextEvent are replaced by
+/// new ones according to the mappings in fWindowList
+
 Bool_t TRecorderReplaying::RemapWindowReferences()
 {
-   // All references to the old windows (IDs) in fNextEvent are replaced by
-   // new ones according to the mappings in fWindowList
-
    // Lock mutex for guarding access to fWindowList
    fMutex->Lock();
 
@@ -661,10 +661,10 @@ Bool_t TRecorderReplaying::RemapWindowReferences()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TRecorderReplaying::FilterEvent(TRecGuiEvent *e)
 {
-
    // Not all the recorded events are replayed.
    // Some of them are generated automatically in ROOT
    // as a consequence of other events.
@@ -699,27 +699,27 @@ Bool_t TRecorderReplaying::FilterEvent(TRecGuiEvent *e)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finds the next event in log file to replay and sets it to fNextEvent
+///
+/// Reads both from CmdTree and GuiTree and chooses that event that becomes
+/// earlier
+/// - fCmdTreeCounter determines actual position in fCmdTree
+/// - fGuiTreeCounter determines actual position in fCmdTree
+///
+/// If GUI event should be replayed, we must first make sure that there is
+/// appropriate mapping for this event
+///
+///  RETURN VALUE:
+///  kFALSE = there is no event to be replayed
+///  kTRUE  = there is still at least one event to be replayed. Cases:
+///             - fNextEvent  = 0 => We are waiting for the appropriate
+///                                  window to be registered
+///             - fNextEvent != 0 => fNextEvent can be replayed (windows are
+///                                  ready)
+
 Bool_t TRecorderReplaying::PrepareNextEvent()
 {
-   // Finds the next event in log file to replay and sets it to fNextEvent
-   //
-   // Reads both from CmdTree and GuiTree and chooses that event that becomes
-   // earlier
-   // - fCmdTreeCounter determines actual position in fCmdTree
-   // - fGuiTreeCounter determines actual position in fCmdTree
-   //
-   // If GUI event should be replayed, we must first make sure that there is
-   // appropriate mapping for this event
-   //
-   //  RETURN VALUE:
-   //  kFALSE = there is no event to be replayed
-   //  kTRUE  = there is still at least one event to be replayed. Cases:
-   //             - fNextEvent  = 0 => We are waiting for the appropriate
-   //                                  window to be registered
-   //             - fNextEvent != 0 => fNextEvent can be replayed (windows are
-   //                                  ready)
-
    fCmdEvent   =  0;
    fGuiEvent   =  0;
    fExtraEvent =  0;
@@ -817,14 +817,14 @@ Bool_t TRecorderReplaying::PrepareNextEvent()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ButtonPress and ButtonRelease must be sometimes replayed more times
+/// Example: pressing of a button opens small window and user chooses
+/// something from that window (color)
+/// Window must be opened while user is choosing
+
 Bool_t TRecorderReplaying::CanOverlap()
 {
-   // ButtonPress and ButtonRelease must be sometimes replayed more times
-   // Example: pressing of a button opens small window and user chooses
-   // something from that window (color)
-   // Window must be opened while user is choosing
-
    if (!fGuiEvent) {
       Error("TRecorderReplaying::CanOverlap()", "fGuiEvent = 0");
       return kFALSE;
@@ -852,23 +852,23 @@ Bool_t TRecorderReplaying::CanOverlap()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replays the next event.
+///
+/// It is called when fTimer times out.
+/// Every time fTimer is set again to time equal to time difference between
+/// current two events being replayed.
+///
+/// It can happen that execution of an event lasts different time during the
+/// recording and during the replaying.
+/// If fTimer times out too early and the previous event has not been yet
+/// replayed, it is usually postponed in order
+/// to keep events execution in the right order.
+/// The excpetions are determined by TRecorderReplaying::CanOverlap()
+///
+
 void TRecorderReplaying::ReplayRealtime()
 {
-   // Replays the next event.
-   //
-   // It is called when fTimer times out.
-   // Every time fTimer is set again to time equal to time difference between
-   // current two events being replayed.
-   //
-   // It can happen that execution of an event lasts different time during the
-   // recording and during the replaying.
-   // If fTimer times out too early and the previous event has not been yet
-   // replayed, it is usually postponed in order
-   // to keep events execution in the right order.
-   // The excpetions are determined by TRecorderReplaying::CanOverlap()
-   //
-
    UInt_t keysym;
    char str[2];
 
@@ -941,30 +941,30 @@ void TRecorderReplaying::ReplayRealtime()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pauses replaying
+
 void TRecorderReplaying::Pause(TRecorder *r)
 {
-   // Pauses replaying
-
    fTimer->Stop();
    r->ChangeState(new TRecorderPaused(this), kFALSE);
    Info("TRecorderReplaying::Pause", "Replaying paused.");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cancels replaying
+
 void TRecorderReplaying::ReplayStop(TRecorder *r)
 {
-   // Cancels replaying
-
    Info("TRecorderReplaying::ReplayStop", "Replaying cancelled");
    r->ChangeState(new TRecorderInactive());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Continues previously paused replaying
+
 void TRecorderReplaying::Continue()
 {
-   // Continues previously paused replaying
-
    if (fNextEvent)
       fTimer->Start(Long_t(fNextEvent->GetTime() - fPreviousEventTime));
 }
@@ -974,12 +974,12 @@ void TRecorderReplaying::Continue()
 
 ClassImp(TRecorderInactive)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switches from INACTIVE state to RECORDING and starts recording
+
 void TRecorderInactive::Start(TRecorder *r, const char *filename,
                               Option_t *option, Window_t *w, Int_t winCount)
 {
-   // Switches from INACTIVE state to RECORDING and starts recording
-
    // const char *filename = name of ROOT file where to store recorded events
    // Option_t *option     = option for creation of ROOT file
    // Window_t *w          = list of IDs of recorder windows (if GUI for
@@ -995,15 +995,15 @@ void TRecorderInactive::Start(TRecorder *r, const char *filename,
       delete rec;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switches from INACTIVE state of recorder to REPLAYING
+/// Return kTRUE if replaying has started or kFALSE if it is not possible
+/// (bad file etc.)
+
 Bool_t TRecorderInactive::Replay(TRecorder *r, const char *filename,
                                  Bool_t showMouseCursor,
                                  TRecorder::EReplayModes mode)
 {
-   // Switches from INACTIVE state of recorder to REPLAYING
-   // Return kTRUE if replaying has started or kFALSE if it is not possible
-   // (bad file etc.)
-
    // const char *filename = name of ROOT file from where to replay recorded
    // events
    // TRecorder::EReplayModes mode     = mode of replaying
@@ -1021,11 +1021,11 @@ Bool_t TRecorderInactive::Replay(TRecorder *r, const char *filename,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints out commandline events recorded in given file
+
 void TRecorderInactive::ListCmd(const char *filename)
 {
-   // Prints out commandline events recorded in given file
-
    /*
    if (!TClassTable::GetDict(" TRecCmdEvent")) {
       Error("TRecorderInactive::List", " TRecCmdEvent not in dictionary.");
@@ -1063,11 +1063,11 @@ void TRecorderInactive::ListCmd(const char *filename)
    delete file;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints out GUI events recorded in given file
+
 void TRecorderInactive::ListGui(const char *filename)
 {
-   // Prints out GUI events recorded in given file
-
    /*
    if (!TClassTable::GetDict("TRecGuiEvent")) {
       Error("TRecorderInactive::ListGui",
@@ -1104,12 +1104,12 @@ void TRecorderInactive::ListGui(const char *filename)
    delete guiEvent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints out attributes of one GUI event TRecGuiEvent *e
+/// Int_n n is number of event if called in cycle
+
 void TRecorderInactive::DumpRootEvent(TRecGuiEvent *e, Int_t n)
 {
-   // Prints out attributes of one GUI event TRecGuiEvent *e
-   // Int_n n is number of event if called in cycle
-
    std::ios::fmtflags f = std::cout.flags(); // store flags
    std::cout << "[" << n << "] " << std::dec <<  std::setw(10)
       << e->GetTime().AsString() << std::setw(15) << kRecEventNames[e->fType]
@@ -1140,11 +1140,11 @@ void TRecorderInactive::DumpRootEvent(TRecGuiEvent *e, Int_t n)
    std::cout.flags( f ); // restore flags (reset std::hex)
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save previous canvases in a .root file
+
 void TRecorderInactive::PrevCanvases(const char *filename, Option_t *option)
 {
-   // Save previous canvases in a .root file
-
    fCollect = gROOT->GetListOfCanvases();
    TFile *f = TFile::Open(filename, option);
    if (f && !f->IsZombie()) {
@@ -1159,19 +1159,19 @@ void TRecorderInactive::PrevCanvases(const char *filename, Option_t *option)
 
    ClassImp(TRecorderPaused)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rememeber the recorder state that is paused
+
 TRecorderPaused::TRecorderPaused(TRecorderReplaying *state)
 {
-   // Rememeber the recorder state that is paused
-
    fReplayingState = state;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Continues replaying
+
 void TRecorderPaused::Resume(TRecorder *r)
 {
-   // Continues replaying
-
    fReplayingState->Continue();
    Info("TRecorderPaused::Resume", "Replaying resumed");
 
@@ -1179,11 +1179,11 @@ void TRecorderPaused::Resume(TRecorder *r)
    r->ChangeState(fReplayingState);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replaying is cancelled
+
 void TRecorderPaused::ReplayStop(TRecorder *r)
 {
-   // Replaying is cancelled
-
    delete fReplayingState;
 
    Info("TRecorderReplaying::ReplayStop", "Reaplying cancelled");
@@ -1196,14 +1196,14 @@ void TRecorderPaused::ReplayStop(TRecorder *r)
 
 ClassImp(TRecorderRecording)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initializes TRecorderRecording for recording
+/// What is allocated here is deleted in destructor
+
 TRecorderRecording::TRecorderRecording(TRecorder *r, const char *filename,
                                        Option_t *option, Window_t *w,
                                        Int_t winCount)
 {
-   // Initializes TRecorderRecording for recording
-   // What is allocated here is deleted in destructor
-
    fRecorder = r;
 
    // Remember window IDs of GUI recorder (appropriate events are
@@ -1244,11 +1244,11 @@ TRecorderRecording::TRecorderRecording(TRecorder *r, const char *filename,
    fExtraEvent = new TRecExtraEvent();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Freeing of allocated memory
+
 TRecorderRecording::~TRecorderRecording()
 {
-   // Freeing of allocated memory
-
    delete[] fFilteredIds;
 
    if (fFile)
@@ -1260,12 +1260,12 @@ TRecorderRecording::~TRecorderRecording()
    delete fExtraEvent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connects appropriate signals and slots in order to gain all registered
+/// windows and processed events in ROOT and then starts recording
+
 Bool_t TRecorderRecording::StartRecording()
 {
-   // Connects appropriate signals and slots in order to gain all registered
-   // windows and processed events in ROOT and then starts recording
-
    if (!fFile || fFile->IsZombie() || !fFile->IsOpen())
       return kFALSE;
 
@@ -1355,11 +1355,11 @@ Bool_t TRecorderRecording::StartRecording()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnects all slots and stopps recording.
+
 void TRecorderRecording::Stop(TRecorder *, Bool_t guiCommand)
 {
-   // Disconnects all slots and stopps recording.
-
    TQObject::Disconnect("TGuiBldDragManager", "TimerEvent(Event_t*)", this,
                         "RecordGuiBldEvent(Event_t*)");
    TQObject::Disconnect("TGFrame", "ProcessedConfigure(Event_t*)", this,
@@ -1394,25 +1394,25 @@ void TRecorderRecording::Stop(TRecorder *, Bool_t guiCommand)
    fRecorder->ChangeState(new TRecorderInactive());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method is called when RegisteredWindow(Window_t) is emitted from
+/// TGClient.
+
 void TRecorderRecording::RegisterWindow(Window_t w)
 {
-   // This method is called when RegisteredWindow(Window_t) is emitted from
-   // TGClient.
-
    // Stores ID of the registered window in appropriate TTree
    fWin = (ULong64_t) w;
    fWinTree->Fill();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Records commandline event (text and time) ans saves the previous
+/// commandline event
+/// This 1 event delay in saving ensures that the last commandline events
+/// 'TRecorder::Stop' will be not stored
+
 void TRecorderRecording::RecordCmdEvent(const char *line)
 {
-   // Records commandline event (text and time) ans saves the previous
-   // commandline event
-   // This 1 event delay in saving ensures that the last commandline events
-   // 'TRecorder::Stop' will be not stored
-
    // If there is some previously recorded event, saves it in TTree now
    if (fCmdEventPending)
       fCmdTree->Fill();
@@ -1428,19 +1428,19 @@ void TRecorderRecording::RecordCmdEvent(const char *line)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Records GUI Event_t *e different from kConfigureNotify (they are
+/// recorded in TRecorderRecording::RecordGuiCNEvent)
+///
+/// It is called via signal-slot when an event is processed in
+/// TGClient::HandleEvent(Event_t *event)
+/// or in TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
+///
+/// If signal is emitted from TGClient::HandleEvent(Event_t *event),
+/// then wid = 0
+
 void TRecorderRecording::RecordGuiEvent(Event_t *e, Window_t wid)
 {
-   // Records GUI Event_t *e different from kConfigureNotify (they are
-   // recorded in TRecorderRecording::RecordGuiCNEvent)
-   //
-   // It is called via signal-slot when an event is processed in
-   // TGClient::HandleEvent(Event_t *event)
-   // or in TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
-   //
-   // If signal is emitted from TGClient::HandleEvent(Event_t *event),
-   // then wid = 0
-
    // If this event is caused by a recorder itself (GUI recorder),
    // it is not recorded
    if (fFilteredIdsCount && IsFiltered(e->fWindow))
@@ -1469,12 +1469,12 @@ void TRecorderRecording::RecordGuiEvent(Event_t *e, Window_t wid)
    fGuiTree->Fill();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special case for the gui builder, having a timer handling some of the
+/// events.
+
 void TRecorderRecording::RecordGuiBldEvent(Event_t *e)
 {
-   // Special case for the gui builder, having a timer handling some of the
-   // events.
-
    e->fFormat = e->fType;
    e->fType = kOtherEvent;
 
@@ -1488,11 +1488,11 @@ void TRecorderRecording::RecordGuiBldEvent(Event_t *e)
    fGuiTree->Fill();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to record all mouse moves...
+
 void TRecorderRecording::RecordMousePosition()
 {
-   // Try to record all mouse moves...
-
    Window_t dum;
    Event_t ev;
    ev.fCode = 0;
@@ -1517,13 +1517,13 @@ void TRecorderRecording::RecordMousePosition()
    fMouseTimer->Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Records GUI Event_t *e of type kConfigureNotify.
+/// It is called via signal-slot when an kConfigureNotify event is processed
+/// in TGFrame::HandleEvent
+
 void TRecorderRecording::RecordGuiCNEvent(Event_t *e)
 {
-   // Records GUI Event_t *e of type kConfigureNotify.
-   // It is called via signal-slot when an kConfigureNotify event is processed
-   // in TGFrame::HandleEvent
-
    // If this event is caused by a recorder itself, it is not recorded
    if (fFilteredIdsCount && IsFiltered(e->fWindow))
       return;
@@ -1542,11 +1542,11 @@ void TRecorderRecording::RecordGuiCNEvent(Event_t *e)
    fGuiTree->Fill();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Records TPaveLabel object created in TCreatePrimitives::Pave()
+
 void TRecorderRecording::RecordPave(const TObject *obj)
 {
-   // Records TPaveLabel object created in TCreatePrimitives::Pave()
-
    Long64_t extratime = fBeginPave;
    Long64_t interval = (Long64_t)fTimer->GetAbsTime() - fBeginPave;
    TPaveLabel *pavel = (TPaveLabel *) obj;
@@ -1586,11 +1586,11 @@ void TRecorderRecording::RecordPave(const TObject *obj)
    RecordExtraEvent(cad, extratime);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Records TLatex object created in TCreatePrimitives::Text()
+
 void TRecorderRecording::RecordText(const TObject *obj)
 {
-   // Records TLatex object created in TCreatePrimitives::Text()
-
    Long64_t extratime = fBeginPave;
    Long64_t interval = (Long64_t)fTimer->GetAbsTime() - fBeginPave;
    TLatex *texto = (TLatex *) obj;
@@ -1628,38 +1628,38 @@ void TRecorderRecording::RecordText(const TObject *obj)
    RecordExtraEvent(cad, extratime);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the state of the flag to kTRUE when you are recording a pavelabel.
+
 void TRecorderRecording::FilterEventPave()
 {
-   // Change the state of the flag to kTRUE when you are recording a pavelabel.
-
    fFilterEventPave = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Memorize the starting time of editinga TLatex or a TPaveLabel
+
 void TRecorderRecording::StartEditing()
 {
-   // Memorize the starting time of editinga TLatex or a TPaveLabel
-
    fBeginPave = fTimer->GetAbsTime();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Records TLatex or TPaveLabel object created in TCreatePrimitives,
+/// ExtTime is needed for the correct replay of these events.
+
 void TRecorderRecording::RecordExtraEvent(TString line, TTime extTime)
 {
-   // Records TLatex or TPaveLabel object created in TCreatePrimitives,
-   // ExtTime is needed for the correct replay of these events.
-
    fExtraEvent->SetTime(extTime);
    fExtraEvent->SetText(line);
    fExtraTree->Fill();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copies all items of given event to fGuiEvent
+
 void TRecorderRecording::CopyEvent(Event_t *e, Window_t wid)
 {
-   // Copies all items of given event to fGuiEvent
-
    fGuiEvent->fType     = e->fType;
    fGuiEvent->fWindow   = e->fWindow;
    fGuiEvent->fTime     = e->fTime;
@@ -1699,11 +1699,11 @@ void TRecorderRecording::CopyEvent(Event_t *e, Window_t wid)
    fGuiEvent->fMasked  = wid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if passed id belongs to window IDs of recorder GUI itself
+
 Bool_t TRecorderRecording::IsFiltered(Window_t id)
 {
-   // Returns kTRUE if passed id belongs to window IDs of recorder GUI itself
-
    for(Int_t i=0; i < fFilteredIdsCount; ++i)
       if (id == fFilteredIds[i])
          return kTRUE;
@@ -1711,17 +1711,17 @@ Bool_t TRecorderRecording::IsFiltered(Window_t id)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets type of kConfigureNotify event to one of EConfigureNotify
+///
+/// On Linux paremeters of GUI event kConfigureNotify are different
+/// than parameters of the same event executed on Windows.
+/// Therefore we need to distinguish [on Linux], if the event is movement
+/// or resize event.
+/// On Windows, we do not need to distinguish them.
+
 void TRecorderRecording::SetTypeOfConfigureNotify(Event_t *e)
 {
-   // Sets type of kConfigureNotify event to one of EConfigureNotify
-   //
-   // On Linux paremeters of GUI event kConfigureNotify are different
-   // than parameters of the same event executed on Windows.
-   // Therefore we need to distinguish [on Linux], if the event is movement
-   // or resize event.
-   // On Windows, we do not need to distinguish them.
-
    // On both platforms, we mark the events matching the criteria
    // (automatically generated in ROOT) as events that should be filtered
    // when replaying (TRecGuiEvent::kCNFilter)
@@ -1769,12 +1769,12 @@ void TRecorderRecording::SetTypeOfConfigureNotify(Event_t *e)
 
 ClassImp(TGRecorder)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The GUI for the recorder
+
 TGRecorder::TGRecorder(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p ? p : gClient->GetRoot(), w, h)
 {
-   // The GUI for the recorder
-
    TGHorizontalFrame *hframe;
    TGVerticalFrame *vframe;
    SetCleanup(kDeepCleanup);
@@ -1873,11 +1873,11 @@ TGRecorder::TGRecorder(const TGWindow *p, UInt_t w, UInt_t h) :
    SetDefault();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets GUI to the default inactive state
+
 void TGRecorder::SetDefault()
 {
-   // Sets GUI to the default inactive state
-
    fTimeDisplay->SetText("00:00:00");
 
    fReplay->SetPicture(gClient->GetPicture("replay.png"));
@@ -1890,12 +1890,12 @@ void TGRecorder::SetDefault()
    fStartStop->SetEnabled(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when fTimer timeouts (every 0.025 second)
+/// Updates GUI of recorder
+
 void TGRecorder::Update()
 {
-   // Called when fTimer timeouts (every 0.025 second)
-   // Updates GUI of recorder
-
    struct tm *running;
    static int cnt = 0;
    TString stime;
@@ -1952,12 +1952,12 @@ void TGRecorder::Update()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handles push of the fStartStop button
+/// according to the current recorder state
+
 void TGRecorder::StartStop()
 {
-   // Handles push of the fStartStop button
-   // according to the current recorder state
-
    static const char *gFiletypes[] = {
       "All files", "*", "Text files", "*.txt", "ROOT files", "*.root", 0, 0
    };
@@ -2016,12 +2016,12 @@ void TGRecorder::StartStop()
    } // switch
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handles push of fReplay button
+/// according to the current recorder state
+
 void TGRecorder::Replay()
 {
-   // Handles push of fReplay button
-   // according to the current recorder state
-
    TGFileInfo fi;
 
    switch(fRecorder->GetState()) {
@@ -2062,11 +2062,11 @@ void TGRecorder::Replay()
    } // switch
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Cleanup the GUI.
+
 TGRecorder::~TGRecorder()
 {
-   // Destructor. Cleanup the GUI.
-
    fTimer->TurnOff();
    delete fTimer;
    Cleanup();
@@ -2078,11 +2078,11 @@ TGRecorder::~TGRecorder()
 ClassImp(TRecCmdEvent)
 ClassImp(TRecGuiEvent)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replays stored GUI event
+
 void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
 {
-   // Replays stored GUI event
-
    Int_t    px, py, dx, dy;
    Window_t wtarget;
    Event_t *e = CreateEvent(this);
@@ -2188,11 +2188,11 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
    delete e;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Converts TRecGuiEvent type to Event_t type
+
 Event_t *TRecGuiEvent::CreateEvent(TRecGuiEvent *ge)
 {
-   // Converts TRecGuiEvent type to Event_t type
-
    Event_t *e = new Event_t();
 
    // Copies all data items

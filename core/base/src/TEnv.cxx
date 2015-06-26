@@ -117,12 +117,12 @@ public:
    void Parse();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse a line of the env file and create an entry in the resource
+/// dictionary (i.e. add a KeyValue pair).
+
 void TEnvParser::Parse()
 {
-   // Parse a line of the env file and create an entry in the resource
-   // dictionary (i.e. add a KeyValue pair).
-
    TString name(1024);
    TString type(1024);
    TString value(1024);
@@ -239,12 +239,12 @@ public:
    void Char(Int_t c) { fputc(c, fOfp); }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write resources out to a new file.
+
 void TWriteEnvParser::KeyValue(const TString &name, const TString &value,
                                const TString &)
 {
-   // Write resources out to a new file.
-
    TEnvRec *er = fEnv->Lookup(name);
    if (er && er->fModified) {
       er->fModified = kFALSE;
@@ -256,22 +256,22 @@ void TWriteEnvParser::KeyValue(const TString &name, const TString &value,
 
 //---- TEnvRec -----------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ctor of a single resource.
+
 TEnvRec::TEnvRec(const char *n, const char *v, const char *t, EEnvLevel l)
    : fName(n), fType(t), fLevel(l)
 {
-   // Ctor of a single resource.
-
    fValue = ExpandValue(v);
    fModified = (l == kEnvChange);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the value of a resource.
+
 void TEnvRec::ChangeValue(const char *v, const char *, EEnvLevel l,
                           Bool_t append, Bool_t ignoredup)
 {
-   // Change the value of a resource.
-
    if (l != kEnvChange && fLevel == l && !append) {
       // use global Warning() since interpreter might not yet be initialized
       // at this stage (called from TROOT ctor)
@@ -298,20 +298,20 @@ void TEnvRec::ChangeValue(const char *v, const char *, EEnvLevel l,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Comparison function for resources.
+
 Int_t TEnvRec::Compare(const TObject *op) const
 {
-   // Comparison function for resources.
-
    return fName.CompareTo(((TEnvRec*)op)->fName);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace all $(XXX) strings by the value defined in the shell
+/// (obtained via TSystem::Getenv()).
+
 TString TEnvRec::ExpandValue(const char *value)
 {
-   // Replace all $(XXX) strings by the value defined in the shell
-   // (obtained via TSystem::Getenv()).
-
    const char *vv;
    char *v, *vorg = StrDup(value);
    v = vorg;
@@ -369,18 +369,18 @@ TString TEnvRec::ExpandValue(const char *value)
 
 ClassImp(TEnv)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a resource table and read the (possibly) three resource files, i.e
+/// $ROOTSYS/etc/system<name> (or ROOTETCDIR/system<name>), $HOME/<name> and
+/// ./<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
+/// read additional user defined resource files by creating addtional TEnv
+/// objects. By setting the shell variable ROOTENV_NO_HOME=1 the reading of
+/// the $HOME/<name> resource file will be skipped. This might be useful in
+/// case the home directory resides on an automounted remote file system
+/// and one wants to avoid the file system from being mounted.
+
 TEnv::TEnv(const char *name)
 {
-   // Create a resource table and read the (possibly) three resource files, i.e
-   // $ROOTSYS/etc/system<name> (or ROOTETCDIR/system<name>), $HOME/<name> and
-   // ./<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
-   // read additional user defined resource files by creating addtional TEnv
-   // objects. By setting the shell variable ROOTENV_NO_HOME=1 the reading of
-   // the $HOME/<name> resource file will be skipped. This might be useful in
-   // case the home directory resides on an automounted remote file system
-   // and one wants to avoid the file system from being mounted.
-
    fIgnoreDup = kFALSE;
 
    if (!name || !name[0] || !gSystem)
@@ -419,22 +419,22 @@ TEnv::TEnv(const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the resource table.
+
 TEnv::~TEnv()
 {
-   // Delete the resource table.
-
    if (fTable) {
       fTable->Delete();
       SafeDelete(fTable);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the character value for a named resouce.
+
 const char *TEnv::Getvalue(const char *name)
 {
-   // Returns the character value for a named resouce.
-
    Bool_t haveProgName = kFALSE;
    if (gProgName && strlen(gProgName) > 0)
       haveProgName = kTRUE;
@@ -479,12 +479,12 @@ const char *TEnv::Getvalue(const char *name)
    return er->fValue;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the integer value for a resource. If the resource is not found
+/// return the dflt value.
+
 Int_t TEnv::GetValue(const char *name, Int_t dflt)
 {
-   // Returns the integer value for a resource. If the resource is not found
-   // return the dflt value.
-
    const char *cp = TEnv::Getvalue(name);
    if (cp) {
       char buf2[512], *cp2 = buf2;
@@ -506,12 +506,12 @@ Int_t TEnv::GetValue(const char *name, Int_t dflt)
    return dflt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the double value for a resource. If the resource is not found
+/// return the dflt value.
+
 Double_t TEnv::GetValue(const char *name, Double_t dflt)
 {
-   // Returns the double value for a resource. If the resource is not found
-   // return the dflt value.
-
    const char *cp = TEnv::Getvalue(name);
    if (cp) {
       char *endptr;
@@ -523,33 +523,33 @@ Double_t TEnv::GetValue(const char *name, Double_t dflt)
    return dflt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the character value for a named resouce. If the resource is
+/// not found the dflt value is returned.
+
 const char *TEnv::GetValue(const char *name, const char *dflt)
 {
-   // Returns the character value for a named resouce. If the resource is
-   // not found the dflt value is returned.
-
    const char *cp = TEnv::Getvalue(name);
    if (cp)
       return cp;
    return dflt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop over all resource records and return the one with name.
+/// Return 0 in case name is not in the resoucre table.
+
 TEnvRec *TEnv::Lookup(const char *name)
 {
-   // Loop over all resource records and return the one with name.
-   // Return 0 in case name is not in the resoucre table.
-
    if (!fTable) return 0;
    return (TEnvRec*) fTable->FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print all resources or the global, user or local resources separately.
+
 void TEnv::Print(Option_t *opt) const
 {
-   // Print all resources or the global, user or local resources separately.
-
    if (!opt || !opt[0]) {
       PrintEnv();
       return;
@@ -563,11 +563,11 @@ void TEnv::Print(Option_t *opt) const
       PrintEnv(kEnvLocal);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print all resources for a certain level (global, user, local, changed).
+
 void TEnv::PrintEnv(EEnvLevel level) const
 {
-   // Print all resources for a certain level (global, user, local, changed).
-
    if (!fTable) return;
 
    TIter next(fTable);
@@ -580,12 +580,12 @@ void TEnv::PrintEnv(EEnvLevel level) const
                 er->fValue.Data(), lc[er->fLevel]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read and parse the resource file for a certain level.
+/// Returns -1 on case of error, 0 in case of success.
+
 Int_t TEnv::ReadFile(const char *fname, EEnvLevel level)
 {
-   // Read and parse the resource file for a certain level.
-   // Returns -1 on case of error, 0 in case of success.
-
    if (!fname || !fname[0]) {
       Error("ReadFile", "no file name specified");
       return -1;
@@ -604,13 +604,13 @@ Int_t TEnv::ReadFile(const char *fname, EEnvLevel level)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write resourse records to file fname for a certain level. Use
+/// level kEnvAll to write all resources. Returns -1 on case of error,
+/// 0 in case of success.
+
 Int_t TEnv::WriteFile(const char *fname, EEnvLevel level)
 {
-   // Write resourse records to file fname for a certain level. Use
-   // level kEnvAll to write all resources. Returns -1 on case of error,
-   // 0 in case of success.
-
    if (!fname || !fname[0]) {
       Error("WriteFile", "no file name specified");
       return -1;
@@ -637,12 +637,12 @@ Int_t TEnv::WriteFile(const char *fname, EEnvLevel level)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the resource files for each level. The new files have the same
+/// name as the original files. The old files are renamed to *.bak.
+
 void TEnv::Save()
 {
-   // Write the resource files for each level. The new files have the same
-   // name as the original files. The old files are renamed to *.bak.
-
    if (fRcName == "") {
       Error("Save", "no resource file name specified");
       return;
@@ -653,11 +653,11 @@ void TEnv::Save()
    SaveLevel(kEnvGlobal);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the resource file for a certain level.
+
 void TEnv::SaveLevel(EEnvLevel level)
 {
-   // Write the resource file for a certain level.
-
    if (fRcName == "") {
       Error("SaveLevel", "no resource file name specified");
       return;
@@ -735,12 +735,12 @@ void TEnv::SaveLevel(EEnvLevel level)
       Error("SaveLevel", "cannot write to file %s", rootrcdir.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of a resource or create a new resource.
+
 void TEnv::SetValue(const char *name, const char *value, EEnvLevel level,
                     const char *type)
 {
-   // Set the value of a resource or create a new resource.
-
    if (!fTable)
       fTable  = new THashList(1000);
 
@@ -758,13 +758,13 @@ void TEnv::SetValue(const char *name, const char *value, EEnvLevel level,
       fTable->Add(new TEnvRec(nam, value, type, level));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of a resource or create a new resource.
+/// Use this method to set a resource like, "name=val".
+/// If just "name" is given it will be interpreted as "name=1".
+
 void TEnv::SetValue(const char *name, EEnvLevel level)
 {
-   // Set the value of a resource or create a new resource.
-   // Use this method to set a resource like, "name=val".
-   // If just "name" is given it will be interpreted as "name=1".
-
    TString buf = name;
    int l = buf.Index("=");
    if (l > 0) {
@@ -775,28 +775,28 @@ void TEnv::SetValue(const char *name, EEnvLevel level)
       SetValue(name, "1", level);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set or create an integer resource value.
+
 void TEnv::SetValue(const char *name, Int_t value)
 {
-   // Set or create an integer resource value.
-
    SetValue(name, Form("%d", value));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set or create a double resource value.
+
 void TEnv::SetValue(const char *name, double value)
 {
-   // Set or create a double resource value.
-
    SetValue(name, Form("%g", value));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If set to true, no warnings in case of duplicates are issued.
+/// Returns previous value.
+
 Bool_t TEnv::IgnoreDuplicates(Bool_t ignore)
 {
-   // If set to true, no warnings in case of duplicates are issued.
-   // Returns previous value.
-
    Bool_t ret = fIgnoreDup;
    fIgnoreDup = ignore;
    return ret;

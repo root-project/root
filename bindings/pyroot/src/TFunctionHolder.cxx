@@ -27,7 +27,8 @@ PyROOT::TFunctionHolder::TFunctionHolder( const TMemberAdapter& function ) :
 {
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyROOT::TFunctionHolder::TFunctionHolder( const TScopeAdapter& scope, const TMemberAdapter& function ) :
       TMethodHolder( scope, function )
 {
@@ -58,11 +59,12 @@ PyObject* PyROOT::TFunctionHolder::FilterArgs(
    return newArgs;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// preliminary check in case keywords are accidently used (they are ignored otherwise)
+
 PyObject* PyROOT::TFunctionHolder::operator()(
       ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user, Bool_t release_gil )
 {
-// preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {
       PyErr_SetString( PyExc_TypeError, "keyword arguments are not yet supported" );
       return 0;

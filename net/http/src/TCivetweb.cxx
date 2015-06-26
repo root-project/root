@@ -122,38 +122,39 @@ static int begin_request_handler(struct mg_connection *conn)
 //////////////////////////////////////////////////////////////////////////
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TCivetweb::TCivetweb() :
    THttpEngine("civetweb", "compact embedded http server"),
    fCtx(0),
    fCallbacks(0),
    fTopName()
 {
-   // constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TCivetweb::~TCivetweb()
 {
-   // destructor
-
    if (fCtx != 0) mg_stop((struct mg_context *) fCtx);
    if (fCallbacks != 0) free(fCallbacks);
    fCtx = 0;
    fCallbacks = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates embedded civetweb server
+/// As argument, http port should be specified in form "8090"
+/// One could provide extra parameters after '?' (like URL parameters)
+///    thrds=N   - there N is number of threads used by the civetweb (default is 5)
+///    top=name  - configure top name, visible at the web browser
+///    auth_file=filename  - authentication file name, created with htdigets utility
+///    auth_domain=domain   - authentication domain
+
 Bool_t TCivetweb::Create(const char *args)
 {
-   // Creates embedded civetweb server
-   // As argument, http port should be specified in form "8090"
-   // One could provide extra parameters after '?' (like URL parameters)
-   //    thrds=N   - there N is number of threads used by the civetweb (default is 5)
-   //    top=name  - configure top name, visible at the web browser
-   //    auth_file=filename  - authentication file name, created with htdigets utility
-   //    auth_domain=domain   - authentication domain
-
    fCallbacks = malloc(sizeof(struct mg_callbacks));
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
    ((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;

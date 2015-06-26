@@ -29,15 +29,16 @@
 //------------------------------------------------------------------------------
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print member data.
+
 void TEveCaloData::CellGeom_t::Dump() const
 {
-   // Print member data.
-
    printf("%f, %f %f, %f \n", fEtaMin, fEtaMax, fPhiMin, fPhiMax);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TEveCaloData::CellGeom_t::Configure(Float_t etaMin, Float_t etaMax, Float_t phiMin, Float_t phiMax)
 {
    fEtaMin = etaMin;
@@ -54,30 +55,30 @@ void TEveCaloData::CellGeom_t::Configure(Float_t etaMin, Float_t etaMax, Float_t
 // TEveCaloData::CellData_t
 //------------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return energy value associated with the cell, usually Et.
+/// If isEt is false it is transformed into energy E.
+
 Float_t TEveCaloData::CellData_t::Value(Bool_t isEt) const
 {
-   // Return energy value associated with the cell, usually Et.
-   // If isEt is false it is transformed into energy E.
-
    if (isEt)
       return fValue;
    else
       return TMath::Abs(fValue/TMath::Sin(Theta()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print member data.
+
 void TEveCaloData::CellData_t::Dump() const
 {
-   // Print member data.
-
    printf("%f, %f %f, %f \n", fEtaMin, fEtaMax, fPhiMin, fPhiMax);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Float_t* TEveCaloData::RebinData_t::GetSliceVals(Int_t bin)
 {
-
    //   printf("get val vec bin %d size %d\n", bin, fBinData.size());
    if (fBinData[bin] == -1)
    {
@@ -102,7 +103,8 @@ Float_t* TEveCaloData::RebinData_t::GetSliceVals(Int_t bin)
 
 ClassImp(TEveCaloData);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveCaloData::TEveCaloData(const char* n, const char* t):
    TEveElement(),
    TNamed(n, t),
@@ -120,24 +122,25 @@ TEveCaloData::TEveCaloData(const char* n, const char* t):
    // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual method TEveElement::UnSelect.
+/// Clear selected towers when deselected.
+
 void TEveCaloData::UnSelected()
 {
-   // Virtual method TEveElement::UnSelect.
-   // Clear selected towers when deselected.
-
    fCellsSelected.clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual method TEveElement::UnHighlighted.
+
 void TEveCaloData::UnHighlighted()
 {
-   // Virtual method TEveElement::UnHighlighted.
-
    fCellsHighlighted.clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TString TEveCaloData::GetHighlightTooltip()
 {
    if (fCellsHighlighted.empty()) return "";
@@ -163,23 +166,23 @@ TString TEveCaloData::GetHighlightTooltip()
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Populate set impSelSet with derived / dependant elements.
+///
+
 void TEveCaloData::FillImpliedSelectedSet(Set_t& impSelSet)
 {
-   // Populate set impSelSet with derived / dependant elements.
-   //
-
    for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       impSelSet.insert(*i);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print selected cells info.
+
 void TEveCaloData::PrintCellsSelected()
 {
-   // Print selected cells info.
-
    printf("%d Selected selected cells:\n", (Int_t)fCellsSelected.size());
    CellData_t cellData;
 
@@ -191,13 +194,13 @@ void TEveCaloData::PrintCellsSelected()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process newly selected cells with given select-record.
+/// Secondary-select status is set.
+/// CellSelectionChanged() is called if needed.
+
 void TEveCaloData::ProcessSelection(vCellId_t& sel_cells, TGLSelectRecord& rec)
 {
-   // Process newly selected cells with given select-record.
-   // Secondary-select status is set.
-   // CellSelectionChanged() is called if needed.
-
    typedef std::set<CellId_t>           sCellId_t;
    typedef std::set<CellId_t>::iterator sCellId_i;
 
@@ -298,28 +301,28 @@ void TEveCaloData::ProcessSelection(vCellId_t& sel_cells, TGLSelectRecord& rec)
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set threshold for given slice.
+
 void TEveCaloData::SetSliceThreshold(Int_t slice, Float_t val)
 {
-   // Set threshold for given slice.
-
    fSliceInfos[slice].fThreshold = val;
    InvalidateUsersCellIdCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get threshold for given slice.
+
 Float_t TEveCaloData::GetSliceThreshold(Int_t slice) const
 {
-   // Get threshold for given slice.
-
    return fSliceInfos[slice].fThreshold;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color for given slice.
+
 void TEveCaloData::SetSliceColor(Int_t slice, Color_t col)
 {
-   // Set color for given slice.
-
    fSliceInfos[slice].fColor = col;
    for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
@@ -327,19 +330,19 @@ void TEveCaloData::SetSliceColor(Int_t slice, Color_t col)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get color for given slice.
+
 Color_t TEveCaloData::GetSliceColor(Int_t slice) const
 {
-   // Get color for given slice.
-
    return fSliceInfos[slice].fColor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set transparency for given slice.
+
 void TEveCaloData::SetSliceTransparency(Int_t slice, Char_t t)
 {
-   // Set transparency for given slice.
-
    fSliceInfos[slice].fTransparency = t;
    for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
@@ -347,19 +350,19 @@ void TEveCaloData::SetSliceTransparency(Int_t slice, Char_t t)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get transparency for given slice.
+
 Char_t TEveCaloData::GetSliceTransparency(Int_t slice) const
 {
-   // Get transparency for given slice.
-
    return fSliceInfos[slice].fTransparency;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invalidate cell ids cache on back ptr references.
+
 void TEveCaloData::InvalidateUsersCellIdCache()
 {
-   // Invalidate cell ids cache on back ptr references.
-
    TEveCaloViz* calo;
    for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
@@ -369,13 +372,13 @@ void TEveCaloData::InvalidateUsersCellIdCache()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tell users (TEveCaloViz instances using this data) that data
+/// has changed and they should update the limits/scales etc.
+/// This is done by calling TEveCaloViz::DataChanged().
+
 void TEveCaloData::DataChanged()
 {
-   // Tell users (TEveCaloViz instances using this data) that data
-   // has changed and they should update the limits/scales etc.
-   // This is done by calling TEveCaloViz::DataChanged().
-
    TEveCaloViz* calo;
    for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
@@ -385,13 +388,13 @@ void TEveCaloData::DataChanged()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tell users (TEveCaloViz instances using this data) that cell selection
+/// has changed and they should update selection cache if necessary.
+/// This is done by calling TEveCaloViz::CellSelectionChanged().
+
 void TEveCaloData::CellSelectionChanged()
 {
-   // Tell users (TEveCaloViz instances using this data) that cell selection
-   // has changed and they should update selection cache if necessary.
-   // This is done by calling TEveCaloViz::CellSelectionChanged().
-
    TEveCaloViz* calo;
    for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
@@ -401,7 +404,8 @@ void TEveCaloData::CellSelectionChanged()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Float_t TEveCaloData::EtaToTheta(Float_t eta)
 {
    using namespace TMath;
@@ -423,7 +427,8 @@ Float_t TEveCaloData::EtaToTheta(Float_t eta)
 
 ClassImp(TEveCaloDataVec);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveCaloDataVec::TEveCaloDataVec(Int_t nslices):
    TEveCaloData(),
 
@@ -440,20 +445,20 @@ TEveCaloDataVec::TEveCaloDataVec(Int_t nslices):
    fSliceVec.assign(nslices, std::vector<Float_t> ());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveCaloDataVec::~TEveCaloDataVec()
 {
-   // Destructor.
-
    if (fEtaAxis) delete fEtaAxis;
    if (fPhiAxis) delete fPhiAxis;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add new slice.
+
 Int_t TEveCaloDataVec::AddSlice()
 {
-  // Add new slice.
-
   fSliceInfos.push_back(SliceInfo_t());
   fSliceVec.push_back(std::vector<Float_t> ());
   fSliceVec.back().resize(fGeomVec.size(), 0.f);
@@ -461,11 +466,11 @@ Int_t TEveCaloDataVec::AddSlice()
   return fSliceInfos.size() - 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add tower within eta/phi range.
+
 Int_t TEveCaloDataVec::AddTower(Float_t etaMin, Float_t etaMax, Float_t phiMin, Float_t phiMax)
 {
-   // Add tower within eta/phi range.
-
    assert (etaMin < etaMax);
    assert (phiMin < phiMax);
 
@@ -484,30 +489,30 @@ Int_t TEveCaloDataVec::AddTower(Float_t etaMin, Float_t etaMax, Float_t phiMin, 
    return fTower;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill given slice in the current tower.
+
 void TEveCaloDataVec::FillSlice(Int_t slice, Float_t val)
 {
-   // Fill given slice in the current tower.
-
    fSliceVec[slice][fTower] = val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill given slice in a given tower.
+
 void TEveCaloDataVec::FillSlice(Int_t slice, Int_t tower, Float_t val)
 {
-   // Fill given slice in a given tower.
-
    fSliceVec[slice][tower] = val;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of cell-ids for given eta/phi range.
+
 void TEveCaloDataVec::GetCellList(Float_t eta, Float_t etaD,
                                   Float_t phi, Float_t phiD,
                                   TEveCaloData::vCellId_t &out) const
 {
-   // Get list of cell-ids for given eta/phi range.
-
    using namespace TMath;
 
    Float_t etaMin = eta - etaD*0.5;
@@ -561,11 +566,11 @@ void TEveCaloDataVec::GetCellList(Float_t eta, Float_t etaD,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rebin cells.
+
 void TEveCaloDataVec::Rebin(TAxis* ax, TAxis* ay, vCellId_t &ids, Bool_t et, RebinData_t& rdata) const
 {
-   // Rebin cells.
-
    rdata.fNSlices = GetNSlices();
    rdata.fBinData.assign((ax->GetNbins()+2)*(ay->GetNbins()+2), -1);
 
@@ -597,21 +602,21 @@ void TEveCaloDataVec::Rebin(TAxis* ax, TAxis* ay, vCellId_t &ids, Bool_t et, Reb
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get cell geometry and value from cell ID.
+
 void TEveCaloDataVec::GetCellData(const TEveCaloData::CellId_t &id,
                                   TEveCaloData::CellData_t& cellData) const
 {
-   // Get cell geometry and value from cell ID.
-
    cellData.CellGeom_t::operator=( fGeomVec[id.fTower] );
    cellData.fValue = fSliceVec[id.fSlice][id.fTower];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update limits and notify data users.
+
 void TEveCaloDataVec::DataChanged()
 {
-   // Update limits and notify data users.
-
    using namespace TMath;
 
    // update max E/Et values
@@ -638,11 +643,11 @@ void TEveCaloDataVec::DataChanged()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set XY axis from cells geometry.
+
 void  TEveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
 {
-   // Set XY axis from cells geometry.
-
    std::vector<Double_t> binX;
    std::vector<Double_t> binY;
 
@@ -733,7 +738,8 @@ void  TEveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
 
 ClassImp(TEveCaloDataHist);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveCaloDataHist::TEveCaloDataHist():
    TEveCaloData(),
 
@@ -745,19 +751,19 @@ TEveCaloDataHist::TEveCaloDataHist():
    fEps    = 1e-5;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveCaloDataHist::~TEveCaloDataHist()
 {
-   // Destructor.
-
    delete fHStack;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update limits and notify data users.
+
 void TEveCaloDataHist::DataChanged()
 {
-   // Update limits and notify data users.
-
    using namespace TMath;
 
    // update max E/Et values
@@ -792,13 +798,13 @@ void TEveCaloDataHist::DataChanged()
    TEveCaloData::DataChanged();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of cell IDs in given eta and phi range.
+
 void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
                                    Float_t phi, Float_t phiD,
                                    TEveCaloData::vCellId_t &out) const
 {
-   // Get list of cell IDs in given eta and phi range.
-
    using namespace TMath;
 
    Float_t etaMin = eta - etaD*0.5 -fEps;
@@ -847,7 +853,8 @@ void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TEveCaloDataHist::Rebin(TAxis* ax, TAxis* ay, TEveCaloData::vCellId_t &ids, Bool_t et, RebinData_t &rdata) const
 {
    rdata.fNSlices = GetNSlices();
@@ -873,12 +880,12 @@ void TEveCaloDataHist::Rebin(TAxis* ax, TAxis* ay, TEveCaloData::vCellId_t &ids,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get cell geometry and value from cell ID.
+
 void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id,
                                    TEveCaloData::CellData_t& cellData) const
 {
-   // Get cell geometry and value from cell ID.
-
    TH2F* hist = GetHist(id.fSlice);
 
    Int_t x, y, z;
@@ -892,13 +899,13 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add new slice to calo tower. Updates cached variables fMaxValE
+/// and fMaxValEt
+/// Return last index in the vector of slice infos.
+
 Int_t TEveCaloDataHist::AddHistogram(TH2F* hist)
 {
-   // Add new slice to calo tower. Updates cached variables fMaxValE
-   // and fMaxValEt
-   // Return last index in the vector of slice infos.
-
    fHStack->Add(hist);
    fSliceInfos.push_back(SliceInfo_t());
    fSliceInfos.back().fName  = hist->GetName();
@@ -909,29 +916,29 @@ Int_t TEveCaloDataHist::AddHistogram(TH2F* hist)
    return fSliceInfos.size() - 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get histogram in given slice.
+
 TH2F* TEveCaloDataHist::GetHist(Int_t slice) const
 {
-   // Get histogram in given slice.
-
    assert(slice >= 0 && slice < fHStack->GetHists()->GetSize());
    return (TH2F*) fHStack->GetHists()->At(slice);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get eta limits.
+
 void TEveCaloDataHist::GetEtaLimits(Double_t &min, Double_t &max) const
 {
-   // Get eta limits.
-
    min = fEtaAxis->GetXmin();
    max = fEtaAxis->GetXmax();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get phi limits.
+
 void TEveCaloDataHist::GetPhiLimits(Double_t &min, Double_t &max) const
 {
-   // Get phi limits.
-
    min = fPhiAxis->GetXmin();
    max = fPhiAxis->GetXmax();
 }

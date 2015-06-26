@@ -36,7 +36,9 @@ ClassImp(TGTableHeader)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTableHeader constuctor.
+
 TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table, TGString *label,
                              UInt_t position, EHeaderType type, UInt_t width,
                              UInt_t height, GContext_t norm, FontStruct_t font,
@@ -45,8 +47,6 @@ TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table, TGString *label,
                  kFALSE), fType(type), fReadOnly(kFALSE), fEnabled(kTRUE),
      fHasOwnLabel(kFALSE)
 {
-   // TGTableHeader constuctor.
-
    if (type == kColumnHeader) {
       fWidth = (table) ? table->GetTableHeader()->GetWidth() : 80;
       fHeight = 25;
@@ -71,7 +71,9 @@ TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table, TGString *label,
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTableHeader constuctor.
+
 TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table,
                              const char *label, UInt_t position,
                              EHeaderType type, UInt_t width, UInt_t height,
@@ -80,8 +82,6 @@ TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table,
                  option, kFALSE), fType(type), fReadOnly(kFALSE), fEnabled(kTRUE),
      fHasOwnLabel(kFALSE)
 {
-   // TGTableHeader constuctor.
-
    if (type == kColumnHeader) {
       fWidth = table->GetTableHeader()->GetWidth();
       fHeight = 25;
@@ -107,17 +107,18 @@ TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTableHeader destructor.
+
 TGTableHeader::~TGTableHeader()
 {
-   // TGTableHeader destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the TGTableHeader
+
 void TGTableHeader::Init()
 {
-   // Initialize the TGTableHeader
-
    if (fType == kTableHeader) {
       SetBackgroundColor(fTable->GetBackground());
    } else {
@@ -134,27 +135,27 @@ void TGTableHeader::Init()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the TGTableHeader.
+
 void TGTableHeader::SetWidth(UInt_t width)
 {
-   // Resize the TGTableHeader.
-
    Resize(width, GetDefaultHeight());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the TGTableHeader.
+
 void TGTableHeader::SetHeight(UInt_t height)
 {
-   // Resize the TGTableHeader.
-
    Resize(GetDefaultWidth(), height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the label of the TGTableHeader to label.
+
 void TGTableHeader::SetLabel(const char *label)
 {
-   // Set the label of the TGTableHeader to label.
-
    if(label) {
       TGTableCell::SetLabel(label);
    } else {
@@ -162,12 +163,12 @@ void TGTableHeader::SetLabel(const char *label)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the label of the TGTableHeader to the default label, "Row #"
+/// or "Col #".
+
 void TGTableHeader::SetDefaultLabel()
 {
-   // Set the label of the TGTableHeader to the default label, "Row #"
-   // or "Col #".
-
    fHasOwnLabel = kFALSE;
    if (fLabel) delete fLabel;
    fLabel = new TGString();
@@ -185,11 +186,11 @@ void TGTableHeader::SetDefaultLabel()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the position of the TGTableHeader to pos.
+
 void TGTableHeader::SetPosition(UInt_t pos)
 {
-   // Set the position of the TGTableHeader to pos.
-
    // Verify functionality
 
    if (fType == kRowHeader) {
@@ -204,28 +205,28 @@ void TGTableHeader::SetPosition(UInt_t pos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the TGTableHeader.
+
 void TGTableHeader::Resize(TGDimension newsize)
 {
-   // Resize the TGTableHeader.
-
    Resize(newsize.fWidth, newsize.fHeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the TGTableHeader.
+
 void TGTableHeader::Resize(UInt_t width, UInt_t height)
 {
-   // Resize the TGTableHeader.
-
    // Implementation of resizing of an entire row of columns probably goes here.
    TGTableCell::Resize(width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort the contents of this row or column in given order.
+
 void TGTableHeader::Sort(Bool_t order)
 {
-   // Sort the contents of this row or column in given order.
-
    // Note: not implemented yet.
 
    if (order == kSortAscending) {
@@ -233,11 +234,11 @@ void TGTableHeader::Sort(Bool_t order)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the positon of the TGTableHeader.
+
 void TGTableHeader::UpdatePosition()
 {
-   // Update the positon of the TGTableHeader.
-
    // Verify functionality. If rows are inserted or removed, internal
    // column numbers are no longer consistent.
 

@@ -30,154 +30,154 @@
 
 ClassImp(TListOfFunctionTemplates)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TListOfFunctionTemplates::TListOfFunctionTemplates(TClass *cl) : fClass(cl),fIds(0),
                           fUnloaded(0),fLastLoadMarker(0)
 {
-   // Constructor.
-
    fIds = new TExMap;
    fUnloaded = new THashList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TListOfFunctionTemplates::~TListOfFunctionTemplates()
 {
-   // Destructor.
-
    THashList::Delete();
    delete fIds;
    fUnloaded->Delete();
    delete fUnloaded;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add pair<id, object> to the map of functions and their ids.
+
 void TListOfFunctionTemplates::MapObject(TObject *obj)
 {
-   // Add pair<id, object> to the map of functions and their ids.
-
    TFunctionTemplate *f = dynamic_cast<TFunctionTemplate*>(obj);
    if (f) {
       fIds->Add((Long64_t)f->GetDeclId(),(Long64_t)f);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the beginning of the list.
+
 void TListOfFunctionTemplates::AddFirst(TObject *obj)
 {
-   // Add object at the beginning of the list.
-
    THashList::AddFirst(obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the beginning of the list and also store option.
+/// Storing an option is useful when one wants to change the behaviour
+/// of an object a little without having to create a complete new
+/// copy of the object. This feature is used, for example, by the Draw()
+/// method. It allows the same object to be drawn in different ways.
+
 void TListOfFunctionTemplates::AddFirst(TObject *obj, Option_t *opt)
 {
-   // Add object at the beginning of the list and also store option.
-   // Storing an option is useful when one wants to change the behaviour
-   // of an object a little without having to create a complete new
-   // copy of the object. This feature is used, for example, by the Draw()
-   // method. It allows the same object to be drawn in different ways.
-
    THashList::AddFirst(obj,opt);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the end of the list.
+
 void TListOfFunctionTemplates::AddLast(TObject *obj)
 {
-   // Add object at the end of the list.
-
    THashList::AddLast(obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at the end of the list and also store option.
+/// Storing an option is useful when one wants to change the behaviour
+/// of an object a little without having to create a complete new
+/// copy of the object. This feature is used, for example, by the Draw()
+/// method. It allows the same object to be drawn in different ways.
+
 void TListOfFunctionTemplates::AddLast(TObject *obj, Option_t *opt)
 {
-   // Add object at the end of the list and also store option.
-   // Storing an option is useful when one wants to change the behaviour
-   // of an object a little without having to create a complete new
-   // copy of the object. This feature is used, for example, by the Draw()
-   // method. It allows the same object to be drawn in different ways.
-
    THashList::AddLast(obj, opt);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object at location idx in the list.
+
 void TListOfFunctionTemplates::AddAt(TObject *obj, Int_t idx)
 {
-   // Insert object at location idx in the list.
-
    THashList::AddAt(obj, idx);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list.
+
 void TListOfFunctionTemplates::AddAfter(const TObject *after, TObject *obj)
 {
-   // Insert object after object after in the list.
-
    THashList::AddAfter(after, obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list.
+
 void TListOfFunctionTemplates::AddAfter(TObjLink *after, TObject *obj)
 {
-   // Insert object after object after in the list.
-
    THashList::AddAfter(after, obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list.
+
 void TListOfFunctionTemplates::AddBefore(const TObject *before, TObject *obj)
 {
-   // Insert object before object before in the list.
-
    THashList::AddBefore(before, obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list.
+
 void TListOfFunctionTemplates::AddBefore(TObjLink *before, TObject *obj)
 {
-   // Insert object before object before in the list.
-
    THashList::AddBefore(before, obj);
    MapObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all objects from the list. Does not delete the objects unless
+/// the THashList is the owner (set via SetOwner()).
+
 void TListOfFunctionTemplates::Clear(Option_t *option)
 {
-   // Remove all objects from the list. Does not delete the objects unless
-   // the THashList is the owner (set via SetOwner()).
-
    fUnloaded->Clear(option);
    fIds->Clear();
    THashList::Clear(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete all TFunction object files.
+
 void TListOfFunctionTemplates::Delete(Option_t *option /* ="" */)
 {
-   // Delete all TFunction object files.
-
    fUnloaded->Delete(option);
    fIds->Clear();
    THashList::Delete(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specialize FindObject to do search for the
+/// a function just by name or create it if its not already in the list
+
 TObject *TListOfFunctionTemplates::FindObject(const char *name) const
 {
-   // Specialize FindObject to do search for the
-   // a function just by name or create it if its not already in the list
-
    TObject *result = THashList::FindObject(name);
    if (!result) {
 
@@ -191,12 +191,12 @@ TObject *TListOfFunctionTemplates::FindObject(const char *name) const
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the set of overloads for this name, collecting all available ones.
+/// Can construct and insert new TFunction-s.
+
 TList* TListOfFunctionTemplates::GetListForObjectNonConst(const char* name)
 {
-   // Return the set of overloads for this name, collecting all available ones.
-   // Can construct and insert new TFunction-s.
-
    R__LOCKGUARD(gInterpreterMutex);
 
    TList* overloads = (TList*)fOverloads.FindObject(name);
@@ -230,30 +230,32 @@ TList* TListOfFunctionTemplates::GetListForObjectNonConst(const char* name)
    return overloads;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the set of overloads for this name, collecting all available ones.
+/// Can construct and insert new TFunction-s.
+
 TList* TListOfFunctionTemplates::GetListForObject(const char* name) const
 {
-   // Return the set of overloads for this name, collecting all available ones.
-   // Can construct and insert new TFunction-s.
    return const_cast<TListOfFunctionTemplates*>(this)->GetListForObjectNonConst(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the set of overloads for function obj, collecting all available ones.
+/// Can construct and insert new TFunction-s.
+
 TList* TListOfFunctionTemplates::GetListForObject(const TObject* obj) const
 {
-   // Return the set of overloads for function obj, collecting all available ones.
-   // Can construct and insert new TFunction-s.
    if (!obj) return 0;
    return const_cast<TListOfFunctionTemplates*>(this)
       ->GetListForObjectNonConst(obj->GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return (after creating it if necessary) the TMethod or TFunction
+/// describing the function corresponding to the Decl 'id'.
+
 TFunctionTemplate *TListOfFunctionTemplates::Get(DeclId_t id)
 {
-   // Return (after creating it if necessary) the TMethod or TFunction
-   // describing the function corresponding to the Decl 'id'.
-
    if (!id) return 0;
 
    TFunctionTemplate *f = (TFunctionTemplate*)fIds->GetValue((Long64_t)id);
@@ -289,27 +291,28 @@ TFunctionTemplate *TListOfFunctionTemplates::Get(DeclId_t id)
    return f;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a pair<id, object> from the map of functions and their ids.
+
 void TListOfFunctionTemplates::UnmapObject(TObject *obj)
 {
-   // Remove a pair<id, object> from the map of functions and their ids.
    TFunctionTemplate *f = dynamic_cast<TFunctionTemplate*>(obj);
    if (f) {
       fIds->Remove((Long64_t)f->GetDeclId());
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from this collection and recursively remove the object
+/// from all other objects (and collections).
+/// This function overrides TCollection::RecursiveRemove that calls
+/// the Remove function. THashList::Remove cannot be called because
+/// it uses the hash value of the hash table. This hash value
+/// is not available anymore when RecursiveRemove is called from
+/// the TObject destructor.
+
 void TListOfFunctionTemplates::RecursiveRemove(TObject *obj)
 {
-   // Remove object from this collection and recursively remove the object
-   // from all other objects (and collections).
-   // This function overrides TCollection::RecursiveRemove that calls
-   // the Remove function. THashList::Remove cannot be called because
-   // it uses the hash value of the hash table. This hash value
-   // is not available anymore when RecursiveRemove is called from
-   // the TObject destructor.
-
    if (!obj) return;
 
    THashList::RecursiveRemove(obj);
@@ -318,11 +321,11 @@ void TListOfFunctionTemplates::RecursiveRemove(TObject *obj)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from the list.
+
 TObject* TListOfFunctionTemplates::Remove(TObject *obj)
 {
-   // Remove object from the list.
-
    Bool_t found;
 
    found = THashList::Remove(obj);
@@ -334,11 +337,11 @@ TObject* TListOfFunctionTemplates::Remove(TObject *obj)
    else return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object via its objlink from the list.
+
 TObject* TListOfFunctionTemplates::Remove(TObjLink *lnk)
 {
-   // Remove object via its objlink from the list.
-
    if (!lnk) return 0;
 
    TObject *obj = lnk->GetObject();
@@ -350,12 +353,12 @@ TObject* TListOfFunctionTemplates::Remove(TObjLink *lnk)
    return obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load all the functions known to the intepreter for the scope 'fClass'
+/// into this collection.
+
 void TListOfFunctionTemplates::Load()
 {
-   // Load all the functions known to the intepreter for the scope 'fClass'
-   // into this collection.
-
    if (fClass && fClass->GetClassInfo() == 0) return;
 
    R__LOCKGUARD(gInterpreterMutex);
@@ -369,14 +372,14 @@ void TListOfFunctionTemplates::Load()
    gInterpreter->LoadFunctionTemplates(fClass);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark 'all func' as being unloaded.
+/// After the unload, the function can no longer be found directly,
+/// until the decl can be found again in the interpreter (in which
+/// the func object will be reused.
+
 void TListOfFunctionTemplates::Unload()
 {
-   // Mark 'all func' as being unloaded.
-   // After the unload, the function can no longer be found directly,
-   // until the decl can be found again in the interpreter (in which
-   // the func object will be reused.
-
    TObjLink *lnk = FirstLink();
    while (lnk) {
       TFunctionTemplate *func = (TFunctionTemplate*)lnk->GetObject();
@@ -390,14 +393,14 @@ void TListOfFunctionTemplates::Unload()
    THashList::Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark 'func' as being unloaded.
+/// After the unload, the function can no longer be found directly,
+/// until the decl can be found again in the interpreter (in which
+/// the func object will be reused.
+
 void TListOfFunctionTemplates::Unload(TFunctionTemplate *func)
 {
-   // Mark 'func' as being unloaded.
-   // After the unload, the function can no longer be found directly,
-   // until the decl can be found again in the interpreter (in which
-   // the func object will be reused.
-
    if (THashList::Remove(func)) {
       // We contains the object, let remove it from the other internal
       // list and move it to the list of unloaded objects.

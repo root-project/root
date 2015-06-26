@@ -28,7 +28,8 @@
 
 ClassImp(TGLLightSetSubEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLLightSetSubEditor::TGLLightSetSubEditor(const TGWindow *p) :
    TGVerticalFrame(p),
    fM             (0),
@@ -65,23 +66,23 @@ TGLLightSetSubEditor::TGLLightSetSubEditor(const TGWindow *p) :
    fLightFrame->AddFrame(hf, new TGLayoutHints(kLHintsTop|kLHintsExpandX, 0, 0, 0, 2));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a button for given lamp and set it up.
+
 TGButton* TGLLightSetSubEditor::MakeLampButton(const char* name, Int_t wid,
                                                TGCompositeFrame* parent)
 {
-   // Create a button for given lamp and set it up.
-
    TGButton* b = new TGCheckButton(parent, name, wid);
    parent->AddFrame(b, new TGLayoutHints(kLHintsNormal|kLHintsExpandX, -2, 0, 0, 2));
    b->Connect("Clicked()", "TGLLightSetSubEditor", this, "DoButton()");
    return b;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// New model was set, refresh data.
+
 void TGLLightSetSubEditor::SetModel(TGLLightSet* m)
 {
-   // New model was set, refresh data.
-
    fM = m;
    UInt_t als = fM->GetLightState();
 
@@ -94,19 +95,19 @@ void TGLLightSetSubEditor::SetModel(TGLLightSet* m)
    fSpecularLight->SetState(fM->GetUseSpecular() ? kButtonDown : kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Data in sub-editor has been changed, emit "Changed()" signal.
+
 void TGLLightSetSubEditor::Changed()
 {
-   // Data in sub-editor has been changed, emit "Changed()" signal.
-
    Emit("Changed()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lights radio button was clicked.
+
 void TGLLightSetSubEditor::DoButton()
 {
-   // Lights radio button was clicked.
-
    TGButton* b = (TGButton*) gTQSender;
    fM->SetLight(TGLLightSet::ELight(b->WidgetId()), b->IsOn());
    Changed();
@@ -120,7 +121,9 @@ void TGLLightSetSubEditor::DoButton()
 
 ClassImp(TGLLightSetEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLLightSetEditor::TGLLightSetEditor(const TGWindow *p,
                                      Int_t width, Int_t height,
                                      UInt_t options, Pixel_t back) :
@@ -128,8 +131,6 @@ TGLLightSetEditor::TGLLightSetEditor(const TGWindow *p,
    fM  (0),
    fSE (0)
 {
-   // Constructor.
-
    MakeTitle("TGLLightSet");
 
    fSE = new TGLLightSetSubEditor(this);
@@ -137,17 +138,18 @@ TGLLightSetEditor::TGLLightSetEditor(const TGWindow *p,
    fSE->Connect("Changed()", "TGLLightSetEditor", this, "Update()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLLightSetEditor::~TGLLightSetEditor()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SetModel ... forward to sub-editor.
+
 void TGLLightSetEditor::SetModel(TObject* obj)
 {
-   // SetModel ... forward to sub-editor.
-
    fM = dynamic_cast<TGLLightSet*>(obj);
    fSE->SetModel(fM);
 }

@@ -38,7 +38,8 @@ using namespace std;
 ClassImp(RooAICRegistry)
 ;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAICRegistry::RooAICRegistry(UInt_t size) 
   : _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0)
 {
@@ -49,13 +50,13 @@ RooAICRegistry::RooAICRegistry(UInt_t size)
   _asArr4.reserve(size);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAICRegistry::RooAICRegistry(const RooAICRegistry& other)
   : _clArr(other._clArr), _asArr1(other._clArr.size(), 0), _asArr2(other._clArr.size(), 0),
     _asArr3(other._clArr.size(), 0), _asArr4(other._clArr.size(), 0)
 {
-  // Copy constructor
-
   // Copy code-list array if other PDF has one
   UInt_t size = other._clArr.size();
   if (size) {
@@ -72,11 +73,11 @@ RooAICRegistry::RooAICRegistry(const RooAICRegistry& other)
   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAICRegistry::~RooAICRegistry() 
 {
-  // Destructor
-
   // Delete code list array, if allocated
   for (unsigned int i = 0; i < _clArr.size(); ++i) {
     if (_asArr1[i]) delete   _asArr1[i];
@@ -86,19 +87,19 @@ RooAICRegistry::~RooAICRegistry()
   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store given arrays of integer codes, and up to four RooArgSets in
+/// the registry (each setX pointer may be null). The registry
+/// clones all RooArgSets internally so the RooArgSets passed as
+/// arguments do not need to live beyond the store() call. The return
+/// value is a unique master code for the given configuration of
+/// integers and RooArgSets. If an identical combination is
+/// previously stored in the registry no objects are stored and the
+/// unique code of the existing entry is returned.
+
 Int_t RooAICRegistry::store(const std::vector<Int_t>& codeList, RooArgSet* set1,
                             RooArgSet* set2, RooArgSet* set3, RooArgSet* set4)
 {
-  // Store given arrays of integer codes, and up to four RooArgSets in
-  // the registry (each setX pointer may be null). The registry
-  // clones all RooArgSets internally so the RooArgSets passed as
-  // arguments do not need to live beyond the store() call. The return
-  // value is a unique master code for the given configuration of
-  // integers and RooArgSets. If an identical combination is
-  // previously stored in the registry no objects are stored and the
-  // unique code of the existing entry is returned.
-
   // Loop over code-list array  
   for (UInt_t i = 0; i < _clArr.size(); ++i) {
     // Existing slot, compare with current list, if matched return index
@@ -146,43 +147,45 @@ Int_t RooAICRegistry::store(const std::vector<Int_t>& codeList, RooArgSet* set1,
   return _clArr.size() - 1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the array of integer codes associated with the given master code
+
 const std::vector<Int_t>& RooAICRegistry::retrieve(Int_t masterCode) const 
 {
-  // Retrieve the array of integer codes associated with the given master code
   return _clArr[masterCode] ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the array of integer codes associated with the given master code
+/// and set the passed set1 pointer to the first RooArgSet associated with this master code
+
 const std::vector<Int_t>& RooAICRegistry::retrieve(Int_t masterCode, pRooArgSet& set1) const 
 {
-  // Retrieve the array of integer codes associated with the given master code
-  // and set the passed set1 pointer to the first RooArgSet associated with this master code
-
   set1 = _asArr1[masterCode] ;
   return _clArr[masterCode] ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the array of integer codes associated with the given master code
+/// and set the passed set1,set2 pointers to the first and second  RooArgSets associated with this 
+/// master code respectively
+
 const std::vector<Int_t>& RooAICRegistry::retrieve
 (Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2) const 
 {
-  // Retrieve the array of integer codes associated with the given master code
-  // and set the passed set1,set2 pointers to the first and second  RooArgSets associated with this 
-  // master code respectively
-
   set1 = _asArr1[masterCode] ;
   set2 = _asArr2[masterCode] ;
   return _clArr[masterCode] ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the array of integer codes associated with the given master code
+/// and set the passed set1-4 pointers to the four  RooArgSets associated with this 
+/// master code respectively
+
 const std::vector<Int_t>& RooAICRegistry::retrieve
 (Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2, pRooArgSet& set3, pRooArgSet& set4) const 
 {
-  // Retrieve the array of integer codes associated with the given master code
-  // and set the passed set1-4 pointers to the four  RooArgSets associated with this 
-  // master code respectively
   set1 = _asArr1[masterCode] ;
   set2 = _asArr2[masterCode] ;
   set3 = _asArr3[masterCode] ;

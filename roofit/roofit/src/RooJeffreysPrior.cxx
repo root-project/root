@@ -38,7 +38,9 @@ ClassImp(RooJeffreysPrior)
 
 using namespace RooFit;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///_obsSet("!obsSet","obs-side variation",this),
+
 RooJeffreysPrior::RooJeffreysPrior(const char* name, const char* title, 
 			     RooAbsPdf& nominal,
 			     const RooArgList& paramSet,
@@ -48,7 +50,6 @@ RooJeffreysPrior::RooJeffreysPrior(const char* name, const char* title,
   _obsSet("!obsSet","obs-side variation",this,kFALSE,kFALSE),
   _paramSet("!paramSet","high-side variation",this)
 {
-  //_obsSet("!obsSet","obs-side variation",this),
   _obsIter = _obsSet.createIterator() ;
   _paramIter = _paramSet.createIterator() ;
 
@@ -93,24 +94,26 @@ RooJeffreysPrior::RooJeffreysPrior(const char* name, const char* title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooJeffreysPrior::RooJeffreysPrior(const RooJeffreysPrior& other, const char* name) :
   RooAbsPdf(other, name), 
   _nominal("!nominal",this,other._nominal),
   _obsSet("!obsSet",this,other._obsSet),
   _paramSet("!paramSet",this,other._paramSet)
 {
-  // Copy constructor
   _obsIter = _obsSet.createIterator() ;
   _paramIter = _paramSet.createIterator() ;
 
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooJeffreysPrior::RooJeffreysPrior() 
 {
-  // Default constructor
   _obsIter = NULL;
   _paramIter = NULL;
 
@@ -118,11 +121,11 @@ RooJeffreysPrior::RooJeffreysPrior()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooJeffreysPrior::~RooJeffreysPrior() 
 {
-  // Destructor
-
   if (_obsIter) delete _obsIter ;
   if (_paramIter) delete _paramIter ;
 }
@@ -130,10 +133,11 @@ RooJeffreysPrior::~RooJeffreysPrior()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return current value of self
+
 Double_t RooJeffreysPrior::evaluate() const 
 {
-  // Calculate and return current value of self
   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
   RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
   // create Asimov dataset
@@ -178,18 +182,20 @@ Double_t RooJeffreysPrior::evaluate() const
 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  if (matchArgs(allVars,analVars,x)) return 1 ;
+///  if (matchArgs(allVars,analVars,mean)) return 2 ;
+///  return 1;
+
 Int_t RooJeffreysPrior::getAnalyticalIntegral(RooArgSet& /*allVars*/, RooArgSet& /*analVars*/, const char* /*rangeName*/) const 
 {
-  //  if (matchArgs(allVars,analVars,x)) return 1 ;
-  //  if (matchArgs(allVars,analVars,mean)) return 2 ;
-  //  return 1;
   return 0 ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooJeffreysPrior::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
 {
   R__ASSERT(code==1 );

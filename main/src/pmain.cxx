@@ -55,11 +55,11 @@ typedef TAFS *(*TAFS_t)(const char *, const char *, Int_t);
 static TAFS *gAFS = 0;
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read envs from file 'envfile' and add them to the env space
+
 static void ReadPutEnvs(const char *envfile)
 {
-   // Read envs from file 'envfile' and add them to the env space
-
    // Check inputs
    if (!envfile || strlen(envfile) <= 0) return;
 
@@ -87,14 +87,14 @@ static void ReadPutEnvs(const char *envfile)
    fclose(fenv);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redirect stdout to 'logfile'. This log file will be flushed to the
+/// client or master after each command.
+/// If donotredir != 0 just reopen the file for usage in TProofServ (already redirected).
+/// On success return a pointer to the open log file. Return 0 on failure.
+
 static FILE *RedirectOutput(const char *logfile, const char *loc, Int_t donotredir)
 {
-   // Redirect stdout to 'logfile'. This log file will be flushed to the
-   // client or master after each command.
-   // If donotredir != 0 just reopen the file for usage in TProofServ (already redirected).
-   // On success return a pointer to the open log file. Return 0 on failure.
-
    if (loc)
       fprintf(stderr, "%s: RedirectOutput: enter: %s (do-not-redir: %d)\n",
                       loc, logfile, donotredir);
@@ -135,11 +135,11 @@ static FILE *RedirectOutput(const char *logfile, const char *loc, Int_t donotred
    return fLog;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set limits on the address space (virtual memory) if required.
+
 static void SetMaxMemLimits(const char *prog)
 {
-   // Set limits on the address space (virtual memory) if required.
-
 #ifndef WIN32
    const char *assoft = gSystem->Getenv("ROOTPROOFASSOFT");
    const char *ashard = gSystem->Getenv("ROOTPROOFASHARD");
@@ -179,11 +179,11 @@ static void SetMaxMemLimits(const char *prog)
 }
 
 #ifdef R__AFS
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init AFS token using credentials at fileafs
+
 static Int_t InitAFS(const char *fileafs, const char *loc)
 {
-   // Init AFS token using credentials at fileafs
-
    TString getter("GetTAFS");
    char *p = 0;
    TString afslib = "libAFSAuth";
@@ -220,11 +220,11 @@ static Int_t InitAFS(const char *fileafs, const char *loc)
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PROOF server main program.
+
 int main(int argc, char **argv)
 {
-   // PROOF server main program.
-
 #ifdef R__DEBUG
    int debug = 1;
    while (debug)

@@ -31,7 +31,8 @@
 ClassImp(TGraph2D)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>Graph 2D class</h2></center>
 A Graph2D is a graphics object made of three arrays X, Y and Z with the same
@@ -221,13 +222,13 @@ gives a nice practical view of Delaunay triangulation and Voronoi diagram.
 End_Html */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Graph2D default constructor
+
 TGraph2D::TGraph2D()
    : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001),
      TAttMarker(), fNpoints(0)
 {
-   // Graph2D default constructor
-
    fSize      = 0;
    fMargin    = 0.;
    fNpx       = 40;
@@ -247,13 +248,13 @@ TGraph2D::TGraph2D()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Graph2D constructor with three vectors of ints as input.
+
 TGraph2D::TGraph2D(Int_t n, Int_t *x, Int_t *y, Int_t *z)
    : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001),
      TAttMarker(), fNpoints(n)
 {
-   // Graph2D constructor with three vectors of ints as input.
-
    Build(n);
 
    // Copy the input vectors into local arrays
@@ -265,13 +266,13 @@ TGraph2D::TGraph2D(Int_t n, Int_t *x, Int_t *y, Int_t *z)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Graph2D constructor with three vectors of floats as input.
+
 TGraph2D::TGraph2D(Int_t n, Float_t *x, Float_t *y, Float_t *z)
    : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001),
      TAttMarker(), fNpoints(n)
 {
-   // Graph2D constructor with three vectors of floats as input.
-
    Build(n);
 
    // Copy the input vectors into local arrays
@@ -283,13 +284,13 @@ TGraph2D::TGraph2D(Int_t n, Float_t *x, Float_t *y, Float_t *z)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Graph2D constructor with three vectors of doubles as input.
+
 TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z)
    : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001),
      TAttMarker(), fNpoints(n)
 {
-   // Graph2D constructor with three vectors of doubles as input.
-
    Build(n);
 
    // Copy the input vectors into local arrays
@@ -301,15 +302,15 @@ TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Graph2D constructor with a TH2 (h2) as input.
+/// Only the h2's bins within the X and Y axis ranges are used.
+/// Empty bins, recognized when both content and errors are zero, are excluded.
+
 TGraph2D::TGraph2D(TH2 *h2)
    : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001),
      TAttMarker(), fNpoints(0)
 {
-   // Graph2D constructor with a TH2 (h2) as input.
-   // Only the h2's bins within the X and Y axis ranges are used.
-   // Empty bins, recognized when both content and errors are zero, are excluded.
-
    Build(h2->GetNbinsX()*h2->GetNbinsY());
 
    TString gname = "Graph2D_from_" + TString(h2->GetName());
@@ -345,19 +346,19 @@ TGraph2D::TGraph2D(TH2 *h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Graph2D constructor with name, title and three vectors of doubles as input.
+/// name   : name of 2D graph (avoid blanks)
+/// title  : 2D graph title
+///          if title is of the form "stringt;stringx;stringy;stringz"
+///          the 2D graph title is set to stringt, the x axis title to stringx,
+///          the y axis title to stringy,etc
+
 TGraph2D::TGraph2D(const char *name, const char *title,
                    Int_t n, Double_t *x, Double_t *y, Double_t *z)
    : TNamed(name, title), TAttLine(1, 1, 1), TAttFill(0, 1001),
      TAttMarker(), fNpoints(n)
 {
-   // Graph2D constructor with name, title and three vectors of doubles as input.
-   // name   : name of 2D graph (avoid blanks)
-   // title  : 2D graph title
-   //          if title is of the form "stringt;stringx;stringy;stringz"
-   //          the 2D graph title is set to stringt, the x axis title to stringx,
-   //          the y axis title to stringy,etc
-
    Build(n);
 
    // Copy the input vectors into local arrays
@@ -369,14 +370,14 @@ TGraph2D::TGraph2D(const char *name, const char *title,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Graph2D constructor. The arrays fX, fY and fZ should be filled via
+/// calls to SetPoint
+
 TGraph2D::TGraph2D(Int_t n)
    : TNamed("Graph2D", "Graph2D"), TAttLine(1, 1, 1), TAttFill(0, 1001),
      TAttMarker(), fNpoints(n)
 {
-   // Graph2D constructor. The arrays fX, fY and fZ should be filled via
-   // calls to SetPoint
-
    Build(n);
    for (Int_t i = 0; i < fNpoints; i++) {
       fX[i] = 0.;
@@ -386,19 +387,19 @@ TGraph2D::TGraph2D(Int_t n)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Graph2D constructor reading input from filename
+/// filename is assumed to contain at least three columns of numbers.
+/// For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
+/// you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
+/// e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';')
+/// used once (e.g. "1;1") or in a combined way (" 1;,;;  1").
+/// Note in that case, the instanciation is about 2 times slower.
+
 TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
    : TNamed("Graph2D", filename), TAttLine(1, 1, 1), TAttFill(0, 1001),
      TAttMarker(), fNpoints(0)
 {
-   // Graph2D constructor reading input from filename
-   // filename is assumed to contain at least three columns of numbers.
-   // For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
-   // you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
-   // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';')
-   // used once (e.g. "1;1") or in a combined way (" 1;,;;  1").
-   // Note in that case, the instanciation is about 2 times slower.
-
    Double_t x, y, z;
    TString fname = filename;
    gSystem->ExpandPathName(fname);
@@ -510,14 +511,15 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Graph2D copy constructor.
+/// copy everything apart from the list of contained functions
+
 TGraph2D::TGraph2D(const TGraph2D &g)
 : TNamed(g), TAttLine(g), TAttFill(g), TAttMarker(g),
    fX(0), fY(0), fZ(0),
    fHistogram(0), fDirectory(0), fPainter(0)
 {
-   // Graph2D copy constructor.
-   // copy everything apart from the list of contained functions
    fFunctions = new TList();   // do not copy the functions
 
 
@@ -538,20 +540,20 @@ TGraph2D::TGraph2D(const TGraph2D &g)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraph2D destructor.
+
 TGraph2D::~TGraph2D()
 {
-   // TGraph2D destructor.
-
    Clear();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Graph2D operator "="
+
 TGraph2D& TGraph2D::operator=(const TGraph2D &g)
 {
-   // Graph2D operator "="
-
    if (this == &g) return *this;
 
    // delete before existing contained objects
@@ -591,11 +593,11 @@ TGraph2D& TGraph2D::operator=(const TGraph2D &g)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates the 2D graph basic data structure
+
 void TGraph2D::Build(Int_t n)
 {
-   // Creates the 2D graph basic data structure
-
    if (n <= 0) {
       Error("TGraph2D", "Invalid number of points (%d)", n);
       return;
@@ -627,21 +629,21 @@ void TGraph2D::Build(Int_t n)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse
+
 void TGraph2D::Browse(TBrowser *)
 {
-   // Browse
-
    Draw("p0");
    gPad->Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free all memory allocated by this object.
+
 void TGraph2D::Clear(Option_t * /*option = "" */)
 {
-   // Free all memory allocated by this object.
-
    if (fX) delete [] fX;
    fX = 0;
    if (fY) delete [] fY;
@@ -666,15 +668,15 @@ void TGraph2D::Clear(Option_t * /*option = "" */)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the automatic addition of the graph to the given directory
+///
+/// Note this function is called in place when the semantic requires
+/// this object to be added to a directory (I.e. when being read from
+/// a TKey or being Cloned)
+
 void TGraph2D::DirectoryAutoAdd(TDirectory *dir)
 {
-   // Perform the automatic addition of the graph to the given directory
-   //
-   // Note this function is called in place when the semantic requires
-   // this object to be added to a directory (I.e. when being read from
-   // a TKey or being Cloned)
-
    Bool_t addStatus = TH1::AddDirectoryStatus();
    if (addStatus) {
       SetDirectory(dir);
@@ -685,43 +687,43 @@ void TGraph2D::DirectoryAutoAdd(TDirectory *dir)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes distance from point px,py to a graph
+
 Int_t TGraph2D::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Computes distance from point px,py to a graph
-
    Int_t distance = 9999;
    if (fHistogram) distance = fHistogram->DistancetoPrimitive(px, py);
    return distance;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specific drawing options can be used to paint a TGraph2D:
+///
+///   "TRI"  : The Delaunay triangles are drawn using filled area.
+///            An hidden surface drawing technique is used. The surface is
+///            painted with the current fill area color. The edges of each
+///            triangles are painted with the current line color.
+///   "TRIW" : The Delaunay triangles are drawn as wire frame
+///   "TRI1" : The Delaunay triangles are painted with color levels. The edges
+///            of each triangles are painted with the current line color.
+///   "TRI2" : the Delaunay triangles are painted with color levels.
+///   "P"    : Draw a marker at each vertex
+///   "P0"   : Draw a circle at each vertex. Each circle background is white.
+///   "PCOL" : Draw a marker at each vertex. The color of each marker is
+///            defined according to its Z position.
+///   "CONT" : Draw contours
+///   "LINE" : Draw a 3D polyline
+///
+/// A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram.
+///
+/// When a TGraph2D is drawn with one of the 2D histogram drawing option,
+/// a intermediate 2D histogram is filled using the Delaunay triangles
+/// technique to interpolate the data set.
+
 void TGraph2D::Draw(Option_t *option)
 {
-   // Specific drawing options can be used to paint a TGraph2D:
-   //
-   //   "TRI"  : The Delaunay triangles are drawn using filled area.
-   //            An hidden surface drawing technique is used. The surface is
-   //            painted with the current fill area color. The edges of each
-   //            triangles are painted with the current line color.
-   //   "TRIW" : The Delaunay triangles are drawn as wire frame
-   //   "TRI1" : The Delaunay triangles are painted with color levels. The edges
-   //            of each triangles are painted with the current line color.
-   //   "TRI2" : the Delaunay triangles are painted with color levels.
-   //   "P"    : Draw a marker at each vertex
-   //   "P0"   : Draw a circle at each vertex. Each circle background is white.
-   //   "PCOL" : Draw a marker at each vertex. The color of each marker is
-   //            defined according to its Z position.
-   //   "CONT" : Draw contours
-   //   "LINE" : Draw a 3D polyline
-   //
-   // A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram.
-   //
-   // When a TGraph2D is drawn with one of the 2D histogram drawing option,
-   // a intermediate 2D histogram is filled using the Delaunay triangles
-   // technique to interpolate the data set.
-
    TString opt = option;
    opt.ToLower();
    if (gPad) {
@@ -737,44 +739,44 @@ void TGraph2D::Draw(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Executes action corresponding to one event
+
 void TGraph2D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Executes action corresponding to one event
-
    if (fHistogram) fHistogram->ExecuteEvent(event, px, py);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// search object named name in the list of functions
+
 TObject *TGraph2D::FindObject(const char *name) const
 {
-   // search object named name in the list of functions
-
    if (fFunctions) return fFunctions->FindObject(name);
    return 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// search object obj in the list of functions
+
 TObject *TGraph2D::FindObject(const TObject *obj) const
 {
-   // search object obj in the list of functions
-
    if (fFunctions) return fFunctions->FindObject(obj);
    return 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fits this graph with function with name fname
+/// Predefined functions such as gaus, expo and poln are automatically
+/// created by ROOT.
+/// fname can also be a formula, accepted by the linear fitter (linear parts divided
+/// by "++" sign), for example "x++sin(y)" for fitting "[0]*x+[1]*sin(y)"
+
 TFitResultPtr TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
 {
-   // Fits this graph with function with name fname
-   // Predefined functions such as gaus, expo and poln are automatically
-   // created by ROOT.
-   // fname can also be a formula, accepted by the linear fitter (linear parts divided
-   // by "++" sign), for example "x++sin(y)" for fitting "[0]*x+[1]*sin(y)"
-
 
    char *linear;
    linear = (char*)strstr(fname, "++");
@@ -793,133 +795,133 @@ TFitResultPtr TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fits this 2D graph with function f2
+///
+///  f2 is an already predefined function created by TF2.
+///  Predefined functions such as gaus, expo and poln are automatically
+///  created by ROOT.
+///
+///  The list of fit options is given in parameter option.
+///     option = "W" Set all weights to 1; ignore error bars
+///            = "U" Use a User specified fitting algorithm (via SetFCN)
+///            = "Q" Quiet mode (minimum printing)
+///            = "V" Verbose mode (default is between Q and V)
+///            = "R" Use the Range specified in the function range
+///            = "N" Do not store the graphics function, do not draw
+///            = "0" Do not plot the result of the fit. By default the fitted function
+///                  is drawn unless the option "N" above is specified.
+///            = "+" Add this new fitted function to the list of fitted functions
+///                  (by default, any previous function is deleted)
+///            = "C" In case of linear fitting, not calculate the chisquare
+///                  (saves time)
+///            = "EX0" When fitting a TGraphErrors do not consider errors in the coordinate
+///            = "ROB" In case of linear fitting, compute the LTS regression
+///                     coefficients (robust (resistant) regression), using
+///                     the default fraction of good points
+///              "ROB=0.x" - compute the LTS regression coefficients, using
+///                           0.x as a fraction of good points
+///            = "S"  The result of the fit is returned in the TFitResultPtr
+///                     (see below Access to the Fit Result)
+///
+///  In order to use the Range option, one must first create a function
+///  with the expression to be fitted. For example, if your graph2d
+///  has a defined range between -4 and 4 and you want to fit a gaussian
+///  only in the interval 1 to 3, you can do:
+///       TF2 *f2 = new TF2("f2","gaus",1,3);
+///       graph2d->Fit("f2","R");
+///
+///
+///  Setting initial conditions
+///  ==========================
+///  Parameters must be initialized before invoking the Fit function.
+///  The setting of the parameter initial values is automatic for the
+///  predefined functions : poln, expo, gaus. One can however disable
+///  this automatic computation by specifying the option "B".
+///  You can specify boundary limits for some or all parameters via
+///       f2->SetParLimits(p_number, parmin, parmax);
+///  if parmin>=parmax, the parameter is fixed
+///  Note that you are not forced to fix the limits for all parameters.
+///  For example, if you fit a function with 6 parameters, you can do:
+///    func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
+///    func->SetParLimits(4,-10,-4);
+///    func->SetParLimits(5, 1,1);
+///  With this setup, parameters 0->3 can vary freely
+///  Parameter 4 has boundaries [-10,-4] with initial value -8
+///  Parameter 5 is fixed to 100.
+///
+///  Fit range
+///  =========
+///  The fit range can be specified in two ways:
+///    - specify rxmax > rxmin (default is rxmin=rxmax=0)
+///    - specify the option "R". In this case, the function will be taken
+///      instead of the full graph range.
+///
+///  Changing the fitting function
+///  =============================
+///   By default a chi2 fitting function is used for fitting a TGraph.
+///   The function is implemented in FitUtil::EvaluateChi2.
+///   In case of TGraph2DErrors an effective chi2 is used
+///   (see TGraphErrors fit in TGraph::Fit) and is implemented in
+///   FitUtil::EvaluateChi2Effective
+///   To specify a User defined fitting function, specify option "U" and
+///   call the following functions:
+///   TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
+///   where MyFittingFunction is of type:
+///   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+///
+///  Associated functions
+///  ====================
+///  One or more object (typically a TF2*) can be added to the list
+///  of functions (fFunctions) associated to each graph.
+///  When TGraph::Fit is invoked, the fitted function is added to this list.
+///  Given a graph gr, one can retrieve an associated function
+///  with:  TF2 *myfunc = gr->GetFunction("myfunc");
+///
+///  Access to the fit results
+///  =========================
+///  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
+///  By default the TFitResultPtr contains only the status of the fit and it converts automatically to an
+///  integer. If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart
+///  pointer to it. For example one can do:
+///     TFitResultPtr r = graph->Fit("myFunc","S");
+///     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
+///     Double_t par0   = r->Value(0); // retrieve the value for the parameter 0
+///     Double_t err0   = r->Error(0); // retrieve the error for the parameter 0
+///     r->Print("V");     // print full information of fit including covariance matrix
+///     r->Write();        // store the result in a file
+///
+///  The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
+///  from the fitted function.
+///  If the graph is made persistent, the list of
+///  associated functions is also persistent. Given a pointer (see above)
+///  to an associated function myfunc, one can retrieve the function/fit
+///  parameters with calls such as:
+///    Double_t chi2 = myfunc->GetChisquare();
+///    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
+///    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
+///
+///  Fit Statistics
+///  ==============
+///  You can change the statistics box to display the fit parameters with
+///  the TStyle::SetOptFit(mode) method. This mode has four digits.
+///  mode = pcev  (default = 0111)
+///    v = 1;  print name/values of parameters
+///    e = 1;  print errors (if e=1, v must be 1)
+///    c = 1;  print Chisquare/Number of degress of freedom
+///    p = 1;  print Probability
+///
+///  For example: gStyle->SetOptFit(1011);
+///  prints the fit probability, parameter names/values, and errors.
+///  You can change the position of the statistics box with these lines
+///  (where g is a pointer to the TGraph):
+///
+///  Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
+///  Root > st->SetX1NDC(newx1); //new x start position
+///  Root > st->SetX2NDC(newx2); //new x end position
+
 TFitResultPtr TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 {
-   // Fits this 2D graph with function f2
-   //
-   //  f2 is an already predefined function created by TF2.
-   //  Predefined functions such as gaus, expo and poln are automatically
-   //  created by ROOT.
-   //
-   //  The list of fit options is given in parameter option.
-   //     option = "W" Set all weights to 1; ignore error bars
-   //            = "U" Use a User specified fitting algorithm (via SetFCN)
-   //            = "Q" Quiet mode (minimum printing)
-   //            = "V" Verbose mode (default is between Q and V)
-   //            = "R" Use the Range specified in the function range
-   //            = "N" Do not store the graphics function, do not draw
-   //            = "0" Do not plot the result of the fit. By default the fitted function
-   //                  is drawn unless the option "N" above is specified.
-   //            = "+" Add this new fitted function to the list of fitted functions
-   //                  (by default, any previous function is deleted)
-   //            = "C" In case of linear fitting, not calculate the chisquare
-   //                  (saves time)
-   //            = "EX0" When fitting a TGraphErrors do not consider errors in the coordinate
-   //            = "ROB" In case of linear fitting, compute the LTS regression
-   //                     coefficients (robust (resistant) regression), using
-   //                     the default fraction of good points
-   //              "ROB=0.x" - compute the LTS regression coefficients, using
-   //                           0.x as a fraction of good points
-   //            = "S"  The result of the fit is returned in the TFitResultPtr
-   //                     (see below Access to the Fit Result)
-   //
-   //  In order to use the Range option, one must first create a function
-   //  with the expression to be fitted. For example, if your graph2d
-   //  has a defined range between -4 and 4 and you want to fit a gaussian
-   //  only in the interval 1 to 3, you can do:
-   //       TF2 *f2 = new TF2("f2","gaus",1,3);
-   //       graph2d->Fit("f2","R");
-   //
-   //
-   //  Setting initial conditions
-   //  ==========================
-   //  Parameters must be initialized before invoking the Fit function.
-   //  The setting of the parameter initial values is automatic for the
-   //  predefined functions : poln, expo, gaus. One can however disable
-   //  this automatic computation by specifying the option "B".
-   //  You can specify boundary limits for some or all parameters via
-   //       f2->SetParLimits(p_number, parmin, parmax);
-   //  if parmin>=parmax, the parameter is fixed
-   //  Note that you are not forced to fix the limits for all parameters.
-   //  For example, if you fit a function with 6 parameters, you can do:
-   //    func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
-   //    func->SetParLimits(4,-10,-4);
-   //    func->SetParLimits(5, 1,1);
-   //  With this setup, parameters 0->3 can vary freely
-   //  Parameter 4 has boundaries [-10,-4] with initial value -8
-   //  Parameter 5 is fixed to 100.
-   //
-   //  Fit range
-   //  =========
-   //  The fit range can be specified in two ways:
-   //    - specify rxmax > rxmin (default is rxmin=rxmax=0)
-   //    - specify the option "R". In this case, the function will be taken
-   //      instead of the full graph range.
-   //
-   //  Changing the fitting function
-   //  =============================
-   //   By default a chi2 fitting function is used for fitting a TGraph.
-   //   The function is implemented in FitUtil::EvaluateChi2.
-   //   In case of TGraph2DErrors an effective chi2 is used
-   //   (see TGraphErrors fit in TGraph::Fit) and is implemented in
-   //   FitUtil::EvaluateChi2Effective
-   //   To specify a User defined fitting function, specify option "U" and
-   //   call the following functions:
-   //   TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
-   //   where MyFittingFunction is of type:
-   //   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-   //
-   //  Associated functions
-   //  ====================
-   //  One or more object (typically a TF2*) can be added to the list
-   //  of functions (fFunctions) associated to each graph.
-   //  When TGraph::Fit is invoked, the fitted function is added to this list.
-   //  Given a graph gr, one can retrieve an associated function
-   //  with:  TF2 *myfunc = gr->GetFunction("myfunc");
-   //
-   //  Access to the fit results
-   //  =========================
-   //  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
-   //  By default the TFitResultPtr contains only the status of the fit and it converts automatically to an
-   //  integer. If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart
-   //  pointer to it. For example one can do:
-   //     TFitResultPtr r = graph->Fit("myFunc","S");
-   //     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
-   //     Double_t par0   = r->Value(0); // retrieve the value for the parameter 0
-   //     Double_t err0   = r->Error(0); // retrieve the error for the parameter 0
-   //     r->Print("V");     // print full information of fit including covariance matrix
-   //     r->Write();        // store the result in a file
-   //
-   //  The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
-   //  from the fitted function.
-   //  If the graph is made persistent, the list of
-   //  associated functions is also persistent. Given a pointer (see above)
-   //  to an associated function myfunc, one can retrieve the function/fit
-   //  parameters with calls such as:
-   //    Double_t chi2 = myfunc->GetChisquare();
-   //    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
-   //    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
-   //
-   //  Fit Statistics
-   //  ==============
-   //  You can change the statistics box to display the fit parameters with
-   //  the TStyle::SetOptFit(mode) method. This mode has four digits.
-   //  mode = pcev  (default = 0111)
-   //    v = 1;  print name/values of parameters
-   //    e = 1;  print errors (if e=1, v must be 1)
-   //    c = 1;  print Chisquare/Number of degress of freedom
-   //    p = 1;  print Probability
-   //
-   //  For example: gStyle->SetOptFit(1011);
-   //  prints the fit probability, parameter names/values, and errors.
-   //  You can change the position of the statistics box with these lines
-   //  (where g is a pointer to the TGraph):
-   //
-   //  Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
-   //  Root > st->SetX1NDC(newx1); //new x start position
-   //  Root > st->SetX2NDC(newx2); //new x end position
-
    // internal graph2D fitting methods
    Foption_t fitOption;
    Option_t *goption = "";
@@ -932,13 +934,13 @@ TFitResultPtr TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display a GUI panel with all graph fit options.
+///
+///   See class TFitEditor for example
+
 void TGraph2D::FitPanel()
 {
-   // Display a GUI panel with all graph fit options.
-   //
-   //   See class TFitEditor for example
-
    if (!gPad)
       gROOT->MakeDefCanvas();
 
@@ -958,46 +960,46 @@ void TGraph2D::FitPanel()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get x axis of the graph.
+
 TAxis *TGraph2D::GetXaxis() const
 {
-   // Get x axis of the graph.
-
    TH1 *h = ((TGraph2D*)this)->GetHistogram("empty");
    if (!h) return 0;
    return h->GetXaxis();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get y axis of the graph.
+
 TAxis *TGraph2D::GetYaxis() const
 {
-   // Get y axis of the graph.
-
    TH1 *h = ((TGraph2D*)this)->GetHistogram("empty");
    if (!h) return 0;
    return h->GetYaxis();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get z axis of the graph.
+
 TAxis *TGraph2D::GetZaxis() const
 {
-   // Get z axis of the graph.
-
    TH1 *h = ((TGraph2D*)this)->GetHistogram("empty");
    if (!h) return 0;
    return h->GetZaxis();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the X and Y graphs building a contour. A contour level may
+/// consist in several parts not connected to each other. This function
+/// returns them in a graphs' list.
+
 TList *TGraph2D::GetContourList(Double_t contour)
 {
-   // Returns the X and Y graphs building a contour. A contour level may
-   // consist in several parts not connected to each other. This function
-   // returns them in a graphs' list.
-
    if (fNpoints <= 0) {
       Error("GetContourList", "Empty TGraph2D");
       return 0;
@@ -1011,48 +1013,48 @@ TList *TGraph2D::GetContourList(Double_t contour)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by Graph2DFitChisquare.
+/// It always returns a negative value. Real implementation in TGraph2DErrors
+
 Double_t TGraph2D::GetErrorX(Int_t) const
 {
-   // This function is called by Graph2DFitChisquare.
-   // It always returns a negative value. Real implementation in TGraph2DErrors
-
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by Graph2DFitChisquare.
+/// It always returns a negative value. Real implementation in TGraph2DErrors
+
 Double_t TGraph2D::GetErrorY(Int_t) const
 {
-   // This function is called by Graph2DFitChisquare.
-   // It always returns a negative value. Real implementation in TGraph2DErrors
-
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by Graph2DFitChisquare.
+/// It always returns a negative value. Real implementation in TGraph2DErrors
+
 Double_t TGraph2D::GetErrorZ(Int_t) const
 {
-   // This function is called by Graph2DFitChisquare.
-   // It always returns a negative value. Real implementation in TGraph2DErrors
-
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// By default returns a pointer to the Delaunay histogram. If fHistogram
+/// doesn't exist, books the 2D histogram fHistogram with a margin around
+/// the hull. Calls TGraphDelaunay::Interpolate at each bin centre to build up
+/// an interpolated 2D histogram.
+/// If the "empty" option is selected, returns an empty histogram booked with
+/// the limits of fX, fY and fZ. This option is used when the data set is
+/// drawn with markers only. In that particular case there is no need to
+/// find the Delaunay triangles.
+
 TH2D *TGraph2D::GetHistogram(Option_t *option)
 {
-   // By default returns a pointer to the Delaunay histogram. If fHistogram
-   // doesn't exist, books the 2D histogram fHistogram with a margin around
-   // the hull. Calls TGraphDelaunay::Interpolate at each bin centre to build up
-   // an interpolated 2D histogram.
-   // If the "empty" option is selected, returns an empty histogram booked with
-   // the limits of fX, fY and fZ. This option is used when the data set is
-   // drawn with markers only. In that particular case there is no need to
-   // find the Delaunay triangles.
-
    if (fNpoints <= 0) {
       if (!fHistogram) {
          Bool_t add = TH1::AddDirectoryStatus();
@@ -1180,78 +1182,78 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the X maximum
+
 Double_t TGraph2D::GetXmax() const
 {
-   // Returns the X maximum
-
    Double_t v = fX[0];
    for (Int_t i = 1; i < fNpoints; i++) if (fX[i] > v) v = fX[i];
    return v;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the X minimum
+
 Double_t TGraph2D::GetXmin() const
 {
-   // Returns the X minimum
-
    Double_t v = fX[0];
    for (Int_t i = 1; i < fNpoints; i++) if (fX[i] < v) v = fX[i];
    return v;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the Y maximum
+
 Double_t TGraph2D::GetYmax() const
 {
-   // Returns the Y maximum
-
    Double_t v = fY[0];
    for (Int_t i = 1; i < fNpoints; i++) if (fY[i] > v) v = fY[i];
    return v;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the Y minimum
+
 Double_t TGraph2D::GetYmin() const
 {
-   // Returns the Y minimum
-
    Double_t v = fY[0];
    for (Int_t i = 1; i < fNpoints; i++) if (fY[i] < v) v = fY[i];
    return v;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the Z maximum
+
 Double_t TGraph2D::GetZmax() const
 {
-   // Returns the Z maximum
-
    Double_t v = fZ[0];
    for (Int_t i = 1; i < fNpoints; i++) if (fZ[i] > v) v = fZ[i];
    return v;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the Z minimum
+
 Double_t TGraph2D::GetZmin() const
 {
-   // Returns the Z minimum
-
    Double_t v = fZ[0];
    for (Int_t i = 1; i < fNpoints; i++) if (fZ[i] < v) v = fZ[i];
    return v;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finds the z value at the position (x,y) thanks to
+/// the Delaunay interpolation.
+
 Double_t TGraph2D::Interpolate(Double_t x, Double_t y)
 {
-   // Finds the z value at the position (x,y) thanks to
-   // the Delaunay interpolation.
-
    if (fNpoints <= 0) {
       Error("Interpolate", "Empty TGraph2D");
       return 0;
@@ -1268,11 +1270,11 @@ Double_t TGraph2D::Interpolate(Double_t x, Double_t y)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paints this 2D graph with its current attributes
+
 void TGraph2D::Paint(Option_t *option)
 {
-   // Paints this 2D graph with its current attributes
-
    if (fNpoints <= 0) {
       Error("Paint", "Empty TGraph2D");
       return;
@@ -1308,17 +1310,17 @@ void TGraph2D::Paint(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Projects a 2-d graph into 1 or 2-d histograms depending on the
+/// option parameter
+/// option may contain a combination of the characters x,y,z
+/// option = "x" return the x projection into a TH1D histogram
+/// option = "y" return the y projection into a TH1D histogram
+/// option = "xy" return the x versus y projection into a TH2D histogram
+/// option = "yx" return the y versus x projection into a TH2D histogram
+
 TH1 *TGraph2D::Project(Option_t *option) const
 {
-   // Projects a 2-d graph into 1 or 2-d histograms depending on the
-   // option parameter
-   // option may contain a combination of the characters x,y,z
-   // option = "x" return the x projection into a TH1D histogram
-   // option = "y" return the y projection into a TH1D histogram
-   // option = "xy" return the x versus y projection into a TH2D histogram
-   // option = "yx" return the y versus x projection into a TH2D histogram
-
    if (fNpoints <= 0) {
       Error("Project", "Empty TGraph2D");
       return 0;
@@ -1401,11 +1403,11 @@ TH1 *TGraph2D::Project(Option_t *option) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes point number ipoint
+
 Int_t TGraph2D::RemovePoint(Int_t ipoint)
 {
-   // Deletes point number ipoint
-
    if (ipoint < 0) return -1;
    if (ipoint >= fNpoints) return -1;
 
@@ -1436,11 +1438,11 @@ Int_t TGraph2D::RemovePoint(Int_t ipoint)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Saves primitive as a C++ statement(s) on output stream out
+
 void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Saves primitive as a C++ statement(s) on output stream out
-
    char quote = '"';
    out << "   " << std::endl;
    if (gROOT->ClassSaved(TGraph2D::Class())) {
@@ -1480,13 +1482,13 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set number of points in the 2D graph.
+/// Existing coordinates are preserved.
+/// New coordinates above fNpoints are preset to 0.
+
 void TGraph2D::Set(Int_t n)
 {
-   // Set number of points in the 2D graph.
-   // Existing coordinates are preserved.
-   // New coordinates above fNpoints are preset to 0.
-
    if (n < 0) n = 0;
    if (n == fNpoints) return;
    if (n >  fNpoints) SetPoint(n, 0, 0, 0);
@@ -1494,15 +1496,15 @@ void TGraph2D::Set(Int_t n)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// By default when an 2D graph is created, it is added to the list
+/// of 2D graph objects in the current directory in memory.
+/// This method removes reference to this 2D graph from current directory and add
+/// reference to new directory dir. dir can be 0 in which case the
+/// 2D graph does not belong to any directory.
+
 void TGraph2D::SetDirectory(TDirectory *dir)
 {
-   // By default when an 2D graph is created, it is added to the list
-   // of 2D graph objects in the current directory in memory.
-   // This method removes reference to this 2D graph from current directory and add
-   // reference to new directory dir. dir can be 0 in which case the
-   // 2D graph does not belong to any directory.
-
    if (fDirectory == dir) return;
    if (fDirectory) fDirectory->Remove(this);
    fDirectory = dir;
@@ -1510,20 +1512,20 @@ void TGraph2D::SetDirectory(TDirectory *dir)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the histogram to be filled.
+/// If the 2D graph needs to be save in a TFile the folllowing set should be
+/// followed to read it back:
+/// 1) Create TGraph2D
+/// 2) Call g->SetHistogram(h), and do whatever you need to do
+/// 3) Save g and h to the TFile, exit
+/// 4) Open the TFile, retrieve g and h
+/// 5) Call h->SetDirectory(0)
+/// 6) Call g->SetHistogram(h) again
+/// 7) Carry on as normal
+
 void TGraph2D::SetHistogram(TH2 *h)
 {
-   // Sets the histogram to be filled.
-   // If the 2D graph needs to be save in a TFile the folllowing set should be
-   // followed to read it back:
-   // 1) Create TGraph2D
-   // 2) Call g->SetHistogram(h), and do whatever you need to do
-   // 3) Save g and h to the TFile, exit
-   // 4) Open the TFile, retrieve g and h
-   // 5) Call h->SetDirectory(0)
-   // 6) Call g->SetHistogram(h) again
-   // 7) Carry on as normal
-
    fUserHisto = kTRUE;
    fHistogram = (TH2D*)h;
    fNpx       = h->GetNbinsX();
@@ -1531,11 +1533,11 @@ void TGraph2D::SetHistogram(TH2 *h)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the extra space (in %) around interpolated area for the 2D histogram
+
 void TGraph2D::SetMargin(Double_t m)
 {
-   // Sets the extra space (in %) around interpolated area for the 2D histogram
-
    if (m < 0 || m > 1) {
       Warning("SetMargin", "The margin must be >= 0 && <= 1, fMargin set to 0.1");
       fMargin = 0.1;
@@ -1549,12 +1551,12 @@ void TGraph2D::SetMargin(Double_t m)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the histogram bin height for points lying outside the TGraphDelaunay
+/// convex hull ie: the bins in the margin.
+
 void TGraph2D::SetMarginBinsContent(Double_t z)
 {
-   // Sets the histogram bin height for points lying outside the TGraphDelaunay
-   // convex hull ie: the bins in the margin.
-
    fZout = z;
    if (fHistogram) {
       delete fHistogram;
@@ -1563,33 +1565,33 @@ void TGraph2D::SetMarginBinsContent(Double_t z)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set maximum.
+
 void TGraph2D::SetMaximum(Double_t maximum)
 {
-   // Set maximum.
-
    fMaximum = maximum;
    TH1 * h = GetHistogram();
    if (h) h->SetMaximum(maximum);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set minimum.
+
 void TGraph2D::SetMinimum(Double_t minimum)
 {
-   // Set minimum.
-
    fMinimum = minimum;
    TH1 * h = GetHistogram();
    if (h) h->SetMinimum(minimum);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes the name of this 2D graph
+
 void TGraph2D::SetName(const char *name)
 {
-   // Changes the name of this 2D graph
-
    //  2D graphs are named objects in a THashList.
    //  We must update the hashlist if we change the name
    if (fDirectory) fDirectory->Remove(this);
@@ -1598,12 +1600,12 @@ void TGraph2D::SetName(const char *name)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the name and title of this 2D graph
+///
+
 void TGraph2D::SetNameTitle(const char *name, const char *title)
 {
-   // Change the name and title of this 2D graph
-   //
-
    //  2D graphs are named objects in a THashList.
    //  We must update the hashlist if we change the name
    if (fDirectory) fDirectory->Remove(this);
@@ -1613,11 +1615,11 @@ void TGraph2D::SetNameTitle(const char *name, const char *title)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the number of bins along X used to draw the function
+
 void TGraph2D::SetNpx(Int_t npx)
 {
-   // Sets the number of bins along X used to draw the function
-
    if (npx < 4) {
       Warning("SetNpx", "Number of points must be >4 && < 500, fNpx set to 4");
       fNpx = 4;
@@ -1634,11 +1636,11 @@ void TGraph2D::SetNpx(Int_t npx)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the number of bins along Y used to draw the function
+
 void TGraph2D::SetNpy(Int_t npy)
 {
-   // Sets the number of bins along Y used to draw the function
-
    if (npy < 4) {
       Warning("SetNpy", "Number of points must be >4 && < 500, fNpy set to 4");
       fNpy = 4;
@@ -1655,13 +1657,13 @@ void TGraph2D::SetNpy(Int_t npy)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets point number n.
+/// If n is greater than the current size, the arrays are automatically
+/// extended.
+
 void TGraph2D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
 {
-   // Sets point number n.
-   // If n is greater than the current size, the arrays are automatically
-   // extended.
-
    if (n < 0) return;
 
    if (!fX || !fY || !fZ || n >= fSize) {
@@ -1697,21 +1699,21 @@ void TGraph2D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets graph title
+
 void TGraph2D::SetTitle(const char* title)
 {
-   // Sets graph title
-
    fTitle = title;
    if (fHistogram) fHistogram->SetTitle(title);
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object
+
 void TGraph2D::Streamer(TBuffer &b)
 {
-   // Stream a class object
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);

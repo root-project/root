@@ -22,21 +22,23 @@
 
 ClassImp(TGLVoxelPainter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+///This plot always needs a palette.
+
 TGLVoxelPainter::TGLVoxelPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord)
                   : TGLPlotPainter(hist, cam, coord, kFALSE, kFALSE, kFALSE),
                     fTransferFunc(0)
 {
-   // Constructor.
-   //This plot always needs a palette.
    fDrawPalette = kTRUE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Show box info (i, j, k, binContent).
+
 char *TGLVoxelPainter::GetPlotInfo(Int_t, Int_t)
 {
-   //Show box info (i, j, k, binContent).
    fPlotInfo = "";
 
    if (fSelectedPart) {
@@ -61,11 +63,11 @@ char *TGLVoxelPainter::GetPlotInfo(Int_t, Int_t)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set ranges, find min and max bin content.
+
 Bool_t TGLVoxelPainter::InitGeometry()
 {
-  //Set ranges, find min and max bin content.
-
    fCoord->SetZLog(kFALSE);
    fCoord->SetYLog(kFALSE);
    fCoord->SetXLog(kFALSE);
@@ -103,11 +105,11 @@ Bool_t TGLVoxelPainter::InitGeometry()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User clicks right mouse button (in a pad).
+
 void TGLVoxelPainter::StartPan(Int_t px, Int_t py)
 {
-   // User clicks right mouse button (in a pad).
-
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
@@ -115,12 +117,12 @@ void TGLVoxelPainter::StartPan(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User's moving mouse cursor, with middle mouse button pressed (for pad).
+/// Calculate 3d shift related to 2d mouse movement.
+
 void TGLVoxelPainter::Pan(Int_t px, Int_t py)
 {
-   // User's moving mouse cursor, with middle mouse button pressed (for pad).
-   // Calculate 3d shift related to 2d mouse movement.
-
    // User's moving mouse cursor, with middle mouse button pressed (for pad).
    // Calculate 3d shift related to 2d mouse movement.
    if (fSelectedPart >= fSelectionBase) {//Pan camera.
@@ -162,19 +164,20 @@ void TGLVoxelPainter::Pan(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// "z" draw palette or not.
+
 void TGLVoxelPainter::AddOption(const TString &option)
 {
-   // "z" draw palette or not.
    option.Index("z") == kNPOS ? fDrawPalette = kFALSE : fDrawPalette = kTRUE;
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove sections, switch on/off box cut.
+
 void TGLVoxelPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
-   // Remove sections, switch on/off box cut.
-
    if (event == kButton1Double && fBoxCut.IsActive()) {
       if (fBoxCut.IsActive())
          fBoxCut.TurnOnOff();
@@ -192,11 +195,11 @@ void TGLVoxelPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize some gl state variables.
+
 void TGLVoxelPainter::InitGL()const
 {
-   // Initialize some gl state variables.
-
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
@@ -207,11 +210,11 @@ void TGLVoxelPainter::InitGL()const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return back some gl state variables.
+
 void TGLVoxelPainter::DeInitGL()const
 {
-   // Return back some gl state variables.
-
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_LIGHTING);
    glDisable(GL_LIGHT0);
@@ -219,11 +222,11 @@ void TGLVoxelPainter::DeInitGL()const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw "voxels".
+
 void TGLVoxelPainter::DrawPlot()const
 {
-   // Draw "voxels".
-
    //Shift plot to point of origin.
    const Rgl::PlotTranslation trGuard(this);
 
@@ -316,29 +319,33 @@ void TGLVoxelPainter::DrawPlot()const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Noop.
+
 void TGLVoxelPainter::DrawSectionXOZ()const
 {
-   // Noop.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Noop.
+
 void TGLVoxelPainter::DrawSectionYOZ()const
 {
-   // Noop.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Noop.
+
 void TGLVoxelPainter::DrawSectionXOY()const
 {
-   // Noop.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw. Palette.
+
 void TGLVoxelPainter::DrawPalette()const
 {
-   //Draw. Palette.
    if (!fPalette.GetPaletteSize() || !fCamera)
       return;
 
@@ -353,20 +360,22 @@ void TGLVoxelPainter::DrawPalette()const
    fCamera->Apply(fPadPhi, fPadTheta);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw. Palette. Axis.
+
 void TGLVoxelPainter::DrawPaletteAxis()const
 {
-   //Draw. Palette. Axis.
    if (fCamera) {
       gVirtualX->SetDrawMode(TVirtualX::kCopy);//TCanvas by default sets in kInverse
       Rgl::DrawPaletteAxis(fCamera, fMinMaxVal, kFALSE);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Generate palette.
+
 void TGLVoxelPainter::PreparePalette()const
 {
-   //Generate palette.
    if(fMinMaxVal.first == fMinMaxVal.second)
       return;//must be std::abs(fMinMaxVal.second - fMinMaxVal.first) < ...
 
@@ -403,10 +412,11 @@ void TGLVoxelPainter::PreparePalette()const
    fPalette.GeneratePalette(paletteSize, fMinMaxVal);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find box color.
+
 void TGLVoxelPainter::FindVoxelColor(Double_t binContent, Float_t *rgba)const
 {
-   // Find box color.
    const UChar_t * tc = fPalette.GetColour(binContent);
    rgba[3] = 0.06f; //Just a constant transparency.
 
@@ -421,10 +431,11 @@ void TGLVoxelPainter::FindVoxelColor(Double_t binContent, Float_t *rgba)const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set box color.
+
 void TGLVoxelPainter::SetVoxelColor(const Float_t *diffColor)const
 {
-   // Set box color.
    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffColor);
    const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specColor);

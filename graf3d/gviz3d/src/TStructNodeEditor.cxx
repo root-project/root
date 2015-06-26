@@ -33,12 +33,12 @@ ClassImp(TStructNodeEditor)
 //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of node attributes GUI.
+
 TStructNodeEditor::TStructNodeEditor(TList* colors, const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back), fColors(colors)
 {
-   // Constructor of node attributes GUI.
-
    MakeTitle("TStructNode");
    fInit = kFALSE;
 
@@ -100,17 +100,18 @@ TStructNodeEditor::TStructNodeEditor(TList* colors, const TGWindow *p, Int_t wid
    this->AddFrame(fApplyButton, expandX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of node editor.
+
 TStructNodeEditor::~TStructNodeEditor()
 {
-   // Destructor of node editor.
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ApplyButton Slot. Activated when user press Apply button. Sets properties of a node
+
 void TStructNodeEditor::ApplyButtonSlot()
 {
-   // ApplyButton Slot. Activated when user press Apply button. Sets properties of a node
-
    Bool_t needReset = false;
 
    if ((Int_t)(fNode->GetMaxLevel()) != fMaxLevelsNumberEntry->GetIntNumber()) {
@@ -131,21 +132,21 @@ void TStructNodeEditor::ApplyButtonSlot()
    Update(needReset);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activated when user chage condition
+
 void TStructNodeEditor::AutoRefreshButtonSlot(Bool_t on)
 {
-   // Activated when user chage condition
-
    if (on) {
       Update(kTRUE);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the fill area color.
+
 void TStructNodeEditor::ColorSelectedSlot(Pixel_t color)
 {
-   // Slot connected to the fill area color.
-
    if (fAvoidSignal) {
       return;
    }
@@ -164,11 +165,11 @@ void TStructNodeEditor::ColorSelectedSlot(Pixel_t color)
    Update();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Defaulf button. Sets color of class to default
+
 void TStructNodeEditor::DefaultButtonSlot()
 {
-   // Slot for Defaulf button. Sets color of class to default
-
    if (TStructNodeProperty* prop = FindNodeProperty(fNode)) {
       fColors->Remove(prop);
       fSelectedPropert = GetDefaultProperty();
@@ -178,12 +179,12 @@ void TStructNodeEditor::DefaultButtonSlot()
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retruns property associated to the class of given node "node". If property isn't found
+/// then returns NULL
+
 TStructNodeProperty* TStructNodeEditor::FindNodeProperty(TStructNode* node)
 {
-   // Retruns property associated to the class of given node "node". If property isn't found
-   // then returns NULL
-
    TIter it(fColors);
    TStructNodeProperty* prop;
    while ((prop = (TStructNodeProperty*) it() )) {
@@ -206,19 +207,19 @@ TStructNodeProperty* TStructNodeEditor::FindNodeProperty(TStructNode* node)
    return NULL;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns property with default color
+
 TStructNodeProperty* TStructNodeEditor::GetDefaultProperty()
 {
-   // Returns property with default color
-
    return (TStructNodeProperty*)fColors->Last();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enables button and fields
+
 void TStructNodeEditor::Init()
 {
-   // Enables button and fields
-
    fMaxObjectsNumberEntry->SetState(kTRUE);
    fMaxLevelsNumberEntry->SetState(kTRUE);
    fNameEntry->SetState(kTRUE);
@@ -229,11 +230,11 @@ void TStructNodeEditor::Init()
    fInit = kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emmited when user changes maximum number of levels
+
 void TStructNodeEditor::MaxLevelsValueSetSlot(Long_t)
 {
-   // Emmited when user changes maximum number of levels
-
    fNode->SetMaxLevel(fMaxLevelsNumberEntry->GetIntNumber());
 
    if(fAutoRefesh->IsOn()) {
@@ -241,11 +242,11 @@ void TStructNodeEditor::MaxLevelsValueSetSlot(Long_t)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emmited when user changes maximum number of objects
+
 void TStructNodeEditor::MaxObjectsValueSetSlot(Long_t)
 {
-   // Emmited when user changes maximum number of objects
-
    fNode->SetMaxObjects(fMaxObjectsNumberEntry->GetIntNumber());
 
    if(fAutoRefesh->IsOn()) {
@@ -253,11 +254,11 @@ void TStructNodeEditor::MaxObjectsValueSetSlot(Long_t)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the used node attributes.
+
 void TStructNodeEditor::SetModel(TObject* obj)
 {
-   // Pick up the used node attributes.
-
    fNode = dynamic_cast<TStructNode *>(obj);
    if (!fNode) return;
 
@@ -287,20 +288,20 @@ void TStructNodeEditor::SetModel(TObject* obj)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Signal emmited when color or other property like number of level is changed
+/// without camera reset
+
 void TStructNodeEditor::Update()
 {
-   // Signal emmited when color or other property like number of level is changed
-   // without camera reset
-
    Emit("Update(Bool_t)", false);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Signal emmited when color or other property like number of level is changed.
+/// If "resetCamera" is true, then current camera is reset.
+
 void TStructNodeEditor::Update(Bool_t resetCamera)
 {
-   // Signal emmited when color or other property like number of level is changed.
-   // If "resetCamera" is true, then current camera is reset.
-
    Emit("Update(Bool_t)", resetCamera);
 }

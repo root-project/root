@@ -90,7 +90,11 @@ using std::vector;
 
 ClassImp(TMVA::DecisionTree)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor using the GiniIndex as separation criterion,
+/// no restrictions on minium number of events in a leave note or the
+/// separation gain in the node splitting
+
 TMVA::DecisionTree::DecisionTree():
 BinaryTree(),
    fNvars          (0),
@@ -118,12 +122,14 @@ BinaryTree(),
    fAnalysisType   (Types::kClassification),
    fDataSetInfo    (NULL)
 {
-   // default constructor using the GiniIndex as separation criterion,
-   // no restrictions on minium number of events in a leave note or the
-   // separation gain in the node splitting
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor specifying the separation type, the min number of
+/// events in a no that is still subjected to further splitting, the
+/// number of bins in the grid used in applying the cut for the node
+/// splitting.
+
 TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize, Int_t nCuts, DataSetInfo* dataInfo, UInt_t cls,
                                   Bool_t randomisedTree, Int_t useNvars, Bool_t usePoissonNvars,
                                   UInt_t nMaxDepth, Int_t iSeed, Float_t purityLimit, Int_t treeID):
@@ -153,11 +159,6 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize
    fAnalysisType   (Types::kClassification),
    fDataSetInfo    (dataInfo)
 {
-   // constructor specifying the separation type, the min number of
-   // events in a no that is still subjected to further splitting, the
-   // number of bins in the grid used in applying the cut for the node
-   // splitting.
-
    if (sepType == NULL) { // it is interpreted as a regression tree, where
                           // currently the separation type (simple least square)
                           // cannot be chosen freely)
@@ -175,7 +176,10 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor that creates a true copy, i.e. a completely independent tree
+/// the node copy will recursively copy all the nodes
+
 TMVA::DecisionTree::DecisionTree( const DecisionTree &d ):
    BinaryTree(),
    fNvars      (d.fNvars),
@@ -202,31 +206,29 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d ):
    fAnalysisType(d.fAnalysisType),
    fDataSetInfo    (d.fDataSetInfo)
 {
-   // copy constructor that creates a true copy, i.e. a completely independent tree
-   // the node copy will recursively copy all the nodes
    this->SetRoot( new TMVA::DecisionTreeNode ( *((DecisionTreeNode*)(d.GetRoot())) ) );
    this->SetParentTreeInNodes();
    fNNodes = d.fNNodes;
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::DecisionTree::~DecisionTree()
 {
-   // destructor
-
    // destruction of the tree nodes done in the "base class" BinaryTree
 
    if (fMyTrandom) delete fMyTrandom;
    if (fRegType) delete fRegType;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// descend a tree to find all its leaf nodes, fill max depth reached in the
+/// tree at the same time.
+
 void TMVA::DecisionTree::SetParentTreeInNodes( Node *n )
 {
-   // descend a tree to find all its leaf nodes, fill max depth reached in the
-   // tree at the same time.
-
    if (n == NULL) { //default, start at the tree top, then descend recursively
       n = this->GetRoot();
       if (n == NULL) {
@@ -255,9 +257,10 @@ void TMVA::DecisionTree::SetParentTreeInNodes( Node *n )
    return;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// re-create a new tree (decision tree or search tree) from XML
+
 TMVA::DecisionTree* TMVA::DecisionTree::CreateFromXML(void* node, UInt_t tmva_Version_Code ) {
-   // re-create a new tree (decision tree or search tree) from XML
    std::string type("");
    gTools().ReadAttr(node,"type", type);
    DecisionTree* dt = new DecisionTree();
@@ -267,13 +270,13 @@ TMVA::DecisionTree* TMVA::DecisionTree::CreateFromXML(void* node, UInt_t tmva_Ve
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// building the decision tree by recursively calling the splitting of
+/// one (root-) node into two daughter nodes (returns the number of nodes)
+
 UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & eventSample,
                                       TMVA::DecisionTreeNode *node)
 {
-   // building the decision tree by recursively calling the splitting of
-   // one (root-) node into two daughter nodes (returns the number of nodes)
-
    if (node==NULL) {
       //start with the root node
       node = new TMVA::DecisionTreeNode();
@@ -505,7 +508,8 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    return fNNodes;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::DecisionTree::FillTree( const std::vector<TMVA::Event*> & eventSample )
   
 {
@@ -516,13 +520,13 @@ void TMVA::DecisionTree::FillTree( const std::vector<TMVA::Event*> & eventSample
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fill the existing the decision tree structure by filling event
+/// in from the top node and see where they happen to end up
+
 void TMVA::DecisionTree::FillEvent( const TMVA::Event & event,  
                                     TMVA::DecisionTreeNode *node )
 {
-   // fill the existing the decision tree structure by filling event
-   // in from the top node and see where they happen to end up
-  
    if (node == NULL) { // that's the start, take the Root node
       node = this->GetRoot();
    }
@@ -551,25 +555,25 @@ void TMVA::DecisionTree::FillEvent( const TMVA::Event & event,
   
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// clear the tree nodes (their S/N, Nevents etc), just keep the structure of the tree
+
 void TMVA::DecisionTree::ClearTree()
 {
-   // clear the tree nodes (their S/N, Nevents etc), just keep the structure of the tree
-  
    if (this->GetRoot()!=NULL) this->GetRoot()->ClearNodeAndAllDaughters();
   
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// remove those last splits that result in two leaf nodes that
+/// are both of the type (i.e. both signal or both background)
+/// this of course is only a reasonable thing to do when you use
+/// "YesOrNo" leafs, while it might loose s.th. if you use the
+/// purity information in the nodes.
+/// --> hence I don't call it automatically in the tree building
+
 UInt_t TMVA::DecisionTree::CleanTree( DecisionTreeNode *node )
 {
-   // remove those last splits that result in two leaf nodes that
-   // are both of the type (i.e. both signal or both background)
-   // this of course is only a reasonable thing to do when you use
-   // "YesOrNo" leafs, while it might loose s.th. if you use the
-   // purity information in the nodes.
-   // --> hence I don't call it automatically in the tree building
-
    if (node==NULL) {
       node = this->GetRoot();
    }
@@ -590,13 +594,13 @@ UInt_t TMVA::DecisionTree::CleanTree( DecisionTreeNode *node )
    
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prune (get rid of internal nodes) the Decision tree to avoid overtraining
+/// serveral different pruning methods can be applied as selected by the 
+/// variable "fPruneMethod". 
+
 Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
 {
-   // prune (get rid of internal nodes) the Decision tree to avoid overtraining
-   // serveral different pruning methods can be applied as selected by the 
-   // variable "fPruneMethod". 
-  
    //   std::ofstream logfile("dt_pruning.log");
 
   
@@ -658,27 +662,28 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
 };
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// run the validation sample through the (pruned) tree and fill in the nodes
+/// the variables NSValidation and NBValidadtion (i.e. how many of the Signal
+/// and Background events from the validation sample. This is then later used
+/// when asking for the "tree quality" .. 
+
 void TMVA::DecisionTree::ApplyValidationSample( const EventConstList* validationSample ) const
 {
-   // run the validation sample through the (pruned) tree and fill in the nodes
-   // the variables NSValidation and NBValidadtion (i.e. how many of the Signal
-   // and Background events from the validation sample. This is then later used
-   // when asking for the "tree quality" .. 
    GetRoot()->ResetValidationData();
    for (UInt_t ievt=0; ievt < validationSample->size(); ievt++) {
       CheckEventWithPrunedTree((*validationSample)[ievt]);
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the misclassification rate of a pruned tree
+/// a "pruned tree" may have set the variable "IsTerminal" to "arbitrary" at
+/// any node, hence this tree quality testing will stop there, hence test
+/// the pruned tree (while the full tree is still in place for normal/later use)
+
 Double_t TMVA::DecisionTree::TestPrunedTreeQuality( const DecisionTreeNode* n, Int_t mode ) const
 {
-   // return the misclassification rate of a pruned tree
-   // a "pruned tree" may have set the variable "IsTerminal" to "arbitrary" at
-   // any node, hence this tree quality testing will stop there, hence test
-   // the pruned tree (while the full tree is still in place for normal/later use)
-   
    if (n == NULL) { // default, start at the tree top, then descend recursively
       n = this->GetRoot();
       if (n == NULL) {
@@ -714,13 +719,13 @@ Double_t TMVA::DecisionTree::TestPrunedTreeQuality( const DecisionTreeNode* n, I
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// pass a single validation event throught a pruned decision tree
+/// on the way down the tree, fill in all the "intermediate" information
+/// that would normally be there from training.
+
 void TMVA::DecisionTree::CheckEventWithPrunedTree( const Event* e ) const
 {
-   // pass a single validation event throught a pruned decision tree
-   // on the way down the tree, fill in all the "intermediate" information
-   // that would normally be there from training.
-
    DecisionTreeNode* current =  this->GetRoot();
    if (current == NULL) {
       Log() << kFATAL << "CheckEventWithPrunedTree: started with undefined ROOT node" <<Endl;
@@ -749,10 +754,11 @@ void TMVA::DecisionTree::CheckEventWithPrunedTree( const Event* e ) const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the normalization factor for a pruning validation sample
+
 Double_t TMVA::DecisionTree::GetSumWeights( const EventConstList* validationSample ) const
 {
-   // calculate the normalization factor for a pruning validation sample
    Double_t sumWeights = 0.0;
    for( EventConstList::const_iterator it = validationSample->begin();
         it != validationSample->end(); ++it ) {
@@ -763,11 +769,11 @@ Double_t TMVA::DecisionTree::GetSumWeights( const EventConstList* validationSamp
 
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the number of terminal nodes in the sub-tree below Node n
+
 UInt_t TMVA::DecisionTree::CountLeafNodes( TMVA::Node *n )
 {
-   // return the number of terminal nodes in the sub-tree below Node n
-  
    if (n == NULL) { // default, start at the tree top, then descend recursively
       n =  this->GetRoot();
       if (n == NULL) {
@@ -792,11 +798,11 @@ UInt_t TMVA::DecisionTree::CountLeafNodes( TMVA::Node *n )
    return countLeafs;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// descend a tree to find all its leaf nodes
+
 void TMVA::DecisionTree::DescendTree( Node* n )
 {
-   // descend a tree to find all its leaf nodes
-  
    if (n == NULL) { // default, start at the tree top, then descend recursively
       n =  this->GetRoot();
       if (n == NULL) {
@@ -826,10 +832,11 @@ void TMVA::DecisionTree::DescendTree( Node* n )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prune away the subtree below the node 
+
 void TMVA::DecisionTree::PruneNode( DecisionTreeNode* node )
 {
-   // prune away the subtree below the node 
    DecisionTreeNode *l = node->GetLeft();
    DecisionTreeNode *r = node->GetRight();
 
@@ -846,12 +853,12 @@ void TMVA::DecisionTree::PruneNode( DecisionTreeNode* node )
   
 }
 
-//_______________________________________________________________________
-void TMVA::DecisionTree::PruneNodeInPlace( DecisionTreeNode* node ) {
-   // prune a node temporaily (without actually deleting its decendants
-   // which allows testing the pruned tree quality for many different
-   // pruning stages without "touching" the tree.
+////////////////////////////////////////////////////////////////////////////////
+/// prune a node temporaily (without actually deleting its decendants
+/// which allows testing the pruned tree quality for many different
+/// pruning stages without "touching" the tree.
 
+void TMVA::DecisionTree::PruneNodeInPlace( DecisionTreeNode* node ) {
    if(node == NULL) return;
    node->SetNTerminal(1);
    node->SetSubTreeR( node->GetNodeR() );
@@ -860,13 +867,13 @@ void TMVA::DecisionTree::PruneNodeInPlace( DecisionTreeNode* node ) {
    node->SetTerminal(kTRUE); // set the node to be terminal without deleting its descendants FIXME not needed
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// retrieve node from the tree. Its position (up to a maximal tree depth of 64)
+/// is coded as a sequence of left-right moves starting from the root, coded as
+/// 0-1 bit patterns stored in the "long-integer"  (i.e. 0:left ; 1:right
+
 TMVA::Node* TMVA::DecisionTree::GetNode( ULong_t sequence, UInt_t depth )
 {
-   // retrieve node from the tree. Its position (up to a maximal tree depth of 64)
-   // is coded as a sequence of left-right moves starting from the root, coded as
-   // 0-1 bit patterns stored in the "long-integer"  (i.e. 0:left ; 1:right
-  
    Node* current = this->GetRoot();
   
    for (UInt_t i =0;  i < depth; i++) {
@@ -879,9 +886,10 @@ TMVA::Node* TMVA::DecisionTree::GetNode( ULong_t sequence, UInt_t depth )
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TMVA::DecisionTree::GetRandomisedVariables(Bool_t *useVariable, UInt_t *mapVariable, UInt_t &useNvars){
-   //
    for (UInt_t ivar=0; ivar<fNvars; ivar++) useVariable[ivar]=kFALSE;
    if (fUseNvars==0) { // no number specified ... choose s.th. which hopefully works well 
       // watch out, should never happen as it is initialised automatically in MethodBDT already!!!
@@ -905,18 +913,18 @@ void TMVA::DecisionTree::GetRandomisedVariables(Bool_t *useVariable, UInt_t *map
    if (nSelectedVars != useNvars) { std::cout << "Bug in TrainNode - GetRandisedVariables()... sorry" << std::endl; std::exit(1);}
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decide how to split a node using one of the variables that gives
+/// the best separation of signal/background. In order to do this, for each 
+/// variable a scan of the different cut values in a grid (grid = fNCuts) is 
+/// performed and the resulting separation gains are compared.
+/// in addition to the individual variables, one can also ask for a fisher
+/// discriminant being built out of (some) of the variables and used as a
+/// possible multivariate split.
+
 Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
                                             TMVA::DecisionTreeNode *node )
 {
-   // Decide how to split a node using one of the variables that gives
-   // the best separation of signal/background. In order to do this, for each 
-   // variable a scan of the different cut values in a grid (grid = fNCuts) is 
-   // performed and the resulting separation gains are compared.
-   // in addition to the individual variables, one can also ask for a fisher
-   // discriminant being built out of (some) of the variables and used as a
-   // possible multivariate split.
-
    Double_t  separationGainTotal = -1, sepTmp;
    Double_t *separationGain    = new Double_t[fNvars+1];
    Int_t    *cutIndex          = new Int_t[fNvars+1];  //-1;
@@ -1334,10 +1342,10 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
 
 
 
-//_______________________________________________________________________
-std::vector<Double_t>  TMVA::DecisionTree::GetFisherCoefficients(const EventConstList &eventSample, UInt_t nFisherVars, UInt_t *mapVarInFisher){ 
-   // calculate the fisher coefficients for the event sample and the variables used
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the fisher coefficients for the event sample and the variables used
 
+std::vector<Double_t>  TMVA::DecisionTree::GetFisherCoefficients(const EventConstList &eventSample, UInt_t nFisherVars, UInt_t *mapVarInFisher){ 
    std::vector<Double_t> fisherCoeff(fNvars+1);
 
    // initializaton of global matrices and vectors
@@ -1527,11 +1535,11 @@ std::vector<Double_t>  TMVA::DecisionTree::GetFisherCoefficients(const EventCons
    return fisherCoeff;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
                                             TMVA::DecisionTreeNode *node )
 {
-  
    // train a node by finding the single optimal cut for a single variable
    // that best separates signal and background (maximizes the separation gain)
   
@@ -1659,12 +1667,12 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
    return separationGain;
 }
 
-//___________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the pointer to the leaf node where a particular event ends up in...
+/// (used in gradient boosting)
+
 TMVA::DecisionTreeNode* TMVA::DecisionTree::GetEventNode(const TMVA::Event & e) const
 {
-   // get the pointer to the leaf node where a particular event ends up in...
-   // (used in gradient boosting)
-
    TMVA::DecisionTreeNode *current = (TMVA::DecisionTreeNode*)this->GetRoot();
    while(current->GetNodeType() == 0) { // intermediate node in a tree
       current = (current->GoesRight(e)) ?
@@ -1674,14 +1682,14 @@ TMVA::DecisionTreeNode* TMVA::DecisionTree::GetEventNode(const TMVA::Event & e) 
    return current;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the event e is put into the decision tree (starting at the root node)
+/// and the output is NodeType (signal) or (background) of the final node (basket)
+/// in which the given events ends up. I.e. the result of the classification if
+/// the event for this decision tree.
+
 Double_t TMVA::DecisionTree::CheckEvent( const TMVA::Event * e, Bool_t UseYesNoLeaf ) const
 {
-   // the event e is put into the decision tree (starting at the root node)
-   // and the output is NodeType (signal) or (background) of the final node (basket)
-   // in which the given events ends up. I.e. the result of the classification if
-   // the event for this decision tree.
-  
    TMVA::DecisionTreeNode *current = this->GetRoot();
    if (!current){
       Log() << kFATAL << "CheckEvent: started with undefined ROOT node" <<Endl;
@@ -1707,11 +1715,11 @@ Double_t TMVA::DecisionTree::CheckEvent( const TMVA::Event * e, Bool_t UseYesNoL
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculates the purity S/(S+B) of a given event sample
+
 Double_t  TMVA::DecisionTree::SamplePurity( std::vector<TMVA::Event*> eventSample )
 {
-   // calculates the purity S/(S+B) of a given event sample
-  
    Double_t sumsig=0, sumbkg=0, sumtot=0;
    for (UInt_t ievt=0; ievt<eventSample.size(); ievt++) {
       if (eventSample[ievt]->GetClass() != fSigClass) sumbkg+=eventSample[ievt]->GetWeight();
@@ -1727,14 +1735,14 @@ Double_t  TMVA::DecisionTree::SamplePurity( std::vector<TMVA::Event*> eventSampl
    else return -1;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the relative variable importance, normalized to all
+/// variables together having the importance 1. The importance in
+/// evaluated as the total separation-gain that this variable had in
+/// the decision trees (weighted by the number of events)
+
 vector< Double_t >  TMVA::DecisionTree::GetVariableImportance()
 {
-   // Return the relative variable importance, normalized to all
-   // variables together having the importance 1. The importance in
-   // evaluated as the total separation-gain that this variable had in
-   // the decision trees (weighted by the number of events)
-  
    std::vector<Double_t> relativeImportance(fNvars);
    Double_t  sum=0;
    for (UInt_t i=0; i< fNvars; i++) {
@@ -1751,11 +1759,11 @@ vector< Double_t >  TMVA::DecisionTree::GetVariableImportance()
    return relativeImportance;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the relative improtance of variable ivar
+
 Double_t  TMVA::DecisionTree::GetVariableImportance( UInt_t ivar )
 {
-   // returns the relative improtance of variable ivar
-  
    std::vector<Double_t> relativeImportance = this->GetVariableImportance();
    if (ivar < fNvars) return relativeImportance[ivar];
    else {

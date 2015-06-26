@@ -20,7 +20,8 @@
 ClassImp(TAttFill)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>Fill Area Attributes class</h2></center>
 
@@ -168,52 +169,53 @@ fillpatterns.C
 End_Macro */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// AttFill default constructor.
+/// Default fill attributes are taking from the current style
+
 TAttFill::TAttFill()
 {
-   // AttFill default constructor.
-   // Default fill attributes are taking from the current style
-
    if (!gStyle) {fFillColor=1; fFillStyle=0; return;}
    fFillColor = gStyle->GetFillColor();
    fFillStyle = gStyle->GetFillStyle();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// AttFill normal constructor.
+/// color Fill Color
+/// style Fill Style
+
 TAttFill::TAttFill(Color_t color, Style_t style)
 {
-   // AttFill normal constructor.
-   // color Fill Color
-   // style Fill Style
-
    fFillColor = color;
    fFillStyle = style;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// AttFill destructor.
+
 TAttFill::~TAttFill()
 {
-   // AttFill destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this fill attributes to a new TAttFill.
+
 void TAttFill::Copy(TAttFill &attfill) const
 {
-   // Copy this fill attributes to a new TAttFill.
-
    attfill.fFillColor  = fFillColor;
    attfill.fFillStyle  = fFillStyle;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change current fill area attributes if necessary.
+
 void TAttFill::Modify()
 {
-   // Change current fill area attributes if necessary.
-
    if (!gPad) return;
    if (!gPad->IsBatch()) {
       gVirtualX->SetFillColor(fFillColor);
@@ -224,21 +226,21 @@ void TAttFill::Modify()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this fill attributes to default values.
+
 void TAttFill::ResetAttFill(Option_t *)
 {
-   // Reset this fill attributes to default values.
-
    fFillColor = 1;
    fFillStyle = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save fill attributes as C++ statement(s) on output stream out
+
 void TAttFill::SaveFillAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef)
 {
-    // Save fill attributes as C++ statement(s) on output stream out
-
    if (fFillColor != coldef) {
       if (fFillColor > 228) {
          TColor::SaveColor(out, fFillColor);
@@ -252,20 +254,20 @@ void TAttFill::SaveFillAttributes(std::ostream &out, const char *name, Int_t col
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the DialogCanvas Fill attributes.
+
 void TAttFill::SetFillAttributes()
 {
-   // Invoke the DialogCanvas Fill attributes.
-
    TVirtualPadEditor::UpdateFillAttributes(fFillColor,fFillStyle);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a transparent fill color. falpha defines the percentage of
+/// the color opacity from 0. (fully transparent) to 1. (fully opaque).
+
 void TAttFill::SetFillColorAlpha(Color_t fcolor, Float_t falpha)
 {
-   // Set a transparent fill color. falpha defines the percentage of
-   // the color opacity from 0. (fully transparent) to 1. (fully opaque).
-
    fFillColor = TColor::GetColorTransparent(fcolor, falpha);
 }

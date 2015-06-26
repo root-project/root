@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TEntryListBlock: Used by TEntryList to store the entry numbers</h2></center>
  There are 2 ways to represent entry numbers in a TEntryListBlock:
@@ -51,11 +52,11 @@ End_Html */
 
 ClassImp(TEntryListBlock)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default c-tor
+
 TEntryListBlock::TEntryListBlock()
 {
-   //default c-tor
-
    fIndices = 0;
    fN = kBlockSize;
    fNPassed = 0;
@@ -66,11 +67,11 @@ TEntryListBlock::TEntryListBlock()
    fLastIndexQueried = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy c-tor
+
 TEntryListBlock::TEntryListBlock(const TEntryListBlock &eblock) : TObject(eblock)
 {
-   //copy c-tor
-
    fN = eblock.fN;
    if (eblock.fIndices){
       fIndices = new UShort_t[fN];
@@ -88,17 +89,18 @@ TEntryListBlock::TEntryListBlock(const TEntryListBlock &eblock) : TObject(eblock
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TEntryListBlock::~TEntryListBlock()
 {
-   //destructor
-
    if (fIndices)
       delete [] fIndices;
    fIndices = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEntryListBlock &TEntryListBlock::operator=(const TEntryListBlock &eblock)
 {
    if (this != &eblock) {
@@ -123,13 +125,13 @@ TEntryListBlock &TEntryListBlock::operator=(const TEntryListBlock &eblock)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If the block has already been optimized and the entries
+///are stored as a list and not as bits, trying to enter a new entry
+///will make the block switch to bits representation
+
 Bool_t TEntryListBlock::Enter(Int_t entry)
 {
-   //If the block has already been optimized and the entries
-   //are stored as a list and not as bits, trying to enter a new entry
-   //will make the block switch to bits representation
-
    if (entry > kBlockSize*16) {
       Error("Enter", "illegal entry value!");
       return 0;
@@ -160,14 +162,14 @@ Bool_t TEntryListBlock::Enter(Int_t entry)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Remove entry #entry
+///If the block has already been optimized and the entries
+///are stored as a list and not as bits, trying to remove a new entry
+///will make the block switch to bits representation
+
 Bool_t TEntryListBlock::Remove(Int_t entry)
 {
-//Remove entry #entry
-//If the block has already been optimized and the entries
-//are stored as a list and not as bits, trying to remove a new entry
-//will make the block switch to bits representation
-
    if (entry > kBlockSize*16) {
       Error("Remove", "Illegal entry value!\n");
       return 0;
@@ -190,11 +192,11 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
    return Remove(entry);
    //return 0;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///true if the block contains entry #entry
+
 Int_t TEntryListBlock::Contains(Int_t entry)
 {
-//true if the block contains entry #entry
-
    if (entry > kBlockSize*16) {
       Error("Contains", "Illegal entry value!\n");
       return 0;
@@ -238,12 +240,12 @@ Int_t TEntryListBlock::Contains(Int_t entry)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Merge with the other block
+///Returns the resulting number of entries in the block
+
 Int_t TEntryListBlock::Merge(TEntryListBlock *block)
 {
-   //Merge with the other block
-   //Returns the resulting number of entries in the block
-
    Int_t i, j;
    if (block->GetNPassed() == 0) return GetNPassed();
    if (GetNPassed() == 0){
@@ -365,24 +367,24 @@ Int_t TEntryListBlock::Merge(TEntryListBlock *block)
    return GetNPassed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the number of entries, passing the selection.
+///In case, when the block stores entries that pass (fPassing=1) returns fNPassed
+
 Int_t TEntryListBlock::GetNPassed()
 {
-//Returns the number of entries, passing the selection.
-//In case, when the block stores entries that pass (fPassing=1) returns fNPassed
-
    if (fPassing)
       return fNPassed;
    else
       return kBlockSize*16-fNPassed;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Return entry #entry
+///See also Next()
+
 Int_t TEntryListBlock::GetEntry(Int_t entry)
 {
-//Return entry #entry
-//See also Next()
-
    if (entry > kBlockSize*16) return -1;
    if (entry > GetNPassed()) return -1;
    if (entry == fLastIndexQueried+1) return Next();
@@ -442,12 +444,12 @@ Int_t TEntryListBlock::GetEntry(Int_t entry)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Return the next non-zero entry
+///Faster than GetEntry() function
+
 Int_t TEntryListBlock::Next()
 {
-//Return the next non-zero entry
-//Faster than GetEntry() function
-
    if (fLastIndexQueried==GetNPassed()-1){
       fLastIndexQueried=-1;
       fLastIndexReturned = -1;
@@ -489,22 +491,22 @@ Int_t TEntryListBlock::Next()
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Print the entries in this block
+
 void TEntryListBlock::Print(const Option_t *option) const
 {
-   //Print the entries in this block
-
    TString opt = option;
    opt.ToUpper();
    if (opt.Contains("A")) PrintWithShift(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///print the indices of this block + shift (used from TEntryList::Print()) to
+///print the corrent values
+
 void TEntryListBlock::PrintWithShift(Int_t shift) const
 {
-   //print the indices of this block + shift (used from TEntryList::Print()) to
-   //print the corrent values
-
    Int_t i;
    if (fType==0){
       Int_t ibit, ibite;
@@ -543,11 +545,11 @@ void TEntryListBlock::PrintWithShift(Int_t shift) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///if there are < kBlockSize or >kBlockSize*15 entries, change to an array representation
+
 void TEntryListBlock::OptimizeStorage()
 {
-   //if there are < kBlockSize or >kBlockSize*15 entries, change to an array representation
-
    if (fType!=0) return;
    if (fNPassed > kBlockSize*15)
       fPassing = 0;
@@ -559,13 +561,13 @@ void TEntryListBlock::OptimizeStorage()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Transform the existing fIndices
+///dir=0 - transform from bits to a list
+///dir=1 - tranform from a list to bits
+
 void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
 {
-   //Transform the existing fIndices
-   //dir=0 - transform from bits to a list
-   //dir=1 - tranform from a list to bits
-
    Int_t i=0;
    Int_t ilist = 0;
    Int_t ibite, ibit;

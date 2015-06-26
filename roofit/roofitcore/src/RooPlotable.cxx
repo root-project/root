@@ -36,9 +36,10 @@ ClassImp(RooPlotable)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print detailed information
+
 void RooPlotable::printMultiline(ostream& os, Int_t /*content*/, Bool_t /*verbose*/, TString indent) const {
-  // Print detailed information
   os << indent << "--- RooPlotable ---" << endl;
   os << indent << "  y-axis min = " << getYAxisMin() << endl
      << indent << "  y-axis max = " << getYAxisMax() << endl
@@ -46,9 +47,10 @@ void RooPlotable::printMultiline(ostream& os, Int_t /*content*/, Bool_t /*verbos
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return cast of RooPlotable as TObject. Note that is this a cross
+/// cast that will change the pointer value in most cases
+
 TObject *RooPlotable::crossCast() {
-  // Return cast of RooPlotable as TObject. Note that is this a cross
-  // cast that will change the pointer value in most cases
   return dynamic_cast<TObject*>(this);
 }

@@ -41,11 +41,11 @@ int gDebug;
 
 #define kMAXPATHLEN 4096
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write info message to syslog.
+
 void Info(const char *va_(fmt), ...)
 {
-   // Write info message to syslog.
-
    char    buf[kMAXPATHLEN];
    va_list ap;
 
@@ -61,12 +61,12 @@ void Info(const char *va_(fmt), ...)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Small program to communicate successful result of sshd auth to the
+/// relevant root server daemons.
+
 int main(int argc, char **argv)
 {
-   // Small program to communicate successful result of sshd auth to the
-   // relevant root server daemons.
-
    char *pipeId = 0;
    char *tmpDir = 0;
 

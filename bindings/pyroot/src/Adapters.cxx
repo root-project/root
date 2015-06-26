@@ -47,56 +47,64 @@ PyROOT::TMemberAdapter::TMemberAdapter( TMethod* meth ) : fMember( meth )
    /* empty */
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// cast the adapter to a TMethod* being adapted, returns 0 on failure
+
 PyROOT::TMemberAdapter::operator TMethod*() const
 {
-// cast the adapter to a TMethod* being adapted, returns 0 on failure
    return dynamic_cast< TMethod* >( const_cast< TDictionary* >( fMember ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyROOT::TMemberAdapter::TMemberAdapter( TFunction* func ) : fMember( func )
 {
    /* empty */
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// cast the adapter to a TFunction* being adapted, returns 0 on failure
+
 PyROOT::TMemberAdapter::operator TFunction*() const
 {
-// cast the adapter to a TFunction* being adapted, returns 0 on failure
    return dynamic_cast< TFunction* >( const_cast< TDictionary* >( fMember ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyROOT::TMemberAdapter::TMemberAdapter( TDataMember* mb ) : fMember( mb )
 {
    /* empty */
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// cast the adapter to a TDataMember* being adapted, returns 0 on failure
+
 PyROOT::TMemberAdapter::operator TDataMember*() const
 {
-// cast the adapter to a TDataMember* being adapted, returns 0 on failure
    return dynamic_cast< TDataMember* >( const_cast< TDictionary* >( fMember ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyROOT::TMemberAdapter::TMemberAdapter( TMethodArg* ma ) : fMember( ma )
 {
    /* empty */
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// cast the adapter to a TMethodArg* being adapted, returns 0 on failure
+
 PyROOT::TMemberAdapter::operator TMethodArg*() const
 {
-// cast the adapter to a TMethodArg* being adapted, returns 0 on failure
    return dynamic_cast< TMethodArg* >( const_cast< TDictionary* >( fMember ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return name of the type described by fMember
+
 std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
 {
-// Return name of the type described by fMember
    TMethodArg* arg = (TMethodArg*)*this;
 
    if ( arg ) {
@@ -118,47 +126,53 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
    return "<unknown>";   // happens for classes w/o dictionary
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if the adapted member is a const method
+
 Bool_t PyROOT::TMemberAdapter::IsConstant() const
 {
-// test if the adapted member is a const method
    return fMember->Property() & kIsConstMethod;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if the adapted member is a const method
+
 Bool_t PyROOT::TMemberAdapter::IsConstructor() const
 {
-// test if the adapted member is a const method
    return ((TFunction*)fMember) ? (((TFunction*)fMember)->ExtraProperty() & kIsConstructor) : kFALSE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if the adapted member is of an enum type
+
 Bool_t PyROOT::TMemberAdapter::IsEnum() const
 {
-// test if the adapted member is of an enum type
    return fMember->Property() & kIsEnum;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if the adapted member represents an public (data) member
+
 Bool_t PyROOT::TMemberAdapter::IsPublic() const
 {
-// test if the adapted member represents an public (data) member
    return fMember->Property() & kIsPublic;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if the adapted member represents a class (data) member
+
 Bool_t PyROOT::TMemberAdapter::IsStatic() const
 {
-// test if the adapted member represents a class (data) member
    if ( DeclaringScope().IsNamespace() )
       return kTRUE;
    return fMember->Property() & kIsStatic;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the total number of parameters that the adapted function/method takes
+
 size_t PyROOT::TMemberAdapter::FunctionParameterSize( Bool_t required ) const
 {
-// get the total number of parameters that the adapted function/method takes
    TFunction* func = (TFunction*)fMember;
    if ( ! func )
       return 0;
@@ -169,17 +183,19 @@ size_t PyROOT::TMemberAdapter::FunctionParameterSize( Bool_t required ) const
    return func->GetNargs();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the type info of the function parameter at position nth
+
 PyROOT::TMemberAdapter PyROOT::TMemberAdapter::FunctionParameterAt( size_t nth ) const
 {
-// get the type info of the function parameter at position nth
    return (TMethodArg*)((TFunction*)fMember)->GetListOfMethodArgs()->At( nth );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the formal name, if available, of the function parameter at position nth
+
 std::string PyROOT::TMemberAdapter::FunctionParameterNameAt( size_t nth ) const
 {
-// get the formal name, if available, of the function parameter at position nth
    const char* name =
       ((TMethodArg*)((TFunction*)fMember)->GetListOfMethodArgs()->At( nth ))->GetName();
 
@@ -188,10 +204,11 @@ std::string PyROOT::TMemberAdapter::FunctionParameterNameAt( size_t nth ) const
    return "";
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the default value, if available, of the function parameter at position nth
+
 std::string PyROOT::TMemberAdapter::FunctionParameterDefaultAt( size_t nth ) const
 {
-// get the default value, if available, of the function parameter at position nth
    TMethodArg* arg = (TMethodArg*)((TFunction*)fMember)->GetListOfMethodArgs()->At( nth );
    const char* def = arg->GetDefault();
 
@@ -209,17 +226,19 @@ std::string PyROOT::TMemberAdapter::FunctionParameterDefaultAt( size_t nth ) con
    return def;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the return type of the wrapped function/method
+
 PyROOT::TReturnTypeAdapter PyROOT::TMemberAdapter::ReturnType() const
 {
-// get the return type of the wrapped function/method
    return TReturnTypeAdapter( ((TFunction*)fMember)->GetReturnTypeNormalizedName() );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the declaring scope (class) of the wrapped function/method
+
 PyROOT::TScopeAdapter PyROOT::TMemberAdapter::DeclaringScope() const
 {
-// get the declaring scope (class) of the wrapped function/method
    TMethod* method = (TMethod*)*this;
    if ( method )
       return method->GetClass();
@@ -249,7 +268,8 @@ PyROOT::TScopeAdapter::TScopeAdapter( TClass* klass ) : fClass( klass )
       fName = fClass->GetName();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyROOT::TScopeAdapter::TScopeAdapter( const std::string& name ) :
    fClass( name.c_str() ), fName( name )
 {
@@ -263,10 +283,11 @@ PyROOT::TScopeAdapter::TScopeAdapter( const TMemberAdapter& mb ) :
    /* empty */
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// lookup a scope (class) by name
+
 PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string& name, Bool_t quiet )
 {
-// lookup a scope (class) by name
    Int_t oldEIL = gErrorIgnoreLevel;
    if ( quiet )
       gErrorIgnoreLevel = 3000;
@@ -278,10 +299,11 @@ PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string& name, Bo
    return klass.GetClass();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return name of type described by fClass
+
 std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
 {
-// Return name of type described by fClass
    if ( ! fClass.GetClass() || ! fClass->Property() ) {
    // fundamental types have no class, and unknown classes have no property
       std::string name = fName;
@@ -321,61 +343,68 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
    return name;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the total number of base classes that this class has
+
 size_t PyROOT::TScopeAdapter::BaseSize() const
 {
-// get the total number of base classes that this class has
    if ( fClass.GetClass() && fClass->GetListOfBases() != 0 )
       return fClass->GetListOfBases()->GetSize();
 
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the nth base of this class
+
 PyROOT::TBaseAdapter PyROOT::TScopeAdapter::BaseAt( size_t nth ) const
 {
-// get the nth base of this class
    return (TBaseClass*)fClass->GetListOfBases()->At( nth );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the total number of methods that this class has
+
 size_t PyROOT::TScopeAdapter::FunctionMemberSize() const
 {
-// get the total number of methods that this class has
    if ( fClass.GetClass() )
       return fClass->GetListOfMethods()->GetSize();
 
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the nth method of this class
+
 PyROOT::TMemberAdapter PyROOT::TScopeAdapter::FunctionMemberAt( size_t nth ) const
 {
-// get the nth method of this class
    return (TMethod*)fClass->GetListOfMethods()->At( nth );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the total number of data members that this class has
+
 size_t PyROOT::TScopeAdapter::DataMemberSize() const
 {
-// get the total number of data members that this class has
    if ( fClass.GetClass() )
       return fClass->GetListOfDataMembers()->GetSize();
 
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the nth data member of this class
+
 PyROOT::TMemberAdapter PyROOT::TScopeAdapter::DataMemberAt( size_t nth ) const
 {
-// get the nth data member of this class
    return (TDataMember*)fClass->GetListOfDataMembers()->At( nth );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check the validity of this scope (class)
+
 PyROOT::TScopeAdapter::operator Bool_t() const
 {
-// check the validity of this scope (class)
    if ( fName.empty() )
       return false;
 
@@ -398,10 +427,11 @@ PyROOT::TScopeAdapter::operator Bool_t() const
    return b;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// verify whether the dictionary of this class is fully available
+
 Bool_t PyROOT::TScopeAdapter::IsComplete() const
 {
-// verify whether the dictionary of this class is fully available
    Bool_t b = kFALSE;
 
    Int_t oldEIL = gErrorIgnoreLevel;
@@ -421,10 +451,11 @@ Bool_t PyROOT::TScopeAdapter::IsComplete() const
    return b;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if this scope represents a class
+
 Bool_t PyROOT::TScopeAdapter::IsClass() const
 {
-// test if this scope represents a class
    if ( fClass.GetClass() ) {
    // some inverted logic: we don't have a TClass, but a builtin will be recognized, so
    // if it is NOT a builtin, it is a class or struct (but may be missing dictionary)
@@ -437,10 +468,11 @@ Bool_t PyROOT::TScopeAdapter::IsClass() const
    return TDataType( Name( Rflx::FINAL | Rflx::SCOPED ).c_str() ).GetType() == kOther_t;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if this scope represents a struct
+
 Bool_t PyROOT::TScopeAdapter::IsStruct() const
 {
-// test if this scope represents a struct
    if ( fClass.GetClass() ) {
    // same logic as for IsClass() above ...
       return (fClass->Property() & kIsStruct) || ! (fClass->Property() & kIsFundamental);
@@ -450,20 +482,22 @@ Bool_t PyROOT::TScopeAdapter::IsStruct() const
    return TDataType( Name( Rflx::FINAL | Rflx::SCOPED ).c_str() ).GetType() == kOther_t;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if this scope represents a namespace
+
 Bool_t PyROOT::TScopeAdapter::IsNamespace() const
 {
-// test if this scope represents a namespace
    if ( fClass.GetClass() )
       return fClass->Property() & kIsNamespace;
 
    return kFALSE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if this scope represents an abstract class
+
 Bool_t PyROOT::TScopeAdapter::IsAbstract() const
 {
-// test if this scope represents an abstract class
    if ( fClass.GetClass() )
       return fClass->Property() & kIsAbstract;   // assume set only for classes
 

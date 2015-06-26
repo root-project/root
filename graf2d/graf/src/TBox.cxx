@@ -24,7 +24,8 @@
 ClassImp(TBox)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>Box class</h2></center>
 A box is defined by :
@@ -37,11 +38,11 @@ A box has line attributes (see TAttLine) and fill area attributes
 End_Html */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Box default constructor.
+
 TBox::TBox(): TObject(), TAttLine(), TAttFill()
 {
-   // Box default constructor.
-
    fTip = 0;
    fX1       = 0.;
    fY1       = 0.;
@@ -51,12 +52,12 @@ TBox::TBox(): TObject(), TAttLine(), TAttFill()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Box standard constructor.
+
 TBox::TBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
      : TObject(), TAttLine(), TAttFill()
 {
-   // Box standard constructor.
-
    if (x2 >= x1) {fX1  =x1; fX2 = x2;}
    else          {fX1 = x2; fX2 = x1;}
    if (y2 >= y1) {fY1  =y1; fY2 = y2;}
@@ -66,11 +67,11 @@ TBox::TBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Box destructor.
+
 TBox::~TBox()
 {
-   // Box destructor.
-
    if (fTip && gPad) {
       gPad->CloseToolTip(fTip);
       gPad->DeleteToolTip(fTip);
@@ -78,11 +79,11 @@ TBox::~TBox()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Box copy constructor.
+
 TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box), TAttBBox2D(box)
 {
-   // Box copy constructor.
-
    fX1       = 0.;
    fY1       = 0.;
    fX2       = 0.;
@@ -92,11 +93,11 @@ TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box), TAttBB
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TBox& TBox::operator=(const TBox& b)
 {
-   // Assignment operator.
-
    if(this!=&b) {
       TObject::operator=(b);
       TAttLine::operator=(b);
@@ -112,11 +113,11 @@ TBox& TBox::operator=(const TBox& b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a Box.
+
 void TBox::Copy(TObject &obj) const
 {
-   // Copy a Box.
-
    TObject::Copy(obj);
    TAttLine::Copy(((TBox&)obj));
    TAttFill::Copy(((TBox&)obj));
@@ -129,18 +130,18 @@ void TBox::Copy(TObject &obj) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a box.
+///
+/// Compute the closest distance of approach from point px,py to the
+/// edges of this box.
+/// The distance is computed in pixels units.
+///
+/// In case of a filled box the distance returned is 0 if the point
+/// (px,py) is inside the box, and is huge if the point is outside.
+
 Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a box.
-   //
-   // Compute the closest distance of approach from point px,py to the
-   // edges of this box.
-   // The distance is computed in pixels units.
-   //
-   // In case of a filled box the distance returned is 0 if the point
-   // (px,py) is inside the box, and is huge if the point is outside.
-
    Int_t pxl, pyl, pxt, pyt;
    Int_t px1 = gPad->XtoAbsPixel(fX1);
    Int_t py1 = gPad->YtoAbsPixel(fY1);
@@ -176,24 +177,24 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this box with its current attributes.
+/// if the box has no fill style (ie fill style=0), the box contour is drawn
+/// if the box has a fill style, the box contour is not drawn by default.
+/// to force the contour to be drawn, specify option "l"
+
 void TBox::Draw(Option_t *option)
 {
-   // Draw this box with its current attributes.
-   // if the box has no fill style (ie fill style=0), the box contour is drawn
-   // if the box has a fill style, the box contour is not drawn by default.
-   // to force the contour to be drawn, specify option "l"
-
    AppendPad(option);
 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this box with new coordinates.
+
 TBox *TBox::DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
 {
-   // Draw this box with new coordinates.
-
    TBox *newbox = new TBox(x1,y1,x2,y2);
    TAttLine::Copy(*newbox);
    TAttFill::Copy(*newbox);
@@ -203,38 +204,38 @@ TBox *TBox::DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+///  This member function is called when a BOX/WBOX/PAD object is clicked.
+///
+///  If the mouse is clicked in one of the 4 corners of the box (pA,pB,pC,pD)
+///  the box is resized with the rubber rectangle.
+///
+///  If the mouse is clicked inside the box, the box is moved.
+///
+///  If the mouse is clicked on the 4 edges (pL,pR,pTop,pBot), the box is
+///  rescaled parallel to this edge (same as Motif window manager).
+///
+///    pA                 pTop                       pB
+///     +--------------------------------------------+
+///     |                                            |
+///     |                                            |
+///     |                                            |
+///   pL|                  pINSIDE                   |pR
+///     |                                            |
+///     |                                            |
+///     |                                            |
+///     |                                            |
+///     +--------------------------------------------+
+///    pD                 pBot                      pC
+///
+///  Note that this function is duplicated on purpose by TPad::ExecuteEvent.
+///  If somebody modifies this function, may be similar changes should also
+///  be applied to TPad::ExecuteEvent.
+
 void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function is called when a BOX/WBOX/PAD object is clicked.
-   //
-   //  If the mouse is clicked in one of the 4 corners of the box (pA,pB,pC,pD)
-   //  the box is resized with the rubber rectangle.
-   //
-   //  If the mouse is clicked inside the box, the box is moved.
-   //
-   //  If the mouse is clicked on the 4 edges (pL,pR,pTop,pBot), the box is
-   //  rescaled parallel to this edge (same as Motif window manager).
-   //
-   //    pA                 pTop                       pB
-   //     +--------------------------------------------+
-   //     |                                            |
-   //     |                                            |
-   //     |                                            |
-   //   pL|                  pINSIDE                   |pR
-   //     |                                            |
-   //     |                                            |
-   //     |                                            |
-   //     |                                            |
-   //     +--------------------------------------------+
-   //    pD                 pBot                      pC
-   //
-   //  Note that this function is duplicated on purpose by TPad::ExecuteEvent.
-   //  If somebody modifies this function, may be similar changes should also
-   //  be applied to TPad::ExecuteEvent.
-
    if (!gPad) return;
    if (!gPad->IsEditable() && event != kMouseEnter) return;
 
@@ -604,53 +605,53 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide tool tip depending on the event type. Typically tool tips
+/// are hidden when event is not a kMouseEnter and not a kMouseMotion
+/// event.
+
 void TBox::HideToolTip(Int_t event)
 {
-   // Hide tool tip depending on the event type. Typically tool tips
-   // are hidden when event is not a kMouseEnter and not a kMouseMotion
-   // event.
-
    if (event != kMouseEnter && event != kMouseMotion && fTip && gPad)
       gPad->CloseToolTip(fTip);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Function which returns 1 if point x,y lies inside the box, 0 otherwise.
+
 Int_t TBox::IsInside(Double_t x, Double_t y) const
 {
-   // Function which returns 1 if point x,y lies inside the box, 0 otherwise.
-
    if (x < fX1 || x > fX2) return 0;
    if (y < fY1 || y > fY2) return 0;
    return 1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List this box with its attributes.
+
 void TBox::ls(Option_t *) const
 {
-   // List this box with its attributes.
-
    TROOT::IndentLevel();
    printf("%s  X1= %f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),fX1,fY1,fX2,fY2);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this box with its current attributes.
+
 void TBox::Paint(Option_t *option)
 {
-   // Paint this box with its current attributes.
-
    PaintBox(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2),option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this box with new coordinates.
+
 void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
 {
-   // Draw this box with new coordinates.
-
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill area attributes only if necessary
 
@@ -665,11 +666,11 @@ void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump this box with its attributes.
+
 void TBox::Print(Option_t *) const
 {
-   // Dump this box with its attributes.
-
    printf("%s  X1=%f Y1=%f X2=%f Y2=%f",IsA()->GetName(),fX1,fY1,fX2,fY2);
    if (GetLineColor() != 1) printf(" Color=%d",GetLineColor());
    if (GetLineStyle() != 1) printf(" Style=%d",GetLineStyle());
@@ -680,11 +681,11 @@ void TBox::Print(Option_t *) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TBox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    if (gROOT->ClassSaved(TBox::Class())) {
       out<<"   ";
    } else {
@@ -699,13 +700,13 @@ void TBox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tool tip text associated with this box. The delay is in
+/// milliseconds (minimum 250). To remove tool tip call method with
+/// text = 0.
+
 void TBox::SetToolTipText(const char *text, Long_t delayms)
 {
-   // Set tool tip text associated with this box. The delay is in
-   // milliseconds (minimum 250). To remove tool tip call method with
-   // text = 0.
-
    if (!gPad) {
       Warning("SetToolTipText", "a canvas must exist before setting the tool tip text");
       return;
@@ -721,11 +722,11 @@ void TBox::SetToolTipText(const char *text, Long_t delayms)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TBox.
+
 void TBox::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TBox.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -750,11 +751,11 @@ void TBox::Streamer(TBuffer &R__b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the "bounding Box" of the Box
+
 Rectangle_t TBox::GetBBox()
 {
-   // Return the "bounding Box" of the Box
-
    Rectangle_t BBox;
    Int_t px1, py1, px2, py2;
    px1 = gPad->XtoPixel(fX1);
@@ -775,11 +776,11 @@ Rectangle_t TBox::GetBBox()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the center of the Box as TPoint in pixels
+
 TPoint TBox::GetBBoxCenter()
 {
-   // Return the center of the Box as TPoint in pixels
-
    TPoint p;
    p.SetX(gPad->XtoPixel(TMath::Min(fX1,fX2)+0.5*(TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2))));
    p.SetY(gPad->YtoPixel(TMath::Min(fY1,fY2)+0.5*(TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2))));
@@ -787,11 +788,11 @@ TPoint TBox::GetBBoxCenter()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set center of the Box
+
 void TBox::SetBBoxCenter(const TPoint &p)
 {
-   // Set center of the Box
-
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    if (fX2>fX1) {
@@ -813,11 +814,11 @@ void TBox::SetBBoxCenter(const TPoint &p)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set X coordinate of the center of the Box
+
 void TBox::SetBBoxCenterX(const Int_t x)
 {
-   // Set X coordinate of the center of the Box
-
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    if (fX2>fX1) {
       this->SetX1(gPad->PixeltoX(x)-0.5*w);
@@ -830,11 +831,11 @@ void TBox::SetBBoxCenterX(const Int_t x)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Y coordinate of the center of the Box
+
 void TBox::SetBBoxCenterY(const Int_t y)
 {
-   // Set Y coordinate of the center of the Box
-
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    if (fY2>fY1) {
       this->SetY1(gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
@@ -846,33 +847,37 @@ void TBox::SetBBoxCenterY(const Int_t y)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set lefthandside of BoundingBox to a value
+/// (resize in x direction on left)
+
 void TBox::SetBBoxX1(const Int_t x)
 {
-   // Set lefthandside of BoundingBox to a value
-   // (resize in x direction on left)
    fX1 = gPad->PixeltoX(x);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set righthandside of BoundingBox to a value
+/// (resize in x direction on right)
+
 void TBox::SetBBoxX2(const Int_t x)
 {
-   // Set righthandside of BoundingBox to a value
-   // (resize in x direction on right)
    fX2 = gPad->PixeltoX(x);
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set top of BoundingBox to a value (resize in y direction on top)
+
 void TBox::SetBBoxY1(const Int_t y)
 {
-   // Set top of BoundingBox to a value (resize in y direction on top)
    fY2 = gPad->PixeltoY(y - gPad->VtoPixel(0));
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bottom of BoundingBox to a value
+/// (resize in y direction on bottom)
+
 void TBox::SetBBoxY2(const Int_t y)
 {
-   // Set bottom of BoundingBox to a value
-   // (resize in y direction on bottom)
    fY1 = gPad->PixeltoY(y - gPad->VtoPixel(0));
 }

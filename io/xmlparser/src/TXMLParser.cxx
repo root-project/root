@@ -57,43 +57,44 @@ namespace {
 
 ClassImp(TXMLParser);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initializes parser variables.
+
 TXMLParser::TXMLParser()
    : fContext(0), fValidate(kTRUE), fReplaceEntities(kFALSE), fStopError(kFALSE), fParseCode(0)
 {
-   // Initializes parser variables.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TXMLParser::~TXMLParser()
 {
-   // Cleanup.
-
    ReleaseUnderlying();
    fParseCode = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The parser will validate the xml file if val = true.
+
 void TXMLParser::SetValidate(Bool_t val)
 {
-   // The parser will validate the xml file if val = true.
-
    fValidate = val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The parser will replace/expand entities.
+
 void TXMLParser::SetReplaceEntities(Bool_t val)
 {
-   // The parser will replace/expand entities.
-
    fReplaceEntities = val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To release any existing document.
+
 void TXMLParser::ReleaseUnderlying()
 {
-   // To release any existing document.
-
    if (fContext) {
       fContext->_private = 0;
       xmlFreeParserCtxt(fContext);
@@ -101,29 +102,29 @@ void TXMLParser::ReleaseUnderlying()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called when an error from the parser has occured.
+/// Message is the parse error.
+
 void TXMLParser::OnValidateError(const TString& message)
 {
-   // This function is called when an error from the parser has occured.
-   // Message is the parse error.
-
    fValidateError += message;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called when a warning from the parser has occured.
+/// Message is the parse error.
+
 void TXMLParser::OnValidateWarning(const TString& message)
 {
-   // This function is called when a warning from the parser has occured.
-   // Message is the parse error.
-
    fValidateWarning += message;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the parse code message.
+
 const char *TXMLParser::GetParseCodeMessage(Int_t parseCode) const
 {
-   // Returns the parse code message.
-
    switch (parseCode) {
       case -1:
          return "Attempt to parse a second file while a parse is in progress";
@@ -148,12 +149,12 @@ const char *TXMLParser::GetParseCodeMessage(Int_t parseCode) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize parser parameters, such as, disactivate non-standards libxml1
+/// features, on/off validation, clear error and warning messages.
+
 void TXMLParser::InitializeContext()
 {
-   // Initialize parser parameters, such as, disactivate non-standards libxml1
-   // features, on/off validation, clear error and warning messages.
-
    fContext->linenumbers = 1; // TRUE - This is the default anyway.
    fContext->validate = fValidate ? 1 : 0;
    fContext->replaceEntities = fReplaceEntities ? 1 : 0;
@@ -163,35 +164,35 @@ void TXMLParser::InitializeContext()
    fValidateWarning = "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stops parsing.
+
 void TXMLParser::StopParser()
 {
-   // Stops parsing.
-
    if (fContext)
       xmlStopParser(fContext);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the parse code:
+///  0: Parse successful
+/// -1: Attempt to parse a second file while a parse is in progress
+/// -2: Parse context is not created
+/// -3: An error occured while parsing file
+/// -4: A fatal error occured while parsing file
+/// -5: Document is not well-formed
+
 void TXMLParser::SetParseCode(Int_t errorcode)
 {
-   // Set the parse code:
-   //  0: Parse successful
-   // -1: Attempt to parse a second file while a parse is in progress
-   // -2: Parse context is not created
-   // -3: An error occured while parsing file
-   // -4: A fatal error occured while parsing file
-   // -5: Document is not well-formed
-
    fParseCode = errorcode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parser stops in case of error:
+/// stop = true, stops on error
+/// stop = false, continue parsing on error...
+
 void TXMLParser::SetStopOnError(Bool_t stop)
 {
-   // Set parser stops in case of error:
-   // stop = true, stops on error
-   // stop = false, continue parsing on error...
-
    fStopError = stop;
 }

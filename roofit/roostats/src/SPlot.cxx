@@ -69,7 +69,8 @@ using namespace std;
 
 
 
-//__________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 SPlot::~SPlot()
 {
    if(TestBit(kOwnData) && fSData)
@@ -77,12 +78,12 @@ SPlot::~SPlot()
 
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 SPlot::SPlot():
   TNamed()
 {
-  // Default constructor
-
   RooArgList Args;
 
   fSWeightVars = Args;
@@ -91,11 +92,11 @@ SPlot::SPlot():
 
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 SPlot::SPlot(const char* name, const char* title):
   TNamed(name, title)
 {
-
   RooArgList Args;
 
   fSWeightVars = Args;
@@ -104,13 +105,13 @@ SPlot::SPlot(const char* name, const char* title):
 
 }
 
-//___________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Constructor from a RooDataSet
+///No sWeighted variables are present
+
 SPlot::SPlot(const char* name, const char* title, const RooDataSet &data):
   TNamed(name, title)
 {
-  //Constructor from a RooDataSet
-  //No sWeighted variables are present
-  
   RooArgList Args;
   
   fSWeightVars = Args;
@@ -119,12 +120,12 @@ SPlot::SPlot(const char* name, const char* title, const RooDataSet &data):
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy Constructor from another SPlot
+
 SPlot::SPlot(const SPlot &other):
   TNamed(other)
 {
-  // Copy Constructor from another SPlot
-  
   RooArgList Args = (RooArgList) other.GetSWeightVars();
   
   fSWeightVars.addClone(Args);
@@ -134,7 +135,8 @@ SPlot::SPlot(const SPlot &other):
 }
 
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* pdf, 
 	     const RooArgList &yieldsList, const RooArgSet &projDeps, 
 	     bool includeWeights, bool cloneData, const char* newName):
@@ -167,7 +169,8 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
 }
 
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooDataSet* SPlot::SetSData(RooDataSet* data)
 {
   if(data)    {
@@ -177,16 +180,17 @@ RooDataSet* SPlot::SetSData(RooDataSet* data)
     return NULL;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooDataSet* SPlot::GetSDataSet() const
 {
   return fSData;
 }  
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t SPlot::GetSWeight(Int_t numEvent, const char* sVariable) const
 {
-
   if(numEvent > fSData->numEntries() )
     {
       coutE(InputArguments)  << "Invalid Entry Number" << endl;
@@ -229,10 +233,10 @@ Double_t SPlot::GetSWeight(Int_t numEvent, const char* sVariable) const
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t SPlot::GetSumOfEventSWeight(Int_t numEvent) const
 {
-
   //Sum the SWeights for a particular event.
   //This sum should equal the total weight of that event.
   //This method is intended to be used as a check.
@@ -263,10 +267,10 @@ Double_t SPlot::GetSumOfEventSWeight(Int_t numEvent) const
 }
 
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t SPlot::GetYieldFromSWeight(const char* sVariable) const
 {
-
 
   //Sum the SWeights for a particular specie over all events
   //This should equal the total (weighted) yield of that specie
@@ -307,10 +311,10 @@ Double_t SPlot::GetYieldFromSWeight(const char* sVariable) const
 }
 
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooArgList SPlot::GetSWeightVars() const
 {
-   
   //Return a RooArgList containing the SWeights
 
   RooArgList Args = fSWeightVars;
@@ -319,24 +323,24 @@ RooArgList SPlot::GetSWeightVars() const
    
 }
 
-//__________________________________________________________________ 
+////////////////////////////////////////////////////////////////////////////////
+///Return the number of SWeights
+///In other words, return the number of
+///species that we are trying to extract.
+
 Int_t SPlot::GetNumSWeightVars() const
 {
-  //Return the number of SWeights
-  //In other words, return the number of
-  //species that we are trying to extract.
-  
   RooArgList Args = fSWeightVars;
   
   return Args.getSize();
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp, 
 			const RooArgSet &projDeps, bool includeWeights) 
 {  
-
   //
   // Method which adds the sWeights to the dataset.
   // Input is the PDF, a RooArgList of the yields (floating)

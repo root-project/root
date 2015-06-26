@@ -39,20 +39,21 @@ ClassImp(RooSharedPropertiesList)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooSharedPropertiesList::RooSharedPropertiesList() 
 {
-  // Constructor
    _propList.setHashTableSize(1000);
 } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooSharedPropertiesList::~RooSharedPropertiesList() 
 {
-  // Destructor
-
   // Delete all objects in property list
   RooFIter iter = _propList.fwdIterator() ;
   RooSharedProperties* prop ;
@@ -63,18 +64,18 @@ RooSharedPropertiesList::~RooSharedPropertiesList()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register property into list and take ownership. 
+///
+/// If an existing entry has a UUID that identical to that of the argument prop, 
+/// the argument prop is deleted and a pointer to the already stored is returned to
+/// eliminate the duplication of instances with a unique identity.
+///
+/// The caller should therefore not refer anymore to the input argument pointer as
+/// as the object cannot be assumed to be live.
+
 RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProperties* prop, Bool_t canDeleteIncoming) 
 {
-  // Register property into list and take ownership. 
-  //
-  // If an existing entry has a UUID that identical to that of the argument prop, 
-  // the argument prop is deleted and a pointer to the already stored is returned to
-  // eliminate the duplication of instances with a unique identity.
-  //
-  // The caller should therefore not refer anymore to the input argument pointer as
-  // as the object cannot be assumed to be live.
-
   if (prop==0) {
     oocoutE((TObject*)0,InputArguments) << "RooSharedPropertiesList::ERROR null pointer!:" << endl ;
     return 0 ;
@@ -112,12 +113,12 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decrease reference count of property. If reference count is at zero,
+/// delete the propery
+
 void RooSharedPropertiesList::unregisterProperties(RooSharedProperties* prop) 
 {
-  // Decrease reference count of property. If reference count is at zero,
-  // delete the propery
-
   prop->decreaseRefCount() ;
 
   if (prop->refCount()==0) {

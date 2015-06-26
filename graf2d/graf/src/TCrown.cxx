@@ -18,7 +18,8 @@
 ClassImp(TCrown)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TCrown : to draw crown</h2></center>
 A crown is specified with the position of its centre, its inner/outer radius
@@ -50,7 +51,8 @@ Begin_Macro(source)
 End_Macro */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TCrown::TCrown(): TEllipse()
 {
    /* Begin_Html
@@ -60,7 +62,8 @@ TCrown::TCrown(): TEllipse()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TCrown::TCrown(Double_t x1, Double_t y1,Double_t radin, Double_t radout,Double_t phimin,Double_t phimax)
       :TEllipse(x1,y1,radin,radout,phimin,phimax,0)
 {
@@ -81,7 +84,8 @@ TCrown::TCrown(Double_t x1, Double_t y1,Double_t radin, Double_t radout,Double_t
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TCrown::TCrown(const TCrown &crown) : TEllipse(crown)
 {
    /* Begin_Html
@@ -92,7 +96,8 @@ TCrown::TCrown(const TCrown &crown) : TEllipse(crown)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TCrown::~TCrown()
 {
    /* Begin_Html
@@ -101,7 +106,8 @@ TCrown::~TCrown()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TCrown::Copy(TObject &crown) const
 {
    /* Begin_Html
@@ -112,7 +118,8 @@ void TCrown::Copy(TObject &crown) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TCrown::DistancetoPrimitive(Int_t px, Int_t py)
 {
    /* Begin_Html
@@ -163,7 +170,8 @@ Int_t TCrown::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radout,Double_t phimin,Double_t phimax,Option_t *option)
 {
    /* Begin_Html
@@ -178,7 +186,8 @@ void TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radout,D
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TCrown::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    /* Begin_Html
@@ -191,7 +200,8 @@ void TCrown::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TCrown::Paint(Option_t *)
 {
    /* Begin_Html
@@ -245,7 +255,8 @@ void TCrown::Paint(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TCrown::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    /* Begin_Html

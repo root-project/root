@@ -181,22 +181,22 @@ namespace {
 
 extern "C" { // std::qsort on solaris wants the sorter to be extern "C"
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Friend function for sorting strings, case insensitive
+   ///
+   ///
+   /// Input: name1 - pointer to the first string
+   ///        name2 - pointer to the second string
+   ///
+   ///  NOTE: This function compares its arguments and returns an integer less
+   ///        than, equal to, or greater than zero, depending on whether name1
+   ///        is lexicographically less than, equal to, or greater than name2,
+   ///        but characters are forced to lower-case prior to comparison.
+   ///
+   ///
+
    static int CaseInsensitiveSort(const void *name1, const void *name2)
    {
-   // Friend function for sorting strings, case insensitive
-   //
-   //
-   // Input: name1 - pointer to the first string
-   //        name2 - pointer to the second string
-   //
-   //  NOTE: This function compares its arguments and returns an integer less
-   //        than, equal to, or greater than zero, depending on whether name1
-   //        is lexicographically less than, equal to, or greater than name2,
-   //        but characters are forced to lower-case prior to comparison.
-   //
-   //
-
       return (strcasecmp(*((char **) name1), *((char **) name2)));
    }
 }
@@ -251,20 +251,22 @@ namespace {
 
 ClassImp(TDocOutput);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDocOutput::TDocOutput(THtml& html): fHtml(&html)
 {}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDocOutput::~TDocOutput()
 {}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a link around str, with title comment.
+/// Update str so it surrounds the link.
+
 void TDocOutput::AddLink(TSubString& str, TString& link, const char* comment)
 {
-   // Add a link around str, with title comment.
-   // Update str so it surrounds the link.
-
    // prepend "./" to allow callers to replace a different relative directory
    if (ReferenceIsRelative(link) && !link.BeginsWith("./"))
       link.Prepend("./");
@@ -288,30 +290,30 @@ void TDocOutput::AddLink(TSubString& str, TString& link, const char* comment)
    str = update;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// adjust the path of links for source files, which are in src/, but need
+/// to point to relpath (usually "../"). Simply replaces "=\"./" by "=\"../"
+
 void TDocOutput::AdjustSourcePath(TString& line, const char* relpath /*= "../"*/)
 {
-   // adjust the path of links for source files, which are in src/, but need
-   // to point to relpath (usually "../"). Simply replaces "=\"./" by "=\"../"
-
    TString replWithRelPath("=\"@!@");
    line.ReplaceAll("=\"../", replWithRelPath + "../" + relpath);
    line.ReplaceAll("=\"./", replWithRelPath + relpath);
    line.ReplaceAll("=\"@!@","=\"");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a text file into a html file.
+/// outfilename doesn't have an extension yet; up to us to decide.
+/// We generate HTML, so our extension is ".html".
+/// See THtml::Convert() for the other parameters.
+
 void TDocOutput::Convert(std::istream& in, const char* infilename,
                          const char* outfilename, const char *title,
                          const char *relpath /*= "../"*/, Int_t includeOutput /*=0*/,
                          const char* context /*= ""*/,
                          TGClient* gclient /*= 0*/)
 {
-   // Convert a text file into a html file.
-   // outfilename doesn't have an extension yet; up to us to decide.
-   // We generate HTML, so our extension is ".html".
-   // See THtml::Convert() for the other parameters.
-
    TString htmlFilename(outfilename);
    htmlFilename += ".html";
 
@@ -572,24 +574,24 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
    WriteHtmlFooter(out, relpath);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy file to HTML directory
+///
+///
+///  Input: sourceName - source file name (fully qualified i.e. file system path)
+///         destName   - optional destination name, if not
+///                      specified it would be the same
+///                      as the source file name
+///
+/// Output: TRUE if file is successfully copied, or
+///         FALSE if it's not
+///
+///
+///   NOTE: The destination directory is always fHtml->GetOutputDir()
+///
+
 Bool_t TDocOutput::CopyHtmlFile(const char *sourceName, const char *destName)
 {
-// Copy file to HTML directory
-//
-//
-//  Input: sourceName - source file name (fully qualified i.e. file system path)
-//         destName   - optional destination name, if not
-//                      specified it would be the same
-//                      as the source file name
-//
-// Output: TRUE if file is successfully copied, or
-//         FALSE if it's not
-//
-//
-//   NOTE: The destination directory is always fHtml->GetOutputDir()
-//
-
    R__LOCKGUARD(GetHtml()->GetMakeClassMutex());
 
    TString sourceFile(sourceName);
@@ -628,15 +630,15 @@ Bool_t TDocOutput::CopyHtmlFile(const char *sourceName, const char *destName)
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a hierarchical class list
+/// The algorithm descends from the base classes and branches into
+/// all derived classes. Mixing classes are displayed several times.
+///
+///
+
 void TDocOutput::CreateHierarchy()
 {
-// Create a hierarchical class list
-// The algorithm descends from the base classes and branches into
-// all derived classes. Mixing classes are displayed several times.
-//
-//
-
    // if (CreateHierarchyDot()) return;
 
    TString filename("ClassHierarchy.html");
@@ -684,12 +686,12 @@ void TDocOutput::CreateHierarchy()
    WriteHtmlFooter(out);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create index of all classes
+///
+
 void TDocOutput::CreateClassIndex()
 {
-// Create index of all classes
-//
-
    // create CSS file, we need it
    fHtml->CreateAuxiliaryFiles();
 
@@ -790,14 +792,14 @@ void TDocOutput::CreateClassIndex()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the class index for each module, picking up documentation from the
+/// module's TModuleDocInfo::GetInputPath() plus the (possibly relative)
+/// THtml::GetModuleDocPath(). Also creates the library dependency plot if dot
+/// exists, see THtml::HaveDot().
+
 void TDocOutput::CreateModuleIndex()
 {
-   // Create the class index for each module, picking up documentation from the
-   // module's TModuleDocInfo::GetInputPath() plus the (possibly relative)
-   // THtml::GetModuleDocPath(). Also creates the library dependency plot if dot
-   // exists, see THtml::HaveDot().
-
    const char* title = "LibraryDependencies";
    TString dotfilename(title);
    gSystem->PrependPathName(fHtml->GetOutputDir(), dotfilename);
@@ -1118,12 +1120,12 @@ void TDocOutput::CreateModuleIndex()
    WriteHtmlFooter(out);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fetch documentation from THtml::GetProductDocDir() and put it into the
+/// product index page.
+
 void TDocOutput::CreateProductIndex()
 {
-   // Fetch documentation from THtml::GetProductDocDir() and put it into the
-   // product index page.
-
    //TString outFile(GetHtml()->GetProductName());
    //outFile += ".html";
    TString outFile("index.html");
@@ -1162,10 +1164,11 @@ void TDocOutput::CreateProductIndex()
    WriteHtmlFooter(out);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a forwarding page for each typedef pointing to a class.
+
 void TDocOutput::CreateClassTypeDefs()
 {
-   // Create a forwarding page for each typedef pointing to a class.
    TDocParser parser(*this);
 
    TIter iClass(GetHtml()->GetListOfClasses());
@@ -1267,11 +1270,11 @@ void TDocOutput::CreateClassTypeDefs()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create index of all data types
+
 void TDocOutput::CreateTypeIndex()
 {
-// Create index of all data types
-
    // open file
    TString outFile("ListOfTypes.html");
    gSystem->PrependPathName(fHtml->GetOutputDir(), outFile);
@@ -1355,15 +1358,15 @@ void TDocOutput::CreateTypeIndex()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add some colors etc to a source entity, contained in str.
+/// The type of what's contained in str is given by type.
+/// It's called e.g. by TDocParser::BeautifyLine().
+/// This function should assume that only str.Begin() is valid.
+/// When inserting into str.String(), str.Begin() must be updated.
+
 void TDocOutput::DecorateEntityBegin(TString& str, Ssiz_t& pos, TDocParser::EParseContext type)
 {
-   // Add some colors etc to a source entity, contained in str.
-   // The type of what's contained in str is given by type.
-   // It's called e.g. by TDocParser::BeautifyLine().
-   // This function should assume that only str.Begin() is valid.
-   // When inserting into str.String(), str.Begin() must be updated.
-
    Ssiz_t originalLen = str.Length();
 
    switch (type) {
@@ -1394,16 +1397,16 @@ void TDocOutput::DecorateEntityBegin(TString& str, Ssiz_t& pos, TDocParser::EPar
    pos += addedLen;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add some colors etc to a source entity, contained in str.
+/// The type of what's contained in str is given by type.
+/// It's called e.g. by TDocParser::BeautifyLine().
+/// This function should assume that only str."End()"
+/// (i.e. str.Begin()+str.Length()) is valid.
+/// When inserting into str.String(), str.Length() must be updated.
+
 void TDocOutput::DecorateEntityEnd(TString& str, Ssiz_t& pos, TDocParser::EParseContext type)
 {
-   // Add some colors etc to a source entity, contained in str.
-   // The type of what's contained in str is given by type.
-   // It's called e.g. by TDocParser::BeautifyLine().
-   // This function should assume that only str."End()"
-   // (i.e. str.Begin()+str.Length()) is valid.
-   // When inserting into str.String(), str.Length() must be updated.
-
    Ssiz_t originalLen = str.Length();
 
    switch (type) {
@@ -1433,18 +1436,18 @@ void TDocOutput::DecorateEntityEnd(TString& str, Ssiz_t& pos, TDocParser::EParse
    pos += addedLen;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special author treatment; called when TDocParser::fSourceInfo[kInfoAuthor] is set.
+/// Modifies the author(s) description, which is a comma separated list of tokens
+/// either in the format
+/// (i) "FirstName LastName " or
+/// (ii) "FirstName LastName <link> more stuff"
+/// The first one generates an XWho link (CERN compatible),
+/// the second a http link (WORLD compatible), <link> being e.g.
+/// <mailto:user@host.bla> or <http://www.host.bla/page>.
+
 void TDocOutput::FixupAuthorSourceInfo(TString& authors)
 {
-// Special author treatment; called when TDocParser::fSourceInfo[kInfoAuthor] is set.
-// Modifies the author(s) description, which is a comma separated list of tokens
-// either in the format
-// (i) "FirstName LastName " or
-// (ii) "FirstName LastName <link> more stuff"
-// The first one generates an XWho link (CERN compatible),
-// the second a http link (WORLD compatible), <link> being e.g.
-// <mailto:user@host.bla> or <http://www.host.bla/page>.
-
    TString original(authors);
    authors = "";
 
@@ -1498,20 +1501,20 @@ void TDocOutput::FixupAuthorSourceInfo(TString& authors)
    } // while next author
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if file is modified
+///
+///
+///  Input: classPtr - pointer to the class
+///         type     - file type to compare with
+///                    values: kSource, kInclude, kTree
+///
+/// Output: TRUE     - if file is modified since last time
+///         FALSE    - if file is up to date
+///
+
 Bool_t TDocOutput::IsModified(TClass * classPtr, EFileType type)
 {
-// Check if file is modified
-//
-//
-//  Input: classPtr - pointer to the class
-//         type     - file type to compare with
-//                    values: kSource, kInclude, kTree
-//
-// Output: TRUE     - if file is modified since last time
-//         FALSE    - if file is up to date
-//
-
    TString sourceFile;
    TString classname(classPtr->GetName());
    TString filename;
@@ -1606,14 +1609,14 @@ Bool_t TDocOutput::IsModified(TClass * classPtr, EFileType type)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace "::" in name by "__"
+/// Replace "<", ">", " ", ",", "~", "=" in name by "_"
+/// Replace "A::X<A::Y>" by "A::X<-p0Y>",
+///         "A::B::X<A::B::Y>" by "A::B::X<-p1Y>", etc
+
 void TDocOutput::NameSpace2FileName(TString& name)
 {
-   // Replace "::" in name by "__"
-   // Replace "<", ">", " ", ",", "~", "=" in name by "_"
-   // Replace "A::X<A::Y>" by "A::X<-p0Y>",
-   //         "A::B::X<A::B::Y>" by "A::B::X<-p1Y>", etc
-
    TString encScope(name);
    Ssiz_t posTemplate = encScope.Index('<');
    if (posTemplate != kNPOS) {
@@ -1664,16 +1667,16 @@ void TDocOutput::NameSpace2FileName(TString& name)
          name[i] = '_';
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write links to files indir/*.txt, indir/*.html (non-recursive) to out.
+/// If one of the files is called "index.{html,txt}" it will be
+/// included in out (instead of copying it to outdir and generating a link
+/// to linkdir). txt files are passed through Convert().
+/// The files' links are sorted alphabetically.
+
 void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
                                  const char* outdir, const char* linkdir)
 {
-   // Write links to files indir/*.txt, indir/*.html (non-recursive) to out.
-   // If one of the files is called "index.{html,txt}" it will be
-   // included in out (instead of copying it to outdir and generating a link
-   // to linkdir). txt files are passed through Convert().
-   // The files' links are sorted alphabetically.
-
    R__LOCKGUARD(GetHtml()->GetMakeClassMutex());
 
    void * dirHandle = gSystem->OpenDirectory(indir);
@@ -1765,23 +1768,23 @@ void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
           << furtherReading.str() << "</div><h3>List of Classes</h3>" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a reference to a class documentation page.
+/// str encloses the text to create the reference for (e.g. name of instance).
+/// comment will be added e.g. as tooltip text.
+/// After the reference is put into str.String(), str will enclose the reference
+/// and the original text. Example:
+/// Input:
+///  str.String(): "a gHtml test"
+///  str.Begin():  2
+///  str.Length(): 5
+/// Output:
+///  str.String(): "a <a href="THtml.html">gHtml</a> test"
+///  str.Begin():  2
+///  str.Length(): 30
+
 void TDocOutput::ReferenceEntity(TSubString& str, TClass* entity, const char* comment /*= 0*/)
 {
-   // Create a reference to a class documentation page.
-   // str encloses the text to create the reference for (e.g. name of instance).
-   // comment will be added e.g. as tooltip text.
-   // After the reference is put into str.String(), str will enclose the reference
-   // and the original text. Example:
-   // Input:
-   //  str.String(): "a gHtml test"
-   //  str.Begin():  2
-   //  str.Length(): 5
-   // Output:
-   //  str.String(): "a <a href="THtml.html">gHtml</a> test"
-   //  str.Begin():  2
-   //  str.Length(): 30
-
    TString link;
    fHtml->GetHtmlFileName(entity, link);
 
@@ -1791,22 +1794,23 @@ void TDocOutput::ReferenceEntity(TSubString& str, TClass* entity, const char* co
    AddLink(str, link, comment);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a reference to a data member documentation page.
+/// str encloses the text to create the reference for (e.g. name of instance).
+/// comment will be added e.g. as tooltip text.
+/// After the reference is put into str.String(), str will enclose the reference
+/// and the original text. Example:
+/// Input:
+///  str.String(): "a gHtml test"
+///  str.Begin():  2
+///  str.Length(): 5
+/// Output:
+///  str.String(): "a <a href="THtml.html">gHtml</a> test"
+///  str.Begin():  2
+///  str.Length(): 30
+
 void TDocOutput::ReferenceEntity(TSubString& str, TDataMember* entity, const char* comment /*= 0*/)
 {
-   // Create a reference to a data member documentation page.
-   // str encloses the text to create the reference for (e.g. name of instance).
-   // comment will be added e.g. as tooltip text.
-   // After the reference is put into str.String(), str will enclose the reference
-   // and the original text. Example:
-   // Input:
-   //  str.String(): "a gHtml test"
-   //  str.Begin():  2
-   //  str.Length(): 5
-   // Output:
-   //  str.String(): "a <a href="THtml.html">gHtml</a> test"
-   //  str.Begin():  2
-   //  str.Length(): 30
    TString link;
    TClass* scope = entity->GetClass();
    fHtml->GetHtmlFileName(scope, link);
@@ -1842,23 +1846,23 @@ void TDocOutput::ReferenceEntity(TSubString& str, TDataMember* entity, const cha
    AddLink(str, link, comment);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a reference to a type documentation page.
+/// str encloses the text to create the reference for (e.g. name of instance).
+/// comment will be added e.g. as tooltip text.
+/// After the reference is put into str.String(), str will enclose the reference
+/// and the original text. Example:
+/// Input:
+///  str.String(): "a gHtml test"
+///  str.Begin():  2
+///  str.Length(): 5
+/// Output:
+///  str.String(): "a <a href="THtml.html">gHtml</a> test"
+///  str.Begin():  2
+///  str.Length(): 30
+
 void TDocOutput::ReferenceEntity(TSubString& str, TDataType* entity, const char* comment /*= 0*/)
 {
-   // Create a reference to a type documentation page.
-   // str encloses the text to create the reference for (e.g. name of instance).
-   // comment will be added e.g. as tooltip text.
-   // After the reference is put into str.String(), str will enclose the reference
-   // and the original text. Example:
-   // Input:
-   //  str.String(): "a gHtml test"
-   //  str.Begin():  2
-   //  str.Length(): 5
-   // Output:
-   //  str.String(): "a <a href="THtml.html">gHtml</a> test"
-   //  str.Begin():  2
-   //  str.Length(): 30
-
    TString mangledEntity(entity->GetName());
    NameSpace2FileName(mangledEntity);
 
@@ -1885,23 +1889,23 @@ void TDocOutput::ReferenceEntity(TSubString& str, TDataType* entity, const char*
    AddLink(str, link, comment);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a reference to a method documentation page.
+/// str encloses the text to create the reference for (e.g. name of instance).
+/// comment will be added e.g. as tooltip text.
+/// After the reference is put into str.String(), str will enclose the reference
+/// and the original text. Example:
+/// Input:
+///  str.String(): "a gHtml test"
+///  str.Begin():  2
+///  str.Length(): 5
+/// Output:
+///  str.String(): "a <a href="THtml.html">gHtml</a> test"
+///  str.Begin():  2
+///  str.Length(): 30
+
 void TDocOutput::ReferenceEntity(TSubString& str, TMethod* entity, const char* comment /*= 0*/)
 {
-   // Create a reference to a method documentation page.
-   // str encloses the text to create the reference for (e.g. name of instance).
-   // comment will be added e.g. as tooltip text.
-   // After the reference is put into str.String(), str will enclose the reference
-   // and the original text. Example:
-   // Input:
-   //  str.String(): "a gHtml test"
-   //  str.Begin():  2
-   //  str.Length(): 5
-   // Output:
-   //  str.String(): "a <a href="THtml.html">gHtml</a> test"
-   //  str.Begin():  2
-   //  str.Length(): 30
-
    TString link;
    TClass* scope = entity->GetClass();
    fHtml->GetHtmlFileName(scope, link);
@@ -1937,24 +1941,24 @@ void TDocOutput::ReferenceEntity(TSubString& str, TMethod* entity, const char* c
    AddLink(str, link, comment);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether reference is a relative reference, and can (or should)
+/// be prependen by relative paths. For HTML, check that it doesn't start
+/// with "http://" or "https://"
+
 Bool_t TDocOutput::ReferenceIsRelative(const char* reference) const
 {
-   // Check whether reference is a relative reference, and can (or should)
-   // be prependen by relative paths. For HTML, check that it doesn't start
-   // with "http://" or "https://"
-
    return !reference ||
       strncmp(reference, "http", 4) ||
       (strncmp(reference + 4, "://", 3) && strncmp(reference + 4, "s://", 4));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace ampersand, less-than and greater-than character, writing to out.
+/// If 0 is returned, no replacement needs to be done.
+
 const char* TDocOutput::ReplaceSpecialChars(char c)
 {
-// Replace ampersand, less-than and greater-than character, writing to out.
-// If 0 is returned, no replacement needs to be done.
-
    /*
    if (fEscFlag) {
       fEscFlag = kFALSE;
@@ -1974,17 +1978,17 @@ const char* TDocOutput::ReplaceSpecialChars(char c)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace ampersand, less-than and greater-than character
+///
+///
+/// Input: text - text where replacement will happen,
+///        pos  - index of char to be replaced; will point to next char to be
+///               replaced when function returns
+///
+
 void TDocOutput::ReplaceSpecialChars(TString& text, Ssiz_t &pos)
 {
-// Replace ampersand, less-than and greater-than character
-//
-//
-// Input: text - text where replacement will happen,
-//        pos  - index of char to be replaced; will point to next char to be
-//               replaced when function returns
-//
-
    const char c = text[pos];
    const char* replaced = ReplaceSpecialChars(c);
    if (replaced) {
@@ -1994,28 +1998,29 @@ void TDocOutput::ReplaceSpecialChars(TString& text, Ssiz_t &pos)
    ++pos;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace ampersand, less-than and greater-than character
+///
+///
+/// Input: text - text where replacement will happen,
+///
+
 void TDocOutput::ReplaceSpecialChars(TString& text) {
-// Replace ampersand, less-than and greater-than character
-//
-//
-// Input: text - text where replacement will happen,
-//
    Ssiz_t pos = 0;
    while (pos < text.Length())
          ReplaceSpecialChars(text, pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace ampersand, less-than and greater-than characters, writing to out
+///
+///
+/// Input: out    - output file stream
+///        string - pointer to an array of characters
+///
+
 void TDocOutput::ReplaceSpecialChars(std::ostream& out, const char *string)
 {
-// Replace ampersand, less-than and greater-than characters, writing to out
-//
-//
-// Input: out    - output file stream
-//        string - pointer to an array of characters
-//
-
    while (string && *string) {
       const char* replaced = ReplaceSpecialChars(*string);
       if (replaced)
@@ -2026,12 +2031,12 @@ void TDocOutput::ReplaceSpecialChars(std::ostream& out, const char *string)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run filename".dot", creating filename".png", and - if outMap is !=0,
+/// filename".map", which gets then included literally into outMap.
+
 Bool_t TDocOutput::RunDot(const char* filename, std::ostream* outMap /* =0 */,
                           EGraphvizTool gvwhat /*= kDot*/) {
-// Run filename".dot", creating filename".png", and - if outMap is !=0,
-// filename".map", which gets then included literally into outMap.
-
    if (!fHtml->HaveDot())
       return kFALSE;
 
@@ -2094,15 +2099,15 @@ Bool_t TDocOutput::RunDot(const char* filename, std::ostream* outMap /* =0 */,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write HTML header
+///
+/// Internal method invoked by the overload
+
 void TDocOutput::WriteHtmlHeader(std::ostream& out, const char *titleNoSpecial,
                             const char* dir /*=""*/, TClass *cls /*=0*/,
                             const char* header)
 {
-// Write HTML header
-//
-// Internal method invoked by the overload
-
    std::ifstream addHeaderFile(header);
 
    if (!addHeaderFile.good()) {
@@ -2153,35 +2158,35 @@ void TDocOutput::WriteHtmlHeader(std::ostream& out, const char *titleNoSpecial,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write HTML header
+///
+///
+/// Input: out   - output file stream
+///        title - title for the HTML page
+///        cls   - current class
+///        dir   - relative directory to reach the top
+///                ("" for html doc, "../" for src/*cxx.html etc)
+///
+/// evaluates the Root.Html.Header setting:
+/// * if not set, the standard header is written. (ROOT)
+/// * if set, and ends with a "+", the standard header is written and this file
+///   included afterwards. (ROOT, USER)
+/// * if set but doesn't end on "+" the file specified will be written instead
+///   of the standard header (USER)
+///
+/// Any occurrence of "%TITLE%" (without the quotation marks) in the user
+/// provided header file will be replaced by the value of this method's
+/// parameter "title" before written to the output file. %CLASS% is replaced by
+/// the class name, %INCFILE% by the header file name as given by
+/// TClass::GetDeclFileName() and %SRCFILE% by the source file name as given by
+/// TClass::GetImplFileName(). If the header is written for a non-class page,
+/// i.e. cls==0, lines containing %CLASS%, %INCFILE%, or %SRCFILE% will be
+/// skipped.
+
 void TDocOutput::WriteHtmlHeader(std::ostream& out, const char *title,
                             const char* dir /*=""*/, TClass *cls/*=0*/)
 {
-// Write HTML header
-//
-//
-// Input: out   - output file stream
-//        title - title for the HTML page
-//        cls   - current class
-//        dir   - relative directory to reach the top
-//                ("" for html doc, "../" for src/*cxx.html etc)
-//
-// evaluates the Root.Html.Header setting:
-// * if not set, the standard header is written. (ROOT)
-// * if set, and ends with a "+", the standard header is written and this file
-//   included afterwards. (ROOT, USER)
-// * if set but doesn't end on "+" the file specified will be written instead
-//   of the standard header (USER)
-//
-// Any occurrence of "%TITLE%" (without the quotation marks) in the user
-// provided header file will be replaced by the value of this method's
-// parameter "title" before written to the output file. %CLASS% is replaced by
-// the class name, %INCFILE% by the header file name as given by
-// TClass::GetDeclFileName() and %SRCFILE% by the source file name as given by
-// TClass::GetImplFileName(). If the header is written for a non-class page,
-// i.e. cls==0, lines containing %CLASS%, %INCFILE%, or %SRCFILE% will be
-// skipped.
-
    TString userHeader = GetHtml()->GetHeader();
    TString noSpecialCharTitle(title);
    ReplaceSpecialChars(noSpecialCharTitle);
@@ -2202,15 +2207,15 @@ void TDocOutput::WriteHtmlHeader(std::ostream& out, const char *title,
    };
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write HTML footer
+///
+/// Internal method invoked by the overload
+
 void TDocOutput::WriteHtmlFooter(std::ostream& out, const char* /*dir*/,
                                  const char* lastUpdate, const char* author,
                                  const char* copyright, const char* footer)
 {
-// Write HTML footer
-//
-// Internal method invoked by the overload
-
    static const char* templateSITags[TDocParser::kNumSourceInfos] = { "%UPDATE%", "%AUTHOR%", "%COPYRIGHT%", "%CHANGED%", "%GENERATED%"};
 
    TString today;
@@ -2256,31 +2261,31 @@ void TDocOutput::WriteHtmlFooter(std::ostream& out, const char* /*dir*/,
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write HTML footer
+///
+///
+/// Input: out        - output file stream
+///        dir        - usually equal to "" or "../", depends of
+///                     current file directory position, i.e. if
+///                     file is in the fHtml->GetOutputDir(), then dir will be ""
+///        lastUpdate - last update string
+///        author     - author's name
+///        copyright  - copyright note
+///
+/// Allows optional user provided footer to be written. Root.Html.Footer holds
+/// the file name for this footer. For details see THtml::WriteHtmlHeader (here,
+/// the "+" means the user's footer is written in front of Root's!) Occurences
+/// of %AUTHOR%, %CHANGED%, %GENERATED%, and %COPYRIGHT% in the user's file are replaced by
+/// their corresponding values (author, lastUpdate, today, and copyright) before
+/// written to out.
+/// If no author is set (author == "", e.g. for ClassIndex.html") skip the whole
+/// line of the footer template containing %AUTHOR%. Accordingly for %COPYRIGHT%.
+
 void TDocOutput::WriteHtmlFooter(std::ostream& out, const char *dir,
                             const char *lastUpdate, const char *author,
                             const char *copyright)
 {
-// Write HTML footer
-//
-//
-// Input: out        - output file stream
-//        dir        - usually equal to "" or "../", depends of
-//                     current file directory position, i.e. if
-//                     file is in the fHtml->GetOutputDir(), then dir will be ""
-//        lastUpdate - last update string
-//        author     - author's name
-//        copyright  - copyright note
-//
-// Allows optional user provided footer to be written. Root.Html.Footer holds
-// the file name for this footer. For details see THtml::WriteHtmlHeader (here,
-// the "+" means the user's footer is written in front of Root's!) Occurences
-// of %AUTHOR%, %CHANGED%, %GENERATED%, and %COPYRIGHT% in the user's file are replaced by
-// their corresponding values (author, lastUpdate, today, and copyright) before
-// written to out.
-// If no author is set (author == "", e.g. for ClassIndex.html") skip the whole
-// line of the footer template containing %AUTHOR%. Accordingly for %COPYRIGHT%.
-
    out << std::endl;
 
    TString userFooter = GetHtml()->GetFooter();
@@ -2299,11 +2304,11 @@ void TDocOutput::WriteHtmlFooter(std::ostream& out, const char *dir,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a div containing links to all topmost modules
+
 void TDocOutput::WriteModuleLinks(std::ostream& out)
 {
-   // Create a div containing links to all topmost modules
-
    if (fHtml->GetListOfModules()->GetSize()) {
       out << "<div id=\"indxModules\"><h4>Modules</h4>" << std::endl;
       // find index chars
@@ -2324,14 +2329,14 @@ void TDocOutput::WriteModuleLinks(std::ostream& out)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a div containing the line numbers (for a source listing) 1 to nLines.
+/// Create links to the source file's line number and anchors, such that one can
+/// jump to SourceFile.cxx.html#27 (using the anchor), and one can copy and paste
+/// the link into e.g. gdb to get the text "SourceFile.cxx:27".
+
 void TDocOutput::WriteLineNumbers(std::ostream& out, Long_t nLines, const TString& infileBase) const
 {
-   // Create a div containing the line numbers (for a source listing) 1 to nLines.
-   // Create links to the source file's line number and anchors, such that one can
-   // jump to SourceFile.cxx.html#27 (using the anchor), and one can copy and paste
-   // the link into e.g. gdb to get the text "SourceFile.cxx:27".
-
    out << "<div id=\"linenums\">";
    for (Long_t i = 0; i < nLines; ++i) {
       // &nbsp; to force correct line height
@@ -2343,11 +2348,11 @@ void TDocOutput::WriteLineNumbers(std::ostream& out, Long_t nLines, const TStrin
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a div containing links to all modules
+
 void TDocOutput::WriteModuleLinks(std::ostream& out, TModuleDocInfo* super)
 {
-   // Create a div containing links to all modules
-
    if (super->GetSub().GetSize()) {
       TString superName(super->GetName());
       superName.ToUpper();
@@ -2372,12 +2377,12 @@ void TDocOutput::WriteModuleLinks(std::ostream& out, TModuleDocInfo* super)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write a search link or a search box, based on THtml::GetSearchStemURL()
+/// and THtml::GetSearchEngine(). The first one is preferred.
+
 void TDocOutput::WriteSearch(std::ostream& out)
 {
-   // Write a search link or a search box, based on THtml::GetSearchStemURL()
-   // and THtml::GetSearchEngine(). The first one is preferred.
-
    // e.g. searchCmd = "http://www.google.com/search?q=%s+site%3A%u+-site%3A%u%2Fsrc%2F+-site%3A%u%2Fexamples%2F";
    const TString& searchCmd = GetHtml()->GetSearchStemURL();
    const TString& searchEngine = GetHtml()->GetSearchEngine();
@@ -2410,10 +2415,11 @@ void TDocOutput::WriteSearch(std::ostream& out)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make a link to the description
+
 void TDocOutput::WriteLocation(std::ostream& out, TModuleDocInfo* module, const char* classname)
 {
-   // make a link to the description
    out << "<div class=\"location\">" << std::endl; // location
    const char *productName = fHtml->GetProductName();
    out << "<a class=\"locationlevel\" href=\"index.html\">" << productName << "</a>" << std::endl;
@@ -2452,14 +2458,14 @@ void TDocOutput::WriteLocation(std::ostream& out, TModuleDocInfo* module, const 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the first part of the links shown ontop of each doc page;
+/// one <div> has to be closed by caller so additional items can still
+/// be added.
+
 void TDocOutput::WriteTopLinks(std::ostream& out, TModuleDocInfo* module, const char* classname,
                                Bool_t withLocation)
 {
-   // Write the first part of the links shown ontop of each doc page;
-   // one <div> has to be closed by caller so additional items can still
-   // be added.
-
    out << "<div id=\"toplinks\">" << std::endl;
 
    out << "<div class=\"descrhead\"><div class=\"descrheadcontent\">" << std::endl // descrhead line 1

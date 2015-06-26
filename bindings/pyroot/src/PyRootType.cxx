@@ -38,20 +38,21 @@ namespace {
       return pyclass;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    void meta_dealloc( PyRootClass* pytype )
    {
       pytype->fClass.~TClassRef();
       return PyType_Type.tp_dealloc( (PyObject*)pytype );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when PyRootType acts as a metaclass; since type_new always resets
+/// tp_alloc, and since it does not call tp_init on types, the metaclass is
+/// being fixed up here, and the class is initialized here as well.
+
    PyObject* pt_new( PyTypeObject* subtype, PyObject* args, PyObject* kwds )
    {
-   // Called when PyRootType acts as a metaclass; since type_new always resets
-   // tp_alloc, and since it does not call tp_init on types, the metaclass is
-   // being fixed up here, and the class is initialized here as well.
-
    // fixup of metaclass (left permanent, and in principle only called once b/c
    // PyROOT caches python classes)
       subtype->tp_alloc   = (allocfunc)meta_alloc;

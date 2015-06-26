@@ -63,12 +63,12 @@ static void CleanUpRooFitAtExit()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Install atexit handler that calls CleanupRooFitAtExit()
+/// on program termination
+
 void RooSentinel::activate()
 {
-  // Install atexit handler that calls CleanupRooFitAtExit()
-  // on program termination
-
   if (!_active) {
     _active = kTRUE ;
     atexit(CleanUpRooFitAtExit) ;

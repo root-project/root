@@ -36,7 +36,8 @@
 
 ClassImp(TEveDigitSetEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveDigitSetEditor::TEveDigitSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                        UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -59,11 +60,11 @@ TEveDigitSetEditor::TEveDigitSetEditor(const TGWindow *p, Int_t width, Int_t hei
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create information tab.
+
 void TEveDigitSetEditor::CreateInfoTab()
 {
-   // Create information tab.
-
    fInfoFrame = CreateEditorTabSubFrame("Info");
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fInfoFrame, 180, 10,
@@ -95,11 +96,11 @@ void TEveDigitSetEditor::CreateInfoTab()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveDigitSetEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveDigitSet*>(obj);
 
    if (fM->fValueIsColor || fM->fPalette == 0) {
@@ -117,11 +118,11 @@ void TEveDigitSetEditor::SetModel(TObject* obj)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show histogram slot.
+
 void TEveDigitSetEditor::DoHisto()
 {
-   // Show histogram slot.
-
    Int_t min, max;
    if (fM->fPalette) {
       min = fM->fPalette->GetLowLimit();
@@ -132,11 +133,11 @@ void TEveDigitSetEditor::DoHisto()
    PlotHisto(min, max);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show ranged histogram slot.
+
 void TEveDigitSetEditor::DoRangeHisto()
 {
-   // Show ranged histogram slot.
-
    Int_t min, max;
    if (fM->fPalette) {
       min = fM->fPalette->GetMinVal();
@@ -147,11 +148,11 @@ void TEveDigitSetEditor::DoRangeHisto()
    PlotHisto(min, max);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Plots a histogram from digit vales with given range.
+
 void TEveDigitSetEditor::PlotHisto(Int_t min, Int_t max)
 {
-   // Plots a histogram from digit vales with given range.
-
    Int_t nbins = max-min+1;
    while (nbins > 200)
       nbins /= 2;

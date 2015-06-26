@@ -43,7 +43,8 @@ const Int_t kHori = BIT(9); //defined in TPad
 ClassImp(TGaxis)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TGaxis : to draw axis</h2></center>
 
@@ -108,11 +109,11 @@ End_Html */
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGaxis default constructor.
+
 TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
 {
-   // TGaxis default constructor.
-
    fGridLength  = 0.;
    fLabelOffset = 0.005;
    fLabelSize   = 0.040;
@@ -134,15 +135,15 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGaxis normal constructor.
+/// See explanation of parameters in PaintAxis.
+
 TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
                Double_t wmin, Double_t wmax, Int_t ndiv,   Option_t *chopt,
                Double_t gridlength)
        : TLine(xmin,ymin,xmax,ymax), TAttText(11,0,1,62,0.040)
 {
-   // TGaxis normal constructor.
-   // See explanation of parameters in PaintAxis.
-
    fWmin        = wmin;
    fWmax        = wmax;
    fNdiv        = ndiv;
@@ -164,49 +165,50 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGaxis constructor with a TF1 to map axis values.
+///
+///  See explanation of parameters in PaintAxis
+///  Instead of the wmin,wmax arguments of the normal constructor, the
+///  name of a TF1 function can be specified. This function will be used
+///  by TGaxis::PaintAxis to map the user coordinates to the axis values
+///  and ticks.
+///  Examples:
+///void gaxis3a()
+///{
+///   gStyle->SetOptStat(0);
+///
+///   TH2F *h2 = new TH2F("h","Axes",100,0,10,100,-2,2);
+///   h2->Draw();
+///
+///   TF1 *f1=new TF1("f1","-x",-10,10);
+///   TGaxis *A1 = new TGaxis(0,2,10,2,"f1",510,"-");
+///   A1->SetTitle("axis with decreasing values");
+///   A1->Draw();
+///
+///   TF1 *f2=new TF1("f2","exp(x)",0,2);
+///   TGaxis *A2 = new TGaxis(1,1,9,1,"f2");
+///   A2->SetTitle("exponential axis");
+///   A2->SetLabelSize(0.03);
+///   A2->SetTitleSize(0.03);
+///   A2->SetTitleOffset(1.2);
+///   A2->Draw();
+///
+///   TF1 *f3=new TF1("f3","log10(x)",1,1000);
+///   TGaxis *A3 = new TGaxis(2,-2,2,0,"f3",505,"G");
+///   A3->SetTitle("logarithmic axis");
+///   A3->SetLabelSize(0.03);
+///   A3->SetTitleSize(0.03);
+///   A3->SetTitleOffset(1.2);
+///   A3->Draw();
+///}
+///Begin_Html
+
 TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
                const char *funcname, Int_t ndiv,   Option_t *chopt,
                Double_t gridlength)
        : TLine(xmin,ymin,xmax,ymax), TAttText(11,0,1,62,0.040)
 {
-   // TGaxis constructor with a TF1 to map axis values.
-   //
-   //  See explanation of parameters in PaintAxis
-   //  Instead of the wmin,wmax arguments of the normal constructor, the
-   //  name of a TF1 function can be specified. This function will be used
-   //  by TGaxis::PaintAxis to map the user coordinates to the axis values
-   //  and ticks.
-   //  Examples:
-   //void gaxis3a()
-   //{
-   //   gStyle->SetOptStat(0);
-   //
-   //   TH2F *h2 = new TH2F("h","Axes",100,0,10,100,-2,2);
-   //   h2->Draw();
-   //
-   //   TF1 *f1=new TF1("f1","-x",-10,10);
-   //   TGaxis *A1 = new TGaxis(0,2,10,2,"f1",510,"-");
-   //   A1->SetTitle("axis with decreasing values");
-   //   A1->Draw();
-   //
-   //   TF1 *f2=new TF1("f2","exp(x)",0,2);
-   //   TGaxis *A2 = new TGaxis(1,1,9,1,"f2");
-   //   A2->SetTitle("exponential axis");
-   //   A2->SetLabelSize(0.03);
-   //   A2->SetTitleSize(0.03);
-   //   A2->SetTitleOffset(1.2);
-   //   A2->Draw();
-   //
-   //   TF1 *f3=new TF1("f3","log10(x)",1,1000);
-   //   TGaxis *A3 = new TGaxis(2,-2,2,0,"f3",505,"G");
-   //   A3->SetTitle("logarithmic axis");
-   //   A3->SetLabelSize(0.03);
-   //   A3->SetTitleSize(0.03);
-   //   A3->SetTitleOffset(1.2);
-   //   A3->Draw();
-   //}
-   //Begin_Html
    /*
    <img src="gif/gaxisf1.gif">
    */
@@ -239,7 +241,9 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TGaxis::TGaxis(const TGaxis& ax) :
   TLine(ax),
   TAttText(ax),
@@ -262,15 +266,14 @@ TGaxis::TGaxis(const TGaxis& ax) :
   fFunction(ax.fFunction),
   fAxis(ax.fAxis)
 {
-   // Copy constructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignement operator.
+
 TGaxis& TGaxis::operator=(const TGaxis& ax)
 {
-   // Assignement operator.
-
    if(this!=&ax) {
       TLine::operator=(ax);
       TAttText::operator=(ax);
@@ -297,43 +300,44 @@ TGaxis& TGaxis::operator=(const TGaxis& ax)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGaxis default destructor.
+
 TGaxis::~TGaxis()
 {
-   // TGaxis default destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If center = kTRUE axis labels are centered in the center of the bin.
+/// The default is to center on the primary tick marks.
+/// This option does not make sense if there are more bins than tick marks.
+
 void TGaxis::CenterLabels(Bool_t center)
 {
-   // If center = kTRUE axis labels are centered in the center of the bin.
-   // The default is to center on the primary tick marks.
-   // This option does not make sense if there are more bins than tick marks.
-
    if (center) SetBit(TAxis::kCenterLabels);
    else        ResetBit(TAxis::kCenterLabels);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If center = kTRUE axis title will be centered.
+/// The default is right adjusted.
+
 void TGaxis::CenterTitle(Bool_t center)
 {
-   // If center = kTRUE axis title will be centered.
-   // The default is right adjusted.
-
    if (center) SetBit(TAxis::kCenterTitle);
    else        ResetBit(TAxis::kCenterTitle);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this axis with new attributes.
+
 void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
                       Double_t wmin, Double_t wmax, Int_t ndiv,   Option_t *chopt,
                       Double_t gridlength)
 {
-   // Draw this axis with new attributes.
-
    TGaxis *newaxis = new TGaxis(xmin,ymin,xmax,ymax,wmin,wmax,ndiv,chopt,gridlength);
    newaxis->SetLineColor(fLineColor);
    newaxis->SetLineWidth(fLineWidth);
@@ -357,20 +361,20 @@ void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning fgMaxDigits (See SetMaxDigits).
+
 Int_t TGaxis::GetMaxDigits()
 {
-   // Static function returning fgMaxDigits (See SetMaxDigits).
-
    return fgMaxDigits;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy TAxis attributes to this TGaxis.
+
 void TGaxis::ImportAxisAttributes(TAxis *axis)
 {
-   // Copy TAxis attributes to this TGaxis.
-
    fAxis = axis;
    SetLineColor(axis->GetAxisColor());
    SetTextColor(axis->GetTitleColor());
@@ -395,11 +399,11 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this axis with its current attributes.
+
 void TGaxis::Paint(Option_t *)
 {
-   // Draw this axis with its current attributes.
-
    Double_t wmin = fWmin;
    Double_t wmax = fWmax;
    Int_t    ndiv = fNdiv;
@@ -414,143 +418,143 @@ void TGaxis::Paint(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Control function to draw an axis.
+///
+/// Original authors: O.Couet C.E.Vandoni N.Cremel-Somon.
+/// Modified and converted to C++ class by Rene Brun.
+///
+/// _Input parameters:
+///
+///  xmin      : X origin coordinate in WC space.
+///  xmax      : X end axis coordinate in WC space.
+///  ymin      : Y origin coordinate in WC space.
+///  ymax      : Y end axis coordinate in WC space.
+///  wmin      : Lowest value for the tick mark
+///              labels written on the axis.
+///  wmax      : Highest value for the tick mark labels
+///              written on the axis.
+///  ndiv      : Number of divisions.
+///
+///       ndiv=N1 + 100*N2 + 10000*N3
+///       N1=number of 1st divisions.
+///       N2=number of 2nd divisions.
+///       N3=number of 3rd divisions.
+///           e.g.:
+///           nndi=0 --> no tick marks.
+///           nndi=2 --> 2 divisions, one tick mark in the middle
+///                      of the axis.
+///
+///  chopt :  options (see below).
+///
+///       chopt='G': loGarithmic scale, default is linear.
+///       chopt='B': Blank axis. Useful to superpose axis.
+///
+/// Orientation of tick marks on axis.
+/// ----------------------------------
+///
+///   Tick marks are normally drawn on the positive side of the axis,
+///   however, if x0=x1, then negative.
+///
+///       chopt='+': tick marks are drawn on Positive side. (default)
+///       chopt='-': tick mark are drawn on the negative side.
+///       i.e: '+-' --> tick marks are drawn on both sides of the axis.
+///       chopt='U': Unlabeled axis, default is labeled.
+///
+/// Size of tick marks
+/// ------------------
+/// By default, tick marks have a length equal to 3 per cent of the
+/// axis length.
+/// When the option "S" is specified, the length of the tick marks
+/// is equal to fTickSize*axis_length, where fTickSize may be set
+/// via TGaxis::SetTickSize.
+///
+/// Position of labels on axis.
+/// ---------------------------
+///
+///   Labels are normally drawn on side opposite to tick marks.
+///   However:
+///
+///       chopt='=': on Equal side
+///
+/// Orientation of labels on axis.
+/// ------------------------------
+///
+///   Labels are normally drawn parallel to the axis.
+///   However if x0=x1, then Orthogonal
+///           if y0=Y1, then Parallel
+///
+/// Position of labels on tick marks.
+/// ---------------------------------
+///
+///   Labels are centered on tick marks.
+///   However , if x0=x1, then they are right adjusted.
+///
+///       chopt='R': labels are Right adjusted on tick mark.
+///                    (default is centered)
+///       chopt='L': labels are Left adjusted on tick mark.
+///       chopt='C': labels are Centered on tick mark.
+///       chopt='M': In the Middle of the divisions.
+///
+/// Format of labels.
+/// -----------------
+///
+///   Blank characters are stripped, and then the
+///   label is correctly aligned. the dot, if last
+///   character of the string, is also stripped,
+///   unless the option "." (a dot, or period) is specified.
+///   if SetDecimals(kTRUE) has been called (bit TAxis::kDecimals set).
+///   all labels have the same number of decimals after the "."
+///   The same is true if gStyle->SetStripDecimals(kFALSE) has been called.
+///
+///   In the following, we have some parameters, like
+///   tick marks length and characters height (in percentage
+///   of the length of the axis (WC))
+///   The default values are as follows:
+///
+///   Primary tick marks: 3.0 %
+///   Secondary tick marks: 1.5 %
+///   Third order tick marks: .75 %
+///   Characters height for labels: 4%
+///
+///   Labels offset: 1.0 %
+///
+/// optional grid.
+/// --------------
+///
+///       chopt='W': cross-Wire
+///   In case of a log axis, the grid is only drawn for the primary tick marks
+///   if the number of secondary and tertiary divisions is 0.
+///
+/// Axis bining optimization.
+/// -------------------------
+///
+///   By default the axis bining is optimized .
+///
+///       chopt='N': No bining optimization
+///       chopt='I': Integer labelling
+///
+/// Maximum Number of Digits for the axis labels
+/// --------------------------------------------
+/// See the static function TGaxis::SetMaxDigits
+///
+/// Time representation.
+/// --------------------
+///
+///   Axis labels may be considered as times, plotted in a defined time format.
+///   The format is set with SetTimeFormat().
+///   wmin and wmax are considered as two time values in seconds.
+///   The time axis will be spread around the time offset value (set with
+///   SetTimeOffset() ). Actually it will go from TimeOffset+wmin to
+///   TimeOffset+wmax.
+///   see examples in tutorials timeonaxis.C and timeonaxis2.C
+///
+///       chopt='t': Plot times with a defined format instead of values
+
 void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
                        Double_t &wmin, Double_t &wmax, Int_t &ndiv,   Option_t *chopt,
                        Double_t gridlength, Bool_t drawGridOnly)
 {
-   // Control function to draw an axis.
-   //
-   // Original authors: O.Couet C.E.Vandoni N.Cremel-Somon.
-   // Modified and converted to C++ class by Rene Brun.
-   //
-   // _Input parameters:
-   //
-   //  xmin      : X origin coordinate in WC space.
-   //  xmax      : X end axis coordinate in WC space.
-   //  ymin      : Y origin coordinate in WC space.
-   //  ymax      : Y end axis coordinate in WC space.
-   //  wmin      : Lowest value for the tick mark
-   //              labels written on the axis.
-   //  wmax      : Highest value for the tick mark labels
-   //              written on the axis.
-   //  ndiv      : Number of divisions.
-   //
-   //       ndiv=N1 + 100*N2 + 10000*N3
-   //       N1=number of 1st divisions.
-   //       N2=number of 2nd divisions.
-   //       N3=number of 3rd divisions.
-   //           e.g.:
-   //           nndi=0 --> no tick marks.
-   //           nndi=2 --> 2 divisions, one tick mark in the middle
-   //                      of the axis.
-   //
-   //  chopt :  options (see below).
-   //
-   //       chopt='G': loGarithmic scale, default is linear.
-   //       chopt='B': Blank axis. Useful to superpose axis.
-   //
-   // Orientation of tick marks on axis.
-   // ----------------------------------
-   //
-   //   Tick marks are normally drawn on the positive side of the axis,
-   //   however, if x0=x1, then negative.
-   //
-   //       chopt='+': tick marks are drawn on Positive side. (default)
-   //       chopt='-': tick mark are drawn on the negative side.
-   //       i.e: '+-' --> tick marks are drawn on both sides of the axis.
-   //       chopt='U': Unlabeled axis, default is labeled.
-   //
-   // Size of tick marks
-   // ------------------
-   // By default, tick marks have a length equal to 3 per cent of the
-   // axis length.
-   // When the option "S" is specified, the length of the tick marks
-   // is equal to fTickSize*axis_length, where fTickSize may be set
-   // via TGaxis::SetTickSize.
-   //
-   // Position of labels on axis.
-   // ---------------------------
-   //
-   //   Labels are normally drawn on side opposite to tick marks.
-   //   However:
-   //
-   //       chopt='=': on Equal side
-   //
-   // Orientation of labels on axis.
-   // ------------------------------
-   //
-   //   Labels are normally drawn parallel to the axis.
-   //   However if x0=x1, then Orthogonal
-   //           if y0=Y1, then Parallel
-   //
-   // Position of labels on tick marks.
-   // ---------------------------------
-   //
-   //   Labels are centered on tick marks.
-   //   However , if x0=x1, then they are right adjusted.
-   //
-   //       chopt='R': labels are Right adjusted on tick mark.
-   //                    (default is centered)
-   //       chopt='L': labels are Left adjusted on tick mark.
-   //       chopt='C': labels are Centered on tick mark.
-   //       chopt='M': In the Middle of the divisions.
-   //
-   // Format of labels.
-   // -----------------
-   //
-   //   Blank characters are stripped, and then the
-   //   label is correctly aligned. the dot, if last
-   //   character of the string, is also stripped,
-   //   unless the option "." (a dot, or period) is specified.
-   //   if SetDecimals(kTRUE) has been called (bit TAxis::kDecimals set).
-   //   all labels have the same number of decimals after the "."
-   //   The same is true if gStyle->SetStripDecimals(kFALSE) has been called.
-   //
-   //   In the following, we have some parameters, like
-   //   tick marks length and characters height (in percentage
-   //   of the length of the axis (WC))
-   //   The default values are as follows:
-   //
-   //   Primary tick marks: 3.0 %
-   //   Secondary tick marks: 1.5 %
-   //   Third order tick marks: .75 %
-   //   Characters height for labels: 4%
-   //
-   //   Labels offset: 1.0 %
-   //
-   // optional grid.
-   // --------------
-   //
-   //       chopt='W': cross-Wire
-   //   In case of a log axis, the grid is only drawn for the primary tick marks
-   //   if the number of secondary and tertiary divisions is 0.
-   //
-   // Axis bining optimization.
-   // -------------------------
-   //
-   //   By default the axis bining is optimized .
-   //
-   //       chopt='N': No bining optimization
-   //       chopt='I': Integer labelling
-   //
-   // Maximum Number of Digits for the axis labels
-   // --------------------------------------------
-   // See the static function TGaxis::SetMaxDigits
-   //
-   // Time representation.
-   // --------------------
-   //
-   //   Axis labels may be considered as times, plotted in a defined time format.
-   //   The format is set with SetTimeFormat().
-   //   wmin and wmax are considered as two time values in seconds.
-   //   The time axis will be spread around the time offset value (set with
-   //   SetTimeOffset() ). Actually it will go from TimeOffset+wmin to
-   //   TimeOffset+wmax.
-   //   see examples in tutorials timeonaxis.C and timeonaxis2.C
-   //
-   //       chopt='t': Plot times with a defined format instead of values
-
    const char *where = "PaintAxis";
 
    Double_t alfa, beta, ratio1, ratio2, grid_side;
@@ -1911,22 +1915,22 @@ L210:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Axis labels optimisation.
+///
+///   This method adjusts the bining of the axis
+///   in order to have integer values for the labels.
+///
+/// Input parameters:
+///
+///  A1,A2    : Old WMIN,WMAX .
+///  binLow,binHigh : New WMIN,WMAX .
+///  nold     : Old NDIV (primary divisions)
+///  nbins    : New NDIV .
+
 void TGaxis::AdjustBinSize(Double_t A1,  Double_t A2,  Int_t nold
                           ,Double_t &binLow, Double_t &binHigh, Int_t &nbins, Double_t &binWidth)
 {
-   // Axis labels optimisation.
-   //
-   //   This method adjusts the bining of the axis
-   //   in order to have integer values for the labels.
-   //
-   // Input parameters:
-   //
-   //  A1,A2    : Old WMIN,WMAX .
-   //  binLow,binHigh : New WMIN,WMAX .
-   //  nold     : Old NDIV (primary divisions)
-   //  nbins    : New NDIV .
-
    binWidth = TMath::Abs(A2-A1)/Double_t(nold);
    if (binWidth <= 1) { binWidth = 1; binLow = int(A1); }
    else {
@@ -1956,11 +1960,11 @@ void TGaxis::AdjustBinSize(Double_t A1,  Double_t A2,  Int_t nold
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find first and last character of a label.
+
 void TGaxis::LabelsLimits(const char *label, Int_t &first, Int_t &last)
 {
-   // Find first and last character of a label.
-
    last = strlen(label)-1;
    for (Int_t i=0; i<=last; i++) {
       if (strchr("1234567890-+.", label[i]) ) { first = i; return; }
@@ -1969,22 +1973,22 @@ void TGaxis::LabelsLimits(const char *label, Int_t &first, Int_t &last)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate axis coordinates.
+
 void TGaxis::Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
                    ,Double_t XT, Double_t YT, Double_t &U,   Double_t &V)
 {
-   // Rotate axis coordinates.
-
    U = CFI*X-SFI*Y+XT;
    V = SFI*X+CFI*Y+YT;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-    // Save primitive as a C++ statement(s) on output stream out
-
    char quote = '"';
    if (gROOT->ClassSaved(TGaxis::Class())) {
       out<<"   ";
@@ -2043,26 +2047,26 @@ void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the Decimals flag
+/// By default, blank characters are stripped, and then the
+/// label is correctly aligned. The dot, if last character of the string,
+/// is also stripped, unless this option is specified.
+/// One can disable the option by calling axis.SetDecimals(kTRUE).
+/// Note the bit is set in fBits (as opposed to fBits2 in TAxis!)
+
 void TGaxis::SetDecimals(Bool_t dot)
 {
-   // Set the Decimals flag
-   // By default, blank characters are stripped, and then the
-   // label is correctly aligned. The dot, if last character of the string,
-   // is also stripped, unless this option is specified.
-   // One can disable the option by calling axis.SetDecimals(kTRUE).
-   // Note the bit is set in fBits (as opposed to fBits2 in TAxis!)
-
    if (dot) SetBit(TAxis::kDecimals);
    else     ResetBit(TAxis::kDecimals);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify a function to map the axis values.
+
 void TGaxis::SetFunction(const char *funcname)
 {
-   // Specify a function to map the axis values.
-
    fFunctionName = funcname;
    if (!funcname[0]) {
       fFunction = 0;
@@ -2078,95 +2082,95 @@ void TGaxis::SetFunction(const char *funcname)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set fgMaxDigits for axis.
+/// fgMaxDigits is the maximum number of digits permitted for the axis
+/// labels above which the notation with 10^N is used.
+/// For example, to accept 6 digits number like 900000 on an axis
+/// call TGaxis::SetMaxDigits(6). The default value is 5.
+/// fgMaxDigits must be greater than 0.
+
 void TGaxis::SetMaxDigits(Int_t maxd)
 {
-   // Static function to set fgMaxDigits for axis.
-   // fgMaxDigits is the maximum number of digits permitted for the axis
-   // labels above which the notation with 10^N is used.
-   // For example, to accept 6 digits number like 900000 on an axis
-   // call TGaxis::SetMaxDigits(6). The default value is 5.
-   // fgMaxDigits must be greater than 0.
-
    fgMaxDigits = maxd;
    if (maxd < 1) fgMaxDigits = 1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the name of the axis.
+
 void TGaxis::SetName(const char *name)
 {
-   // Change the name of the axis.
-
    fName = name;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the kMoreLogLabels bit flag.
+/// When this option is selected more labels are drawn when in log scale
+/// and there is a small number of decades  (<3).
+/// Note that this option is automatically inherited from TAxis
+
 void TGaxis::SetMoreLogLabels(Bool_t more)
 {
-   // Set the kMoreLogLabels bit flag.
-   // When this option is selected more labels are drawn when in log scale
-   // and there is a small number of decades  (<3).
-   // Note that this option is automatically inherited from TAxis
-
    if (more) SetBit(TAxis::kMoreLogLabels);
    else      ResetBit(TAxis::kMoreLogLabels);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the NoExponent flag.
+/// By default, an exponent of the form 10^N is used when the label values
+/// are either all very small or very large.
+/// One can disable the exponent by calling axis.SetNoExponent(kTRUE).
+
 void TGaxis::SetNoExponent(Bool_t noExponent)
 {
-   // Set the NoExponent flag.
-   // By default, an exponent of the form 10^N is used when the label values
-   // are either all very small or very large.
-   // One can disable the exponent by calling axis.SetNoExponent(kTRUE).
-
    if (noExponent) SetBit(TAxis::kNoExponent);
    else            ResetBit(TAxis::kNoExponent);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To set axis options.
+
 void TGaxis::SetOption(Option_t *option)
 {
-   // To set axis options.
-
    fChopt = option;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the title of the axis.
+
 void TGaxis::SetTitle(const char *title)
 {
-   // Change the title of the axis.
-
    fTitle = title;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the format used for time plotting.
+/// The format string for date and time use the same options as the one used
+/// in the standard strftime C function, i.e. :
+///   for date :
+///     %a abbreviated weekday name
+///     %b abbreviated month name
+///     %d day of the month (01-31)
+///     %m month (01-12)
+///     %y year without century
+///
+///   for time :
+///     %H hour (24-hour clock)
+///     %I hour (12-hour clock)
+///     %p local equivalent of AM or PM
+///     %M minute (00-59)
+///     %S seconds (00-61)
+///     %% %
+
 void TGaxis::SetTimeFormat(const char *tformat)
 {
-   // Change the format used for time plotting.
-   // The format string for date and time use the same options as the one used
-   // in the standard strftime C function, i.e. :
-   //   for date :
-   //     %a abbreviated weekday name
-   //     %b abbreviated month name
-   //     %d day of the month (01-31)
-   //     %m month (01-12)
-   //     %y year without century
-   //
-   //   for time :
-   //     %H hour (24-hour clock)
-   //     %I hour (12-hour clock)
-   //     %p local equivalent of AM or PM
-   //     %M minute (00-59)
-   //     %S seconds (00-61)
-   //     %% %
-
    TString timeformat = tformat;
 
    if (timeformat.Index("%F")>=0 || timeformat.IsNull()) {
@@ -2187,12 +2191,12 @@ void TGaxis::SetTimeFormat(const char *tformat)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the time offset.
+/// If option = "gmt", set display mode to GMT.
+
 void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
 {
-   // Change the time offset.
-   // If option = "gmt", set display mode to GMT.
-
    TString opt = option;
    opt.ToLower();
 
@@ -2222,14 +2226,14 @@ void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set X and Y offset of the axis 10^n notation.
+/// It is in % of the pad size. It can be negative.
+/// axis specifies which axis ("x","y"), default = "x"
+/// if axis="xz" set the two axes
+
 void TGaxis::SetExponentOffset(Float_t xoff, Float_t yoff, Option_t *axis)
 {
-   // Static function to set X and Y offset of the axis 10^n notation.
-   // It is in % of the pad size. It can be negative.
-   // axis specifies which axis ("x","y"), default = "x"
-   // if axis="xz" set the two axes
-
    TString opt = axis;
    opt.ToLower();
 
@@ -2244,11 +2248,11 @@ void TGaxis::SetExponentOffset(Float_t xoff, Float_t yoff, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TGaxis.
+
 void TGaxis::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TGaxis.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

@@ -19,28 +19,31 @@
 
 ClassImp(TVirtualMCGeometry)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Standard constructor
+///
+
 TVirtualMCGeometry::TVirtualMCGeometry(const char *name, const char *title)
   : TNamed(name,title)
 {
-   //
-   // Standard constructor
-   //
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Default constructor
+///
+
 TVirtualMCGeometry::TVirtualMCGeometry()
   : TNamed()
 {
-   //
-   // Default constructor
-   //
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Destructor
+///
+
 TVirtualMCGeometry::~TVirtualMCGeometry()
 {
-   //
-   // Destructor
-   //
 }

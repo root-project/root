@@ -65,10 +65,11 @@ namespace {
       return 0;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the C++ datum held.
+
    int pp_set( PropertyProxy* pyprop, ObjectProxy* pyobj, PyObject* value )
    {
-   // Set the value of the C++ datum held.
       const int errret = -1;
 
    // filter const objects to prevent changing their values
@@ -113,10 +114,11 @@ namespace {
       return pyprop;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deallocate memory held by this descriptor.
+
    void pp_dealloc( PropertyProxy* pyprop )
    {
-   // Deallocate memory held by this descriptor.
       using namespace std;
       delete pyprop->fConverter;
       pyprop->fName.~string();
@@ -211,10 +213,11 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
    fName      = dm->GetName();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialize from <tec> info
+
 void PyROOT::PropertyProxy::Set( TEnumConstant* tec )
 {
-// initialize from <tec> info
    fOffset    = (Long_t)tec->GetAddress();
    fProperty  = tec->Property() | kIsStatic | kIsEnum;
 
@@ -224,10 +227,11 @@ void PyROOT::PropertyProxy::Set( TEnumConstant* tec )
    fName      = tec->GetName();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialize from <gbl> info
+
 void PyROOT::PropertyProxy::Set( TGlobal* gbl )
 {
-// initialize from <gbl> info
    fOffset    = (Long_t)gbl->GetAddress();
    fProperty  = gbl->Property() | kIsStatic;    // force static flag
 
@@ -244,9 +248,10 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
    fName      = gbl->GetName();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// class attributes, global properties
+
 Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
-// class attributes, global properties
    if ( (fProperty & kIsStatic) || fEnclosingScope == 0 )
       return fOffset;
 

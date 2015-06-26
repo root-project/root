@@ -156,10 +156,11 @@ void TPySelector::SetupPySelf()
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forward <method> to python.
+
 PyObject* TPySelector::CallSelf( const char* method, PyObject* pyobject )
 {
-// Forward <method> to python.
    if ( ! fPySelf || fPySelf == Py_None ) {
       Py_INCREF( Py_None );
       return Py_None;
@@ -206,10 +207,11 @@ TPySelector::TPySelector( TTree*, PyObject* self ) : fChain( 0 ), fPySelf( 0 )
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Only deref if still holding on to Py_None (circular otherwise).
+
 TPySelector::~TPySelector()
 {
-// Destructor. Only deref if still holding on to Py_None (circular otherwise).
    if ( fPySelf == Py_None ) {
       Py_DECREF( fPySelf );
    }
@@ -231,18 +233,20 @@ Int_t TPySelector::Version() const {
    return -99;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Boilerplate get entry; same as for generated code; not forwarded.
+
 Int_t TPySelector::GetEntry( Long64_t entry, Int_t getall )
 {
-// Boilerplate get entry; same as for generated code; not forwarded.
    return fChain ? fChain->GetTree()->GetEntry( entry, getall ) : 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize with the current tree to be used; not forwarded (may be called
+/// multiple times, and is called from Begin() and SlaveBegin() ).
+
 void TPySelector::Init( TTree* tree )
 {
-// Initialize with the current tree to be used; not forwarded (may be called
-// multiple times, and is called from Begin() and SlaveBegin() ).
    if ( ! tree )
       return;
 
@@ -260,10 +264,11 @@ void TPySelector::Init( TTree* tree )
    Py_XDECREF( result );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forward call to derived Notify() if available.
+
 Bool_t TPySelector::Notify()
 {
-// Forward call to derived Notify() if available.
    PyObject* result = CallSelf( "Notify" );
 
    if ( ! result )
@@ -277,10 +282,11 @@ Bool_t TPySelector::Notify()
    return kTRUE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// First function called, and used to setup the python self; forward call.
+
 void TPySelector::Begin( TTree* )
 {
-// First function called, and used to setup the python self; forward call.
    SetupPySelf();
 
 // As per the generated code: the tree argument is deprecated (on PROOF 0 is
@@ -293,11 +299,12 @@ void TPySelector::Begin( TTree* )
    Py_XDECREF( result );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// First function called on worker node, needs to make sure python self is setup,
+/// then store the tree to be used, initialize client, and forward call.
+
 void TPySelector::SlaveBegin( TTree* tree )
 {
-// First function called on worker node, needs to make sure python self is setup,
-// then store the tree to be used, initialize client, and forward call.
    SetupPySelf();
    Init( tree );
 
@@ -316,10 +323,11 @@ void TPySelector::SlaveBegin( TTree* tree )
    Py_XDECREF( result );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Actual processing; call is forwarded to python self.
+
 Bool_t TPySelector::Process( Long64_t entry )
 {
-// Actual processing; call is forwarded to python self.
    if ( ! fPySelf || fPySelf == Py_None ) {
    // would like to set a python error, but can't risk that in case of a
    // configuration problem, as it would be absorbed ...
@@ -341,10 +349,11 @@ Bool_t TPySelector::Process( Long64_t entry )
    return bresult;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// End of client; call is forwarded to python self.
+
 void TPySelector::SlaveTerminate()
 {
-// End of client; call is forwarded to python self.
    PyObject* result = CallSelf( "SlaveTerminate" );
 
    if ( ! result )
@@ -353,10 +362,11 @@ void TPySelector::SlaveTerminate()
    Py_XDECREF( result );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// End of job; call is forwarded to python self.
+
 void TPySelector::Terminate()
 {
-// End of job; call is forwarded to python self.
    PyObject* result = CallSelf( "Terminate" );
 
    if ( ! result )
@@ -365,10 +375,11 @@ void TPySelector::Terminate()
    Py_XDECREF( result );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If no 'why' given, read from python error
+
 void TPySelector::Abort( const char* why, EAbort what )
 {
-// If no 'why' given, read from python error
    if ( ! why && PyErr_Occurred() ) {
       PyObject *pytype = 0, *pyvalue = 0, *pytrace = 0;
       PyErr_Fetch( &pytype, &pyvalue, &pytrace );

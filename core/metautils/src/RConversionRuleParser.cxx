@@ -37,7 +37,8 @@ namespace ROOT
 
    //--------------------------------------------------------------------------
    // Allocate global variables
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    SchemaRuleClassMap_t gReadRules;
    SchemaRuleClassMap_t gReadRawRules;
 
@@ -81,26 +82,28 @@ namespace ROOT
    }
 
 
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Parse the schema rule as specified in the LinkDef file
+
    Bool_t ParseRule( std::string command,
                      std::map<std::string, std::string> &result,
                      std::string &error_string )
    {
-      // Parse the schema rule as specified in the LinkDef file
-
       std::string::size_type l=0;
       command = TSchemaRuleProcessor::Trim( command );
 
       //-----------------------------------------------------------------------
       // Remove the semicolon from the end if declared
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       if( command[command.size()-1] == ';' )
          command = command.substr( 0, command.size()-1 );
 
       //-----------------------------------------------------------------------
       // If the first symbol does not end is not followed by equal then it
       // defaults to being the sourceClass.
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       {
          std::string::size_type endsymbol = FindEndSymbol( command );
          if ( endsymbol == command.length() || command[endsymbol] == ' ' || command[endsymbol] == '\t' ) {
@@ -136,17 +139,19 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Process the input until there are no characters left
-      //-----------------------------------------------------------------------
-      while( !command.empty() ) {
+      //////////////////////////////////////////////////////////////////////////
 
+      while( !command.empty() ) {
          //--------------------------------------------------------------------
          // Find key token
-         //--------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          std::string::size_type pos = command.find( '=' );
 
          //--------------------------------------------------------------------
          // No equality sign found - no keys left
-         //--------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          if( pos == std::string::npos ) {
             error_string = "Parsing error, no key found!";
             return false;
@@ -154,13 +159,15 @@ namespace ROOT
 
          //--------------------------------------------------------------------
          // The key was found - process the arguments
-         //--------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          std::string key = TSchemaRuleProcessor::Trim( command.substr( 0, pos ) );
          command = TSchemaRuleProcessor::Trim( command.substr( pos+1 ) );
 
          //--------------------------------------------------------------------
          // Nothing left to be processed
-         //--------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          if( command.size() < 1 ) {
             error_string = "Parsing error, wrond or no value specified for key: " + key;
             return false;
@@ -170,7 +177,8 @@ namespace ROOT
 
          //--------------------------------------------------------------------
          // Processing code tag: "{ code }"
-         //--------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          if( key == "code" ) {
             if( command[1] != '{' ) {
                error_string = "Parsing error while processing key: code\n";
@@ -190,9 +198,9 @@ namespace ROOT
          }
          //--------------------------------------------------------------------
          // Processing normal tag: "value"
-         //--------------------------------------------------------------------
-         else {
+         ///////////////////////////////////////////////////////////////////////
 
+         else {
             if( hasquote) {
                l = command.find( '"', 1 );
                if (l == std::string::npos ) {
@@ -210,7 +218,8 @@ namespace ROOT
 
          //--------------------------------------------------------------------
          // Everything went ok
-         //--------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          if( l == command.size() )
             break;
          command = command.substr( l+1 );
@@ -231,7 +240,8 @@ namespace ROOT
       //------------------------------------------------------------------------
       // "include" tag. Replace ";" with "," for backwards compatibility with
       // ROOT5
-      //------------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       auto const includeKeyName = "include";
       auto includeTag = result.find(includeKeyName);
       if (includeTag != result.end()){
@@ -246,14 +256,15 @@ namespace ROOT
       return ValidateRule( result, error_string);
    }
 
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Validate if the user specified rules are correct
+
    static Bool_t ValidateRule( const std::map<std::string, std::string>& rule, std::string &error_string )
    {
-      // Validate if the user specified rules are correct
-
       //-----------------------------------------------------------------------
       // Check if we have target class name
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       std::map<std::string, std::string>::const_iterator it1, it2;
       std::list<std::string>                             lst;
       std::list<std::string>::iterator                   lsIt;
@@ -270,7 +281,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Check if we have the source tag
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       it1 = rule.find( "sourceClass" );
       if( it1 == rule.end())
       {
@@ -280,7 +292,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Check if we have either version or checksum specified
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       it1 = rule.find( "version" );
       it2 = rule.find( "checksum" );
       if( it1 == rule.end() && it2 == rule.end() ) {
@@ -291,7 +304,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Check if the checksum has been set to right value
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       if( it2 != rule.end() ) {
          if( it2->second.size() < 2 || it2->second[0] != '[' ||
              it2->second[it2->second.size()-1] != ']' ) {
@@ -318,7 +332,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Check if the version is correct
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       std::pair<Int_t, Int_t> ver;
       if( it1 != rule.end() ) {
          if( it1->second.size() < 2 || it1->second[0] != '[' ||
@@ -346,7 +361,8 @@ namespace ROOT
       //-----------------------------------------------------------------------
       // Check if we're dealing with renameing declaration - sourceClass,
       // targetClass and either version or checksum required
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       if( rule.size() == 3 || (rule.size() == 4 && it1 != rule.end() && it2 != rule.end()) )
          return true;
 
@@ -365,7 +381,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Check the source contains proper declarations.
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       it1 = rule.find("code");
       if (it1 != rule.end() && it1->second != "") {
          SourceTypeList_t source;
@@ -383,7 +400,8 @@ namespace ROOT
       //-----------------------------------------------------------------------
       // Check if we have an embed parameter and if so if it has been set to
       // the right value
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       it1 = rule.find( "embed" );
       if( it1 != rule.end() ) {
          std::string emValue = TSchemaRuleProcessor::Trim( it1->second );
@@ -396,7 +414,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Check if the include list is not empty
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       it1 = rule.find( "include" );
       if( it1 != rule.end() ) {
          if( it1->second.empty() ) {
@@ -408,11 +427,12 @@ namespace ROOT
       return true;
    }
 
-   //---------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Check if given rule contains references to valid data members
+
    Bool_t HasValidDataMembers(SchemaRuleMap_t& rule,
                               MembersTypeMap_t& members )
    {
-      // Check if given rule contains references to valid data members
       std::list<std::string>           mem;
       std::list<std::string>::iterator it;
       // MembersMap_t::iterator           rIt;
@@ -421,7 +441,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Loop over the data members
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       for( it = mem.begin(); it != mem.end(); ++it ) {
          if( members.find( *it ) == members.end() ) {
             std::cout << "WARNING: IO rule for class " + rule["targetClass"];
@@ -434,16 +455,17 @@ namespace ROOT
       return true;
    }
 
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   ///-----------------------------------------------------------------------
+   /// Write down the sources
+   ///-----------------------------------------------------------------------
+
    static void WriteAutoVariables( const std::list<std::string>& target,
                                    const SourceTypeList_t& source,
                                    MembersTypeMap_t& members,
                                    std::string& className, std::string& mappedName,
                                    std::ostream& output )
    {
-      //-----------------------------------------------------------------------
-      // Write down the sources
-      //-----------------------------------------------------------------------
       if (!source.empty()) {
          Bool_t start = true;
          SourceTypeList_t::const_iterator it;
@@ -451,7 +473,8 @@ namespace ROOT
          //--------------------------------------------------------------------
          // Write IDs and check if we should generate the onfile structure
          // this is done if the type was declared
-         //--------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          Bool_t generateOnFile = false;
          output << "#if 0" << std::endl; // this is to be removed later
          for( it = source.begin(); it != source.end(); ++it ) {
@@ -466,7 +489,8 @@ namespace ROOT
 
          //--------------------------------------------------------------------
          // Declare the on-file structure - if needed
-         //--------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          if( generateOnFile ) {
             std::string onfileStructName = mappedName + "_Onfile";
             output << "      ";
@@ -474,9 +498,10 @@ namespace ROOT
 
             //-----------------------------------------------------------------
             // List the data members with non-empty type declarations
-            //-----------------------------------------------------------------
+            ////////////////////////////////////////////////////////////////////
+            /// fprintf(stderr, "Seeing %s %s %s\n", it->first.fType.c_str(), it->second.c_str(), it->first.fDimensions.c_str());
+
             for( it = source.begin(); it != source.end(); ++it ) {
-               // fprintf(stderr, "Seeing %s %s %s\n", it->first.fType.c_str(), it->second.c_str(), it->first.fDimensions.c_str());
                if( it->first.fType.size() ) {
                   if ( it->first.fDimensions.size() ) {
                      output << "         typedef " << it->first.fType;
@@ -493,7 +518,8 @@ namespace ROOT
 
             //-----------------------------------------------------------------
             // Generate the constructor
-            //-----------------------------------------------------------------
+            ////////////////////////////////////////////////////////////////////
+
             output << "         " << onfileStructName << "(";
             for( start = true, it = source.begin(); it != source.end(); ++it ) {
                if( it->first.fType.size() == 0)
@@ -514,7 +540,8 @@ namespace ROOT
 
             //-----------------------------------------------------------------
             // Generate the constructor's initializer list
-            //-----------------------------------------------------------------
+            ////////////////////////////////////////////////////////////////////
+
             for( start = true, it = source.begin(); it != source.end(); ++it ) {
                if( it->first.fType == "" )
                   continue;
@@ -531,7 +558,8 @@ namespace ROOT
 
             //-----------------------------------------------------------------
             // Initialize the structure - to be changed later
-            //-----------------------------------------------------------------
+            ////////////////////////////////////////////////////////////////////
+
             for( it = source.begin(); it != source.end(); ++it ) {
                output << "      ";
                output << "static Long_t offset_Onfile_" << mappedName;
@@ -567,7 +595,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Write down the targets
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       if( !target.empty() ) {
          output << "      static TClassRef cls(\"";
          output << className << "\");" << std::endl;
@@ -592,26 +621,28 @@ namespace ROOT
       }
    }
 
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Write the conversion function for Read rule, the function name
+   /// is being written to rule["funcname"]
+
    void WriteReadRuleFunc( SchemaRuleMap_t& rule, int index,
                            std::string& mappedName, MembersTypeMap_t& members,
                            std::ostream& output )
    {
-      // Write the conversion function for Read rule, the function name
-      // is being written to rule["funcname"]
-
       std::string className = rule["targetClass"];
 
       //-----------------------------------------------------------------------
       // Create the function name
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       std::ostringstream func;
       func << "read_" << mappedName << "_" << index;
       rule["funcname"] = func.str();
 
       //-----------------------------------------------------------------------
       // Write the header
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       output << "   static void " << func.str();
       output << "( char* target, TVirtualObject *oldObj )" << std::endl;
       output << "   {" << std::endl;
@@ -619,7 +650,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Write the automatically generated variables
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       std::list<std::pair<ROOT::TSchemaType,std::string> > source;
       std::list<std::string> target;
       TSchemaRuleProcessor::SplitDeclaration( rule["source"], source );
@@ -634,33 +666,36 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Write the user's code
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       output << "      //--- User's code ---" << std::endl;
       output << "     " << rule["code"] << std::endl;
       output << "   }" << std::endl;
    }
 
 
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Write the conversion function for ReadRaw rule, the function name
+   /// is being written to rule["funcname"]
+
    void WriteReadRawRuleFunc( SchemaRuleMap_t& rule, int index,
                               std::string& mappedName, MembersTypeMap_t& members,
                               std::ostream& output )
    {
-      // Write the conversion function for ReadRaw rule, the function name
-      // is being written to rule["funcname"]
-
       std::string className = rule["targetClass"];
 
       //-----------------------------------------------------------------------
       // Create the function name
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       std::ostringstream func;
       func << "readraw_" << mappedName << "_" << index;
       rule["funcname"] = func.str();
 
       //-----------------------------------------------------------------------
       // Write the header
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       output << "   static void " << func.str();
       output << "( char* target, TBuffer &b )" << std::endl;
       output << "   {" << std::endl;
@@ -669,7 +704,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Write the automatically generated variables
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       std::list<std::pair<ROOT::TSchemaType,std::string> > source;
       std::list<std::string> target;
       TSchemaRuleProcessor::SplitList( rule["target"], target );
@@ -680,18 +716,20 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Write the user's code
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       output << "      //--- User's code ---" << std::endl;
       output << rule["code"] << std::endl;
       output << "#endif" << std::endl;
       output << "   }" << std::endl;
    }
 
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Replace all accurances of given string with other string
+
    static void StrReplace( std::string& proc, const std::string& pat,
                            const std::string& tr )
    {
-      // Replace all accurances of given string with other string
       std::string::size_type it = 0;
       std::string::size_type s  = pat.size();
       std::string::size_type tr_len= tr.size();
@@ -708,24 +746,27 @@ namespace ROOT
       }
    }
 
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Write schema rules
+
    void WriteSchemaList( std::list<SchemaRuleMap_t>& rules,
                          const std::string& listName, std::ostream& output )
    {
-      // Write schema rules
       std::list<SchemaRuleMap_t>::iterator it;
       int                                  i = 0;
 
       //-----------------------------------------------------------------------
       // Loop over the rules
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       for( it = rules.begin(); it != rules.end(); ++it ) {
          output << "      rule = &" << listName << "[" << i++;
          output << "];" << std::endl;
 
          //--------------------------------------------------------------------
          // Write down the mandatory fields
-         //--------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          output << "      rule->fSourceClass = \"" << (*it)["sourceClass"];
          output << "\";" << std::endl;
 
@@ -741,7 +782,8 @@ namespace ROOT
 
          //--------------------------------------------------------------------
          // Deal with non mandatory keys
-         //--------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          if( it->find( "funcname" ) != it->end() ) {
             std::string code = (*it)["code"];
             StrReplace( code, "\n", "\\n" );
@@ -780,10 +822,11 @@ namespace ROOT
       }
    }
 
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Get the list of includes specified in the shema rules
+
    void GetRuleIncludes( std::list<std::string> &result )
    {
-      // Get the list of includes specified in the shema rules
       std::list<std::string>               tmp;
       std::list<SchemaRuleMap_t>::iterator rule;
       SchemaRuleMap_t::iterator            attr;
@@ -791,7 +834,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Processing read rules
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       for( it = gReadRules.begin(); it != gReadRules.end(); ++it ) {
          for( rule = it->second.begin(); rule != it->second.end(); ++rule ) {
             attr = rule->find( "include" );
@@ -803,7 +847,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Processing read raw rules
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       for( it = gReadRawRules.begin(); it != gReadRawRules.end(); ++it ) {
          for( rule = it->second.begin(); rule != it->second.end(); ++rule ) {
             attr = rule->find( "include" );
@@ -815,19 +860,21 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Removing duplicates
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       result.sort();
       result.unique();
    }
 
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// I am being called when a read pragma is encountered
+
    void ProcessReadPragma( const char* args )
    {
-      // I am being called when a read pragma is encountered
-
       //-----------------------------------------------------------------------
       // Parse the rule and check it's validity
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       std::map<std::string, std::string> rule;
       std::string error_string;
       if( !ParseRule( args, rule, error_string ) ) {
@@ -839,7 +886,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Append the rule to the list
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       SchemaRuleClassMap_t::iterator it;
       std::string                    targetClass = rule["targetClass"];
       it = gReadRules.find( targetClass );
@@ -852,14 +900,15 @@ namespace ROOT
          it->second.push_back( rule );
    }
 
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// I am being called then a readraw pragma is encountered
+
    void ProcessReadRawPragma( const char* args )
    {
-      // I am being called then a readraw pragma is encountered
-
       //-----------------------------------------------------------------------
       // Parse the rule and check it's validity
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       std::map<std::string, std::string> rule;
       std::string error_string;
       if( !ParseRule( args, rule, error_string ) ) {
@@ -871,7 +920,8 @@ namespace ROOT
 
       //-----------------------------------------------------------------------
       // Append the rule to the list
-      //-----------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       SchemaRuleClassMap_t::iterator it;
       std::string                    targetClass = rule["targetClass"];
       it = gReadRawRules.find( targetClass );

@@ -82,7 +82,8 @@ End_Html */
 
 ClassImp(TMVA::LogInterval)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::LogInterval::LogInterval( Double_t min, Double_t max, Int_t nbins ) :
 TMVA::Interval(min,max,nbins)
 {
@@ -94,19 +95,21 @@ TMVA::LogInterval::LogInterval( const LogInterval& other ) :
 {
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::LogInterval::~LogInterval()
 {
-   // destructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculates the value of the "number" bin in a discrete interval.
+/// Parameters:
+///        Double_t position
+///
+
 Double_t TMVA::LogInterval::GetElement( Int_t bin ) const
 {
-   // calculates the value of the "number" bin in a discrete interval.
-   // Parameters:
-   //        Double_t position
-   //
    if (fNbins <= 0) {
       Log() << kFATAL << "GetElement only defined for discrete value LogIntervals" << Endl;
       return 0.0;
@@ -118,10 +121,11 @@ Double_t TMVA::LogInterval::GetElement( Int_t bin ) const
    return  TMath::Exp(TMath::Log(fMin)+((Double_t)bin) /((Double_t)(fNbins-1))*log(fMax/fMin));
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// retuns the step size between the numbers of a "discrete LogInterval"
+
 Double_t TMVA::LogInterval::GetStepSize( Int_t iBin )  const
 {
-   // retuns the step size between the numbers of a "discrete LogInterval"
    if (fNbins <= 0) {
       Log() << kFATAL << "GetElement only defined for discrete value LogIntervals" << Endl;
    }
@@ -132,10 +136,11 @@ Double_t TMVA::LogInterval::GetStepSize( Int_t iBin )  const
    return (GetElement(TMath::Max(iBin,0))-GetElement(TMath::Max(iBin-1,0)));
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get uniformely distributed number within interval
+
 Double_t TMVA::LogInterval::GetRndm( TRandom3& rnd )  const
 {
-   // get uniformely distributed number within interval
    return TMath::Exp(rnd.Rndm()*(TMath::Log(fMax/fMin) - TMath::Log(fMin)) + TMath::Log(fMin));
 }
 

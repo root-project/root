@@ -81,11 +81,12 @@
 //
 // Scheduler thread
 //
-//--------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// This is an endless loop to check the system periodically or when
+/// triggered via a message in a dedicated pipe
+
 void *XrdProofSchedCron(void *p)
 {
-   // This is an endless loop to check the system periodically or when
-   // triggered via a message in a dedicated pipe
    XPDLOC(SCHED, "SchedCron")
 
    XrdProofSched *sched = (XrdProofSched *)p;
@@ -138,20 +139,20 @@ void *XrdProofSchedCron(void *p)
    return (void *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare two workers for sorting
+
 static bool XpdWrkComp(XrdProofWorker *&lhs, XrdProofWorker *&rhs)
 {
-   // Compare two workers for sorting
-
    return ((lhs && rhs &&
             lhs->GetNActiveSessions() < rhs->GetNActiveSessions()) ? 1 : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generic directive processor
+
 int DoSchedDirective(XrdProofdDirective *d, char *val, XrdOucStream *cfg, bool rcf)
 {
-   // Generic directive processor
-
    if (!d || !(d->fVal))
       // undefined inputs
       return -1;
@@ -159,14 +160,14 @@ int DoSchedDirective(XrdProofdDirective *d, char *val, XrdOucStream *cfg, bool r
    return ((XrdProofSched *)d->fVal)->ProcessDirective(d, val, cfg, rcf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 XrdProofSched::XrdProofSched(const char *name,
                              XrdProofdManager *mgr, XrdProofGroupMgr *grpmgr,
                              const char *cfn,  XrdSysError *e)
               : XrdProofdConfig(cfn, e)
 {
-   // Constructor
-
    fValid = 1;
    fMgr = mgr;
    fGrpMgr = grpmgr;
@@ -183,20 +184,21 @@ XrdProofSched::XrdProofSched(const char *name,
    RegisterDirectives();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register directives for configuration
+
 void XrdProofSched::RegisterDirectives()
 {
-   // Register directives for configuration
-
    Register("schedparam", new XrdProofdDirective("schedparam", this, &DoDirectiveClass));
    Register("resource", new XrdProofdDirective("resource", this, &DoDirectiveClass));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the priorities of the active sessions.
+
 int XrdProofSched::DoDirective(XrdProofdDirective *d,
                                char *val, XrdOucStream *cfg, bool rcf)
 {
-   // Update the priorities of the active sessions.
    XPDLOC(SCHED, "Sched::DoDirective")
 
    if (!d)
@@ -213,11 +215,11 @@ int XrdProofSched::DoDirective(XrdProofdDirective *d,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset values for the configurable parameters
+
 void XrdProofSched::ResetParameters()
 {
-   // Reset values for the configurable parameters
-
    fMaxSessions = -1;
    fMaxRunning = -1;
    fWorkerMax = -1;
@@ -228,12 +230,13 @@ void XrdProofSched::ResetParameters()
    fCheckFrequency = 30;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Configure this instance using the content of file 'cfn'.
+/// Return 0 on success, -1 in case of failure (file does not exists
+/// or containing incoherent information).
+
 int XrdProofSched::Config(bool rcf)
 {
-   // Configure this instance using the content of file 'cfn'.
-   // Return 0 on success, -1 in case of failure (file does not exists
-   // or containing incoherent information).
    XPDLOC(SCHED, "Sched::Config")
 
    // Run first the configurator
@@ -268,11 +271,12 @@ int XrdProofSched::Config(bool rcf)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Queue a query in the session; if this is the first querym enqueue also
+/// the session
+
 int XrdProofSched::Enqueue(XrdProofdProofServ *xps, XrdProofQuery *query)
 {
-   // Queue a query in the session; if this is the first querym enqueue also
-   // the session
    XPDDOM(SCHED)
 
    if (xps->Enqueue(query) == 1) {
@@ -291,11 +295,11 @@ int XrdProofSched::Enqueue(XrdProofdProofServ *xps, XrdProofQuery *query)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump the content of the waiting sessions queue
+
 void XrdProofSched::DumpQueues(const char *prefix)
 {
-   // Dump the content of the waiting sessions queue
-
    XPDLOC(SCHED, "DumpQueues")
 
    TRACE(ALL," ++++++++++++++++++++ DumpQueues ++++++++++++++++++++++++++++++++ ");
@@ -311,11 +315,12 @@ void XrdProofSched::DumpQueues(const char *prefix)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get first valid session.
+/// The dataset information can be used to assign workers.
+
 XrdProofdProofServ *XrdProofSched::FirstSession()
 {
-   // Get first valid session.
-   // The dataset information can be used to assign workers.
    XPDDOM(SCHED)
 
    if (fQueue.empty())
@@ -330,10 +335,11 @@ XrdProofdProofServ *XrdProofSched::FirstSession()
    return xps;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the number of workers to be used given the state of the cluster
+
 int XrdProofSched::GetNumWorkers(XrdProofdProofServ *xps)
 {
-   // Calculate the number of workers to be used given the state of the cluster
    XPDLOC(SCHED, "Sched::GetNumWorkers")
 
    // Go through the list of hosts and see how many CPUs are not used.
@@ -378,20 +384,20 @@ int XrdProofSched::GetNumWorkers(XrdProofdProofServ *xps)
    return nWrks;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a list of workers that can be used by session 'xps'.
+/// The return code is:
+///  -1     Some failure occured; cannot continue
+///   0     A new list has been assigned to the session 'xps' and
+///         returned in 'wrks'
+///   1     The list currently assigned to the session is the one
+///         to be used
+///   2     No worker could be assigned now; session should be queued
+
 int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
                               std::list<XrdProofWorker *> *wrks,
                               const char *querytag)
 {
-   // Get a list of workers that can be used by session 'xps'.
-   // The return code is:
-   //  -1     Some failure occured; cannot continue
-   //   0     A new list has been assigned to the session 'xps' and
-   //         returned in 'wrks'
-   //   1     The list currently assigned to the session is the one
-   //         to be used
-   //   2     No worker could be assigned now; session should be queued
-
    XPDLOC(SCHED, "Sched::GetWorkers")
 
    int rc = 0;
@@ -685,16 +691,16 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Consider starting some query from the queue.
+/// to be called after some resources are free (e.g. by a finished query)
+/// This method is doing the full transaction of finding the session to
+/// resume, assigning it workers and sending a resume message.
+/// In this way there is not possibility of interference with other GetWorkers
+/// return 0 in case of success and -1 in case of an error
+
 int XrdProofSched::Reschedule()
 {
-   // Consider starting some query from the queue.
-   // to be called after some resources are free (e.g. by a finished query)
-   // This method is doing the full transaction of finding the session to
-   // resume, assigning it workers and sending a resume message.
-   // In this way there is not possibility of interference with other GetWorkers
-   // return 0 in case of success and -1 in case of an error
-
    XPDLOC(SCHED, "Sched::Reschedule")
 
    if (fUseFIFO && TRACING(DBG)) DumpQueues("Reschedule");
@@ -744,11 +750,11 @@ int XrdProofSched::Reschedule()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill sbuf with some info about our current status
+
 int XrdProofSched::ExportInfo(XrdOucString &sbuf)
 {
-   // Fill sbuf with some info about our current status
-
    // Selection type
    const char *osel[] = { "all", "round-robin", "random", "load-based"};
    sbuf += "Selection: ";
@@ -776,11 +782,12 @@ int XrdProofSched::ExportInfo(XrdOucString &sbuf)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the priorities of the active sessions.
+
 int XrdProofSched::ProcessDirective(XrdProofdDirective *d,
                                     char *val, XrdOucStream *cfg, bool rcf)
 {
-   // Update the priorities of the active sessions.
    XPDLOC(SCHED, "Sched::ProcessDirective")
 
    if (!d)
@@ -796,10 +803,11 @@ int XrdProofSched::ProcessDirective(XrdProofdDirective *d,
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'schedparam' directive
+
 int XrdProofSched::DoDirectiveSchedParam(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'schedparam' directive
    XPDLOC(SCHED, "Sched::DoDirectiveSchedParam")
 
    if (!val || !cfg)
@@ -864,11 +872,11 @@ int XrdProofSched::DoDirectiveSchedParam(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'resource' directive
+
 int XrdProofSched::DoDirectiveResource(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'resource' directive
-
    if (!val || !cfg)
       // undefined inputs
       return -1;

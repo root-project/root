@@ -34,13 +34,15 @@ ClassImp(RooChiSquarePdf)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooChiSquarePdf::RooChiSquarePdf()
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooChiSquarePdf::RooChiSquarePdf(const char* name, const char* title, 
                            RooAbsReal& x, RooAbsReal& ndof): 
   RooAbsPdf(name, title),
@@ -51,7 +53,8 @@ RooChiSquarePdf::RooChiSquarePdf(const char* name, const char* title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooChiSquarePdf::RooChiSquarePdf(const RooChiSquarePdf& other, const char* name) :
   RooAbsPdf(other, name), 
   _x("x", this, other._x), 
@@ -60,10 +63,10 @@ RooChiSquarePdf::RooChiSquarePdf(const RooChiSquarePdf& other, const char* name)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooChiSquarePdf::evaluate() const 
 {
-
   if(_x <= 0) return 0;
 
   return  pow(_x,(_ndof/2.)-1.) * exp(-_x/2.) / TMath::Gamma(_ndof/2.) / pow(2.,_ndof/2.);
@@ -72,10 +75,11 @@ Double_t RooChiSquarePdf::evaluate() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// No analytical calculation available (yet) of integrals over subranges
+
 Int_t RooChiSquarePdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
-  // No analytical calculation available (yet) of integrals over subranges
   if (rangeName && strlen(rangeName)) {
     return 0 ;
   }
@@ -86,7 +90,8 @@ Int_t RooChiSquarePdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& anal
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooChiSquarePdf::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   R__ASSERT(code==1) ;

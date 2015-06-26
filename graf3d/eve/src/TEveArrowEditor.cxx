@@ -21,7 +21,8 @@
 
 ClassImp(TEveArrowEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveArrowEditor::TEveArrowEditor(const TGWindow *p, Int_t width, Int_t height,
                                  UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -94,11 +95,11 @@ TEveArrowEditor::TEveArrowEditor(const TGWindow *p, Int_t width, Int_t height,
    fOrigin->Connect("ValueSet()", "TEveArrowEditor", this, "DoVertex()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveArrowEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveArrow*>(obj);
 
    fTubeR->SetValue(fM->fTubeR);
@@ -109,38 +110,38 @@ void TEveArrowEditor::SetModel(TObject* obj)
    fVector->SetValues(&fM->fVector[0]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for TubeR.
+
 void TEveArrowEditor::DoTubeR()
 {
-   // Slot for TubeR.
-
    fM->SetTubeR(fTubeR->GetValue());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for ConeR.
+
 void TEveArrowEditor::DoConeR()
 {
-   // Slot for ConeR.
-
    fM->SetConeR(fConeR->GetValue());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for ConeL.
+
 void TEveArrowEditor::DoConeL()
 {
-   // Slot for ConeL.
-
    fM->SetConeL(fConeL->GetValue());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for origin and vector.
+
 void TEveArrowEditor::DoVertex()
 {
-   // Slot for origin and vector.
-
    Double_t v[3];
    fOrigin->GetValues(v);
    fM->fOrigin.Set(v);

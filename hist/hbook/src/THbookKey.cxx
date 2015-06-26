@@ -16,10 +16,11 @@
 ClassImp(THbookKey)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 THbookKey::THbookKey(Int_t id, THbookFile *file)
 {
-   //constructor
    fDirectory = file;
    fID = id;
    char name[10];
@@ -28,20 +29,21 @@ THbookKey::THbookKey(Int_t id, THbookFile *file)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 THbookKey::~THbookKey()
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read object from disk and call its Browse() method.
+/// If object with same name already exist in memory delete it (like
+/// TDirectory::Get() is doing), except when the key references a
+/// folder in which case we don't want to re-read the folder object
+/// since it might contain new objects not yet saved.
+
 void THbookKey::Browse(TBrowser *b)
 {
-   // Read object from disk and call its Browse() method.
-   // If object with same name already exist in memory delete it (like
-   // TDirectory::Get() is doing), except when the key references a
-   // folder in which case we don't want to re-read the folder object
-   // since it might contain new objects not yet saved.
-
    fDirectory->cd();
 
    TObject *obj = fDirectory->GetList()->FindObject(GetName());
@@ -61,10 +63,11 @@ void THbookKey::Browse(TBrowser *b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///an hbook key is not a folder
+
 Bool_t THbookKey::IsFolder() const
 {
-   //an hbook key is not a folder
    Bool_t ret = kFALSE;
 
 

@@ -38,11 +38,11 @@
 
 ClassImp(TDecompQRH)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for (nrows x ncols) matrix
+
 TDecompQRH::TDecompQRH(Int_t nrows,Int_t ncols)
 {
-// Constructor for (nrows x ncols) matrix
-
    if (nrows < ncols) {
       Error("TDecompQRH(Int_t,Int_t","matrix rows should be >= columns");
       return;
@@ -59,11 +59,11 @@ TDecompQRH::TDecompQRH(Int_t nrows,Int_t ncols)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for ([row_lwb..row_upb] x [col_lwb..col_upb]) matrix
+
 TDecompQRH::TDecompQRH(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
 {
-// Constructor for ([row_lwb..row_upb] x [col_lwb..col_upb]) matrix
-
    const Int_t nrows = row_upb-row_lwb+1;
    const Int_t ncols = col_upb-col_lwb+1;
 
@@ -86,11 +86,11 @@ TDecompQRH::TDecompQRH(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for general matrix A .
+
 TDecompQRH::TDecompQRH(const TMatrixD &a,Double_t tol)
 {
-// Constructor for general matrix A .
-
    R__ASSERT(a.IsValid());
    if (a.GetNrows() < a.GetNcols()) {
       Error("TDecompQRH(const TMatrixD &","matrix rows should be >= columns");
@@ -120,24 +120,24 @@ TDecompQRH::TDecompQRH(const TMatrixD &a,Double_t tol)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TDecompQRH::TDecompQRH(const TDecompQRH &another) : TDecompBase(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// QR decomposition of matrix a by Householder transformations,
+///  see Golub & Loan first edition p41 & Sec 6.2.
+/// First fR is returned in upper triang of fQ and diagR. fQ returned in
+/// 'u-form' in lower triang of fQ and fW, the latter containing the
+///  "Householder betas".
+/// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
+
 Bool_t TDecompQRH::Decompose()
 {
-// QR decomposition of matrix a by Householder transformations,
-//  see Golub & Loan first edition p41 & Sec 6.2.
-// First fR is returned in upper triang of fQ and diagR. fQ returned in
-// 'u-form' in lower triang of fQ and fW, the latter containing the
-//  "Householder betas".
-// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
-
    if (TestBit(kDecomposed)) return kTRUE;
 
    if ( !TestBit(kMatrixSet) ) {
@@ -172,11 +172,11 @@ Bool_t TDecompQRH::Decompose()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decomposition function .
+
 Bool_t TDecompQRH::QRH(TMatrixD &q,TVectorD &diagR,TVectorD &up,TVectorD &w,Double_t tol)
 {
-// Decomposition function .
-
    const Int_t nRow = q.GetNrows();
    const Int_t nCol = q.GetNcols();
 
@@ -205,11 +205,11 @@ Bool_t TDecompQRH::QRH(TMatrixD &q,TVectorD &diagR,TVectorD &up,TVectorD &w,Doub
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set matrix to be decomposed
+
 void TDecompQRH::SetMatrix(const TMatrixD &a)
 {
-// Set matrix to be decomposed
-
    R__ASSERT(a.IsValid());
 
    ResetStatus();
@@ -238,12 +238,12 @@ void TDecompQRH::SetMatrix(const TMatrixD &a)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve Ax=b assuming the QR form of A is stored in fR,fQ and fW, but assume b
+/// has *not* been transformed.  Solution returned in b.
+
 Bool_t TDecompQRH::Solve(TVectorD &b)
 {
-// Solve Ax=b assuming the QR form of A is stored in fR,fQ and fW, but assume b
-// has *not* been transformed.  Solution returned in b.
-
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
       Error("Solve()","Matrix is singular");
@@ -293,12 +293,12 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve Ax=b assuming the QR form of A is stored in fR,fQ and fW, but assume b
+/// has *not* been transformed.  Solution returned in b.
+
 Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
 {
-// Solve Ax=b assuming the QR form of A is stored in fR,fQ and fW, but assume b
-// has *not* been transformed.  Solution returned in b.
-
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
@@ -352,12 +352,12 @@ Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve A^T x=b assuming the QR form of A is stored in fR,fQ and fW, but assume b
+/// has *not* been transformed.  Solution returned in b.
+
 Bool_t TDecompQRH::TransSolve(TVectorD &b)
 {
-// Solve A^T x=b assuming the QR form of A is stored in fR,fQ and fW, but assume b
-// has *not* been transformed.  Solution returned in b.
-
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
       Error("TransSolve()","Matrix is singular");
@@ -412,12 +412,12 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve A^T x=b assuming the QR form of A is stored in fR,fQ and fW, but assume b
+/// has *not* been transformed.  Solution returned in b.
+
 Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
 {
-// Solve A^T x=b assuming the QR form of A is stored in fR,fQ and fW, but assume b
-// has *not* been transformed.  Solution returned in b.
-
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
@@ -475,12 +475,12 @@ Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine calculates the absolute (!) value of the determinant
+/// |det| = d1*TMath::Power(2.,d2)
+
 void TDecompQRH::Det(Double_t &d1,Double_t &d2)
 {
-// This routine calculates the absolute (!) value of the determinant
-// |det| = d1*TMath::Power(2.,d2)
-
    if ( !TestBit(kDetermined) ) {
       if ( !TestBit(kDecomposed) )
         Decompose();
@@ -495,14 +495,14 @@ void TDecompQRH::Det(Double_t &d1,Double_t &d2)
    d2 = fDet2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+/// The user should always supply a matrix of size (m x m) !
+/// If m > n , only the (n x m) part of the returned (pseudo inverse) matrix
+/// should be used .
+
 Bool_t TDecompQRH::Invert(TMatrixD &inv)
 {
-// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
-// The user should always supply a matrix of size (m x m) !
-// If m > n , only the (n x m) part of the returned (pseudo inverse) matrix
-// should be used .
-
    if (inv.GetNrows()  != GetNrows()  || inv.GetNcols()  != GetNrows() ||
        inv.GetRowLwb() != GetRowLwb() || inv.GetColLwb() != GetColLwb()) {
       Error("Invert(TMatrixD &","Input matrix has wrong shape");
@@ -515,12 +515,12 @@ Bool_t TDecompQRH::Invert(TMatrixD &inv)
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+/// (n x m) Ainv is returned .
+
 TMatrixD TDecompQRH::Invert(Bool_t &status)
 {
-// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
-// (n x m) Ainv is returned .
-
    const Int_t rowLwb = GetRowLwb();
    const Int_t colLwb = GetColLwb();
    const Int_t rowUpb = rowLwb+GetNrows()-1;
@@ -532,11 +532,11 @@ TMatrixD TDecompQRH::Invert(Bool_t &status)
    return inv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the class members
+
 void TDecompQRH::Print(Option_t *opt) const
 {
-// Print the class members
-
    TDecompBase::Print(opt);
    fQ.Print("fQ");
    fR.Print("fR");
@@ -544,11 +544,11 @@ void TDecompQRH::Print(Option_t *opt) const
    fW.Print("fW");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TDecompQRH &TDecompQRH::operator=(const TDecompQRH &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TDecompBase::operator=(source);
       fQ.ResizeTo(source.fQ);

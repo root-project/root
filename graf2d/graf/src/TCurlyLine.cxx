@@ -40,11 +40,11 @@ Bool_t   TCurlyLine::fgDefaultIsCurly    = kTRUE;
 ClassImp(TCurlyLine)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TCurlyLine::TCurlyLine()
 {
-   // Default constructor.
-
    fX1         = 0.;
    fY1         = 0.;
    fX2         = 0.;
@@ -56,12 +56,12 @@ TCurlyLine::TCurlyLine()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new TCurlyLine with starting point (x1, y1), end point (x2,y2).
+/// The wavelength and amplitude are given in percent of the pad height.
+
 TCurlyLine::TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t wl, Double_t amp)
 {
-   // Create a new TCurlyLine with starting point (x1, y1), end point (x2,y2).
-   // The wavelength and amplitude are given in percent of the pad height.
-
    fX1         = x1;
    fY1         = y1;
    fX2         = x2;
@@ -73,11 +73,11 @@ TCurlyLine::TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Doubl
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a curly (Gluon) or wavy (Gamma) line.
+
 void TCurlyLine::Build()
 {
-   // Create a curly (Gluon) or wavy (Gamma) line.
-
    Double_t pixeltoX = 1;
    Double_t pixeltoY = 1;
 
@@ -166,29 +166,29 @@ void TCurlyLine::Build()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a line.
+
 Int_t TCurlyLine::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a line.
-
    return DistancetoLine(px,py,fX1,fY1,fX2,fY2);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+///  This member function is called when a  TCurlyLine is clicked with the locator
+///
+///  If Left button clicked on one of the line end points, this point
+///     follows the cursor until button is released.
+///
+///  if Middle button clicked, the line is moved parallel to itself
+///     until the button is released.
+///
+
 void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function is called when a  TCurlyLine is clicked with the locator
-   //
-   //  If Left button clicked on one of the line end points, this point
-   //     follows the cursor until button is released.
-   //
-   //  if Middle button clicked, the line is moved parallel to itself
-   //     until the button is released.
-   //
-
    Int_t kMaxDiff = 20;
    static Int_t d1,d2,px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
@@ -338,11 +338,11 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TCurlyLine::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    if (gROOT->ClassSaved(TCurlyLine::Class())) {
       out<<"   ";
    } else {
@@ -359,126 +359,126 @@ void TCurlyLine::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set curly.
+
 void TCurlyLine::SetCurly()
 {
-   // Set curly.
-
    fIsCurly = kTRUE;
    Build();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set wavy.
+
 void TCurlyLine::SetWavy()
 {
-   // Set wavy.
-
    fIsCurly = kFALSE;
    Build();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set wave length.
+
 void TCurlyLine::SetWaveLength(Double_t x)
 {
-   // Set wave length.
-
    fWaveLength = x;
    Build();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set amplitude.
+
 void TCurlyLine::SetAmplitude(Double_t x)
 {
-   // Set amplitude.
-
    fAmplitude = x;
    Build();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set start point.
+
 void TCurlyLine::SetStartPoint(Double_t x, Double_t y)
 {
-   // Set start point.
-
    fX1 = x;
    fY1 = y;
    Build();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set edn point.
+
 void TCurlyLine::SetEndPoint(Double_t x, Double_t y)
 {
-   // Set edn point.
-
    fX2 = x;
    fY2 = y;
    Build();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default wave length.
+
 void TCurlyLine::SetDefaultWaveLength(Double_t WaveLength)
 {
-   // Set default wave length.
-
    fgDefaultWaveLength = WaveLength;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default amplitude.
+
 void TCurlyLine::SetDefaultAmplitude(Double_t Amplitude)
 {
-   // Set default amplitude.
-
    fgDefaultAmplitude  = Amplitude;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set defaul "IsCurly".
+
 void TCurlyLine::SetDefaultIsCurly(Bool_t IsCurly)
 {
-   // Set defaul "IsCurly".
-
    fgDefaultIsCurly    = IsCurly;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default wave length.
+
 Double_t TCurlyLine::GetDefaultWaveLength()
 {
-   // Get default wave length.
-
    return fgDefaultWaveLength;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default amplitude.
+
 Double_t TCurlyLine::GetDefaultAmplitude()
 {
-   // Get default amplitude.
-
    return fgDefaultAmplitude;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default "IsCurly".
+
 Bool_t TCurlyLine::GetDefaultIsCurly()
 {
-   // Get default "IsCurly".
-
    return fgDefaultIsCurly;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the bounding Box of the CurlyLine
+
 Rectangle_t TCurlyLine::GetBBox()
 {
-   // Return the bounding Box of the CurlyLine
-
    Rectangle_t BBox;
    Int_t px1, py1, px2, py2;
    px1 = gPad->XtoPixel(fX1);
@@ -498,22 +498,22 @@ Rectangle_t TCurlyLine::GetBBox()
    return (BBox);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the center of the BoundingBox as TPoint in pixels
+
 TPoint TCurlyLine::GetBBoxCenter()
 {
-   // Return the center of the BoundingBox as TPoint in pixels
-
    TPoint p;
    p.SetX(gPad->XtoPixel(TMath::Min(fX1,fX2)+0.5*(TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2))));
    p.SetY(gPad->YtoPixel(TMath::Min(fY1,fY2)+0.5*(TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2))));
    return(p);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set center of the BoundingBox
+
 void TCurlyLine::SetBBoxCenter(const TPoint &p)
 {
-   // Set center of the BoundingBox
-
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    Double_t x1, x2, y1, y2;
@@ -539,11 +539,11 @@ void TCurlyLine::SetBBoxCenter(const TPoint &p)
    this->SetEndPoint(x2, y2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set X coordinate of the center of the BoundingBox
+
 void TCurlyLine::SetBBoxCenterX(const Int_t x)
 {
-   // Set X coordinate of the center of the BoundingBox
-
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    if (fX2>fX1) {
       this->SetStartPoint(gPad->PixeltoX(x)-0.5*w, fY1);
@@ -555,11 +555,11 @@ void TCurlyLine::SetBBoxCenterX(const Int_t x)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Y coordinate of the center of the BoundingBox
+
 void TCurlyLine::SetBBoxCenterY(const Int_t y)
 {
-   // Set Y coordinate of the center of the BoundingBox
-
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    if (fY2>fY1) {
       this->SetStartPoint(fX1, gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
@@ -571,47 +571,47 @@ void TCurlyLine::SetBBoxCenterY(const Int_t y)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set lefthandside of BoundingBox to a value
+/// (resize in x direction on left)
+
 void TCurlyLine::SetBBoxX1(const Int_t x)
 {
-   // Set lefthandside of BoundingBox to a value
-   // (resize in x direction on left)
-
    if (fX2>fX1)
       this->SetStartPoint(gPad->PixeltoX(x), fY1);
    else
       this->SetEndPoint(gPad->PixeltoX(x), fY2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set righthandside of BoundingBox to a value
+/// (resize in x direction on right)
+
 void TCurlyLine::SetBBoxX2(const Int_t x)
 {
-   // Set righthandside of BoundingBox to a value
-   // (resize in x direction on right)
-
    if (fX2>fX1)
       this->SetEndPoint(gPad->PixeltoX(x), fY2);
    else
       this->SetStartPoint(gPad->PixeltoX(x), fY1);
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set top of BoundingBox to a value (resize in y direction on top)
+
 void TCurlyLine::SetBBoxY1(const Int_t y)
 {
-   // Set top of BoundingBox to a value (resize in y direction on top)
-
    if (fY2>fY1)
       this->SetEndPoint(fX2, gPad->PixeltoY(y - gPad->VtoPixel(0)));
    else
       this->SetStartPoint(fX1, gPad->PixeltoY(y - gPad->VtoPixel(0)));
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bottom of BoundingBox to a value
+/// (resize in y direction on bottom)
+
 void TCurlyLine::SetBBoxY2(const Int_t y)
 {
-   // Set bottom of BoundingBox to a value
-   // (resize in y direction on bottom)
-
    if (fY2>fY1)
       this->SetStartPoint(fX1, gPad->PixeltoY(y - gPad->VtoPixel(0)));
    else

@@ -194,15 +194,15 @@ namespace {
    //*-* function GetLastError. This is intended to provide a reliable way for a thread
    //*-* in a multithreaded process to obtain per-thread error information.
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Receive exactly length bytes into buffer. Returns number of bytes
+   /// received. Returns -1 in case of error, -2 in case of MSG_OOB
+   /// and errno == EWOULDBLOCK, -3 in case of MSG_OOB and errno == EINVAL
+   /// and -4 in case of kNonBlock and errno == EWOULDBLOCK.
+   /// Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
+
    static int WinNTRecv(int socket, void *buffer, int length, int flag)
    {
-      // Receive exactly length bytes into buffer. Returns number of bytes
-      // received. Returns -1 in case of error, -2 in case of MSG_OOB
-      // and errno == EWOULDBLOCK, -3 in case of MSG_OOB and errno == EINVAL
-      // and -4 in case of kNonBlock and errno == EWOULDBLOCK.
-      // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
-
       if (socket == -1) return -1;
       SOCKET sock = socket;
 
@@ -249,14 +249,14 @@ namespace {
       return n;
    }
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Send exactly length bytes from buffer. Returns -1 in case of error,
+   /// otherwise number of sent bytes. Returns -4 in case of kNoBlock and
+   /// errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
+   /// (EPIPE || ECONNRESET).
+
    static int WinNTSend(int socket, const void *buffer, int length, int flag)
    {
-      // Send exactly length bytes from buffer. Returns -1 in case of error,
-      // otherwise number of sent bytes. Returns -4 in case of kNoBlock and
-      // errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
-      // (EPIPE || ECONNRESET).
-
       if (socket < 0) return -1;
       SOCKET sock = socket;
 
@@ -293,12 +293,12 @@ namespace {
       return n;
    }
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Wait for events on the file descriptors specified in the readready and
+   /// writeready masks or for timeout (in milliseconds) to occur.
+
    static int WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout)
    {
-      // Wait for events on the file descriptors specified in the readready and
-      // writeready masks or for timeout (in milliseconds) to occur.
-
       int retcode;
       fd_set* rbits = readready ? (fd_set*)readready->GetBits() : 0;
       fd_set* wbits = writeready ? (fd_set*)writeready->GetBits() : 0;
@@ -346,11 +346,11 @@ namespace {
       return retcode;
    }
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Get shared library search path.
+
    static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
    {
-      // Get shared library search path.
-
       static TString dynpath;
 
       if (reset || newpath) {
@@ -391,11 +391,11 @@ namespace {
       return dynpath;
    }
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Call the signal handler associated with the signal.
+
    static void sighandler(int sig)
    {
-      // Call the signal handler associated with the signal.
-
       for (int i = 0; i < kMAXSIGNALS; i++) {
          if (signal_map[i].code == sig) {
             (*signal_map[i].handler)((ESignals)i);
@@ -404,28 +404,29 @@ namespace {
       }
    }
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Set a signal handler for a signal.
+
    static void WinNTSignal(ESignals sig, SigHandler_t handler)
    {
-      // Set a signal handler for a signal.
       signal_map[sig].handler = handler;
       if (signal_map[sig].code != -1)
          (SigHandler_t)signal(signal_map[sig].code, sighandler);
    }
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Return the signal name associated with a signal.
+
    static char *WinNTSigname(ESignals sig)
    {
-      // Return the signal name associated with a signal.
-
       return signal_map[sig].signame;
    }
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// WinNT signal handler.
+
    static BOOL ConsoleSigHandler(DWORD sig)
    {
-      // WinNT signal handler.
-
       switch (sig) {
          case CTRL_C_EVENT:
             if (gSystem) {
@@ -454,19 +455,21 @@ namespace {
    }
 
    static CONTEXT *fgXcptContext = 0;
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+
    static void SigHandler(ESignals sig)
    {
       if (gSystem)
          ((TWinNTSystem*)gSystem)->DispatchSignals(sig);
    }
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Function that's called when an unhandled exception occurs.
+   /// Produces a stack trace, and lets the system deal with it
+   /// as if it was an unhandled excecption (usually ::abort)
+
    LONG WINAPI ExceptionFilter(LPEXCEPTION_POINTERS pXcp)
    {
-      // Function that's called when an unhandled exception occurs.
-      // Produces a stack trace, and lets the system deal with it
-      // as if it was an unhandled excecption (usually ::abort)
       fgXcptContext = pXcp->ContextRecord;
       gSystem->StackTrace();
       return EXCEPTION_CONTINUE_SEARCH;
@@ -482,17 +485,17 @@ namespace {
    }
 #pragma auto_inline(on)
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Message processing loop for the TGWin32 related GUI
+   /// thread for processing windows messages (aka Main/Server thread).
+   /// We need to start the thread outside the TGWin32 / GUI related
+   /// dll, because starting threads at DLL init time does not work.
+   /// Instead, we start an ideling thread at binary startup, and only
+   /// call the "real" message processing function
+   /// TGWin32::GUIThreadMessageFunc() once gVirtualX comes up.
+
    static DWORD WINAPI GUIThreadMessageProcessingLoop(void *p)
    {
-      // Message processing loop for the TGWin32 related GUI
-      // thread for processing windows messages (aka Main/Server thread).
-      // We need to start the thread outside the TGWin32 / GUI related
-      // dll, because starting threads at DLL init time does not work.
-      // Instead, we start an ideling thread at binary startup, and only
-      // call the "real" message processing function
-      // TGWin32::GUIThreadMessageFunc() once gVirtualX comes up.
-
       MSG msg;
 
       // force to create message queue
@@ -683,12 +686,12 @@ namespace {
 
    ////// Shortcuts helper functions IsShortcut and ResolveShortCut ///////////
 
-   //__________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Validates if a file name has extension '.lnk'. Returns true if file
+   /// name have extension same as Window's shortcut file (.lnk).
+
    static BOOL IsShortcut(const char *filename)
    {
-      // Validates if a file name has extension '.lnk'. Returns true if file
-      // name have extension same as Window's shortcut file (.lnk).
-
       //File extension for the Window's shortcuts (.lnk)
       const char *extLnk = ".lnk";
       if (filename != NULL) {
@@ -700,11 +703,11 @@ namespace {
       return FALSE;
    }
 
-   //__________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// Resolve a ShellLink (i.e. c:\path\shortcut.lnk) to a real path.
+
    static BOOL ResolveShortCut(LPCSTR pszShortcutFile, char *pszPath, int maxbuf)
    {
-      // Resolve a ShellLink (i.e. c:\path\shortcut.lnk) to a real path.
-
       HRESULT hres;
       IShellLink* psl;
       char szGotPath[MAX_PATH];
@@ -898,11 +901,11 @@ namespace {
       ::SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
    } // UpdateRegistry()
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+   /// return kFALSE if option "-l" was specified as main programm command arg
+
    bool NeedSplash()
    {
-      // return kFALSE if option "-l" was specified as main programm command arg
-
       static bool once = true;
       if (!once || gROOT->IsBatch() || !gApplication) return false;
       TString arg = gSystem->BaseName(gApplication->Argv(0));
@@ -922,10 +925,10 @@ namespace {
       return false;
    }
 
-   //______________________________________________________________________________
+   /////////////////////////////////////////////////////////////////////////////
+
    static void SetConsoleWindowName()
    {
-
       char pszNewWindowTitle[1024]; // contains fabricated WindowTitle
       char pszOldWindowTitle[1024]; // contains original WindowTitle
       HANDLE hStdout;
@@ -964,11 +967,11 @@ ClassImp(TWinNTSystem)
 
 ULong_t gConsoleWindow = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 Bool_t TWinNTSystem::HandleConsoleEvent()
 {
-   //
-
    TSignalHandler *sh;
    TIter next(fSignalHandler);
    ESignals s;
@@ -984,12 +987,12 @@ Bool_t TWinNTSystem::HandleConsoleEvent()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ctor
+
 TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System"),
 fGUIThreadHandle(0), fGUIThreadId(0)
 {
-   // ctor
-
    fhProcess = ::GetCurrentProcess();
    fDirNameBuffer = 0;
 
@@ -1045,11 +1048,11 @@ fGUIThreadHandle(0), fGUIThreadId(0)
    delete [] buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dtor
+
 TWinNTSystem::~TWinNTSystem()
 {
-   // dtor
-
    // Revert back the accuracy of Sleep() without needing to link to winmm.lib
    typedef UINT (WINAPI* LPTIMEENDPERIOD)( UINT uPeriod );
    HINSTANCE hInstWinMM = LoadLibrary( "winmm.dll" );
@@ -1078,11 +1081,11 @@ TWinNTSystem::~TWinNTSystem()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize WinNT system interface.
+
 Bool_t TWinNTSystem::Init()
 {
-   // Initialize WinNT system interface.
-
    const char *dir = 0;
 
    if (TSystem::Init()) {
@@ -1168,13 +1171,13 @@ Bool_t TWinNTSystem::Init()
 
 //---- Misc --------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Base name of a file name. Base name of /user/root is root.
+/// But the base name of '/' is '/'
+///                      'c:\' is 'c:\'
+
 const char *TWinNTSystem::BaseName(const char *name)
 {
-   // Base name of a file name. Base name of /user/root is root.
-   // But the base name of '/' is '/'
-   //                      'c:\' is 'c:\'
-
    // BB 28/10/05 : Removed (commented out) StrDup() :
    // - To get same behaviour on Windows and on Linux
    // - To avoid the need to use #ifdefs
@@ -1212,12 +1215,12 @@ const char *TWinNTSystem::BaseName(const char *name)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the application name (from command line, argv[0]) and copy it in
+/// gProgName. Copy the application pathname in gProgPath.
+
 void TWinNTSystem::SetProgname(const char *name)
 {
-   // Set the application name (from command line, argv[0]) and copy it in
-   // gProgName. Copy the application pathname in gProgPath.
-
    ULong_t  idot = 0;
    char *dot = 0;
    char *progname;
@@ -1276,11 +1279,11 @@ void TWinNTSystem::SetProgname(const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return system error string.
+
 const char *TWinNTSystem::GetError()
 {
-   // Return system error string.
-
    Int_t err = GetErrno();
    if (err == 0 && GetLastErrorString() != "")
       return GetLastErrorString();
@@ -1292,11 +1295,11 @@ const char *TWinNTSystem::GetError()
    return sys_errlist[err];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the system's host name.
+
 const char *TWinNTSystem::HostName()
 {
-   // Return the system's host name.
-
    if (fHostname == "")
       fHostname = ::getenv("COMPUTERNAME");
    if (fHostname == "") {
@@ -1309,12 +1312,12 @@ const char *TWinNTSystem::HostName()
    return fHostname;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Beep. If freq==0 (the default for TWinNTSystem), use ::MessageBeep.
+/// Otherwise ::Beep with freq and duration.
+
 void TWinNTSystem::DoBeep(Int_t freq /*=-1*/, Int_t duration /*=-1*/) const
 {
-   // Beep. If freq==0 (the default for TWinNTSystem), use ::MessageBeep.
-   // Otherwise ::Beep with freq and duration.
-
    if (freq == 0) {
       ::MessageBeep(-1);
       return;
@@ -1324,19 +1327,19 @@ void TWinNTSystem::DoBeep(Int_t freq /*=-1*/, Int_t duration /*=-1*/) const
    ::Beep(freq, duration);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the (static part of) the event handler func for GUI messages.
+
 void TWinNTSystem::SetGUIThreadMsgHandler(ThreadMsgFunc_t func)
 {
-   // Set the (static part of) the event handler func for GUI messages.
-
    gGUIThreadMsgFunc = func;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hook to tell TSystem that the TApplication object has been created.
+
 void TWinNTSystem::NotifyApplicationCreated()
 {
-   // Hook to tell TSystem that the TApplication object has been created.
-
    // send a dummy message to the GUI thread to kick it into life
    ::PostThreadMessage(fGUIThreadId, 0, NULL, 0L);
 }
@@ -1344,12 +1347,12 @@ void TWinNTSystem::NotifyApplicationCreated()
 
 //---- EventLoop ---------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a file handler to the list of system file handlers. Only adds
+/// the handler if it is not already in the list of file handlers.
+
 void TWinNTSystem::AddFileHandler(TFileHandler *h)
 {
-   // Add a file handler to the list of system file handlers. Only adds
-   // the handler if it is not already in the list of file handlers.
-
    TSystem::AddFileHandler(h);
    if (h) {
       int fd = h->GetFd();
@@ -1364,12 +1367,12 @@ void TWinNTSystem::AddFileHandler(TFileHandler *h)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a file handler from the list of file handlers. Returns
+/// the handler or 0 if the handler was not in the list of file handlers.
+
 TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
 {
-   // Remove a file handler from the list of file handlers. Returns
-   // the handler or 0 if the handler was not in the list of file handlers.
-
    if (!h) return 0;
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
@@ -1380,12 +1383,12 @@ TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
    return oh;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a signal handler to list of system signal handlers. Only adds
+/// the handler if it is not already in the list of signal handlers.
+
 void TWinNTSystem::AddSignalHandler(TSignalHandler *h)
 {
-   // Add a signal handler to list of system signal handlers. Only adds
-   // the handler if it is not already in the list of signal handlers.
-
    Bool_t set_console = kFALSE;
    ESignals  sig = h->GetSignal();
 
@@ -1408,12 +1411,12 @@ void TWinNTSystem::AddSignalHandler(TSignalHandler *h)
       WinNTSignal(h->GetSignal(), SigHandler);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a signal handler from list of signal handlers. Returns
+/// the handler or 0 if the handler was not in the list of signal handlers.
+
 TSignalHandler *TWinNTSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   // Remove a signal handler from list of signal handlers. Returns
-   // the handler or 0 if the handler was not in the list of signal handlers.
-
    if (!h) return 0;
 
    int sig = h->GetSignal();
@@ -1434,42 +1437,42 @@ TSignalHandler *TWinNTSystem::RemoveSignalHandler(TSignalHandler *h)
    return TSystem::RemoveSignalHandler(h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If reset is true reset the signal handler for the specified signal
+/// to the default handler, else restore previous behaviour.
+
 void TWinNTSystem::ResetSignal(ESignals sig, Bool_t reset)
 {
-   // If reset is true reset the signal handler for the specified signal
-   // to the default handler, else restore previous behaviour.
-
    //FIXME!
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset signals handlers to previous behaviour.
+
 void TWinNTSystem::ResetSignals()
 {
-   // Reset signals handlers to previous behaviour.
-
    //FIXME!
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If ignore is true ignore the specified signal, else restore previous
+/// behaviour.
+
 void TWinNTSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
 {
-   // If ignore is true ignore the specified signal, else restore previous
-   // behaviour.
-
    // FIXME!
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print a stack trace, if gEnv entry "Root.Stacktrace" is unset or 1,
+/// and if the image helper functions can be found (see InitImagehlpFunctions()).
+/// The stack trace is printed for each thread; if fgXcptContext is set (e.g.
+/// because there was an exception) use it to define the current thread's context.
+/// For each frame in the stack, the frame's module name, the frame's function
+/// name, and the frame's line number are printed.
+
 void TWinNTSystem::StackTrace()
 {
-   // Print a stack trace, if gEnv entry "Root.Stacktrace" is unset or 1,
-   // and if the image helper functions can be found (see InitImagehlpFunctions()).
-   // The stack trace is printed for each thread; if fgXcptContext is set (e.g.
-   // because there was an exception) use it to define the current thread's context.
-   // For each frame in the stack, the frame's module name, the frame's function
-   // name, and the frame's line number are printed.
-
    if (!gEnv->GetValue("Root.Stacktrace", 1))
       return;
 
@@ -1583,11 +1586,11 @@ void TWinNTSystem::StackTrace()
    _SymCleanup(GetCurrentProcess());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the bitmap of conditions that trigger a floating point exception.
+
 Int_t TWinNTSystem::GetFPEMask()
 {
-   // Return the bitmap of conditions that trigger a floating point exception.
-
    Int_t mask = 0;
    UInt_t oldmask = _statusfp( );
 
@@ -1600,12 +1603,12 @@ Int_t TWinNTSystem::GetFPEMask()
    return mask;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set which conditions trigger a floating point exception.
+/// Return the previous set of conditions.
+
 Int_t TWinNTSystem::SetFPEMask(Int_t mask)
 {
-   // Set which conditions trigger a floating point exception.
-   // Return the previous set of conditions.
-
    Int_t old = GetFPEMask();
 
    UInt_t newm = 0;
@@ -1622,19 +1625,19 @@ Int_t TWinNTSystem::SetFPEMask(Int_t mask)
    return old;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process pending events, i.e. DispatchOneEvent(kTRUE)
+
 Bool_t TWinNTSystem::ProcessEvents()
 {
-   // process pending events, i.e. DispatchOneEvent(kTRUE)
-
    return TSystem::ProcessEvents();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dispatch a single event in TApplication::Run() loop
+
 void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
-   // Dispatch a single event in TApplication::Run() loop
-
    // check for keyboard events
    if (pendingOnly && gGlobalEvent) ::SetEvent(gGlobalEvent);
 
@@ -1771,20 +1774,20 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exit from event loop.
+
 void TWinNTSystem::ExitLoop()
 {
-   // Exit from event loop.
-
    TSystem::ExitLoop();
 }
 
 //---- handling of system events -----------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle and dispatch signals.
+
 void TWinNTSystem::DispatchSignals(ESignals sig)
 {
-   // Handle and dispatch signals.
-
    if (sig == kSigInterrupt) {
       fSignals->Set(sig);
       fSigcnt++;
@@ -1802,11 +1805,11 @@ void TWinNTSystem::DispatchSignals(ESignals sig)
       CheckSignals(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if some signals were raised and call their Notify() member.
+
 Bool_t TWinNTSystem::CheckSignals(Bool_t sync)
 {
-   // Check if some signals were raised and call their Notify() member.
-
    TSignalHandler *sh;
    Int_t sigdone = -1;
    {
@@ -1831,12 +1834,12 @@ Bool_t TWinNTSystem::CheckSignals(Bool_t sync)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if there is activity on some file descriptors and call their
+/// Notify() member.
+
 Bool_t TWinNTSystem::CheckDescriptors()
 {
-   // Check if there is activity on some file descriptors and call their
-   // Notify() member.
-
    TFileHandler *fh;
    Int_t  fddone = -1;
    Bool_t read   = kFALSE;
@@ -1875,14 +1878,14 @@ Bool_t TWinNTSystem::CheckDescriptors()
 
 //---- Directories -------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a file system directory. Returns 0 in case of success and
+/// -1 if the directory could not be created (either already exists or
+/// illegal path name).
+/// If 'recursive' is true, makes parent directories as needed.
+
 int TWinNTSystem::mkdir(const char *name, Bool_t recursive)
 {
-   // Make a file system directory. Returns 0 in case of success and
-   // -1 if the directory could not be created (either already exists or
-   // illegal path name).
-   // If 'recursive' is true, makes parent directories as needed.
-
    if (recursive) {
       TString dirname = DirName(name);
       if (dirname.Length() == 0) {
@@ -1911,13 +1914,13 @@ int TWinNTSystem::mkdir(const char *name, Bool_t recursive)
    return MakeDirectory(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a WinNT file system directory. Returns 0 in case of success and
+/// -1 if the directory could not be created (either already exists or
+/// illegal path name).
+
 int  TWinNTSystem::MakeDirectory(const char *name)
 {
-   // Make a WinNT file system directory. Returns 0 in case of success and
-   // -1 if the directory could not be created (either already exists or
-   // illegal path name).
-
    TSystem *helper = FindHelper(name);
    if (helper) {
       return helper->MakeDirectory(name);
@@ -1934,11 +1937,11 @@ int  TWinNTSystem::MakeDirectory(const char *name)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close a WinNT file system directory.
+
 void TWinNTSystem::FreeDirectory(void *dirp)
 {
-   // Close a WinNT file system directory.
-
    TSystem *helper = FindHelper(0, dirp);
    if (helper) {
       helper->FreeDirectory(dirp);
@@ -1950,11 +1953,11 @@ void TWinNTSystem::FreeDirectory(void *dirp)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the next directory entry.
+
 const char *TWinNTSystem::GetDirEntry(void *dirp)
 {
-   // Returns the next directory entry.
-
    TSystem *helper = FindHelper(0, dirp);
    if (helper) {
       return helper->GetDirEntry(dirp);
@@ -1976,40 +1979,42 @@ const char *TWinNTSystem::GetDirEntry(void *dirp)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change directory.
+
 Bool_t TWinNTSystem::ChangeDirectory(const char *path)
 {
-   // Change directory.
-
    Bool_t ret = (Bool_t) (::chdir(path) == 0);
    if (fWdpath != "")
       fWdpath = "";   // invalidate path cache
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Inline function to check for a double-backslash at the
+/// beginning of a string
+///
+
 __inline BOOL DBL_BSLASH(LPCTSTR psz)
 {
-   //
-   // Inline function to check for a double-backslash at the
-   // beginning of a string
-   //
    return (psz[0] == TEXT('\\') && psz[1] == TEXT('\\'));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns TRUE if the given string is a UNC path.
+///
+/// TRUE
+///      "\\foo\bar"
+///      "\\foo"         <- careful
+///      "\\"
+/// FALSE
+///      "\foo"
+///      "foo"
+///      "c:\foo"
+
 BOOL PathIsUNC(LPCTSTR pszPath)
 {
-   // Returns TRUE if the given string is a UNC path.
-   //
-   // TRUE
-   //      "\\foo\bar"
-   //      "\\foo"         <- careful
-   //      "\\"
-   // FALSE
-   //      "\foo"
-   //      "foo"
-   //      "c:\foo"
    return DBL_BSLASH(pszPath);
 }
 
@@ -2017,16 +2022,17 @@ BOOL PathIsUNC(LPCTSTR pszPath)
 const TCHAR c_szColonSlash[] = TEXT(":\\");
 #pragma data_seg()
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// check if a path is a root
+///
+/// returns:
+///  TRUE for "\" "X:\" "\\foo\asdf" "\\foo\"
+///  FALSE for others
+///
+
 BOOL PathIsRoot(LPCTSTR pPath)
 {
-   //
-   // check if a path is a root
-   //
-   // returns:
-   //  TRUE for "\" "X:\" "\\foo\asdf" "\\foo\"
-   //  FALSE for others
-   //
    if (!IsDBCSLeadByte(*pPath)) {
       if (!lstrcmpi(pPath + 1, c_szColonSlash))
          // "X:\" case
@@ -2050,11 +2056,11 @@ BOOL PathIsRoot(LPCTSTR pPath)
    return FALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a directory. Returns 0 if directory does not exist.
+
 void *TWinNTSystem::OpenDirectory(const char *fdir)
 {
-   // Open a directory. Returns 0 if directory does not exist.
-
    TSystem *helper = FindHelper(fdir);
    if (helper) {
       return helper->OpenDirectory(fdir);
@@ -2128,20 +2134,20 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the working directory for the default drive
+
 const char *TWinNTSystem::WorkingDirectory()
 {
-   // Return the working directory for the default drive
-
    return WorkingDirectory('\0');
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Return working directory for the selected drive
+///  driveletter == 0 means return the working durectory for the default drive
+
 const char *TWinNTSystem::WorkingDirectory(char driveletter)
 {
-   //  Return working directory for the selected drive
-   //  driveletter == 0 means return the working durectory for the default drive
-
    char *wdpath = 0;
    char drive = driveletter ? toupper( driveletter ) - 'A' + 1 : 0;
 
@@ -2162,11 +2168,11 @@ const char *TWinNTSystem::WorkingDirectory(char driveletter)
    return fWdpath;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the user's home directory.
+
 const char *TWinNTSystem::HomeDirectory(const char *userName)
 {
-   // Return the user's home directory.
-
    static char mydir[kMAXPATHLEN] = "./";
    const char *h = 0;
    if (!(h = ::getenv("home"))) h = ::getenv("HOME");
@@ -2195,12 +2201,12 @@ const char *TWinNTSystem::HomeDirectory(const char *userName)
    return mydir;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a user configured or systemwide directory to create
+/// temporary files in.
+
 const char *TWinNTSystem::TempDirectory() const
 {
-   // Return a user configured or systemwide directory to create
-   // temporary files in.
-
    const char *dir =  gSystem->Getenv("TEMP");
    if (!dir)   dir =  gSystem->Getenv("TEMPDIR");
    if (!dir)   dir =  gSystem->Getenv("TEMP_DIR");
@@ -2212,17 +2218,17 @@ const char *TWinNTSystem::TempDirectory() const
    return dir;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a secure temporary file by appending a unique
+/// 6 letter string to base. The file will be created in
+/// a standard (system) directory or in the directory
+/// provided in dir. The full filename is returned in base
+/// and a filepointer is returned for safely writing to the file
+/// (this avoids certain security problems). Returns 0 in case
+/// of error.
+
 FILE *TWinNTSystem::TempFileName(TString &base, const char *dir)
 {
-   // Create a secure temporary file by appending a unique
-   // 6 letter string to base. The file will be created in
-   // a standard (system) directory or in the directory
-   // provided in dir. The full filename is returned in base
-   // and a filepointer is returned for safely writing to the file
-   // (this avoids certain security problems). Returns 0 in case
-   // of error.
-
    char tmpName[MAX_PATH];
 
    ::GetTempFileName(dir ? dir : TempDirectory(), base.Data(), 0, tmpName);
@@ -2236,12 +2242,12 @@ FILE *TWinNTSystem::TempFileName(TString &base, const char *dir)
 
 //---- Paths & Files -----------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of volumes (drives) mounted on the system.
+/// The returned TList must be deleted by the user using "delete".
+
 TList *TWinNTSystem::GetVolumes(Option_t *opt) const
 {
-   // Get list of volumes (drives) mounted on the system.
-   // The returned TList must be deleted by the user using "delete".
-
    Int_t   curdrive;
    UInt_t  type;
    TString sDrive, sType;
@@ -2337,13 +2343,13 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
    return drives;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the directory name in pathname. DirName of c:/user/root is /user.
+/// It creates output with 'new char []' operator. Returned string has to
+/// be deleted.
+
 const char *TWinNTSystem::DirName(const char *pathname)
 {
-   // Return the directory name in pathname. DirName of c:/user/root is /user.
-   // It creates output with 'new char []' operator. Returned string has to
-   // be deleted.
-
    // Delete old buffer
    if (fDirNameBuffer) {
       // delete [] fDirNameBuffer;
@@ -2381,22 +2387,22 @@ const char *TWinNTSystem::DirName(const char *pathname)
    return fDirNameBuffer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+/// Return the drive letter in pathname. DriveName of 'c:/user/root' is 'c'//
+///   Input:                                                               //
+///      pathname - the string containing file name                        //
+///   Return:                                                              //
+///     = Letter presenting the drive letter in the file name              //
+///     = The current drive if the pathname has no drive assigment         //
+///     = 0 if pathname is an empty string  or uses UNC syntax             //
+///   Note:                                                                //
+///      It doesn't chech whether pathname presents the 'real filename     //
+///      This subroutine looks for 'single letter' is follows with a ':'   //
+/////////////////////////////////////////////////////////////////////////////
+
 const char TWinNTSystem::DriveName(const char *pathname)
 {
-   ////////////////////////////////////////////////////////////////////////////
-   // Return the drive letter in pathname. DriveName of 'c:/user/root' is 'c'//
-   //   Input:                                                               //
-   //      pathname - the string containing file name                        //
-   //   Return:                                                              //
-   //     = Letter presenting the drive letter in the file name              //
-   //     = The current drive if the pathname has no drive assigment         //
-   //     = 0 if pathname is an empty string  or uses UNC syntax             //
-   //   Note:                                                                //
-   //      It doesn't chech whether pathname presents the 'real filename     //
-   //      This subroutine looks for 'single letter' is follows with a ':'   //
-   ////////////////////////////////////////////////////////////////////////////
-
    if (!pathname)    return 0;
    if (!pathname[0]) return 0;
 
@@ -2417,11 +2423,11 @@ const char TWinNTSystem::DriveName(const char *pathname)
    return DriveName(WorkingDirectory());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if dir is an absolute pathname.
+
 Bool_t TWinNTSystem::IsAbsoluteFileName(const char *dir)
 {
-   // Return true if dir is an absolute pathname.
-
    if (dir) {
       int idx = 0;
       if (strchr(dir,':')) idx = 2;
@@ -2430,34 +2436,34 @@ Bool_t TWinNTSystem::IsAbsoluteFileName(const char *dir)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a pathname to a unix pathname. E.g. form \user\root to /user/root.
+/// General rules for applications creating names for directories and files or
+/// processing names supplied by the user include the following:
+///
+///  *  Use any character in the current code page for a name, but do not use
+///     a path separator, a character in the range 0 through 31, or any character
+///     explicitly disallowed by the file system. A name can contain characters
+///     in the extended character set (128-255).
+///  *  Use the backslash (\), the forward slash (/), or both to separate
+///     components in a path. No other character is acceptable as a path separator.
+///  *  Use a period (.) as a directory component in a path to represent the
+///     current directory.
+///  *  Use two consecutive periods (..) as a directory component in a path to
+///     represent the parent of the current directory.
+///  *  Use a period (.) to separate components in a directory name or filename.
+///  *  Do not use the following characters in directory names or filenames, because
+///     they are reserved for Windows:
+///                      < > : " / \ |
+///  *  Do not use reserved words, such as aux, con, and prn, as filenames or
+///     directory names.
+///  *  Process a path as a null-terminated string. The maximum length for a path
+///     is given by MAX_PATH.
+///  *  Do not assume case sensitivity. Consider names such as OSCAR, Oscar, and
+///     oscar to be the same.
+
 const char *TWinNTSystem::UnixPathName(const char *name)
 {
-   // Convert a pathname to a unix pathname. E.g. form \user\root to /user/root.
-   // General rules for applications creating names for directories and files or
-   // processing names supplied by the user include the following:
-   //
-   //  *  Use any character in the current code page for a name, but do not use
-   //     a path separator, a character in the range 0 through 31, or any character
-   //     explicitly disallowed by the file system. A name can contain characters
-   //     in the extended character set (128-255).
-   //  *  Use the backslash (\), the forward slash (/), or both to separate
-   //     components in a path. No other character is acceptable as a path separator.
-   //  *  Use a period (.) as a directory component in a path to represent the
-   //     current directory.
-   //  *  Use two consecutive periods (..) as a directory component in a path to
-   //     represent the parent of the current directory.
-   //  *  Use a period (.) to separate components in a directory name or filename.
-   //  *  Do not use the following characters in directory names or filenames, because
-   //     they are reserved for Windows:
-   //                      < > : " / \ |
-   //  *  Do not use reserved words, such as aux, con, and prn, as filenames or
-   //     directory names.
-   //  *  Process a path as a null-terminated string. The maximum length for a path
-   //     is given by MAX_PATH.
-   //  *  Do not assume case sensitivity. Consider names such as OSCAR, Oscar, and
-   //     oscar to be the same.
-
    static char temp[1024];
    strlcpy(temp, name,1024);
    char *currentChar = temp;
@@ -2469,13 +2475,13 @@ const char *TWinNTSystem::UnixPathName(const char *name)
    return temp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns FALSE if one can access a file using the specified access mode.
+/// Mode is the same as for the WinNT access(2) function.
+/// Attention, bizarre convention of return value!!
+
 Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
 {
-   // Returns FALSE if one can access a file using the specified access mode.
-   // Mode is the same as for the WinNT access(2) function.
-   // Attention, bizarre convention of return value!!
-
    TSystem *helper = FindHelper(path);
    if (helper)
       return helper->AccessPathName(path, mode);
@@ -2497,12 +2503,12 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns TRUE if the url in 'path' points to the local file system.
+/// This is used to avoid going through the NIC card for local operations.
+
 Bool_t TWinNTSystem::IsPathLocal(const char *path)
 {
-   // Returns TRUE if the url in 'path' points to the local file system.
-   // This is used to avoid going through the NIC card for local operations.
-
    TSystem *helper = FindHelper(path);
    if (helper)
       return helper->IsPathLocal(path);
@@ -2510,11 +2516,11 @@ Bool_t TWinNTSystem::IsPathLocal(const char *path)
    return TSystem::IsPathLocal(path);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Concatenate a directory and a file name.
+
 const char *TWinNTSystem::PrependPathName(const char *dir, TString& name)
 {
-   // Concatenate a directory and a file name.
-
    if (name == ".") name = "";
    if (dir && dir[0]) {
       // Test whether the last symbol of the directory is a separator
@@ -2528,13 +2534,13 @@ const char *TWinNTSystem::PrependPathName(const char *dir, TString& name)
    return name.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a file. If overwrite is true and file already exists the
+/// file will be overwritten. Returns 0 when successful, -1 in case
+/// of failure, -2 in case the file already exists and overwrite was false.
+
 int TWinNTSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
 {
-   // Copy a file. If overwrite is true and file already exists the
-   // file will be overwritten. Returns 0 when successful, -1 in case
-   // of failure, -2 in case the file already exists and overwrite was false.
-
    if (AccessPathName(f, kReadPermission)) return -1;
    if (!AccessPathName(t) && !overwrite) return -2;
 
@@ -2544,24 +2550,24 @@ int TWinNTSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rename a file. Returns 0 when successful, -1 in case of failure.
+
 int TWinNTSystem::Rename(const char *f, const char *t)
 {
-   // Rename a file. Returns 0 when successful, -1 in case of failure.
-
    int ret = ::rename(f, t);
    GetLastErrorString() = GetError();
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 int TWinNTSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    TSystem *helper = FindHelper(path);
    if (helper)
       return helper->GetPathInfo(path, buf);
@@ -2608,18 +2614,18 @@ int TWinNTSystem::GetPathInfo(const char *path, FileStat_t &buf)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file system: id, bsize, bfree, blocks.
+/// Id      is file system type (machine dependend, see statfs())
+/// Bsize   is block size of file system
+/// Blocks  is total number of blocks in file system
+/// Bfree   is number of free blocks in file system
+/// The function returns 0 in case of success and 1 if the file system could
+/// not be stat'ed.
+
 int TWinNTSystem::GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
                             Long_t *blocks, Long_t *bfree)
 {
-   // Get info about a file system: id, bsize, bfree, blocks.
-   // Id      is file system type (machine dependend, see statfs())
-   // Bsize   is block size of file system
-   // Blocks  is total number of blocks in file system
-   // Bfree   is number of free blocks in file system
-   // The function returns 0 in case of success and 1 if the file system could
-   // not be stat'ed.
-
    // address of root directory of the file system
    LPCTSTR lpRootPathName = path;
 
@@ -2682,11 +2688,11 @@ int TWinNTSystem::GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a link from file1 to file2.
+
 int TWinNTSystem::Link(const char *from, const char *to)
 {
-   // Create a link from file1 to file2.
-
    struct   _stati64 finfo;
    char     winDrive[256];
    char     winDir[256];
@@ -2739,12 +2745,12 @@ int TWinNTSystem::Link(const char *from, const char *to)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a symlink from file1 to file2. Returns 0 when successful,
+/// -1 in case of failure.
+
 int TWinNTSystem::Symlink(const char *from, const char *to)
 {
-   // Create a symlink from file1 to file2. Returns 0 when successful,
-   // -1 in case of failure.
-
    HRESULT        hRes;                  /* Returned COM result code */
    IShellLink*    pShellLink;            /* IShellLink object pointer */
    IPersistFile*  pPersistFile;          /* IPersistFile object pointer */
@@ -2810,11 +2816,11 @@ int TWinNTSystem::Symlink(const char *from, const char *to)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlink, i.e. remove, a file or directory.
+
 int TWinNTSystem::Unlink(const char *name)
 {
-   // Unlink, i.e. remove, a file or directory.
-
    TSystem *helper = FindHelper(name);
    if (helper)
       return helper->Unlink(name);
@@ -2832,11 +2838,11 @@ int TWinNTSystem::Unlink(const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make descriptor fd non-blocking.
+
 int TWinNTSystem::SetNonBlock(int fd)
 {
-   // Make descriptor fd non-blocking.
-
    if (::ioctlsocket(fd, FIONBIO, (u_long *)1) == SOCKET_ERROR) {
       ::SysError("SetNonBlock", "ioctlsocket");
       return -1;
@@ -2851,11 +2857,11 @@ static char
    *shellStuff     = "(){}<>\"'",
    shellEscape     = '\\';
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand a pathname getting rid of special shell characaters like ~.$, etc.
+
 Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
 {
-   // Expand a pathname getting rid of special shell characaters like ~.$, etc.
-
    const char *patbuf = (const char *)patbuf0;
    const char *p;
    char   *cmd = 0;
@@ -2954,12 +2960,12 @@ needshell:
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand a pathname getting rid of special shell characaters like ~.$, etc.
+/// User must delete returned string.
+
 char *TWinNTSystem::ExpandPathName(const char *path)
 {
-   // Expand a pathname getting rid of special shell characaters like ~.$, etc.
-   // User must delete returned string.
-
    char newpath[MAX_PATH];
    if (IsShortcut(path)) {
       if (!ResolveShortCut(path, newpath, MAX_PATH))
@@ -2973,31 +2979,31 @@ char *TWinNTSystem::ExpandPathName(const char *path)
    return StrDup(patbuf.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the file permission bits. Returns -1 in case or error, 0 otherwise.
+/// On windows mode can only be a combination of "user read" (0400),
+/// "user write" (0200) or "user read | user write" (0600). Any other value
+/// for mode are ignored.
+
 int TWinNTSystem::Chmod(const char *file, UInt_t mode)
 {
-   // Set the file permission bits. Returns -1 in case or error, 0 otherwise.
-   // On windows mode can only be a combination of "user read" (0400),
-   // "user write" (0200) or "user read | user write" (0600). Any other value
-   // for mode are ignored.
-
    return ::_chmod(file, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the process file creation mode mask.
+
 int TWinNTSystem::Umask(Int_t mask)
 {
-   // Set the process file creation mode mask.
-
    return ::umask(mask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a files modification and access times. If actime = 0 it will be
+/// set to the modtime. Returns 0 on success and -1 in case of error.
+
 int TWinNTSystem::Utime(const char *file, Long_t modtime, Long_t actime)
 {
-   // Set a files modification and access times. If actime = 0 it will be
-   // set to the modtime. Returns 0 on success and -1 in case of error.
-
    if (AccessPathName(file, kWritePermission)) {
       Error("Utime", "need write permission for %s to change utime", file);
       return -1;
@@ -3010,12 +3016,12 @@ int TWinNTSystem::Utime(const char *file, Long_t modtime, Long_t actime)
    return ::utime(file, &t);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find location of file in a search path.
+/// User must delete returned string. Returns 0 in case file is not found.
+
 const char *TWinNTSystem::FindFile(const char *search, TString& infile, EAccessMode mode)
 {
-   // Find location of file in a search path.
-   // User must delete returned string. Returns 0 in case file is not found.
-
    // Windows cannot check on execution mode - all we can do is kReadPermission
    if (mode==kExecutePermission)
       mode=kReadPermission;
@@ -3065,11 +3071,11 @@ const char *TWinNTSystem::FindFile(const char *search, TString& infile, EAccessM
 
 //---- Users & Groups ----------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect local users and groups accounts information
+
 Bool_t TWinNTSystem::InitUsersGroups()
 {
-   // Collect local users and groups accounts information
-
    // Net* API functions allowed and OS is Windows NT/2000/XP
    if ((gEnv->GetValue("WinNT.UseNetAPI", 0)) && (::GetVersion() < 0x80000000)) {
       fActUser = -1;
@@ -3100,7 +3106,8 @@ Bool_t TWinNTSystem::InitUsersGroups()
    return kTRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TWinNTSystem::CountMembers(const char *lpszGroupName)
 {
    NET_API_STATUS NetStatus = NERR_Success;
@@ -3158,7 +3165,8 @@ Bool_t TWinNTSystem::CountMembers(const char *lpszGroupName)
    return TRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TWinNTSystem::GetNbGroups()
 {
    NET_API_STATUS NetStatus = NERR_Success;
@@ -3206,14 +3214,15 @@ Bool_t TWinNTSystem::GetNbGroups()
    return TRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Take the name and look up a SID so that we can get full
+/// domain/user information
+///
+
 Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what,
                                 int &groupIdx, int &memberIdx)
 {
-   //
-   // Take the name and look up a SID so that we can get full
-   // domain/user information
-   //
    BOOL bRetOp = FALSE;
    PSID pSid = NULL;
    DWORD dwSidSize, dwDomainNameSize;
@@ -3281,12 +3290,12 @@ Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what,
    return 0;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
                                     int &memberIdx)
 {
-   //
-
 
    NET_API_STATUS NetStatus = NERR_Success;
    LPBYTE Data = NULL;
@@ -3416,11 +3425,11 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
    return TRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 Bool_t TWinNTSystem::CollectGroups()
 {
-   //
-
    NET_API_STATUS NetStatus = NERR_Success;
    LPBYTE Data = NULL;
    DWORD Index = 0, ResumeHandle = 0, Total = 0, i;
@@ -3471,11 +3480,11 @@ Bool_t TWinNTSystem::CollectGroups()
    return TRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the user's id. If user = 0, returns current user's id.
+
 Int_t TWinNTSystem::GetUid(const char *user)
 {
-   // Returns the user's id. If user = 0, returns current user's id.
-
    if(!fGroupsInitDone)
       InitUsersGroups();
 
@@ -3511,12 +3520,12 @@ Int_t TWinNTSystem::GetUid(const char *user)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the effective user id. The effective id corresponds to the
+/// set id bit on the file being executed.
+
 Int_t TWinNTSystem::GetEffectiveUid()
 {
-   // Returns the effective user id. The effective id corresponds to the
-   // set id bit on the file being executed.
-
    if(!fGroupsInitDone)
       InitUsersGroups();
 
@@ -3539,11 +3548,11 @@ Int_t TWinNTSystem::GetEffectiveUid()
    return fPasswords[fActUser].pw_uid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the group's id. If group = 0, returns current user's group.
+
 Int_t TWinNTSystem::GetGid(const char *group)
 {
-   // Returns the group's id. If group = 0, returns current user's group.
-
    if(!fGroupsInitDone)
       InitUsersGroups();
 
@@ -3579,12 +3588,12 @@ Int_t TWinNTSystem::GetGid(const char *group)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the effective group id. The effective group id corresponds
+/// to the set id bit on the file being executed.
+
 Int_t TWinNTSystem::GetEffectiveGid()
 {
-   // Returns the effective group id. The effective group id corresponds
-   // to the set id bit on the file being executed.
-
    if(!fGroupsInitDone)
       InitUsersGroups();
 
@@ -3607,12 +3616,12 @@ Int_t TWinNTSystem::GetEffectiveGid()
    return fPasswords[fActUser].pw_gid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all user info in the UserGroup_t structure. The returned
+/// structure must be deleted by the user. In case of error 0 is returned.
+
 UserGroup_t *TWinNTSystem::GetUserInfo(Int_t uid)
 {
-   // Returns all user info in the UserGroup_t structure. The returned
-   // structure must be deleted by the user. In case of error 0 is returned.
-
    if(!fGroupsInitDone)
       InitUsersGroups();
 
@@ -3668,25 +3677,25 @@ UserGroup_t *TWinNTSystem::GetUserInfo(Int_t uid)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all user info in the UserGroup_t structure. If user = 0, returns
+/// current user's id info. The returned structure must be deleted by the
+/// user. In case of error 0 is returned.
+
 UserGroup_t *TWinNTSystem::GetUserInfo(const char *user)
 {
-   // Returns all user info in the UserGroup_t structure. If user = 0, returns
-   // current user's id info. The returned structure must be deleted by the
-   // user. In case of error 0 is returned.
-
    return GetUserInfo(GetUid(user));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all group info in the UserGroup_t structure. The only active
+/// fields in the UserGroup_t structure for this call are:
+///    fGid and fGroup
+/// The returned structure must be deleted by the user. In case of
+/// error 0 is returned.
+
 UserGroup_t *TWinNTSystem::GetGroupInfo(Int_t gid)
 {
-   // Returns all group info in the UserGroup_t structure. The only active
-   // fields in the UserGroup_t structure for this call are:
-   //    fGid and fGroup
-   // The returned structure must be deleted by the user. In case of
-   // error 0 is returned.
-
    if(!fGroupsInitDone)
       InitUsersGroups();
 
@@ -3730,33 +3739,33 @@ UserGroup_t *TWinNTSystem::GetGroupInfo(Int_t gid)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all group info in the UserGroup_t structure. The only active
+/// fields in the UserGroup_t structure for this call are:
+///    fGid and fGroup
+/// If group = 0, returns current user's group. The returned structure
+/// must be deleted by the user. In case of error 0 is returned.
+
 UserGroup_t *TWinNTSystem::GetGroupInfo(const char *group)
 {
-   // Returns all group info in the UserGroup_t structure. The only active
-   // fields in the UserGroup_t structure for this call are:
-   //    fGid and fGroup
-   // If group = 0, returns current user's group. The returned structure
-   // must be deleted by the user. In case of error 0 is returned.
-
    return GetGroupInfo(GetGid(group));
 }
 
 //---- environment manipulation ------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set environment variable.
+
 void TWinNTSystem::Setenv(const char *name, const char *value)
 {
-   // Set environment variable.
-
    ::_putenv(TString::Format("%s=%s", name, value));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get environment variable.
+
 const char *TWinNTSystem::Getenv(const char *name)
 {
-   // Get environment variable.
-
    const char *env = ::getenv(name);
    if (!env) {
       if (::_stricmp(name,"home") == 0 ) {
@@ -3770,51 +3779,51 @@ const char *TWinNTSystem::Getenv(const char *name)
 
 //---- Processes ---------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute a command.
+
 int TWinNTSystem::Exec(const char *shellcmd)
 {
-   // Execute a command.
-
    return ::system(shellcmd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a pipe.
+
 FILE *TWinNTSystem::OpenPipe(const char *command, const char *mode)
 {
-   // Open a pipe.
-
   return ::_popen(command, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the pipe.
+
 int TWinNTSystem::ClosePipe(FILE *pipe)
 {
-   // Close the pipe.
-
   return ::_pclose(pipe);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get process id.
+
 int TWinNTSystem::GetPid()
 {
-   // Get process id.
-
    return ::getpid();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current process handle
+
 HANDLE TWinNTSystem::GetProcess()
 {
-  // Get current process handle
-
   return fhProcess;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exit the application.
+
 void TWinNTSystem::Exit(int code, Bool_t mode)
 {
-   // Exit the application.
-
    // Insures that the files and sockets are closed before any library is unloaded
    // and before emptying CINT.
    if (gROOT) {
@@ -3842,31 +3851,31 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Abort the application.
+
 void TWinNTSystem::Abort(int)
 {
-   // Abort the application.
-
    ::abort();
 }
 
 //---- Standard output redirection ---------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redirect standard output (stdout, stderr) to the specified file.
+/// If the file argument is 0 the output is set again to stderr, stdout.
+/// The second argument specifies whether the output should be added to the
+/// file ("a", default) or the file be truncated before ("w").
+/// This function saves internally the current state into a static structure.
+/// The call can be made reentrant by specifying the opaque structure pointed
+/// by 'h', which is filled with the relevant information. The handle 'h'
+/// obtained on the first call must then be used in any subsequent call,
+/// included ShowOutput, to display the redirected output.
+/// Returns 0 on success, -1 in case of error.
+
 Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
                                    RedirectHandle_t *h)
 {
-   // Redirect standard output (stdout, stderr) to the specified file.
-   // If the file argument is 0 the output is set again to stderr, stdout.
-   // The second argument specifies whether the output should be added to the
-   // file ("a", default) or the file be truncated before ("w").
-   // This function saves internally the current state into a static structure.
-   // The call can be made reentrant by specifying the opaque structure pointed
-   // by 'h', which is filled with the relevant information. The handle 'h'
-   // obtained on the first call must then be used in any subsequent call,
-   // included ShowOutput, to display the redirected output.
-   // Returns 0 on success, -1 in case of error.
-
    FILE *fout, *ferr;
    static int fd1=0, fd2=0;
    static fpos_t pos1=0, pos2=0;
@@ -3969,11 +3978,11 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
 
 //---- dynamic loading and linking ---------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new directory to the dynamic path.
+
 void TWinNTSystem::AddDynamicPath(const char *dir)
 {
-   // Add a new directory to the dynamic path.
-
    if (dir) {
       TString oldpath = DynamicPath(0, kFALSE);
       oldpath.Append(";");
@@ -3982,34 +3991,34 @@ void TWinNTSystem::AddDynamicPath(const char *dir)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the dynamic path (used to find shared libraries).
+
 const char* TWinNTSystem::GetDynamicPath()
 {
-   // Return the dynamic path (used to find shared libraries).
-
    return DynamicPath(0, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the dynamic path to a new value.
+/// If the value of 'path' is zero, the dynamic path is reset to its
+/// default value.
+
 void TWinNTSystem::SetDynamicPath(const char *path)
 {
-   // Set the dynamic path to a new value.
-   // If the value of 'path' is zero, the dynamic path is reset to its
-   // default value.
-
    if (!path)
       DynamicPath(0, kTRUE);
    else
       DynamicPath(path);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns and updates sLib to the path of a dynamic library
+///  (searches for library in the dynamic library search path).
+/// If no file name extension is provided it tries .DLL.
+
 const char *TWinNTSystem::FindDynamicLibrary(TString &sLib, Bool_t quiet)
 {
-   // Returns and updates sLib to the path of a dynamic library
-   //  (searches for library in the dynamic library search path).
-   // If no file name extension is provided it tries .DLL.
-
    int len = sLib.Length();
    if (len > 4 && (!stricmp(sLib.Data()+len-4, ".dll"))) {
       if (gSystem->FindFile(GetDynamicPath(), sLib, kReadPermission))
@@ -4031,23 +4040,25 @@ const char *TWinNTSystem::FindDynamicLibrary(TString &sLib, Bool_t quiet)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a shared library. Returns 0 on successful loading, 1 in
+/// case lib was already loaded and -1 in case lib does not exist
+/// or in case of error.
+
 int TWinNTSystem::Load(const char *module, const char *entry, Bool_t system)
 {
-   // Load a shared library. Returns 0 on successful loading, 1 in
-   // case lib was already loaded and -1 in case lib does not exist
-   // or in case of error.
    return TSystem::Load(module, entry, system);
 }
 
 /* nonstandard extension used : zero-sized array in struct/union */
 #pragma warning(push)
 #pragma warning(disable:4200)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of shared libraries loaded at the start of the executable.
+/// Returns 0 in case list cannot be obtained or in case of error.
+
 const char *TWinNTSystem::GetLinkedLibraries()
 {
-   // Get list of shared libraries loaded at the start of the executable.
-   // Returns 0 in case list cannot be obtained or in case of error.
    char winDrive[256];
    char winDir[256];
    char winName[256];
@@ -4189,20 +4200,20 @@ const char *TWinNTSystem::GetLinkedLibraries()
 }
 #pragma warning(pop)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a space separated list of loaded shared libraries.
+/// This list is of a format suitable for a linker, i.e it may contain
+/// -Lpathname and/or -lNameOfLib.
+/// Option can be any of:
+///   S: shared libraries loaded at the start of the executable, because
+///      they were specified on the link line.
+///   D: shared libraries dynamically loaded after the start of the program.
+///   L: list the .LIB rather than the .DLL (this is intended for linking)
+///      [This options is not the default]
+
 const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
                                        Bool_t isRegexp)
 {
-   // Return a space separated list of loaded shared libraries.
-   // This list is of a format suitable for a linker, i.e it may contain
-   // -Lpathname and/or -lNameOfLib.
-   // Option can be any of:
-   //   S: shared libraries loaded at the start of the executable, because
-   //      they were specified on the link line.
-   //   D: shared libraries dynamically loaded after the start of the program.
-   //   L: list the .LIB rather than the .DLL (this is intended for linking)
-   //      [This options is not the default]
-
    TString libs(TSystem::GetLibraries(regexp, options, isRegexp));
    TString ntlibs;
    TString opt = options;
@@ -4250,30 +4261,30 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
 
 //---- Time & Date -------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add timer to list of system timers.
+
 void TWinNTSystem::AddTimer(TTimer *ti)
 {
-   // Add timer to list of system timers.
-
    TSystem::AddTimer(ti);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove timer from list of system timers.
+
 TTimer *TWinNTSystem::RemoveTimer(TTimer *ti)
 {
-   // Remove timer from list of system timers.
-
    if (!ti) return 0;
 
    TTimer *t = TSystem::RemoveTimer(ti);
    return t;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special Thread to check asynchronous timers.
+
 void TWinNTSystem::TimerThread()
 {
-   // Special Thread to check asynchronous timers.
-
    while (1) {
       if (!fInsideNotify)
          DispatchTimers(kFALSE);
@@ -4281,12 +4292,12 @@ void TWinNTSystem::TimerThread()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle and dispatch timers. If mode = kTRUE dispatch synchronous
+/// timers else a-synchronous timers.
+
 Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
 {
-   // Handle and dispatch timers. If mode = kTRUE dispatch synchronous
-   // timers else a-synchronous timers.
-
    if (!fTimers) return kFALSE;
 
    fInsideNotify = kTRUE;
@@ -4314,11 +4325,11 @@ Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
 }
 
 const Double_t gTicks = 1.0e-7;
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 Double_t TWinNTSystem::GetRealTime()
 {
-   //
-
    union {
       FILETIME ftFileTime;
       __int64  ftInt64;
@@ -4328,11 +4339,11 @@ Double_t TWinNTSystem::GetRealTime()
    return (Double_t)ftRealTime.ftInt64 * gTicks;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 Double_t TWinNTSystem::GetCPUTime()
 {
-   //
-
    OSVERSIONINFO OsVersionInfo;
 
 //*-*         Value                      Platform
@@ -4380,11 +4391,11 @@ Double_t TWinNTSystem::GetCPUTime()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current time in milliseconds since 0:00 Jan 1 1995.
+
 TTime TWinNTSystem::Now()
 {
-   // Get current time in milliseconds since 0:00 Jan 1 1995.
-
    static time_t jan95 = 0;
    if (!jan95) {
       struct tm tp;
@@ -4408,20 +4419,21 @@ TTime TWinNTSystem::Now()
    return TTime((now.time-(Long_t)jan95)*1000 + now.millitm);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sleep milliSec milli seconds.
+/// The Sleep function suspends the execution of the CURRENT THREAD for
+/// a specified interval.
+
 void TWinNTSystem::Sleep(UInt_t milliSec)
 {
-   // Sleep milliSec milli seconds.
-   // The Sleep function suspends the execution of the CURRENT THREAD for
-   // a specified interval.
-
    ::Sleep(milliSec);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select on file descriptors. The timeout to is in millisec.
+
 Int_t TWinNTSystem::Select(TList *act, Long_t to)
 {
-   // Select on file descriptors. The timeout to is in millisec.
    Int_t rc = -4;
 
    TFdSet rd, wr;
@@ -4453,11 +4465,12 @@ Int_t TWinNTSystem::Select(TList *act, Long_t to)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select on the file descriptor related to file handler h.
+/// The timeout to is in millisec.
+
 Int_t TWinNTSystem::Select(TFileHandler *h, Long_t to)
 {
-   // Select on the file descriptor related to file handler h.
-   // The timeout to is in millisec.
    Int_t rc = -4;
 
    TFdSet rd, wr;
@@ -4484,11 +4497,11 @@ Int_t TWinNTSystem::Select(TFileHandler *h, Long_t to)
 }
 
 //---- RPC ---------------------------------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get port # of internet service.
+
 int TWinNTSystem::GetServiceByName(const char *servicename)
 {
-   // Get port # of internet service.
-
    struct servent *sp;
 
    if ((sp = ::getservbyname(servicename, kProtocolName)) == 0) {
@@ -4499,10 +4512,10 @@ int TWinNTSystem::GetServiceByName(const char *servicename)
    return ::ntohs(sp->s_port);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 char *TWinNTSystem::GetServiceByPort(int port)
 {
-
    // Get name of internet service.
 
    struct servent *sp;
@@ -4513,11 +4526,11 @@ char *TWinNTSystem::GetServiceByPort(int port)
    return sp->s_name;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Internet Protocol (IP) address of host.
+
 TInetAddress TWinNTSystem::GetHostByName(const char *hostname)
 {
-   // Get Internet Protocol (IP) address of host.
-
    struct hostent *host_ptr;
    const char     *host;
    int             type;
@@ -4568,11 +4581,11 @@ TInetAddress TWinNTSystem::GetHostByName(const char *hostname)
    return TInetAddress(host, ::ntohl(addr), type);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Internet Protocol (IP) address of remote host and port #.
+
 TInetAddress TWinNTSystem::GetPeerName(int socket)
 {
-   // Get Internet Protocol (IP) address of remote host and port #.
-
    SOCKET sock = socket;
    struct sockaddr_in addr;
    int len = sizeof(addr);
@@ -4601,11 +4614,11 @@ TInetAddress TWinNTSystem::GetPeerName(int socket)
    return TInetAddress(hostname, ::ntohl(iaddr), family, ::ntohs(addr.sin_port));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Internet Protocol (IP) address of host and port #.
+
 TInetAddress TWinNTSystem::GetSockName(int socket)
 {
-   // Get Internet Protocol (IP) address of host and port #.
-
    SOCKET sock = socket;
    struct sockaddr_in addr;
    int len = sizeof(addr);
@@ -4634,11 +4647,11 @@ TInetAddress TWinNTSystem::GetSockName(int socket)
    return TInetAddress(hostname, ::ntohl(iaddr), family, ::ntohs(addr.sin_port));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Announce unix domain service.
+
 int TWinNTSystem::AnnounceUnixService(int port, int backlog)
 {
-   // Announce unix domain service.
-
    SOCKET sock;
 
    // Create socket
@@ -4668,12 +4681,12 @@ int TWinNTSystem::AnnounceUnixService(int port, int backlog)
    return (int)sock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a socket on path 'sockpath', bind to it and start listening for Unix
+/// domain connections to it. Returns socket fd or -1.
+
 int TWinNTSystem::AnnounceUnixService(const char *sockpath, int backlog)
 {
-   // Open a socket on path 'sockpath', bind to it and start listening for Unix
-   // domain connections to it. Returns socket fd or -1.
-
    if (!sockpath || strlen(sockpath) <= 0) {
       ::SysError("TWinNTSystem::AnnounceUnixService", "socket path undefined");
       return -1;
@@ -4725,11 +4738,11 @@ int TWinNTSystem::AnnounceUnixService(const char *sockpath, int backlog)
    return sock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close socket.
+
 void TWinNTSystem::CloseConnection(int socket, Bool_t force)
 {
-   // Close socket.
-
    if (socket == -1) return;
    SOCKET sock = socket;
 
@@ -4743,13 +4756,13 @@ void TWinNTSystem::CloseConnection(int socket, Bool_t force)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a buffer headed by a length indicator. Length is the size of
+/// the buffer. Returns the number of bytes received in buf or -1 in
+/// case of error.
+
 int TWinNTSystem::RecvBuf(int sock, void *buf, int length)
 {
-   // Receive a buffer headed by a length indicator. Length is the size of
-   // the buffer. Returns the number of bytes received in buf or -1 in
-   // case of error.
-
    Int_t header;
 
    if (WinNTRecv(sock, &header, sizeof(header), 0) > 0) {
@@ -4769,12 +4782,12 @@ int TWinNTSystem::RecvBuf(int sock, void *buf, int length)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a buffer headed by a length indicator. Returns length of sent buffer
+/// or -1 in case of error.
+
 int TWinNTSystem::SendBuf(int sock, const void *buf, int length)
 {
-   // Send a buffer headed by a length indicator. Returns length of sent buffer
-   // or -1 in case of error.
-
    Int_t header = ::htonl(length);
 
    if (WinNTSend(sock, &header, sizeof(header), 0) < 0) {
@@ -4790,18 +4803,18 @@ int TWinNTSystem::SendBuf(int sock, const void *buf, int length)
    return length;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive exactly length bytes into buffer. Use opt to receive out-of-band
+/// data or to have a peek at what is in the buffer (see TSocket). Buffer
+/// must be able to store at least length bytes. Returns the number of
+/// bytes received (can be 0 if other side of connection was closed) or -1
+/// in case of error, -2 in case of MSG_OOB and errno == EWOULDBLOCK, -3
+/// in case of MSG_OOB and errno == EINVAL and -4 in case of kNoBlock and
+/// errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
+/// (EPIPE || ECONNRESET).
+
 int TWinNTSystem::RecvRaw(int sock, void *buf, int length, int opt)
 {
-   // Receive exactly length bytes into buffer. Use opt to receive out-of-band
-   // data or to have a peek at what is in the buffer (see TSocket). Buffer
-   // must be able to store at least length bytes. Returns the number of
-   // bytes received (can be 0 if other side of connection was closed) or -1
-   // in case of error, -2 in case of MSG_OOB and errno == EWOULDBLOCK, -3
-   // in case of MSG_OOB and errno == EINVAL and -4 in case of kNoBlock and
-   // errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
-   // (EPIPE || ECONNRESET).
-
    int flag;
 
    switch (opt) {
@@ -4832,14 +4845,14 @@ int TWinNTSystem::RecvRaw(int sock, void *buf, int length, int opt)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send exactly length bytes from buffer. Use opt to send out-of-band
+/// data (see TSocket). Returns the number of bytes sent or -1 in case of
+/// error. Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
+/// Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
+
 int TWinNTSystem::SendRaw(int sock, const void *buf, int length, int opt)
 {
-   // Send exactly length bytes from buffer. Use opt to send out-of-band
-   // data (see TSocket). Returns the number of bytes sent or -1 in case of
-   // error. Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
-   // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
-
    int flag;
 
    switch (opt) {
@@ -4868,11 +4881,11 @@ int TWinNTSystem::SendRaw(int sock, const void *buf, int length, int opt)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set socket option.
+
 int  TWinNTSystem::SetSockOpt(int socket, int opt, int value)
 {
-   // Set socket option.
-
    u_long val = value;
    if (socket == -1) return -1;
    SOCKET sock = socket;
@@ -4938,11 +4951,11 @@ int  TWinNTSystem::SetSockOpt(int socket, int opt, int value)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get socket option.
+
 int TWinNTSystem::GetSockOpt(int socket, int opt, int *val)
 {
-   // Get socket option.
-
    if (socket == -1) return -1;
    SOCKET sock = socket;
 
@@ -5024,12 +5037,12 @@ int TWinNTSystem::GetSockOpt(int socket, int opt, int *val)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to service servicename on server servername.
+
 int TWinNTSystem::ConnectService(const char *servername, int port,
                                  int tcpwindowsize, const char *protocol)
 {
-   // Connect to service servicename on server servername.
-
    short  sport;
    struct servent *sp;
 
@@ -5081,11 +5094,11 @@ int TWinNTSystem::ConnectService(const char *servername, int port,
    return (int) sock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to a Unix domain socket.
+
 int TWinNTSystem::WinNTUnixConnect(int port)
 {
-   // Connect to a Unix domain socket.
-
    struct sockaddr_in myaddr;
    int sock;
 
@@ -5112,11 +5125,11 @@ int TWinNTSystem::WinNTUnixConnect(int port)
    return sock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to a Unix domain socket. Returns -1 in case of error.
+
 int TWinNTSystem::WinNTUnixConnect(const char *sockpath)
 {
-   // Connect to a Unix domain socket. Returns -1 in case of error.
-
    FILE *fp;
    int port = 0;
 
@@ -5141,12 +5154,12 @@ int TWinNTSystem::WinNTUnixConnect(const char *sockpath)
    return WinNTUnixConnect(port);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a UDP socket connection
+/// Is called via the TSocket constructor. Returns -1 in case of error.
+
 int TWinNTSystem::WinNTUdpConnect(const char *hostname, int port)
 {
-   // Creates a UDP socket connection
-   // Is called via the TSocket constructor. Returns -1 in case of error.
-
    short  sport;
    struct servent *sp;
 
@@ -5186,34 +5199,34 @@ int TWinNTSystem::WinNTUdpConnect(const char *hostname, int port)
    return sock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a connection to a service on a server. Returns -1 in case
+/// connection cannot be opened.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Is called via the TSocket constructor.
+
 int TWinNTSystem::OpenConnection(const char *server, int port, int tcpwindowsize,
                                  const char *protocol)
 {
-   // Open a connection to a service on a server. Returns -1 in case
-   // connection cannot be opened.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Is called via the TSocket constructor.
-
    return ConnectService(server, port, tcpwindowsize, protocol);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Announce TCP/IP service.
+/// Open a socket, bind to it and start listening for TCP/IP connections
+/// on the port. If reuse is true reuse the address, backlog specifies
+/// how many sockets can be waiting to be accepted.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Returns socket fd or -1 if socket() failed, -2 if bind() failed
+/// or -3 if listen() failed.
+
 int TWinNTSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog,
                                      int tcpwindowsize)
 {
-   // Announce TCP/IP service.
-   // Open a socket, bind to it and start listening for TCP/IP connections
-   // on the port. If reuse is true reuse the address, backlog specifies
-   // how many sockets can be waiting to be accepted.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns socket fd or -1 if socket() failed, -2 if bind() failed
-   // or -3 if listen() failed.
-
    short  sport;
    struct servent *sp;
    const short kSOCKET_MINPORT = 5000, kSOCKET_MAXPORT = 15000;
@@ -5285,11 +5298,11 @@ int TWinNTSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog,
    return (int)sock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Announce UDP service.
+
 int TWinNTSystem::AnnounceUdpService(int port, int backlog)
 {
-   // Announce UDP service.
-
    // Open a socket, bind to it and start listening for UDP connections
    // on the port. If reuse is true reuse the address, backlog specifies
    // how many sockets can be waiting to be accepted. If port is 0 a port
@@ -5346,13 +5359,13 @@ int TWinNTSystem::AnnounceUdpService(int port, int backlog)
    return sock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Accept a connection. In case of an error return -1. In case
+/// non-blocking I/O is enabled and no connections are available
+/// return -2.
+
 int TWinNTSystem::AcceptConnection(int socket)
 {
-   // Accept a connection. In case of an error return -1. In case
-   // non-blocking I/O is enabled and no connections are available
-   // return -2.
-
    int soc = -1;
    SOCKET sock = socket;
 
@@ -5419,12 +5432,12 @@ typedef LONG (WINAPI *PROCNTQSI) (UINT, PVOID, ULONG, PULONG);
 
 #define Li2Double(x) ((double)((x).HighPart) * 4.294967296E9 + (double)((x).LowPart))
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the CPU clock speed using the 'rdtsc' instruction.
+/// RDTSC: Read Time Stamp Counter.
+
 static DWORD GetCPUSpeed()
 {
-   // Calculate the CPU clock speed using the 'rdtsc' instruction.
-   // RDTSC: Read Time Stamp Counter.
-
    LARGE_INTEGER ulFreq, ulTicks, ulValue, ulStartCounter;
 
    // Query for high-resolution counter frequency
@@ -5453,7 +5466,8 @@ static DWORD GetCPUSpeed()
 #define SM_SERVERR2 89
 typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static char *GetWindowsVersion()
 {
    OSVERSIONINFOEX osvi;
@@ -5676,11 +5690,11 @@ static char *GetWindowsVersion()
    return strReturn;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use assembly to retrieve the L2 cache information ...
+
 static int GetL2CacheSize()
 {
-   // Use assembly to retrieve the L2 cache information ...
-
    unsigned nHighestFeatureEx;
    int nBuff[4];
 
@@ -5694,11 +5708,11 @@ static int GetL2CacheSize()
    else return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get system info for Windows NT.
+
 static void GetWinNTSysInfo(SysInfo_t *sysinfo)
 {
-   // Get system info for Windows NT.
-
    SYSTEM_PERFORMANCE_INFORMATION   SysPerfInfo;
    SYSTEM_INFO sysInfo;
    MEMORYSTATUSEX statex;
@@ -5769,12 +5783,12 @@ static void GetWinNTSysInfo(SysInfo_t *sysinfo)
    sysinfo->fModel.Remove(TString::kBoth, ' ');
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get CPU stat for Window. Use sampleTime to set the interval over which
+/// the CPU load will be measured, in ms (default 1000).
+
 static void GetWinNTCpuInfo(CpuInfo_t *cpuinfo, Int_t sampleTime)
 {
-   // Get CPU stat for Window. Use sampleTime to set the interval over which
-   // the CPU load will be measured, in ms (default 1000).
-
    SYSTEM_INFO sysInfo;
    Float_t  idle_ratio, kernel_ratio, user_ratio, total_ratio;
    FILETIME ft_sys_idle, ft_sys_kernel, ft_sys_user, ft_fun_time;
@@ -5859,11 +5873,11 @@ again:
    cpuinfo->fIdle    = idle_ratio; // cpu idle percentage
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get VM stat for Windows NT.
+
 static void GetWinNTMemInfo(MemInfo_t *meminfo)
 {
-   // Get VM stat for Windows NT.
-
    Long64_t total, used, free, swap_total, swap_used, swap_avail;
    MEMORYSTATUSEX statex;
    statex.dwLength = sizeof(statex);
@@ -5888,11 +5902,11 @@ static void GetWinNTMemInfo(MemInfo_t *meminfo)
    meminfo->fSwapFree  = (Int_t) (swap_avail >> 20);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get process info for this process on Windows NT.
+
 static void GetWinNTProcInfo(ProcInfo_t *procinfo)
 {
-   // Get process info for this process on Windows NT.
-
    PROCESS_MEMORY_COUNTERS pmc;
    FILETIME    starttime, exittime, kerneltime, usertime;
    timeval     ru_stime, ru_utime;
@@ -5941,47 +5955,47 @@ static void GetWinNTProcInfo(ProcInfo_t *procinfo)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns static system info, like OS type, CPU type, number of CPUs
+/// RAM size, etc into the SysInfo_t structure. Returns -1 in case of error,
+/// 0 otherwise.
+
 Int_t TWinNTSystem::GetSysInfo(SysInfo_t *info) const
 {
-   // Returns static system info, like OS type, CPU type, number of CPUs
-   // RAM size, etc into the SysInfo_t structure. Returns -1 in case of error,
-   // 0 otherwise.
-
    if (!info) return -1;
    GetWinNTSysInfo(info);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns cpu load average and load info into the CpuInfo_t structure.
+/// Returns -1 in case of error, 0 otherwise. Use sampleTime to set the
+/// interval over which the CPU load will be measured, in ms (default 1000).
+
 Int_t TWinNTSystem::GetCpuInfo(CpuInfo_t *info, Int_t sampleTime) const
 {
-   // Returns cpu load average and load info into the CpuInfo_t structure.
-   // Returns -1 in case of error, 0 otherwise. Use sampleTime to set the
-   // interval over which the CPU load will be measured, in ms (default 1000).
-
    if (!info) return -1;
    GetWinNTCpuInfo(info, sampleTime);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns ram and swap memory usage info into the MemInfo_t structure.
+/// Returns -1 in case of error, 0 otherwise.
+
 Int_t TWinNTSystem::GetMemInfo(MemInfo_t *info) const
 {
-   // Returns ram and swap memory usage info into the MemInfo_t structure.
-   // Returns -1 in case of error, 0 otherwise.
-
    if (!info) return -1;
    GetWinNTMemInfo(info);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns cpu and memory used by this process into the ProcInfo_t structure.
+/// Returns -1 in case of error, 0 otherwise.
+
 Int_t TWinNTSystem::GetProcInfo(ProcInfo_t *info) const
 {
-   // Returns cpu and memory used by this process into the ProcInfo_t structure.
-   // Returns -1 in case of error, 0 otherwise.
-
    if (!info) return -1;
    GetWinNTProcInfo(info);
    return 0;

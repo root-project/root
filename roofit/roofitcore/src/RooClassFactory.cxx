@@ -58,26 +58,28 @@ static Int_t dummy = init() ;
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooClassFactory::RooClassFactory()
 {
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooClassFactory::~RooClassFactory()
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t RooClassFactory::makeAndCompilePdf(const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
 {
-
   string realArgNames,catArgNames ;
   TIterator* iter = vars.createIterator() ;
   RooAbsArg* arg ;
@@ -111,21 +113,21 @@ Bool_t RooClassFactory::makeAndCompilePdf(const char* name, const char* expressi
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write, compile and load code for a RooAbsReal implementation with
+/// class name 'name', taking all elements of 'vars' as constructor
+/// arguments. The initial value expression is taken to be
+/// 'expression' which can be any one-line C++ expression in terms of
+/// variables that occur in 'vars'. You can add optional expressions
+/// for analytical integrals to be advertised by your class in the
+/// syntax
+/// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+/// where <intObsName> a name of the observable integrated over and
+/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// integral.
+
 Bool_t RooClassFactory::makeAndCompileFunction(const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
 {
-  // Write, compile and load code for a RooAbsReal implementation with
-  // class name 'name', taking all elements of 'vars' as constructor
-  // arguments. The initial value expression is taken to be
-  // 'expression' which can be any one-line C++ expression in terms of
-  // variables that occur in 'vars'. You can add optional expressions
-  // for analytical integrals to be advertised by your class in the
-  // syntax
-  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-  // where <intObsName> a name of the observable integrated over and
-  // <CPPAnaIntExpression> is the C++ expression that calculates that
-  // integral.
-
   string realArgNames,catArgNames ;
   TIterator* iter = vars.createIterator() ;
   RooAbsArg* arg ;
@@ -158,28 +160,28 @@ Bool_t RooClassFactory::makeAndCompileFunction(const char* name, const char* exp
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write, compile and load code and instantiate object for a
+/// RooAbsReal implementation with class name 'name', taking all
+/// elements of 'vars' as constructor arguments. The initial value
+/// expression is taken to be 'expression' which can be any one-line
+/// C++ expression in terms of variables that occur in 'vars'.
+///
+/// The returned object is an instance of the object you just defined
+/// connected to the variables listed in 'vars'. The name of the
+/// object is 'name', its class name Roo<name>Class.
+///
+/// This function is an effective compiled replacement of RooFormulaVar
+///
+/// You can add optional expressions for analytical integrals to be
+/// advertised by your class in the syntax
+/// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+/// where <intObsName> a name of the observable integrated over and
+/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// integral.
+
 RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
 {
-  // Write, compile and load code and instantiate object for a
-  // RooAbsReal implementation with class name 'name', taking all
-  // elements of 'vars' as constructor arguments. The initial value
-  // expression is taken to be 'expression' which can be any one-line
-  // C++ expression in terms of variables that occur in 'vars'.
-  //
-  // The returned object is an instance of the object you just defined
-  // connected to the variables listed in 'vars'. The name of the
-  // object is 'name', its class name Roo<name>Class.
-  //
-  // This function is an effective compiled replacement of RooFormulaVar
-  //
-  // You can add optional expressions for analytical integrals to be
-  // advertised by your class in the syntax
-  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-  // where <intObsName> a name of the observable integrated over and
-  // <CPPAnaIntExpression> is the C++ expression that calculates that
-  // integral.
-
   // Construct unique class name for this function expression
   string tmpName(name) ;
   tmpName[0] = toupper(tmpName[0]) ;
@@ -188,28 +190,28 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* 
   return makeFunctionInstance(className.c_str(),name,expression,vars,intExpression) ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write, compile and load code and instantiate object for a
+/// RooAbsReal implementation with class name 'name', taking all
+/// elements of 'vars' as constructor arguments. The initial value
+/// expression is taken to be 'expression' which can be any one-line
+/// C++ expression in terms of variables that occur in 'vars'.
+///
+/// The returned object is an instance of the object you just defined
+/// connected to the variables listed in 'vars'. The name of the
+/// object is 'name', its class name Roo<name>Class.
+///
+/// This function is an effective compiled replacement of RooFormulaVar
+///
+/// You can add optional expressions for analytical integrals to be
+/// advertised by your class in the syntax
+/// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+/// where <intObsName> a name of the observable integrated over and
+/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// integral.
+
 RooAbsReal* RooClassFactory::makeFunctionInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
 {
-  // Write, compile and load code and instantiate object for a
-  // RooAbsReal implementation with class name 'name', taking all
-  // elements of 'vars' as constructor arguments. The initial value
-  // expression is taken to be 'expression' which can be any one-line
-  // C++ expression in terms of variables that occur in 'vars'.
-  //
-  // The returned object is an instance of the object you just defined
-  // connected to the variables listed in 'vars'. The name of the
-  // object is 'name', its class name Roo<name>Class.
-  //
-  // This function is an effective compiled replacement of RooFormulaVar
-  //
-  // You can add optional expressions for analytical integrals to be
-  // advertised by your class in the syntax
-  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-  // where <intObsName> a name of the observable integrated over and
-  // <CPPAnaIntExpression> is the C++ expression that calculates that
-  // integral.
-
   if (gInterpreter->GetRootMapFiles()==0) {
     gInterpreter->EnableAutoLoading() ;
   }
@@ -256,29 +258,29 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* className, const c
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write, compile and load code and instantiate object for a
+/// RooAbsPdf implementation with class name 'name', taking all
+/// elements of 'vars' as constructor arguments. The initial value
+/// expression is taken to be 'expression' which can be any one-line
+/// C++ expression in terms of variables that occur in 'vars'.
+///
+/// The returned object is an instance of the object you just defined
+/// connected to the variables listed in 'vars'. The name of the
+/// object is 'name', its class name Roo<name>Class.
+///
+/// This function is an effective compiled replacement of RooGenericPdf
+///
+/// You can add optional expressions for analytical integrals to be
+/// advertised by your class in the syntax
+/// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+/// where <intObsName> a name of the observable integrated over and
+/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// integral.
+
 RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expression,
 					    const RooArgList& vars, const char* intExpression)
 {
-  // Write, compile and load code and instantiate object for a
-  // RooAbsPdf implementation with class name 'name', taking all
-  // elements of 'vars' as constructor arguments. The initial value
-  // expression is taken to be 'expression' which can be any one-line
-  // C++ expression in terms of variables that occur in 'vars'.
-  //
-  // The returned object is an instance of the object you just defined
-  // connected to the variables listed in 'vars'. The name of the
-  // object is 'name', its class name Roo<name>Class.
-  //
-  // This function is an effective compiled replacement of RooGenericPdf
-  //
-  // You can add optional expressions for analytical integrals to be
-  // advertised by your class in the syntax
-  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-  // where <intObsName> a name of the observable integrated over and
-  // <CPPAnaIntExpression> is the C++ expression that calculates that
-  // integral.
-
   // Construct unique class name for this function expression
   string tmpName(name) ;
   tmpName[0] = toupper(tmpName[0]) ;
@@ -287,29 +289,29 @@ RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expres
   return makePdfInstance(className.c_str(),name,expression,vars,intExpression) ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write, compile and load code and instantiate object for a
+/// RooAbsPdf implementation with class name 'name', taking all
+/// elements of 'vars' as constructor arguments. The initial value
+/// expression is taken to be 'expression' which can be any one-line
+/// C++ expression in terms of variables that occur in 'vars'.
+///
+/// The returned object is an instance of the object you just defined
+/// connected to the variables listed in 'vars'. The name of the
+/// object is 'name', its class name Roo<name>Class.
+///
+/// This function is an effective compiled replacement of RooGenericPdf
+///
+/// You can add optional expressions for analytical integrals to be
+/// advertised by your class in the syntax
+/// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+/// where <intObsName> a name of the observable integrated over and
+/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// integral.
+
 RooAbsPdf* RooClassFactory::makePdfInstance(const char* className, const char* name, const char* expression,
 					    const RooArgList& vars, const char* intExpression)
 {
-  // Write, compile and load code and instantiate object for a
-  // RooAbsPdf implementation with class name 'name', taking all
-  // elements of 'vars' as constructor arguments. The initial value
-  // expression is taken to be 'expression' which can be any one-line
-  // C++ expression in terms of variables that occur in 'vars'.
-  //
-  // The returned object is an instance of the object you just defined
-  // connected to the variables listed in 'vars'. The name of the
-  // object is 'name', its class name Roo<name>Class.
-  //
-  // This function is an effective compiled replacement of RooGenericPdf
-  //
-  // You can add optional expressions for analytical integrals to be
-  // advertised by your class in the syntax
-  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-  // where <intObsName> a name of the observable integrated over and
-  // <CPPAnaIntExpression> is the C++ expression that calculates that
-  // integral.
-
   if (gInterpreter->GetRootMapFiles()==0) {
     gInterpreter->EnableAutoLoading() ;
   }
@@ -355,74 +357,74 @@ RooAbsPdf* RooClassFactory::makePdfInstance(const char* className, const char* n
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write code for a RooAbsPdf implementation with class name 'name',
+/// taking RooAbsReal arguments with names listed in argNames and
+/// RooAbsCategory arguments with names listed in catArgNames as
+/// constructor arguments (use a comma separated list for multiple
+/// arguments). The initial value expression is taken to be
+/// 'expression' which can be any one-line C++ expression in terms of
+/// variables that occur in 'vars'. Skeleton code for handling of
+/// analytical integrals is added if hasAnaInt is true. You can add
+/// optional expressions for analytical integrals to be advertised by
+/// your class in the syntax
+/// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+/// where <intObsName> a name of the observable integrated over and
+/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// integral. Skeleton code for internal event generation is added
+/// if hasIntGen is true
+///
+
 Bool_t RooClassFactory::makePdf(const char* name, const char* argNames, const char* catArgNames, const char* expression,
 				Bool_t hasAnaInt, Bool_t hasIntGen, const char* intExpression)
 {
-  // Write code for a RooAbsPdf implementation with class name 'name',
-  // taking RooAbsReal arguments with names listed in argNames and
-  // RooAbsCategory arguments with names listed in catArgNames as
-  // constructor arguments (use a comma separated list for multiple
-  // arguments). The initial value expression is taken to be
-  // 'expression' which can be any one-line C++ expression in terms of
-  // variables that occur in 'vars'. Skeleton code for handling of
-  // analytical integrals is added if hasAnaInt is true. You can add
-  // optional expressions for analytical integrals to be advertised by
-  // your class in the syntax
-  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-  // where <intObsName> a name of the observable integrated over and
-  // <CPPAnaIntExpression> is the C++ expression that calculates that
-  // integral. Skeleton code for internal event generation is added
-  // if hasIntGen is true
-  //
-
   return makeClass("RooAbsPdf",name,argNames,catArgNames,expression,hasAnaInt,hasIntGen,intExpression) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write code for a RooAbsReal implementation with class name 'name',
+/// taking RooAbsReal arguments with names listed in argNames and
+/// RooAbsCategory arguments with names listed in catArgNames as
+/// constructor arguments (use a comma separated list for multiple
+/// arguments). The initial value expression is taken to be
+/// 'expression' which can be any one-line C++ expression in terms of
+/// variables that occur in 'vars'. Skeleton code for handling of
+/// analytical integrals is added if hasAnaInt is true. You can add
+/// optional expressions for analytical integrals to be advertised by
+/// your class in the syntax
+/// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+/// where <intObsName> a name of the observable integrated over and
+/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// integral.
+
 Bool_t RooClassFactory::makeFunction(const char* name, const char* argNames, const char* catArgNames, const char* expression, Bool_t hasAnaInt, const char* intExpression)
 {
-  // Write code for a RooAbsReal implementation with class name 'name',
-  // taking RooAbsReal arguments with names listed in argNames and
-  // RooAbsCategory arguments with names listed in catArgNames as
-  // constructor arguments (use a comma separated list for multiple
-  // arguments). The initial value expression is taken to be
-  // 'expression' which can be any one-line C++ expression in terms of
-  // variables that occur in 'vars'. Skeleton code for handling of
-  // analytical integrals is added if hasAnaInt is true. You can add
-  // optional expressions for analytical integrals to be advertised by
-  // your class in the syntax
-  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-  // where <intObsName> a name of the observable integrated over and
-  // <CPPAnaIntExpression> is the C++ expression that calculates that
-  // integral.
-
   return makeClass("RooAbsReal",name,argNames,catArgNames,expression,hasAnaInt,kFALSE,intExpression) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write code for a 'baseName' implementation with class name 'className',
+/// taking RooAbsReal arguments with names listed in argNames and
+/// RooAbsCategory arguments with names listed in catArgNames as
+/// constructor arguments (use a comma separated list for multiple
+/// arguments). The initial value expression is taken to be
+/// 'expression' which can be any one-line C++ expression in terms of
+/// variables that occur in 'vars'. Skeleton code for handling of
+/// analytical integrals is added if hasAnaInt is true. You can add
+/// optional expressions for analytical integrals to be advertised by
+/// your class in the syntax
+/// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+/// where <intObsName> a name of the observable integrated over and
+/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// integral. Skeleton code for internal event generation is added
+/// if hasIntGen is true
+///
+
 Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, const char* realArgNames, const char* catArgNames,
 				  const char* expression,  Bool_t hasAnaInt, Bool_t hasIntGen, const char* intExpression)
 {
-  // Write code for a 'baseName' implementation with class name 'className',
-  // taking RooAbsReal arguments with names listed in argNames and
-  // RooAbsCategory arguments with names listed in catArgNames as
-  // constructor arguments (use a comma separated list for multiple
-  // arguments). The initial value expression is taken to be
-  // 'expression' which can be any one-line C++ expression in terms of
-  // variables that occur in 'vars'. Skeleton code for handling of
-  // analytical integrals is added if hasAnaInt is true. You can add
-  // optional expressions for analytical integrals to be advertised by
-  // your class in the syntax
-  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-  // where <intObsName> a name of the observable integrated over and
-  // <CPPAnaIntExpression> is the C++ expression that calculates that
-  // integral. Skeleton code for internal event generation is added
-  // if hasIntGen is true
-  //
-
   // Check that arguments were given
   if (!baseName) {
     oocoutE((TObject*)0,InputArguments) << "RooClassFactory::makeClass: ERROR: a base class name must be given" << endl ;
@@ -744,7 +746,8 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
   return kFALSE ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::string RooClassFactory::ClassFacIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args)
 {
   static int classCounter = 0 ;

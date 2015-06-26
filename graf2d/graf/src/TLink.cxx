@@ -32,23 +32,23 @@ ClassImp(TLink)
 //
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Link default constructor.
+
 TLink::TLink() : TText()
 {
-   // Link default constructor.
-
    fLink  = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor to define a link object.
+///
+/// pointer points to any kind of object.
+
 TLink::TLink(Double_t x, Double_t y, void *pointer)
            : TText(x, y, "")
 {
-   // Constructor to define a link object.
-   //
-   // pointer points to any kind of object.
-
    fLink  = pointer;
    static char line[16];
    snprintf(line,16,"->%lx ", (Long_t)pointer);
@@ -56,23 +56,24 @@ TLink::TLink(Double_t x, Double_t y, void *pointer)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Link default destructor.
+
 TLink::~TLink()
 {
-   // Link default destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+///  This member function is called when a link is clicked with the locator
+///
+///  If mouse is clicked on a link text, the object pointed by the link
+///  is Inspected
+
 void TLink::ExecuteEvent(Int_t event, Int_t, Int_t)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function is called when a link is clicked with the locator
-   //
-   //  If mouse is clicked on a link text, the object pointed by the link
-   //  is Inspected
-
    if (event == kMouseMotion)
       gPad->SetCursor(kHand);
 

@@ -37,14 +37,14 @@
 #include "TSelector.h"
 #include "TVirtualPacketizer.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the selector object and save the relevant files and binary information
+/// in the cache so that the worker can pick it up.
+/// Returns 0 and fill fSelector in case of success. Returns -1 and sets
+/// fSelector to 0 in case of failure.
+
 Int_t TProofPlayerLite::MakeSelector(const char *selfile)
 {
-   // Create the selector object and save the relevant files and binary information
-   // in the cache so that the worker can pick it up.
-   // Returns 0 and fill fSelector in case of success. Returns -1 and sets
-   // fSelector to 0 in case of failure.
-
    fSelectorClass = 0;
    SafeDelete(fSelector);
    if (!selfile || strlen(selfile) <= 0) {
@@ -72,16 +72,16 @@ Int_t TProofPlayerLite::MakeSelector(const char *selfile)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process specified TDSet on PROOF.
+/// This method is called on client and on the PROOF master.
+/// The return value is -1 in case of an error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProofPlayerLite::Process(TDSet *dset, TSelector *selector,
                                    Option_t *option, Long64_t nentries,
                                    Long64_t first)
 {
-   // Process specified TDSet on PROOF.
-   // This method is called on client and on the PROOF master.
-   // The return value is -1 in case of an error and TSelector::GetStatus() in
-   // in case of success.
-
    if (!selector) {
       Error("Process", "selector object undefined");
       return -1;
@@ -101,16 +101,16 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, TSelector *selector,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process specified TDSet on PROOF.
+/// This method is called on client and on the PROOF master.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
                                    Option_t *option, Long64_t nentries,
                                    Long64_t first)
 {
-   // Process specified TDSet on PROOF.
-   // This method is called on client and on the PROOF master.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    PDB(kGlobal,1) Info("Process","Enter");
    fDSet = dset;
    fExitStatus = kFinished;
@@ -321,12 +321,12 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize a query.
+/// Returns -1 in case error, 0 otherwise.
+
 Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
 {
-   // Finalize a query.
-   // Returns -1 in case error, 0 otherwise.
-
    if (fOutputLists == 0) {
       if (force && fQuery)
          return fProof->Finalize(Form("%s:%s", fQuery->GetTitle(),
@@ -428,11 +428,11 @@ Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
    return rv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send feedback objects to client.
+
 Bool_t TProofPlayerLite::HandleTimer(TTimer *)
 {
-   // Send feedback objects to client.
-
    PDB(kFeedback,2)
       Info("HandleTimer","Entry: %p", fFeedbackTimer);
 
@@ -471,11 +471,11 @@ Bool_t TProofPlayerLite::HandleTimer(TTimer *)
    return kFALSE; // ignored?
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup reporting of feedback objects.
+
 void TProofPlayerLite::SetupFeedback()
 {
-   // Setup reporting of feedback objects.
-
    fFeedback = (TList*) fInput->FindObject("FeedbackList");
 
    if (fFeedback) {
@@ -497,11 +497,11 @@ void TProofPlayerLite::SetupFeedback()
    fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store feedback results from the specified slave.
+
 void TProofPlayerLite::StoreFeedback(TObject *slave, TList *out)
 {
-   // Store feedback results from the specified slave.
-
    PDB(kFeedback,1)
       Info("StoreFeedback","Enter (%p,%p,%d)", fFeedbackLists, out, (out ? out->GetSize() : -1));
 

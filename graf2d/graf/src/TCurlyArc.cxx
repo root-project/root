@@ -39,11 +39,11 @@ Bool_t   TCurlyArc::fgDefaultIsCurly    = kTRUE;
 ClassImp(TCurlyArc)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TCurlyArc::TCurlyArc()
 {
-   // Default constructor
-
    fR1     = 0.;
    fPhimin = 0.;
    fPhimax = 0.;
@@ -51,16 +51,16 @@ TCurlyArc::TCurlyArc()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create a new TCurlyarc with center (x1, y1) and radius rad.
+/// The wavelength and amplitude are given in percent of the line length
+/// phimin and phimax are given in degrees.
+
 TCurlyArc::TCurlyArc(Double_t x1, Double_t y1,
                    Double_t rad, Double_t phimin, Double_t phimax,
                    Double_t wl, Double_t amp)
          : fR1(rad), fPhimin(phimin),fPhimax(phimax)
 {
-   // create a new TCurlyarc with center (x1, y1) and radius rad.
-   // The wavelength and amplitude are given in percent of the line length
-   // phimin and phimax are given in degrees.
-
    fX1         = x1;
    fY1         = y1;
    fIsCurly    = fgDefaultIsCurly;
@@ -71,11 +71,11 @@ TCurlyArc::TCurlyArc(Double_t x1, Double_t y1,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a curly (Gluon) or wavy (Gamma) arc.
+
 void TCurlyArc::Build()
 {
-   // Create a curly (Gluon) or wavy (Gamma) arc.
-
    Double_t pixeltoX = 1;
    Double_t pixeltoY = 1;
    Double_t rPix = fR1;
@@ -117,15 +117,15 @@ void TCurlyArc::Build()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to an arc.
+///
+///  Compute the closest distance of approach from point px,py to this arc.
+///  The distance is computed in pixels units.
+///
+
 Int_t TCurlyArc::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to an arc.
-   //
-   //  Compute the closest distance of approach from point px,py to this arc.
-   //  The distance is computed in pixels units.
-   //
-
    // Compute distance of point to center of arc
    Int_t pxc    = gPad->XtoAbsPixel(fX1);
    Int_t pyc    = gPad->YtoAbsPixel(fY1);
@@ -146,19 +146,19 @@ Int_t TCurlyArc::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+///  This member function is called when a TCurlyArc is clicked with the locator
+///
+///  If Left button clicked on one of the line end points, this point
+///     follows the cursor until button is released.
+///
+///  if Middle button clicked, the line is moved parallel to itself
+///     until the button is released.
+
 void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function is called when a TCurlyArc is clicked with the locator
-   //
-   //  If Left button clicked on one of the line end points, this point
-   //     follows the cursor until button is released.
-   //
-   //  if Middle button clicked, the line is moved parallel to itself
-   //     until the button is released.
-
    Int_t kMaxDiff = 10;
    const Int_t np = 10;
    const Double_t pi = TMath::Pi();
@@ -410,11 +410,11 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TCurlyArc::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    if (gROOT->ClassSaved(TCurlyArc::Class())) {
       out<<"   ";
    } else {
@@ -431,105 +431,105 @@ void TCurlyArc::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Curly Arc center.
+
 void TCurlyArc::SetCenter(Double_t x, Double_t y)
 {
-   // Set Curly Arc center.
-
    fX1 = x;
    fY1 = y;
    Build();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Curly Arc radius.
+
 void TCurlyArc::SetRadius(Double_t x)
 {
-   // Set Curly Arc radius.
-
    fR1 = x;
    Build();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Curly Arc minimum Phi.
+
 void TCurlyArc::SetPhimin(Double_t x)
 {
-   // Set Curly Arc minimum Phi.
-
    fPhimin = x;
    Build();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Curly Arc maximum Phi.
+
 void TCurlyArc::SetPhimax(Double_t x)
 {
-   // Set Curly Arc maximum Phi.
-
    fPhimax = x;
    Build();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default wave length.
+
 void TCurlyArc::SetDefaultWaveLength(Double_t WaveLength)
 {
-   // Set default wave length.
-
    fgDefaultWaveLength = WaveLength;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default wave amplitude.
+
 void TCurlyArc::SetDefaultAmplitude(Double_t Amplitude)
 {
-   // Set default wave amplitude.
-
    fgDefaultAmplitude = Amplitude ;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default "IsCurly".
+
 void TCurlyArc::SetDefaultIsCurly(Bool_t IsCurly)
 {
-   // Set default "IsCurly".
-
    fgDefaultIsCurly = IsCurly;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default wave length.
+
 Double_t TCurlyArc::GetDefaultWaveLength()
 {
-   // Get default wave length.
-
    return fgDefaultWaveLength;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default wave amplitude.
+
 Double_t TCurlyArc::GetDefaultAmplitude()
 {
-   // Get default wave amplitude.
-
    return fgDefaultAmplitude;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default "IsCurly".
+
 Bool_t TCurlyArc::GetDefaultIsCurly()
 {
-   // Get default "IsCurly".
-
    return fgDefaultIsCurly;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the bounding Box of the Line
+
 Rectangle_t TCurlyArc::GetBBox()
 {
-   // Return the bounding Box of the Line
-
    Double_t R2 = fR1 * TMath::Abs(gPad->GetY2()-gPad->GetY1())/TMath::Abs(gPad->GetX2()-gPad->GetX1());
 
    Rectangle_t BBox;
@@ -541,51 +541,51 @@ Rectangle_t TCurlyArc::GetBBox()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the center of the BoundingBox as TPoint in pixels
+
 TPoint TCurlyArc::GetBBoxCenter()
 {
-   // Return the center of the BoundingBox as TPoint in pixels
-
    TPoint p;
    p.SetX(gPad->XtoPixel(fX1));
    p.SetY(gPad->YtoPixel(fY1));
    return(p);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set center of the BoundingBox
+
 void TCurlyArc::SetBBoxCenter(const TPoint &p)
 {
-   // Set center of the BoundingBox
-
    fX1 = gPad->PixeltoX(p.GetX());
    fY1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0));
    Build();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set X coordinate of the center of the BoundingBox
+
 void TCurlyArc::SetBBoxCenterX(const Int_t x)
 {
-   // Set X coordinate of the center of the BoundingBox
-
    fX1 = gPad->PixeltoX(x);
    Build();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Y coordinate of the center of the BoundingBox
+
 void TCurlyArc::SetBBoxCenterY(const Int_t y)
 {
-   // Set Y coordinate of the center of the BoundingBox
-
    fY1 = gPad->PixeltoY(y-gPad->VtoPixel(0));
    Build();
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set lefthandside of BoundingBox to a value
+/// (resize in x direction on left)
+
 void TCurlyArc::SetBBoxX1(const Int_t x)
 {
-   // Set lefthandside of BoundingBox to a value
-   // (resize in x direction on left)
-
    Double_t x1 = gPad->PixeltoX(x);
    if (x1>fX1+fR1) return;
 
@@ -593,12 +593,12 @@ void TCurlyArc::SetBBoxX1(const Int_t x)
    fX1 = x1 + fR1;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set righthandside of BoundingBox to a value
+/// (resize in x direction on right)
+
 void TCurlyArc::SetBBoxX2(const Int_t x)
 {
-   // Set righthandside of BoundingBox to a value
-   // (resize in x direction on right)
-
    Double_t x2 = gPad->PixeltoX(x);
    if (x2<fX1-fR1) return;
 
@@ -606,11 +606,11 @@ void TCurlyArc::SetBBoxX2(const Int_t x)
    fX1 = x2-fR1;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set top of BoundingBox to a value (resize in y direction on top)
+
 void TCurlyArc::SetBBoxY1(const Int_t y)
 {
-   // Set top of BoundingBox to a value (resize in y direction on top)
-
    Double_t R2 = fR1 * TMath::Abs(gPad->GetY2()-gPad->GetY1())/TMath::Abs(gPad->GetX2()-gPad->GetX1());
 
    Double_t y1 = gPad->PixeltoY(y-gPad->VtoPixel(0));
@@ -620,12 +620,12 @@ void TCurlyArc::SetBBoxY1(const Int_t y)
    fY1 = y1-R2;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bottom of BoundingBox to a value
+/// (resize in y direction on bottom)
+
 void TCurlyArc::SetBBoxY2(const Int_t y)
 {
-   // Set bottom of BoundingBox to a value
-   // (resize in y direction on bottom)
-
    Double_t R2 = fR1 * TMath::Abs(gPad->GetY2()-gPad->GetY1())/TMath::Abs(gPad->GetX2()-gPad->GetX1());
 
    Double_t y2 = gPad->PixeltoY(y-gPad->VtoPixel(0));

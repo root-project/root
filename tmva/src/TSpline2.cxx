@@ -36,26 +36,29 @@
 
 ClassImp(TMVA::TSpline2)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from TGraph
+/// TSpline is a TNamed object
+
 TMVA::TSpline2::TSpline2( const TString& title, TGraph* theGraph )
    : fGraph( theGraph ) // not owned by TSpline2
 {
-   // constructor from TGraph
-   // TSpline is a TNamed object
    SetNameTitle( title, title );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::TSpline2::~TSpline2( void )
 {
-   // destructor
    if (fGraph) delete fGraph; // ROOT's spline classes also own the TGraph
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns quadratically interpolated TGraph entry around x
+
 Double_t TMVA::TSpline2::Eval( const Double_t x ) const
 {  
-   // returns quadratically interpolated TGraph entry around x
    Double_t retval=0;
   
    Int_t ibin = TMath::BinarySearch( fGraph->GetN(),
@@ -111,27 +114,30 @@ Double_t TMVA::TSpline2::Eval( const Double_t x ) const
    return retval;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// no coefficients to precompute
+
 void TMVA::TSpline2::BuildCoeff( void )
 {
-   // no coefficients to precompute
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// no knots
+
 void TMVA::TSpline2::GetKnot( Int_t  /*i*/, Double_t& /*x*/, Double_t& /*y*/ ) const
 {
-   // no knots
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// quadratic interpolation
+/// Revised and checked by Francois Nov, 16th, 2000
+/// Note the beautiful non-spontaneous symmetry breaking ...
+/// It was checked that the old routine gave exactly the same answers.
+///   
+
 Double_t TMVA::TSpline2::Quadrax( const Float_t dm,const Float_t dm1,const Float_t dm2,const Float_t dm3,
                                   const Float_t cos1, const Float_t cos2, const Float_t cos3 ) const
 {  
-   // quadratic interpolation
-   // Revised and checked by Francois Nov, 16th, 2000
-   // Note the beautiful non-spontaneous symmetry breaking ...
-   // It was checked that the old routine gave exactly the same answers.
-   //   
    Float_t a = cos1*(dm2-dm3) + cos2*(dm3-dm1) + cos3*(dm1-dm2);
    Float_t b = cos1*(dm2*dm2-dm3*dm3) + cos2*(dm3*dm3-dm1*dm1) + cos3*(dm1*dm1-dm2*dm2);
    Float_t c = cos1*(dm2-dm3)*dm2*dm3 + cos2*(dm3-dm1)*dm3*dm1 + cos3*(dm1-dm2)*dm1*dm2;

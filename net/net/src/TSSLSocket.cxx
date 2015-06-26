@@ -29,11 +29,11 @@ char TSSLSocket::fgSSLCAPath[FILENAME_MAX] = "";
 char TSSLSocket::fgSSLUCert[FILENAME_MAX]  = "";
 char TSSLSocket::fgSSLUKey[FILENAME_MAX]   = "";
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wraps the socket with OpenSSL.
+
 void TSSLSocket::WrapWithSSL(void)
 {
-   // Wraps the socket with OpenSSL.
-
    SSL_library_init();
 
    // New context
@@ -82,66 +82,75 @@ wrapFailed:
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSSLSocket)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSSLSocket::TSSLSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    : TSocket(addr, service, tcpwindowsize)
 {
    WrapWithSSL();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSSLSocket::TSSLSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    : TSocket(addr, port, tcpwindowsize)
 {
    WrapWithSSL();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSSLSocket::TSSLSocket(const char *host, const char *service, Int_t tcpwindowsize)
    : TSocket(host, service, tcpwindowsize)
 {
    WrapWithSSL();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSSLSocket::TSSLSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    : TSocket(url, port, tcpwindowsize)
 {
    WrapWithSSL();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSSLSocket::TSSLSocket(const char *sockpath) : TSocket(sockpath)
 {
    WrapWithSSL();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSSLSocket::TSSLSocket(Int_t desc) : TSocket(desc)
 {
    WrapWithSSL();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSSLSocket::TSSLSocket(Int_t desc, const char *sockpath) : TSocket(desc, sockpath)
 {
    WrapWithSSL();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSSLSocket::TSSLSocket(const TSSLSocket &s) : TSocket(s)
 {
    WrapWithSSL();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close gracefully the connection, and free SSL structures.
+
 TSSLSocket::~TSSLSocket()
 {
-   // Close gracefully the connection, and free SSL structures.
-
    Close();
    if (fSSL)
      SSL_free(fSSL);
@@ -149,22 +158,22 @@ TSSLSocket::~TSSLSocket()
      SSL_CTX_free(fSSLCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the SSL connection.
+
 void TSSLSocket::Close(Option_t *option)
 {
-   // Close the SSL connection.
-
    if (fSSL)
       SSL_shutdown(fSSL);
    TSocket::Close(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set up the static configuration variables.
+
 void TSSLSocket::SetUpSSL(const char *cafile, const char *capath,
                           const char *ucert,  const char *ukey)
 {
-   // Set up the static configuration variables.
-
    if (cafile)
       strlcpy(fgSSLCAFile, cafile, FILENAME_MAX);
    if (capath)
@@ -175,18 +184,19 @@ void TSSLSocket::SetUpSSL(const char *cafile, const char *capath,
       strlcpy(fgSSLUKey,   ukey,   FILENAME_MAX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TSSLSocket::Recv(TMessage *& /*mess */)
 {
    Error("Recv", "not implemented");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a raw buffer of specified length bytes.
+
 Int_t TSSLSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 {
-   // Receive a raw buffer of specified length bytes.
-
    TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;
@@ -239,18 +249,19 @@ Int_t TSSLSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
    return offset;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TSSLSocket::Send(const TMessage & /* mess */)
 {
    Error("Send", "not implemented");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a raw buffer of specified length.
+
 Int_t TSSLSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions /* opt */)
 {
-   // Send a raw buffer of specified length.
-
    TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;

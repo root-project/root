@@ -143,21 +143,21 @@ TVirtualMutex* gROOTMutex = 0;
 void **(*gThreadTsd)(void*,Int_t) = 0;
 
 //-------- Names of next three routines are a small homage to CMZ --------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return version id as an integer, i.e. "2.22/04" -> 22204.
+
 static Int_t IVERSQ()
 {
-   // Return version id as an integer, i.e. "2.22/04" -> 22204.
-
    Int_t maj, min, cycle;
    sscanf(ROOT_RELEASE, "%d.%d/%d", &maj, &min, &cycle);
    return 10000*maj + 100*min + cycle;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return built date as integer, i.e. "Apr 28 2000" -> 20000428.
+
 static Int_t IDATQQ(const char *date)
 {
-   // Return built date as integer, i.e. "Apr 28 2000" -> 20000428.
-
    static const char *months[] = {"Jan","Feb","Mar","Apr","May",
                                   "Jun","Jul","Aug","Sep","Oct",
                                   "Nov","Dec"};
@@ -173,22 +173,22 @@ static Int_t IDATQQ(const char *date)
    return 10000*yy + 100*mm + dd;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return built time as integer (with min precision), i.e.
+/// "17:32:37" -> 1732.
+
 static Int_t ITIMQQ(const char *time)
 {
-   // Return built time as integer (with min precision), i.e.
-   // "17:32:37" -> 1732.
-
    Int_t hh, mm, ss;
    sscanf(time, "%d:%d:%d", &hh, &mm, &ss);
    return 100*hh + mm;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up at program termination before global objects go out of scope.
+
 static void CleanUpROOTAtExit()
 {
-   // Clean up at program termination before global objects go out of scope.
-
    if (gROOT) {
       R__LOCKGUARD(gROOTMutex);
 
@@ -203,12 +203,13 @@ static void CleanUpROOTAtExit()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A module and its headers. Intentionally not a copy:
+/// If these strings end up in this struct they are
+/// long lived by definition because they get passed in
+/// before initialization of TCling.
+
 namespace {
-   // A module and its headers. Intentionally not a copy:
-   // If these strings end up in this struct they are
-   // long lived by definition because they get passed in
-   // before initialization of TCling.
    struct ModuleHeaderInfo_t {
       ModuleHeaderInfo_t(const char* moduleName,
                          const char** headers,
@@ -364,7 +365,9 @@ Int_t gDebug;
 
 ClassImp(TROOT)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TROOT::TROOT() : TDirectory(),
      fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
@@ -378,10 +381,26 @@ TROOT::TROOT() : TDirectory(),
      fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
      fPluginManager(0)
 {
-   // Default ctor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the ROOT system. The creation of the TROOT object initializes
+/// the ROOT system. It must be the first ROOT related action that is
+/// performed by a program. The TROOT object must be created on the stack
+/// (can not be called via new since "operator new" is protected). The
+/// TROOT object is either created as a global object (outside the main()
+/// program), or it is one of the first objects created in main().
+/// Make sure that the TROOT object stays in scope for as long as ROOT
+/// related actions are performed. TROOT is a so called singleton so
+/// only one instance of it can be created. The single TROOT object can
+/// always be accessed via the global pointer gROOT.
+/// The name and title arguments can be used to identify the running
+/// application. The initfunc argument can contain an array of
+/// function pointers (last element must be 0). These functions are
+/// executed at the end of the constructor. This way one can easily
+/// extend the ROOT system without adding permanent dependencies
+/// (e.g. the graphics system is initialized via such a function).
+
 TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    : TDirectory(), fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
@@ -395,23 +414,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
      fProofs(0),fClipboard(0),fDataSets(0),fUUIDs(0),fRootFolder(0),fBrowsables(0),
      fPluginManager(0)
 {
-   // Initialize the ROOT system. The creation of the TROOT object initializes
-   // the ROOT system. It must be the first ROOT related action that is
-   // performed by a program. The TROOT object must be created on the stack
-   // (can not be called via new since "operator new" is protected). The
-   // TROOT object is either created as a global object (outside the main()
-   // program), or it is one of the first objects created in main().
-   // Make sure that the TROOT object stays in scope for as long as ROOT
-   // related actions are performed. TROOT is a so called singleton so
-   // only one instance of it can be created. The single TROOT object can
-   // always be accessed via the global pointer gROOT.
-   // The name and title arguments can be used to identify the running
-   // application. The initfunc argument can contain an array of
-   // function pointers (last element must be 0). These functions are
-   // executed at the end of the constructor. This way one can easily
-   // extend the ROOT system without adding permanent dependencies
-   // (e.g. the graphics system is initialized via such a function).
-
    if (fgRootInit || ROOT::gROOTLocal) {
       //Warning("TROOT", "only one instance of TROOT allowed");
       return;
@@ -608,12 +610,12 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    ROOT::gGetROOT = &ROOT::GetROOT2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up and free resources used by ROOT (files, network sockets,
+/// shared memory segments, etc.).
+
 TROOT::~TROOT()
 {
-   // Clean up and free resources used by ROOT (files, network sockets,
-   // shared memory segments, etc.).
-
    if (ROOT::gROOTLocal == this) {
 
       // If the interpreter has not yet been initialized, don't bother
@@ -731,31 +733,31 @@ TROOT::~TROOT()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a class to the list and map of classes.
+/// This routine is deprecated, use TClass::AddClass directly.
+
 void TROOT::AddClass(TClass *cl)
 {
-   // Add a class to the list and map of classes.
-   // This routine is deprecated, use TClass::AddClass directly.
-
    TClass::AddClass(cl);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a class generator.  This generator will be called by TClass::GetClass
+/// in case its does not find a loaded rootcint dictionary to request the
+/// creation of a TClass object.
+
 void TROOT::AddClassGenerator(TClassGenerator *generator)
 {
-   // Add a class generator.  This generator will be called by TClass::GetClass
-   // in case its does not find a loaded rootcint dictionary to request the
-   // creation of a TClass object.
-
    if (!generator) return;
    fClassGenerators->Add(generator);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add browsable objects to TBrowser.
+
 void TROOT::Browse(TBrowser *b)
 {
-   // Add browsable objects to TBrowser.
-
    TObject *obj;
    TIter next(fBrowsables);
 
@@ -768,13 +770,13 @@ void TROOT::Browse(TBrowser *b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return class status bit kClassSaved for class cl
+/// This function is called by the SavePrimitive functions writing
+/// the C++ code for an object.
+
 Bool_t TROOT::ClassSaved(TClass *cl)
 {
-// return class status bit kClassSaved for class cl
-// This function is called by the SavePrimitive functions writing
-// the C++ code for an object.
-
    if (cl == 0) return kFALSE;
    if (cl->TestBit(TClass::kClassSaved)) return kTRUE;
    cl->SetBit(TClass::kClassSaved);
@@ -815,12 +817,12 @@ namespace {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close any files and sockets that gROOT knows about.
+/// This can be used to insures that the files and sockets are closed before any library is unloaded!
+
 void TROOT::CloseFiles()
 {
-   // Close any files and sockets that gROOT knows about.
-   // This can be used to insures that the files and sockets are closed before any library is unloaded!
-
    if (fFiles && fFiles->First()) {
       R__ListSlowClose(static_cast<TList*>(fFiles));
    }
@@ -890,12 +892,12 @@ void TROOT::CloseFiles()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the cleanups necessary at the end of the process, in particular
+/// those that must be executed before the library start being unloaded.
+
 void TROOT::EndOfProcessCleanups()
 {
-   // Execute the cleanups necessary at the end of the process, in particular
-   // those that must be executed before the library start being unloaded.
-
    CloseFiles();
 
    if (gInterpreter) {
@@ -913,37 +915,37 @@ void TROOT::EndOfProcessCleanups()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find an object in one Root folder
+
 TObject *TROOT::FindObject(const TObject *) const
 {
-// Find an object in one Root folder
-
    Error("FindObject","Not yet implemented");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns address of a ROOT object if it exists
+///
+/// If name contains at least one "/" the function calls FindObjectany
+/// else
+/// This function looks in the following order in the ROOT lists:
+///     - List of files
+///     - List of memory mapped files
+///     - List of functions
+///     - List of geometries
+///     - List of canvases
+///     - List of styles
+///     - List of specials
+///     - List of materials in current geometry
+///     - List of shapes in current geometry
+///     - List of matrices in current geometry
+///     - List of Nodes in current geometry
+///     - Current Directory in memory
+///     - Current Directory on file
+
 TObject *TROOT::FindObject(const char *name) const
 {
-   // Returns address of a ROOT object if it exists
-   //
-   // If name contains at least one "/" the function calls FindObjectany
-   // else
-   // This function looks in the following order in the ROOT lists:
-   //     - List of files
-   //     - List of memory mapped files
-   //     - List of functions
-   //     - List of geometries
-   //     - List of canvases
-   //     - List of styles
-   //     - List of specials
-   //     - List of materials in current geometry
-   //     - List of shapes in current geometry
-   //     - List of matrices in current geometry
-   //     - List of Nodes in current geometry
-   //     - Current Directory in memory
-   //     - Current Directory on file
-
    if (name && strstr(name,"/")) return FindObjectAny(name);
 
    TObject *temp = 0;
@@ -974,26 +976,26 @@ TObject *TROOT::FindObject(const char *name) const
    return temp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns address and folder of a ROOT object if it exists
+///
+/// This function looks in the following order in the ROOT lists:
+///     - List of files
+///     - List of memory mapped files
+///     - List of functions
+///     - List of geometries
+///     - List of canvases
+///     - List of styles
+///     - List of specials
+///     - List of materials in current geometry
+///     - List of shapes in current geometry
+///     - List of matrices in current geometry
+///     - List of Nodes in current geometry
+///     - Current Directory in memory
+///     - Current Directory on file
+
 TObject *TROOT::FindSpecialObject(const char *name, void *&where)
 {
-   // Returns address and folder of a ROOT object if it exists
-   //
-   // This function looks in the following order in the ROOT lists:
-   //     - List of files
-   //     - List of memory mapped files
-   //     - List of functions
-   //     - List of geometries
-   //     - List of canvases
-   //     - List of styles
-   //     - List of specials
-   //     - List of materials in current geometry
-   //     - List of shapes in current geometry
-   //     - List of matrices in current geometry
-   //     - List of Nodes in current geometry
-   //     - Current Directory in memory
-   //     - Current Directory on file
-
    TObject *temp = 0;
    where = 0;
 
@@ -1046,23 +1048,23 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the first object with name starting at //root.
+/// This function scans the list of all folders.
+/// if no object found in folders, it scans the memory list of all files.
+
 TObject *TROOT::FindObjectAny(const char *name) const
 {
-   // Return a pointer to the first object with name starting at //root.
-   // This function scans the list of all folders.
-   // if no object found in folders, it scans the memory list of all files.
-
    TObject *obj = fRootFolder->FindObjectAny(name);
    if (obj) return obj;
    return gDirectory->FindObjectAnyFile(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan the memory lists of all files for an object with name
+
 TObject *TROOT::FindObjectAnyFile(const char *name) const
 {
-   // Scan the memory lists of all files for an object with name
-
    R__LOCKGUARD(gROOTMutex);
    TDirectory *d;
    TIter next(GetListOfFiles());
@@ -1075,11 +1077,11 @@ TObject *TROOT::FindObjectAnyFile(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns class name of a ROOT object including CINT globals.
+
 const char *TROOT::FindObjectClassName(const char *name) const
 {
-   // Returns class name of a ROOT object including CINT globals.
-
    // Search first in the list of "standard" objects
    TObject *obj = FindObject(name);
    if (obj) return obj->ClassName();
@@ -1091,26 +1093,26 @@ const char *TROOT::FindObjectClassName(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return path name of obj somewhere in the //root/... path.
+/// The function returns the first occurence of the object in the list
+/// of folders. The returned string points to a static char array in TROOT.
+/// If this function is called in a loop or recursively, it is the
+/// user's responsability to copy this string in their area.
+
 const char *TROOT::FindObjectPathName(const TObject *) const
 {
-   // Return path name of obj somewhere in the //root/... path.
-   // The function returns the first occurence of the object in the list
-   // of folders. The returned string points to a static char array in TROOT.
-   // If this function is called in a loop or recursively, it is the
-   // user's responsability to copy this string in their area.
-
    Error("FindObjectPathName","Not yet implemented");
    return "??";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return a TClass object corresponding to 'name' assuming it is an STL container.
+/// In particular we looking for possible alternative name (default template
+/// parameter, typedefs template arguments, typedefed name).
+
 TClass *TROOT::FindSTLClass(const char *name, Bool_t load, Bool_t silent) const
 {
-   // return a TClass object corresponding to 'name' assuming it is an STL container.
-   // In particular we looking for possible alternative name (default template
-   // parameter, typedefs template arguments, typedefed name).
-
    // Example of inputs are
    //   vector<int>  (*)
    //   vector<Int_t>
@@ -1140,29 +1142,29 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load, Bool_t silent) const
    return cl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to class with name. Obsolete, use TClass::GetClass directly
+
 TClass *TROOT::GetClass(const char *name, Bool_t load, Bool_t silent) const
 {
-   // Return pointer to class with name. Obsolete, use TClass::GetClass directly
-
    return TClass::GetClass(name,load,silent);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to class from its name. Obsolete, use TClass::GetClass directly
+/// See TClass::GetClass
+
 TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load, Bool_t silent) const
 {
-   // Return pointer to class from its name. Obsolete, use TClass::GetClass directly
-   // See TClass::GetClass
-
    return TClass::GetClass(typeinfo,load,silent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return address of color with index color.
+
 TColor *TROOT::GetColor(Int_t color) const
 {
-   // Return address of color with index color.
-
    TColor::InitializeColors();
    TObjArray *lcolors = (TObjArray*) GetListOfColors();
    if (!lcolors) return 0;
@@ -1176,44 +1178,44 @@ TColor *TROOT::GetColor(Int_t color) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a default canvas.
+
 TCanvas *TROOT::MakeDefCanvas() const
 {
-   // Return a default canvas.
-
    return (TCanvas*)gROOT->ProcessLine("TCanvas::MakeDefCanvas();");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to type with name.
+
 TDataType *TROOT::GetType(const char *name, Bool_t /* load */) const
 {
-   // Return pointer to type with name.
-
    return (TDataType*)gROOT->GetListOfTypes()->FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to file with name.
+
 TFile *TROOT::GetFile(const char *name) const
 {
-   // Return pointer to file with name.
-
    R__LOCKGUARD(gROOTMutex);
    return (TFile*)GetListOfFiles()->FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to style with name
+
 TStyle *TROOT::GetStyle(const char *name) const
 {
-   // Return pointer to style with name
-
    return (TStyle*)GetListOfStyles()->FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to function with name.
+
 TObject *TROOT::GetFunction(const char *name) const
 {
-   // Return pointer to function with name.
-
    if (name == 0 || name[0] == 0) {
       return 0;
    }
@@ -1230,7 +1232,8 @@ TObject *TROOT::GetFunction(const char *name) const
    return fFunctions->FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TFunctionTemplate *TROOT::GetFunctionTemplate(const char *name)
 {
    if (!gInterpreter) return 0;
@@ -1240,20 +1243,20 @@ TFunctionTemplate *TROOT::GetFunctionTemplate(const char *name)
    return (TFunctionTemplate*)fFuncTemplate->FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to global variable by name. If load is true force
+/// reading of all currently defined globals from CINT (more expensive).
+
 TGlobal *TROOT::GetGlobal(const char *name, Bool_t load) const
 {
-   // Return pointer to global variable by name. If load is true force
-   // reading of all currently defined globals from CINT (more expensive).
-
    return (TGlobal *)gROOT->GetListOfGlobals(load)->FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to global variable with address addr.
+
 TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t /* load */) const
 {
-   // Return pointer to global variable with address addr.
-
    if (addr == 0 || ((Long_t)addr) == -1) return 0;
 
    TInterpreter::DeclId_t decl = gInterpreter->GetDataMemberAtAddr(addr);
@@ -1272,34 +1275,35 @@ TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t /* load */) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal routine returning, and creating if necessary, the list
+/// of global function.
+
 TListOfFunctions *TROOT::GetGlobalFunctions()
 {
-   // Internal routine returning, and creating if necessary, the list
-   // of global function.
-
    if (!fGlobalFunctions) fGlobalFunctions = new TListOfFunctions(0);
    return fGlobalFunctions;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the collection of functions named "name".
+
 TCollection *TROOT::GetListOfFunctionOverloads(const char* name) const
 {
-   // Return the collection of functions named "name".
    return ((TListOfFunctions*)fFunctions)->GetListForObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to global function by name.
+/// If params != 0 it will also resolve overloading other it returns the first
+/// name match.
+/// If params == 0 and load is true force reading of all currently defined
+/// global functions from Cling.
+/// The param string must be of the form: "3189,\"aap\",1.3".
+
 TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
                                     Bool_t load)
 {
-   // Return pointer to global function by name.
-   // If params != 0 it will also resolve overloading other it returns the first
-   // name match.
-   // If params == 0 and load is true force reading of all currently defined
-   // global functions from Cling.
-   // The param string must be of the form: "3189,\"aap\",1.3".
-
    if (!params) {
       R__LOCKGUARD2(gROOTMutex);
       return (TFunction *)GetListOfGlobalFunctions(load)->FindObject(function);
@@ -1324,15 +1328,15 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to global function by name. If proto != 0
+/// it will also resolve overloading. If load is true force reading
+/// of all currently defined global functions from CINT (more expensive).
+/// The proto string must be of the form: "int, char*, float".
+
 TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
                                                const char *proto, Bool_t load)
 {
-   // Return pointer to global function by name. If proto != 0
-   // it will also resolve overloading. If load is true force reading
-   // of all currently defined global functions from CINT (more expensive).
-   // The proto string must be of the form: "int, char*, float".
-
    if (!proto) {
       R__LOCKGUARD2(gROOTMutex);
       return (TFunction *)GetListOfGlobalFunctions(load)->FindObject(function);
@@ -1356,15 +1360,16 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to Geometry with name
+
 TObject *TROOT::GetGeometry(const char *name) const
 {
-   // Return pointer to Geometry with name
-
    return GetListOfGeometries()->FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TCollection *TROOT::GetListOfEnums(Bool_t load /* = kTRUE */)
 {
    if(!fEnums) {
@@ -1380,7 +1385,8 @@ TCollection *TROOT::GetListOfEnums(Bool_t load /* = kTRUE */)
    return fEnums.load();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TCollection *TROOT::GetListOfFunctionTemplates()
 {
    R__LOCKGUARD2(gROOTMutex);
@@ -1390,16 +1396,16 @@ TCollection *TROOT::GetListOfFunctionTemplates()
    return fFuncTemplate;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list containing the TGlobals currently defined.
+/// Since globals are created and deleted during execution of the
+/// program, we need to update the list of globals every time we
+/// execute this method. However, when calling this function in
+/// a (tight) loop where no interpreter symbols will be created
+/// you can set load=kFALSE (default).
+
 TCollection *TROOT::GetListOfGlobals(Bool_t load)
 {
-   // Return list containing the TGlobals currently defined.
-   // Since globals are created and deleted during execution of the
-   // program, we need to update the list of globals every time we
-   // execute this method. However, when calling this function in
-   // a (tight) loop where no interpreter symbols will be created
-   // you can set load=kFALSE (default).
-
    if (!fGlobals) {
       // We add to the list the "funcky-fake" globals.
       fGlobals = new TListOfDataMembers(0);
@@ -1425,16 +1431,16 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
    return fGlobals;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list containing the TFunctions currently defined.
+/// Since functions are created and deleted during execution of the
+/// program, we need to update the list of functions every time we
+/// execute this method. However, when calling this function in
+/// a (tight) loop where no interpreter symbols will be created
+/// you can set load=kFALSE (default).
+
 TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
 {
-   // Return list containing the TFunctions currently defined.
-   // Since functions are created and deleted during execution of the
-   // program, we need to update the list of functions every time we
-   // execute this method. However, when calling this function in
-   // a (tight) loop where no interpreter symbols will be created
-   // you can set load=kFALSE (default).
-
    if (!fGlobalFunctions) {
       fGlobalFunctions = new TListOfFunctions(0);
    }
@@ -1447,24 +1453,24 @@ TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
    return fGlobalFunctions;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a dynamic list giving access to all TDataTypes (typedefs)
+/// currently defined.
+///
+/// The list is populated on demand.  Calling
+///    gROOT->GetListOfTypes()->FindObject(nameoftype);
+/// will return the TDataType corresponding to 'nameoftype'.  If the
+/// TDataType is not already in the list itself and the type does exist,
+/// a new TDataType will be created and added to the list.
+///
+/// Calling
+///    gROOT->GetListOfTypes()->ls(); // or Print()
+/// list only the typedefs that have been previously accessed throught the
+/// list (plus the builtins types).
+///
+
 TCollection *TROOT::GetListOfTypes(Bool_t /* load */)
 {
-   // Return a dynamic list giving access to all TDataTypes (typedefs)
-   // currently defined.
-   //
-   // The list is populated on demand.  Calling
-   //    gROOT->GetListOfTypes()->FindObject(nameoftype);
-   // will return the TDataType corresponding to 'nameoftype'.  If the
-   // TDataType is not already in the list itself and the type does exist,
-   // a new TDataType will be created and added to the list.
-   //
-   // Calling
-   //    gROOT->GetListOfTypes()->ls(); // or Print()
-   // list only the typedefs that have been previously accessed throught the
-   // list (plus the builtins types).
-   //
-
    if (!fTypes) {
       fTypes = new TListOfTypes;
    }
@@ -1476,11 +1482,11 @@ TCollection *TROOT::GetListOfTypes(Bool_t /* load */)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute command when system has been idle for idleTimeInSec seconds.
+
 void TROOT::Idle(UInt_t idleTimeInSec, const char *command)
 {
-   // Execute command when system has been idle for idleTimeInSec seconds.
-
    if (!fApplication)
       TApplication::CreateApplication();
 
@@ -1490,12 +1496,12 @@ void TROOT::Idle(UInt_t idleTimeInSec, const char *command)
       (*fApplication).SetIdleTimer(idleTimeInSec, command);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether className is a known class, and only autoload
+/// if we can. Helper function for TROOT::IgnoreInclude().
+
 static TClass* R__GetClassIfKnown(const char* className)
 {
-   // Check whether className is a known class, and only autoload
-   // if we can. Helper function for TROOT::IgnoreInclude().
-
    // Check whether the class is available for auto-loading first:
    const char* libsToLoad = gInterpreter->GetClassSharedLibs(className);
    TClass* cla = 0;
@@ -1511,12 +1517,12 @@ static TClass* R__GetClassIfKnown(const char* className)
    return cla;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return 1 if the name of the given include file corresponds to a class that
+///  is known to ROOT, e.g. "TLorentzVector.h" versus TLorentzVector.
+
 Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
 {
-   // Return 1 if the name of the given include file corresponds to a class that
-   //  is known to ROOT, e.g. "TLorentzVector.h" versus TLorentzVector.
-
    if (fname == 0) return 0;
 
    TString stem(fname);
@@ -1562,11 +1568,11 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize operating system interface.
+
 void TROOT::InitSystem()
 {
-   // Initialize operating system interface.
-
    if (gSystem == 0) {
 #if defined(R__UNIX)
 #if defined(R__HAS_COCOA)
@@ -1627,11 +1633,11 @@ void TROOT::InitSystem()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load and initialize thread library.
+
 void TROOT::InitThreads()
 {
-   // Load and initialize thread library.
-
    if (gEnv->GetValue("Root.UseThreads", 0)) {
       char *path;
       if ((path = gSystem->DynamicPathName("libThread", kTRUE))) {
@@ -1645,12 +1651,12 @@ void TROOT::InitThreads()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the interpreter. Should be called only after main(),
+/// to make sure LLVM/Clang is fully initialized.
+
 void TROOT::InitInterpreter()
 {
-   // Initialize the interpreter. Should be called only after main(),
-   // to make sure LLVM/Clang is fully initialized.
-
    // usedToIdentifyRootClingByDlSym is available when TROOT is part of
    // rootcling.
    if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")
@@ -1745,37 +1751,37 @@ void TROOT::InitInterpreter()
    fInterpreter->EnableAutoLoading();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper function used by TClass::GetClass().
+/// This function attempts to load the dictionary for 'classname'
+/// either from the TClassTable or from the list of generator.
+/// If silent is 'true', do not warn about missing dictionary for the class.
+/// (typically used for class that are used only for transient members)
+///
+/// The 'requestedname' is expected to be already normalized.
+
 TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
 {
-   // Helper function used by TClass::GetClass().
-   // This function attempts to load the dictionary for 'classname'
-   // either from the TClassTable or from the list of generator.
-   // If silent is 'true', do not warn about missing dictionary for the class.
-   // (typically used for class that are used only for transient members)
-   //
-   // The 'requestedname' is expected to be already normalized.
-
    return TClass::LoadClass(requestedname, silent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if class "classname" is known to the interpreter (in fact,
+/// this check is not needed anymore, so classname is ignored). If
+/// not it will load library "libname". If the library name does
+/// not start with "lib", "lib" will be prepended and a search will
+/// be made in the DynamicPath (see .rootrc). If not found a search
+/// will be made on libname (without "lib" prepended) and if not found
+/// a direct try of libname will be made (in case it contained an
+/// absolute path).
+/// If check is true it will only check if libname exists and is
+/// readable.
+/// Returns 0 on successful loading, -1 in case libname does not
+/// exist or in case of error and -2 in case of version mismatch.
+
 Int_t TROOT::LoadClass(const char * /*classname*/, const char *libname,
                        Bool_t check)
 {
-   // Check if class "classname" is known to the interpreter (in fact,
-   // this check is not needed anymore, so classname is ignored). If
-   // not it will load library "libname". If the library name does
-   // not start with "lib", "lib" will be prepended and a search will
-   // be made in the DynamicPath (see .rootrc). If not found a search
-   // will be made on libname (without "lib" prepended) and if not found
-   // a direct try of libname will be made (in case it contained an
-   // absolute path).
-   // If check is true it will only check if libname exists and is
-   // readable.
-   // Returns 0 on successful loading, -1 in case libname does not
-   // exist or in case of error and -2 in case of version mismatch.
-
    Int_t err = -1;
 
    char *path;
@@ -1818,11 +1824,11 @@ Int_t TROOT::LoadClass(const char * /*classname*/, const char *libname,
    return err;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the file is local and is (likely) to be a ROOT file
+
 Bool_t TROOT::IsRootFile(const char *filename) const
 {
-   // Return true if the file is local and is (likely) to be a ROOT file
-
    Bool_t result = kFALSE;
    FILE *mayberootfile = fopen(filename,"rb");
    if (mayberootfile) {
@@ -1835,32 +1841,32 @@ Bool_t TROOT::IsRootFile(const char *filename) const
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To list all objects of the application.
+/// Loop on all objects created in the ROOT linked lists.
+/// Objects may be files and windows or any other object directly
+/// attached to the ROOT linked list.
+
 void TROOT::ls(Option_t *option) const
 {
-   // To list all objects of the application.
-   // Loop on all objects created in the ROOT linked lists.
-   // Objects may be files and windows or any other object directly
-   // attached to the ROOT linked list.
-
 //   TObject::SetDirLevel();
 //   GetList()->R__FOR_EACH(TObject,ls)(option);
    TDirectory::ls(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a macro in the interpreter's memory. Equivalent to the command line
+/// command ".L filename". If the filename has "+" or "++" appended
+/// the macro will be compiled by ACLiC. The filename must have the format:
+/// [path/]macro.C[+|++[g|O]].
+/// The possible error codes are defined by TInterpreter::EErrorCode.
+/// If check is true it will only check if filename exists and is
+/// readable.
+/// Returns 0 on successful loading and -1 in case filename does not
+/// exist or in case of error.
+
 Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
 {
-   // Load a macro in the interpreter's memory. Equivalent to the command line
-   // command ".L filename". If the filename has "+" or "++" appended
-   // the macro will be compiled by ACLiC. The filename must have the format:
-   // [path/]macro.C[+|++[g|O]].
-   // The possible error codes are defined by TInterpreter::EErrorCode.
-   // If check is true it will only check if filename exists and is
-   // readable.
-   // Returns 0 on successful loading and -1 in case filename does not
-   // exist or in case of error.
-
    Int_t err = -1;
    Int_t lerr, *terr;
    if (error)
@@ -1898,17 +1904,17 @@ Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
    return err;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute a macro in the interpreter. Equivalent to the command line
+/// command ".x filename". If the filename has "+" or "++" appended
+/// the macro will be compiled by ACLiC. The filename must have the format:
+/// [path/]macro.C[+|++[g|O]][(args)].
+/// The possible error codes are defined by TInterpreter::EErrorCode.
+/// If padUpdate is true (default) update the current pad.
+/// Returns the macro return value.
+
 Long_t TROOT::Macro(const char *filename, Int_t *error, Bool_t padUpdate)
 {
-   // Execute a macro in the interpreter. Equivalent to the command line
-   // command ".x filename". If the filename has "+" or "++" appended
-   // the macro will be compiled by ACLiC. The filename must have the format:
-   // [path/]macro.C[+|++[g|O]][(args)].
-   // The possible error codes are defined by TInterpreter::EErrorCode.
-   // If padUpdate is true (default) update the current pad.
-   // Returns the macro return value.
-
    Long_t result = 0;
 
    if (fInterpreter) {
@@ -1938,11 +1944,11 @@ Long_t TROOT::Macro(const char *filename, Int_t *error, Bool_t padUpdate)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process message id called by obj.
+
 void  TROOT::Message(Int_t id, const TObject *obj)
 {
-   // Process message id called by obj.
-
    TIter next(fMessageHandlers);
    TMessageHandler *mh;
    while ((mh = (TMessageHandler*)next())) {
@@ -1950,19 +1956,19 @@ void  TROOT::Message(Int_t id, const TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process interpreter command via TApplication::ProcessLine().
+/// On Win32 the line will be processed asynchronously by sending
+/// it to the CINT interpreter thread. For explicit synchronous processing
+/// use ProcessLineSync(). On non-Win32 platforms there is no difference
+/// between ProcessLine() and ProcessLineSync().
+/// The possible error codes are defined by TInterpreter::EErrorCode. In
+/// particular, error will equal to TInterpreter::kProcessing until the
+/// CINT interpreted thread has finished executing the line.
+/// Returns the result of the command, cast to a Long_t.
+
 Long_t TROOT::ProcessLine(const char *line, Int_t *error)
 {
-   // Process interpreter command via TApplication::ProcessLine().
-   // On Win32 the line will be processed asynchronously by sending
-   // it to the CINT interpreter thread. For explicit synchronous processing
-   // use ProcessLineSync(). On non-Win32 platforms there is no difference
-   // between ProcessLine() and ProcessLineSync().
-   // The possible error codes are defined by TInterpreter::EErrorCode. In
-   // particular, error will equal to TInterpreter::kProcessing until the
-   // CINT interpreted thread has finished executing the line.
-   // Returns the result of the command, cast to a Long_t.
-
    TString sline = line;
    sline = sline.Strip(TString::kBoth);
 
@@ -1972,17 +1978,17 @@ Long_t TROOT::ProcessLine(const char *line, Int_t *error)
    return (*fApplication).ProcessLine(sline, kFALSE, error);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process interpreter command via TApplication::ProcessLine().
+/// On Win32 the line will be processed synchronously (i.e. it will
+/// only return when the CINT interpreter thread has finished executing
+/// the line). On non-Win32 platforms there is no difference between
+/// ProcessLine() and ProcessLineSync().
+/// The possible error codes are defined by TInterpreter::EErrorCode.
+/// Returns the result of the command, cast to a Long_t.
+
 Long_t TROOT::ProcessLineSync(const char *line, Int_t *error)
 {
-   // Process interpreter command via TApplication::ProcessLine().
-   // On Win32 the line will be processed synchronously (i.e. it will
-   // only return when the CINT interpreter thread has finished executing
-   // the line). On non-Win32 platforms there is no difference between
-   // ProcessLine() and ProcessLineSync().
-   // The possible error codes are defined by TInterpreter::EErrorCode.
-   // Returns the result of the command, cast to a Long_t.
-
    TString sline = line;
    sline = sline.Strip(TString::kBoth);
 
@@ -1992,14 +1998,14 @@ Long_t TROOT::ProcessLineSync(const char *line, Int_t *error)
    return (*fApplication).ProcessLine(sline, kTRUE, error);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process interpreter command directly via CINT interpreter.
+/// Only executable statements are allowed (no variable declarations),
+/// In all other cases use TROOT::ProcessLine().
+/// The possible error codes are defined by TInterpreter::EErrorCode.
+
 Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 {
-   // Process interpreter command directly via CINT interpreter.
-   // Only executable statements are allowed (no variable declarations),
-   // In all other cases use TROOT::ProcessLine().
-   // The possible error codes are defined by TInterpreter::EErrorCode.
-
    TString sline = line;
    sline = sline.Strip(TString::kBoth);
 
@@ -2016,12 +2022,12 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read Git commit information and branch name from the
+/// etc/gitinfo.txt file.
+
 void TROOT::ReadGitInfo()
 {
-   // Read Git commit information and branch name from the
-   // etc/gitinfo.txt file.
-
 #ifdef ROOT_GIT_COMMIT
    fGitCommit = ROOT_GIT_COMMIT;
 #endif
@@ -2069,7 +2075,8 @@ Bool_t &GetReadingObject() {
    return fgReadingObject;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TROOT::ReadingObject() const
 {
    /* Deprecated (will be removed in next release) */
@@ -2082,11 +2089,11 @@ void TROOT::SetReadingObject(Bool_t flag)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return date/time make was run.
+
 const char *TROOT::GetGitDate()
 {
-   // Return date/time make was run.
-
    if (fGitDate == "") {
       Int_t iday,imonth,iyear, ihour, imin;
       static const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -2103,29 +2110,34 @@ const char *TROOT::GetGitDate()
    return fGitDate;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh all browsers. Call this method when some command line
+/// command or script has changed the browser contents. Not needed
+/// for objects that have the kMustCleanup bit set. Most useful to
+/// update browsers that show the file system or other objects external
+/// to the running ROOT session.
+
 void TROOT::RefreshBrowsers()
 {
-   // Refresh all browsers. Call this method when some command line
-   // command or script has changed the browser contents. Not needed
-   // for objects that have the kMustCleanup bit set. Most useful to
-   // update browsers that show the file system or other objects external
-   // to the running ROOT session.
-
    TIter next(GetListOfBrowsers());
    TBrowser *b;
    while ((b = (TBrowser*) next()))
       b->SetRefreshFlag(kTRUE);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insure that the files, canvases and sockets are closed.
+
 static void CallCloseFiles()
 {
-   // Insure that the files, canvases and sockets are closed.
-
    if (TROOT::Initialized() && ROOT::gROOTLocal) gROOT->CloseFiles();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called by static dictionary initialization to register clang modules
+/// for headers. Calls TCling::RegisterModule() unless gCling
+/// is NULL, i.e. during startup, where the information is buffered in
+/// the static GetModuleHeaderInfoBuffer().
+
 void TROOT::RegisterModule(const char* modulename,
                            const char** headers,
                            const char** includePaths,
@@ -2135,11 +2147,6 @@ void TROOT::RegisterModule(const char* modulename,
                            const TInterpreter::FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                            const char** classesHeaders)
 {
-   // Called by static dictionary initialization to register clang modules
-   // for headers. Calls TCling::RegisterModule() unless gCling
-   // is NULL, i.e. during startup, where the information is buffered in
-   // the static GetModuleHeaderInfoBuffer().
-
 
    // First a side track to insure proper end of process behavior.
 
@@ -2209,35 +2216,35 @@ void TROOT::RegisterModule(const char* modulename,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a class from the list and map of classes.
+/// This routine is deprecated, use TClass::RemoveClass directly.
+
 void TROOT::RemoveClass(TClass *oldcl)
 {
-   // Remove a class from the list and map of classes.
-   // This routine is deprecated, use TClass::RemoveClass directly.
-
    TClass::RemoveClass(oldcl);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete all global interpreter objects created since the last call to Reset
+///
+/// If option="a" is set reset to startup context (i.e. unload also
+/// all loaded files, classes, structs, typedefs, etc.).
+///
+/// This function is typically used at the beginning (or end) of an unnamed macro
+/// to clean the environment.
+///
+/// IMPORTANT WARNING:
+/// Do not use this call from within any function (neither compiled nor
+/// interpreted.  This should only be used from a unnamed macro
+/// (which starts with a { (curly braces)  ).  For example, using TROOT::Reset
+/// from within an interpreted function will lead to the unloading of the
+/// dictionary and source file, including the one defining the function being
+/// executed.
+///
+
 void TROOT::Reset(Option_t *option)
 {
-   // Delete all global interpreter objects created since the last call to Reset
-   //
-   // If option="a" is set reset to startup context (i.e. unload also
-   // all loaded files, classes, structs, typedefs, etc.).
-   //
-   // This function is typically used at the beginning (or end) of an unnamed macro
-   // to clean the environment.
-   //
-   // IMPORTANT WARNING:
-   // Do not use this call from within any function (neither compiled nor
-   // interpreted.  This should only be used from a unnamed macro
-   // (which starts with a { (curly braces)  ).  For example, using TROOT::Reset
-   // from within an interpreted function will lead to the unloading of the
-   // dictionary and source file, including the one defining the function being
-   // executed.
-   //
-
    if (IsExecutingMacro()) return;  //True when TMacro::Exec runs
    if (fInterpreter) {
       if (!strncmp(option, "a", 1)) {
@@ -2253,23 +2260,23 @@ void TROOT::Reset(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the current interpreter context.
+
 void TROOT::SaveContext()
 {
-   // Save the current interpreter context.
-
    if (fInterpreter)
       gInterpreter->SaveGlobalsContext();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the default graphical cut class name for the graphics editor
+/// By default the graphics editor creates an instance of a class TCutG.
+/// This function may be called to specify a different class that MUST
+/// derive from TCutG
+
 void TROOT::SetCutClassName(const char *name)
 {
-   // Set the default graphical cut class name for the graphics editor
-   // By default the graphics editor creates an instance of a class TCutG.
-   // This function may be called to specify a different class that MUST
-   // derive from TCutG
-
    if (!name) {
       Error("SetCutClassName","Invalid class name");
       return;
@@ -2286,11 +2293,11 @@ void TROOT::SetCutClassName(const char *name)
    fCutClassName = name;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set editor mode
+
 void TROOT::SetEditorMode(const char *mode)
 {
-   // Set editor mode
-
    fEditorMode = 0;
    if (!mode[0]) return;
    if (!strcmp(mode,"Arc"))      {fEditorMode = kArc;        return;}
@@ -2312,11 +2319,11 @@ void TROOT::SetEditorMode(const char *mode)
    if (!strcmp(mode,"CutG"))     {fEditorMode = kCutG;       return;}
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change current style to style with name stylename
+
 void TROOT::SetStyle(const char *stylename)
 {
-   // Change current style to style with name stylename
-
    TString style_name = stylename;
 
    TStyle *style = GetStyle(style_name);
@@ -2328,25 +2335,27 @@ void TROOT::SetStyle(const char *stylename)
 //-------- Static Member Functions ---------------------------------------------
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decrease the indentation level for ls().
+
 Int_t TROOT::DecreaseDirLevel()
 {
-   // Decrease the indentation level for ls().
    return --fgDirLevel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return directory level
+
 Int_t TROOT::GetDirLevel()
 {
-   //return directory level
    return fgDirLevel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get macro search path. Static utility function.
+
 const char *TROOT::GetMacroPath()
 {
-   // Get macro search path. Static utility function.
-
    TString &macroPath = ROOT::GetMacroPath();
 
    if (macroPath.Length() == 0) {
@@ -2375,12 +2384,12 @@ const char *TROOT::GetMacroPath()
    return macroPath;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set or extend the macro search path. Static utility function.
+/// If newpath=0 or "" reset to value specified in the rootrc file.
+
 void TROOT::SetMacroPath(const char *newpath)
 {
-   // Set or extend the macro search path. Static utility function.
-   // If newpath=0 or "" reset to value specified in the rootrc file.
-
    TString &macroPath = ROOT::GetMacroPath();
 
    if (!newpath || !*newpath)
@@ -2389,80 +2398,85 @@ void TROOT::SetMacroPath(const char *newpath)
       macroPath = newpath;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increase the indentation level for ls().
+
 Int_t TROOT::IncreaseDirLevel()
 {
-   // Increase the indentation level for ls().
    return ++fgDirLevel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Functions used by ls() to indent an object hierarchy.
+
 void TROOT::IndentLevel()
 {
-   // Functions used by ls() to indent an object hierarchy.
-
    for (int i = 0; i < fgDirLevel; i++) std::cout.put(' ');
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if the TROOT object has been initialized.
+
 Bool_t TROOT::Initialized()
 {
-   // Return kTRUE if the TROOT object has been initialized.
    return fgRootInit;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if the memory leak checker is on.
+
 Bool_t TROOT::MemCheck()
 {
-   // Return kTRUE if the memory leak checker is on.
    return fgMemCheck;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return Indentation level for ls().
+
 void TROOT::SetDirLevel(Int_t level)
 {
-   // Return Indentation level for ls().
    fgDirLevel = level;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert version code to an integer, i.e. 331527 -> 51507.
+
 Int_t TROOT::ConvertVersionCode2Int(Int_t code)
 {
-   // Convert version code to an integer, i.e. 331527 -> 51507.
-
    return 10000*(code>>16) + 100*((code&65280)>>8) + (code&255);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert version as an integer to version code as used in RVersion.h.
+
 Int_t TROOT::ConvertVersionInt2Code(Int_t v)
 {
-   // Convert version as an integer to version code as used in RVersion.h.
-
    int a = v/10000;
    int b = (v - a*10000)/100;
    int c = v - a*10000 - b*100;
    return (a << 16) + (b << 8) + c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return ROOT version code as defined in RVersion.h.
+
 Int_t TROOT::RootVersionCode()
 {
-   // Return ROOT version code as defined in RVersion.h.
-
    return ROOT_VERSION_CODE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char**& TROOT::GetExtraInterpreterArgs() {
    static const char** extraInterpArgs = 0;
    return extraInterpArgs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the tuorials directory in the installtion. Static utility function.
+
 const char *TROOT::GetTutorialsDir()
 {
-   // Get the tuorials directory in the installtion. Static utility function.
-   
 #ifdef ROOTTUTDIR
    return ROOTTUTDIR;
 #else

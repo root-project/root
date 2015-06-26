@@ -355,13 +355,15 @@ using namespace ROOT;
 
 //--- Error handlers -----------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Err(int level,const char *msg, int size)
 {
    Perror((char *)msg,size);
    if (level > -1) NetSendError((ERootdErrors)level);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ErrFatal(int level,const char *msg, int size)
 {
    Perror((char *)msg,size);
@@ -369,7 +371,8 @@ void ErrFatal(int level,const char *msg, int size)
    RootdClose();
    exit(1);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ErrSys(int level,const char *msg, int size)
 {
    Perror((char *)msg,size);
@@ -382,11 +385,11 @@ const char *shellMeta   = "~*[]{}?$";
 const char *shellStuff  = "(){}<>\"'";
 const char  shellEscape = '\\';
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Escape specchars in src with escchar and copy to dst.
+
 static int EscChar(const char *src, char *dst, int dstlen, const char *specchars, char escchar)
 {
-   // Escape specchars in src with escchar and copy to dst.
-
    const char *p;
    char *q, *end = dst+dstlen-1;
 
@@ -405,11 +408,11 @@ static int EscChar(const char *src, char *dst, int dstlen, const char *specchars
    return q-dst;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// After SO_KEEPALIVE times out we probably get a SIGPIPE.
+
 void SigPipe(int)
 {
-   // After SO_KEEPALIVE times out we probably get a SIGPIPE.
-
    ErrorInfo("SigPipe: rootd.cxx: got a SIGPIPE");
 
    // Terminate properly
@@ -418,11 +421,11 @@ void SigPipe(int)
    exit(1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the user's home directory.
+
 static const char *HomeDirectory(const char *name)
 {
-   // Returns the user's home directory.
-
    static char path[kMAXPATHLEN], mydir[kMAXPATHLEN];
    struct passwd *pw;
 
@@ -446,12 +449,12 @@ static const char *HomeDirectory(const char *name)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand a pathname getting rid of special shell characters like ~.$, etc.
+/// Returned string must be freed by caller.
+
 char *RootdExpandPathName(const char *name)
 {
-   // Expand a pathname getting rid of special shell characters like ~.$, etc.
-   // Returned string must be freed by caller.
-
    const char *patbuf = name;
 
    // skip leading blanks
@@ -539,24 +542,24 @@ again:
    return strdup(expPatbuf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks gRootdTab file to see if file can be opened. If mode = 1 then
+/// check if file can safely be opened in write mode, i.e. see if file
+/// is not already opened in either read or write mode. If mode = 0 then
+/// check if file can safely be opened in read mode, i.e. see if file
+/// is not already opened in write mode. If mode = -1 check write mode
+/// like 1 but do not update rootdtab file. Returns 1 if file can be
+/// opened safely, otherwise 0.
+///
+/// The format of the file is:
+/// filename device inode mode username pid
+/// where device is the unique file system id, inode is the unique file
+/// ref number, mode is either "read" or "write", username the user
+/// who has the file open and pid is the pid of the rootd having the
+/// file open.
+
 int RootdCheckTab(int mode)
 {
-   // Checks gRootdTab file to see if file can be opened. If mode = 1 then
-   // check if file can safely be opened in write mode, i.e. see if file
-   // is not already opened in either read or write mode. If mode = 0 then
-   // check if file can safely be opened in read mode, i.e. see if file
-   // is not already opened in write mode. If mode = -1 check write mode
-   // like 1 but do not update rootdtab file. Returns 1 if file can be
-   // opened safely, otherwise 0.
-   //
-   // The format of the file is:
-   // filename device inode mode username pid
-   // where device is the unique file system id, inode is the unique file
-   // ref number, mode is either "read" or "write", username the user
-   // who has the file open and pid is the pid of the rootd having the
-   // file open.
-
    // Open rootdtab file. Try first /usr/tmp and then /tmp.
    // The lockf() call can fail if the directory is NFS mounted
    // and the lockd daemon is not running.
@@ -695,15 +698,15 @@ again:
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Removes from the gRootdTab file the reference to gFile for the
+/// current rootd. If force = 1, then remove all references for gFile
+/// from the gRootdTab file. This might be necessary in case something
+/// funny happened and the original reference was not correctly removed.
+/// Stale locks are detected by checking each pid and then removed.
+
 void RootdCloseTab(int force = 0)
 {
-   // Removes from the gRootdTab file the reference to gFile for the
-   // current rootd. If force = 1, then remove all references for gFile
-   // from the gRootdTab file. This might be necessary in case something
-   // funny happened and the original reference was not correctly removed.
-   // Stale locks are detected by checking each pid and then removed.
-
    const char *sfile = gRootdTab.c_str();
    int fid;
 
@@ -806,14 +809,16 @@ again:
    close(fid);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int RootdIsOpen()
 {
    if (gFd == -1) return 0;
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RootdCloseFtp()
 {
    if (gDebug > 0)
@@ -828,7 +833,8 @@ void RootdCloseFtp()
                 NetGetBytesRecv(), NetGetBytesSent());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RootdClose()
 {
    if (gFtp) {
@@ -853,7 +859,8 @@ void RootdClose()
                 NetGetBytesRecv(), NetGetBytesSent());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RootdFlush()
 {
    if (RootdIsOpen() && gWritable) {
@@ -867,17 +874,17 @@ void RootdFlush()
       ErrorInfo("RootdFlush: file %s flushed", gFile);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RootdStat()
 {
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return file stat information in same format as TSystem::GetPathInfo().
+
 void RootdFstat(const char *buf)
 {
-   // Return file stat information in same format as TSystem::GetPathInfo().
-
    char     msg[256];
    int      islink = 0;
 
@@ -958,12 +965,12 @@ void RootdFstat(const char *buf)
    NetSend(msg, kROOTD_FSTAT);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle initialization message from remote host. If size > 1 then
+/// so many parallel sockets will be opened to the remote host.
+
 void RootdParallel()
 {
-   // Handle initialization message from remote host. If size > 1 then
-   // so many parallel sockets will be opened to the remote host.
-
    int buf[3];
    if (NetRecvRaw(buf, sizeof(buf)) < 0)
       Error(ErrFatal, kErrFatal, "RootdParallel: error receiving message");
@@ -978,11 +985,11 @@ void RootdParallel()
       NetParOpen(port, size);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// System independent open().
+
 static int SysOpen(const char *pathname, int flags, unsigned int mode)
 {
-   // System independent open().
-
 #if defined(R__WINGCC)
    // ALWAYS use binary mode - even cygwin text should be in unix format
    // although this is posix default it has to be set explicitly
@@ -994,12 +1001,12 @@ static int SysOpen(const char *pathname, int flags, unsigned int mode)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open file in mode depending on specified option. If file is already
+/// opened by another rootd in write mode, do not open the file.
+
 void RootdOpen(const char *msg)
 {
-   // Open file in mode depending on specified option. If file is already
-   // opened by another rootd in write mode, do not open the file.
-
    char file[kMAXPATHLEN], option[32];
 
    gBytesRead = gBytesWritten = 0;
@@ -1183,12 +1190,12 @@ void RootdOpen(const char *msg)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a buffer and write it at the specified offset in the currently
+/// open file.
+
 void RootdPut(const char *msg)
 {
-   // Receive a buffer and write it at the specified offset in the currently
-   // open file.
-
    Long64_t offset;
    int      len;
 
@@ -1231,12 +1238,12 @@ void RootdPut(const char *msg)
                 len, offset, gFile);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a buffer from the specified offset from the currently open file
+/// and send it to the client.
+
 void RootdGet(const char *msg)
 {
-   // Get a buffer from the specified offset from the currently open file
-   // and send it to the client.
-
    Long64_t offset;
    int      len;
 
@@ -1281,14 +1288,14 @@ void RootdGet(const char *msg)
                 len, offset, gFile);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gets multiple buffers from the specified list of offsets and lengths from
+/// the currently open file and send it to the client in a single buffer.
+/// (BUt rem it gets the buffer with the info in the same way it would get
+/// new data)
+
 void RootdGets(const char *msg)
 {
-   // Gets multiple buffers from the specified list of offsets and lengths from
-   // the currently open file and send it to the client in a single buffer.
-   // (BUt rem it gets the buffer with the info in the same way it would get
-   // new data)
-
    if (!RootdIsOpen())
       Error(ErrFatal, kErrNoAccess, "RootdGets: file %s not open", gFile);
 
@@ -1398,11 +1405,11 @@ end:
                 actual_pos, gFile);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a file from the remote client (upload).
+
 void RootdPutFile(const char *msg)
 {
-   // Receive a file from the remote client (upload).
-
    char     file[kMAXPATHLEN];
    Long64_t size, restartat;
    int      blocksize, mode, forceopen = 0;
@@ -1608,11 +1615,11 @@ void RootdPutFile(const char *msg)
                 "%.2f bytes/s)", gFile, size, t, speed);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a file to a remote client (download).
+
 void RootdGetFile(const char *msg)
 {
-   // Send a file to a remote client (download).
-
    char     file[kMAXPATHLEN];
    Long64_t restartat;
    int      blocksize, mode, forceopen = 0;
@@ -1762,11 +1769,11 @@ void RootdGetFile(const char *msg)
                 "%.2f bytes/s)", gFile, size, t, speed);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change directory.
+
 void RootdChdir(const char *dir)
 {
-   // Change directory.
-
    const int kMAXBUFLEN = kMAXPATHLEN + 256;
    char buffer[kMAXBUFLEN];
 
@@ -1812,11 +1819,11 @@ void RootdChdir(const char *dir)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test access permission on path
+
 void RootdAccess(const char *buf)
 {
-   // Test access permission on path
-
    char buffer[kMAXPATHLEN];
    char path[kMAXPATHLEN];
    int mode;
@@ -1847,11 +1854,11 @@ void RootdAccess(const char *buf)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free open directory.
+
 void RootdFreeDir()
 {
-   // Free open directory.
-
    char buffer[kMAXPATHLEN];
 
    if (!gRDDirectory) {
@@ -1867,11 +1874,11 @@ void RootdFreeDir()
    NetSend(buffer, kROOTD_FREEDIR);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get directory entry.
+
 void RootdGetDirEntry()
 {
-   // Get directory entry.
-
    char buffer[kMAXPATHLEN];
    struct dirent *dp = 0;
 
@@ -1892,11 +1899,11 @@ void RootdGetDirEntry()
    NetSend(buffer, kROOTD_DIRENTRY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open directory.
+
 void RootdOpenDir(const char *dir)
 {
-   // Open directory.
-
    char buffer[kMAXPATHLEN];
 
    char *edir = (char *)dir;
@@ -1913,11 +1920,11 @@ void RootdOpenDir(const char *dir)
    NetSend(buffer, kROOTD_OPENDIR);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make directory.
+
 void RootdMkdir(const char *fdir)
 {
-   // Make directory.
-
    char buffer[kMAXPATHLEN];
 
    char *dir = (char *)fdir;
@@ -1938,11 +1945,11 @@ void RootdMkdir(const char *fdir)
    NetSend(buffer, kROOTD_MKDIR);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete directory.
+
 void RootdRmdir(const char *fdir)
 {
-   // Delete directory.
-
    char buffer[kMAXPATHLEN];
 
    char *dir = (char *)fdir;
@@ -1963,11 +1970,11 @@ void RootdRmdir(const char *fdir)
    NetSend(buffer, kROOTD_RMDIR);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List directory.
+
 void RootdLsdir(const char *cmd)
 {
-   // List directory.
-
    char buffer[kMAXPATHLEN];
 
    // make sure all commands start with ls (should use snprintf)
@@ -2013,11 +2020,11 @@ void RootdLsdir(const char *cmd)
    NetSend(buffer, kROOTD_LSDIR);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print path of working directory.
+
 void RootdPwd()
 {
-   // Print path of working directory.
-
    char buffer[kMAXPATHLEN];
 
    if (!getcwd(buffer, kMAXPATHLEN)) {
@@ -2029,11 +2036,11 @@ void RootdPwd()
    NetSend(buffer, kROOTD_PWD);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rename a file.
+
 void RootdMv(const char *msg)
 {
-   // Rename a file.
-
    char file1[kMAXPATHLEN], file2[kMAXPATHLEN], buffer[kMAXPATHLEN];
    sscanf(msg, "%s %s", file1, file2);
 
@@ -2052,11 +2059,11 @@ void RootdMv(const char *msg)
    NetSend(buffer, kROOTD_MV);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a file.
+
 void RootdRm(const char *file)
 {
-   // Delete a file.
-
    char buffer[kMAXPATHLEN];
 
    if (gAnon) {
@@ -2072,11 +2079,11 @@ void RootdRm(const char *file)
    NetSend(buffer, kROOTD_RM);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a file.
+
 void RootdChmod(const char *msg)
 {
-   // Delete a file.
-
    char file[kMAXPATHLEN], buffer[kMAXPATHLEN];
    int  mode;
 
@@ -2097,11 +2104,11 @@ void RootdChmod(const char *msg)
    NetSend(buffer, kROOTD_CHMOD);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Termination upon receipt of a SIGTERM or SIGINT.
+
 static void RootdTerm(int)
 {
-   // Termination upon receipt of a SIGTERM or SIGINT.
-
    ErrorInfo("RootdTerm: rootd.cxx: got a SIGTERM/SIGINT");
    // Terminate properly
    RpdAuthCleanup(0,0);
@@ -2111,11 +2118,11 @@ static void RootdTerm(int)
    exit(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle all rootd commands. Returns after file close command.
+
 void RootdLoop()
 {
-   // Handle all rootd commands. Returns after file close command.
-
    char recvbuf[kMAXRECVBUF];
    EMessageTypes kind;
 
@@ -2219,7 +2226,8 @@ void RootdLoop()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Usage(const char* name, int rc)
 {
    fprintf(stderr, "\nUsage: %s [options] [rootsys-dir]\n", name);
@@ -2252,7 +2260,8 @@ void Usage(const char* name, int rc)
    exit(rc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int main(int argc, char **argv)
 {
    char *s;

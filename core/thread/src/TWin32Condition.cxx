@@ -27,14 +27,14 @@
 
 ClassImp(TWin32Condition)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create Condition variable. Ctor must be given a pointer to an
+/// existing mutex. The condition variable is then linked to the mutex,
+/// so that there is an implicit unlock and lock around Wait() and
+/// TimedWait().
+
 TWin32Condition::TWin32Condition(TMutexImp *m)
 {
-   // Create Condition variable. Ctor must be given a pointer to an
-   // existing mutex. The condition variable is then linked to the mutex,
-   // so that there is an implicit unlock and lock around Wait() and
-   // TimedWait().
-
    fMutex = (TWin32Mutex *) m;
 
    fCond.waiters_count_ = 0;
@@ -50,21 +50,21 @@ TWin32Condition::TWin32Condition(TMutexImp *m)
                                      0);    // unnamed
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TCondition dtor.
+
 TWin32Condition::~TWin32Condition()
 {
-   // TCondition dtor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wait for the condition variable to be signalled. The mutex is
+/// implicitely released before waiting and locked again after waking up.
+/// If Wait() is called by multiple threads, a signal may wake up more
+/// than one thread. See POSIX threads documentation for details.
+
 Int_t TWin32Condition::Wait()
 {
-   // Wait for the condition variable to be signalled. The mutex is
-   // implicitely released before waiting and locked again after waking up.
-   // If Wait() is called by multiple threads, a signal may wake up more
-   // than one thread. See POSIX threads documentation for details.
-
    // Avoid race conditions.
    EnterCriticalSection(&fCond.waiters_count_lock_);
    fCond.waiters_count_++;
@@ -106,14 +106,14 @@ Int_t TWin32Condition::Wait()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TimedWait() is given an absolute time to wait until. To wait for a
+/// relative time from now, use TThread::GetTime(). See POSIX threads
+/// documentation for why absolute times are better than relative.
+/// Returns 0 if successfully signalled, 1 if time expired.
+
 Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
 {
-   // TimedWait() is given an absolute time to wait until. To wait for a
-   // relative time from now, use TThread::GetTime(). See POSIX threads
-   // documentation for why absolute times are better than relative.
-   // Returns 0 if successfully signalled, 1 if time expired.
-
    DWORD ret;
    TTimeStamp t;
    // Get actual time
@@ -166,12 +166,12 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If one or more threads have called Wait(), Signal() wakes up at least
+/// one of them, possibly more. See POSIX threads documentation for details.
+
 Int_t TWin32Condition::Signal()
 {
-   // If one or more threads have called Wait(), Signal() wakes up at least
-   // one of them, possibly more. See POSIX threads documentation for details.
-
    EnterCriticalSection (&fCond.waiters_count_lock_);
    int have_waiters = fCond.waiters_count_ > 0;
    LeaveCriticalSection (&fCond.waiters_count_lock_);
@@ -184,11 +184,11 @@ Int_t TWin32Condition::Signal()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast is like signal but wakes all threads which have called Wait().
+
 Int_t TWin32Condition::Broadcast()
 {
-   // Broadcast is like signal but wakes all threads which have called Wait().
-
    // This is needed to ensure that <waiters_count_> and <was_broadcast_> are
    // consistent relative to each other.
    EnterCriticalSection(&fCond.waiters_count_lock_);

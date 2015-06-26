@@ -48,7 +48,8 @@
 ClassImp(TGLScenePad)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLScenePad::TGLScenePad(TVirtualPad* pad) :
    TVirtualViewer3D(),
    TGLScene(),
@@ -70,11 +71,11 @@ TGLScenePad::TGLScenePad(TVirtualPad* pad) :
 // Histo import and Sub-pad traversal
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scale and rotate a histo object to mimic placement in canvas.
+
 void TGLScenePad::AddHistoPhysical(TGLLogicalShape* log, const Float_t *histoColor)
 {
-   // Scale and rotate a histo object to mimic placement in canvas.
-
    Double_t how = ((Double_t) gPad->GetWh()) / gPad->GetWw();
 
    Double_t lw = gPad->GetAbsWNDC();
@@ -127,15 +128,16 @@ void TGLScenePad::AddHistoPhysical(TGLLogicalShape* log, const Float_t *histoCol
 
 namespace {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///TTree::Draw can create polymarker + empty TH3 (to draw as a frame around marker).
+///Unfortunately, this is not good for GL - this will be two unrelated
+///objects in two unrelated coordinate systems.
+///So, this function checks list contents, and if it founds empty TH3 and polymarker,
+///the must be combined as one object.
+///Later we'll reconsider the design.
+
 Bool_t HasPolymarkerAndFrame(const TList *lst)
 {
-   //TTree::Draw can create polymarker + empty TH3 (to draw as a frame around marker).
-   //Unfortunately, this is not good for GL - this will be two unrelated
-   //objects in two unrelated coordinate systems.
-   //So, this function checks list contents, and if it founds empty TH3 and polymarker,
-   //the must be combined as one object.
-   //Later we'll reconsider the design.
    Bool_t gotEmptyTH3 = kFALSE;
    Bool_t gotMarker = kFALSE;
 
@@ -156,11 +158,11 @@ Bool_t HasPolymarkerAndFrame(const TList *lst)
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Iterate over pad-primitves and import them.
+
 void TGLScenePad::SubPadPaint(TVirtualPad* pad)
 {
-   // Iterate over pad-primitves and import them.
-
    TVirtualPad      *padsav  = gPad;
    TVirtualViewer3D *vv3dsav = pad->GetViewer3D();
    gPad = pad;
@@ -181,13 +183,13 @@ void TGLScenePad::SubPadPaint(TVirtualPad* pad)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override of virtual TVirtualViewer3D::ObjectPaint().
+/// Special handling of 2D/3D histograms to activate Timur's
+/// histo-painters.
+
 void TGLScenePad::ObjectPaint(TObject* obj, Option_t* opt)
 {
-   // Override of virtual TVirtualViewer3D::ObjectPaint().
-   // Special handling of 2D/3D histograms to activate Timur's
-   // histo-painters.
-
    TGLPlot3D* log = TGLPlot3D::CreatePlot(obj, opt, gPad);
    if (log)
    {
@@ -210,12 +212,12 @@ void TGLScenePad::ObjectPaint(TObject* obj, Option_t* opt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Entry point for requesting update of scene's contents from
+/// gl-viewer.
+
 void TGLScenePad::PadPaintFromViewer(TGLViewer* viewer)
 {
-   // Entry point for requesting update of scene's contents from
-   // gl-viewer.
-
    Bool_t sr = fSmartRefresh;
    fSmartRefresh = viewer->GetSmartRefresh();
 
@@ -224,14 +226,14 @@ void TGLScenePad::PadPaintFromViewer(TGLViewer* viewer)
    fSmartRefresh = sr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Entry point for updating scene contents via VirtualViewer3D
+/// interface.
+/// For now this is handled by TGLViewer as it remains
+/// the 'Viewer3D' of given pad.
+
 void TGLScenePad::PadPaint(TVirtualPad* pad)
 {
-   // Entry point for updating scene contents via VirtualViewer3D
-   // interface.
-   // For now this is handled by TGLViewer as it remains
-   // the 'Viewer3D' of given pad.
-
    if (pad != fPad)
    {
       Error("TGLScenePad::PadPaint", "Mismatch between pad argument and data-member!");
@@ -248,16 +250,16 @@ void TGLScenePad::PadPaint(TVirtualPad* pad)
 // VV3D
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start building of the scene.
+/// Old contents is dropped, unless smart-refresh is in active. Then
+/// the object supporting it are kept in a cache and possibly reused.
+///
+/// TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+/// for description of viewer architecture.
+
 void TGLScenePad::BeginScene()
 {
-   // Start building of the scene.
-   // Old contents is dropped, unless smart-refresh is in active. Then
-   // the object supporting it are kept in a cache and possibly reused.
-   //
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture.
-
    if (gDebug>2) {
       Info("TGLScenePad::BeginScene", "entering.");
    }
@@ -302,13 +304,13 @@ void TGLScenePad::BeginScene()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// End building of the scene.
+/// TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+/// for description of viewer architecture
+
 void TGLScenePad::EndScene()
 {
-   // End building of the scene.
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture
-
    if (fSmartRefresh) {
       EndSmartRefresh();
    }
@@ -321,26 +323,26 @@ void TGLScenePad::EndScene()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an object to the viewer, using internal physical IDs
+/// TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+/// for description of viewer architecture
+
 Int_t TGLScenePad::AddObject(const TBuffer3D& buffer, Bool_t* addChildren)
 {
-   // Add an object to the viewer, using internal physical IDs
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture
-
    // If this is called we are generating internal physical IDs
    fInternalPIDs = kTRUE;
    Int_t sections = AddObject(fNextInternalPID, buffer, addChildren);
    return sections;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an object to the scene, using an external physical ID
+/// TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+/// for description of viewer architecture
+
 Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t* addChildren)
 {
-   // Add an object to the scene, using an external physical ID
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture
-
    // TODO: Break this up and make easier to understand. This is
    // pretty convoluted due to the large number of cases it has to
    // deal with:
@@ -474,13 +476,13 @@ Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t*
    return TBuffer3D::kNone;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open new composite container.
+/// TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+/// for description of viewer architecture.
+
 Bool_t TGLScenePad::OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren)
 {
-   // Open new composite container.
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture.
-
    if (fComposite) {
       Error("TGLScenePad::OpenComposite", "composite already open");
       return kFALSE;
@@ -499,13 +501,13 @@ Bool_t TGLScenePad::OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close composite container
+/// TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+/// for description of viewer architecture
+
 void TGLScenePad::CloseComposite()
 {
-   // Close composite container
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture
-
    // If we have a partially complete composite build it now
    if (fComposite) {
       // TODO: Why is this member and here - only used in BuildComposite()
@@ -520,28 +522,28 @@ void TGLScenePad::CloseComposite()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add composite operation used to combine objects added via AddObject
+/// TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
+/// for description of viewer architecture
+
 void TGLScenePad::AddCompositeOp(UInt_t operation)
 {
-   // Add composite operation used to combine objects added via AddObject
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture
-
    fCSTokens.push_back(std::make_pair(operation, (RootCsg::TBaseMesh *)0));
 }
 
 
 // Protected methods
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Validate if the passed 'buffer' contains all sections we require to add object.
+/// Returns Int_t combination of TBuffer::ESection flags still required - or
+/// TBuffer3D::kNone if buffer is valid.
+/// If 'includeRaw' is kTRUE check for kRaw/kRawSizes - skip otherwise.
+/// See base/src/TVirtualViewer3D.cxx for description of viewer architecture
+
 Int_t TGLScenePad::ValidateObjectBuffer(const TBuffer3D& buffer, Bool_t includeRaw) const
 {
-   // Validate if the passed 'buffer' contains all sections we require to add object.
-   // Returns Int_t combination of TBuffer::ESection flags still required - or
-   // TBuffer3D::kNone if buffer is valid.
-   // If 'includeRaw' is kTRUE check for kRaw/kRawSizes - skip otherwise.
-   // See base/src/TVirtualViewer3D.cxx for description of viewer architecture
-
    // kCore: Should always be filled
    if (!buffer.SectionsValid(TBuffer3D::kCore)) {
       Error("TGLScenePad::ValidateObjectBuffer", "kCore section of buffer should be filled always");
@@ -605,10 +607,11 @@ Int_t TGLScenePad::ValidateObjectBuffer(const TBuffer3D& buffer, Bool_t includeR
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create and return a new TGLLogicalShape from the supplied buffer
+
 TGLLogicalShape* TGLScenePad::CreateNewLogical(const TBuffer3D& buffer) const
 {
-   // Create and return a new TGLLogicalShape from the supplied buffer
    TGLLogicalShape * newLogical = 0;
 
    if (buffer.fColor == 1) // black -> light-brown; std behaviour for geom
@@ -678,15 +681,15 @@ TGLLogicalShape* TGLScenePad::CreateNewLogical(const TBuffer3D& buffer) const
    return newLogical;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create and return a new TGLPhysicalShape with id 'ID', using
+/// 'buffer' placement information (translation etc), and bound to
+/// suppled 'logical'
+
 TGLPhysicalShape*
 TGLScenePad::CreateNewPhysical(UInt_t ID, const TBuffer3D& buffer,
                                const TGLLogicalShape& logical) const
 {
-   // Create and return a new TGLPhysicalShape with id 'ID', using
-   // 'buffer' placement information (translation etc), and bound to
-   // suppled 'logical'
-
    // Extract indexed color from buffer
    // TODO: Still required? Better use proper color triplet in buffer?
    Int_t colorIndex = buffer.fColor;
@@ -698,7 +701,8 @@ TGLScenePad::CreateNewPhysical(UInt_t ID, const TBuffer3D& buffer,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLScenePad::ComposePolymarker(const TList *lst)
 {
    TPolyMarker3D *pm = 0;
@@ -736,10 +740,11 @@ void TGLScenePad::ComposePolymarker(const TList *lst)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build and return composite shape mesh
+
 RootCsg::TBaseMesh* TGLScenePad::BuildComposite()
 {
-   // Build and return composite shape mesh
    const CSPart_t &currToken = fCSTokens[fCSLevel];
    UInt_t opCode = currToken.first;
 
@@ -762,13 +767,13 @@ RootCsg::TBaseMesh* TGLScenePad::BuildComposite()
    } else return fCSTokens[fCSLevel++].second;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to construct an appropriate logical-shape sub-class based
+/// on id'class, following convention that SomeClassGL is a suitable
+/// renderer for class SomeClass.
+
 TGLLogicalShape* TGLScenePad::AttemptDirectRenderer(TObject* id)
 {
-   // Try to construct an appropriate logical-shape sub-class based
-   // on id'class, following convention that SomeClassGL is a suitable
-   // renderer for class SomeClass.
-
    TClass* cls = TGLObject::GetGLRenderer(id->IsA());
    if (cls == 0)
       return 0;

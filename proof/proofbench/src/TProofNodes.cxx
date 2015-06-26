@@ -25,36 +25,36 @@
 
 ClassImp(TProofNodes)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TProofNodes::TProofNodes(TProof* proof)
             : fProof(proof), fNodes(0), fActiveNodes(0),
               fMaxWrksNode(-1), fMinWrksNode(-1),
               fNNodes(0), fNWrks(0), fNActiveWrks(0), fNCores(0)
 {
-   // Constructor
-
    Build();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TProofNodes::~TProofNodes()
 {
-   // Destructor
-
    if (fNodes) {
       fNodes->SetOwner(kTRUE);
       SafeDelete(fNodes);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Desctiption: Build the node list, which is a list of nodes whose members
+///             in turn are lists of workers on the node.
+/// Input: Nothing
+/// Return: Nothing
+
 void TProofNodes::Build()
 {
-   // Desctiption: Build the node list, which is a list of nodes whose members
-   //             in turn are lists of workers on the node.
-   // Input: Nothing
-   // Return: Nothing
-
    if (!fProof || !fProof->IsValid()) {
       Warning("Build", "the PROOF instance is undefined or invalid! Cannot continue");
       return;
@@ -142,14 +142,14 @@ void TProofNodes::Build()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Description: Activate 'nwrks' workers; calls TProof::SetParallel and
+///              rebuild the internal lists
+/// Input: number of workers
+/// Return: 0 is successful, <0 otherwise.
+
 Int_t TProofNodes::ActivateWorkers(Int_t nwrks)
 {
-   // Description: Activate 'nwrks' workers; calls TProof::SetParallel and
-   //              rebuild the internal lists
-   // Input: number of workers
-   // Return: 0 is successful, <0 otherwise.
-
    Int_t nw = fProof->SetParallel(nwrks);
    if (nw > 0) {
       if (nw != nwrks)
@@ -159,16 +159,16 @@ Int_t TProofNodes::ActivateWorkers(Int_t nwrks)
    return nw;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Description: Activate the same number of workers on all nodes.
+/// Input: workers: string of the form "nx" where non-negative integer n
+///                 is the number of worker on each node to be activated.
+/// Return: The number of active workers per node when the operation is
+///         successful.
+///         <0 otherwise.
+
 Int_t TProofNodes::ActivateWorkers(const char *workers)
 {
-   // Description: Activate the same number of workers on all nodes.
-   // Input: workers: string of the form "nx" where non-negative integer n
-   //                 is the number of worker on each node to be activated.
-   // Return: The number of active workers per node when the operation is
-   //         successful.
-   //         <0 otherwise.
-
    TString toactivate;
    TString todeactivate;
 
@@ -266,11 +266,11 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Description: Print node information.
+
 void TProofNodes::Print(Option_t* option) const
 {
-   // Description: Print node information.
-
    TIter nxk(fNodes);
    TObject *key = 0;
    while ((key = nxk()) != 0) {

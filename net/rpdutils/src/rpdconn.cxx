@@ -77,11 +77,11 @@
 // Class describing a basic connection
 //
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 rpdconn::rpdconn(int r, int w) : rdfd(r), wrfd(w)
 {
-   // Constructor
-
    int rc = 0;
    pthread_mutexattr_t attr;
    if (!(rc = pthread_mutexattr_init(&attr))) {
@@ -93,15 +93,15 @@ rpdconn::rpdconn(int r, int w) : rdfd(r), wrfd(w)
    pthread_mutexattr_destroy(&attr);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send an integer
+/// Return:
+///          0    if OK
+///         -1    if invalid descriptor
+///         -2    if failed to acquire mutex lock
+
 int rpdconn::send(int i)
 {
-   // Send an integer
-   // Return:
-   //          0    if OK
-   //         -1    if invalid descriptor
-   //         -2    if failed to acquire mutex lock
-
    rpdmtxhelper mh(&wrmtx);
    if (isvalid(0)) {
       if (mh.isok()) {
@@ -119,15 +119,15 @@ int rpdconn::send(int i)
    return -1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a typed message
+/// Return:
+///          0    if OK
+///         -1    if invalid descriptor
+///         -2    if failed to acquire mutex lock
+
 int rpdconn::send(int type, const char *msg)
 {
-   // Send a typed message
-   // Return:
-   //          0    if OK
-   //         -1    if invalid descriptor
-   //         -2    if failed to acquire mutex lock
-
    rpdmtxhelper mh(&wrmtx);
    if (isvalid(0)) {
       if (mh.isok()) {
@@ -155,30 +155,30 @@ int rpdconn::send(int type, const char *msg)
    return -1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send message
+/// Return:
+///          0    if OK
+///         -1    if invalid descriptor
+///         -2    if failed to acquire mutex lock
+
 int rpdconn::send(const rpdmsg &msg)
 {
-   // Send message
-   // Return:
-   //          0    if OK
-   //         -1    if invalid descriptor
-   //         -2    if failed to acquire mutex lock
-
    return send(msg.type, msg.buf.c_str());
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send 'len' bytes at 'buf'
+/// Return:
+///          0    if OK
+///         -1    if invalid descriptor
+///         -2    if failed to acquire mutex lock
+///         -3    if the operation would block
+///         -4    if connection broken
+///         -errno  if any another failure
+
 int rpdconn::send(const void *buf, int len)
 {
-   // Send 'len' bytes at 'buf'
-   // Return:
-   //          0    if OK
-   //         -1    if invalid descriptor
-   //         -2    if failed to acquire mutex lock
-   //         -3    if the operation would block
-   //         -4    if connection broken
-   //         -errno  if any another failure
-
    rpdmtxhelper mh(&wrmtx);
    if (isvalid(0)) {
       if (mh.isok()) {
@@ -209,15 +209,15 @@ int rpdconn::send(const void *buf, int len)
    return -1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive an integer
+/// Return:
+///          0    if OK
+///         -1    if invalid descriptor
+///         -2    if failed to acquire mutex lock
+
 int rpdconn::recv(int &i)
 {
-   // Receive an integer
-   // Return:
-   //          0    if OK
-   //         -1    if invalid descriptor
-   //         -2    if failed to acquire mutex lock
-
    rpdmtxhelper mh(&rdmtx);
    if (isvalid(1)) {
       if (mh.isok()) {
@@ -235,17 +235,17 @@ int rpdconn::recv(int &i)
    return -1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a typed message
+/// Return:
+///          0    if OK
+///         -1    if invalid descriptor
+///         -2    if failed to acquire mutex lock
+///         -3    if failed to receive the full message (the partial message
+///               is stored in 'msg')
+
 int rpdconn::recv(int &type, std::string &msg)
 {
-   // Receive a typed message
-   // Return:
-   //          0    if OK
-   //         -1    if invalid descriptor
-   //         -2    if failed to acquire mutex lock
-   //         -3    if failed to receive the full message (the partial message
-   //               is stored in 'msg')
-
    rpdmtxhelper mh(&rdmtx);
    if (isvalid(1)) {
       if (mh.isok()) {
@@ -291,30 +291,30 @@ int rpdconn::recv(int &type, std::string &msg)
    return -1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recv message
+/// Return:
+///          0    if OK
+///         -1    if invalid descriptor
+///         -2    if failed to acquire mutex lock
+
 int rpdconn::recv(rpdmsg &msg)
 {
-   // Recv message
-   // Return:
-   //          0    if OK
-   //         -1    if invalid descriptor
-   //         -2    if failed to acquire mutex lock
-
    return recv(msg.type, msg.buf);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive 'len' bytes at 'buf'
+/// Return:
+///          0    if OK
+///         -1    if invalid descriptor
+///         -2    if failed to acquire mutex lock
+///         -3    if the operation would block
+///         -4    if connection broken
+///         -errno  if any another failure
+
 int rpdconn::recv(void *buf, int len)
 {
-   // Receive 'len' bytes at 'buf'
-   // Return:
-   //          0    if OK
-   //         -1    if invalid descriptor
-   //         -2    if failed to acquire mutex lock
-   //         -3    if the operation would block
-   //         -4    if connection broken
-   //         -errno  if any another failure
-
    rpdmtxhelper mh(&rdmtx);
    if (isvalid(1)) {
       if (mh.isok()) {
@@ -344,16 +344,16 @@ int rpdconn::recv(void *buf, int len)
    return -1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Poll over the read descriptor for to secs;
+/// Return:
+///           >0     ready to poll
+///            0     timeout
+///           -1     invalid descriptor
+///          <-1     -errno from 'poll'
+
 int rpdconn::pollrd(int to)
 {
-   // Poll over the read descriptor for to secs;
-   // Return:
-   //           >0     ready to poll
-   //            0     timeout
-   //           -1     invalid descriptor
-   //          <-1     -errno from 'poll'
-
    if (isvalid(1)) {
 
       // Read descriptor
@@ -374,16 +374,16 @@ int rpdconn::pollrd(int to)
    return -1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a descriptor to a the connected peer
+/// Return:
+///          0       if OK
+///         -1       if invalid
+///         -2       if failed to acquire mutex lock
+///        <-2       -errno from sendmsg
+
 int rpdconn::senddesc(int desc)
 {
-   // Send a descriptor to a the connected peer
-   // Return:
-   //          0       if OK
-   //         -1       if invalid
-   //         -2       if failed to acquire mutex lock
-   //        <-2       -errno from sendmsg
-
    rpdmtxhelper mh(&wrmtx);
    if (isvalid(0)) {
       if (mh.isok()) {
@@ -439,16 +439,16 @@ int rpdconn::senddesc(int desc)
    return -1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a descriptor from a the connected peer
+/// Return:
+///          0       if OK
+///         -1       if invalid
+///         -2       if failed to acquire mutex lock
+///        <-2       -errno from recvmsg
+
 int rpdconn::recvdesc(int &desc)
 {
-   // Receive a descriptor from a the connected peer
-   // Return:
-   //          0       if OK
-   //         -1       if invalid
-   //         -2       if failed to acquire mutex lock
-   //        <-2       -errno from recvmsg
-
    rpdmtxhelper mh(&rdmtx);
    if (isvalid(1)) {
       if (mh.isok()) {
@@ -515,11 +515,11 @@ int rpdconn::recvdesc(int &desc)
 // Class describing a UNIX connection
 //
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 rpdtcp::rpdtcp(const char *h, int p) : rpdconn(), host(h), port(p), fd(-1)
 {
-   // Constructor
-
    struct hostent *hent = 0;
    if (!(hent = gethostbyname(h))) {
       fprintf(stderr, "rpdtcp::rpdtcp: ERROR: failure resolving host address (errno: %d)\n", errno);
@@ -564,11 +564,11 @@ rpdtcp::rpdtcp(const char *h, int p) : rpdconn(), host(h), port(p), fd(-1)
 // Class describing a server TCP connection
 //
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 rpdtcpsrv::rpdtcpsrv(int p, int backlog) : rpdtcp(p)
 {
-   // Constructor
-
    // The structure
    struct sockaddr_in inserver;
    memset(&inserver, 0, sizeof(inserver));
@@ -604,15 +604,15 @@ rpdtcpsrv::rpdtcpsrv(int p, int backlog) : rpdtcp(p)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Accept a connection on the server socket.
+/// If to > 0, wait max to secs (granularity 1 sec).
+/// Return a rpdtcp object describing the open connection (to be destroyed
+/// by the caller).
+/// On error return a NULL pointer and the errno in *err, if defined;
+
 rpdtcp *rpdtcpsrv::accept(int to, int *err)
 {
-   // Accept a connection on the server socket.
-   // If to > 0, wait max to secs (granularity 1 sec).
-   // Return a rpdtcp object describing the open connection (to be destroyed
-   // by the caller).
-   // On error return a NULL pointer and the errno in *err, if defined;
-
    int d = -1;
    // Wait for incoming connections in steps of 1 sec
    int tw = 0, rc = 0;
@@ -656,11 +656,11 @@ rpdtcp *rpdtcpsrv::accept(int to, int *err)
 // Class describing a UNIX connection
 //
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 rpdunix::rpdunix(const char *p) : rpdtcp(0), sockpath(p)
 {
-   // Constructor
-
    // Need a valid path
    unsigned int plen = 0;
    if (!p || (p && (plen = strlen(p)) <= 0)) {
@@ -710,11 +710,11 @@ rpdunix::rpdunix(const char *p) : rpdtcp(0), sockpath(p)
 // Class describing a server UNIX connection
 //
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 rpdunixsrv::rpdunixsrv(const char *p, int backlog) : rpdunix()
 {
-   // Constructor
-
    // Need a valid path
    unsigned int plen = 0;
    if (!p || (p && (plen = strlen(p)) <= 0)) {
@@ -788,15 +788,15 @@ rpdunixsrv::rpdunixsrv(const char *p, int backlog) : rpdunix()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Accept a connection on the server socket.
+/// If to > 0, wait max to secs (granularity 1 sec).
+/// Return a rpdunix object describing the open connection (to be destroyed
+/// by the caller).
+/// On error return a NULL pointer and the errno in *err, if defined;
+
 rpdunix *rpdunixsrv::accept(int to, int *err)
 {
-   // Accept a connection on the server socket.
-   // If to > 0, wait max to secs (granularity 1 sec).
-   // Return a rpdunix object describing the open connection (to be destroyed
-   // by the caller).
-   // On error return a NULL pointer and the errno in *err, if defined;
-
    int d = -1;
 
    // Wait for incoming connections in steps of 1 sec
@@ -840,11 +840,11 @@ rpdunix *rpdunixsrv::accept(int to, int *err)
 // Class describing a UDP connection
 //
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 rpdudp::rpdudp(const char *h, int p) : rpdtcp(h,p)
 {
-   // Constructor
-
    struct hostent *hent = 0;
    if (!(hent = gethostbyname(h))) {
       fprintf(stderr, "rpdtcp::rpdtcp: ERROR: failure resolving host address (errno: %d)\n", errno);
@@ -884,11 +884,11 @@ rpdudp::rpdudp(const char *h, int p) : rpdtcp(h,p)
    return;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 rpdudpsrv::rpdudpsrv(int p) : rpdudp(p)
 {
-   // Constructor
-
    // The structure
    struct sockaddr_in inserver;
    memset(&inserver, 0, sizeof(inserver));
@@ -916,16 +916,16 @@ rpdudpsrv::rpdudpsrv(int p) : rpdudp(p)
    return;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send 'len' bytes at 'buf'
+/// Return:
+///          0    if OK
+///         -1    if invalid descriptor
+///         -2    if failed to acquire mutex lock
+///         -errno  if any another failure
+
 int rpdudp::send(const void *buf, int len)
 {
-   // Send 'len' bytes at 'buf'
-   // Return:
-   //          0    if OK
-   //         -1    if invalid descriptor
-   //         -2    if failed to acquire mutex lock
-   //         -errno  if any another failure
-
    rpdmtxhelper mh(&wrmtx);
    if (isvalid(0)) {
       if (mh.isok()) {
@@ -949,16 +949,16 @@ int rpdudp::send(const void *buf, int len)
    return -1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive 'len' bytes at 'buf'
+/// Return:
+///          0    if OK
+///         -1    if invalid descriptor
+///         -2    if failed to acquire mutex lock
+///         -errno  if any another failure
+
 int rpdudp::recv(void *buf, int len)
 {
-   // Receive 'len' bytes at 'buf'
-   // Return:
-   //          0    if OK
-   //         -1    if invalid descriptor
-   //         -2    if failed to acquire mutex lock
-   //         -errno  if any another failure
-
    rpdmtxhelper mh(&rdmtx);
    if (isvalid(1)) {
       if (mh.isok()) {
@@ -986,11 +986,11 @@ int rpdudp::recv(void *buf, int len)
 // Class describing a basic message
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add int 'i' to the internal buffer
+
 void rpdmsg::w_int(int i)
 {
-   // Add int 'i' to the internal buffer
-
    char b[64] = {0};
    snprintf(b, 64, "%d", i);
    if (!buf.empty()) buf += " ";
@@ -998,11 +998,11 @@ void rpdmsg::w_int(int i)
    if (cur < 0) cur = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add double 'd' to the internal buffer
+
 void rpdmsg::w_double(double d)
 {
-   // Add double 'd' to the internal buffer
-
    char b[128] = {0};
    snprintf(b, 128, "%f", d);
    if (!buf.empty()) buf += " ";
@@ -1010,11 +1010,11 @@ void rpdmsg::w_double(double d)
    if (cur < 0) cur = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add string 's' to the internal buffer
+
 void rpdmsg::w_string(const std::string &s)
 {
-   // Add string 's' to the internal buffer
-
    if (!buf.empty()) buf += " ";
    buf += "'";
    buf += s;
@@ -1022,11 +1022,11 @@ void rpdmsg::w_string(const std::string &s)
    if (cur < 0) cur = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve an int from the internal buffer
+
 void rpdmsg::r_int(int &i)
 {
-   // Retrieve an int from the internal buffer
-
    if (cur < 0 || cur > (int) buf.length()) return;
 
    char *p= ((char *)buf.c_str()) + cur;
@@ -1042,11 +1042,11 @@ void rpdmsg::r_int(int &i)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve a double from the internal buffer
+
 void rpdmsg::r_double(double &d)
 {
-   // Retrieve a double from the internal buffer
-
    if (cur < 0 || cur > (int) buf.length()) return;
 
    char *p= ((char *)buf.c_str()) + cur;
@@ -1064,11 +1064,11 @@ void rpdmsg::r_double(double &d)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve a string from the internal buffer
+
 void rpdmsg::r_string(std::string &s)
 {
-   // Retrieve a string from the internal buffer
-
    if (cur < 0 || cur > (int) buf.length()) return;
 
    s = "";

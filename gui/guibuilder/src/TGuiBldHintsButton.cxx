@@ -23,12 +23,12 @@ ClassImp(TGuiBldHintsButton)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGuiBldHintsButton::TGuiBldHintsButton(const TGWindow* p, Int_t id) :
                      TGButton(p, id)
 {
-   // Constructor.
-
    fStayDown = kTRUE;
 
    switch ((ELayoutHints)fWidgetId) {
@@ -46,11 +46,11 @@ TGuiBldHintsButton::TGuiBldHintsButton(const TGWindow* p, Int_t id) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw button.
+
 void TGuiBldHintsButton::DoRedraw()
 {
-   // Redraw button.
-
    TGButton::DoRedraw();
 
    switch (fWidgetId) {
@@ -84,11 +84,11 @@ void TGuiBldHintsButton::DoRedraw()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw expand X button.
+
 void TGuiBldHintsButton::DrawExpandX()
 {
-   // Draw expand X button.
-
    const int dist = 3;
    const int amplitude = TMath::Min(3, (int)fHeight/3);
    int base = fHeight/2;
@@ -114,11 +114,11 @@ void TGuiBldHintsButton::DrawExpandX()
    gVirtualX->DrawLine(fId, gc->GetGC(), fWidth - 6, 6, fWidth - 6, fHeight - 6);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw expand Y button.
+
 void TGuiBldHintsButton::DrawExpandY()
 {
-   // Draw expand Y button.
-
    const int dist = 3;
    const int amplitude = TMath::Min(3, (int)fWidth/3);
    int base = fWidth/2;
@@ -145,11 +145,11 @@ void TGuiBldHintsButton::DrawExpandY()
    gVirtualX->DrawLine(fId, gc->GetGC(), 6, fHeight - 6, fWidth - 6, fHeight - 6);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw center X buton.
+
 void TGuiBldHintsButton::DrawCenterX()
 {
-   // Draw center X buton.
-
    int base = fHeight/2;
    int x = 6;
    int y = 6;
@@ -187,11 +187,11 @@ void TGuiBldHintsButton::DrawCenterX()
    gVirtualX->DrawLine(fId, gc->GetGC(), x + fWidth - 12, y, x + fWidth - 12, y + fHeight - 12);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw center Y button.
+
 void TGuiBldHintsButton::DrawCenterY()
 {
-   // Draw center Y button.
-
    int base = fWidth/2;
    int x = 6;
    int y = 6;
@@ -228,27 +228,31 @@ void TGuiBldHintsButton::DrawCenterY()
    gVirtualX->DrawLine(fId, gc->GetGC(), x, y + fHeight - 12,  x + fWidth - 12, y + fHeight - 12);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// DrawTopLeft.
+
 void TGuiBldHintsButton::DrawTopLeft()
 {
-   // DrawTopLeft.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// DrawTopRight.
+
 void TGuiBldHintsButton::DrawTopRight()
 {
-   // DrawTopRight.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// DrawBottomLeft.
+
 void TGuiBldHintsButton::DrawBottomLeft()
 {
-   // DrawBottomLeft.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// DrawBottomRight.
+
 void TGuiBldHintsButton::DrawBottomRight()
 {
-   // DrawBottomRight.
 }
 

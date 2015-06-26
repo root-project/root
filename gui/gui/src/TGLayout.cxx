@@ -68,11 +68,11 @@ ClassImp(TGListLayout)
 ClassImp(TGListDetailsLayout)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGFrameElement::TGFrameElement(TGFrame *f, TGLayoutHints *l)
 {
-   // Constructor.
-
    fLayout = 0;
    fFrame  = f;
    if (f) f->SetFrameElement(this);
@@ -86,18 +86,18 @@ TGFrameElement::TGFrameElement(TGFrame *f, TGLayoutHints *l)
    fState = 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Decrease ref. count of fLayout.
+
 TGFrameElement::~TGFrameElement()
 {
-   // Destructor. Decrease ref. count of fLayout.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print this frame element.
+
 void TGFrameElement::Print(Option_t *option) const
 {
-   // Print this frame element.
-
    TObject::Print(option);
 
    std::cout << "\t";
@@ -110,11 +110,11 @@ void TGFrameElement::Print(Option_t *option) const
    std::cout << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLayoutHints::TGLayoutHints(const TGLayoutHints &lh) : TObject(lh), TRefCnt(lh)
 {
-   // Constructor.
-
    fPadleft = lh.fPadleft; fPadright = lh.fPadright;
    fPadtop  = lh.fPadtop;  fPadbottom = lh.fPadbottom;
    fLayoutHints = lh.fLayoutHints;
@@ -122,18 +122,18 @@ TGLayoutHints::TGLayoutHints(const TGLayoutHints &lh) : TObject(lh), TRefCnt(lh)
    fFE = lh.fFE; fPrev = lh.fPrev;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLayoutHints::~TGLayoutHints()
 {
-   // Destructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update layout hints of frame elements.
+
 void TGLayoutHints::UpdateFrameElements(TGLayoutHints *l)
 {
-   // Update layout hints of frame elements.
-
    if (fFE) fFE->fLayout = l;
    else return;
 
@@ -145,11 +145,11 @@ void TGLayoutHints::UpdateFrameElements(TGLayoutHints *l)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Printing.
+
 void TGLayoutHints::Print(Option_t *) const
 {
-   // Printing.
-
    Bool_t bor = kFALSE;
 
    if (fLayoutHints & kLHintsLeft) {
@@ -202,20 +202,20 @@ void TGLayoutHints::Print(Option_t *) const
    std::cout << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create vertical layout manager.
+
 TGVerticalLayout::TGVerticalLayout(TGCompositeFrame *main)
 {
-   // Create vertical layout manager.
-
    fMain = main;
    fList = fMain->GetList();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a vertical layout of all frames in the list.
+
 void TGVerticalLayout::Layout()
 {
-   // Make a vertical layout of all frames in the list.
-
    TGFrameElement *ptr;
    TGLayoutHints  *layout;
    Int_t    nb_expand = 0;
@@ -343,11 +343,11 @@ void TGVerticalLayout::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default dimension of the vertical layout.
+
 TGDimension TGVerticalLayout::GetDefaultSize() const
 {
-   // Return default dimension of the vertical layout.
-
    TGFrameElement *ptr;
    TGDimension     size(0,0), msize = fMain->GetSize(), csize;
    UInt_t options = fMain->GetOptions();
@@ -375,11 +375,11 @@ TGDimension TGVerticalLayout::GetDefaultSize() const
    return size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a horizontal layout of all frames in the list.
+
 void TGHorizontalLayout::Layout()
 {
-   // Make a horizontal layout of all frames in the list.
-
    TGFrameElement *ptr;
    TGLayoutHints  *layout;
    Int_t    nb_expand = 0;
@@ -501,11 +501,11 @@ void TGHorizontalLayout::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default dimension of the horizontal layout.
+
 TGDimension TGHorizontalLayout::GetDefaultSize() const
 {
-   // Return default dimension of the horizontal layout.
-
    TGFrameElement *ptr;
    TGDimension     size(0,0), msize = fMain->GetSize(), csize;
    UInt_t options = fMain->GetOptions();
@@ -533,11 +533,11 @@ TGDimension TGHorizontalLayout::GetDefaultSize() const
    return size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a row layout of all frames in the list.
+
 void TGRowLayout::Layout()
 {
-   // Make a row layout of all frames in the list.
-
    TGFrameElement *ptr;
    TGDimension     size;
    Int_t  bw = fMain->GetBorderWidth();
@@ -559,11 +559,11 @@ void TGRowLayout::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default dimension of the row layout.
+
 TGDimension TGRowLayout::GetDefaultSize() const
 {
-  // Return default dimension of the row layout.
-
    TGFrameElement *ptr;
    TGDimension size(0,0), dsize, msize = fMain->GetSize();
    UInt_t options = fMain->GetOptions();
@@ -590,11 +590,11 @@ TGDimension TGRowLayout::GetDefaultSize() const
    return size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a column layout of all frames in the list.
+
 void TGColumnLayout::Layout()
 {
-   // Make a column layout of all frames in the list.
-
    TGFrameElement *ptr;
    TGDimension     size;
    Int_t  bw = fMain->GetBorderWidth();
@@ -614,11 +614,11 @@ void TGColumnLayout::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default dimension of the column layout.
+
 TGDimension TGColumnLayout::GetDefaultSize() const
 {
-  // Return default dimension of the column layout.
-
    TGFrameElement *ptr;
    TGDimension     size(0,0), dsize, msize = fMain->GetSize();
    UInt_t options = fMain->GetOptions();
@@ -645,12 +645,12 @@ TGDimension TGColumnLayout::GetDefaultSize() const
    return size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGMatrixLayout constructor.
+
 TGMatrixLayout::TGMatrixLayout(TGCompositeFrame *main, UInt_t r, UInt_t c,
                                Int_t s, Int_t h)
 {
-   // TGMatrixLayout constructor.
-
    fMain    = main;
    fList    = fMain->GetList();
    fSep     = s;
@@ -659,11 +659,11 @@ TGMatrixLayout::TGMatrixLayout(TGCompositeFrame *main, UInt_t r, UInt_t c,
    fColumns = c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a matrix layout of all frames in the list.
+
 void TGMatrixLayout::Layout()
 {
-   // Make a matrix layout of all frames in the list.
-
    TGFrameElement *ptr;
    TGDimension csize, maxsize(0,0);
    Int_t bw = fMain->GetBorderWidth();
@@ -715,11 +715,11 @@ void TGMatrixLayout::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default dimension of the matrix layout.
+
 TGDimension TGMatrixLayout::GetDefaultSize() const
 {
-   // Return default dimension of the matrix layout.
-
    TGFrameElement *ptr;
    TGDimension     size, csize, maxsize(0,0);
    Int_t           count = 0;
@@ -748,22 +748,22 @@ TGDimension TGMatrixLayout::GetDefaultSize() const
    return size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a tile layout manager.
+
 TGTileLayout::TGTileLayout(TGCompositeFrame *main, Int_t sep)
 {
-   // Create a tile layout manager.
-
    fMain = main;
    fSep  = sep;
    fList = fMain->GetList();
    fModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a tile layout of all frames in the list.
+
 void TGTileLayout::Layout()
 {
-   // Make a tile layout of all frames in the list.
-
    TGFrameElement *ptr;
    Int_t   x, y, xw, yw;
    UInt_t  max_width;
@@ -814,11 +814,11 @@ void TGTileLayout::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default dimension of the tile layout.
+
 TGDimension TGTileLayout::GetDefaultSize() const
 {
-   // Return default dimension of the tile layout.
-
    TGFrameElement *ptr;
    Int_t x, y;
    TGDimension max_size, max_osize(0,0), msize = fMain->GetSize();
@@ -849,11 +849,11 @@ TGDimension TGTileLayout::GetDefaultSize() const
    return max_size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a tile layout of all frames in the list.
+
 void TGListLayout::Layout()
 {
-   // Make a tile layout of all frames in the list.
-
    TGFrameElement *ptr;
    Int_t   x, y, xw, yw;
    UInt_t  max_height;
@@ -907,11 +907,11 @@ void TGListLayout::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default dimension of the list layout.
+
 TGDimension TGListLayout::GetDefaultSize() const
 {
-   // Return default dimension of the list layout.
-
    TGFrameElement *ptr;
    Int_t x, y;
    TGDimension max_size, max_osize(0,0), msize = fMain->GetSize();
@@ -941,11 +941,11 @@ TGDimension TGListLayout::GetDefaultSize() const
    return max_size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a list details layout of all frames in the list.
+
 void TGListDetailsLayout::Layout()
 {
-   // Make a list details layout of all frames in the list.
-
    TGFrameElement *ptr;
    TGDimension     csize, msize = fMain->GetSize();
    Int_t max_oh = 0, x = fSep, y = fSep << 1;
@@ -973,11 +973,11 @@ void TGListDetailsLayout::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default dimension of the list details layout.
+
 TGDimension TGListDetailsLayout::GetDefaultSize() const
 {
-   // Return default dimension of the list details layout.
-
    TGFrameElement *ptr;
    TGDimension csize, max_osize(0,0);
    Int_t y = fSep << 1;

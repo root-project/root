@@ -26,26 +26,28 @@
 //
 /////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the ROOT event queue
+
 TQtEventQueue::TQtEventQueue(): QQueue<const Event_t *> ()
 {
-   // Create the ROOT event queue
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all remaining events if any
+
 TQtEventQueue::~TQtEventQueue()
 {
-    // Remove all remaining events if any
     qDeleteAll(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Removes all items matching ev->fWindow
+/// The removed item is deleted if auto-deletion (by default) is enabled
+/// with class ctor
+
 int TQtEventQueue::RemoveItems(const Event_t *ev)
 {
-   // Removes all items matching ev->fWindow
-   // The removed item is deleted if auto-deletion (by default) is enabled
-   // with class ctor
-
    // This method is used to debug the application only (by far)
    int counter = 0;
    assert(0);

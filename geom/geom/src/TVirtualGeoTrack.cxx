@@ -24,11 +24,12 @@
 
 ClassImp(TVirtualGeoTrack)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Virtual tracks default constructor*-*-*-*-*-*-*-*-*
+///*-*                  ==================================
+
 TVirtualGeoTrack::TVirtualGeoTrack()
 {
-//*-*-*-*-*-*-*-*-*-*-*Virtual tracks default constructor*-*-*-*-*-*-*-*-*
-//*-*                  ==================================
    fPDG        = 0;
    fId         = -1;
    fParent     = 0;
@@ -36,11 +37,12 @@ TVirtualGeoTrack::TVirtualGeoTrack()
    fTracks     = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor providing ID for parent track (-1 for primaries), ID of this
+/// track and related particle pointer.
+
 TVirtualGeoTrack::TVirtualGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent, TObject *particle)
 {
-// Constructor providing ID for parent track (-1 for primaries), ID of this
-// track and related particle pointer.
    fPDG        = pdgcode;
    fId         = id;
    fParent     = parent;
@@ -48,7 +50,9 @@ TVirtualGeoTrack::TVirtualGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *pa
    fTracks     = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor. NOT TO BE CALLED.
+
 TVirtualGeoTrack::TVirtualGeoTrack(const TVirtualGeoTrack& other)
                  :TObject(other), TGeoAtt(other), TAttLine(other), TAttMarker(other),
                   fPDG(other.fPDG),
@@ -57,13 +61,13 @@ TVirtualGeoTrack::TVirtualGeoTrack(const TVirtualGeoTrack& other)
                   fParticle(other.fParticle),
                   fTracks(other.fTracks)
 {
-// Copy ctor. NOT TO BE CALLED.
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator. NOT TO BE CALLED.
+
 TVirtualGeoTrack& TVirtualGeoTrack::operator=(const TVirtualGeoTrack& gv)
 {
-   // Assignment operator. NOT TO BE CALLED.
    if(this!=&gv) {
       TObject::operator=(gv);
       TGeoAtt::operator=(gv);
@@ -78,20 +82,22 @@ TVirtualGeoTrack& TVirtualGeoTrack::operator=(const TVirtualGeoTrack& gv)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TVirtualGeoTrack::~TVirtualGeoTrack()
 {
-// Destructor.
    if (fTracks) {
       fTracks->Delete();
       delete fTracks;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns daughter id.
+
 Int_t TVirtualGeoTrack::GetDaughterId(Int_t index) const
 {
-// Returns daughter id.
    TVirtualGeoTrack *daughter = GetDaughter(index);
    if (!daughter) {
       Error("GetDaughterId", "No daughter track with index %d", index);
@@ -100,11 +106,12 @@ Int_t TVirtualGeoTrack::GetDaughterId(Int_t index) const
    return daughter->GetId();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively search through this track for a daughter
+/// particle (at any depth) with the specified id
+
 TVirtualGeoTrack *TVirtualGeoTrack::FindTrackWithId(Int_t id) const
 {
-// Recursively search through this track for a daughter
-// particle (at any depth) with the specified id
    TVirtualGeoTrack* trk=0;
    if (GetId()==id) {
       trk = (TVirtualGeoTrack*)this;
@@ -123,17 +130,19 @@ TVirtualGeoTrack *TVirtualGeoTrack::FindTrackWithId(Int_t id) const
    return trk;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the PDG name.
+
 const char *TVirtualGeoTrack::GetName() const
 {
-// Get the PDG name.
    return gGeoManager->GetPdgName(fPDG);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// True if track TOF range overlaps with time interval of TGeoManager
+
 Bool_t TVirtualGeoTrack::IsInTimeRange() const
 {
-// True if track TOF range overlaps with time interval of TGeoManager
    Double_t tmin, tmax;
    Bool_t timecut = gGeoManager->GetTminTmax(tmin,tmax);
    if (!timecut) return kTRUE;
@@ -145,10 +154,11 @@ Bool_t TVirtualGeoTrack::IsInTimeRange() const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a default name for this track.
+
 void TVirtualGeoTrack::SetName(const char *name)
 {
-// Set a default name for this track.
    gGeoManager->SetPdgName(fPDG, name);
    if (!strcmp(name, "gamma")) {
       SetLineColor(kGreen);

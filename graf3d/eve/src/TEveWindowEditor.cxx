@@ -29,15 +29,15 @@
 
 ClassImp(TEveWindowEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveWindowEditor::TEveWindowEditor(const TGWindow *p, Int_t width, Int_t height,
              UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM(0),
    fShowTitleBar(0)
 {
-   // Constructor.
-
    MakeTitle("TEveWindow");
 
    fShowTitleBar = new TGCheckButton(this, "Show title-bar");
@@ -48,21 +48,21 @@ TEveWindowEditor::TEveWindowEditor(const TGWindow *p, Int_t width, Int_t height,
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveWindowEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveWindow*>(obj);
 
    fShowTitleBar->SetState(fM->GetShowTitleBar() ? kButtonDown : kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for ShowTitleBar.
+
 void TEveWindowEditor::DoShowTitleBar()
 {
-   // Slot for ShowTitleBar.
-
    fM->SetShowTitleBar(fShowTitleBar->IsOn());
    Update();
 }

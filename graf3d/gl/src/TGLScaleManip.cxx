@@ -26,32 +26,35 @@
 
 ClassImp(TGLScaleManip)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct scale manipulator not bound to any physical shape.
+
 TGLScaleManip::TGLScaleManip()
 {
-   // Construct scale manipulator not bound to any physical shape.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct scale manipulator bound to TGLPhysicalShape 'shape'.
+
 TGLScaleManip::TGLScaleManip(TGLPhysicalShape * shape) :
    TGLManip(shape)
 {
-   // Construct scale manipulator bound to TGLPhysicalShape 'shape'.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destory the scale manipulator
+
 TGLScaleManip::~TGLScaleManip()
 {
-   // Destory the scale manipulator
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw scale manipulator - tubes with box heads, in local axes of
+/// attached shape, in red(X), green(Y) and blue(Z), with white center sphere.
+/// If selected widget (mouse over) this is drawn in active colour (yellow).
+
 void TGLScaleManip::Draw(const TGLCamera & camera) const
 {
-   // Draw scale manipulator - tubes with box heads, in local axes of
-   // attached shape, in red(X), green(Y) and blue(Z), with white center sphere.
-   // If selected widget (mouse over) this is drawn in active colour (yellow).
-
    if (!fShape) {
       return;
    }
@@ -106,13 +109,13 @@ void TGLScaleManip::Draw(const TGLCamera & camera) const
    glDisable(GL_BLEND);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event over manipulator - returns kTRUE if
+/// redraw required kFALSE otherwise.
+
 Bool_t TGLScaleManip::HandleButton(const Event_t   & event,
                                    const TGLCamera & camera)
 {
-   // Handle mouse button event over manipulator - returns kTRUE if
-   // redraw required kFALSE otherwise.
-
    if (event.fType == kButtonPress && fSelectedWidget != 0) {
       fStartScale = fShape->GetScale();
    }
@@ -120,15 +123,15 @@ Bool_t TGLScaleManip::HandleButton(const Event_t   & event,
    return TGLManip::HandleButton(event, camera);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion over manipulator - if active (selected
+/// widget) scale physical along selected widget (axis) of the
+/// manipulator, so it tracks mouse action. Returns kTRUE if redraw
+/// required kFALSE otherwise.
+
 Bool_t TGLScaleManip::HandleMotion(const Event_t & event,
                                    const TGLCamera & camera)
 {
-   // Handle mouse motion over manipulator - if active (selected
-   // widget) scale physical along selected widget (axis) of the
-   // manipulator, so it tracks mouse action. Returns kTRUE if redraw
-   // required kFALSE otherwise.
-
    if (fActive) {
       // Find mouse delta projected into world at attached object center
       TGLVector3 shift = camera.ViewportDeltaToWorld(fShape->BoundingBox().Center(),
@@ -155,11 +158,12 @@ Bool_t TGLScaleManip::HandleMotion(const Event_t & event,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clamp scale to sizable values: 1000 - 1/1000
+/// Guards against div by zero problems.
+
 void TGLScaleManip::LimitScale(Double_t & factor) const
 {
-   // Clamp scale to sizable values: 1000 - 1/1000
-   // Guards against div by zero problems.
    if (factor < 1e-4) {
       factor = 1e-4;
    }

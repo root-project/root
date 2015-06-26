@@ -28,37 +28,38 @@ ClassImp(TSliderBox)
 //////////////////////////////////////////////////////////////////////////
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SliderBox default constructor.
+
 TSliderBox::TSliderBox(): TWbox()
 {
-   // SliderBox default constructor.
-
    fSlider = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SliderBox normal constructor.
+
 TSliderBox::TSliderBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
            :TWbox(x1,y1,x2,y2,color,bordersize,bordermode)
 {
-   // SliderBox normal constructor.
-
    fSlider = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SliderBox default destructor.
+
 TSliderBox::~TSliderBox()
 {
-   // SliderBox default destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interaction with a slider.
+
 void TSliderBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Interaction with a slider.
-
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
 
@@ -289,8 +290,9 @@ again:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TSliderBox::SavePrimitive(std::ostream &, Option_t * /*= ""*/)
 {
-    // Save primitive as a C++ statement(s) on output stream out
 }

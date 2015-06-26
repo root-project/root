@@ -29,7 +29,11 @@ using namespace std;
 using namespace oracle::occi;
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor of TOracleStatement class
+/// On creation time specifies buffer length, which should be
+/// used in data fetching or data inserting
+
 TOracleStatement::TOracleStatement(Environment* env, Connection* conn, Statement* stmt, Int_t niter, Bool_t errout) :
    TSQLStatement(errout),
    fEnv(env),
@@ -44,10 +48,6 @@ TOracleStatement::TOracleStatement(Environment* env, Connection* conn, Statement
    fWorkingMode(0),
    fTimeFmt(TOracleServer::GetDatimeFormat())
 {
-   // Normal constructor of TOracleStatement class
-   // On creation time specifies buffer length, which should be
-   // used in data fetching or data inserting
-
    if (fStmt) {
       fStmt->setPrefetchMemorySize(1000000);
       fStmt->setPrefetchRowCount(niter);
@@ -55,20 +55,20 @@ TOracleStatement::TOracleStatement(Environment* env, Connection* conn, Statement
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of TOracleStatement clas
+
 TOracleStatement::~TOracleStatement()
 {
-   // Destructor of TOracleStatement clas
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close Oracle statement
+/// Removes and destroys all buffers and metainfo
+
 void TOracleStatement::Close(Option_t *)
 {
-   // Close Oracle statement
-   // Removes and destroys all buffers and metainfo
-
 
    if (fFieldInfo)
       delete fFieldInfo;
@@ -129,12 +129,12 @@ void TOracleStatement::Close(Option_t *)
       }                                                 \
    }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set buffer size, which is used to keep string values of
+/// currently fetched column.
+
 void TOracleStatement::SetBufferSize(Int_t size)
 {
-    // Set buffer size, which is used to keep string values of
-    // currently fetched column.
-
     CloseBuffer();
     if (size<=0) return;
     fBufferSize = size;
@@ -146,11 +146,11 @@ void TOracleStatement::SetBufferSize(Int_t size)
     }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy buffers, used in data fetching
+
 void TOracleStatement::CloseBuffer()
 {
-   // Destroy buffers, used in data fetching
-
    if (fBuffer) {
       for (Int_t n=0;n<fBufferSize;n++) {
          delete[] fBuffer[n].strbuf;
@@ -163,11 +163,11 @@ void TOracleStatement::CloseBuffer()
    fBufferSize = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process SQL statement
+
 Bool_t TOracleStatement::Process()
 {
-   // Process SQL statement
-
    CheckStatement("Process", kFALSE);
 
    try {
@@ -187,12 +187,12 @@ Bool_t TOracleStatement::Process()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of affected rows after statement Process() was called
+/// Make sense for queries like SELECT, INSERT, UPDATE
+
 Int_t TOracleStatement::GetNumAffectedRows()
 {
-   // Return number of affected rows after statement Process() was called
-   // Make sense for queries like SELECT, INSERT, UPDATE
-
    CheckStatement("GetNumAffectedRows", -1);
 
    try {
@@ -204,12 +204,12 @@ Int_t TOracleStatement::GetNumAffectedRows()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of parameters in statement
+/// Not yet implemented for Oracle
+
 Int_t TOracleStatement::GetNumParameters()
 {
-   // Return number of parameters in statement
-   // Not yet implemented for Oracle
-
    CheckStatement("GetNumParameters", -1);
 
    Info("GetParametersNumber","Not implemented");
@@ -217,11 +217,11 @@ Int_t TOracleStatement::GetNumParameters()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set NULL as value of parameter npar
+
 Bool_t TOracleStatement::SetNull(Int_t npar)
 {
-   // Set NULL as value of parameter npar
-
    CheckSetPar("SetNull");
 
    try {
@@ -236,11 +236,11 @@ Bool_t TOracleStatement::SetNull(Int_t npar)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set integer value for parameter npar
+
 Bool_t TOracleStatement::SetInt(Int_t npar, Int_t value)
 {
-   // Set integer value for parameter npar
-
    CheckSetPar("SetInt");
 
    try {
@@ -254,11 +254,11 @@ Bool_t TOracleStatement::SetInt(Int_t npar, Int_t value)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set unsigned integer value for parameter npar
+
 Bool_t TOracleStatement::SetUInt(Int_t npar, UInt_t value)
 {
-   // Set unsigned integer value for parameter npar
-
    CheckSetPar("SetUInt");
 
    try {
@@ -271,11 +271,11 @@ Bool_t TOracleStatement::SetUInt(Int_t npar, UInt_t value)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set long integer value for parameter npar
+
 Bool_t TOracleStatement::SetLong(Int_t npar, Long_t value)
 {
-   // Set long integer value for parameter npar
-
    CheckSetPar("SetLong");
 
    try {
@@ -287,11 +287,11 @@ Bool_t TOracleStatement::SetLong(Int_t npar, Long_t value)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set 64-bit integer value for parameter npar
+
 Bool_t TOracleStatement::SetLong64(Int_t npar, Long64_t value)
 {
-   // Set 64-bit integer value for parameter npar
-
    CheckSetPar("SetLong64");
 
    try {
@@ -303,11 +303,11 @@ Bool_t TOracleStatement::SetLong64(Int_t npar, Long64_t value)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set unsigned 64-bit integer value for parameter npar
+
 Bool_t TOracleStatement::SetULong64(Int_t npar, ULong64_t value)
 {
-   // Set unsigned 64-bit integer value for parameter npar
-
    CheckSetPar("SetULong64");
 
    try {
@@ -319,11 +319,11 @@ Bool_t TOracleStatement::SetULong64(Int_t npar, ULong64_t value)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set double value for parameter npar
+
 Bool_t TOracleStatement::SetDouble(Int_t npar, Double_t value)
 {
-   // Set double value for parameter npar
-
    CheckSetPar("SetDouble");
 
    try {
@@ -335,11 +335,11 @@ Bool_t TOracleStatement::SetDouble(Int_t npar, Double_t value)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set string value for parameter npar
+
 Bool_t TOracleStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
-   // Set string value for parameter npar
-
    CheckSetPar("SetString");
 
    try {
@@ -358,11 +358,11 @@ Bool_t TOracleStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set parameter value as binary data
+
 Bool_t TOracleStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize)
 {
-   // set parameter value as binary data
-
    CheckSetPar("SetBinary");
 
    try {
@@ -383,11 +383,11 @@ Bool_t TOracleStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t ma
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set date value for parameter npar
+
 Bool_t TOracleStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
 {
-   // Set date value for parameter npar
-
    CheckSetPar("SetDate");
 
    try {
@@ -405,11 +405,11 @@ Bool_t TOracleStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set time value for parameter npar
+
 Bool_t TOracleStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 {
-   // Set time value for parameter npar
-
    CheckSetPar("SetTime");
 
    try {
@@ -427,11 +427,11 @@ Bool_t TOracleStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set date & time value for parameter npar
+
 Bool_t TOracleStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec)
 {
-   // Set date & time value for parameter npar
-
    CheckSetPar("SetDatime");
 
    try {
@@ -445,11 +445,11 @@ Bool_t TOracleStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t da
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set date & time value for parameter npar
+
 Bool_t TOracleStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac)
 {
-   // Set date & time value for parameter npar
-
    CheckSetPar("SetTimestamp");
 
    try {
@@ -463,11 +463,11 @@ Bool_t TOracleStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set vector of integer values for parameter npar
+
 Bool_t TOracleStatement::SetVInt(Int_t npar, const std::vector<Int_t> value, const char* schemaName, const char* typeName)
 {
-   // Set vector of integer values for parameter npar
-
    CheckSetPar("SetVInt");
 
    try {
@@ -480,11 +480,11 @@ Bool_t TOracleStatement::SetVInt(Int_t npar, const std::vector<Int_t> value, con
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set vector of unsigned integer values for parameter npar
+
 Bool_t TOracleStatement::SetVUInt(Int_t npar, const std::vector<UInt_t> value, const char* schemaName, const char* typeName)
 {
-   // Set vector of unsigned integer values for parameter npar
-
    CheckSetPar("SetVUInt");
 
    try {
@@ -497,11 +497,11 @@ Bool_t TOracleStatement::SetVUInt(Int_t npar, const std::vector<UInt_t> value, c
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set vector of long integer values for parameter npar
+
 Bool_t TOracleStatement::SetVLong(Int_t npar, const std::vector<Long_t> value, const char* schemaName, const char* typeName)
 {
-   // Set vector of long integer values for parameter npar
-
    CheckSetPar("SetVLong");
 
    try {
@@ -519,11 +519,11 @@ Bool_t TOracleStatement::SetVLong(Int_t npar, const std::vector<Long_t> value, c
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set vector of 64-bit integer values for parameter npar
+
 Bool_t TOracleStatement::SetVLong64(Int_t npar, const std::vector<Long64_t> value, const char* schemaName, const char* typeName)
 {
-   // Set vector of 64-bit integer values for parameter npar
-
    CheckSetPar("SetVLong64");
 
    try {
@@ -541,11 +541,11 @@ Bool_t TOracleStatement::SetVLong64(Int_t npar, const std::vector<Long64_t> valu
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set vector of unsigned 64-bit integer values for parameter npar
+
 Bool_t TOracleStatement::SetVULong64(Int_t npar, std::vector<ULong64_t> value, const char* schemaName, const char* typeName)
 {
-   // Set vector of unsigned 64-bit integer values for parameter npar
-
    CheckSetPar("SetVULong64");
 
    try {
@@ -563,11 +563,11 @@ Bool_t TOracleStatement::SetVULong64(Int_t npar, std::vector<ULong64_t> value, c
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set vector of double values for parameter npar
+
 Bool_t TOracleStatement::SetVDouble(Int_t npar, const std::vector<Double_t> value, const char* schemaName, const char* typeName)
 {
-   // Set vector of double values for parameter npar
-
    CheckSetPar("SetVDouble");
 
    try {
@@ -579,11 +579,11 @@ Bool_t TOracleStatement::SetVDouble(Int_t npar, const std::vector<Double_t> valu
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add next iteration for statement with parameters
+
 Bool_t TOracleStatement::NextIteration()
 {
-   // Add next iteration for statement with parameters
-
    CheckStatement("NextIteration", kFALSE);
 
    try {
@@ -606,12 +606,12 @@ Bool_t TOracleStatement::NextIteration()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store result of statement processing.
+/// Required to access results of SELECT queries
+
 Bool_t TOracleStatement::StoreResult()
 {
-   // Store result of statement processing.
-   // Required to access results of SELECT queries
-
    CheckStatement("StoreResult", kFALSE);
 
    try {
@@ -630,13 +630,13 @@ Bool_t TOracleStatement::StoreResult()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines maximum size for field which must be used for read or write operation
+/// Some Oracle types as LONG (long binary continer) requires this call
+/// before any data can be read from database. Call it once before first call to NextResultRow()
+
 Bool_t TOracleStatement::SetMaxFieldSize(Int_t nfield, Long_t maxsize)
 {
-   // Defines maximum size for field which must be used for read or write operation
-   // Some Oracle types as LONG (long binary continer) requires this call
-   // before any data can be read from database. Call it once before first call to NextResultRow()
-
    CheckStatement("SetMaxFieldSize", kFALSE);
 
    try {
@@ -652,19 +652,19 @@ Bool_t TOracleStatement::SetMaxFieldSize(Int_t nfield, Long_t maxsize)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of fields in result set
+
 Int_t TOracleStatement::GetNumFields()
 {
-   // Returns number of fields in result set
-
    return IsResultSet() ?  fBufferSize : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field name in result set
+
 const char* TOracleStatement::GetFieldName(Int_t npar)
 {
-   // Return field name in result set
-
    CheckGetField("GetFieldName", 0);
 
    if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
@@ -682,12 +682,12 @@ const char* TOracleStatement::GetFieldName(Int_t npar)
    return fBuffer[npar].namebuf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move cursor to next row in result set.
+/// For Oracle it may lead to additional request to database
+
 Bool_t TOracleStatement::NextResultRow()
 {
-   // Move cursor to next row in result set.
-   // For Oracle it may lead to additional request to database
-
    ClearError();
 
    if (fResult==0) {
@@ -721,11 +721,11 @@ Bool_t TOracleStatement::NextResultRow()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if fieled value in result set is NULL
+
 Bool_t TOracleStatement::IsNull(Int_t npar)
 {
-   // Checks if fieled value in result set is NULL
-
    CheckGetField("IsNull", kFALSE);
 
    try {
@@ -737,11 +737,11 @@ Bool_t TOracleStatement::IsNull(Int_t npar)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as integer
+
 Int_t TOracleStatement::GetInt(Int_t npar)
 {
-   // return field value as integer
-
    CheckGetField("GetInt", 0);
 
    Int_t res = 0;
@@ -756,11 +756,11 @@ Int_t TOracleStatement::GetInt(Int_t npar)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as unsigned integer
+
 UInt_t TOracleStatement::GetUInt(Int_t npar)
 {
-   // return field value as unsigned integer
-
    CheckGetField("GetUInt", 0);
 
    UInt_t res = 0;
@@ -776,11 +776,11 @@ UInt_t TOracleStatement::GetUInt(Int_t npar)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as long integer
+
 Long_t TOracleStatement::GetLong(Int_t npar)
 {
-   // return field value as long integer
-
    CheckGetField("GetLong", 0);
 
    Long_t res = 0;
@@ -795,11 +795,11 @@ Long_t TOracleStatement::GetLong(Int_t npar)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as 64-bit integer
+
 Long64_t TOracleStatement::GetLong64(Int_t npar)
 {
-   // return field value as 64-bit integer
-
    CheckGetField("GetLong64", 0);
 
    Long64_t res = 0;
@@ -814,11 +814,11 @@ Long64_t TOracleStatement::GetLong64(Int_t npar)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as unsigned 64-bit integer
+
 ULong64_t TOracleStatement::GetULong64(Int_t npar)
 {
-   // return field value as unsigned 64-bit integer
-
    CheckGetField("GetULong64", 0);
 
    ULong64_t res = 0;
@@ -833,11 +833,11 @@ ULong64_t TOracleStatement::GetULong64(Int_t npar)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as double
+
 Double_t TOracleStatement::GetDouble(Int_t npar)
 {
-   // return field value as double
-
    CheckGetField("GetDouble", 0.);
 
    Double_t res = 0;
@@ -852,11 +852,11 @@ Double_t TOracleStatement::GetDouble(Int_t npar)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as string
+
 const char* TOracleStatement::GetString(Int_t npar)
 {
-   // return field value as string
-
    CheckGetField("GetString", 0);
 
    if (fBuffer[npar].strbuf!=0) return fBuffer[npar].strbuf;
@@ -919,14 +919,14 @@ const char* TOracleStatement::GetString(Int_t npar)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return field value as binary array
+/// Supports LONG, BLOB, CLOB, BFILE, CFILE types of columns
+/// Reads complete content of the column, therefore not suitable for
+/// big structures
+
 Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 {
-   // Return field value as binary array
-   // Supports LONG, BLOB, CLOB, BFILE, CFILE types of columns
-   // Reads complete content of the column, therefore not suitable for
-   // big structures
-
    mem = 0;
    size = 0;
 
@@ -1034,31 +1034,31 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as date
+
 Bool_t TOracleStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
 {
-   // return field value as date
-
    Int_t hour, min, sec;
 
    return GetDatime(npar, year, month, day, hour, min, sec);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as time
+
 Bool_t TOracleStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // return field value as time
-
    Int_t year, month, day;
 
    return GetDatime(npar, year, month, day, hour, min, sec);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as date & time
+
 Bool_t TOracleStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // return field value as date & time
-
    CheckGetField("GetDatime", kFALSE);
 
    try {
@@ -1086,11 +1086,11 @@ Bool_t TOracleStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t&
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as date & time
+
 Bool_t TOracleStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac)
 {
-   // return field value as date & time
-
    CheckGetField("GetTimestamp", kFALSE);
 
    try {
@@ -1122,10 +1122,11 @@ Bool_t TOracleStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as vector of integers
+
 Bool_t TOracleStatement::GetVInt(Int_t npar, std::vector<Int_t> &value)
 {
-   // return field value as vector of integers
    CheckGetField("GetVInt", kFALSE);
    try {
       if (!fResult->isNull(npar+1))
@@ -1137,10 +1138,11 @@ Bool_t TOracleStatement::GetVInt(Int_t npar, std::vector<Int_t> &value)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as vector of unsigned integers
+
 Bool_t TOracleStatement::GetVUInt(Int_t npar, std::vector<UInt_t> &value)
 {
-   // return field value as vector of unsigned integers
    CheckGetField("GetVUInt", kFALSE);
    try {
       if (!fResult->isNull(npar+1))
@@ -1153,10 +1155,11 @@ Bool_t TOracleStatement::GetVUInt(Int_t npar, std::vector<UInt_t> &value)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as vector of long integers
+
 Bool_t TOracleStatement::GetVLong(Int_t npar, std::vector<Long_t> &value)
 {
-   // return field value as vector of long integers
    CheckGetField("GetVLong", kFALSE);
    try {
       std::vector<Number> res;
@@ -1174,10 +1177,11 @@ Bool_t TOracleStatement::GetVLong(Int_t npar, std::vector<Long_t> &value)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as vector of 64-bit integers
+
 Bool_t TOracleStatement::GetVLong64(Int_t npar, std::vector<Long64_t> &value)
 {
-   // return field value as vector of 64-bit integers
    CheckGetField("GetVLong64", kFALSE);
    try {
       std::vector<Number> res;
@@ -1195,10 +1199,11 @@ Bool_t TOracleStatement::GetVLong64(Int_t npar, std::vector<Long64_t> &value)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as vector of unsigned 64-bit integers
+
 Bool_t TOracleStatement::GetVULong64(Int_t npar, std::vector<ULong64_t> &value)
 {
-   // return field value as vector of unsigned 64-bit integers
    CheckGetField("GetVULong64", kFALSE);
    try {
       std::vector<Number> res;
@@ -1216,10 +1221,11 @@ Bool_t TOracleStatement::GetVULong64(Int_t npar, std::vector<ULong64_t> &value)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as vector of doubles
+
 Bool_t TOracleStatement::GetVDouble(Int_t npar, std::vector<Double_t> &value)
 {
-   // return field value as vector of doubles
    CheckGetField("GetVDouble", kFALSE);
    try {
       if (!fResult->isNull(npar+1))

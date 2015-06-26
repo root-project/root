@@ -38,14 +38,14 @@ TList  *TEveGedEditor::fgExtraEditors    = new TList;
 
 TContextMenu *TEveGedEditor::fgContextMenu = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGedEditor::TEveGedEditor(TCanvas* canvas, UInt_t width, UInt_t height) :
    TGedEditor(canvas, width, height),
    fElement  (0),
    fObject   (0)
 {
-   // Constructor.
-
    // Remove old name-frame -- it is created in TGedEditor constructor
    // so virtuals are not active yet.
    fTabContainer->RemoveAll();
@@ -74,21 +74,21 @@ TEveGedEditor::TEveGedEditor(TCanvas* canvas, UInt_t width, UInt_t height) :
    fFrameMap.Add(amClass, frame);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveGedEditor::~TEveGedEditor()
 {
-   // Destructor.
-
    if (gDebug > 0)
       Info("TEveGedEditor::~TEveGedEditor", "%p going down.", this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called from window-manger close button.
+/// Unregister from global list and delete the window.
+
 void TEveGedEditor::CloseWindow()
 {
-   // Called from window-manger close button.
-   // Unregister from global list and delete the window.
-
    if (gDebug > 0)
       Info("TEveGedEditor::CloseWindow", "%p closing.", this);
 
@@ -97,13 +97,13 @@ void TEveGedEditor::CloseWindow()
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is exact clone of TGFrame::DeleteWindow().
+/// Needs to be overriden together with CloseWindow() otherwise CINT
+/// goes kaboom in timer execution.
+
 void TEveGedEditor::DeleteWindow()
 {
-   // This is exact clone of TGFrame::DeleteWindow().
-   // Needs to be overriden together with CloseWindow() otherwise CINT
-   // goes kaboom in timer execution.
-
    if (gDebug > 0)
       Info("TEveGedEditor::DeleteWindow", "%p shooting timer.", this);
 
@@ -118,27 +118,27 @@ void TEveGedEditor::DeleteWindow()
    SetBit(kDeleteWindowCalled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create name-frame for a tab.
+
 TGedFrame* TEveGedEditor::CreateNameFrame(const TGWindow* parent, const char* /*tab_name*/)
 {
-   // Create name-frame for a tab.
-
    return new TEveGedNameFrame(parent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return eve-element if it is the model object.
+
 TEveElement* TEveGedEditor::GetEveElement() const
 {
-   // Return eve-element if it is the model object.
-
    return (fModel == fObject) ? fElement : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show a TEveElement in editor.
+
 void TEveGedEditor::DisplayElement(TEveElement* re)
 {
-   // Show a TEveElement in editor.
-
    static const TEveException eh("TEveGedEditor::DisplayElement ");
 
    fElement = re;
@@ -146,11 +146,11 @@ void TEveGedEditor::DisplayElement(TEveElement* re)
    TGedEditor::SetModel(fPad, fObject, kButton1Down);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show a TObject in editor.
+
 void TEveGedEditor::DisplayObject(TObject* obj)
 {
-   // Show a TObject in editor.
-
    fElement = dynamic_cast<TEveElement*>(obj);
    fObject  = obj;
    TGedEditor::SetModel(fPad, obj, kButton1Down);
@@ -158,22 +158,22 @@ void TEveGedEditor::DisplayObject(TObject* obj)
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
 {
-   // Set model object.
-
    fElement = dynamic_cast<TEveElement*>(obj);
    fObject  = obj;
    TGedEditor::SetModel(pad, obj, event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual method from TGedEditor, called on every change.
+/// Propagates changes to TEveElement and TEveManager.
+
 void TEveGedEditor::Update(TGedFrame* /*gframe*/)
 {
-   // Virtual method from TGedEditor, called on every change.
-   // Propagates changes to TEveElement and TEveManager.
-
    if (fElement)
    {
       fElement->ElementChanged();
@@ -187,11 +187,11 @@ void TEveGedEditor::Update(TGedFrame* /*gframe*/)
 // Static functions for management of extra editors.
 //------------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to create a new extra editor.
+
 void TEveGedEditor::SpawnNewEditor(TObject* obj)
 {
-   // Static function to create a new extra editor.
-
    if (fgExtraEditors->GetSize() >= fgMaxExtraEditors)
    {
       new TGMsgBox(gClient->GetDefaultRoot(), gEve->GetMainWindow(),
@@ -210,11 +210,11 @@ void TEveGedEditor::SpawnNewEditor(TObject* obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Element was changed. Update editors showing it.
+
 void TEveGedEditor::ElementChanged(TEveElement* el)
 {
-   // Element was changed. Update editors showing it.
-
    TObject *eobj = el->GetEditorObject("TEveGedEditor::ElementChanged ");
    TObjLink *lnk = fgExtraEditors->FirstLink();
    while (lnk)
@@ -226,11 +226,11 @@ void TEveGedEditor::ElementChanged(TEveElement* el)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Element is being deleted. Close editors showing it.
+
 void TEveGedEditor::ElementDeleted(TEveElement* el)
 {
-   // Element is being deleted. Close editors showing it.
-
    TObject *eobj = el->GetEditorObject("TEveGedEditor::ElementChanged ");
    TObjLink *lnk = fgExtraEditors->FirstLink();
    while (lnk)
@@ -250,11 +250,11 @@ void TEveGedEditor::ElementDeleted(TEveElement* el)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroys all editors. Called from EVE termination.
+
 void TEveGedEditor::DestroyEditors()
 {
-   // Destroys all editors. Called from EVE termination.
-
    while ( ! fgExtraEditors->IsEmpty())
    {
       TEveGedEditor *ed = (TEveGedEditor*) fgExtraEditors->First();
@@ -263,11 +263,11 @@ void TEveGedEditor::DestroyEditors()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return context menu object shared among eve-ged-editors.
+
 TContextMenu* TEveGedEditor::GetContextMenu()
 {
-   // Return context menu object shared among eve-ged-editors.
-
    if (fgContextMenu == 0)
       fgContextMenu = new TContextMenu("", "");
    return fgContextMenu;
@@ -286,31 +286,32 @@ TContextMenu* TEveGedEditor::GetContextMenu()
 
 ClassImp(TEveGedNameFrame);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGedNameFrame::TEveGedNameFrame(const TGWindow *p, Int_t width, Int_t height,
                                    UInt_t options) :
    TGedFrame(p, width, height, options),
    fNCButton(0)
 {
-   // Constructor.
-
    fNCButton = new TEveGedNameTextButton(this);
    fNCButton->SetTextColor(0x0020a0);
    AddFrame(fNCButton, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
    fNCButton->Connect("Clicked()", "TEveGedNameFrame", this, "SpawnEditorClone()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveGedNameFrame::~TEveGedNameFrame()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveGedNameFrame::SetModel(TObject* obj)
 {
-   // Set model object.
-
    if (obj)
    {
       fNCButton->SetText(Form("%s [%s]", obj->GetName(), obj->ClassName()));
@@ -325,11 +326,11 @@ void TEveGedNameFrame::SetModel(TObject* obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new floating editor with current object.
+
 void TEveGedNameFrame::SpawnEditorClone()
 {
-   // Create a new floating editor with current object.
-
    TEveGedEditor::SpawnNewEditor(fGedEditor->GetModel());
 }
 
@@ -345,29 +346,30 @@ void TEveGedNameFrame::SpawnEditorClone()
 
 ClassImp(TEveGedNameTextButton);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGedNameTextButton::TEveGedNameTextButton(TEveGedNameFrame* p) :
    TGTextButton(p, ""),
    fFrame(p)
 {
-   // Constructor.
-
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask,
                          kNone, kNone);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveGedNameTextButton::~TEveGedNameTextButton()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle button.
+
 Bool_t TEveGedNameTextButton::HandleButton(Event_t* event)
 {
-   // Handle button.
-
    static const TEveException eh("TEveGedNameTextButton::HandleButton ");
 
    if (fTip) fTip->Hide();

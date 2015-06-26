@@ -67,131 +67,132 @@ namespace {
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TFormulaPrimitive::TFormulaPrimitive() : TNamed(),
                                          fFuncG(0),
                                          fType(0),fNArguments(0),fNParameters(0),fIsStatic(kTRUE)
 {
-   // Default constructor.
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
                                      GenFunc0 fpointer) : TNamed(name,formula),
                                                           fFunc0(fpointer),
                                                           fType(0),fNArguments(0),fNParameters(0),fIsStatic(kTRUE)
 {
-   // Constructor.
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
                                      GenFunc10 fpointer) : TNamed(name,formula),
                                                            fFunc10(fpointer),
                                                            fType(10),fNArguments(1),fNParameters(0),fIsStatic(kTRUE)
 {
-   // Constructor.
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
                                      GenFunc110 fpointer) : TNamed(name,formula),
                                                             fFunc110(fpointer),
                                                             fType(110),fNArguments(2),fNParameters(0),fIsStatic(kTRUE)
 {
-   // Constructor.
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
                                      GenFunc1110 fpointer) : TNamed(name,formula),
                                                              fFunc1110(fpointer),
                                                              fType(1110),fNArguments(3),fNParameters(0),fIsStatic(kTRUE)
 {
-   // Constructor.
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
                                      GenFuncG fpointer,Int_t npar) : TNamed(name,formula),
                                                                      fFuncG(fpointer),
                                                                      fType(-1),fNArguments(2),fNParameters(npar),fIsStatic(kTRUE)
 {
-   // Constructor.
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
                                      TFuncG fpointer) : TNamed(name,formula),
                                                         fTFuncG(fpointer),
                                                         fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
-   // Constructor.
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
                                      TFunc0 fpointer) : TNamed(name,formula),
                                                         fTFunc0(fpointer),
                                                         fType(0),fNArguments(0),fNParameters(0),fIsStatic(kFALSE)
 {
-   // Constructor.
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
                                      TFunc10 fpointer) : TNamed(name,formula),
                                                          fTFunc10(fpointer),
                                                          fType(-10),fNArguments(1),fNParameters(0),fIsStatic(kFALSE)
 {
-   // Constructor.
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
                                      TFunc110 fpointer) : TNamed(name,formula),
                                                           fTFunc110(fpointer),
                                                           fType(-110),fNArguments(2),fNParameters(0),fIsStatic(kFALSE)
 {
-   // Constructor.
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
                                      TFunc1110 fpointer) :TNamed(name,formula),
                                                           fTFunc1110(fpointer),
                                                           fType(-1110),fNArguments(3),fNParameters(0),fIsStatic(kFALSE)
 {
-   // Constructor.
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add formula to the list of primitive formulas.
+/// If primitive formula already defined do nothing.
+
 Int_t TFormulaPrimitive::AddFormula(TFormulaPrimitive * formula)
 {
-   // Add formula to the list of primitive formulas.
-   // If primitive formula already defined do nothing.
    R__LOCKGUARD2(gTFormulaPrimativeListMutex);
    if (fgListOfFunction == 0) BuildBasicFormulas();
    if (FindFormula(formula->GetName(),formula->fNArguments)){
@@ -203,11 +204,11 @@ Int_t TFormulaPrimitive::AddFormula(TFormulaPrimitive * formula)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Eval primitive function at point x.
+
 Double_t TFormulaPrimitive::Eval(Double_t* x)
 {
-   // Eval primitive function at point x.
-
    if (fIsStatic == kFALSE) return 0;
 
    if (fType==0) return  fFunc0();
@@ -224,11 +225,11 @@ Double_t TFormulaPrimitive::Eval(Double_t* x)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Eval member function of object o at point x.
+
 Double_t  TFormulaPrimitive::Eval(TObject *o, Double_t *x)
 {
-   // Eval member function of object o at point x.
-
    if (fIsStatic == kTRUE) return 0;
    if (fType== 0)    return (*o.*fTFunc0)();
    if (fType==-10)   return (*o.*fTFunc10)(*x);
@@ -238,11 +239,11 @@ Double_t  TFormulaPrimitive::Eval(TObject *o, Double_t *x)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Eval primitive parametric function.
+
 Double_t TFormulaPrimitive::Eval(Double_t *x, Double_t *param)
 {
-   // Eval primitive parametric function.
-
    return fFuncG(x,param);
 }
 
@@ -307,10 +308,11 @@ namespace TFastFun {
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the formula in the list of formulas.
+
 TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name)
 {
-   // Find the formula in the list of formulas.
    R__LOCKGUARD2(gTFormulaPrimativeListMutex);
    if (!fgListOfFunction) {
       BuildBasicFormulas();
@@ -324,11 +326,11 @@ TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the formula in the list of formulas.
+
 TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name, UInt_t nargs)
 {
-   // Find the formula in the list of formulas.
-
    R__LOCKGUARD2(gTFormulaPrimativeListMutex);
    if (!fgListOfFunction) {
       BuildBasicFormulas();
@@ -345,11 +347,11 @@ TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name, UInt_t nargs
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the formula in the list of formulas.
+
 TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name, const char *args)
 {
-   // Find the formula in the list of formulas.
-
    // let's count the argument(s)
    if (args) {
       Int_t nargs = 0;
@@ -374,11 +376,11 @@ TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name, const char *
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// FPoln.
+
 Double_t TFastFun::FPoln(Double_t *x, Double_t *param, Int_t npar)
 {
-   // FPoln.
-
    Double_t res = 0; Double_t temp=1;
    for (Int_t j=npar ;j>=0;j--) {
       res  += temp*param[j];
@@ -388,32 +390,33 @@ Double_t TFastFun::FPoln(Double_t *x, Double_t *param, Int_t npar)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gauss.
+
 Double_t TFastFun::Gaus(Double_t x, Double_t mean, Double_t sigma)
 {
-   // Gauss.
-
    if (sigma == 0) return 1.e30;
    Double_t arg = (x-mean)/sigma;
    return TMath::Exp(-0.5*arg*arg);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normalize gauss.
+
 Double_t TFastFun::Gausn(Double_t x, Double_t mean, Double_t sigma)
 {
-   // Normalize gauss.
-
    if (sigma == 0)  return 0;
    Double_t arg = (x-mean)/sigma;
    return TMath::Exp(-0.5*arg*arg)/(2.50662827463100024*sigma);  //sqrt(2*Pi)=2.50662827463100024
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Built-in functions.
+
 Int_t TFormulaPrimitive::BuildBasicFormulas()
 {
-   // Built-in functions.
    R__LOCKGUARD2(gTFormulaPrimativeListMutex);
    if (fgListOfFunction==0) {
       fgListOfFunction = new TObjArray(1000);

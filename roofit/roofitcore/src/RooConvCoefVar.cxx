@@ -37,7 +37,10 @@ ClassImp(RooConvCoefVar)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constuctor given a RooAbsAnaConvPdf a coefficient index and a set with the
+/// convoluted observable(s)
+
 RooConvCoefVar::RooConvCoefVar(const char *name, const char *title, const RooAbsAnaConvPdf& input, 
 			       Int_t coefIdx, const RooArgSet* varList) :
   RooAbsReal(name,title),
@@ -45,59 +48,60 @@ RooConvCoefVar::RooConvCoefVar(const char *name, const char *title, const RooAbs
   _convPdf("convPdf","Convoluted PDF",this,(RooAbsReal&)input,kFALSE,kFALSE),
   _coefIdx(coefIdx)
 {
-  // Constuctor given a RooAbsAnaConvPdf a coefficient index and a set with the
-  // convoluted observable(s)
   if (varList) _varSet.add(*varList) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooConvCoefVar::RooConvCoefVar(const RooConvCoefVar& other, const char* name) :
   RooAbsReal(other,name),
   _varSet("varSet",this,other._varSet),
   _convPdf("convPdf",this,other._convPdf),
   _coefIdx(other._coefIdx)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return value of chosen coefficient
+
 Double_t RooConvCoefVar::getValV(const RooArgSet*) const 
 { 
-  // Return value of chosen coefficient
   return evaluate() ; 
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return value of chosen coefficient
+
 Double_t RooConvCoefVar::evaluate() const 
 {
-  // Return value of chosen coefficient
   return ((RooAbsAnaConvPdf&)_convPdf.arg()).coefficient(_coefIdx) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return analytical integration capabilities of chosen coefficient
+
 Int_t RooConvCoefVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
-  // Return analytical integration capabilities of chosen coefficient
-
   Int_t code = ((RooAbsAnaConvPdf&)_convPdf.arg()).getCoefAnalyticalIntegral(_coefIdx,allVars,analVars,rangeName) ;
   return code ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return analytical integral of chosen coefficient
+
 Double_t RooConvCoefVar::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  // Return analytical integral of chosen coefficient
-
   return ((RooAbsAnaConvPdf&)_convPdf.arg()).coefAnalyticalIntegral(_coefIdx,code,rangeName) ;
 }
 
