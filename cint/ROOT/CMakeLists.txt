@@ -82,6 +82,7 @@ set(CINTDLLCFLAGS "${CINT_C_DEFINITIONS} -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__S
 
 if(MACOSX_TMPNAM_DEPRECATED OR CMAKE_COMPILER_IS_GNUCXX)
   ROOT_ADD_CXX_FLAG(_cxxflags -Wno-deprecated-declarations)
+  ROOT_ADD_CXX_FLAG(_cxxflags -Wno-strict-aliasing)
 endif()
 ROOT_ADD_CXX_FLAG(_cxxflags -Wno-ignored-qualifiers)
 add_definitions(${_cxxflags})
