@@ -13,7 +13,6 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TDataMember	kAllAxes	 : 0
  OBJ: TDataMember	kNoStats	 : 0
  OBJ: TDataMember	kUserContour	 : 0
- OBJ: TDataMember	kCanRebin	 : 0
  OBJ: TDataMember	kLogX	 : 0
  OBJ: TDataMember	kIsZoomed	 : 0
  OBJ: TDataMember	kNoTitle	 : 0
