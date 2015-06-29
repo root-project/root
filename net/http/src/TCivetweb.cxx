@@ -13,7 +13,9 @@
 
 static int log_message_handler(const struct mg_connection *conn, const char *message)
 {
-   TCivetweb* engine = (TCivetweb*) mg_get_request_info((struct mg_connection *)conn)->user_data;
+   const struct mg_context *ctx = mg_get_context(conn);
+
+   TCivetweb* engine = (TCivetweb*) mg_get_user_data(ctx);
 
    if (engine) return engine->ProcessLog(message);
 
@@ -219,7 +221,7 @@ TCivetweb::~TCivetweb()
 
 Int_t TCivetweb::ProcessLog(const char* message)
 {
-   if (gDebug>0) Error("Log", "%s", message);
+   if ((gDebug>0) || (strstr(message,"cannot bind to")!=0)) Error("Log", "%s", message);
 
    return 0;
 }
