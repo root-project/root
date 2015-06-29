@@ -24,8 +24,8 @@
 #include<TVector.h>
 #endif
 
-#ifndef ROOT_TMatrix
-#include<TMatrix.h>
+#ifndef ROOT_TMatrixT
+#include<TMatrixT.h>
 #endif
 
 #ifndef ROOT_TArrayD
@@ -59,6 +59,10 @@
 #pragma GCC diagnostic ignored "-Wextra"
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #endif
+
+
+//Some useful typedefs
+typedef std::vector<TString> TVectorString;
 
 
 #include<RcppCommon.h>

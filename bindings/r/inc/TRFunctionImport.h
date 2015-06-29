@@ -50,7 +50,7 @@ namespace ROOT {
         TRFunctionImport(const TString& name, const TString& ns);
         TRFunctionImport(const TRFunctionImport &fun);
         ~TRFunctionImport(){if(f) delete f;}
-        TRObjectProxy operator()(){return (*f)();}
+        SEXP operator()(){return (*f)();}
         #include<TRFunctionImport__oprtr.h>
          ClassDef(TRFunctionImport, 0) //
       };

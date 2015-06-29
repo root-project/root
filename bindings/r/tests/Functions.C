@@ -68,9 +68,11 @@ void Functions(TString type = "Import")
       print("Hola");
       
       ROOT::R::TRFunctionImport c("c");
+      ROOT::R::TRFunctionImport require("require");
       
       ROOT::R::TRObjectProxy vector=c(1,2,3,4);
       
       print(vector);
+      require("C50");
    }
 }

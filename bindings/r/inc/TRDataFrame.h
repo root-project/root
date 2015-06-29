@@ -20,6 +20,10 @@
 #include<TRObjectProxy.h>
 #endif
 
+#ifndef ROOT_R_TRFunctionImport
+#include<TRFunctionImport.h>
+#endif
+
 //________________________________________________________________________________________________________
 /**
    This is a base class to create DataFrames from ROOT to R
@@ -187,6 +191,26 @@ public:
          }
     int GetNcols(){return df.size();}
     int GetNrows(){return df.nrows();}
+    TVectorString GetColNames()
+    {
+            Rcpp::CharacterVector names=df.attr("names");
+            TVectorString rnames(GetNcols());
+            for(int i=0;i<GetNcols();i++)rnames[i]=names[i];
+            return rnames;
+    }
+    
+    template<class T> TMatrixT<T> AsMatrix()
+    {
+        TRFunctionImport asMatrix("as.matrix");
+        return Rcpp::as<TMatrixT<T> >(asMatrix(df));
+    }
+    
+    void Print(TString label="")
+    {
+        TRFunctionImport print("print");
+        if(label=="") print(df);
+        else print(df[label.Data()]);
+    }
     ClassDef(TRDataFrame, 0) //
 };
 }
