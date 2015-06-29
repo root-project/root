@@ -133,6 +133,10 @@ if(CXX_HAS_Wno-strict-aliasing)
   set_source_files_properties(${CORE_DICTIONARIES} COMPILE_FLAGS -Wno-strict-aliasing)
 endif()
 
+if(${GCC_MAJOR} GREATER 4)
+  set_source_files_properties(${CORE_DICTIONARIES} PROPERTIES COMPILE_DEFINITIONS R__ACCESS_IN_SYMBOL)
+endif()
+
 ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} ${CORE_DICTIONARIES}
                     LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs}
                     DEPENDENCIES Cint)

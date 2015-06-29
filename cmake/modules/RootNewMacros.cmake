@@ -266,6 +266,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(CXX_HAS_Wno-strict-aliasing)
     set_source_files_properties( ${dictionary}.cxx COMPILE_FLAGS -Wno-strict-aliasing)
   endif()
+  if(${GCC_MAJOR} GREATER 4)
+    set_source_files_properties( ${dictionary}.cxx PROPERTIES COMPILE_DEFINITIONS R__ACCESS_IN_SYMBOL)
+  endif()
 
 endfunction()
 
