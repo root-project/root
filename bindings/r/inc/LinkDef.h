@@ -21,6 +21,8 @@
 //classes
 #pragma link C++ class ROOT::R::TRFunctionExport+;
 
+#pragma link C++ class ROOT::R::TRFunctionImport+;
+
 #pragma link C++ class ROOT::R::TRInterface+;
 
 #pragma link C++ class ROOT::R::TRObjectProxy+;
