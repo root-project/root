@@ -26,19 +26,15 @@ RDO          := $(RDS:.cxx=.o)
 RDH          := $(MODDIRI)/RExports.h \
                 $(MODDIRI)/TRInterface.h \
                 $(MODDIRI)/TRObjectProxy.h \
-                $(MODDIRI)/TRFunction.h \
+                $(MODDIRI)/TRDataFrame.h \
+                $(MODDIRI)/TRFunctionImport.h \
+                $(MODDIRI)/TRFunctionExport.h \
                 $(MODDIRI)/TRInternalFunction.h \
                 $(MODDIRI)/TRInternalFunction__ctors.h
 
-RDHMOD       := $(MODDIRI)/TRCanvas.h \
-                $(MODDIRI)/TRF1.h \
-                $(MODDIRI)/TRRint.h \
-                $(MODDIRI)/TRFile.h \
-                $(MODDIRI)/TRGraph.h \
-                $(MODDIRI)/TRSystem.h
 
 
-RH    := $(RDH)  $(RDHMOD)
+RH    := $(RDH)  
 RS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 RO    := $(call stripsrc,$(RS:.cxx=.o))
 

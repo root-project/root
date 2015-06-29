@@ -69,6 +69,7 @@ typedef std::vector<TString> TVectorString;
 namespace ROOT {
    namespace R {
       class TRFunctionExport;
+      class TRFunctionImport;
       class TRDataFrame;
       class TRObjectProxy;
    }
@@ -103,8 +104,13 @@ namespace Rcpp {
    template<> SEXP wrap(const ROOT::R::TRDataFrame &o);
    template<> ROOT::R::TRDataFrame as(SEXP) ;
    
+//TRObjectProxy
    template<> SEXP wrap(const ROOT::R::TRObjectProxy &o);
    template<> ROOT::R::TRObjectProxy as(SEXP) ;
+
+//TRFunctionImport
+   template<> SEXP wrap(const ROOT::R::TRFunctionImport &o);
+   template<> ROOT::R::TRFunctionImport as(SEXP) ;
 
    template<class T, size_t i> std::array<T, i> as(SEXP &obj)
    {

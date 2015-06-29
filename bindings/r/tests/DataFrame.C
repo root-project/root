@@ -95,6 +95,9 @@ void DataFrame() {
      ROOT::R::TRDataFrame dfm;
      r["df=data.frame(v1=c(0.1,0.2,0.3),v2=c(0.4,0.5,0.6))"]>>dfm;
      dfm.Print();
+     
+     dfm.Print("v1");
+     
      TMatrixT<Float_t>  m=dfm.AsMatrix<Float_t>();
      m.Print();
      

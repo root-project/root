@@ -24,6 +24,10 @@
 #include<TRFunctionExport.h>
 #endif
 
+#ifndef ROOT_R_TFunctionImport
+#include<TRFunctionImport.h>
+#endif
+
 #ifndef ROOT_TThread
 #include<TThread.h>
 #endif

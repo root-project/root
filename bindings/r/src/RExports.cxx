@@ -90,6 +90,17 @@ namespace Rcpp {
    {
       return ROOT::R::TRDataFrame(Rcpp::as<Rcpp::DataFrame>(obj));
    }
+   
+//TRFunctionImport
+   template<> SEXP wrap(const ROOT::R::TRFunctionImport &obj)
+   {
+      return *obj.f;
+   }
+
+   template<> ROOT::R::TRFunctionImport as(SEXP obj)
+   {
+      return ROOT::R::TRFunctionImport(Rcpp::as<Rcpp::Function>(obj));
+   }
 
 }
 namespace ROOT {

@@ -30,22 +30,17 @@ ClassImp(TRFunctionImport)
 //______________________________________________________________________________
 TRFunctionImport::TRFunctionImport(const TRFunctionImport &fun): TObject(fun)
 {
-    fFunctionName=fun.fFunctionName;
-    fNameSpace=fun.fNameSpace;
     f = fun.f;
 }
 
 //______________________________________________________________________________
 TRFunctionImport::TRFunctionImport(const TString& name)
 {
-    fFunctionName=name;
     f=new Rcpp::Function(name.Data());
 }
 
 //______________________________________________________________________________
 TRFunctionImport::TRFunctionImport(const TString& name, const TString& ns)
 {
-    fFunctionName=name;
-    fNameSpace=ns;
     f=new Rcpp::Function(name.Data(),ns.Data());
 }

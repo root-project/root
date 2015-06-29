@@ -40,15 +40,19 @@ namespace ROOT {
       class TRFunctionImport: public TObject {
          friend class TRInterface;
          friend SEXP Rcpp::wrap<TRFunctionImport>(const TRFunctionImport &f);
+         friend TRFunctionImport Rcpp::as<>(SEXP);
+
       protected:
          Rcpp::Function *f;
-         TString fFunctionName;
-         TString fNameSpace;
+         TRFunctionImport(const Rcpp::Function &fun){
+             *f=fun;
+         }
          
       public:
         TRFunctionImport(const TString& name);
         TRFunctionImport(const TString& name, const TString& ns);
         TRFunctionImport(const TRFunctionImport &fun);
+        
         ~TRFunctionImport(){if(f) delete f;}
         SEXP operator()(){return (*f)();}
         #include<TRFunctionImport__oprtr.h>
