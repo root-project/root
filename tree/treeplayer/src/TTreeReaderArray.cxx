@@ -712,7 +712,10 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
             dict = fDict;
          }
          else if (!dict && (branch->GetSplitLevel() == 0 || brElement->GetClass()->GetCollectionProxy())){
+            // Try getting the contained class
             dict = brElement->GetClass()->GetCollectionProxy()->GetValueClass();
+            // If it fails, try to get the contained type as a primitive type
+            if (!dict) dict = TDataType::GetDataType(brElement->GetClass()->GetCollectionProxy()->GetType());
             if (dict) contentTypeName = dict->GetName();
             return 0;
          }
