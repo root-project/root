@@ -1,17 +1,17 @@
 /*************************************************************************
- * Copyright (C) 2013-2014, Omar Andres Zapata Mesa                      *
+ * Copyright (C) 2013-2015, Omar Andres Zapata Mesa                      *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#include<TRFunction.h>
+#include<TRFunctionExport.h>
 //______________________________________________________________________________
 /* Begin_Html
-<center><h2>TRFunction class</h2></center>
+<center><h2>TRFunctionExport class</h2></center>
 
 <p>
-The TRFunction class lets you pass ROOT's functions to R's environment<br>
+The TRFunctionExport class lets you pass ROOT's functions to R's environment<br>
 </p>
 <p>
 The next example was based in <br>
@@ -75,10 +75,10 @@ void Minimization()
 {
  ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
  //passing RosenBrock function to R
- r["RosenBrock"]<<ROOT::R::TRFunction(RosenBrock);
+ r["RosenBrock"]<<ROOT::R::TRFunctionExport(RosenBrock);
 
  //passing RosenBrockGrad function to R
- r["RosenBrockGrad"]<<ROOT::R::TRFunction(RosenBrockGrad);
+ r["RosenBrockGrad"]<<ROOT::R::TRFunctionExport(RosenBrockGrad);
 
  //the option "method" could be "Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN","Brent"
  //the option "control" lets you put some constraints like:
@@ -113,17 +113,17 @@ void Minimization()
 
 
 using namespace ROOT::R;
-ClassImp(TRFunction)
+ClassImp(TRFunctionExport)
 
 
 //______________________________________________________________________________
-TRFunction::TRFunction(): TObject()
+TRFunctionExport::TRFunctionExport(): TObject()
 {
    f = NULL;
 }
 
 //______________________________________________________________________________
-TRFunction::TRFunction(const TRFunction &fun): TObject(fun)
+TRFunctionExport::TRFunctionExport(const TRFunctionExport &fun): TObject(fun)
 {
    f = fun.f;
 }

@@ -19,7 +19,7 @@
 #pragma link C++ nestedtypedef;
 
 //classes
-#pragma link C++ class ROOT::R::TRFunction+;
+#pragma link C++ class ROOT::R::TRFunctionExport+;
 
 #pragma link C++ class ROOT::R::TRInterface+;
 

@@ -20,8 +20,8 @@
 #include<TRDataFrame.h>
 #endif
 
-#ifndef ROOT_R_TFunction
-#include<TRFunction.h>
+#ifndef ROOT_R_TFunctionExport
+#include<TRFunctionExport.h>
 #endif
 
 #ifndef ROOT_TThread
@@ -70,13 +70,13 @@ namespace ROOT {
                fInterface->Assign<T>(data, fName);
                return *this;
             }
-            Binding &operator=(const TRFunction &fun) {
+            Binding &operator=(const TRFunctionExport &fun) {
                //The method assign is not a template for a function
                fInterface->Assign(fun, fName);
                return *this;
             }
 
-            Binding &operator<<(const TRFunction &fun) {
+            Binding &operator<<(const TRFunctionExport &fun) {
                //The method assign is not a template for a function
                fInterface->Assign(fun, fName);
                return *this;
@@ -131,7 +131,7 @@ namespace ROOT {
             // the TString's name is the name of the variable in the R enviroment.
             fR->assign<T>(var, name.Data());
          }
-         void Assign(const TRFunction &fun, const TString &name);
+         void Assign(const TRFunctionExport &fun, const TString &name);
          void Assign(const TRDataFrame &df, const TString &name);
 
          void Interactive();

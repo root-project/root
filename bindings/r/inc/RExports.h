@@ -64,7 +64,7 @@
 #include<RcppCommon.h>
 namespace ROOT {
    namespace R {
-      class TRFunction;
+      class TRFunctionExport;
       class TRDataFrame;
       class TRObjectProxy;
    }

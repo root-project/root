@@ -6,7 +6,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #include<RExports.h>
-#include<TRFunction.h>
+#include<TRFunctionExport.h>
 #include<TRObjectProxy.h>
 #include<TRDataFrame.h>
 #include<Rcpp/Vector.h>

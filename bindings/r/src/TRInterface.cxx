@@ -256,7 +256,7 @@ TRInterface::Binding TRInterface::operator[](const TString &name)
 }
 
 //______________________________________________________________________________
-void TRInterface::Assign(const TRFunction &obj, const TString &name)
+void TRInterface::Assign(const TRFunctionExport &obj, const TString &name)
 {
    //This method lets you pass c++ functions to R environment.
    fR->assign(*obj.f, name.Data());
