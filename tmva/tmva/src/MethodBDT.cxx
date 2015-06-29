@@ -739,7 +739,10 @@ void TMVA::MethodBDT::InitEventSample( void )
          // const Event* event = new Event( *GetTrainingEvent(ievt) );
          Event* event = new Event( *GetTrainingEvent(ievt) );
          if (fDoPreselection){
-            if (TMath::Abs(ApplyPreselectionCuts(event)) > 0.05) continue;
+            if (TMath::Abs(ApplyPreselectionCuts(event)) > 0.05) {
+               delete event; 
+               continue;
+            }
          }
 
          if (event->GetWeight() < 0 && (IgnoreEventsWithNegWeightsInTraining() || fNoNegWeightsInTraining)){
