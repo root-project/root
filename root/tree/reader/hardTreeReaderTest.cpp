@@ -14,6 +14,7 @@
 #define NUM_CONSTANT 14
 #define MULTIPLIER_B_OBJECT 1
 #define MULTIPLIER_VECTOR_B 1
+#define MULTIPLIER_VECTOR_FLOAT 1
 #define MULTIPLIER_VECTOR_B_STAR 3
 #define MULTIPLIER_VECTOR_STAR_B 2
 #define MULTIPLIER_B_STAR 2
@@ -50,6 +51,8 @@ void makeTree(const char* fileName, Int_t startI = 1){
     myTree->Branch("S1_num",            &myObject0.num, 32000, 1);
     myTree->Branch("S99_num",           &myObject0.num, 32000, 99);
     myTree->Branch("S101_num",          &myObject0.num, 32000, 101);
+
+    myTree->Branch("S0_vectorFloat",    &myObject0.vectorFloat, 32000, 0);
 
     myTree->Branch("S0_vectorB",        &myObject0.vectorB, 32000, 0);
     myTree->Branch("S1_vectorB",        &myObject0.vectorB, 32000, 1);
@@ -96,12 +99,17 @@ void makeTree(const char* fileName, Int_t startI = 1){
         fprintf(stderr, "\nEntry %i\n\n", i);
 
         // Clear old values
+        myObject0.ResetVectorFloat();
         myObject0.ResetVectorB();
 
         fprintf(stderr, "Setting BObject\n");
         myObject0.BObject.dummy = i;
 
         for (int j = 0; j < LIST_ENTRIES; ++j){
+            // Vector of floats
+            fprintf(stderr, "Adding %.2f to vectorFloat\n", (Float_t)(i*j));
+            myObject0.AddToVectorFloat(i*j);
+
             // Vector of objects
             B obj (i*j);
             fprintf(stderr, "Adding %i to vectorB\n", i*j);
@@ -299,6 +307,31 @@ void readBStar(const char* branchName, Bool_t printOut, Bool_t testValues, TreeG
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
 }
 
+void readVectorFloatValue(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
+
+    TString finalBranchName = branchName;
+    finalBranchName += "vectorFloat";
+
+    TTreeReaderValue<std::vector<Float_t> > myVectorFloat (myTreeReader, finalBranchName);
+
+    Bool_t success = true;
+    Bool_t read = false;
+    for (int i = 1; myTreeReader.Next(); ++i){
+        read = true;
+        if (printOut) fprintf(stderr, "vectorFloat values:");
+
+        for (int j = 0; j < LIST_ENTRIES; ++j){
+            if (testValues && myVectorFloat->at(j) != i * j * MULTIPLIER_VECTOR_FLOAT) success = false;
+            if (printOut) fprintf(stderr, " %.2f", myVectorFloat->at(j));
+        }
+
+        if (printOut) fprintf(stderr, "\n");
+    }
+    if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+}
+
 void readVectorBValue(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
 
     TTreeReader myTreeReader(getter.GetTree());
@@ -370,6 +403,31 @@ void readVectorStarBArray(const char* branchName, Bool_t printOut, Bool_t testVa
         for (int j = 0; j < LIST_ENTRIES; ++j){
             if (testValues && myVectorStarB.At(j).dummy != i * j * MULTIPLIER_VECTOR_STAR_B) success = false;
             if (printOut) fprintf(stderr, " %i", myVectorStarB.At(j).dummy);
+        }
+
+        if (printOut) fprintf(stderr, "\n");
+    }
+    if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+}
+
+void readVectorFloatArray(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
+
+    TString finalBranchName = branchName;
+    finalBranchName += "vectorFloat";
+
+    TTreeReaderArray<Float_t> myVectorFloat (myTreeReader, finalBranchName);
+
+    Bool_t success = true;
+    Bool_t read = false;
+    for (int i = 1; myTreeReader.Next(); ++i){
+        read = true;
+        if (printOut) fprintf(stderr, "vectorFloat values(%lu):", myVectorFloat.GetSize());
+
+        for (int j = 0; j < LIST_ENTRIES && j < (int)myVectorFloat.GetSize(); ++j){
+            if (testValues && myVectorFloat.At(j) != i * j * MULTIPLIER_VECTOR_FLOAT) success = false;
+            if (printOut) fprintf(stderr, " %.2f", myVectorFloat.At(j));
         }
 
         if (printOut) fprintf(stderr, "\n");
@@ -735,9 +793,11 @@ void output(Bool_t printAll, Bool_t testAll, TreeGetter& getter){
     fprintf(stderr, "A0: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(                "A0.", printAll, testAll, getter);
     fprintf(stderr, "A0: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(           "A0.", printAll, testAll, getter);
     fprintf(stderr, "A0: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(                  "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readVectorFloatValue(): ---------------- %s", printAll ? "\n": ""); readVectorFloatValue(       "A0.", printAll, testAll, getter);
     fprintf(stderr, "A0: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(           "A0.", printAll, testAll, getter);
     fprintf(stderr, "A0: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(       "A0.", printAll, testAll, getter);
     fprintf(stderr, "A0: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(       "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readVectorFloatArray(): ---------------- %s", printAll ? "\n": ""); readVectorFloatArray(       "A0.", printAll, testAll, getter);
     fprintf(stderr, "A0: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(           "A0.", printAll, testAll, getter);
     fprintf(stderr, "A0: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(                 "A0.", printAll, testAll, getter);
     fprintf(stderr, "A0: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(             "A0.", printAll, testAll, getter);
@@ -801,9 +861,11 @@ void output(Bool_t printAll, Bool_t testAll, TreeGetter& getter){
     fprintf(stderr, "S0_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObjectBranch(                 "S0_", printAll, testAll, getter);
     // fprintf(stderr, "S0_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(               "S0_", printAll, testAll, getter); // Branch not created
     fprintf(stderr, "S0_: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(                 "S0_", printAll, testAll, getter);
+    fprintf(stderr, "S0_: readVectorFloatValue(): ---------------- %s", printAll ? "\n": ""); readVectorFloatValue(          "S0_", printAll, testAll, getter);
     fprintf(stderr, "S0_: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(              "S0_", printAll, testAll, getter);
     fprintf(stderr, "S0_: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(          "S0_", printAll, testAll, getter);
     fprintf(stderr, "S0_: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(          "S0_", printAll, testAll, getter);
+    fprintf(stderr, "S0_: readVectorFloatArray(): ---------------- %s", printAll ? "\n": ""); readVectorFloatArray(          "S0_", printAll, testAll, getter);
     fprintf(stderr, "S0_: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(              "S0_", printAll, testAll, getter);
     // fprintf(stderr, "S0_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(                 "S0_", printAll, testAll, getter); // Branch not created
     // fprintf(stderr, "S0_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(             "S0_", printAll, testAll, getter); // Branch not created
