@@ -668,13 +668,11 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
 
       }
 
-      if ( parent ) {   // possibly freshly created above
+      if ( parent && !PyRootType_Check( parent ) ) {
+      // Special case: parent found is not one of ours (it's e.g. a pure Python module), so
+      // continuing would fail badly. One final lookup, then out of here ...
          std::string unscoped = scope_name.substr( last, std::string::npos );
-         PyObject* pyklass = PyObject_GetAttrString( parent, unscoped.c_str() );
-         if ( pyklass )
-            return pyklass;
-         PyErr_Clear();
-         return CreateScopeProxy( unscoped.c_str(), parent );
+         return PyObject_GetAttrString( parent, unscoped.c_str() );
       }
    }
 
