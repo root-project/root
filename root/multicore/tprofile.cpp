@@ -29,7 +29,7 @@ int main()
     std::ostringstream s;
     s<<"Dummy"<<i;
     profiles.push_back(std::unique_ptr<TProfile>(new TProfile(s.str().c_str(),s.str().c_str(), 100,10,11,0,10)));
-    profiles.back()->SetBit(TH1::kCanRebin);
+    profiles.back()->SetCanExtend(TH1::kAllAxes);
     auto profile = profiles.back().get();
     threads.emplace_back([i,profile,&canStart]() {
         TTHREAD_TLS_DECL(TThread, s_thread_guard);
