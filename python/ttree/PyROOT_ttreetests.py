@@ -177,8 +177,8 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       f = TFile( self.fname )
 
-      #myarray = f.Get( 'myarray' )
-      #self.assert_( isinstance( myarray, TArrayI ) )
+      myarray = f.Get( 'myarray' )
+      self.assert_( isinstance( myarray, TArrayI ) )
 
       myarray = MakeNullPointer( TArrayI )
       f.GetObject( 'myarray', myarray )
@@ -302,7 +302,10 @@ class TFileGetNonTObject( MyTestCase ):
       self.assert_( f.Get( 'totalEvents' ) )
       self.assertEqual( f.Get( 'totalEvents' ).GetSize(), 1 )
       self.assertEqual( f.totalEvents.GetSize(),          1 )
-      
+
+      # the following used to crash
+      self.assert_( not gDirectory.Get( "non_existent_stuff" ) )
+
 
 ## actual test run
 if __name__ == '__main__':
