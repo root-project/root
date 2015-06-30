@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_basictests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/23/04
-# Last: 07/25/11
+# Last: 06/09/15
 
 """Basic unit tests for PyROOT package."""
 
@@ -127,13 +127,6 @@ class Basic3PythonLanguageTestCase( MyTestCase ):
 
       import cppyy
       PyABC = cppyy.gbl.PyABC
-
-      print cppyy.gbl.std.vector('const PyABC::SomeStruct*') 
-      print cppyy.gbl.std.vector('const PyABC::SomeStruct*') 
-      print PyABC.SomeOtherStruct.StructContainer
-      print PyABC.SomeOtherStruct.StructContainer
-      print PyABC.SomeOtherStruct.StructContainer
-      print PyABC.SomeOtherStruct.StructContainer
 
       self.assert_( PyABC.SomeOtherStruct.StructContainer is cppyy.gbl.std.vector('const PyABC::SomeStruct*') )
 
@@ -384,6 +377,12 @@ class Basic5PythonizationTestCase( MyTestCase ):
       b = list( a )  
 
       self.assertEqual( b, [] )
+
+   def test5Hashing( self ):
+      """C++ objects must be hashable"""
+
+      a = TH1D("asd", "asd", 10, 0, 1)
+      self.assert_( hash(a) )
 
 
 ## actual test run

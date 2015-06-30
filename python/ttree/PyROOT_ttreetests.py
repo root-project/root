@@ -12,6 +12,7 @@ from ROOT import *
 from common import *
 
 __all__ = [
+   'TFileGetNonTObject',
    'TTree1ReadWriteSimpleObjectsTestCase',
    'TTree2BranchCreation'
 ]
@@ -284,6 +285,24 @@ class TTree2BranchCreation( MyTestCase ):
       t = TTree()
       t.Branch( "a", 0 )
 
+
+class TFileGetNonTObject( MyTestCase ):
+   fname = 'test.root'
+
+   def test01PythonizationOfGet( self ):
+      """TFile::Get pythonization checks classes"""
+
+      totalEvents = TArrayI( 1 )
+      f = TFile( self.fname, 'RECREATE' )
+      f.WriteObject( totalEvents, 'totalEvents' )
+      f.Close()
+
+      f = TFile( self.fname )
+      self.assertEqual( f.GetKey( 'totalEvents' ).GetClassName(), 'TArrayI' )
+      self.assert_( f.Get( 'totalEvents' ) )
+      self.assertEqual( f.Get( 'totalEvents' ).GetSize(), 1 )
+      self.assertEqual( f.totalEvents.GetSize(),          1 )
+      
 
 ## actual test run
 if __name__ == '__main__':

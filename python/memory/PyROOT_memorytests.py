@@ -1,7 +1,7 @@
 # File: roottest/python/memory/PyROOT_memorytests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 02/15/05
-# Last: 09/24/10
+# Last: 06/15/15
 
 """Memory tests for PyROOT package."""
 
@@ -160,6 +160,30 @@ class Memory1TestCase( MyTestCase ):
       self.assertEqual( MemTester.counter, 0 )
       del c             # c not derived from TObject, no notification
       self.assertEqual( MemTester.counter, 0 )
+
+   def test4DestructionOfDerivedClass( self ):
+      """Derived classes should call base dtor automatically"""
+
+      class D1( MemTester ):
+         def __init__( self ):
+            MemTester.__init__( self )
+
+      self.assertEqual( MemTester.counter, 0 )
+      d = D1()
+      self.assertEqual( MemTester.counter, 1 )
+      del d
+      self.assertEqual( MemTester.counter, 0 )
+
+      class D2( MemTester ):
+         def __init__( self ):
+            super( D2, self ).__init__()
+
+      self.assertEqual( MemTester.counter, 0 )
+      d = D2()
+      self.assertEqual( MemTester.counter, 1 )
+      del d
+      self.assertEqual( MemTester.counter, 0 )
+
 
 
 ## actual test run

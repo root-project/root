@@ -258,6 +258,13 @@ class Cpp2ClassNamingTestCase( MyTestCase ):
       c = PR_NS_A.CtorWithDefaultInNS( 2 )
       self.assertEqual( c.data, 2 )
 
+   def test03NamespaceInTemplates( self ):
+      """Templated data members need to retain namespaces of arguments"""
+
+      p = std.pair( std.vector( PR_NS_A.PR_ST_B ), std.vector( PR_NS_A.PR_NS_D.PR_ST_E ) )()
+      self.assert_( "vector<PR_NS_A::PR_ST_B>" in type(p.first).__name__ )
+      self.assert_( "vector<PR_NS_A::PR_NS_D::PR_ST_E>" in type(p.second).__name__ )
+
 
 ## actual test run
 if __name__ == '__main__':

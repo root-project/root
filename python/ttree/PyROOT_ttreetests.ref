@@ -1,3 +1,4 @@
+TFile::Get pythonization checks classes ... ok
 Test writing of a single branched TTree with an std::vector<double> ... ok
 Test reading of a single branched TTree with an std::vector<double> ... ok
 Test writing of a complex data object ... ok
