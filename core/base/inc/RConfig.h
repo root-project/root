@@ -439,6 +439,9 @@
 #   if __GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ > 1)
 #      define R__PRAGMA_DIAGNOSTIC
 #   endif
+#   if __GNUC__ >= 5             /* disable any define private to public in generated dictionaties */
+#     define R__ACCESS_IN_SYMBOL
+#   endif
 #endif
 
 /* allows symbols to be hidden from the shared library export symbol table */

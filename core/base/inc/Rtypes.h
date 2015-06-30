@@ -313,7 +313,8 @@ static const char *ImplFileName();
 
 
 #if !defined(R__CONCRETE_INPUT_OPERATOR)
-#if !defined(R__ACCESS_IN_SYMBOL) || defined(__CINT__)
+#if !defined(R__ACCESS_IN_SYMBOL) || defined(__CINT__) || \
+    (defined(__GNUC__) && __GNUC__ >= 5)
 
 #define ClassDef(name,id) \
    _ClassDef_(name,id) \

@@ -130,11 +130,7 @@ foreach(src ${LibCore_SRCS})
 endforeach()
 
 if(CXX_HAS_Wno-strict-aliasing)
-  set_source_files_properties(${CORE_DICTIONARIES} COMPILE_FLAGS -Wno-strict-aliasing)
-endif()
-
-if(${GCC_MAJOR} GREATER 4)
-  set_source_files_properties(${CORE_DICTIONARIES} PROPERTIES COMPILE_DEFINITIONS R__ACCESS_IN_SYMBOL)
+  set_source_files_properties(${CORE_DICTIONARIES} PROPERTIES COMPILE_FLAGS -Wno-strict-aliasing)
 endif()
 
 ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} ${CORE_DICTIONARIES}

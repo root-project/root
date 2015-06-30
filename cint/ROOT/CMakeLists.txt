@@ -146,9 +146,6 @@ foreach(_name ${CINTSTLDLLNAMES})
     set_source_files_properties(${Dictionary}.cxx 
                                  COMPILE_FLAGS "${CINTDLLCXXFLAGS} -DG__CINTBODY -I${HEADER_OUTPUT_PATH}"
                                 )
-    if(${GCC_MAJOR} GREATER 4)
-      set_source_files_properties( ${Dictionary}.cxx PROPERTIES COMPILE_DEFINITIONS R__ACCESS_IN_SYMBOL)
-    endif()
                                 
     add_Library(${_name}Dict SHARED ${Dictionary}.cxx )
     set_Target_properties(${_name}Dict PROPERTIES PREFIX ${libprefix} SUFFIX ${libsuffix} FOLDER Dictionaries MACOSX_RPATH 1)
