@@ -793,7 +793,7 @@ PyObject* PyROOT::GetCppGlobal( const std::string& name )
 // allow lookup into std as if global (historic)
    TDataMember* dm = TClass::GetClass( "std" )->GetDataMember( name.c_str() );
    if ( dm ) {
-      Cppyy::TCppType_t klass = Cppyy::GetScope( dm->GetFullTypeName() );
+      Cppyy::TCppType_t klass = Cppyy::GetScope( dm->GetTrueTypeName() );
       return BindCppObjectNoCast( (void*)dm->GetOffset(), klass, kFALSE );
    }
 
