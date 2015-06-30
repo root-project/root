@@ -167,6 +167,7 @@ endforeach()
 set(stamp_file ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LLVMRES.stamp)
 add_custom_command(OUTPUT ${stamp_file}
                    COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
+                   COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/bits
                    COMMAND cmake -E copy_directory
                                   ${CMAKE_BINARY_DIR}/interpreter/llvm/src/${CMAKE_CFG_INTDIR}/lib/clang/${LLVM_VERSION}/include
                                   ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
@@ -179,6 +180,9 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND cmake -E copy
                                   ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/unistd.h
                                   ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/unistd.h
+                   COMMAND cmake -E copy
+                                  ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/bits/time.h
+                                  ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/bits/time.h
                    ${copy_commands}
                    COMMAND cmake -E touch ${stamp_file}
                    DEPENDS ${files_to_copy}
