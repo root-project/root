@@ -2214,20 +2214,38 @@ namespace {
 // TDirectory suffers from a similar problem. Nevertheless, the TFile case is by far
 // the most common, so we'll leave it at this until someone asks for one of the bases
 // to be pythonized.
-   PyObject* TFileGet( PyObject* self, PyObject* namecycle )
+   PyObject* TDirectoryFileGet( ObjectProxy* self, PyObject* pynamecycle )
    {
-   // Pythonization of TFile::Get that raises AttributeError on failure.
-      ObjectProxy* key = (ObjectProxy*)CallPyObjMethod( self, "GetKey", namecycle );
-      if ( !key )
+   // Pythonization of TDirectoryFile::Get that handles non-TObject deriveds
+      if ( ! ObjectProxy_Check( self ) ) {
+         PyErr_SetString( PyExc_TypeError,
+            "TDirectoryFile::Get must be called with a TDirectoryFile instance as first argument" );
          return nullptr;
+      }
 
-      void* addr = ((TFile*)((ObjectProxy*)self)->GetObject())->GetObjectChecked(
-         PyROOT_PyUnicode_AsString( namecycle ), ((TKey*)key->GetObject())->GetClassName() );
+      TDirectoryFile* dirf =
+         (TDirectoryFile*)OP2TCLASS(self)->DynamicCast( TDirectoryFile::Class(), self->GetObject() );
+      if ( !dirf ) {
+         PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
+         return nullptr;
+      }
 
-      Cppyy::TCppType_t klass =
-         (Cppyy::TCppType_t)Cppyy::GetScope( ((TKey*)key->GetObject())->GetClassName() );
-      return BindCppObjectNoCast( addr, klass, kFALSE );
+      const char* namecycle = PyROOT_PyUnicode_AsString( pynamecycle );
+      if ( !namecycle )
+         return nullptr;     // TypeError already set
+
+      TKey* key = dirf->GetKey( namecycle );
+      if ( key ) {
+         void* addr = dirf->GetObjectChecked( namecycle, key->GetClassName() );
+         return BindCppObjectNoCast( addr,
+            (Cppyy::TCppType_t)Cppyy::GetScope( key->GetClassName() ), kFALSE );
+      }
+
+      // no key? for better or worse, call normal Get()
+      void* addr = dirf->Get( namecycle );
+      return BindCppObject( addr, (Cppyy::TCppType_t)Cppyy::GetScope( "TObject" ), kFALSE );
    }
+
 
 //- simplistic len() functions -------------------------------------------------
    PyObject* ReturnThree( ObjectProxy*, PyObject* ) {
@@ -2519,6 +2537,13 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       return kTRUE;
    }
 
+   if ( name == "TDirectoryFile" ) {
+   // add safety for non-TObject derived Get() results
+      Utility::AddToClass( pyclass, "Get", (PyCFunction) TDirectoryFileGet,     METH_O );
+
+      return kTRUE;
+   }
+
    if ( name == "TTree" ) {
    // allow direct browsing of the tree
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TTreeGetAttr, METH_O );
@@ -2598,7 +2623,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    // allow member-style access to entries in file
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TFileGetAttr, METH_O );
-      Utility::AddToClass( pyclass, "Get",         (PyCFunction) TFileGet,     METH_O );
 
       return kTRUE;
    }
