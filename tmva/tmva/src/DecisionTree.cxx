@@ -1336,6 +1336,8 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    delete [] separationGain;
    delete [] cutIndex;
 
+   delete [] nBins; 
+
    return separationGainTotal;
 
 }
