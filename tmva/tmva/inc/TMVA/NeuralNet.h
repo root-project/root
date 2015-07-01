@@ -210,32 +210,6 @@ public:
 
 
 
-// test multithreaded training
-class SteepestThreaded
-{
-public:
-
-    size_t m_repetitions;
-
-    SteepestThreaded (double learningRate = 1e-4, double learningRatePrev = 1e-4, size_t repetitions = 10) 
-	: m_repetitions (repetitions)
-        , m_alpha (learningRate)
-        , m_beta (learningRatePrev)
-    {}
-
-
-    template <typename Function, typename Weights, typename Gradients, typename PassThrough>
-        double fitWrapper (Function& function, PassThrough& passThrough, Weights weights);
-
-
-    template <typename Function, typename Weights, typename PassThrough>
-        double operator() (Function& fitnessFunction, Weights& weights, PassThrough& passThrough);
-
-
-    double m_alpha;
-    double m_beta;
-    std::vector<double> m_prevGradients;
-};
 
 
 
@@ -511,7 +485,9 @@ public:
               size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
 	      double _factorWeightDecay = 1e-5, TMVA::NN::EnumRegularization _regularization = TMVA::NN::EnumRegularization::NONE,
               MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
-              double _learningRate = 1e-5, double _momentum = 0.3, int _repetitions = 3);
+              double _learningRate = 1e-5, double _momentum = 0.3, 
+              int _repetitions = 3,
+	      bool _multithreading = true);
     
     virtual ~Settings ();
 
@@ -567,6 +543,8 @@ public:
 
     EnumRegularization regularization () const { return m_regularization; }
 
+    bool useMultithreading () const { return m_useMultithreading; }
+
 
     void pads (int numPads) { if (fMonitoring) fMonitoring->pads (numPads); }
     void create (std::string histoName, int bins, double min, double max) { if (fMonitoring) fMonitoring->create (histoName, bins, min, max); }
@@ -604,6 +582,7 @@ public:
     MinimizerType fMinimizerType;
 
 protected:
+    bool m_useMultithreading;
     std::shared_ptr<Monitoring> fMonitoring;
 
 };
@@ -639,9 +618,10 @@ public:
                             size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
 			    double _factorWeightDecay = 1e-5, EnumRegularization _regularization = EnumRegularization::NONE, 
 			    size_t _scaleToNumEvents = 0, MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
-                            double _learningRate = 1e-5, double _momentum = 0.3, int _repetitions = 3)
+                            double _learningRate = 1e-5, double _momentum = 0.3, int _repetitions = 3,
+                            bool _useMultithreading = true)
         : Settings (name, _convergenceSteps, _batchSize, _testRepetitions, _factorWeightDecay, 
-                    _regularization, _eMinimizerType, _learningRate, _momentum, _repetitions)
+                    _regularization, _eMinimizerType, _learningRate, _momentum, _repetitions, _useMultithreading)
         , m_ams ()
         , m_sumOfSigWeights (0)
         , m_sumOfBkgWeights (0)

@@ -289,84 +289,6 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
 
-    template <typename Function, typename Weights, typename Gradients, typename PassThrough>
-        double SteepestThreaded::fitWrapper (Function& function, PassThrough& passThrough, Weights weights)
-    {
-	return fitnessFunction (passThrough, weights);
-    }
-
-
-
-    template <typename Function, typename Weights, typename PassThrough>
-        double SteepestThreaded::operator() (Function& fitnessFunction, Weights& weights, PassThrough& passThrough) 
-    {
-	size_t numWeights = weights.size ();
-	std::vector<double> gradients (numWeights, 0.0);
-	std::vector<double> localWeights (begin (weights), end (weights));
-        if (m_prevGradients.empty ())
-            m_prevGradients.assign (weights.size (), 0);
-
-
-        fitnessFunction (passThrough, weights, gradients);
-
-        std::vector<std::future<double> > futures;
-        std::vector<std::pair<double,double> > factors;
-        for (size_t i = 0; i < m_repetitions; ++i)
-        {
-            std::vector<double> tmpWeights (weights);
-            double alpha = std::pow (m_alpha, (1.0 + i));
-            double beta = m_beta;
-            auto itGradient = begin (gradients);
-            auto itPrevGradient = begin (m_prevGradients);
-            std::for_each (begin (tmpWeights), end (tmpWeights), [alpha,beta,&itGradient,&itPrevGradient](double& w) 
-                           { 
-                               w += alpha * (*itGradient) + beta * (*itPrevGradient);
-                               ++itGradient; ++itPrevGradient;
-                           }
-                );
-            
-	    // fitnessFunction is a function template which turns into a function at invocation
-	    // if we call fitnessFunction directly in async, the templat parameters
-	    // cannot be deduced correctly. Through the lambda function, the types are 
-            // already deduced correctly for the lambda function and the async. The deduction for 
-	    // the template function is then done from within the lambda function. 
-	    futures.push_back (std::async (std::launch::async, [&fitnessFunction, &passThrough, tmpWeights]() mutable 
-					   {  
-					       return fitnessFunction (passThrough, tmpWeights); 
-					   }) );
-
-            factors.push_back (std::make_pair (alpha,beta));
-        }
-
-        // select best
-        double bestAlpha = m_alpha, bestBeta = 0.0;
-        auto itE = begin (futures);
-        double bestE = 1e100;
-        for (auto& alphaBeta : factors)
-        {
-            double E = (*itE).get ();
-            if (E < bestE)
-            {
-                bestAlpha = alphaBeta.first;
-                bestBeta = alphaBeta.second;
-                bestE = E;
-            }
-            ++itE;
-        }
-
-        // walk this way
-        auto itGradient = begin (gradients);
-        auto itPrevGradient = begin (m_prevGradients);
-        std::for_each (begin (weights), end (weights), [bestAlpha,bestBeta,&itGradient,&itPrevGradient](double& w) 
-                       { 
-                           double grad = bestAlpha * (*itGradient) + bestBeta * (*itPrevGradient);
-                           w += grad;
-                           (*itPrevGradient) = grad;
-                           ++itGradient; ++itPrevGradient;
-                       }
-            );
-        return bestE;
-    }
 
 
 
@@ -863,23 +785,73 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	Iterator itPatternBatchBegin = itPatternBegin;
 	Iterator itPatternBatchEnd = itPatternBatchBegin;
 	std::random_shuffle (itPatternBegin, itPatternEnd);
-	while (numBatches > 0)
-	{
-            settings.testIteration ();
+
+        // create batches
+        std::vector<Batch> batches;
+        while (numBatches > 0)
+        {
 	    std::advance (itPatternBatchEnd, settings.batchSize ());
-            Batch batch (itPatternBatchBegin, itPatternBatchEnd);
-            std::tuple<Settings&, Batch&, DropContainer&> settingsAndBatch (settings, batch, dropContainer);
-	    error += minimizer ((*this), weights, settingsAndBatch);
+            batches.push_back (Batch (itPatternBatchBegin, itPatternBatchEnd));
 	    itPatternBatchBegin = itPatternBatchEnd;
 	    --numBatches;
-	}
-	if (itPatternBatchEnd != itPatternEnd)
-        {
-            settings.testIteration ();
-            Batch batch (itPatternBatchEnd, itPatternEnd);
-            std::tuple<Settings&, Batch&, DropContainer&> settingsAndBatch (settings, batch, dropContainer);
-	    error += minimizer ((*this), weights, settingsAndBatch);
         }
+
+        // add the last pattern to the last batch
+	if (itPatternBatchEnd != itPatternEnd)
+            batches.push_back (Batch (itPatternBatchEnd, itPatternEnd));
+
+
+        if (settings.useMultithreading ())
+        {
+            // -------------------- divide the batches into bunches for each thread --------------
+            size_t numThreads = std::thread::hardware_concurrency ();
+            size_t batchesPerThread = batches.size () / numThreads;
+            typedef std::vector<Batch>::iterator batch_iterator;
+            std::vector<std::pair<batch_iterator,batch_iterator>> batchVec;
+            batch_iterator itBatchBegin = std::begin (batches);
+            batch_iterator itBatchCurrEnd = std::begin (batches);
+            batch_iterator itBatchEnd = std::end (batches);
+            for (size_t iT = 0; iT < numThreads; ++iT)
+            {
+                if (iT == numThreads-1)
+                    itBatchCurrEnd = itBatchEnd;
+                else
+                    std::advance (itBatchCurrEnd, batchesPerThread);
+                batchVec.push_back (std::make_pair (itBatchBegin, itBatchCurrEnd));
+                itBatchBegin = itBatchCurrEnd;
+            }
+        
+            // -------------------- loop  over batches -------------------------------------------
+            std::vector<std::future<double>> futures;
+            for (auto& batchRange : batchVec)
+            {
+                futures.push_back (
+                    std::async (std::launch::async, [&]() 
+                                {
+                                    double localError = 0.0;
+                                    for (auto it = batchRange.first, itEnd = batchRange.second; it != itEnd; ++it)
+                                    {
+                                        Batch& batch = *it;
+                                        std::tuple<Settings&, Batch&, DropContainer&> settingsAndBatch (settings, batch, dropContainer);
+                                        localError += minimizer ((*this), weights, settingsAndBatch);
+                                    }
+                                    return localError;
+                                })
+                    );
+            }
+
+            for (auto& f : futures)
+                error += f.get ();
+        }
+        else
+        {
+            for (auto& batch : batches)
+            {
+                std::tuple<Settings&, Batch&, DropContainer&> settingsAndBatch (settings, batch, dropContainer);
+                error += minimizer ((*this), weights, settingsAndBatch);
+            }
+        }
+        
 	error /= numBatches_stored;
         settings.testIteration ();
     
@@ -980,30 +952,6 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
         Batch& batch = std::get<1>(settingsAndBatch);
 	DropContainer& drop = std::get<2>(settingsAndBatch);
 
-        /* EnumRegularization eRegularization = settings.regularization (); */
-        /* if (eRegularization == EnumRegularization::L1MAX && */
-        /*     settings.factorWeightDecay () > 0.0) */
-        /* { */
-	/*     size_t numNodesPrev = (*batch.begin ()).input ().size (); */
-        /*     size_t _numWeights = numWeights (numNodesPrev); */
-        /*     auto itCurrWeight = itWeightBegin; */
-        /*     auto itCurrWeightEnd = itCurrWeight; */
-        /*     std::advance (itCurrWeightEnd, _numWeights); */
-        /*     double accum = std::accumulate (itCurrWeight, itCurrWeightEnd, (double)0.0, [](double currSum, const double& w) */
-        /*                                   { */
-        /*                                       return currSum + std::fabs (w); */
-        /*                                   }); */
-        /*     if (accum > settings.factorWeightDecay ()) */
-        /*     { */
-        /*         double factor = settings.factorWeightDecay ()/accum; */
-        /*         std::for_each (itCurrWeight, itCurrWeightEnd, [factor](double& w) */
-        /*                        { */
-        /*                            w *= factor; */
-        /*                        }); */
-        /*     } */
-        /* } */
-
-        
 	bool usesDropOut = !drop.empty ();
 
 	std::vector<std::vector<std::function<double(double)> > > activationFunctionsDropOut;
@@ -1086,6 +1034,9 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
         }
 	assert (totalNumWeights > 0);
 
+
+
+        // ---------------------------------- loop over pattern -------------------------------------------------------
 	for (const Pattern& _pattern : batch)
 	{
             bool isFirst = true;

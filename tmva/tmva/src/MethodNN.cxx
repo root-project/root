@@ -408,6 +408,7 @@ void TMVA::MethodNN::ProcessOptions()
            double learningRate = fetchValue (block, "LearningRate", 1e-5);
            double momentum = fetchValue (block, "Momentum", 0.3);
            int repetitions = fetchValue (block, "Repetitions", 3);
+           TString strMultithreading = fetchValue (block, "Multithreading", TString ("True"));
            std::vector<double> dropConfig;
            dropConfig = fetchValue (block, "DropConfig", dropConfig);
            int dropRepetitions = fetchValue (block, "DropRepetitions", 3);
@@ -419,13 +420,23 @@ void TMVA::MethodNN::ProcessOptions()
                eRegularization = TMVA::NN::EnumRegularization::L2;
            else if (regularization == "L1MAX")
                eRegularization = TMVA::NN::EnumRegularization::L1MAX;
+
+
+           strMultithreading.ToUpper ();
+           bool multithreading = true;
+           if (strMultithreading.BeginsWith ("T"))
+               multithreading = true;
+           else
+               multithreading = false;
+           
            
            std::shared_ptr<TMVA::NN::ClassificationSettings> ptrSettings = make_shared <TMVA::NN::ClassificationSettings> (
                GetName  (),
                convergenceSteps, batchSize, 
                testRepetitions, factorWeightDecay,
-               eRegularization, fScaleToNumEvents, TMVA::NN::MinimizerType::fSteepest, learningRate, 
-               momentum, repetitions);
+               eRegularization, fScaleToNumEvents, TMVA::NN::MinimizerType::fSteepest,
+               learningRate, 
+               momentum, repetitions, multithreading);
 
            if (dropRepetitions > 0 && !dropConfig.empty ())
            {
@@ -528,6 +539,7 @@ void TMVA::MethodNN::Train()
         size_t inputSize = GetNVariables (); //trainPattern.front ().input ().size ();
         size_t outputSize = fAnalysisType == Types::kClassification ? 1 : GetNTargets (); //trainPattern.front ().output ().size ();
         fNet.setInputSize (inputSize + 1); // num vars + bias node
+//        fNet.setOutputSize (outputSize); // num vars + bias node
         
         // configure neural net
         auto itLayout = std::begin (fLayout), itLayoutEnd = std::end (fLayout)-1; // all layers except the last one
@@ -650,6 +662,7 @@ void TMVA::MethodNN::AddWeightsXMLTo( void* parent ) const
 
    void* weightsxml = gTools().xmlengine().NewChild(nn, 0, "Synapses");
    gTools().xmlengine().NewAttr (weightsxml, 0, "InputSize", gTools().StringFromInt((int)fNet.inputSize ()));
+//   gTools().xmlengine().NewAttr (weightsxml, 0, "OutputSize", gTools().StringFromInt((int)fNet.outputSize ()));
    gTools().xmlengine().NewAttr (weightsxml, 0, "NumberSynapses", gTools().StringFromInt((int)fWeights.size ()));
    std::stringstream s("");
    s.precision( 16 );
@@ -711,9 +724,12 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
 
    Int_t numWeights (0);
    Int_t inputSize (0);
+//   Int_t outputSize (0);
    gTools().ReadAttr (xmlWeights, "NumberSynapses", numWeights);
    gTools().ReadAttr (xmlWeights, "InputSize", inputSize);
+//   gTools().ReadAttr (xmlWeights, "OutputSize", outputSize);
    fNet.setInputSize (inputSize);
+//   fNet.setOutputSize (inputSize);
 
    const char* content = gTools().GetContent (xmlWeights);
    std::stringstream sstr (content);
@@ -888,6 +904,7 @@ void TMVA::MethodNN::checkGradients ()
     fNet.clear ();
 
     fNet.setInputSize (inputSize);
+//    fNet.setOutputSize (outputSize);
     fNet.addLayer (NN::Layer (100, NN::EnumFunction::SOFTSIGN)); 
     fNet.addLayer (NN::Layer (30, NN::EnumFunction::SOFTSIGN)); 
     fNet.addLayer (NN::Layer (outputSize, NN::EnumFunction::LINEAR, NN::ModeOutputValues::SIGMOID)); 
