@@ -243,18 +243,18 @@ namespace mathtext {
          struct pfb_segment_header_s segment_header;
          size_t offset = 0;
 
-         segment_header.type = 0;
+         // The two char elements of struct
+         // pfb_segment_header_s are most likely aligned to
+         // larger than 1 byte boundaries, so copy all the
+         // elements individually
+         segment_header.always_128 = font_data[offset];
+         segment_header.type = font_data[offset + 1];
+
          while (segment_header.type != TYPE_EOF) {
-            // The two char elements of struct
-            // pfb_segment_header_s are most likely aligned to
-            // larger than 1 byte boundaries, so copy all the
-            // elements individually
-            segment_header.always_128 = font_data[offset];
-            segment_header.type = font_data[offset + 1];
             memcpy(&segment_header.length, &font_data[offset + 2],
                    sizeof(unsigned int));
             offset += sizeof(unsigned int) + 2;
-#ifdef LITTLE_ENDIAN
+#ifndef LITTLE_ENDIAN
             segment_header.length =
             bswap_32(segment_header.length);
 #endif // LITTLE_ENDIAN
@@ -289,6 +289,9 @@ namespace mathtext {
             }
 
             delete [] buffer;
+
+            segment_header.always_128 = font_data[offset];
+            segment_header.type = font_data[offset + 1];
          }
 
          return ret;
