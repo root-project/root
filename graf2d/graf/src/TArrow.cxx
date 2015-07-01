@@ -21,7 +21,8 @@ TString TArrow::fgDefaultOption     = ">";
 
 ClassImp(TArrow)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TArrow : to draw all kinds of arrows</h2></center>
 The different arrow's formats are explained in TArrow::TArrow.
@@ -37,16 +38,17 @@ Begin_Macro(source)
 ../../../tutorials/graphics/arrow.C
 End_Macro */
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Arrow default constructor.
+
 TArrow::TArrow(): TLine(),TAttFill()
 {
-   // Arrow default constructor.
-
    fAngle     = fgDefaultAngle;
    fArrowSize = 0.;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
              Float_t arrowsize ,Option_t *option)
        :TLine(x1,y1,x2,y2), TAttFill(0,1001)
@@ -83,7 +85,8 @@ TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    SetFillColor(this->GetLineColor());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TArrow::~TArrow()
 {
    /* Begin_Html
@@ -91,7 +94,8 @@ TArrow::~TArrow()
    End_Html */
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TArrow::TArrow(const TArrow &arrow) : TLine(), TAttFill()
 {
    /* Begin_Html
@@ -103,7 +107,8 @@ TArrow::TArrow(const TArrow &arrow) : TLine(), TAttFill()
    ((TArrow&)arrow).Copy(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TArrow::Copy(TObject &obj) const
 {
    /* Begin_Html
@@ -117,7 +122,8 @@ void TArrow::Copy(TObject &obj) const
    ((TArrow&)obj).fOption     = fOption;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TArrow::Draw(Option_t *option)
 {
    /* Begin_Html
@@ -132,7 +138,8 @@ void TArrow::Draw(Option_t *option)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                      Float_t arrowsize ,Option_t *option)
 {
@@ -157,7 +164,8 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    newarrow->AppendPad(opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TArrow::Paint(Option_t *option)
 {
    /* Begin_Html
@@ -171,7 +179,8 @@ void TArrow::Paint(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                         Float_t arrowsize, Option_t *option)
 {
@@ -352,7 +361,8 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    /* Begin_Html
@@ -379,7 +389,8 @@ void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TArrow::SetDefaultAngle(Float_t Angle)
 {
    /* Begin_Html
@@ -390,7 +401,8 @@ void TArrow::SetDefaultAngle(Float_t Angle)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TArrow::SetDefaultArrowSize (Float_t ArrowSize)
 {
    /* Begin_Html
@@ -401,7 +413,8 @@ void TArrow::SetDefaultArrowSize (Float_t ArrowSize)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TArrow::SetDefaultOption(Option_t *Option)
 {
    /* Begin_Html
@@ -412,7 +425,8 @@ void TArrow::SetDefaultOption(Option_t *Option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Float_t TArrow::GetDefaultAngle()
 {
    /* Begin_Html
@@ -423,7 +437,8 @@ Float_t TArrow::GetDefaultAngle()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Float_t TArrow::GetDefaultArrowSize()
 {
    /* Begin_Html
@@ -434,7 +449,8 @@ Float_t TArrow::GetDefaultArrowSize()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Option_t *TArrow::GetDefaultOption()
 {
    /* Begin_Html

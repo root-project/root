@@ -57,34 +57,34 @@
 
 ClassImp(TMySQLServer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a connection to a MySQL DB server. The db arguments should be
+/// of the form "mysql://<host>[:<port>][/<database>]", e.g.:
+/// "mysql://pcroot.cern.ch:3456/test". The uid is the username and pw
+/// the password that should be used for the connection.
+///
+/// In addition, several parameters can be specified in url after "?" symbol:
+///    timeout=N           n is connect timeout is seconds
+///    socket=socketname   socketname should be name of Unix socket, used
+///                        for connection
+///    multi_statements    tell the server that the client may send multiple
+///                        statements in a single string (separated by ;);
+///    multi_results       tell the server that the client can handle multiple
+///                        result sets from multiple-statement executions or
+///                        stored procedures
+///    reconnect=0|1       enable or disable automatic reconnection to the server
+///                        if the connection is found to have been lost
+///    compress            use the compressed client/server protocol
+///    cnf_file=filename   Read options from the named option file instead of
+///                        from my.cnf
+///    cnf_group=groupname Read options from the named group from my.cnf or the
+///                        file specified with cnf_file option
+/// If several parameters are specified, they should be separated by "&" symbol
+/// Example of connection argument:
+///    TSQLServer::Connect("mysql://host.domain/test?timeout=10&multi_statements");
+
 TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
 {
-   // Open a connection to a MySQL DB server. The db arguments should be
-   // of the form "mysql://<host>[:<port>][/<database>]", e.g.:
-   // "mysql://pcroot.cern.ch:3456/test". The uid is the username and pw
-   // the password that should be used for the connection.
-   //
-   // In addition, several parameters can be specified in url after "?" symbol:
-   //    timeout=N           n is connect timeout is seconds
-   //    socket=socketname   socketname should be name of Unix socket, used
-   //                        for connection
-   //    multi_statements    tell the server that the client may send multiple
-   //                        statements in a single string (separated by ;);
-   //    multi_results       tell the server that the client can handle multiple
-   //                        result sets from multiple-statement executions or
-   //                        stored procedures
-   //    reconnect=0|1       enable or disable automatic reconnection to the server
-   //                        if the connection is found to have been lost
-   //    compress            use the compressed client/server protocol
-   //    cnf_file=filename   Read options from the named option file instead of
-   //                        from my.cnf
-   //    cnf_group=groupname Read options from the named group from my.cnf or the
-   //                        file specified with cnf_file option
-   // If several parameters are specified, they should be separated by "&" symbol
-   // Example of connection argument:
-   //    TSQLServer::Connect("mysql://host.domain/test?timeout=10&multi_statements");
-
    fMySQL = 0;
    fInfo = "MySQL";
 
@@ -223,11 +223,11 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to MySQL DB server.
+
 TMySQLServer::~TMySQLServer()
 {
-   // Close connection to MySQL DB server.
-
    if (IsConnected())
       Close();
    delete fMySQL;
@@ -257,11 +257,11 @@ TMySQLServer::~TMySQLServer()
    }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to MySQL DB server.
+
 void TMySQLServer::Close(Option_t *)
 {
-   // Close connection to MySQL DB server.
-
    ClearError();
 
    if (!fMySQL)
@@ -271,13 +271,13 @@ void TMySQLServer::Close(Option_t *)
    fPort = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute SQL command. Result object must be deleted by the user.
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TMySQLServer::Query(const char *sql)
 {
-   // Execute SQL command. Result object must be deleted by the user.
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    CheckConnect("Query", 0);
 
    if (mysql_query(fMySQL, sql))
@@ -289,12 +289,12 @@ TSQLResult *TMySQLServer::Query(const char *sql)
    return new TMySQLResult(res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute SQL command which does not produce any result sets.
+/// Returns kTRUE if successful.
+
 Bool_t TMySQLServer::Exec(const char* sql)
 {
-   // Execute SQL command which does not produce any result sets.
-   // Returns kTRUE if successful.
-
    CheckConnect("Exec", kFALSE);
 
    if (mysql_query(fMySQL, sql))
@@ -303,11 +303,11 @@ Bool_t TMySQLServer::Exec(const char* sql)
    return !IsError();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select a database. Returns 0 if successful, non-zero otherwise.
+
 Int_t TMySQLServer::SelectDataBase(const char *dbname)
 {
-   // Select a database. Returns 0 if successful, non-zero otherwise.
-
    CheckConnect("SelectDataBase", -1);
 
    Int_t res = mysql_select_db(fMySQL, dbname);
@@ -317,14 +317,14 @@ Int_t TMySQLServer::SelectDataBase(const char *dbname)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all available databases. Wild is for wildcarding "t%" list all
+/// databases starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TMySQLServer::GetDataBases(const char *wild)
 {
-   // List all available databases. Wild is for wildcarding "t%" list all
-   // databases starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    CheckConnect("GetDataBases", 0);
 
    MYSQL_RES *res = mysql_list_dbs(fMySQL, wild);
@@ -334,14 +334,14 @@ TSQLResult *TMySQLServer::GetDataBases(const char *wild)
    return new TMySQLResult(res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all tables in the specified database. Wild is for wildcarding
+/// "t%" list all tables starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TMySQLServer::GetTables(const char *dbname, const char *wild)
 {
-   // List all tables in the specified database. Wild is for wildcarding
-   // "t%" list all tables starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    CheckConnect("GetTables", 0);
 
    if (SelectDataBase(dbname) != 0) return 0;
@@ -354,11 +354,11 @@ TSQLResult *TMySQLServer::GetTables(const char *dbname, const char *wild)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of tables with specified wildcard.
+
 TList* TMySQLServer::GetTablesList(const char* wild)
 {
-   // Return list of tables with specified wildcard.
-
    CheckConnect("GetTablesList", 0);
 
    MYSQL_RES *res = mysql_list_tables(fMySQL, wild);
@@ -390,12 +390,12 @@ TList* TMySQLServer::GetTablesList(const char* wild)
    return lst;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produces SQL table info.
+/// Object must be deleted by user.
+
 TSQLTableInfo *TMySQLServer::GetTableInfo(const char* tablename)
 {
-   // Produces SQL table info.
-   // Object must be deleted by user.
-
    CheckConnect("GetTableInfo", 0);
 
    if ((tablename==0) || (*tablename==0)) return 0;
@@ -583,15 +583,15 @@ TSQLTableInfo *TMySQLServer::GetTableInfo(const char* tablename)
    return info;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all columns in specified table in the specified database.
+/// Wild is for wildcarding "t%" list all columns starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TMySQLServer::GetColumns(const char *dbname, const char *table,
                                      const char *wild)
 {
-   // List all columns in specified table in the specified database.
-   // Wild is for wildcarding "t%" list all columns starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    CheckConnect("GetColumns", 0);
 
    if (SelectDataBase(dbname) != 0) return 0;
@@ -605,11 +605,11 @@ TSQLResult *TMySQLServer::GetColumns(const char *dbname, const char *table,
    return Query(sql.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a database. Returns 0 if successful, non-zero otherwise.
+
 Int_t TMySQLServer::CreateDataBase(const char *dbname)
 {
-   // Create a database. Returns 0 if successful, non-zero otherwise.
-
    CheckConnect("CreateDataBase", -1);
 
    Int_t res = mysql_query(fMySQL, Form("CREATE DATABASE %s",dbname));
@@ -619,12 +619,12 @@ Int_t TMySQLServer::CreateDataBase(const char *dbname)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drop (i.e. delete) a database. Returns 0 if successful, non-zero
+/// otherwise.
+
 Int_t TMySQLServer::DropDataBase(const char *dbname)
 {
-   // Drop (i.e. delete) a database. Returns 0 if successful, non-zero
-   // otherwise.
-
    CheckConnect("DropDataBase", -1);
 
    Int_t res = mysql_query(fMySQL, Form("DROP DATABASE %s",dbname));
@@ -634,12 +634,12 @@ Int_t TMySQLServer::DropDataBase(const char *dbname)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reload permission tables. Returns 0 if successful, non-zero
+/// otherwise. User must have reload permissions.
+
 Int_t TMySQLServer::Reload()
 {
-   // Reload permission tables. Returns 0 if successful, non-zero
-   // otherwise. User must have reload permissions.
-
    CheckConnect("Reload", -1);
 
    Int_t res = mysql_reload(fMySQL);
@@ -649,12 +649,12 @@ Int_t TMySQLServer::Reload()
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shutdown the database server. Returns 0 if successful, non-zero
+/// otherwise. User must have shutdown permissions.
+
 Int_t TMySQLServer::Shutdown()
 {
-   // Shutdown the database server. Returns 0 if successful, non-zero
-   // otherwise. User must have shutdown permissions.
-
    CheckConnect("Shutdown", -1);
 
    Int_t res;
@@ -671,11 +671,11 @@ Int_t TMySQLServer::Shutdown()
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return server info in form "MySQL <vesrion>".
+
 const char *TMySQLServer::ServerInfo()
 {
-   // Return server info in form "MySQL <vesrion>".
-
    CheckConnect("ServerInfo", 0);
 
    const char* res = mysql_get_server_info(fMySQL);
@@ -688,12 +688,12 @@ const char *TMySQLServer::ServerInfo()
    return fInfo.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if TSQLStatement class is supported.
+/// Starts from MySQL 4.1.
+
 Bool_t TMySQLServer::HasStatement() const
 {
-   // Return kTRUE if TSQLStatement class is supported.
-   // Starts from MySQL 4.1.
-
 #if MYSQL_VERSION_ID < 40100
    return kFALSE;
 #else
@@ -702,11 +702,11 @@ Bool_t TMySQLServer::HasStatement() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce TMySQLStatement.
+
 TSQLStatement *TMySQLServer::Statement(const char *sql, Int_t)
 {
-   // Produce TMySQLStatement.
-
 #if MYSQL_VERSION_ID < 40100
    ClearError();
    SetError(-1, "Statement class does not supported by MySQL version < 4.1", "Statement");
@@ -735,21 +735,21 @@ TSQLStatement *TMySQLServer::Statement(const char *sql, Int_t)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start transaction
+
 Bool_t TMySQLServer::StartTransaction()
 {
-   // Start transaction
-
    CheckConnect("StartTransaction", kFALSE);
 
    return TSQLServer::StartTransaction();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Commit changes
+
 Bool_t TMySQLServer::Commit()
 {
-   // Commit changes
-
    CheckConnect("Commit", kFALSE);
 
 #if MYSQL_VERSION_ID >= 40100
@@ -767,11 +767,11 @@ Bool_t TMySQLServer::Commit()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rollback changes
+
 Bool_t TMySQLServer::Rollback()
 {
-   // Rollback changes
-
    CheckConnect("Rollback", kFALSE);
 
 #if MYSQL_VERSION_ID >= 40100
@@ -789,14 +789,14 @@ Bool_t TMySQLServer::Rollback()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute Ping to SQL Connection.
+/// Since mysql_ping tries to reconnect by itself,
+/// a double call to the mysql function is implemented.
+/// Returns kTRUE if successful
+
 Bool_t TMySQLServer::PingVerify()
 {
-   // Execute Ping to SQL Connection.
-   // Since mysql_ping tries to reconnect by itself,
-   // a double call to the mysql function is implemented.
-   // Returns kTRUE if successful
-
    CheckConnect("Ping", kFALSE);
 
    if (mysql_ping(fMySQL)) {
@@ -810,12 +810,12 @@ Bool_t TMySQLServer::PingVerify()
    return !IsError();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute Ping to SQL Connection using the mysql_ping function.
+/// Returns 0 if successful, non-zero in case an error occured.
+
 Int_t TMySQLServer::Ping()
 {
-   // Execute Ping to SQL Connection using the mysql_ping function.
-   // Returns 0 if successful, non-zero in case an error occured.
-
    CheckConnect("PingInt", kFALSE);
 
    return mysql_ping(fMySQL);

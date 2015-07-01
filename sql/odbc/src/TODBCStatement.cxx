@@ -35,12 +35,12 @@
 
 ClassImp(TODBCStatement)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize, Bool_t errout) :
    TSQLStatement(errout)
 {
-   //constructor
-
    fHstmt = stmt;
    fBufferPreferredSize = rowarrsize;
 
@@ -98,19 +98,19 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize, Bool_t errout) :
    fLastResultRow = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TODBCStatement::~TODBCStatement()
 {
-   //destructor
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close statement
+
 void TODBCStatement::Close(Option_t *)
 {
-   // Close statement
-
    FreeBuffers();
 
    SQLFreeHandle(SQL_HANDLE_STMT, fHstmt);
@@ -118,11 +118,11 @@ void TODBCStatement::Close(Option_t *)
    fHstmt=0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process statement
+
 Bool_t TODBCStatement::Process()
 {
-   // process statement
-
    ClearError();
 
    SQLRETURN retcode = SQL_SUCCESS;
@@ -154,11 +154,11 @@ Bool_t TODBCStatement::Process()
    return !ExtractErrors(retcode, "Process");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///get number of affected rows
+
 Int_t TODBCStatement::GetNumAffectedRows()
 {
-   //get number of affected rows
-
    ClearError();
 
    SQLLEN    rowCount;
@@ -171,13 +171,13 @@ Int_t TODBCStatement::GetNumAffectedRows()
    return rowCount;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store result of statement processing.
+/// Results set, produced by processing of statement, can be stored, and accessed by
+/// TODBCStamenet methoods like NextResultRow(), GetInt(), GetLong() and so on.
+
 Bool_t TODBCStatement::StoreResult()
 {
-   // Store result of statement processing.
-   // Results set, produced by processing of statement, can be stored, and accessed by
-   // TODBCStamenet methoods like NextResultRow(), GetInt(), GetLong() and so on.
-
    ClearError();
 
    if (IsParSettMode()) {
@@ -231,19 +231,19 @@ Bool_t TODBCStatement::StoreResult()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return number of fields
+
 Int_t TODBCStatement::GetNumFields()
 {
-   //return number of fields
-
    return IsResultSet() ? fNumBuffers : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return field name
+
 const char* TODBCStatement::GetFieldName(Int_t nfield)
 {
-   //return field name
-
    ClearError();
 
    if (!IsResultSet() || (nfield<0) || (nfield>=fNumBuffers)) return 0;
@@ -252,11 +252,11 @@ const char* TODBCStatement::GetFieldName(Int_t nfield)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///next result row
+
 Bool_t TODBCStatement::NextResultRow()
 {
-   //next result row
-
    ClearError();
 
    if (!IsResultSet()) return kFALSE;
@@ -299,11 +299,11 @@ Bool_t TODBCStatement::NextResultRow()
    return IsResultSet();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract errors, produced by last ODBC function call
+
 Bool_t TODBCStatement::ExtractErrors(SQLRETURN retcode, const char* method)
 {
-   // Extract errors, produced by last ODBC function call
-
    if ((retcode== SQL_SUCCESS) || (retcode == SQL_SUCCESS_WITH_INFO)) return kFALSE;
 
    SQLINTEGER i = 0;
@@ -322,11 +322,11 @@ Bool_t TODBCStatement::ExtractErrors(SQLRETURN retcode, const char* method)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///run next iteration
+
 Bool_t TODBCStatement::NextIteration()
 {
-   //run next iteration
-
    ClearError();
 
    if (!IsParSettMode() || (fBuffer==0) || (fBufferLength<=0)) return kFALSE;
@@ -344,19 +344,19 @@ Bool_t TODBCStatement::NextIteration()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return number of parameters
+
 Int_t TODBCStatement::GetNumParameters()
 {
-   //return number of parameters
-
    return IsParSettMode() ? fNumBuffers : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set number of buffers
+
 void TODBCStatement::SetNumBuffers(Int_t isize, Int_t ilen)
 {
-   //set number of buffers
-
    FreeBuffers();
 
    fNumBuffers = isize;
@@ -378,11 +378,11 @@ void TODBCStatement::SetNumBuffers(Int_t isize, Int_t ilen)
    fStatusBuffer = new SQLUSMALLINT[fBufferLength];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free allocated buffers
+
 void TODBCStatement::FreeBuffers()
 {
-   // Free allocated buffers
-
    if (fBuffer==0) return;
    for (Int_t n=0;n<fNumBuffers;n++) {
       if (fBuffer[n].fBbuffer!=0)
@@ -400,11 +400,11 @@ void TODBCStatement::FreeBuffers()
    fStatusBuffer = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bind result column to buffer. Allocate buffer of appropriate type
+
 Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER size)
 {
-   // Bind result column to buffer. Allocate buffer of appropriate type
-
    ClearError();
 
    if ((ncol<0) || (ncol>=fNumBuffers)) {
@@ -484,11 +484,11 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
    return !ExtractErrors(retcode, "BindColumn");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bind query parameter with buffer. Creates buffer of appropriate type
+
 Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
 {
-   // Bind query parameter with buffer. Creates buffer of appropriate type
-
    ClearError();
 
    if ((npar<0) || (npar>=fNumBuffers)) return kFALSE;
@@ -555,11 +555,11 @@ Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get parameter address
+
 void* TODBCStatement::GetParAddr(Int_t npar, Int_t roottype, Int_t length)
 {
-   // Get parameter address
-
    ClearError();
 
    if ((fBuffer==0) || (npar<0) || (npar>=fNumBuffers) || (fBufferCounter<0)) {
@@ -580,10 +580,11 @@ void* TODBCStatement::GetParAddr(Int_t npar, Int_t roottype, Int_t length)
    return (char*)fBuffer[npar].fBbuffer + fBufferCounter*fBuffer[npar].fBelementsize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///convert to numeric type
+
 long double TODBCStatement::ConvertToNumeric(Int_t npar)
 {
-   //convert to numeric type
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
@@ -621,10 +622,11 @@ long double TODBCStatement::ConvertToNumeric(Int_t npar)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///convert to string
+
 const char* TODBCStatement::ConvertToString(Int_t npar)
 {
-   //convert to string
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
    if (fBuffer[npar].fBstrbuffer==0)
@@ -673,21 +675,22 @@ const char* TODBCStatement::ConvertToString(Int_t npar)
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Verifies if field value is NULL
+
 Bool_t TODBCStatement::IsNull(Int_t npar)
 {
-   // Verifies if field value is NULL
-
    void* addr = GetParAddr(npar);
    if (addr==0) return kTRUE;
 
    return fBuffer[npar].fBlenarray[fBufferCounter] == SQL_NULL_DATA;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///get parameter as integer
+
 Int_t TODBCStatement::GetInt(Int_t npar)
 {
-   //get parameter as integer
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
@@ -697,10 +700,11 @@ Int_t TODBCStatement::GetInt(Int_t npar)
    return (Int_t) ConvertToNumeric(npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///get parameter as unsigned integer
+
 UInt_t TODBCStatement::GetUInt(Int_t npar)
 {
-   //get parameter as unsigned integer
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
@@ -710,10 +714,11 @@ UInt_t TODBCStatement::GetUInt(Int_t npar)
    return (UInt_t) ConvertToNumeric(npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///get parameter as Long_t
+
 Long_t TODBCStatement::GetLong(Int_t npar)
 {
-   //get parameter as Long_t
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
@@ -723,10 +728,11 @@ Long_t TODBCStatement::GetLong(Int_t npar)
    return (Long_t) ConvertToNumeric(npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///get parameter as Long64_t
+
 Long64_t TODBCStatement::GetLong64(Int_t npar)
 {
-   //get parameter as Long64_t
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
@@ -736,10 +742,11 @@ Long64_t TODBCStatement::GetLong64(Int_t npar)
    return (Long64_t) ConvertToNumeric(npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///get parameter as ULong64_t
+
 ULong64_t TODBCStatement::GetULong64(Int_t npar)
 {
-   //get parameter as ULong64_t
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
@@ -749,10 +756,11 @@ ULong64_t TODBCStatement::GetULong64(Int_t npar)
    return (ULong64_t) ConvertToNumeric(npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///get parameter as Double_t
+
 Double_t TODBCStatement::GetDouble(Int_t npar)
 {
-   //get parameter as Double_t
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
@@ -762,11 +770,11 @@ Double_t TODBCStatement::GetDouble(Int_t npar)
    return (Double_t) ConvertToNumeric(npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///get parameter as string
+
 const char* TODBCStatement::GetString(Int_t npar)
 {
-   //get parameter as string
-
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
@@ -801,11 +809,11 @@ const char* TODBCStatement::GetString(Int_t npar)
    return ConvertToString(npar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return parameter as binary data
+
 Bool_t TODBCStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 {
-   // return parameter as binary data
-
    mem = 0;
    size = 0;
 
@@ -836,11 +844,11 @@ Bool_t TODBCStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as date
+
 Bool_t TODBCStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
 {
-   // return field value as date
-
    void* addr = GetParAddr(npar);
    if (addr==0) return kFALSE;
 
@@ -854,11 +862,11 @@ Bool_t TODBCStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as time
+
 Bool_t TODBCStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // return field value as time
-
    void* addr = GetParAddr(npar);
    if (addr==0) return kFALSE;
 
@@ -872,11 +880,11 @@ Bool_t TODBCStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as date & time
+
 Bool_t TODBCStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // return field value as date & time
-
    void* addr = GetParAddr(npar);
    if (addr==0) return kFALSE;
 
@@ -893,11 +901,11 @@ Bool_t TODBCStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& d
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return field value as time stamp
+
 Bool_t TODBCStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac)
 {
-   // return field value as time stamp
-
    void* addr = GetParAddr(npar);
    if (addr==0) return kFALSE;
 
@@ -916,17 +924,17 @@ Bool_t TODBCStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set NULL as parameter value
+/// If NULL should be set for statement parameter during first iteration,
+/// one should call before proper Set... method to identify type of argument for
+/// the future. For instance, if one suppose to have double as type of parameter,
+/// code should look like:
+///    stmt->SetDouble(2, 0.);
+///    stmt->SetNull(2);
+
 Bool_t TODBCStatement::SetNull(Int_t npar)
 {
-   // Set NULL as parameter value
-   // If NULL should be set for statement parameter during first iteration,
-   // one should call before proper Set... method to identify type of argument for
-   // the future. For instance, if one suppose to have double as type of parameter,
-   // code should look like:
-   //    stmt->SetDouble(2, 0.);
-   //    stmt->SetNull(2);
-
    void* addr = GetParAddr(npar, kInt_t);
    if (addr!=0)
       *((SQLINTEGER*) addr) = 0;
@@ -937,10 +945,11 @@ Bool_t TODBCStatement::SetNull(Int_t npar)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set parameter as Int_t
+
 Bool_t TODBCStatement::SetInt(Int_t npar, Int_t value)
 {
-   //set parameter as Int_t
    void* addr = GetParAddr(npar, kInt_t);
    if (addr==0) return kFALSE;
 
@@ -951,10 +960,11 @@ Bool_t TODBCStatement::SetInt(Int_t npar, Int_t value)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set parameter as UInt_t
+
 Bool_t TODBCStatement::SetUInt(Int_t npar, UInt_t value)
 {
-   //set parameter as UInt_t
    void* addr = GetParAddr(npar, kUInt_t);
    if (addr==0) return kFALSE;
 
@@ -965,10 +975,11 @@ Bool_t TODBCStatement::SetUInt(Int_t npar, UInt_t value)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set parameter as Long_t
+
 Bool_t TODBCStatement::SetLong(Int_t npar, Long_t value)
 {
-   //set parameter as Long_t
    void* addr = GetParAddr(npar, kLong_t);
    if (addr==0) return kFALSE;
 
@@ -979,10 +990,11 @@ Bool_t TODBCStatement::SetLong(Int_t npar, Long_t value)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set parameter as Long64_t
+
 Bool_t TODBCStatement::SetLong64(Int_t npar, Long64_t value)
 {
-   //set parameter as Long64_t
    void* addr = GetParAddr(npar, kLong64_t);
    if (addr==0) return kFALSE;
 
@@ -993,11 +1005,11 @@ Bool_t TODBCStatement::SetLong64(Int_t npar, Long64_t value)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set parameter as ULong64_t
+
 Bool_t TODBCStatement::SetULong64(Int_t npar, ULong64_t value)
 {
-   //set parameter as ULong64_t
-
    void* addr = GetParAddr(npar, kULong64_t);
    if (addr==0) return kFALSE;
 
@@ -1008,11 +1020,11 @@ Bool_t TODBCStatement::SetULong64(Int_t npar, ULong64_t value)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set parameter as Double_t
+
 Bool_t TODBCStatement::SetDouble(Int_t npar, Double_t value)
 {
-   //set parameter as Double_t
-
    void* addr = GetParAddr(npar, kDouble_t);
    if (addr==0) return kFALSE;
 
@@ -1023,10 +1035,11 @@ Bool_t TODBCStatement::SetDouble(Int_t npar, Double_t value)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set parameter as string
+
 Bool_t TODBCStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
-   //set parameter as string
    void* addr = GetParAddr(npar, kCharStar, maxsize);
 
    if (addr==0) return kFALSE;
@@ -1054,11 +1067,11 @@ Bool_t TODBCStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set parameter value as binary data
+
 Bool_t TODBCStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize)
 {
-   //set parameter value as binary data
-
    void* addr = GetParAddr(npar, kSqlBinary, maxsize);
    if (addr==0) return kFALSE;
 
@@ -1071,11 +1084,11 @@ Bool_t TODBCStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxs
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set parameter value as date
+
 Bool_t TODBCStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
 {
-   // set parameter value as date
-
    void* addr = GetParAddr(npar, kSqlDate);
    if (addr==0) return kFALSE;
 
@@ -1089,11 +1102,11 @@ Bool_t TODBCStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set parameter value as time
+
 Bool_t TODBCStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 {
-   // set parameter value as time
-
    void* addr = GetParAddr(npar, kSqlTime);
    if (addr==0) return kFALSE;
 
@@ -1107,11 +1120,11 @@ Bool_t TODBCStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set parameter value as date & time
+
 Bool_t TODBCStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec)
 {
-   // set parameter value as date & time
-
    void* addr = GetParAddr(npar, kSqlTimestamp);
    if (addr==0) return kFALSE;
 
@@ -1129,11 +1142,11 @@ Bool_t TODBCStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set parameter value as timestamp
+
 Bool_t TODBCStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac)
 {
-   // set parameter value as timestamp
-
    void* addr = GetParAddr(npar, kSqlTimestamp);
    if (addr==0) return kFALSE;
 

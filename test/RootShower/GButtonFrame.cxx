@@ -17,17 +17,17 @@
 //______________________________________________________________________________
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GButtonFrame object, with TGWindow parent *p.
+///
+/// buttonHandler = pointer to button handler TGWindow
+/// nextEventId = id of NextEvent button
+
 GButtonFrame::GButtonFrame(const TGWindow* p, TGWindow* buttonHandler,
                            Int_t nextEventId, Int_t showTrackId,
                            Int_t interruptSimId) :
                            TGCompositeFrame(p, 100, 100, kVerticalFrame)
 {
-   // Create GButtonFrame object, with TGWindow parent *p.
-   //
-   // buttonHandler = pointer to button handler TGWindow
-   // nextEventId = id of NextEvent button
-
    // Create Layout hints
    fButtonLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 5, 2, 2, 2);
 
@@ -54,21 +54,21 @@ GButtonFrame::GButtonFrame(const TGWindow* p, TGWindow* buttonHandler,
    fStopSimButton->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy GButtonFrame object. Delete all created widgets
+
 GButtonFrame::~GButtonFrame()
 {
-   // Destroy GButtonFrame object. Delete all created widgets
-
    delete fNextEventButton;
    delete fButtonLayout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the state of the GButtonFrame. This sets the state of
+/// the TGButton's in this frame.
+
 void GButtonFrame::SetState(EState state)
 {
-   // Set the state of the GButtonFrame. This sets the state of
-   // the TGButton's in this frame.
-
    switch (state) {
       case kAllActive:
          fNextEventButton->SetState(kButtonUp);

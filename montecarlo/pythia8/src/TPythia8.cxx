@@ -83,13 +83,14 @@ ClassImp(TPythia8)
 
 TPythia8*  TPythia8::fgInstance = 0;
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TPythia8::TPythia8():
     TGenerator("TPythia8", "TPythia8"),
     fPythia(0),
     fNumberOfParticles(0)
 {
-   // Constructor
    if (fgInstance)
       Fatal("TPythia8", "There's already an instance of TPythia8");
 
@@ -99,13 +100,14 @@ TPythia8::TPythia8():
    fPythia    = new Pythia8::Pythia();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with an xmlDir (eg "../xmldoc"
+
 TPythia8::TPythia8(const char *xmlDir):
     TGenerator("TPythia8", "TPythia8"),
     fPythia(0),
     fNumberOfParticles(0)
 {
-   // Constructor with an xmlDir (eg "../xmldoc"
    if (fgInstance)
       Fatal("TPythia8", "There's already an instance of TPythia8");
 
@@ -115,10 +117,11 @@ TPythia8::TPythia8(const char *xmlDir):
    fPythia    = new Pythia8::Pythia(xmlDir);
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TPythia8::~TPythia8()
 {
-   // Destructor
    if (fParticles) {
       fParticles->Delete();
       delete fParticles;
@@ -127,17 +130,19 @@ TPythia8::~TPythia8()
    delete fPythia;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an instance of TPythia8
+
 TPythia8* TPythia8::Instance()
 {
-   // Return an instance of TPythia8
    return fgInstance ? fgInstance : (fgInstance = new TPythia8()) ;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization
+
 Bool_t TPythia8::Initialize(Int_t idAin, Int_t idBin, Double_t ecms)
 {
-   // Initialization
    AddParticlesToPdgDataBase();
 
    // Set arguments in Settings database.
@@ -151,10 +156,11 @@ Bool_t TPythia8::Initialize(Int_t idAin, Int_t idBin, Double_t ecms)
    //return fPythia->init(idAin, idBin, ecms);
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization
+
 Bool_t TPythia8::Initialize(Int_t idAin, Int_t idBin, Double_t eAin, Double_t eBin)
 {
-   // Initialization
    AddParticlesToPdgDataBase();
 
    // Set arguments in Settings database.
@@ -170,18 +176,20 @@ Bool_t TPythia8::Initialize(Int_t idAin, Int_t idBin, Double_t eAin, Double_t eB
    //return fPythia->init(idAin, idBin, eAin, eBin);
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate the next event
+
 void TPythia8::GenerateEvent()
 {
-   // Generate the next event
    fPythia->next();
    fNumberOfParticles  = fPythia->event.size() - 1;
    ImportParticles();
 }
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Import particles from Pythia stack
+
 Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
 {
-   // Import particles from Pythia stack
    if (particles == 0) return 0;
    TClonesArray &clonesParticles = *particles;
    clonesParticles.Clear();
@@ -240,10 +248,11 @@ Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
    return nparts;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Import particles from Pythia stack
+
 TObjArray* TPythia8::ImportParticles(Option_t* /* option */)
 {
-   // Import particles from Pythia stack
    fParticles->Clear();
    Int_t ioff = 0;
    Int_t numpart   = fPythia->event.size();
@@ -274,81 +283,91 @@ TObjArray* TPythia8::ImportParticles(Option_t* /* option */)
    return fParticles;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization
+
 Int_t TPythia8::GetN() const
 {
-   // Initialization
    return (fPythia->event.size() - 1);
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Configuration
+
 void TPythia8::ReadString(const char* string) const
 {
-   // Configuration
    fPythia->readString(string);
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Configuration
+
 void  TPythia8::ReadConfigFile(const char* string) const
 {
-  // Configuration
   fPythia->readFile(string);
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Event listing
+
 void TPythia8::ListAll() const
 {
-   // Event listing
    fPythia->settings.listAll();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Event listing
+
 void TPythia8::ListChanged() const
 {
-   // Event listing
    fPythia->settings.listChanged();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Event listing
+
 void TPythia8::Plist(Int_t id) const
 {
-   // Event listing
    fPythia->particleData.list(id);
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Event listing
+
 void TPythia8::PlistAll() const
 {
-   // Event listing
    fPythia->particleData.listAll();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Event listing
+
 void TPythia8::PlistChanged() const
 {
-   // Event listing
    fPythia->particleData.listChanged();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print end of run statistics
+
 void TPythia8::PrintStatistics() const
 {
-   // Print end of run statistics
    fPythia->stat();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Event listing
+
 void TPythia8::EventListing() const
 {
-   // Event listing
    fPythia->event.list();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add some pythia specific particle code to the data base
+
 void TPythia8::AddParticlesToPdgDataBase()
 {
-   // Add some pythia specific particle code to the data base
-
    TDatabasePDG *pdgDB = TDatabasePDG::Instance();
    pdgDB->AddParticle("string","string", 0, kTRUE,
                       0, 0, "QCD string", 90);

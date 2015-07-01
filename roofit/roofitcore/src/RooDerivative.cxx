@@ -49,15 +49,17 @@ ClassImp(RooDerivative)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooDerivative::RooDerivative() : _order(1), _eps(1e-7), _ftor(0), _rd(0)
 {
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, Double_t epsIn) :
   RooAbsReal(name, title),
   _order(orderIn),
@@ -73,7 +75,8 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t orderIn, Double_t epsIn) :
   RooAbsReal(name, title),
   _order(orderIn),
@@ -92,7 +95,8 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooDerivative::RooDerivative(const RooDerivative& other, const char* name) :
   RooAbsReal(other, name), 
   _order(other._order),  
@@ -107,20 +111,22 @@ RooDerivative::RooDerivative(const RooDerivative& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooDerivative::~RooDerivative() 
 {
-  // Destructor
   if (_rd) delete _rd ;
   if (_ftor) delete _ftor ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate value
+
 Double_t RooDerivative::evaluate() const 
 {
-  // Calculate value
   if (!_ftor) {
     _ftor = _func.arg().functor(_x.arg(),RooArgSet(),_nset)  ;    
     ROOT::Math::WrappedFunction<RooFunctor&> wf(*_ftor);
@@ -137,10 +143,11 @@ Double_t RooDerivative::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Zap functor and derivator ;
+
 Bool_t RooDerivative::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
-  // Zap functor and derivator ;
   delete _ftor ;
   delete _rd ; 
   _ftor = 0 ;

@@ -34,22 +34,22 @@
 
 ClassImp(TAlienMasterJob)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browser interface.
+
 void TAlienMasterJob::Browse(TBrowser* b)
 {
-   // Browser interface.
-
    if (b) {
       b->Add(GetJobStatus());
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gets the status of the master job and all its sub jobs.
+/// Returns a TAlienMasterJobStatus object, 0 on failure.
+
 TGridJobStatus *TAlienMasterJob::GetJobStatus() const
 {
-   // Gets the status of the master job and all its sub jobs.
-   // Returns a TAlienMasterJobStatus object, 0 on failure.
-
    TString jobID;
    jobID = fJobID;
 
@@ -92,7 +92,8 @@ TGridJobStatus *TAlienMasterJob::GetJobStatus() const
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TAlienMasterJob::Print(Option_t* options) const
 {
    std::cout << " ------------------------------------------------ " << std::endl;
@@ -153,13 +154,15 @@ void TAlienMasterJob::Print(Option_t* options) const
    delete status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TAlienMasterJob::Merge()
 {
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TAlienMasterJob::Merge(const char* inputname,const char* mergeoutput)
 {
    TFileMerger merger;

@@ -42,60 +42,63 @@
 
 ClassImp(TMVA::TActivationTanh)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor for tanh sigmoid (normalized in [-1,1])
+
 TMVA::TActivationTanh::TActivationTanh()
 {
-   // constructor for tanh sigmoid (normalized in [-1,1])
    fFAST=kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::TActivationTanh::~TActivationTanh()
 {
-   // destructor
 }
 
-//______________________________________________________________________________
-Double_t TMVA::TActivationTanh::fast_tanh(Double_t arg){
-   // a fast tanh approximation
+////////////////////////////////////////////////////////////////////////////////
+/// a fast tanh approximation
 
+Double_t TMVA::TActivationTanh::fast_tanh(Double_t arg){
    float arg2 = arg * arg;
    float a = arg * (135135.0f + arg2 * (17325.0f + arg2 * (378.0f + arg2)));
    float b = 135135.0f + arg2 * (62370.0f + arg2 * (3150.0f + arg2 * 28.0f));
    return a / b;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// evaluate the tanh
+
 Double_t TMVA::TActivationTanh::Eval(Double_t arg)
 {
-   // evaluate the tanh
-
    return fFAST ? fast_tanh(arg) : TMath::TanH(arg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// evaluate the derivative
+
 Double_t TMVA::TActivationTanh::EvalDerivative(Double_t arg)
 {
-   // evaluate the derivative
-
    Double_t tmp=Eval(arg);
    return ( 1-tmp*tmp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get expressions for the tanh and its derivative
+/// whatever that may be good for ... 
+
 TString TMVA::TActivationTanh::GetExpression()
 {
-   // get expressions for the tanh and its derivative
-   // whatever that may be good for ... 
-
    TString expr = "tanh(x)\t\t (1-tanh()^2)";
    return expr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// writes the sigmoid activation function source code
+
 void TMVA::TActivationTanh::MakeFunction( std::ostream& fout, const TString& fncName ) 
 {
-   // writes the sigmoid activation function source code
    fout << "double " << fncName << "(double x) const {" << std::endl;
    fout << "   // hyperbolic tan" << std::endl;
    fout << "   return tanh(x);" << std::endl;

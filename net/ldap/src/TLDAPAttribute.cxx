@@ -13,33 +13,34 @@
 
 ClassImp(TLDAPAttribute)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TLDAPAttribute::TLDAPAttribute(const char *name) : fNCount(0)
 {
-   //constructor
    SetName(name);
    fValues = new TList;
    fValues->SetOwner();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates an Attribute with name and value.
+
 TLDAPAttribute::TLDAPAttribute(const char *name, const char *value)
    : fNCount(0)
 {
-   // Creates an Attribute with name and value.
-
    SetName(name);
    fValues = new TList;
    fValues->SetOwner();
    AddValue(value);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// LDAP attribute copy ctor.
+
 TLDAPAttribute::TLDAPAttribute(const TLDAPAttribute &attr)
    : TNamed(attr), fNCount(attr.fNCount)
 {
-   // LDAP attribute copy ctor.
-
    fValues = new TList;
    fValues->SetOwner();
 
@@ -49,10 +50,11 @@ TLDAPAttribute::TLDAPAttribute(const TLDAPAttribute &attr)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Equal operator
+
 TLDAPAttribute& TLDAPAttribute::operator=(const TLDAPAttribute &attr)
 {
-   // Equal operator
    if(this!=&attr) {
       TNamed::operator=(attr);
       fValues=attr.fValues;
@@ -60,26 +62,27 @@ TLDAPAttribute& TLDAPAttribute::operator=(const TLDAPAttribute &attr)
    } return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TLDAPAttribute::~TLDAPAttribute()
 {
-   //destructor
    delete fValues;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a value to the attribute.
+
 void TLDAPAttribute::AddValue(const char *value)
 {
-   // Add a value to the attribute.
-
    fValues->AddLast(new TObjString(value));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete value by name.
+
 void TLDAPAttribute::DeleteValue(const char *value)
 {
-   // Delete value by name.
-
    Int_t n = GetCount();
    for (Int_t i = 0; i < n; i++) {
       TObjString *v = (TObjString*) fValues->At(i);
@@ -91,12 +94,12 @@ void TLDAPAttribute::DeleteValue(const char *value)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next value of the attribute. Returns zero after the last value,
+/// then returns the first value again.
+
 const char *TLDAPAttribute::GetValue() const
 {
-   // Get next value of the attribute. Returns zero after the last value,
-   // then returns the first value again.
-
    Int_t n = GetCount();
    if (n > fNCount) {
       return ((TObjString*)fValues->At(fNCount++))->GetName();
@@ -106,11 +109,11 @@ const char *TLDAPAttribute::GetValue() const
    }
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print an attribute.
+
 void TLDAPAttribute::Print(Option_t *) const
 {
-   // Print an attribute.
-
    Int_t counter = GetCount();
    if (counter == 0) {
       std::cout << GetName() << ": " << std::endl;
@@ -121,12 +124,12 @@ void TLDAPAttribute::Print(Option_t *) const
    }
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get "LDAPMod" structure for attribute. Returned LDAPMod must be
+/// deleted by the user.
+
 LDAPMod *TLDAPAttribute::GetMod(Int_t op)
 {
-   // Get "LDAPMod" structure for attribute. Returned LDAPMod must be
-   // deleted by the user.
-
    LDAPMod *tmpMod = new LDAPMod;
    Int_t iCount = GetCount();
    char **values = new char* [iCount + 1];

@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 SamplingDistPlot :
 
@@ -45,7 +46,9 @@ ClassImp(RooStats::SamplingDistPlot);
 using namespace RooStats;
 using namespace std;
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SamplingDistPlot default constructor with bin size
+
 SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
    fHist(0),
    fLegend(NULL),
@@ -58,7 +61,6 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
    fApplyStyle(kTRUE),
    fFillStyle(3004)
 {
-  // SamplingDistPlot default constructor with bin size
   fIterator = fItems.MakeIterator();
   fIsWeighted = kFALSE;
   fBins = nbins;
@@ -66,7 +68,9 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
   fColor = 1;
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SamplingDistPlot constructor with bin size, min and max
+
 SamplingDistPlot::SamplingDistPlot(Int_t nbins, Double_t min, Double_t max) :
    fHist(0),
    fLegend(NULL),
@@ -79,7 +83,6 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins, Double_t min, Double_t max) :
    fApplyStyle(kTRUE),
    fFillStyle(3004)
 {
-  // SamplingDistPlot constructor with bin size, min and max
   fIterator = fItems.MakeIterator();
   fIsWeighted = kFALSE;
   fBins = nbins;
@@ -89,19 +92,20 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins, Double_t min, Double_t max) :
   SetXRange( min, max );
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructors - delete objects contained in the list
+
 SamplingDistPlot::~SamplingDistPlot() {
-   // destructors - delete objects contained in the list
    fItems.Delete();
    fOtherItems.Delete();
    if (fRooPlot) delete fRooPlot;
 }
 
 
-//_______________________________________________________
-Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions) {
-   // adds sampling distribution (and normalizes if "NORMALIZE" is given as an option)
+////////////////////////////////////////////////////////////////////////////////
+/// adds sampling distribution (and normalizes if "NORMALIZE" is given as an option)
 
+Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions) {
    fSamplingDistr = samplingDist->GetSamplingDistribution();
    if( fSamplingDistr.empty() ) {
       coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << endl;
@@ -180,7 +184,8 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    return 1./weightSum;
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistribution *samplingDist, Double_t minShaded, Double_t maxShaded, Option_t *drawOptions) {
    if( samplingDist->GetSamplingDistribution().empty() ) {
       coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << endl;
@@ -233,11 +238,11 @@ void SamplingDistPlot::AddTF1(TF1* f, const char* title, Option_t *drawOptions) 
 }
 
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Determine if the sampling distribution has weights and store them
+
 void SamplingDistPlot::SetSampleWeights(const SamplingDistribution* samplingDist)
 {
-  //Determine if the sampling distribution has weights and store them
-
   fIsWeighted = kFALSE;
 
   if(samplingDist->GetSampleWeights().size() != 0){
@@ -281,12 +286,12 @@ void SamplingDistPlot::addOtherObject(TObject *obj, Option_t *drawOptions)
   return;
 }
 
-//_____________________________________________________________________________
-void SamplingDistPlot::Draw(Option_t * /*options */) {
-   // Draw this plot and all of the elements it contains. The specified options
-   // only apply to the drawing of our frame. The options specified in our add...()
-   // methods will be used to draw each object we contain.
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this plot and all of the elements it contains. The specified options
+/// only apply to the drawing of our frame. The options specified in our add...()
+/// methods will be used to draw each object we contain.
 
+void SamplingDistPlot::Draw(Option_t * /*options */) {
    ApplyDefaultStyle();
 
    Double_t theMin(0.), theMax(0.), theYMin(NaN), theYMax(0.);
@@ -390,7 +395,8 @@ void SamplingDistPlot::ApplyDefaultStyle(void) {
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void SamplingDistPlot::GetAbsoluteInterval(Double_t &theMin, Double_t &theMax, Double_t &theYMax) const
 {
    Double_t tmpmin = TMath::Infinity();
@@ -413,11 +419,11 @@ void SamplingDistPlot::GetAbsoluteInterval(Double_t &theMin, Double_t &theMax, D
   return;
 }
 
-//_____________________________________________________________________________
-void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *samplDist) {
-   // Sets line color for given sampling distribution and
-   // fill color for the associated shaded TH1F.
+////////////////////////////////////////////////////////////////////////////////
+/// Sets line color for given sampling distribution and
+/// fill color for the associated shaded TH1F.
 
+void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *samplDist) {
    if (samplDist == 0) {
       fHist->SetLineColor(color);
 
@@ -457,7 +463,8 @@ void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *s
    return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *samplDist)
 {
   if(samplDist == 0){
@@ -477,7 +484,8 @@ void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *
   return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *samplDist)
 {
   if(samplDist == 0){
@@ -497,7 +505,8 @@ void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *s
   return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution *samplDist)
 {
   if(samplDist == 0){
@@ -517,7 +526,8 @@ void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution 
   return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution *samplDist)
 {
   if(samplDist == 0){
@@ -537,7 +547,8 @@ void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution 
   return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *samplDist)
 {
   if(samplDist == 0){
@@ -557,7 +568,8 @@ void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *sa
   return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
 {
   if(samplDist == NULL){
@@ -576,7 +588,8 @@ TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void SamplingDistPlot::RebinDistribution(Int_t rebinFactor, const SamplingDistribution *samplDist)
 {
   if(samplDist == 0){

@@ -30,12 +30,13 @@ typedef Q3TextDrag QTextDrag;
 
 ClassImp(TQRootCanvas)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set defaults
+
 TQRootCanvas::TQRootCanvas( QWidget *parent, const char *name, TCanvas *c )
   : QWidget( parent, name ,WRepaintNoErase | WResizeNoErase ),
         fNeedResize(kTRUE)
 {
-   // set defaults
    setUpdatesEnabled( kTRUE );
    setMouseTracking(kTRUE);
 
@@ -70,12 +71,13 @@ TQRootCanvas::TQRootCanvas( QWidget *parent, const char *name, TCanvas *c )
    setAcceptDrops(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set defaults
+
 TQRootCanvas::TQRootCanvas( QWidget *parent, QWidget* tabWin, const char *name, TCanvas *c )
   : QWidget( tabWin, name ,WRepaintNoErase | WResizeNoErase ),
     fNeedResize(kTRUE)
 {
-   // set defaults
    setUpdatesEnabled( kTRUE );
    setMouseTracking(kTRUE);
 
@@ -111,11 +113,11 @@ TQRootCanvas::TQRootCanvas( QWidget *parent, QWidget* tabWin, const char *name, 
    setAcceptDrops(TRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse move event.
+
 void TQRootCanvas::mouseMoveEvent(QMouseEvent *e)
 {
-   // Handle mouse move event.
-
    if (fCanvas) {
       if (e->state() & LeftButton) {
          fCanvas->HandleInput(kButton1Motion, e->x(), e->y());
@@ -126,11 +128,11 @@ void TQRootCanvas::mouseMoveEvent(QMouseEvent *e)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button press event.
+
 void TQRootCanvas::mousePressEvent( QMouseEvent *e )
 {
-   // Handle mouse button press event.
-
    TPad *pad=0;
    TObjLink *pickobj=0;
    TObject *selected=0;
@@ -180,11 +182,11 @@ void TQRootCanvas::mousePressEvent( QMouseEvent *e )
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button release event.
+
 void TQRootCanvas::mouseReleaseEvent( QMouseEvent *e )
 {
-   // Handle mouse button release event.
-
    switch (e->button()) {
       case LeftButton :
          fCanvas->HandleInput(kButton1Up, e->x(), e->y());
@@ -203,11 +205,11 @@ void TQRootCanvas::mouseReleaseEvent( QMouseEvent *e )
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse double click event.
+
 void TQRootCanvas::mouseDoubleClickEvent( QMouseEvent *e )
 {
-   // Handle mouse double click event.
-
    switch (e->button()) {
       case LeftButton :
          fCanvas->HandleInput(kButton1Double, e->x(), e->y());
@@ -225,20 +227,20 @@ void TQRootCanvas::mouseDoubleClickEvent( QMouseEvent *e )
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call QWidget resize and inform the ROOT Canvas.
+
 void TQRootCanvas::resizeEvent( QResizeEvent *e )
 {
-   // Call QWidget resize and inform the ROOT Canvas.
-
    QWidget::resizeEvent( e );
    fNeedResize=kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle paint event of Qt.
+
 void TQRootCanvas::paintEvent( QPaintEvent * )
 {
-   // Handle paint event of Qt.
-
    if (fCanvas) {
       QPainter p;
       p.begin( this);
@@ -251,20 +253,20 @@ void TQRootCanvas::paintEvent( QPaintEvent * )
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle leave event.
+
 void TQRootCanvas::leaveEvent( QEvent * /*e*/ )
 {
-   // Handle leave event.
-
    if (fCanvas) fCanvas->HandleInput(kMouseLeave, 0, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Filtering of QWidget Events
+/// for ressource management
+
 Bool_t TQRootCanvas ::eventFilter( QObject *o, QEvent *e )
 {
-   // Filtering of QWidget Events
-   // for ressource management
-
    if ( e->type() == QEvent::Close) {  // close
       if (fCanvas && (fIsCanvasOwned== kFALSE) ) {
          delete fCanvas;
@@ -292,20 +294,20 @@ Bool_t TQRootCanvas ::eventFilter( QObject *o, QEvent *e )
 
 ////////////////////////////////////// drag and drop support
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Entering a drag event.
+
 void TQRootCanvas::dragEnterEvent( QDragEnterEvent *e )
 {
-   // Entering a drag event.
-
    if ( QTextDrag::canDecode(e))
       e->accept();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start a drop, for now only histogram objects can be drwon by droping.
+
 void TQRootCanvas::dropEvent( QDropEvent *Event )
 {
-   // Start a drop, for now only histogram objects can be drwon by droping.
-
    QString str;
    if ( QTextDrag::decode( Event, str ) ) {
       TObject *dragedObject = gROOT->FindObject(str);
@@ -332,502 +334,563 @@ void TQRootCanvas::dropEvent( QDropEvent *Event )
 
 /////////////////////////////////////End Drag and drop Support (Mohammad Al-Turany)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Just a wrapper
+
 void TQRootCanvas::cd(Int_t subpadnumber)
 {
-   // Just a wrapper
-
    fCanvas->cd(subpadnumber);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Just a wrapper.
+
 void TQRootCanvas::Browse(TBrowser *b)
 {
-   // Just a wrapper.
-
    fCanvas->Browse(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Just a wrapper.
+
 void TQRootCanvas::Clear(Option_t *option)
 {
-   // Just a wrapper.
-
    fCanvas->Clear(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Just a wrapper.
+
 void TQRootCanvas::Close(Option_t *option)
 {
-   // Just a wrapper.
-
    fCanvas->Close(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Just a wrapper.
+
 void TQRootCanvas::Draw(Option_t *option)
 {
-   // Just a wrapper.
-
    fCanvas->Draw(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Just a wrapper.
+
 TObject *TQRootCanvas::DrawClone(Option_t *option)
 {
-   // Just a wrapper.
-
    return  fCanvas->DrawClone(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Just a wrapper.
+
 TObject *TQRootCanvas::DrawClonePad()
 {
-   // Just a wrapper.
-
    return  fCanvas->DrawClonePad();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Just a wrapper.
+
 void TQRootCanvas::EditorBar()
 {
-   // Just a wrapper.
-
    fCanvas->EditorBar();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::EnterLeave(TPad *prevSelPad, TObject *prevSelObj)
 {
-   // just a wrapper
    fCanvas->EnterLeave(prevSelPad, prevSelObj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::FeedbackMode(Bool_t set)
 {
-   // just a wrapper
    fCanvas->FeedbackMode(set);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::Flush()
 {
-   // just a wrapper
    fCanvas->Flush();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::UseCurrentStyle()
 {
-   // just a wrapper
    fCanvas->UseCurrentStyle();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::ForceUpdate()
 {
-   // just a wrapper
    fCanvas->ForceUpdate() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 const char *TQRootCanvas::GetDISPLAY()
 {
-   // just a wrapper
    return fCanvas->GetDISPLAY() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 TContextMenu *TQRootCanvas::GetContextMenu()
 {
-   // just a wrapper
    return  fCanvas->GetContextMenu() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Int_t TQRootCanvas::GetDoubleBuffer()
 {
-   // just a wrapper
    return fCanvas->GetDoubleBuffer();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Int_t TQRootCanvas::GetEvent()
 {
-   // just a wrapper
    return fCanvas->GetEvent();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Int_t TQRootCanvas::GetEventX()
 {
-   // just a wrapper
    return fCanvas->GetEventX() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Int_t TQRootCanvas::GetEventY()
 {
-   // just a wrapper
    return fCanvas->GetEventY() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Color_t TQRootCanvas::GetHighLightColor()
 {
-   // just a wrapper
    return fCanvas->GetHighLightColor() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 TVirtualPad *TQRootCanvas::GetPadSave()
 {
-   // just a wrapper
    return fCanvas->GetPadSave();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 TObject *TQRootCanvas::GetSelected()
 {
-   // just a wrapper
    return fCanvas->GetSelected() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Option_t *TQRootCanvas::GetSelectedOpt()
 {
-   // just a wrapper
    return fCanvas->GetSelectedOpt();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 TVirtualPad *TQRootCanvas::GetSelectedPad()
 {
-   // just a wrapper
    return fCanvas->GetSelectedPad();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Bool_t TQRootCanvas::GetShowEventStatus()
 {
-   // just a wrapper
    return fCanvas->GetShowEventStatus() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Bool_t TQRootCanvas::GetAutoExec()
 {
-   // just a wrapper
    return fCanvas->GetAutoExec();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Size_t TQRootCanvas::GetXsizeUser()
 {
-   // just a wrapper
    return fCanvas->GetXsizeUser();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Size_t TQRootCanvas::GetYsizeUser()
 {
-   // just a wrapper
    return fCanvas->GetYsizeUser();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Size_t TQRootCanvas::GetXsizeReal()
 {
-   // just a wrapper
    return fCanvas->GetXsizeReal();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Size_t TQRootCanvas::GetYsizeReal()
 {
-   // just a wrapper
    return fCanvas->GetYsizeReal();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Int_t TQRootCanvas::GetCanvasID()
 {
-   // just a wrapper
    return fCanvas->GetCanvasID();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Int_t TQRootCanvas::GetWindowTopX()
 {
-   // just a wrapper
    return fCanvas->GetWindowTopX();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Int_t TQRootCanvas::GetWindowTopY()
 {
-   // just a wrapper
    return fCanvas->GetWindowTopY();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 UInt_t TQRootCanvas::GetWindowWidth()
 {
-   // just a wrapper
    return fCanvas->GetWindowWidth() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 UInt_t TQRootCanvas::GetWindowHeight()
 {
-   // just a wrapper
    return fCanvas->GetWindowHeight();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 UInt_t TQRootCanvas::GetWw()
 {
-   // just a wrapper
    return fCanvas->GetWw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 UInt_t TQRootCanvas::GetWh()
 {
-   // just a wrapper
    return fCanvas->GetWh() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::GetCanvasPar(Int_t &wtopx, Int_t &wtopy, UInt_t &ww, UInt_t &wh)
 {
-   // just a wrapper
    fCanvas->GetCanvasPar(wtopx, wtopy, ww, wh);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
 {
-   // just a wrapper
    fCanvas->HandleInput(button, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Bool_t TQRootCanvas::HasMenuBar()
 {
-   // just a wrapper
    return fCanvas->HasMenuBar() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::Iconify()
 {
-   // just a wrapper
    fCanvas->Iconify();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Bool_t TQRootCanvas::IsBatch()
 {
-   // just a wrapper
    return fCanvas->IsBatch() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Bool_t TQRootCanvas::IsRetained()
 {
-   // just a wrapper
    return fCanvas->IsRetained();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::ls(Option_t *option)
 {
-   // just a wrapper
    fCanvas->ls(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::MoveOpaque(Int_t set)
 {
-   // just a wrapper
    fCanvas->MoveOpaque(set);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Bool_t TQRootCanvas::OpaqueMoving()
 {
-   // just a wrapper
    return fCanvas->OpaqueMoving();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 Bool_t TQRootCanvas::OpaqueResizing()
 {
-   // just a wrapper
    return fCanvas->OpaqueResizing();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::Paint(Option_t *option)
 {
-   // just a wrapper
    fCanvas->Paint(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 TPad *TQRootCanvas::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 {
-   // just a wrapper
    return fCanvas->Pick(px, py, pickobj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 TPad *TQRootCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
 {
-   // just a wrapper
    return fCanvas->Pick(px, py, prevSelObj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::Resize(Option_t *option)
 {
-   // just a wrapper
    fCanvas->Resize(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::ResizeOpaque(Int_t set)
 {
-   // just a wrapper
    fCanvas->ResizeOpaque(set);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::SaveSource(const char *filename, Option_t *option)
 {
-   // just a wrapper
    fCanvas->SaveSource(filename, option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::SetCursor(ECursor cursor)
 {
-   // just a wrapper
    fCanvas->SetCursor(cursor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::SetDoubleBuffer(Int_t mode)
 {
-   // just a wrapper
    fCanvas->SetDoubleBuffer(mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::SetWindowPosition(Int_t x, Int_t y)
 {
-   // just a wrapper
    fCanvas->SetWindowPosition(x, y) ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::SetWindowSize(UInt_t ww, UInt_t wh)
 {
-   // just a wrapper
    fCanvas->SetWindowSize(ww,wh) ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
 {
-   // just a wrapper
    fCanvas->SetCanvasSize(ww, wh);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::SetHighLightColor(Color_t col)
 {
-   // just a wrapper
    fCanvas->SetHighLightColor(col);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::SetSelected(TObject *obj)
 {
-   // just a wrapper
    fCanvas->SetSelected(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::SetSelectedPad(TPad *pad)
 {
-   // just a wrapper
    fCanvas->SetSelectedPad(pad);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::Show()
 {
-   // just a wrapper
    fCanvas->Show() ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::Size(Float_t xsizeuser, Float_t ysizeuser)
 {
-   // just a wrapper
    fCanvas->Size(xsizeuser, ysizeuser);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::SetBatch(Bool_t batch)
 {
-   // just a wrapper
    fCanvas->SetBatch(batch);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::SetRetained(Bool_t retained)
 {
-  // just a wrapper
    fCanvas->SetRetained(retained);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::SetTitle(const char *title)
 {
-   // just a wrapper
    fCanvas->SetTitle(title);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::ToggleEventStatus()
 {
-   // just a wrapper
    fCanvas->ToggleEventStatus();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::ToggleAutoExec()
 {
-   // just a wrapper
    fCanvas->ToggleAutoExec();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just a wrapper
+
 void TQRootCanvas::Update()
 {
-   // just a wrapper
    fCanvas->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close.
+
 void  TQRootCanvas::closeEvent( QCloseEvent * e)
 {
-   // Close.
-
    if ( fIsCanvasOwned ) {
       delete fCanvas;
       fCanvas = 0;
@@ -836,11 +899,11 @@ void  TQRootCanvas::closeEvent( QCloseEvent * e)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dtor
+
 TQRootCanvas::~TQRootCanvas()
 {
-   // dtor
-
    if (fContextMenu) {
       delete fContextMenu;
       fContextMenu=0;

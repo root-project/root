@@ -42,28 +42,29 @@
 
 ClassImp(TMLPAnalyzer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TMLPAnalyzer::~TMLPAnalyzer()
 {
-   // Destructor
    delete fAnalysisTree;
    delete fIOTree;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of layers.
+
 Int_t TMLPAnalyzer::GetLayers()
 {
-   // Returns the number of layers.
-
    TString fStructure = fNetwork->GetStructure();
    return fStructure.CountChar(':')+1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of neurons in given layer.
+
 Int_t TMLPAnalyzer::GetNeurons(Int_t layer)
 {
-   // Returns the number of neurons in given layer.
-
    if(layer==1) {
       TString fStructure = fNetwork->GetStructure();
       TString input      = TString(fStructure(0, fStructure.First(':')));
@@ -97,12 +98,12 @@ Int_t TMLPAnalyzer::GetNeurons(Int_t layer)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the formula used as input for neuron (idx) in
+/// the first layer.
+
 TString TMLPAnalyzer::GetNeuronFormula(Int_t idx)
 {
-   // Returns the formula used as input for neuron (idx) in
-   // the first layer.
-
    TString fStructure = fNetwork->GetStructure();
    TString input      = TString(fStructure(0, fStructure.First(':')));
    Int_t beg = 0;
@@ -124,27 +125,29 @@ TString TMLPAnalyzer::GetNeuronFormula(Int_t idx)
    return brName;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the name of any neuron from the input layer
+
 const char* TMLPAnalyzer::GetInputNeuronTitle(Int_t in)
 {
-   // Returns the name of any neuron from the input layer
    TNeuron* neuron=(TNeuron*)fNetwork->fFirstLayer[in];
    return neuron ? neuron->GetName() : "NO SUCH NEURON";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the name of any neuron from the output layer
+
 const char* TMLPAnalyzer::GetOutputNeuronTitle(Int_t out)
 {
-   // Returns the name of any neuron from the output layer
    TNeuron* neuron=(TNeuron*)fNetwork->fLastLayer[out];
    return neuron ? neuron->GetName() : "NO SUCH NEURON";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gives some information about the network in the terminal.
+
 void TMLPAnalyzer::CheckNetwork()
 {
-   // Gives some information about the network in the terminal.
-
    TString fStructure = fNetwork->GetStructure();
    std::cout << "Network with structure: " << fStructure.Data() << std::endl;
    std::cout << "inputs with low values in the differences plot may not be needed" << std::endl;
@@ -162,13 +165,13 @@ void TMLPAnalyzer::CheckNetwork()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect information about what is usefull in the network.
+/// This method has to be called first when analyzing a network.
+/// Fills the two analysis trees.
+
 void TMLPAnalyzer::GatherInformations()
 {
-   // Collect information about what is usefull in the network.
-   // This method has to be called first when analyzing a network.
-   // Fills the two analysis trees.
-
    Double_t shift = 0.1;
    TTree* data = fNetwork->fData;
    TEventList* test = fNetwork->fTest;
@@ -275,40 +278,40 @@ void TMLPAnalyzer::GatherInformations()
    fIOTree->ResetBranchAddresses();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draws the distribution (on the test sample) of the
+/// impact on the network output of a small variation of
+/// the ith input.
+
 void TMLPAnalyzer::DrawDInput(Int_t i)
 {
-   // Draws the distribution (on the test sample) of the
-   // impact on the network output of a small variation of
-   // the ith input.
-
    char sel[64];
    snprintf(sel,64, "inNeuron==%d", i);
    fAnalysisTree->Draw("diff", sel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draws the distribution (on the test sample) of the
+/// impact on the network output of a small variation of
+/// each input.
+/// DrawDInputs() draws something that approximates the distribution of the
+/// derivative of the NN w.r.t. each input. That quantity is recognized as
+/// one of the measures to determine key quantities in the network.
+///
+/// What is done is to vary one input around its nominal value and to see
+/// how the NN changes. This is done for each entry in the sample and produces
+/// a distribution.
+///
+/// What you can learn from that is:
+/// - is variable a really useful, or is my network insensitive to it ?
+/// - is there any risk of big systematic ? Is the network extremely sensitive
+///   to small variations of any of my inputs ?
+///
+/// As you might understand, this is to be considered with care and can serve
+/// as input for an "educated guess" when optimizing the network.
+
 void TMLPAnalyzer::DrawDInputs()
 {
-   // Draws the distribution (on the test sample) of the
-   // impact on the network output of a small variation of
-   // each input.
-   // DrawDInputs() draws something that approximates the distribution of the
-   // derivative of the NN w.r.t. each input. That quantity is recognized as
-   // one of the measures to determine key quantities in the network.
-   //
-   // What is done is to vary one input around its nominal value and to see
-   // how the NN changes. This is done for each entry in the sample and produces
-   // a distribution.
-   //
-   // What you can learn from that is:
-   // - is variable a really useful, or is my network insensitive to it ?
-   // - is there any risk of big systematic ? Is the network extremely sensitive
-   //   to small variations of any of my inputs ?
-   //
-   // As you might understand, this is to be considered with care and can serve
-   // as input for an "educated guess" when optimizing the network.
-
    THStack* stack  = new THStack("differences","differences (impact of variables on ANN)");
    TLegend* legend = new TLegend(0.75,0.75,0.95,0.95);
    TH1F* tmp = 0;
@@ -328,13 +331,13 @@ void TMLPAnalyzer::DrawDInputs()
    gPad->SetLogy();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draws the distribution of the neural network (using ith neuron).
+/// Two distributions are drawn, for events passing respectively the "signal"
+/// and "background" cuts. Only the test sample is used.
+
 void TMLPAnalyzer::DrawNetwork(Int_t neuron, const char* signal, const char* bg)
 {
-   // Draws the distribution of the neural network (using ith neuron).
-   // Two distributions are drawn, for events passing respectively the "signal"
-   // and "background" cuts. Only the test sample is used.
-
    TTree* data = fNetwork->fData;
    TEventList* test = fNetwork->fTest;
    TEventList* current = data->GetEventList();
@@ -384,19 +387,19 @@ void TMLPAnalyzer::DrawNetwork(Int_t neuron, const char* signal, const char* bg)
    delete bg_list;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a profile of the difference of the MLP output minus the
+/// true value for a given output node outnode, vs the true value for
+/// outnode, for all test data events. This method is mainly useful
+/// when doing regression analysis with the MLP (i.e. not classification,
+/// but continuous truth values).
+/// The resulting TProfile histogram is returned.
+/// It is not drawn if option "goff" is specified.
+/// Options are passed to TProfile::Draw
+
 TProfile* TMLPAnalyzer::DrawTruthDeviation(Int_t outnode /*=0*/,
                                            Option_t *option /*=""*/)
 {
-   // Create a profile of the difference of the MLP output minus the
-   // true value for a given output node outnode, vs the true value for
-   // outnode, for all test data events. This method is mainly useful
-   // when doing regression analysis with the MLP (i.e. not classification,
-   // but continuous truth values).
-   // The resulting TProfile histogram is returned.
-   // It is not drawn if option "goff" is specified.
-   // Options are passed to TProfile::Draw
-
    if (!fIOTree) GatherInformations();
    TString pipehist=Form("MLP_truthdev_%d",outnode);
    TString drawline;
@@ -417,17 +420,18 @@ TProfile* TMLPAnalyzer::DrawTruthDeviation(Int_t outnode /*=0*/,
    return h;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates TProfiles of the difference of the MLP output minus the
+/// true value vs the true value, one for each output, filled with the
+/// test data events. This method is mainly useful when doing regression
+/// analysis with the MLP (i.e. not classification, but continuous truth
+/// values).
+/// The returned THStack contains all the TProfiles. It is drawn unless
+/// the option "goff" is specified.
+/// Options are passed to TProfile::Draw.
+
 THStack* TMLPAnalyzer::DrawTruthDeviations(Option_t *option /*=""*/)
 {
-   // Creates TProfiles of the difference of the MLP output minus the
-   // true value vs the true value, one for each output, filled with the
-   // test data events. This method is mainly useful when doing regression
-   // analysis with the MLP (i.e. not classification, but continuous truth
-   // values).
-   // The returned THStack contains all the TProfiles. It is drawn unless
-   // the option "goff" is specified.
-   // Options are passed to TProfile::Draw.
    THStack *hs=new THStack("MLP_TruthDeviation",
                            "Deviation of MLP output from truth");
 
@@ -461,18 +465,18 @@ THStack* TMLPAnalyzer::DrawTruthDeviations(Option_t *option /*=""*/)
    return hs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a profile of the difference of the MLP output outnode minus
+/// the true value of outnode vs the input value innode, for all test
+/// data events.
+/// The resulting TProfile histogram is returned.
+/// It is not drawn if option "goff" is specified.
+/// Options are passed to TProfile::Draw
+
 TProfile* TMLPAnalyzer::DrawTruthDeviationInOut(Int_t innode,
                                                 Int_t outnode /*=0*/,
                                                 Option_t *option /*=""*/)
 {
-   // Creates a profile of the difference of the MLP output outnode minus
-   // the true value of outnode vs the input value innode, for all test
-   // data events.
-   // The resulting TProfile histogram is returned.
-   // It is not drawn if option "goff" is specified.
-   // Options are passed to TProfile::Draw
-
    if (!fIOTree) GatherInformations();
    TString pipehist=Form("MLP_truthdev_i%d_o%d", innode, outnode);
    TString drawline;
@@ -493,16 +497,17 @@ TProfile* TMLPAnalyzer::DrawTruthDeviationInOut(Int_t innode,
    return h;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a profile of the difference of the MLP output outnode minus the
+/// true value of outnode vs the input value, stacked for all inputs, for
+/// all test data events.
+/// The returned THStack contains all the TProfiles. It is drawn unless
+/// the option "goff" is specified.
+/// Options are passed to TProfile::Draw.
+
 THStack* TMLPAnalyzer::DrawTruthDeviationInsOut(Int_t outnode /*=0*/,
                                                 Option_t *option /*=""*/)
 {
-   // Creates a profile of the difference of the MLP output outnode minus the
-   // true value of outnode vs the input value, stacked for all inputs, for
-   // all test data events.
-   // The returned THStack contains all the TProfiles. It is drawn unless
-   // the option "goff" is specified.
-   // Options are passed to TProfile::Draw.
    TString sName;
    sName.Form("MLP_TruthDeviationIO_%d", outnode);
    const char* outputNodeTitle=GetOutputNeuronTitle(outnode);

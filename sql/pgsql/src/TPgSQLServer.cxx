@@ -21,14 +21,14 @@
 
 ClassImp(TPgSQLServer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a connection to a PgSQL DB server. The db arguments should be
+/// of the form "pgsql://<host>[:<port>][/<database>]", e.g.:
+/// "pgsql://pcroot.cern.ch:3456/test". The uid is the username and pw
+/// the password that should be used for the connection.
+
 TPgSQLServer::TPgSQLServer(const char *db, const char *uid, const char *pw)
 {
-   // Open a connection to a PgSQL DB server. The db arguments should be
-   // of the form "pgsql://<host>[:<port>][/<database>]", e.g.:
-   // "pgsql://pcroot.cern.ch:3456/test". The uid is the username and pw
-   // the password that should be used for the connection.
-
    fPgSQL = 0;
    fSrvInfo="";
 
@@ -81,20 +81,20 @@ TPgSQLServer::TPgSQLServer(const char *db, const char *uid, const char *pw)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to PgSQL DB server.
+
 TPgSQLServer::~TPgSQLServer()
 {
-   // Close connection to PgSQL DB server.
-
    if (IsConnected())
       Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to PgSQL DB server.
+
 void TPgSQLServer::Close(Option_t *)
 {
-   // Close connection to PgSQL DB server.
-
    if (!fPgSQL)
       return;
 
@@ -102,13 +102,13 @@ void TPgSQLServer::Close(Option_t *)
    fPort = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute SQL command. Result object must be deleted by the user.
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TPgSQLServer::Query(const char *sql)
 {
-   // Execute SQL command. Result object must be deleted by the user.
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    if (!IsConnected()) {
       Error("Query", "not connected");
       return 0;
@@ -127,11 +127,11 @@ TSQLResult *TPgSQLServer::Query(const char *sql)
    return new TPgSQLResult(res);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select a database. Returns 0 if successful, non-zero otherwise.
+
 Int_t TPgSQLServer::SelectDataBase(const char *dbname)
 {
-   // Select a database. Returns 0 if successful, non-zero otherwise.
-
    TString usr;
    TString pwd;
    TString port;
@@ -166,14 +166,14 @@ Int_t TPgSQLServer::SelectDataBase(const char *dbname)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all available databases. Wild is for wildcarding "t%" list all
+/// databases starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TPgSQLServer::GetDataBases(const char *wild)
 {
-   // List all available databases. Wild is for wildcarding "t%" list all
-   // databases starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    if (!IsConnected()) {
       Error("GetDataBases", "not connected");
       return 0;
@@ -186,14 +186,14 @@ TSQLResult *TPgSQLServer::GetDataBases(const char *wild)
    return Query(sql);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all tables in the specified database. Wild is for wildcarding
+/// "t%" list all tables starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TPgSQLServer::GetTables(const char *dbname, const char *wild)
 {
-   // List all tables in the specified database. Wild is for wildcarding
-   // "t%" list all tables starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    if (!IsConnected()) {
       Error("GetTables", "not connected");
       return 0;
@@ -211,15 +211,15 @@ TSQLResult *TPgSQLServer::GetTables(const char *dbname, const char *wild)
    return Query(sql);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all columns in specified table in the specified database.
+/// Wild is for wildcarding "t%" list all columns starting with "t".
+/// Returns a pointer to a TSQLResult object if successful, 0 otherwise.
+/// The result object must be deleted by the user.
+
 TSQLResult *TPgSQLServer::GetColumns(const char *dbname, const char *table,
                                      const char *wild)
 {
-   // List all columns in specified table in the specified database.
-   // Wild is for wildcarding "t%" list all columns starting with "t".
-   // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
-
    if (!IsConnected()) {
       Error("GetColumns", "not connected");
       return 0;
@@ -246,11 +246,11 @@ TSQLResult *TPgSQLServer::GetColumns(const char *dbname, const char *table,
    return Query(sql);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a database. Returns 0 if successful, non-zero otherwise.
+
 Int_t TPgSQLServer::CreateDataBase(const char *dbname)
 {
-   // Create a database. Returns 0 if successful, non-zero otherwise.
-
    if (!IsConnected()) {
       Error("CreateDataBase", "not connected");
       return -1;
@@ -262,12 +262,12 @@ Int_t TPgSQLServer::CreateDataBase(const char *dbname)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drop (i.e. delete) a database. Returns 0 if successful, non-zero
+/// otherwise.
+
 Int_t TPgSQLServer::DropDataBase(const char *dbname)
 {
-   // Drop (i.e. delete) a database. Returns 0 if successful, non-zero
-   // otherwise.
-
    if (!IsConnected()) {
       Error("DropDataBase", "not connected");
       return -1;
@@ -279,12 +279,12 @@ Int_t TPgSQLServer::DropDataBase(const char *dbname)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reload permission tables. Returns 0 if successful, non-zero
+/// otherwise. User must have reload permissions.
+
 Int_t TPgSQLServer::Reload()
 {
-   // Reload permission tables. Returns 0 if successful, non-zero
-   // otherwise. User must have reload permissions.
-
    if (!IsConnected()) {
       Error("Reload", "not connected");
       return -1;
@@ -294,12 +294,12 @@ Int_t TPgSQLServer::Reload()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shutdown the database server. Returns 0 if successful, non-zero
+/// otherwise. User must have shutdown permissions.
+
 Int_t TPgSQLServer::Shutdown()
 {
-   // Shutdown the database server. Returns 0 if successful, non-zero
-   // otherwise. User must have shutdown permissions.
-
    if (!IsConnected()) {
       Error("Shutdown", "not connected");
       return -1;
@@ -309,11 +309,11 @@ Int_t TPgSQLServer::Shutdown()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return server info.
+
 const char *TPgSQLServer::ServerInfo()
 {
-   // Return server info.
-
    if (!IsConnected()) {
       Error("ServerInfo", "not connected");
       return 0;
@@ -322,13 +322,13 @@ const char *TPgSQLServer::ServerInfo()
    return fSrvInfo.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PG_VERSION_NUM conveniently only started being #defined at 8.2.3
+/// which is the first version of libpq which explicitly supports prepared
+/// statements
+
 Bool_t TPgSQLServer::HasStatement() const
 {
-   // PG_VERSION_NUM conveniently only started being #defined at 8.2.3
-   // which is the first version of libpq which explicitly supports prepared
-   // statements
-
 #ifdef PG_VERSION_NUM
    return kTRUE;
 #else
@@ -336,15 +336,15 @@ Bool_t TPgSQLServer::HasStatement() const
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce TPgSQLStatement.
+
 #ifdef PG_VERSION_NUM
 TSQLStatement* TPgSQLServer::Statement(const char *sql, Int_t)
 #else
 TSQLStatement* TPgSQLServer::Statement(const char *, Int_t)
 #endif
 {
-  // Produce TPgSQLStatement.
-
 #ifdef PG_VERSION_NUM
    if (!sql || !*sql) {
       SetError(-1, "no query string specified","Statement");
@@ -375,11 +375,11 @@ TSQLStatement* TPgSQLServer::Statement(const char *, Int_t)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Produce TSQLTableInfo.
+
 TSQLTableInfo *TPgSQLServer::GetTableInfo(const char* tablename)
 {
-   // Produce TSQLTableInfo.
-
    if (!IsConnected()) {
       Error("GetColumns", "not connected");
       return NULL;

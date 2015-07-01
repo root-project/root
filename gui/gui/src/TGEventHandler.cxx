@@ -20,22 +20,22 @@
 
 ClassImp(TGEventHandler)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle the event. Returns true if the event has been handled,
+/// false otherwise.
+
 Bool_t TGEventHandler::HandleEvent(Event_t *ev)
 {
-   // Handle the event. Returns true if the event has been handled,
-   // false otherwise.
-
    return fWindow->HandleEvent(ev);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send message (i.e. event) to window w. Message is encoded in one long
+/// as message type and up to two long parameters.
+
 void TGEventHandler::SendMessage(const TGWindow *w, Long_t msg, Long_t parm1,
                                  Long_t parm2)
 {
-   // Send message (i.e. event) to window w. Message is encoded in one long
-   // as message type and up to two long parameters.
-
    Event_t event;
 
    if (w) {

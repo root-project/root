@@ -42,37 +42,40 @@ ClassImp(RooAbsSelfCachedPdf)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsSelfCachedPdf::RooAbsSelfCachedPdf(const char *name, const char *title, Int_t ipOrder) :
   RooAbsCachedPdf(name,title,ipOrder)
  { 
-   // Constructor
  } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAbsSelfCachedPdf::RooAbsSelfCachedPdf(const RooAbsSelfCachedPdf& other, const char* name) :  
    RooAbsCachedPdf(other,name)
  { 
-   // Copy constructor
  } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAbsSelfCachedPdf::~RooAbsSelfCachedPdf() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill cache with sampling of p.d.f as defined by the evaluate() implementation
+
 void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const 
 {
-  // Fill cache with sampling of p.d.f as defined by the evaluate() implementation
-
   RooDataHist& cacheHist = *cache.hist() ;
 
   // Make deep clone of self in non-caching mde and attach to dataset observables
@@ -95,12 +98,12 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines observables to be cached, given a set of user defined observables
+/// Returns the subset of nset that are observables this p.d.f
+
 RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) const 
 {
-  // Defines observables to be cached, given a set of user defined observables
-  // Returns the subset of nset that are observables this p.d.f
-
   // Make list of servers
   RooArgSet servers ;
 
@@ -119,13 +122,13 @@ RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) con
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines parameters on which cache contents depends. Returns
+/// subset of variables of self that is not contained in the
+/// supplied nset
+
 RooArgSet* RooAbsSelfCachedPdf::actualParameters(const RooArgSet& nset) const 
 {  
-  // Defines parameters on which cache contents depends. Returns
-  // subset of variables of self that is not contained in the
-  // supplied nset
-
   RooArgSet *servers = new RooArgSet ;
 
   TIterator* siter = serverIterator() ;

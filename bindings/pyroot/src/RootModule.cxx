@@ -145,7 +145,8 @@ namespace {
 
    using namespace PyROOT;
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    PyObject* RootModuleResetCallback( PyObject*, PyObject* )
    {
       gRootModule = 0;   // reference was borrowed
@@ -153,10 +154,11 @@ namespace {
       return Py_None;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find a match within the ROOT module for something with name 'pyname'.
+
    PyObject* LookupCppEntity( PyObject* pyname, PyObject* args )
    {
-   // Find a match within the ROOT module for something with name 'pyname'.
       const char* cname = 0; long macro_ok = 0;
       if ( pyname && PyROOT_PyUnicode_CheckExact( pyname ) )
          cname = PyROOT_PyUnicode_AsString( pyname );
@@ -222,7 +224,8 @@ namespace {
       return 0;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #if PY_VERSION_HEX >= 0x03030000
    inline PyDictKeyEntry* OrgDictLookup(
          PyDictObject* mp, PyObject* key, Py_hash_t hash, PyObject*** value_addr )
@@ -308,12 +311,13 @@ namespace {
       return ep;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modify the given dictionary to install the lookup function that also
+/// tries the ROOT namespace before failing. Called on a module's dictionary,
+/// this allows for lazy lookups.
+
    PyObject* SetRootLazyLookup( PyObject*, PyObject* args )
    {
-   // Modify the given dictionary to install the lookup function that also
-   // tries the ROOT namespace before failing. Called on a module's dictionary,
-   // this allows for lazy lookups.
       PyDictObject* dict = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyDict_Type, &dict ) )
          return 0;
@@ -324,11 +328,11 @@ namespace {
       return Py_None;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a binding for a templated class instantiation.
+
    PyObject* MakeRootTemplateClass( PyObject*, PyObject* args )
    {
-   // Create a binding for a templated class instantiation.
-
    // args is class name + template arguments; build full instantiation
       Py_ssize_t nArgs = PyTuple_GET_SIZE( args );
       if ( nArgs < 2 ) {
@@ -347,10 +351,11 @@ namespace {
       return CreateScopeProxy( name );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper to get the address (address-of-address) of various object proxy types.
+
    void* GetObjectProxyAddress( PyObject*, PyObject* args )
    {
-   // Helper to get the address (address-of-address) of various object proxy types.
       ObjectProxy* pyobj = 0;
       PyObject* pyname = 0;
       if ( PyArg_ParseTuple( args, const_cast< char* >( "O|O!" ), &pyobj,
@@ -446,11 +451,11 @@ namespace {
       return 0;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper to factorize the common code between MakeNullPointer and BindObject.
+
    PyObject* BindObject_( void* addr, PyObject* pyname )
    {
-   // Helper to factorize the common code between MakeNullPointer and BindObject.
-
       if ( ! PyROOT_PyUnicode_Check( pyname ) ) {     // name given as string
          PyObject* nattr = PyObject_GetAttr( pyname, PyStrings::gName );
          if ( nattr )                        // object is actually a class
@@ -473,10 +478,11 @@ namespace {
       return BindCppObjectNoCast( addr, klass, kFALSE );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// From a long representing an address or a PyCapsule/CObject, bind to a class.
+
    PyObject* BindObject( PyObject*, PyObject* args )
    {
-   // From a long representing an address or a PyCapsule/CObject, bind to a class.
       Py_ssize_t argc = PyTuple_GET_SIZE( args );
       if ( argc != 2 ) {
          PyErr_Format( PyExc_TypeError,
@@ -507,11 +513,12 @@ namespace {
       return BindObject_( addr, PyTuple_GET_ITEM( args, 1 ) );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an object of the given type point to NULL (historic note: this
+/// function is older than BindObject(), which can be used instead).
+
    PyObject* MakeNullPointer( PyObject*, PyObject* args )
    {
-   // Create an object of the given type point to NULL (historic note: this
-   // function is older than BindObject(), which can be used instead).
       Py_ssize_t argc = PyTuple_GET_SIZE( args );
       if ( argc != 0 && argc != 1 ) {
          PyErr_Format( PyExc_TypeError,
@@ -528,10 +535,11 @@ namespace {
       return BindObject_( 0, PyTuple_GET_ITEM( args, 0 ) );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method is a helper for (un)pickling of ObjectProxy instances.
+
    PyObject* ObjectProxyExpand( PyObject*, PyObject* args )
    {
-   // This method is a helper for (un)pickling of ObjectProxy instances.
       PyObject* pybuf = 0, *pyname = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!:__expand__" ),
                &PyBytes_Type, &pybuf, &PyBytes_Type, &pyname ) )
@@ -572,11 +580,12 @@ namespace {
       return result;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the global memory policy, which affects object ownership when objects
+/// are passed as function arguments.
+
    PyObject* SetMemoryPolicy( PyObject*, PyObject* args )
    {
-   // Set the global memory policy, which affects object ownership when objects
-   // are passed as function arguments.
       PyObject* policy = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyInt_Type, &policy ) )
          return 0;
@@ -591,11 +600,12 @@ namespace {
       return 0;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the global signal policy, which determines whether a jmp address
+/// should be saved to return to after a C++ segfault.
+
    PyObject* SetSignalPolicy( PyObject*, PyObject* args )
    {
-   // Set the global signal policy, which determines whether a jmp address
-   // should be saved to return to after a C++ segfault.
       PyObject* policy = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyInt_Type, &policy ) )
          return 0;
@@ -610,10 +620,11 @@ namespace {
       return 0;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the ownership (True is python-owns) for the given object.
+
    PyObject* SetOwnership( PyObject*, PyObject* args )
    {
-   // Set the ownership (True is python-owns) for the given object.
       ObjectProxy* pyobj = 0; PyObject* pykeep = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!" ),
                 &ObjectProxy_Type, (void*)&pyobj, &PyInt_Type, &pykeep ) )
@@ -702,7 +713,9 @@ static struct PyModuleDef moduledef = {
    NULL
 };
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization of extension module libPyROOT.
+
 #define PYROOT_INIT_ERROR return NULL
 extern "C" PyObject* PyInit_libPyROOT()
 #else
@@ -710,7 +723,6 @@ extern "C" PyObject* PyInit_libPyROOT()
 extern "C" void initlibPyROOT()
 #endif
 {
-// Initialization of extension module libPyROOT.
    using namespace PyROOT;
 
 // load commonly used python strings

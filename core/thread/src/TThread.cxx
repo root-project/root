@@ -100,32 +100,32 @@ public:
    Int_t Join();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of Thread helper class.
+
 TJoinHelper::TJoinHelper(TThread *th, void **ret)
    : fT(th), fRet(ret), fRc(0), fM(new TMutex), fC(new TCondition(fM)), fJoined(kFALSE)
 {
-   // Constructor of Thread helper class.
-
    fH = new TThread("JoinHelper", JoinFunc, this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TJoinHelper::~TJoinHelper()
 {
-   // Destructor.
-
    delete fC;
    delete fM;
    delete fH;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method which runs in a separate thread to handle thread
+/// joins without blocking the main thread.
+/// Return a value (zero) so that it makes a joinable thread.
+
 void* TJoinHelper::JoinFunc(void *p)
 {
-   // Static method which runs in a separate thread to handle thread
-   // joins without blocking the main thread.
-   // Return a value (zero) so that it makes a joinable thread.
-
    TJoinHelper *jp = (TJoinHelper*)p;
 
    jp->fRc = jp->fT->Join(jp->fRet);
@@ -140,11 +140,11 @@ void* TJoinHelper::JoinFunc(void *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Thread join function.
+
 Int_t TJoinHelper::Join()
 {
-   // Thread join function.
-
    fM->Lock();
    fH->Run();
 
@@ -189,14 +189,14 @@ Int_t TJoinHelper::Join()
 ClassImp(TThread)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a thread. Specify the function or static class method
+/// to be executed by the thread and a pointer to the argument structure.
+/// The user function should return a void*. To start the thread call Run().
+
 TThread::TThread(VoidRtnFunc_t fn, void *arg, EPriority pri)
    : TNamed("<anon>", "")
 {
-   // Create a thread. Specify the function or static class method
-   // to be executed by the thread and a pointer to the argument structure.
-   // The user function should return a void*. To start the thread call Run().
-
    fDetached  = kFALSE;
    fFcnVoid   = 0;
    fFcnRetn   = fn;
@@ -206,14 +206,14 @@ TThread::TThread(VoidRtnFunc_t fn, void *arg, EPriority pri)
    fNamed     = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a detached thread. Specify the function or static class method
+/// to be executed by the thread and a pointer to the argument structure.
+/// To start the thread call Run().
+
 TThread::TThread(VoidFunc_t fn, void *arg, EPriority pri)
    : TNamed("<anon>", "")
 {
-   // Create a detached thread. Specify the function or static class method
-   // to be executed by the thread and a pointer to the argument structure.
-   // To start the thread call Run().
-
    fDetached  = kTRUE;
    fFcnRetn   = 0;
    fFcnVoid   = fn;
@@ -223,14 +223,14 @@ TThread::TThread(VoidFunc_t fn, void *arg, EPriority pri)
    fNamed     = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create thread with a name. Specify the function or static class method
+/// to be executed by the thread and a pointer to the argument structure.
+/// The user function should return a void*. To start the thread call Run().
+
 TThread::TThread(const char *thname, VoidRtnFunc_t fn, void *arg,
                  EPriority pri) : TNamed(thname, "")
 {
-   // Create thread with a name. Specify the function or static class method
-   // to be executed by the thread and a pointer to the argument structure.
-   // The user function should return a void*. To start the thread call Run().
-
    fDetached  = kFALSE;
    fFcnVoid   = 0;
    fFcnRetn   = fn;
@@ -240,14 +240,14 @@ TThread::TThread(const char *thname, VoidRtnFunc_t fn, void *arg,
    fNamed     = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a detached thread with a name. Specify the function or static
+/// class method to be executed by the thread and a pointer to the argument
+/// structure. To start the thread call Run().
+
 TThread::TThread(const char *thname, VoidFunc_t fn, void *arg,
                  EPriority pri) : TNamed(thname, "")
 {
-   // Create a detached thread with a name. Specify the function or static
-   // class method to be executed by the thread and a pointer to the argument
-   // structure. To start the thread call Run().
-
    fDetached  = kTRUE;
    fFcnRetn   = 0;
    fFcnVoid   = fn;
@@ -257,11 +257,11 @@ TThread::TThread(const char *thname, VoidFunc_t fn, void *arg,
    fNamed     = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TThread for a already running thread.
+
 TThread::TThread(Long_t id)
 {
-   // Create a TThread for a already running thread.
-
    fDetached  = kTRUE;
    fFcnRetn   = 0;
    fFcnVoid   = 0;
@@ -281,32 +281,32 @@ TThread::TThread(Long_t id)
       Info("TThread::TThread", "TThread attached to running thread");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the Thread package. This initializes the TThread and ROOT
+/// global mutexes to make parts of ROOT thread safe/aware. This call is
+/// implicit in case a TThread is created.
+
 void TThread::Initialize()
 {
-   // Initialize the Thread package. This initializes the TThread and ROOT
-   // global mutexes to make parts of ROOT thread safe/aware. This call is
-   // implicit in case a TThread is created.
-
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true, if the TThread objects have been initialize. If false,
+/// the process is (from ROOT's point of view) single threaded.
+
 Bool_t TThread::IsInitialized()
 {
-   // Return true, if the TThread objects have been initialize. If false,
-   // the process is (from ROOT's point of view) single threaded.
-
    if (fgThreadImp)
       return kTRUE;
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize global state and variables once.
+
 void TThread::Init()
 {
-   // Initialize global state and variables once.
-
    if (fgThreadImp || fgIsTearDown) return;
 
 #if !defined (_REENTRANT) && !defined (WIN32)
@@ -340,11 +340,11 @@ void TThread::Init()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common thread constructor.
+
 void TThread::Constructor()
 {
-   // Common thread constructor.
-
    fHolder = 0;
    fClean  = 0;
    fState  = kNewState;
@@ -373,11 +373,11 @@ void TThread::Constructor()
    // thread is set up in initialisation routine or Run().
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup the thread.
+
 TThread::~TThread()
 {
-   // Cleanup the thread.
-
    if (gDebug)
       Info("TThread::~TThread", "thread deleted");
 
@@ -396,14 +396,14 @@ TThread::~TThread()
    if (fHolder) *fHolder = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to delete the specified thread.
+/// Returns -1 in case the thread was running and has been killed. Returns
+/// 0 in case the thread has been Delete and Cleaned up. The th pointer is
+/// not valid anymore in that case.
+
 Int_t TThread::Delete(TThread *&th)
 {
-   // Static method to delete the specified thread.
-   // Returns -1 in case the thread was running and has been killed. Returns
-   // 0 in case the thread has been Delete and Cleaned up. The th pointer is
-   // not valid anymore in that case.
-
    if (!th) return 0;
    th->fHolder = &th;
 
@@ -421,12 +421,12 @@ Int_t TThread::Delete(TThread *&th)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to check if threads exist.
+/// Returns the number of running threads.
+
 Int_t TThread::Exists()
 {
-   // Static method to check if threads exist.
-   // Returns the number of running threads.
-
    ThreadInternalLock();
 
    Int_t num = 0;
@@ -438,19 +438,19 @@ Int_t TThread::Exists()
    return num;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set thread priority.
+
 void TThread::SetPriority(EPriority pri)
 {
-   // Set thread priority.
-
    fPriority = pri;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to find a thread by id.
+
 TThread *TThread::GetThread(Long_t id)
 {
-   // Static method to find a thread by id.
-
    TThread *myTh;
 
    ThreadInternalLock();
@@ -462,11 +462,11 @@ TThread *TThread::GetThread(Long_t id)
    return myTh;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to find a thread by name.
+
 TThread *TThread::GetThread(const char *name)
 {
-   // Static method to find a thread by name.
-
    TThread *myTh;
 
    ThreadInternalLock();
@@ -478,11 +478,11 @@ TThread *TThread::GetThread(const char *name)
    return myTh;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning pointer to current thread.
+
 TThread *TThread::Self()
 {
-   // Static method returning pointer to current thread.
-
    TTHREAD_TLS(TThread*) self = 0;
 
    if (!self || fgIsTearDown) {
@@ -493,11 +493,11 @@ TThread *TThread::Self()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Join this thread.
+
 Long_t TThread::Join(void **ret)
 {
-   // Join this thread.
-
    if (fId == -1) {
       Error("Join", "thread not running");
       return -1;
@@ -517,11 +517,11 @@ Long_t TThread::Join(void **ret)
    return helper.Join();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to join a thread by id.
+
 Long_t TThread::Join(Long_t jid, void **ret)
 {
-   // Static method to join a thread by id.
-
    TThread *myTh = GetThread(jid);
 
    if (!myTh) {
@@ -532,25 +532,25 @@ Long_t TThread::Join(Long_t jid, void **ret)
    return myTh->Join(ret);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the id for the current thread.
+
 Long_t TThread::SelfId()
 {
-   // Static method returning the id for the current thread.
-
    if (fgIsTearDown) return -1;
    if (!fgThreadImp) Init();
 
    return fgThreadImp->SelfId();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start the thread. This starts the static method TThread::Function()
+/// which calls the user function specified in the TThread ctor with
+/// the arg argument. Returns 0 on success, otherwise an error number will
+/// be returned.
+
 Int_t TThread::Run(void *arg)
 {
-   // Start the thread. This starts the static method TThread::Function()
-   // which calls the user function specified in the TThread ctor with
-   // the arg argument. Returns 0 on success, otherwise an error number will
-   // be returned.
-
    if (arg) fThreadArg = arg;
 
    SetComment("Run: MainInternalMutex locking");
@@ -569,12 +569,12 @@ Int_t TThread::Run(void *arg)
    return iret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Kill this thread. Returns 0 on success, otherwise an error number will
+/// be returned.
+
 Int_t TThread::Kill()
 {
-   // Kill this thread. Returns 0 on success, otherwise an error number will
-   // be returned.
-
    if (fState != kRunningState && fState != kDeletingState) {
       if (gDebug)
          Warning("TThread::Kill", "thread is not running");
@@ -585,12 +585,12 @@ Int_t TThread::Kill()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to kill the thread by id. Returns 0 on success, otherwise
+/// an error number will be returned.
+
 Int_t TThread::Kill(Long_t id)
 {
-   // Static method to kill the thread by id. Returns 0 on success, otherwise
-   // an error number will be returned.
-
    TThread *th = GetThread(id);
    if (th) {
       return fgThreadImp->Kill(th);
@@ -601,12 +601,12 @@ Int_t TThread::Kill(Long_t id)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to kill thread by name. Returns 0 on success, otherwise
+/// an error number will be returned.
+
 Int_t TThread::Kill(const char *name)
 {
-   // Static method to kill thread by name. Returns 0 on success, otherwise
-   // an error number will be returned.
-
    TThread *th = GetThread(name);
    if (th) {
       return fgThreadImp->Kill(th);
@@ -617,82 +617,82 @@ Int_t TThread::Kill(const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to turn off thread cancellation. Returns 0 on success,
+/// otherwise an error number will be returned.
+
 Int_t TThread::SetCancelOff()
 {
-   // Static method to turn off thread cancellation. Returns 0 on success,
-   // otherwise an error number will be returned.
-
    return fgThreadImp ? fgThreadImp->SetCancelOff() : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to turn on thread cancellation. Returns 0 on success,
+/// otherwise an error number will be returned.
+
 Int_t TThread::SetCancelOn()
 {
-   // Static method to turn on thread cancellation. Returns 0 on success,
-   // otherwise an error number will be returned.
-
    return fgThreadImp ? fgThreadImp->SetCancelOn() : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to set the cancellation response type of the calling thread
+/// to asynchronous, i.e. cancel as soon as the cancellation request
+/// is received.
+
 Int_t TThread::SetCancelAsynchronous()
 {
-   // Static method to set the cancellation response type of the calling thread
-   // to asynchronous, i.e. cancel as soon as the cancellation request
-   // is received.
-
    return fgThreadImp ? fgThreadImp->SetCancelAsynchronous() : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to set the cancellation response type of the calling thread
+/// to deferred, i.e. cancel only at next cancellation point.
+/// Returns 0 on success, otherwise an error number will be returned.
+
 Int_t TThread::SetCancelDeferred()
 {
-   // Static method to set the cancellation response type of the calling thread
-   // to deferred, i.e. cancel only at next cancellation point.
-   // Returns 0 on success, otherwise an error number will be returned.
-
    return fgThreadImp ? fgThreadImp->SetCancelDeferred() : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to set a cancellation point. Returns 0 on success, otherwise
+/// an error number will be returned.
+
 Int_t TThread::CancelPoint()
 {
-   // Static method to set a cancellation point. Returns 0 on success, otherwise
-   // an error number will be returned.
-
    return fgThreadImp ? fgThreadImp->CancelPoint() : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method which pushes thread cleanup method on stack.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TThread::CleanUpPush(void *free, void *arg)
 {
-   // Static method which pushes thread cleanup method on stack.
-   // Returns 0 in case of success and -1 in case of error.
-
    TThread *th = Self();
    if (th)
       return fgThreadImp->CleanUpPush(&(th->fClean), free, arg);
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method which pops thread cleanup method off stack.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TThread::CleanUpPop(Int_t exe)
 {
-   // Static method which pops thread cleanup method off stack.
-   // Returns 0 in case of success and -1 in case of error.
-
    TThread *th = Self();
    if (th)
       return fgThreadImp->CleanUpPop(&(th->fClean), exe);
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to cleanup the calling thread.
+
 Int_t TThread::CleanUp()
 {
-   // Static method to cleanup the calling thread.
-
    TThread *th = Self();
    if (!th) return 13;
 
@@ -709,11 +709,11 @@ Int_t TThread::CleanUp()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method which is called after the thread has been canceled.
+
 void TThread::AfterCancel(TThread *th)
 {
-   // Static method which is called after the thread has been canceled.
-
    if (th) {
       th->fState = kCanceledState;
       if (gDebug)
@@ -722,66 +722,66 @@ void TThread::AfterCancel(TThread *th)
       ::Error("TThread::AfterCancel", "zero thread pointer passed");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method which terminates the execution of the calling thread.
+
 Int_t TThread::Exit(void *ret)
 {
-   // Static method which terminates the execution of the calling thread.
-
    return fgThreadImp ? fgThreadImp->Exit(ret) : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to sleep the calling thread.
+
 Int_t TThread::Sleep(ULong_t secs, ULong_t nanos)
 {
-   // Static method to sleep the calling thread.
-
    UInt_t ms = UInt_t(secs * 1000) + UInt_t(nanos / 1000000);
    if (gSystem) gSystem->Sleep(ms);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to get the current time. Returns
+/// the number of seconds.
+
 Int_t TThread::GetTime(ULong_t *absSec, ULong_t *absNanoSec)
 {
-   // Static method to get the current time. Returns
-   // the number of seconds.
-
    TTimeStamp t;
    if (absSec)     *absSec     = t.GetSec();
    if (absNanoSec) *absNanoSec = t.GetNanoSec();
    return t.GetSec();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to lock the main thread mutex.
+
 Int_t TThread::Lock()
 {
-   // Static method to lock the main thread mutex.
-
    return (fgMainMutex ? fgMainMutex->Lock() : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to try to lock the main thread mutex.
+
 Int_t TThread::TryLock()
 {
-   // Static method to try to lock the main thread mutex.
-
    return (fgMainMutex ? fgMainMutex->TryLock() : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to unlock the main thread mutex.
+
 Int_t TThread::UnLock()
 {
-   // Static method to unlock the main thread mutex.
-
    return (fgMainMutex ? fgMainMutex->UnLock() : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method which is called by the system thread function and
+/// which in turn calls the actual user function.
+
 void *TThread::Function(void *ptr)
 {
-   // Static method which is called by the system thread function and
-   // which in turn calls the actual user function.
-
    TThread *th;
    void *ret, *arg;
 
@@ -823,11 +823,11 @@ void *TThread::Function(void *ptr)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method listing the existing threads.
+
 void TThread::Ps()
 {
-   // Static method listing the existing threads.
-
    TThread *l;
    int i;
 
@@ -870,15 +870,15 @@ void TThread::Ps()
    ThreadInternalUnLock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning a pointer to thread specific data container
+/// of the calling thread.
+/// k should be between 0 and kMaxUserThreadSlot for user application.
+/// (and between kMaxUserThreadSlot and kMaxThreadSlot for ROOT libraries).
+/// See ROOT::EThreadSlotReservation
+
 void **TThread::Tsd(void *dflt, Int_t k)
 {
-   // Static method returning a pointer to thread specific data container
-   // of the calling thread.
-   // k should be between 0 and kMaxUserThreadSlot for user application.
-   // (and between kMaxUserThreadSlot and kMaxThreadSlot for ROOT libraries).
-   // See ROOT::EThreadSlotReservation
-
    TThread *th = TThread::Self();
 
    if (!th) {   //Main thread
@@ -888,11 +888,11 @@ void **TThread::Tsd(void *dflt, Int_t k)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method providing a thread safe printf. Appends a newline.
+
 void TThread::Printf(const char *va_(fmt), ...)
 {
-   // Static method providing a thread safe printf. Appends a newline.
-
    va_list ap;
    va_start(ap,va_(fmt));
 
@@ -923,13 +923,13 @@ again:
    delete [] buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Thread specific error handler function.
+/// It calls the user set error handler in the main thread.
+
 void TThread::ErrorHandler(int level, const char *location, const char *fmt,
                            va_list ap) const
 {
-   // Thread specific error handler function.
-   // It calls the user set error handler in the main thread.
-
    Int_t buf_size = 2048;
    char *buf, *bp;
 
@@ -966,14 +966,14 @@ again:
    delete [] bp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to ErrorHandler. User has to specify the class name as
+/// part of the location, just like for the global Info(), Warning() and
+/// Error() functions.
+
 void TThread::DoError(int level, const char *location, const char *fmt,
                       va_list va) const
 {
-   // Interface to ErrorHandler. User has to specify the class name as
-   // part of the location, just like for the global Info(), Warning() and
-   // Error() functions.
-
    char *loc = 0;
 
    if (location) {
@@ -989,11 +989,11 @@ void TThread::DoError(int level, const char *location, const char *fmt,
    delete [] loc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method used to allow commands to be executed by the main thread.
+
 Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
 {
-   // Static method used to allow commands to be executed by the main thread.
-
    if (!gApplication || !gApplication->IsRunning()) return 0;
 
    // The first time, create the related static vars
@@ -1037,13 +1037,13 @@ Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
       return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method called via the thread timer to execute in the main
+/// thread certain commands. This to avoid sophisticated locking and
+/// possible deadlocking.
+
 void TThread::XAction()
 {
-   // Static method called via the thread timer to execute in the main
-   // thread certain commands. This to avoid sophisticated locking and
-   // possible deadlocking.
-
    TConditionImp *condimp = fgXActCondi->fConditionImp;
    TMutexImp *condmutex = fgXActCondi->GetMutex()->fMutexImp;
    condmutex->Lock();
@@ -1156,19 +1156,19 @@ void TThread::XAction()
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create thread timer.
+
 TThreadTimer::TThreadTimer(Long_t ms) : TTimer(ms, kTRUE)
 {
-   // Create thread timer.
-
    gSystem->AddTimer(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Periodically execute the TThread::XAxtion() method in the main thread.
+
 Bool_t TThreadTimer::Notify()
 {
-   // Periodically execute the TThread::XAxtion() method in the main thread.
-
    if (TThread::fgXAct) { TThread::XAction(); }
    Reset();
 
@@ -1182,10 +1182,10 @@ Bool_t TThreadTimer::Notify()
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call user clean up routines.
+
 TThreadCleaner::~TThreadCleaner()
 {
-   // Call user clean up routines.
-
    TThread::CleanUp();
 }

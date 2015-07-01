@@ -31,7 +31,9 @@
 
 ClassImp(TEveGeoShapeExtract);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGeoShapeExtract::TEveGeoShapeExtract(const char* n, const char* t) :
    TNamed       (n,t),
    fRnrSelf     (kTRUE),
@@ -41,38 +43,36 @@ TEveGeoShapeExtract::TEveGeoShapeExtract(const char* n, const char* t) :
    fShape       (0),
    fElements    (0)
 {
-   // Constructor.
-
    memset(fTrans, 0, sizeof(fTrans));
    fTrans[0] = fTrans[5] = fTrans[10] = fTrans[15] = 1;
    fRGBA [0] = fRGBA [1] = fRGBA [2]  = fRGBA [3]  = 1;
    fRGBALine[0] = fRGBALine[1] = fRGBALine[2] = 0; fRGBALine[3] = 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Delete shape and elements.
+
 TEveGeoShapeExtract::~TEveGeoShapeExtract()
 {
-   // Destructor. Delete shape and elements.
-
    delete fShape;
    delete fElements;
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// True if has at least one element.
+
 Bool_t TEveGeoShapeExtract::HasElements()
 {
-   // True if has at least one element.
-
    return fElements != 0 && fElements->GetSize() > 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a child element.
+
 void TEveGeoShapeExtract::AddElement(TEveGeoShapeExtract* gse)
 {
-   // Add a child element.
-
    if (fElements == 0)
       fElements = new TList;
 
@@ -81,29 +81,29 @@ void TEveGeoShapeExtract::AddElement(TEveGeoShapeExtract* gse)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set transformation matrix.
+
 void TEveGeoShapeExtract::SetTrans(const Double_t arr[16])
 {
-   // Set transformation matrix.
-
    for(Int_t i=0; i<16; ++i)
       fTrans[i] = arr[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set RGBA color.
+
 void TEveGeoShapeExtract::SetRGBA(const Float_t  arr[4])
 {
-   // Set RGBA color.
-
    for(Int_t i=0; i<4; ++i)
       fRGBA[i] = arr[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set RGBA color for line.
+
 void TEveGeoShapeExtract::SetRGBALine(const Float_t  arr[4])
 {
-   // Set RGBA color for line.
-
    for(Int_t i=0; i<4; ++i)
       fRGBALine[i] = arr[i];
 }

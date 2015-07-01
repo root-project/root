@@ -57,42 +57,42 @@
 
 ClassImp(TQpProbBase)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TQpProbBase::TQpProbBase()
 {
-// Default constructor
-
    fNx = 0;
    fMy = 0;
    fMz = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQpProbBase::TQpProbBase(Int_t nx,Int_t my,Int_t mz)
 {
-// Constructor
-
    fNx = nx;
    fMy = my;
    fMz = mz;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TQpProbBase::TQpProbBase(const TQpProbBase &another) : TObject(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TQpProbBase &TQpProbBase::operator=(const TQpProbBase &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TObject::operator=(source);
       fNx = source.fNx;

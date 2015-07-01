@@ -31,54 +31,60 @@ ClassImp(TPythia6Decayer)
 
 TPythia6Decayer* TPythia6Decayer::fgInstance = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the singleton object.
+
 TPythia6Decayer* TPythia6Decayer::Instance()
 {
-   // Get the singleton object.
    if (!fgInstance) fgInstance = new TPythia6Decayer;
    return fgInstance;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TPythia6Decayer::TPythia6Decayer()
    : fDecay(kMaxDecay),
    fBraPart(501)
 {
-   // Constructor
    fBraPart.Reset(1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the decayer
+
 void TPythia6Decayer::Init()
 {
-   // Initialize the decayer
    static Bool_t init = kFALSE;
    if (init) return;
    init = kTRUE;
    ForceDecay();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decay a particle of type IDPART (PDG code) and momentum P.
+
 void TPythia6Decayer::Decay(Int_t idpart, TLorentzVector* p)
 {
-   // Decay a particle of type IDPART (PDG code) and momentum P.
    if (!p) return;
    TPythia6::Instance()->Py1ent(0, idpart, p->Energy(), p->Theta(), p->Phi());
    TPythia6::Instance()->GetPrimaries();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the decay products into the passed PARTICLES TClonesArray of
+/// TParticles
+
 Int_t TPythia6Decayer::ImportParticles(TClonesArray *particles)
 {
-   // Get the decay products into the passed PARTICLES TClonesArray of
-   // TParticles
    return TPythia6::Instance()->ImportParticles(particles,"All");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Force a particular decay type
+
 void TPythia6Decayer::SetForceDecay(Int_t type)
 {
-   // Force a particular decay type
    if (type > kMaxDecay) {
       Warning("SetForceDecay", "Invalid decay mode: %d", type);
       return;
@@ -86,10 +92,11 @@ void TPythia6Decayer::SetForceDecay(Int_t type)
    fDecay = EDecayType(type);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Force a particle decay mode
+
 void TPythia6Decayer::ForceDecay()
 {
-   // Force a particle decay mode
    EDecayType decay=fDecay;
    TPythia6::Instance()->SetMSTJ(21,2);
    if (decay == kNoDecayHeavy) return;
@@ -263,30 +270,33 @@ void TPythia6Decayer::ForceDecay()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the partial branching ratio for a particle of type IPART (a
+/// PDG code).
+
 Float_t TPythia6Decayer::GetPartialBranchingRatio(Int_t ipart)
 {
-   // Get the partial branching ratio for a particle of type IPART (a
-   // PDG code).
    Int_t kc = TPythia6::Instance()->Pycomp(TMath::Abs(ipart));
    // return TPythia6::Instance()->GetBRAT(kc);
    return fBraPart[kc];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the life-time of a particle of type KF (a PDG code).
+
 Float_t TPythia6Decayer::GetLifetime(Int_t kf)
 {
-   // Get the life-time of a particle of type KF (a PDG code).
    Int_t kc=TPythia6::Instance()->Pycomp(TMath::Abs(kf));
    return TPythia6::Instance()->GetPMAS(kc,4) * 3.3333e-12;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read in particle data from an ASCII file.   The file name must
+/// previously have been set using the member function
+/// SetDecayTableFile.
+
 void TPythia6Decayer::ReadDecayTable()
 {
-   // Read in particle data from an ASCII file.   The file name must
-   // previously have been set using the member function
-   // SetDecayTableFile.
    if (fDecayTableFile.IsNull()) {
       Warning("ReadDecayTable", "No file set");
       return;
@@ -398,70 +408,71 @@ void MakeDecayList()
 // END COMMENT
 // ===================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write particle data to an ASCII file.   The file name must
+/// previously have been set using the member function
+/// SetDecayTableFile.
+///
+/// Users can use this function to make an initial decay list file,
+/// which then can be edited by hand, and re-loaded into the decayer
+/// using ReadDecayTable.
+///
+/// The file syntax is
+///
+///    particle_list : partcle_data
+///                  | particle_list particle_data
+///                  ;
+///    particle_data : particle_info
+///                  | particle_info '\n' decay_list
+///                  ;
+///    particle_info : See below
+///                  ;
+///    decay_list    : decay_entry
+///                  | decay_list decay_entry
+///                  ;
+///    decay_entry   : See below
+///
+/// The particle_info consists of 13 fields:
+///
+///     PDG code             int
+///     Name                 string
+///     Anti-particle name   string  if there's no anti-particle,
+///                                  then this field must be the
+///                                  empty string
+///     Electic charge       int     in units of |e|/3
+///     Color charge         int     in units of quark color charges
+///     Have anti-particle   int     1 of there's an anti-particle
+///                                  to this particle, or 0
+///                                  otherwise
+///     Mass                 float   in units of GeV
+///     Resonance width      float
+///     Max broadning        float
+///     Lifetime             float
+///     MWID                 int     ??? (some sort of flag)
+///     Decay                int     1 if it decays. 0 otherwise
+///
+/// The format to write these entries in are
+///
+///    " %9  %-16s  %-16s%3d%3d%3d%12.5f%12.5f%12.5f%13.gf%3d%d\n"
+///
+/// The decay_entry consists of 8 fields:
+///
+///     On/Off               int     1 for on, -1 for off
+///     Matrix element type  int
+///     Branching ratio      float
+///     Product 1            int     PDG code of decay product 1
+///     Product 2            int     PDG code of decay product 2
+///     Product 3            int     PDG code of decay product 3
+///     Product 4            int     PDG code of decay product 4
+///     Product 5            int     PDG code of decay product 5
+///
+/// The format for these lines are
+///
+///    "          %5d%5d%12.5f%10d%10d%10d%10d%10d\n"
+///
+
 void TPythia6Decayer::WriteDecayTable()
 {
-   // write particle data to an ASCII file.   The file name must
-   // previously have been set using the member function
-   // SetDecayTableFile.
-   //
-   // Users can use this function to make an initial decay list file,
-   // which then can be edited by hand, and re-loaded into the decayer
-   // using ReadDecayTable.
-   //
-   // The file syntax is
-   //
-   //    particle_list : partcle_data
-   //                  | particle_list particle_data
-   //                  ;
-   //    particle_data : particle_info
-   //                  | particle_info '\n' decay_list
-   //                  ;
-   //    particle_info : See below
-   //                  ;
-   //    decay_list    : decay_entry
-   //                  | decay_list decay_entry
-   //                  ;
-   //    decay_entry   : See below
-   //
-   // The particle_info consists of 13 fields:
-   //
-   //     PDG code             int
-   //     Name                 string
-   //     Anti-particle name   string  if there's no anti-particle,
-   //                                  then this field must be the
-   //                                  empty string
-   //     Electic charge       int     in units of |e|/3
-   //     Color charge         int     in units of quark color charges
-   //     Have anti-particle   int     1 of there's an anti-particle
-   //                                  to this particle, or 0
-   //                                  otherwise
-   //     Mass                 float   in units of GeV
-   //     Resonance width      float
-   //     Max broadning        float
-   //     Lifetime             float
-   //     MWID                 int     ??? (some sort of flag)
-   //     Decay                int     1 if it decays. 0 otherwise
-   //
-   // The format to write these entries in are
-   //
-   //    " %9  %-16s  %-16s%3d%3d%3d%12.5f%12.5f%12.5f%13.gf%3d%d\n"
-   //
-   // The decay_entry consists of 8 fields:
-   //
-   //     On/Off               int     1 for on, -1 for off
-   //     Matrix element type  int
-   //     Branching ratio      float
-   //     Product 1            int     PDG code of decay product 1
-   //     Product 2            int     PDG code of decay product 2
-   //     Product 3            int     PDG code of decay product 3
-   //     Product 4            int     PDG code of decay product 4
-   //     Product 5            int     PDG code of decay product 5
-   //
-   // The format for these lines are
-   //
-   //    "          %5d%5d%12.5f%10d%10d%10d%10d%10d\n"
-   //
    if (fDecayTableFile.IsNull()) {
       Warning("ReadDecayTable", "No file set");
       return;
@@ -473,20 +484,22 @@ void TPythia6Decayer::WriteDecayTable()
    TPythia6::Instance()->CloseFortranFile(lun);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Count number of decay products
+
 Int_t TPythia6Decayer::CountProducts(Int_t channel, Int_t particle)
 {
-   // Count number of decay products
    Int_t np = 0;
    for (Int_t i = 1; i <= 5; i++)
       if (TMath::Abs(TPythia6::Instance()->GetKFDP(channel,i)) == particle) np++;
    return np;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Force golden D decay modes
+
 void TPythia6Decayer::ForceHadronicD()
 {
-   // Force golden D decay modes
    const Int_t kNHadrons = 4;
    Int_t channel;
    Int_t hadron[kNHadrons] = {411,  421, 431, 4112};
@@ -539,11 +552,12 @@ void TPythia6Decayer::ForceHadronicD()
    } // hadrons
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Force decay of particle into products with multiplicity mult
+
 void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t product, Int_t mult)
 {
-   //
-   //  Force decay of particle into products with multiplicity mult
    TPythia6* pyth = TPythia6::Instance();
 
    Int_t kc =  pyth->Pycomp(particle);
@@ -565,12 +579,13 @@ void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t product, Int_t mu
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Force decay of particle into products with multiplicity mult
+
 void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t* products,
                                          Int_t* mult, Int_t npart)
 {
-   //
-   //  Force decay of particle into products with multiplicity mult
    TPythia6* pyth = TPythia6::Instance();
 
    Int_t kc     = pyth->Pycomp(particle);
@@ -593,10 +608,11 @@ void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t* products,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Force Omega -> Lambda K- Decay
+
 void TPythia6Decayer::ForceOmega()
 {
-   // Force Omega -> Lambda K- Decay
    TPythia6* pyth = TPythia6::Instance();
 
    Int_t kc     = pyth->Pycomp(3334);

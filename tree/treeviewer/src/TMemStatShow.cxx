@@ -123,50 +123,50 @@
    Long64_t TMemStatShow::fgAddressFirst = 0; //first entry to process
    Long64_t TMemStatShow::fgAddressN     = 0; //number of entries to process
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///specify a memory address range to process (static function).
+/// This function can be used to restrict the range of memory addresses
+/// to be analyzed. For example whem TmemStat is run on a 64 bits machine and
+/// the results visualized on a 32 bits machine, it might be necessary to
+/// restrict the analysis range to the addresses below 2 Gigabytes, eg
+///   TMemStatShow::SetMemoryRange(500000000,0); //analyse only the first 500 MBytes
+/// -first : first address to process (default is 0)
+/// -nbytes : number of addresses in bytes to process starting at first
+///             if 0 (default), then all addresses are processed
+
 void TMemStatShow::SetAddressRange(Long64_t nbytes, Long64_t first)
 {
-   //specify a memory address range to process (static function).
-   // This function can be used to restrict the range of memory addresses
-   // to be analyzed. For example whem TmemStat is run on a 64 bits machine and
-   // the results visualized on a 32 bits machine, it might be necessary to
-   // restrict the analysis range to the addresses below 2 Gigabytes, eg
-   //   TMemStatShow::SetMemoryRange(500000000,0); //analyse only the first 500 MBytes
-   // -first : first address to process (default is 0)
-   // -nbytes : number of addresses in bytes to process starting at first
-   //             if 0 (default), then all addresses are processed
-
    fgAddressFirst = first;
    fgAddressN     = nbytes;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///specify a range of entries to process (static function)
+/// -first : first entry to process (default is 0)
+/// -nentries : number of entries to process starting at first
+///             if 0 (default), then all entries are processed
+/// call this function when the amount of data collected in the Tree is large
+/// and therefore making the analysis slow.
+
 void TMemStatShow::SetEntryRange(Long64_t nentries, Long64_t first)
 {
-   //specify a range of entries to process (static function)
-   // -first : first entry to process (default is 0)
-   // -nentries : number of entries to process starting at first
-   //             if 0 (default), then all entries are processed
-   // call this function when the amount of data collected in the Tree is large
-   // and therefore making the analysis slow.
-
    fgEntryFirst = first;
    fgEntryN     = nentries;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// function called by TMemStat::Show
+/// Open the memstat data file, then call TTree::Draw to precompute
+/// the arrays of positions and nbytes per entry.
+/// update is the time interval in the data file  in seconds after which
+/// the display is updated. For example is the job producing the memstat.root file
+/// took 100s to execute, an update of 0.1s will generate 1000 time views of
+/// the memory use.
+/// the histogram hbigleaks will contain the nbigleaks largest leaks
+/// if fname=="*" (default), the most recent file memstat*.root will be taken.
+
 void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
 {
-   // function called by TMemStat::Show
-   // Open the memstat data file, then call TTree::Draw to precompute
-   // the arrays of positions and nbytes per entry.
-   // update is the time interval in the data file  in seconds after which
-   // the display is updated. For example is the job producing the memstat.root file
-   // took 100s to execute, an update of 0.1s will generate 1000 time views of
-   // the memory use.
-   // the histogram hbigleaks will contain the nbigleaks largest leaks
-   // if fname=="*" (default), the most recent file memstat*.root will be taken.
-
 
    TString s;
    if (!fname || strlen(fname) <5 || strstr(fname,"*")) {
@@ -529,10 +529,11 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
 
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static: draw the tooltip showing the backtrace for the allocatios histogram
+
 void TMemStatShow::EventInfo1(Int_t event, Int_t px, Int_t , TObject *selected)
 {
-   // static: draw the tooltip showing the backtrace for the allocatios histogram
    if (!fgTip1) return;
    fgTip1->Hide();
    if (event == kMouseLeave)
@@ -577,10 +578,11 @@ void TMemStatShow::EventInfo1(Int_t event, Int_t px, Int_t , TObject *selected)
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static: draw the tooltip showing the backtrace for the histogram of leaks
+
 void TMemStatShow::EventInfo2(Int_t event, Int_t px, Int_t , TObject *selected)
 {
-   // static: draw the tooltip showing the backtrace for the histogram of leaks
    if (!fgTip2) return;
    fgTip2->Hide();
    if (event == kMouseLeave)
@@ -602,12 +604,12 @@ void TMemStatShow::EventInfo2(Int_t event, Int_t px, Int_t , TObject *selected)
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static: fill btstring with the traceback corresponding to entry in T
+///          btstring must be initialized in calling function
+
 void TMemStatShow::FillBTString(Int_t entry,Int_t mode,TString &btstring)
 {
-   // static: fill btstring with the traceback corresponding to entry in T
-   //          btstring must be initialized in calling function
-
    Int_t btid   = (Int_t)fgV4[entry];
    TH1I *hbtids = (TH1I*)fgT->GetUserInfo()->FindObject("btids");
    if (!hbtids) return;

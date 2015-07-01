@@ -38,7 +38,8 @@
 
 ClassImp(TGLHistPainter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>The histogram painter class using OpenGL</h2></center>
 
@@ -200,7 +201,10 @@ The following types of plots are provided:
   </ul>
 End_Html */
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///ROOT does not use exceptions, so, if default painter's creation failed,
+///fDefaultPainter is 0. In each function, which use it, I have to check the pointer first.
+
 TGLHistPainter::TGLHistPainter(TH1 *hist)
                    : fDefaultPainter(TVirtualHistPainter::HistPainter(hist)),
                      fEq(0),
@@ -209,11 +213,11 @@ TGLHistPainter::TGLHistPainter(TH1 *hist)
                      fStack(0),
                      fPlotType(kGLDefaultPlot)//THistPainter
 {
-   //ROOT does not use exceptions, so, if default painter's creation failed,
-   //fDefaultPainter is 0. In each function, which use it, I have to check the pointer first.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///This ctor creates gl-parametric plot's painter.
+
 TGLHistPainter::TGLHistPainter(TGLParametricEquation *equation)
                    : fEq(equation),
                      fHist(0),
@@ -221,11 +225,12 @@ TGLHistPainter::TGLHistPainter(TGLParametricEquation *equation)
                      fStack(0),
                      fPlotType(kGLParametricPlot)//THistPainter
 {
-   //This ctor creates gl-parametric plot's painter.
    fGLPainter.reset(new TGLParametricPlot(equation, &fCamera));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///This ctor creates plot painter for TGL5DDataSet.
+
 TGLHistPainter::TGLHistPainter(TGL5DDataSet *data)
                    : fEq(0),
                      fHist(0),
@@ -233,11 +238,12 @@ TGLHistPainter::TGLHistPainter(TGL5DDataSet *data)
                      fStack(0),
                      fPlotType(kGL5D)//THistPainter
 {
-   //This ctor creates plot painter for TGL5DDataSet.
    fGLPainter.reset(new TGL5DPainter(data, &fCamera, &fCoord));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///This ctor creates plot painter for TGL5DDataSet.
+
 TGLHistPainter::TGLHistPainter(TGLTH3Composition *data)
                    : fEq(0),
                      fHist(data),
@@ -245,16 +251,15 @@ TGLHistPainter::TGLHistPainter(TGLTH3Composition *data)
                      fStack(0),
                      fPlotType(kGLTH3Composition)
 {
-   //This ctor creates plot painter for TGL5DDataSet.
    fGLPainter.reset(new TGLTH3CompositionPainter(data, &fCamera, &fCoord));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Selects plot or axis.
+///9999 is the magic number, ROOT's classes use in DistancetoPrimitive.
+
 Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   //Selects plot or axis.
-   //9999 is the magic number, ROOT's classes use in DistancetoPrimitive.
-
    //[tp: return statement added.
    //tp]
 
@@ -288,29 +293,31 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Default implementation is OK
+///This function is called from a context menu
+///after right click on a plot's area. Opens window
+///("panel") with several controls.
+
 void TGLHistPainter::DrawPanel()
 {
-   //Default implementation is OK
-   //This function is called from a context menu
-   //after right click on a plot's area. Opens window
-   //("panel") with several controls.
    if (fDefaultPainter.get())
       fDefaultPainter->DrawPanel();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Execute event.
+///Events are: mouse events in a plot's area,
+///key presses (while mouse cursor is in plot's area).
+///"Event execution" means one of the following actions:
+///1. Rotation.
+///2. Panning.
+///3. Zoom changing.
+///4. Moving dynamic profile.
+///5. Plot specific events - for example, 's' or 'S' key press for TF3.
+
 void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   //Execute event.
-   //Events are: mouse events in a plot's area,
-   //key presses (while mouse cursor is in plot's area).
-   //"Event execution" means one of the following actions:
-   //1. Rotation.
-   //2. Panning.
-   //3. Zoom changing.
-   //4. Moving dynamic profile.
-   //5. Plot specific events - for example, 's' or 'S' key press for TF3.
    if (fPlotType == kGLDefaultPlot) {
       if(fDefaultPainter.get()) {
          fDefaultPainter->ExecuteEvent(event, px, py);
@@ -430,24 +437,26 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Get contour list.
+///I do not use this function. Contours are implemented in
+///a completely different way by gl-painters.
+
 TList *TGLHistPainter::GetContourList(Double_t contour)const
 {
-   //Get contour list.
-   //I do not use this function. Contours are implemented in
-   //a completely different way by gl-painters.
    return fDefaultPainter.get() ? fDefaultPainter->GetContourList(contour) : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Overrides TObject::GetObjectInfo.
+///For lego info is: bin numbers (i, j), bin content.
+///For TF2 info is: x,y,z 3d surface-point for 2d screen-point under cursor
+///(this can work incorrectly now, because of wrong code in TF2).
+///For TF3 no info now.
+///For box info is: bin numbers (i, j, k), bin content.
+
 char *TGLHistPainter::GetObjectInfo(Int_t px, Int_t py)const
 {
-   //Overrides TObject::GetObjectInfo.
-   //For lego info is: bin numbers (i, j), bin content.
-   //For TF2 info is: x,y,z 3d surface-point for 2d screen-point under cursor
-   //(this can work incorrectly now, because of wrong code in TF2).
-   //For TF3 no info now.
-   //For box info is: bin numbers (i, j, k), bin content.
    static char errMsg[] = { "TGLHistPainter::GetObjectInfo: Error in a hist painter\n" };
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->GetObjectInfo(px, py)
@@ -464,48 +473,53 @@ char *TGLHistPainter::GetObjectInfo(Int_t px, Int_t py)const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get stack.
+
 TList *TGLHistPainter::GetStack()const
 {
-   // Get stack.
    return fStack;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns kTRUE if the cell ix, iy is inside one of the graphical cuts.
+///I do not use this function anywhere, this is a "default implementation".
+
 Bool_t TGLHistPainter::IsInside(Int_t x, Int_t y)
 {
-   //Returns kTRUE if the cell ix, iy is inside one of the graphical cuts.
-   //I do not use this function anywhere, this is a "default implementation".
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->IsInside(x, y) : kFALSE;
 
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns kTRUE if the cell x, y is inside one of the graphical cuts.
+///I do not use this function anywhere, this is a "default implementation".
+
 Bool_t TGLHistPainter::IsInside(Double_t x, Double_t y)
 {
-   //Returns kTRUE if the cell x, y is inside one of the graphical cuts.
-   //I do not use this function anywhere, this is a "default implementation".
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->IsInside(x, y) : kFALSE;
 
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Paint statistics.
+///This does not work on windows.
+
 void TGLHistPainter::PaintStat(Int_t dostat, TF1 *fit)
 {
-   //Paint statistics.
-   //This does not work on windows.
    if (fDefaultPainter.get())
       fDefaultPainter->PaintStat(dostat, fit);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process message.
+
 void TGLHistPainter::ProcessMessage(const char *m, const TObject *o)
 {
-   // Process message.
    if (!std::strcmp(m, "SetF3"))
       fF3 = (TF3 *)o;
 
@@ -513,30 +527,33 @@ void TGLHistPainter::ProcessMessage(const char *m, const TObject *o)
       fDefaultPainter->ProcessMessage(m, o);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set histogram.
+
 void TGLHistPainter::SetHistogram(TH1 *h)
 {
-   // Set histogram.
    fHist = h;
 
    if (fDefaultPainter.get())
       fDefaultPainter->SetHistogram(h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set stack.
+
 void TGLHistPainter::SetStack(TList *s)
 {
-   // Set stack.
    fStack = s;
 
    if (fDefaultPainter.get())
       fDefaultPainter->SetStack(s);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make cuts.
+
 Int_t TGLHistPainter::MakeCuts(char *o)
 {
-   // Make cuts.
    if (fPlotType == kGLDefaultPlot && fDefaultPainter.get())
       return fDefaultPainter->MakeCuts(o);
 
@@ -554,10 +571,11 @@ struct TGLHistPainter::PlotOption_t {
    Bool_t       fLogZ;
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Final-overrider for TObject::Paint.
+
 void TGLHistPainter::Paint(Option_t *o)
 {
-   //Final-overrider for TObject::Paint.
    TString option(o);
    option.ToLower();
 
@@ -624,13 +642,13 @@ Bool_t FindAndRemoveOption(TString &options, const char *toFind)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///In principle, we can have several conflicting options: "lego surf pol sph", surfbb: surf, fb, bb.
+///but only one will be selected, which one - depends on parsing order in this function.
+
 TGLHistPainter::PlotOption_t
 TGLHistPainter::ParsePaintOption(const TString &o)const
 {
-   //In principle, we can have several conflicting options: "lego surf pol sph", surfbb: surf, fb, bb.
-   //but only one will be selected, which one - depends on parsing order in this function.
-
    TString options(o);
 
    PlotOption_t parsedOption = {kGLDefaultPlot, kGLCartesian,
@@ -673,10 +691,11 @@ TGLHistPainter::ParsePaintOption(const TString &o)const
    return parsedOption;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create painter.
+
 void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &addOption)
 {
-   // Create painter.
    if (option.fPlotType != fPlotType) {
       fCoord.ResetModified();
       fGLPainter.reset(0);
@@ -721,15 +740,16 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
       fPlotType = kGLDefaultPlot;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set show projection.
+
 void TGLHistPainter::SetShowProjection(const char *option, Int_t nbins)
 {
-   // Set show projection.
-
    if (fDefaultPainter.get()) fDefaultPainter->SetShowProjection(option, nbins);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLHistPainter::PadToViewport(Bool_t /*selectionPass*/)
 {
    if (!fGLPainter.get())

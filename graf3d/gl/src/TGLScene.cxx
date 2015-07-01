@@ -42,7 +42,9 @@
 // 2. Statistics / debug information
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLScene::TSceneInfo::TSceneInfo(TGLViewerBase* view, TGLScene* scene) :
    TGLSceneInfo (view, scene),
    fMinorStamp  (0),
@@ -50,22 +52,22 @@ TGLScene::TSceneInfo::TSceneInfo(TGLViewerBase* view, TGLScene* scene) :
    fTranspCnt   (0),
    fAsPixelCnt  (0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLScene::TSceneInfo::~TSceneInfo()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear given vec and if it grew too large compared to the size of
+/// shape-of-interest also resize it.
+
 void TGLScene::TSceneInfo::ClearDrawElementVec(DrawElementVec_t& vec,
                                                Int_t maxSize)
 {
-   // Clear given vec and if it grew too large compared to the size of
-   // shape-of-interest also resize it.
-
    if (vec.capacity() > (size_t) maxSize) {
       DrawElementVec_t foo;
       foo.reserve((size_t) maxSize);
@@ -75,13 +77,13 @@ void TGLScene::TSceneInfo::ClearDrawElementVec(DrawElementVec_t& vec,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear given vec and if it grew too large compared to the size of
+/// shape-of-interest also resize it.
+
 void TGLScene::TSceneInfo::ClearDrawElementPtrVec(DrawElementPtrVec_t& vec,
                                                   Int_t maxSize)
 {
-   // Clear given vec and if it grew too large compared to the size of
-   // shape-of-interest also resize it.
-
    if (vec.capacity() > (size_t) maxSize) {
       DrawElementPtrVec_t foo;
       foo.reserve((size_t) maxSize);
@@ -91,25 +93,25 @@ void TGLScene::TSceneInfo::ClearDrawElementPtrVec(DrawElementPtrVec_t& vec,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear DrawElementVector fVisibleElement and optionally resize it
+/// so that it doesn't take more space then required by all the
+/// elements in the scene's draw-list.
+
 void TGLScene::TSceneInfo::ClearAfterRebuild()
 {
-   // Clear DrawElementVector fVisibleElement and optionally resize it
-   // so that it doesn't take more space then required by all the
-   // elements in the scene's draw-list.
-
    Int_t maxSize = (Int_t) fShapesOfInterest.size();
 
    ClearDrawElementVec(fVisibleElements, maxSize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear DrawElementPtrVectors and optionally resize them so that
+/// they don't take more space then required by all the elements in
+/// the scene's draw-list.
+
 void TGLScene::TSceneInfo::ClearAfterUpdate()
 {
-   // Clear DrawElementPtrVectors and optionally resize them so that
-   // they don't take more space then required by all the elements in
-   // the scene's draw-list.
-
    Int_t maxSize = (Int_t) fShapesOfInterest.size();
 
    ClearDrawElementPtrVec(fOpaqueElements, maxSize);
@@ -120,21 +122,21 @@ void TGLScene::TSceneInfo::ClearAfterUpdate()
    fMinorStamp = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Quantize LODs for gice render-context.
+
 void TGLScene::TSceneInfo::Lodify(TGLRnrCtx& ctx)
 {
-   // Quantize LODs for gice render-context.
-
    for (DrawElementVec_i i = fVisibleElements.begin(); i != fVisibleElements.end(); ++i)
       i->fPhysical->QuantizeShapeLOD(i->fPixelLOD, ctx.CombiLOD(), i->fFinalLOD);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prepare for drawing - fill DrawElementPtrVectors from the
+/// contents of fVisibleElements if there was some change.
+
 void TGLScene::TSceneInfo::PreDraw()
 {
-   // Prepare for drawing - fill DrawElementPtrVectors from the
-   // contents of fVisibleElements if there was some change.
-
    if (fMinorStamp < fScene->GetMinorStamp())
    {
       fOpaqueElements.clear();
@@ -161,29 +163,30 @@ void TGLScene::TSceneInfo::PreDraw()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean-up after drawing, nothing to be done here.
+
 void TGLScene::TSceneInfo::PostDraw()
 {
-   // Clean-up after drawing, nothing to be done here.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset draw statistics.
+
 void TGLScene::TSceneInfo::ResetDrawStats()
 {
-   // Reset draw statistics.
-
    fOpaqueCnt  = 0;
    fTranspCnt  = 0;
    fAsPixelCnt = 0;
    fByShapeCnt.clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update draw stats, for newly drawn 'shape'
+
 void TGLScene::TSceneInfo::UpdateDrawStats(const TGLPhysicalShape& shape,
                                            Short_t lod)
 {
-   // Update draw stats, for newly drawn 'shape'
-
    // Update opaque/transparent draw count
    if (shape.IsTransparent()) {
       ++fTranspCnt;
@@ -209,11 +212,11 @@ void TGLScene::TSceneInfo::UpdateDrawStats(const TGLPhysicalShape& shape,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Output draw stats to Info stream.
+
 void TGLScene::TSceneInfo::DumpDrawStats()
 {
-   // Output draw stats to Info stream.
-
    if (gDebug>2)
    {
       TString out;
@@ -273,7 +276,8 @@ void TGLScene::TSceneInfo::DumpDrawStats()
 
 ClassImp(TGLScene);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLScene::TGLScene() :
    TGLSceneBase(),
    fGLCtxIdentity(0),
@@ -282,10 +286,11 @@ TGLScene::TGLScene() :
    fLastLineWidthScale (0)
 {}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy scene objects
+
 TGLScene::~TGLScene()
 {
-   // Destroy scene objects
    TakeLock(kModifyLock);
    ReleaseGLCtxIdentity();
    DestroyPhysicals();
@@ -299,12 +304,12 @@ TGLScene::~TGLScene()
 // GLCtxIdentity
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release all GL resources for current context identity.
+/// Requires iteration over all logical shapes.
+
 void TGLScene::ReleaseGLCtxIdentity()
 {
-   // Release all GL resources for current context identity.
-   // Requires iteration over all logical shapes.
-
    if (fGLCtxIdentity == 0) return;
 
    if (fGLCtxIdentity->IsValid())
@@ -334,48 +339,48 @@ void TGLScene::ReleaseGLCtxIdentity()
 /**************************************************************************/
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a scene-info instance appropriate for this scene class.
+/// Here we instantiate the inner class TSceneInfo that includes
+/// camera/clipping specific draw-list containers.
+
 TGLScene::TSceneInfo* TGLScene::CreateSceneInfo(TGLViewerBase* view)
 {
-   // Create a scene-info instance appropriate for this scene class.
-   // Here we instantiate the inner class TSceneInfo that includes
-   // camera/clipping specific draw-list containers.
-
    return new TSceneInfo(view, this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare 'shape1' and 'shape2' bounding box volumes - return kTRUE if
+/// 'shape1' bigger than 'shape2'.
+
 inline Bool_t TGLScene::ComparePhysicalVolumes(const TGLPhysicalShape* shape1,
                                                const TGLPhysicalShape* shape2)
 {
-   // Compare 'shape1' and 'shape2' bounding box volumes - return kTRUE if
-   // 'shape1' bigger than 'shape2'.
-
    return (shape1->BoundingBox().Volume() > shape2->BoundingBox().Volume());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare 'shape1' and 'shape2' bounding box volumes - return kTRUE if
+/// 'shape1' bigger than 'shape2'.
+
 inline Bool_t TGLScene::ComparePhysicalDiagonals(const TGLPhysicalShape* shape1,
                                                  const TGLPhysicalShape* shape2)
 {
-   // Compare 'shape1' and 'shape2' bounding box volumes - return kTRUE if
-   // 'shape1' bigger than 'shape2'.
-
    return (shape1->BoundingBox().Diagonal() > shape2->BoundingBox().Diagonal());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Major change in scene, need to rebuild all-element draw-vector and
+/// sort it.
+///
+/// Sort the TGLPhysical draw list by shape bounding box diagonal, from
+/// large to small. This makes dropout of shapes with time limited
+/// Draw() calls must less noticable. As this does not use projected
+/// size it only needs to be done after a scene content change - not
+/// everytime scene drawn (potential camera/projection change).
+
 void TGLScene::RebuildSceneInfo(TGLRnrCtx& rnrCtx)
 {
-   // Major change in scene, need to rebuild all-element draw-vector and
-   // sort it.
-   //
-   // Sort the TGLPhysical draw list by shape bounding box diagonal, from
-   // large to small. This makes dropout of shapes with time limited
-   // Draw() calls must less noticable. As this does not use projected
-   // size it only needs to be done after a scene content change - not
-   // everytime scene drawn (potential camera/projection change).
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (sinfo == 0 || sinfo->GetScene() != this) {
       Error("TGLScene::RebuildSceneInfo", "Scene mismatch.");
@@ -411,15 +416,15 @@ void TGLScene::RebuildSceneInfo(TGLRnrCtx& rnrCtx)
    sinfo->ClearAfterRebuild();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill scene-info with information needed for rendering, take into
+/// account the render-context (viewer state, camera, clipping).
+/// Here we have to iterate over all the physical shapes and select
+/// the visible ones. While at it, opaque and transparent shapes are
+/// divided into two groups.
+
 void TGLScene::UpdateSceneInfo(TGLRnrCtx& rnrCtx)
 {
-   // Fill scene-info with information needed for rendering, take into
-   // account the render-context (viewer state, camera, clipping).
-   // Here we have to iterate over all the physical shapes and select
-   // the visible ones. While at it, opaque and transparent shapes are
-   // divided into two groups.
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (sinfo == 0 || sinfo->GetScene() != this) {
       Error("TGLScene::UpdateSceneInfo", "Scene mismatch.");
@@ -532,12 +537,12 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& rnrCtx)
    // Even more ... should z-sort contributions from ALL scenes!
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup LOD-dependant values in scene-info.
+/// We have to perform LOD quantization for all draw-elements.
+
 void TGLScene::LodifySceneInfo(TGLRnrCtx& rnrCtx)
 {
-   // Setup LOD-dependant values in scene-info.
-   // We have to perform LOD quantization for all draw-elements.
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (sinfo == 0 || sinfo->GetScene() != this) {
       Error("TGLScene::LodifySceneInfo", "Scene mismatch.");
@@ -554,14 +559,14 @@ void TGLScene::LodifySceneInfo(TGLRnrCtx& rnrCtx)
 // Rendering
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize rendering.
+/// Pass to base-class where most work is done.
+/// Check if GL-ctx is shared with the previous one; if not
+/// wipe display-lists of all logicals.
+
 void TGLScene::PreDraw(TGLRnrCtx& rnrCtx)
 {
-   // Initialize rendering.
-   // Pass to base-class where most work is done.
-   // Check if GL-ctx is shared with the previous one; if not
-   // wipe display-lists of all logicals.
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (sinfo == 0 || sinfo->GetScene() != this) {
       TGLSceneInfo* si = rnrCtx.GetSceneInfo();
@@ -602,67 +607,68 @@ void TGLScene::PreDraw(TGLRnrCtx& rnrCtx)
    sinfo->ResetDrawStats();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render opaque elements.
+
 void TGLScene::RenderOpaque(TGLRnrCtx& rnrCtx)
 {
-   // Render opaque elements.
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (!sinfo->fOpaqueElements.empty())
       RenderAllPasses(rnrCtx, sinfo->fOpaqueElements, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render transparent elements.
+
 void TGLScene::RenderTransp(TGLRnrCtx& rnrCtx)
 {
-   // Render transparent elements.
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (!sinfo->fTranspElements.empty())
       RenderAllPasses(rnrCtx, sinfo->fTranspElements, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render selected opaque elements.
+
 void TGLScene::RenderSelOpaque(TGLRnrCtx& rnrCtx)
 {
-   // Render selected opaque elements.
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if ( ! sinfo->fSelOpaqueElements.empty())
       RenderAllPasses(rnrCtx, sinfo->fSelOpaqueElements, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render selected transparent elements.
+
 void TGLScene::RenderSelTransp(TGLRnrCtx& rnrCtx)
 {
-   // Render selected transparent elements.
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (!sinfo->fSelTranspElements.empty())
       RenderAllPasses(rnrCtx, sinfo->fSelTranspElements, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render selected opaque elements for highlight.
+
 void TGLScene::RenderSelOpaqueForHighlight(TGLRnrCtx& rnrCtx)
 {
-   // Render selected opaque elements for highlight.
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if ( ! sinfo->fSelOpaqueElements.empty())
       RenderHighlight(rnrCtx, sinfo->fSelOpaqueElements);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render selected transparent elements for highlight.
+
 void TGLScene::RenderSelTranspForHighlight(TGLRnrCtx& rnrCtx)
 {
-   // Render selected transparent elements for highlight.
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (!sinfo->fSelTranspElements.empty())
       RenderHighlight(rnrCtx, sinfo->fSelTranspElements);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLScene::RenderHighlight(TGLRnrCtx&           rnrCtx,
                                DrawElementPtrVec_t& elVec)
 {
@@ -693,13 +699,13 @@ void TGLScene::RenderHighlight(TGLRnrCtx&           rnrCtx,
    glDisable(GL_STENCIL_TEST);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called after the rendering is finished.
+/// In debug mode draw statistcs is dumped.
+/// Parent's PostDraw is called for GL cleanup.
+
 void TGLScene::PostDraw(TGLRnrCtx& rnrCtx)
 {
-   // Called after the rendering is finished.
-   // In debug mode draw statistcs is dumped.
-   // Parent's PostDraw is called for GL cleanup.
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
 
    if (gDebug)
@@ -710,16 +716,16 @@ void TGLScene::PostDraw(TGLRnrCtx& rnrCtx)
    TGLSceneBase::PostDraw(rnrCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do full rendering of scene.
+///
+/// First draw the opaques, then the transparents. For each we do
+/// the number of passes required by draw mode and clipping setup.
+
 void TGLScene::RenderAllPasses(TGLRnrCtx&           rnrCtx,
                                DrawElementPtrVec_t& elVec,
                                Bool_t               check_timeout)
 {
-   // Do full rendering of scene.
-   //
-   // First draw the opaques, then the transparents. For each we do
-   // the number of passes required by draw mode and clipping setup.
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    assert(sinfo != 0);
 
@@ -879,16 +885,16 @@ void TGLScene::RenderAllPasses(TGLRnrCtx&           rnrCtx,
    glEnable(GL_LIGHTING);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render DrawElements in elementVec with given timeout.
+/// If clipPlanes is non-zero, test each element against its
+/// clipping planes.
+
 void TGLScene::RenderElements(TGLRnrCtx&           rnrCtx,
                               DrawElementPtrVec_t& elVec,
                               Bool_t               check_timeout,
                               const TGLPlaneSet_t* clipPlanes)
 {
-   // Render DrawElements in elementVec with given timeout.
-   // If clipPlanes is non-zero, test each element against its
-   // clipping planes.
-
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    assert(sinfo != 0);
 
@@ -934,15 +940,15 @@ void TGLScene::RenderElements(TGLRnrCtx&           rnrCtx,
 // Selection
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process selection record rec.
+/// 'curIdx' is the item position where the scene should start
+/// its processing.
+/// Return TRUE if an object has been identified or FALSE otherwise.
+/// The scene-info member of the record is already set by the caller.
+
 Bool_t TGLScene::ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx)
 {
-   // Process selection record rec.
-   // 'curIdx' is the item position where the scene should start
-   // its processing.
-   // Return TRUE if an object has been identified or FALSE otherwise.
-   // The scene-info member of the record is already set by the caller.
-
    if (curIdx >= rec.GetN())
       return kFALSE;
 
@@ -964,12 +970,12 @@ Bool_t TGLScene::ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx)
 // Bounding-box
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Encapsulates all physical shapes bounding box with axes aligned box.
+/// Validity checked in the base-class.
+
 void TGLScene::CalcBoundingBox() const
 {
-   // Encapsulates all physical shapes bounding box with axes aligned box.
-   // Validity checked in the base-class.
-
    Double_t xMin, xMax, yMin, yMax, zMin, zMax;
    xMin = xMax = yMin = yMax = zMin = zMax = 0.0;
    PhysicalShapeMapCIt_t physicalShapeIt = fPhysicalShapes.begin();
@@ -1005,12 +1011,12 @@ void TGLScene::CalcBoundingBox() const
 // Logical shapes
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt dynamically created logical 'shape' - add to internal map
+/// and take responsibility for deleting.
+
 void TGLScene::AdoptLogical(TGLLogicalShape& shape)
 {
-   // Adopt dynamically created logical 'shape' - add to internal map
-   // and take responsibility for deleting.
-
    if (fLock != kModifyLock) {
       Error("TGLScene::AdoptLogical", "expected ModifyLock");
       return;
@@ -1020,15 +1026,15 @@ void TGLScene::AdoptLogical(TGLLogicalShape& shape)
    fLogicalShapes.insert(LogicalShapeMapValueType_t(shape.ID(), &shape));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy logical shape defined by unique 'ID'.
+/// Returns kTRUE if found/destroyed - kFALSE otherwise.
+///
+/// If mustFind is true, an error is reported if the logical is not
+/// found.
+
 Bool_t TGLScene::DestroyLogical(TObject* logid, Bool_t mustFind)
 {
-   // Destroy logical shape defined by unique 'ID'.
-   // Returns kTRUE if found/destroyed - kFALSE otherwise.
-   //
-   // If mustFind is true, an error is reported if the logical is not
-   // found.
-
    if (fLock != kModifyLock) {
       Error("TGLScene::DestroyLogical", "expected ModifyLock");
       return kFALSE;
@@ -1060,12 +1066,12 @@ Bool_t TGLScene::DestroyLogical(TObject* logid, Bool_t mustFind)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy all logical shapes in scene.
+/// Return number of destroyed logicals.
+
 Int_t TGLScene::DestroyLogicals()
 {
-   // Destroy all logical shapes in scene.
-   // Return number of destroyed logicals.
-
    if (fLock != kModifyLock) {
       Error("TGLScene::DestroyLogicals", "expected ModifyLock");
       return 0;
@@ -1094,12 +1100,12 @@ Int_t TGLScene::DestroyLogicals()
    return count;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find and return logical shape identified by unqiue logid.
+/// Returns 0 if not found.
+
 TGLLogicalShape * TGLScene::FindLogical(TObject* logid) const
 {
-   // Find and return logical shape identified by unqiue logid.
-   // Returns 0 if not found.
-
    LogicalShapeMapCIt_t lit = fLogicalShapes.find(logid);
    if (lit != fLogicalShapes.end()) {
       return lit->second;
@@ -1116,11 +1122,12 @@ TGLLogicalShape * TGLScene::FindLogical(TObject* logid) const
 // Physical shapes
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt dynamically created physical 'shape' - add to internal map and take
+/// responsibility for deleting
+
 void TGLScene::AdoptPhysical(TGLPhysicalShape & shape)
 {
-   // Adopt dynamically created physical 'shape' - add to internal map and take
-   // responsibility for deleting
    if (fLock != kModifyLock) {
       Error("TGLScene::AdoptPhysical", "expected ModifyLock");
       return;
@@ -1134,23 +1141,23 @@ void TGLScene::AdoptPhysical(TGLPhysicalShape & shape)
    IncTimeStamp();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual function to destroy a physical. Sub-classes might have
+/// special checks to perform.
+/// Caller should also invalidate the draw-list.
+
 void TGLScene::DestroyPhysicalInternal(PhysicalShapeMapIt_t pit)
 {
-   // Virtual function to destroy a physical. Sub-classes might have
-   // special checks to perform.
-   // Caller should also invalidate the draw-list.
-
    delete pit->second;
    fPhysicalShapes.erase(pit);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy physical shape defined by unique 'ID'.
+/// Returns kTRUE if found/destroyed - kFALSE otherwise.
+
 Bool_t TGLScene::DestroyPhysical(UInt_t phid)
 {
-   // Destroy physical shape defined by unique 'ID'.
-   // Returns kTRUE if found/destroyed - kFALSE otherwise.
-
    if (fLock != kModifyLock) {
       Error("TGLScene::DestroyPhysical", "expected ModifyLock.");
       return kFALSE;
@@ -1170,11 +1177,11 @@ Bool_t TGLScene::DestroyPhysical(UInt_t phid)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy physical shapes.
+
 Int_t TGLScene::DestroyPhysicals()
 {
-   // Destroy physical shapes.
-
    if (fLock != kModifyLock) {
       Error("TGLScene::DestroyPhysicals", "expected ModifyLock");
       return 0;
@@ -1207,22 +1214,22 @@ Int_t TGLScene::DestroyPhysicals()
    return count;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find and return physical shape identified by unqiue 'ID'.
+/// Returns 0 if not found.
+
 TGLPhysicalShape* TGLScene::FindPhysical(UInt_t phid) const
 {
-   // Find and return physical shape identified by unqiue 'ID'.
-   // Returns 0 if not found.
-
    PhysicalShapeMapCIt_t pit = fPhysicalShapes.find(phid);
    return (pit != fPhysicalShapes.end()) ? pit->second : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the maximum used physical id.
+/// Returns 0 if empty.
+
 UInt_t TGLScene::GetMaxPhysicalID()
 {
-   // Returns the maximum used physical id.
-   // Returns 0 if empty.
-
    if (fPhysicalShapes.empty()) return 0;
    return (--fPhysicalShapes.end())->first;
 }
@@ -1232,31 +1239,31 @@ UInt_t TGLScene::GetMaxPhysicalID()
 // Update methods
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Put scene in update mode, return true if lock acquired.
+
 Bool_t TGLScene::BeginUpdate()
 {
-   // Put scene in update mode, return true if lock acquired.
-
    Bool_t ok = TakeLock(kModifyLock);
    return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exit scene update mode.
+///
+/// If sceneChanged is true (default), the scene timestamp is
+/// increased and basic draw-lists etc will be rebuild on next draw
+/// request. If you only changed colors or some other visual
+/// parameters that do not affect object bounding-box or
+/// transformation matrix, you can set it to false.
+///
+/// If updateViewers is true (default), the viewers using this scene
+/// will be tagged as changed. If sceneChanged is true the
+/// updateViewers should be true as well, unless you take care of
+/// the viewers elsewhere or in some other way.
+
 void TGLScene::EndUpdate(Bool_t minorChange, Bool_t sceneChanged, Bool_t updateViewers)
 {
-   // Exit scene update mode.
-   //
-   // If sceneChanged is true (default), the scene timestamp is
-   // increased and basic draw-lists etc will be rebuild on next draw
-   // request. If you only changed colors or some other visual
-   // parameters that do not affect object bounding-box or
-   // transformation matrix, you can set it to false.
-   //
-   // If updateViewers is true (default), the viewers using this scene
-   // will be tagged as changed. If sceneChanged is true the
-   // updateViewers should be true as well, unless you take care of
-   // the viewers elsewhere or in some other way.
-
    if (minorChange)
       IncMinorStamp();
 
@@ -1269,12 +1276,12 @@ void TGLScene::EndUpdate(Bool_t minorChange, Bool_t sceneChanged, Bool_t updateV
       TagViewersChanged();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drop display-lists for the logical (assume TGLObject/direct rendering).
+/// Re-calculate the bounding box (also for all physicals).
+
 void TGLScene::UpdateLogical(TObject* logid)
 {
-   // Drop display-lists for the logical (assume TGLObject/direct rendering).
-   // Re-calculate the bounding box (also for all physicals).
-
    if (fLock != kModifyLock) {
       Error("TGLScene::UpdateLogical", "expected ModifyLock");
       return;
@@ -1291,11 +1298,11 @@ void TGLScene::UpdateLogical(TObject* logid)
    log->UpdateBoundingBox();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reposition/recolor physical shape.
+
 void TGLScene::UpdatePhysical(UInt_t phid, Double_t* trans, UChar_t* col)
 {
-   // Reposition/recolor physical shape.
-
    if (fLock != kModifyLock) {
       Error("TGLScene::UpdatePhysical", "expected ModifyLock");
       return;
@@ -1312,11 +1319,11 @@ void TGLScene::UpdatePhysical(UInt_t phid, Double_t* trans, UChar_t* col)
    if (col)    phys->SetDiffuseColor(col);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reposition/recolor physical shape.
+
 void TGLScene::UpdatePhysical(UInt_t phid, Double_t* trans, Color_t cidx, UChar_t transp)
 {
-   // Reposition/recolor physical shape.
-
    if (fLock != kModifyLock) {
       Error("TGLScene::UpdatePhysical", "expected ModifyLock");
       return;
@@ -1338,12 +1345,12 @@ void TGLScene::UpdatePhysical(UInt_t phid, Double_t* trans, Color_t cidx, UChar_
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reposition/recolor physical for given logical (assume TGLObject and
+/// a single physical).
+
 void TGLScene::UpdatePhysioLogical(TObject* logid, Double_t* trans, UChar_t* col)
 {
-   // Reposition/recolor physical for given logical (assume TGLObject and
-   // a single physical).
-
    if (fLock != kModifyLock) {
       Error("TGLScene::UpdatePhysioLogical", "expected ModifyLock");
       return;
@@ -1365,12 +1372,12 @@ void TGLScene::UpdatePhysioLogical(TObject* logid, Double_t* trans, UChar_t* col
    if (col)    phys->SetDiffuseColor(col);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reposition/recolor physical for given logical (assume TGLObject and
+/// a single physical).
+
 void TGLScene::UpdatePhysioLogical(TObject* logid, Double_t* trans, Color_t cidx, UChar_t transp)
 {
-   // Reposition/recolor physical for given logical (assume TGLObject and
-   // a single physical).
-
    if (fLock != kModifyLock) {
       Error("TGLScene::UpdatePhysioLogical", "expected ModifyLock");
       return;
@@ -1402,12 +1409,12 @@ void TGLScene::UpdatePhysioLogical(TObject* logid, Double_t* trans, Color_t cidx
 // Smart refresh
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Moves logicals that support smart-refresh to intermediate cache.
+/// Destroys the others and returns the number of destroyed ones.
+
 UInt_t TGLScene::BeginSmartRefresh()
 {
-   // Moves logicals that support smart-refresh to intermediate cache.
-   // Destroys the others and returns the number of destroyed ones.
-
    fSmartRefreshCache.swap(fLogicalShapes);
    // Remove all logicals that don't survive a refresh.
    UInt_t count = 0;
@@ -1426,11 +1433,11 @@ UInt_t TGLScene::BeginSmartRefresh()
    return count;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wipes logicals in refresh-cache.
+
 void TGLScene::EndSmartRefresh()
 {
-   // Wipes logicals in refresh-cache.
-
    fInSmartRefresh = kFALSE;
 
    LogicalShapeMapIt_t i = fSmartRefreshCache.begin();
@@ -1441,12 +1448,12 @@ void TGLScene::EndSmartRefresh()
    fSmartRefreshCache.clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find and return logical shape identified by unqiue 'ID' in refresh-cache.
+/// Returns 0 if not found.
+
 TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(TObject* ID) const
 {
-   // Find and return logical shape identified by unqiue 'ID' in refresh-cache.
-   // Returns 0 if not found.
-
    LogicalShapeMapIt_t it = fSmartRefreshCache.find(ID);
    if (it != fSmartRefreshCache.end())
    {
@@ -1476,13 +1483,13 @@ TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(TObject* ID) const
 // Helpers
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return memory cost of scene.
+/// Warning: NOT CORRECT at present - doesn't correctly calculate size.
+/// of logical shapes with dynamic internal contents.
+
 UInt_t TGLScene::SizeOfScene() const
 {
-   // Return memory cost of scene.
-   // Warning: NOT CORRECT at present - doesn't correctly calculate size.
-   // of logical shapes with dynamic internal contents.
-
    UInt_t size = sizeof(*this);
 
    printf("Size: Scene Only %u\n", size);
@@ -1510,32 +1517,32 @@ UInt_t TGLScene::SizeOfScene() const
    return size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print sizes of logical nad physical-shape maps.
+
 void TGLScene::DumpMapSizes() const
 {
-   // Print sizes of logical nad physical-shape maps.
-
    printf("Scene: %u Logicals / %u Physicals\n",
           (UInt_t) fLogicalShapes.size(), (UInt_t) fPhysicalShapes.size());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill rgba color from ROOT color-index ci and transparency (0->100).
+
 void TGLScene::RGBAFromColorIdx(Float_t rgba[4], Color_t ci, Char_t transp)
 {
-   // Fill rgba color from ROOT color-index ci and transparency (0->100).
-
    TColor* c = gROOT->GetColor(ci);
    if(c)   c->GetRGB(rgba[0], rgba[1], rgba[2]);
    else    rgba[0] = rgba[1] = rgba[2] = 0.5;
    rgba[3] = 1.0f - transp/100.0f;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if box is outside of all planes.
+
 Bool_t TGLScene::IsOutside(const TGLBoundingBox & box,
                            const TGLPlaneSet_t  & planes)
 {
-   // Check if box is outside of all planes.
-
    for (TGLPlaneSet_ci p=planes.begin(); p!=planes.end(); ++p)
       if (box.Overlap(*p) == Rgl::kOutside)
          return kTRUE;

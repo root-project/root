@@ -47,13 +47,15 @@
 using namespace std;
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TOCCToStep::TOCCToStep()
 {
    OCCDocCreation();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TOCCToStep::OCCDocCreation()
 {
    Handle (XCAFApp_Application)A = XCAFApp_Application::GetApplication();
@@ -64,11 +66,11 @@ void TOCCToStep::OCCDocCreation()
       ::Error("TOCCToStep::OCCDocCreation", "creating OCC application");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical fTree creation.
+
 TDF_Label TOCCToStep::OCCShapeCreation(TGeoManager *m)
 {
-   // Logical fTree creation.
-
    TDF_Label motherLabel;
    TGeoVolume * currentVolume;
    TGeoVolume * motherVol;
@@ -138,7 +140,8 @@ TDF_Label TOCCToStep::OCCShapeCreation(TGeoManager *m)
    return fLabel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TOCCToStep::OCCWriteStep(const char *fname)
 {
    STEPControl_StepModelType mode = STEPControl_AsIs;
@@ -152,7 +155,8 @@ void TOCCToStep::OCCWriteStep(const char *fname)
    IFSelect_ReturnStatus stat = fWriter.Write(fname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDF_Label TOCCToStep::GetLabelOfVolume(TGeoVolume * v)
 {
    TDF_Label null;
@@ -162,7 +166,8 @@ TDF_Label TOCCToStep::GetLabelOfVolume(TGeoVolume * v)
       return null;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGeoVolume * TOCCToStep::GetVolumeOfLabel(TDF_Label fLabel)
 {
    map <TGeoVolume *,TDF_Label>::iterator it;
@@ -171,14 +176,16 @@ TGeoVolume * TOCCToStep::GetVolumeOfLabel(TDF_Label fLabel)
          return it->first;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TOCCToStep::AddChildLabel(TDF_Label mother, TDF_Label child, TopLoc_Location loc)
 {
    TDF_Label newL=XCAFDoc_DocumentTool::ShapeTool(mother)->AddComponent(mother, child,loc);
    XCAFDoc_DocumentTool::ShapeTool(mother)->UpdateAssembly(mother);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TopLoc_Location TOCCToStep::CalcLocation (TGeoHMatrix matrix)
 {
    gp_Trsf TR,TR1;
@@ -195,7 +202,8 @@ TopLoc_Location TOCCToStep::CalcLocation (TGeoHMatrix matrix)
    return locA;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TOCCToStep::OCCTreeCreation(TGeoManager * m)
 {
    TGeoIterator nextNode(m->GetTopVolume());
@@ -233,7 +241,8 @@ void TOCCToStep::OCCTreeCreation(TGeoManager * m)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TOCCToStep::PrintAssembly()
 {
    XCAFDoc_DocumentTool::ShapeTool(fDoc->Main())->Dump();

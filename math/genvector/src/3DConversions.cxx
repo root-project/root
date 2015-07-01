@@ -196,11 +196,11 @@ void convert( Rotation3D const & from, EulerAngles & to)
 
 } // convert to EulerAngles
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// conversion from Rotation3D to Quaternion
+
 void convert( Rotation3D const & from, Quaternion  & to)
 {
-   // conversion from Rotation3D to Quaternion
-
    double m[9];
    from.GetComponents(m, m+9);
 
@@ -251,14 +251,14 @@ void convert( Rotation3D const & from, Quaternion  & to)
    }
 }  // convert to Quaternion
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// conversion from Rotation3D to RotationZYX
+/// same Math used as for EulerAngles apart from some different meaning of angles and
+/// matrix elements. But the basic algoprithms principles are the same described in
+/// http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf
+
 void convert( Rotation3D const & from, RotationZYX  & to)
 {
-   // conversion from Rotation3D to RotationZYX
-   // same Math used as for EulerAngles apart from some different meaning of angles and
-   // matrix elements. But the basic algoprithms principles are the same described in
-   // http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf
-
    // theta is assumed to be in range [-PI/2,PI/2].
    // this is guranteed by the Rectify function
 

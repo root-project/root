@@ -51,7 +51,9 @@ REGISTER_METHOD(KNN)
 
 ClassImp(TMVA::MethodKNN)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
 TMVA::MethodKNN::MethodKNN( const TString& jobName,
                             const TString& methodTitle,
                             DataSetInfo& theData, 
@@ -71,10 +73,11 @@ TMVA::MethodKNN::MethodKNN( const TString& jobName,
    , fUseLDA(kFALSE)
    , fTreeOptDepth(0)
 {
-   // standard constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from weight file
+
 TMVA::MethodKNN::MethodKNN( DataSetInfo& theData, 
                             const TString& theWeightFile,  
                             TDirectory* theTargetDir ) 
@@ -92,21 +95,21 @@ TMVA::MethodKNN::MethodKNN( DataSetInfo& theData,
    , fUseLDA(kFALSE)
    , fTreeOptDepth(0)
 {
-   // constructor from weight file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodKNN::~MethodKNN()
 {
-   // destructor
    if (fModule) delete fModule;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MethodKNN options
+
 void TMVA::MethodKNN::DeclareOptions() 
 {
-   // MethodKNN options
- 
    // fnkNN         = 20;     // number of k-nearest neighbors 
    // fBalanceDepth = 6;      // number of binary tree levels used for tree balancing
    // fScaleFrac    = 0.8;    // fraction of events used to compute variable width
@@ -128,18 +131,19 @@ void TMVA::MethodKNN::DeclareOptions()
    DeclareOptionRef(fUseLDA       = kFALSE, "UseLDA",       "Use local linear discriminant - experimental feature");
 }
 
-//_______________________________________________________________________
-void TMVA::MethodKNN::DeclareCompatibilityOptions() {
-   // options that are used ONLY for the READER to ensure backward compatibility
+////////////////////////////////////////////////////////////////////////////////
+/// options that are used ONLY for the READER to ensure backward compatibility
 
+void TMVA::MethodKNN::DeclareCompatibilityOptions() {
    MethodBase::DeclareCompatibilityOptions();
    DeclareOptionRef(fTreeOptDepth = 6, "TreeOptDepth", "Binary tree optimisation depth");
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process the options specified by the user
+
 void TMVA::MethodKNN::ProcessOptions() 
 {
-   // process the options specified by the user
    if (!(fnkNN > 0)) {      
       fnkNN = 10;
       Log() << kWARNING << "kNN must be a positive integer: set kNN = " << fnkNN << Endl;
@@ -167,20 +171,21 @@ void TMVA::MethodKNN::ProcessOptions()
          << "  Optimize = " << fBalanceDepth << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// FDA can handle classification with 2 classes and regression with one regression-target
+
 Bool_t TMVA::MethodKNN::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
-   // FDA can handle classification with 2 classes and regression with one regression-target
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    if (type == Types::kRegression) return kTRUE;
    return kFALSE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization
+
 void TMVA::MethodKNN::Init() 
 {
-   // Initialization
-
    // fScaleFrac <= 0.0 then do not scale input variables
    // fScaleFrac >= 1.0 then use all event coordinates to scale input variables
    
@@ -189,10 +194,11 @@ void TMVA::MethodKNN::Init()
    fSumOfWeightsB = 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create kNN
+
 void TMVA::MethodKNN::MakeKNN() 
 {
-   // create kNN
    if (!fModule) {
       Log() << kFATAL << "ModulekNN is not created" << Endl;
    }
@@ -219,10 +225,11 @@ void TMVA::MethodKNN::MakeKNN()
                  option);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// kNN training
+
 void TMVA::MethodKNN::Train()
 {
-   // kNN training
    Log() << kINFO << "<Train> start..." << Endl;
 
    if (IsNormalised()) {
@@ -278,11 +285,11 @@ void TMVA::MethodKNN::Train()
    MakeKNN();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute classifier response
+
 Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // Compute classifier response
-
    // cannot determine error
    NoErrorCalc(err, errUpper);
 
@@ -416,13 +423,14 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err, Double_t* errUpper )
    return weight_sig/weight_all;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Return vector of averages for target values of k-nearest neighbors.
+/// Use own copy of the regression vector, I do not like using a pointer to vector.
+///
+
 const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
 {
-   //
-   // Return vector of averages for target values of k-nearest neighbors.
-   // Use own copy of the regression vector, I do not like using a pointer to vector.
-   //
    if( fRegressionReturnVal == 0 )
       fRegressionReturnVal = new std::vector<Float_t>;
    else 
@@ -501,17 +509,18 @@ const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
    return *fRegressionReturnVal;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// no ranking available
+
 const TMVA::Ranking* TMVA::MethodKNN::CreateRanking() 
 {
-   // no ranking available
    return 0;
 }
 
-//_______________________________________________________________________
-void TMVA::MethodKNN::AddWeightsXMLTo( void* parent ) const {
-   // write weights to XML
+////////////////////////////////////////////////////////////////////////////////
+/// write weights to XML
 
+void TMVA::MethodKNN::AddWeightsXMLTo( void* parent ) const {
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr(wght,"NEvents",fEvent.size());
    if (fEvent.size()>0) gTools().AddAttr(wght,"NVar",fEvent.begin()->GetNVar());
@@ -536,9 +545,9 @@ void TMVA::MethodKNN::AddWeightsXMLTo( void* parent ) const {
    }
 }
 
-//_______________________________________________________________________
-void TMVA::MethodKNN::ReadWeightsFromXML( void* wghtnode ) {
+////////////////////////////////////////////////////////////////////////////////
 
+void TMVA::MethodKNN::ReadWeightsFromXML( void* wghtnode ) {
    void* ch = gTools().GetChild(wghtnode); // first event
    UInt_t nvar = 0, ntgt = 0;
    gTools().ReadAttr( wghtnode, "NVar", nvar );
@@ -573,10 +582,11 @@ void TMVA::MethodKNN::ReadWeightsFromXML( void* wghtnode ) {
    MakeKNN();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read the weights
+
 void TMVA::MethodKNN::ReadWeightsFromStream(std::istream& is)
 {
-   // read the weights
    Log() << kINFO << "Starting ReadWeightsFromStream(std::istream& is) function..." << Endl;
 
    if (!fEvent.empty()) {
@@ -661,10 +671,11 @@ void TMVA::MethodKNN::ReadWeightsFromStream(std::istream& is)
    MakeKNN();
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// save weights to ROOT file
+
 void TMVA::MethodKNN::WriteWeightsToStream(TFile &rf) const
 { 
-   // save weights to ROOT file
    Log() << kINFO << "Starting WriteWeightsToStream(TFile &rf) function..." << Endl;
    
    if (fEvent.empty()) {
@@ -696,10 +707,11 @@ void TMVA::MethodKNN::WriteWeightsToStream(TFile &rf) const
    delete event; 
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// read weights from ROOT file
+
 void TMVA::MethodKNN::ReadWeightsFromStream(TFile &rf)
 { 
-   // read weights from ROOT file
    Log() << kINFO << "Starting ReadWeightsFromStream(TFile &rf) function..." << Endl;
 
    if (!fEvent.empty()) {
@@ -737,21 +749,23 @@ void TMVA::MethodKNN::ReadWeightsFromStream(TFile &rf)
    MakeKNN();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write specific classifier response
+
 void TMVA::MethodKNN::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
-   // write specific classifier response
    fout << "   // not implemented for class: \"" << className << "\"" << std::endl;
    fout << "};" << std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get help message text
+///
+/// typical length of text line: 
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodKNN::GetHelpMessage() const
 {
-   // get help message text
-   //
-   // typical length of text line: 
-   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;
@@ -792,10 +806,11 @@ void TMVA::MethodKNN::GetHelpMessage() const
          << "response. The kernel re-weights events using a distance to the test event." << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// polynomial kernel
+
 Double_t TMVA::MethodKNN::PolnKernel(const Double_t value) const
 {
-   // polynomial kernel
    const Double_t avalue = TMath::Abs(value);
 
    if (!(avalue < 1.0)) {
@@ -807,12 +822,12 @@ Double_t TMVA::MethodKNN::PolnKernel(const Double_t value) const
    return (prod * prod * prod);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gaussian kernel
+
 Double_t TMVA::MethodKNN::GausKernel(const kNN::Event &event_knn,
                                      const kNN::Event &event, const std::vector<Double_t> &svec) const
 {
-   // Gaussian kernel
-
    if (event_knn.GetNVar() != event.GetNVar() || event_knn.GetNVar() != svec.size()) {
       Log() << kFATAL << "Mismatched vectors in Gaussian kernel function" << Endl;
       return 0.0;
@@ -843,12 +858,13 @@ Double_t TMVA::MethodKNN::GausKernel(const kNN::Event &event_knn,
    return std::exp(-sum_exp);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Get polynomial kernel radius
+///
+
 Double_t TMVA::MethodKNN::getKernelRadius(const kNN::List &rlist) const
 {
-   //
-   // Get polynomial kernel radius
-   //
    Double_t kradius = -1.0;
    UInt_t kcount = 0;
    const UInt_t knn = static_cast<UInt_t>(fnkNN);
@@ -866,12 +882,13 @@ Double_t TMVA::MethodKNN::getKernelRadius(const kNN::List &rlist) const
    return kradius;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Get polynomial kernel radius
+///
+
 const std::vector<Double_t> TMVA::MethodKNN::getRMS(const kNN::List &rlist, const kNN::Event &event_knn) const
 {
-   //
-   // Get polynomial kernel radius
-   //
    std::vector<Double_t> rvec;
    UInt_t kcount = 0;
    const UInt_t knn = static_cast<UInt_t>(fnkNN);
@@ -920,7 +937,8 @@ const std::vector<Double_t> TMVA::MethodKNN::getRMS(const kNN::List &rlist, cons
    return rvec;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::MethodKNN::getLDAValue(const kNN::List &rlist, const kNN::Event &event_knn)
 {
    LDAEvents sig_vec, bac_vec;

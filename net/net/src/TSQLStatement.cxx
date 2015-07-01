@@ -226,87 +226,87 @@
 
 ClassImp(TSQLStatement)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns error code of last operation
+/// if res==0, no error
+/// Each specific implementation of TSQLStatement provides its own error coding
+
 Int_t TSQLStatement::GetErrorCode() const
 {
-   // returns error code of last operation
-   // if res==0, no error
-   // Each specific implementation of TSQLStatement provides its own error coding
-
    return fErrorCode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  returns error message of last operation
+/// if no errors, return 0
+/// Each specific implementation of TSQLStatement provides its own error messages
+
 const char* TSQLStatement::GetErrorMsg() const
 {
-   //  returns error message of last operation
-   // if no errors, return 0
-   // Each specific implementation of TSQLStatement provides its own error messages
-
    return GetErrorCode()==0 ? 0 : fErrorMsg.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reset error fields
+
 void TSQLStatement::ClearError()
 {
-   // reset error fields
-
    fErrorCode = 0;
    fErrorMsg = "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set new values for error fields
+/// if method specified, displays error message
+
 void TSQLStatement::SetError(Int_t code, const char* msg, const char* method)
 {
-   // set new values for error fields
-   // if method specified, displays error message
-
    fErrorCode = code;
    fErrorMsg = msg;
    if ((method!=0) && fErrorOut)
       Error(method,"Code: %d  Msg: %s", code, (msg ? msg : "No message"));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set only date value for specified parameter from TDatime object
+
 Bool_t TSQLStatement::SetDate(Int_t npar, const TDatime& tm)
 {
-   // set only date value for specified parameter from TDatime object
-
    return SetDate(npar, tm.GetYear(), tm.GetMonth(), tm.GetDay());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set only time value for specified parameter from TDatime object
+
 Bool_t TSQLStatement::SetTime(Int_t npar, const TDatime& tm)
 {
-   // set only time value for specified parameter from TDatime object
-
    return SetTime(npar, tm.GetHour(), tm.GetMinute(), tm.GetSecond());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set date & time value for specified parameter from TDatime object
+
 Bool_t TSQLStatement::SetDatime(Int_t npar, const TDatime& tm)
 {
-   // set date & time value for specified parameter from TDatime object
-
    return SetDatime(npar, tm.GetYear(), tm.GetMonth(), tm.GetDay(),
                           tm.GetHour(), tm.GetMinute(), tm.GetSecond());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set timestamp value for specified parameter from TDatime object
+
 Bool_t TSQLStatement::SetTimestamp(Int_t npar, const TDatime& tm)
 {
-   // set timestamp value for specified parameter from TDatime object
-
    return SetTimestamp(npar, tm.GetYear(), tm.GetMonth(), tm.GetDay(),
                              tm.GetHour(), tm.GetMinute(), tm.GetSecond(), 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return value of parameter in form of TDatime
+/// Be aware, that TDatime does not allow dates before 1995-01-01
+
 TDatime TSQLStatement::GetDatime(Int_t npar)
 {
-   // return value of parameter in form of TDatime
-   // Be aware, that TDatime does not allow dates before 1995-01-01
-
    Int_t year, month, day, hour, min, sec;
 
    if (!GetDatime(npar, year, month, day, hour, min, sec))
@@ -320,78 +320,78 @@ TDatime TSQLStatement::GetDatime(Int_t npar)
    return TDatime(year, month, day, hour, min, sec);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return year value for parameter (if applicable)
+
 Int_t TSQLStatement::GetYear(Int_t npar)
 {
-   // return year value for parameter (if applicable)
-
    Int_t year, month, day, hour, min, sec, frac;
    if (GetDate(npar, year, month, day)) return year;
    if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return year;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return month value for parameter (if applicable)
+
 Int_t TSQLStatement::GetMonth(Int_t npar)
 {
-   // return month value for parameter (if applicable)
-
    Int_t year, month, day, hour, min, sec, frac;
    if (GetDate(npar, year, month, day)) return month;
    if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return month;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return day value for parameter (if applicable)
+
 Int_t TSQLStatement::GetDay(Int_t npar)
 {
-   // return day value for parameter (if applicable)
-
    Int_t year, month, day, hour, min, sec, frac;
    if (GetDate(npar, year, month, day)) return day;
    if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return day;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return hours value for parameter (if applicable)
+
 Int_t TSQLStatement::GetHour(Int_t npar)
 {
-   // return hours value for parameter (if applicable)
-
    Int_t year, month, day, hour, min, sec, frac;
    if (GetTime(npar, hour, min, sec)) return hour;
    if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return hour;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return minutes value for parameter (if applicable)
+
 Int_t TSQLStatement::GetMinute(Int_t npar)
 {
-   // return minutes value for parameter (if applicable)
-
    Int_t year, month, day, hour, min, sec, frac;
    if (GetTime(npar, hour, min, sec)) return min;
    if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return min;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return seconds value for parameter (if applicable)
+
 Int_t TSQLStatement::GetSecond(Int_t npar)
 {
-   // return seconds value for parameter (if applicable)
-
    Int_t year, month, day, hour, min, sec, frac;
    if (GetTime(npar, hour, min, sec)) return sec;
    if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return sec;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return value of parameter in form of TDatime
+/// Be aware, that TDatime does not allow dates before 1995-01-01
+
 TDatime TSQLStatement::GetTimestamp(Int_t npar)
 {
-   // return value of parameter in form of TDatime
-   // Be aware, that TDatime does not allow dates before 1995-01-01
-
    Int_t year, month, day, hour, min, sec, frac;
 
    if (!GetTimestamp(npar, year, month, day, hour, min, sec, frac))

@@ -11,11 +11,12 @@
 using namespace RooFit;
 using namespace RooStats;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build model for prototype on/off problem
+/// Poiss(x | s+b) * Poiss(y | tau b )
+
 void buildAPI_XML_TestModel(TString prefix)
 {
-  // Build model for prototype on/off problem
-  // Poiss(x | s+b) * Poiss(y | tau b )
   HistFactory::Measurement meas("Test","API_XML_TestModel");
 
   // do not fit, just export the workspace

@@ -49,21 +49,24 @@ ClassImp(RooStudyPackage)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStudyPackage::RooStudyPackage() : _ws(0)
 {  
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStudyPackage::RooStudyPackage(RooWorkspace& w) : _ws(new RooWorkspace(w))
 {  
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStudyPackage::RooStudyPackage(const RooStudyPackage& other) : TNamed(other), _ws(new RooWorkspace(*other._ws))
 {      
   list<RooAbsStudy*>::const_iterator iter = other._studies.begin() ;
@@ -74,7 +77,8 @@ RooStudyPackage::RooStudyPackage(const RooStudyPackage& other) : TNamed(other), 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooStudyPackage::addStudy(RooAbsStudy& study) 
 {
   _studies.push_back(&study) ;
@@ -82,7 +86,8 @@ void RooStudyPackage::addStudy(RooAbsStudy& study)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooStudyPackage::driver(Int_t nExperiments)
 {
   initialize() ;
@@ -92,10 +97,11 @@ void RooStudyPackage::driver(Int_t nExperiments)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make iterator over copy of studies attached to workspace
+
 void RooStudyPackage::initialize() 
 {
-  // Make iterator over copy of studies attached to workspace
   for (list<RooAbsStudy*>::iterator iter=_studies.begin() ; iter!=_studies.end() ; iter++) {
     (*iter)->attach(*_ws) ;
     (*iter)->initialize() ;
@@ -104,10 +110,10 @@ void RooStudyPackage::initialize()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooStudyPackage::run(Int_t nExperiments) 
 {
-
   // Run the requested number of experiments
   Int_t prescale = nExperiments>100 ? Int_t(nExperiments/100) : 1 ;
   for (Int_t i=0 ; i<nExperiments ; i++) {
@@ -120,7 +126,8 @@ void RooStudyPackage::run(Int_t nExperiments)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooStudyPackage::runOne() 
 {
   for (list<RooAbsStudy*>::iterator iter=_studies.begin() ; iter!=_studies.end() ; iter++) {
@@ -131,10 +138,11 @@ void RooStudyPackage::runOne()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize all studies
+
 void RooStudyPackage::finalize() 
 {   
-  // Finalize all studies
   for (list<RooAbsStudy*>::iterator iter=_studies.begin() ; iter!=_studies.end() ; iter++) {
     (*iter)->finalize() ;
   }
@@ -143,7 +151,8 @@ void RooStudyPackage::finalize()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooStudyPackage::exportData(TList* olist, Int_t seqno)
 {
   for (list<RooAbsStudy*>::iterator iter=_studies.begin() ; iter!=_studies.end() ; iter++) {
@@ -177,12 +186,13 @@ void RooStudyPackage::exportData(TList* olist, Int_t seqno)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Choose random seed for this process
+/// in case pass a definite seed to have it deterministic
+/// use also worker number
+
 Int_t RooStudyPackage::initRandom()
 {
-  // Choose random seed for this process
-  // in case pass a definite seed to have it deterministic
-  // use also worker number
   TRandom2 random(0); 
   //gRandom->SetSeed(0) ;
   Int_t seed = random.Integer(TMath::Limits<Int_t>::Max()) ;
@@ -206,10 +216,11 @@ Int_t RooStudyPackage::initRandom()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read in study package
+
 void RooStudyPackage::processFile(const char* studyName, Int_t nexp) 
 {
-  // Read in study package
   string name_fin = Form("study_data_%s.root",studyName) ;
   TFile fin(name_fin.c_str()) ;
   RooStudyPackage* pkg = dynamic_cast<RooStudyPackage*>(fin.Get("studypack")) ;

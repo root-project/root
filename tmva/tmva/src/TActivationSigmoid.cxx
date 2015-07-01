@@ -43,52 +43,52 @@ static const Int_t  UNINITIALIZED = -1;
 
 ClassImp(TMVA::TActivationSigmoid)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor for sigmoid normalized in [0,1]
+
 TMVA::TActivationSigmoid::TActivationSigmoid()
 {
-   // constructor for sigmoid normalized in [0,1]
-   
    fEqn = new TFormula("sigmoid", "1.0/(1.0+TMath::Exp(-x))");
    fEqnDerivative = 
       new TFormula("derivative", "TMath::Exp(-x)/(1.0+TMath::Exp(-x))^2");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::TActivationSigmoid::~TActivationSigmoid()
 {
-   // destructor
-   
    if (fEqn != NULL) delete fEqn;
    if (fEqnDerivative != NULL) delete fEqnDerivative;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// evaluate the sigmoid
+
 Double_t TMVA::TActivationSigmoid::Eval(Double_t arg)
 {
-   // evaluate the sigmoid
-
    if (fEqn == NULL) return UNINITIALIZED;
    return fEqn->Eval(arg);
 
    //return EvalFast(arg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// evaluate the derivative of the sigmoid
+
 Double_t TMVA::TActivationSigmoid::EvalDerivative(Double_t arg)
 {
-   // evaluate the derivative of the sigmoid
-
    if (fEqnDerivative == NULL) return UNINITIALIZED;
    return fEqnDerivative->Eval(arg);
 
    //return EvalDerivativeFast(arg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get expressions for the sigmoid and its derivatives
+
 TString TMVA::TActivationSigmoid::GetExpression()
 {
-   // get expressions for the sigmoid and its derivatives
-   
    TString expr = "";
    
    if (fEqn == NULL) expr += "<null>";
@@ -102,10 +102,11 @@ TString TMVA::TActivationSigmoid::GetExpression()
    return expr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// writes the sigmoid activation function source code
+
 void TMVA::TActivationSigmoid::MakeFunction( std::ostream& fout, const TString& fncName ) 
 {
-   // writes the sigmoid activation function source code
    fout << "double " << fncName << "(double x) const {" << std::endl;
    fout << "   // sigmoid" << std::endl;
    fout << "   return 1.0/(1.0+exp(-x));" << std::endl;

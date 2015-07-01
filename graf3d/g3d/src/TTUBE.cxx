@@ -33,11 +33,11 @@ ClassImp(TTUBE)
 //     - dz         half length in z
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUBE shape default constructor
+
 TTUBE::TTUBE()
 {
-   // TUBE shape default constructor
-
    fCoTab       = 0;
    fSiTab       = 0;
    fAspectRatio = 1;
@@ -48,12 +48,12 @@ TTUBE::TTUBE()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUBE shape normal constructor
+
 TTUBE::TTUBE(const char *name, const char *title, const char *material, Float_t rmin, Float_t rmax, Float_t dz,Float_t aspect)
       : TShape(name, title,material)
 {
-   // TUBE shape normal constructor
-
    fRmin  = rmin;
    fRmax  = rmax;
 
@@ -69,12 +69,12 @@ TTUBE::TTUBE(const char *name, const char *title, const char *material, Float_t 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUBE shape "simplified" constructor
+
 TTUBE::TTUBE(const char *name, const char *title, const char *material, Float_t rmax, Float_t dz)
       : TShape(name, title,material)
 {
-   // TUBE shape "simplified" constructor
-
    fRmin  = 0;
    fRmax  = rmax;
 
@@ -89,7 +89,9 @@ TTUBE::TTUBE(const char *name, const char *title, const char *material, Float_t 
    MakeTableOfCoSin();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TTUBE::TTUBE(const TTUBE& tu) :
   TShape(tu),
   fRmin(tu.fRmin),
@@ -100,13 +102,13 @@ TTUBE::TTUBE(const TTUBE& tu) :
   fSiTab(tu.fSiTab),
   fCoTab(tu.fCoTab)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignement operator
+
 TTUBE& TTUBE::operator=(const TTUBE& tu)
 {
-   //assignement operator
    if(this!=&tu) {
       TShape::operator=(tu);
       fRmin=tu.fRmin;
@@ -120,11 +122,11 @@ TTUBE& TTUBE::operator=(const TTUBE& tu)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make table of sine and cosine.
+
 void TTUBE::MakeTableOfCoSin() const // Internal cache - const so other const fn can use
 {
-   // Make table of sine and cosine.
-
    const Double_t pi  = TMath::ATan(1) * 4.0;
 
    Int_t j;
@@ -156,45 +158,45 @@ void TTUBE::MakeTableOfCoSin() const // Internal cache - const so other const fn
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUBE shape default destructor
+
 TTUBE::~TTUBE()
 {
-   // TUBE shape default destructor
-
    delete [] fCoTab;
    delete [] fSiTab;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a TUBE
+///
+/// Compute the closest distance of approach from point px,py to each
+/// computed outline point of the TUBE.
+
 Int_t TTUBE::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a TUBE
-   //
-   // Compute the closest distance of approach from point px,py to each
-   // computed outline point of the TUBE.
-
    Int_t n = GetNumberOfDivisions();
    Int_t numPoints = n*4;
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set number of divisions used to draw this tube
+
 void TTUBE::SetNumberOfDivisions (Int_t ndiv)
 {
-   // Set number of divisions used to draw this tube
-
    fNdiv = ndiv;
    MakeTableOfCoSin();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TUBE points
+
 void TTUBE::SetPoints(Double_t *points) const
 {
-   // Create TUBE points
-
    Int_t j, n;
    Int_t indx = 0;
 
@@ -224,11 +226,11 @@ void TTUBE::SetPoints(Double_t *points) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set segments and polygons.
+
 void TTUBE::SetSegsAndPols(TBuffer3D & buffer) const
 {
-   // Set segments and polygons.
-
    Int_t i, j;
    Int_t n = GetNumberOfDivisions();
    Int_t c = GetBasicColor();
@@ -304,11 +306,11 @@ void TTUBE::SetSegsAndPols(TBuffer3D & buffer) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return total X3D needed by TNode::ls (when called with option "x")
+
 void TTUBE::Sizeof3D() const
 {
-   // Return total X3D needed by TNode::ls (when called with option "x")
-
    Int_t n = GetNumberOfDivisions();
 
    gSize3D.numPoints += n*4;
@@ -317,11 +319,11 @@ void TTUBE::Sizeof3D() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TTUBE.
+
 void TTUBE::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TTUBE.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -344,11 +346,11 @@ void TTUBE::Streamer(TBuffer &R__b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get buffer 3d.
+
 const TBuffer3D & TTUBE::GetBuffer3D(Int_t reqSections) const
 {
-   // Get buffer 3d.
-
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);

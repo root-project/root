@@ -32,7 +32,8 @@ using namespace std;
 ClassImp(Roo1DMomentMorphFunction) 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
   Roo1DMomentMorphFunction::Roo1DMomentMorphFunction() : _mref(0), _frac(0), _M(0), _setting(Linear)
 {
   _varItr    = _varList.createIterator() ;
@@ -40,7 +41,9 @@ ClassImp(Roo1DMomentMorphFunction)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CTOR
+
 Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char *title, 
 						   RooAbsReal& _m,
 						   const RooArgList& varList,
@@ -51,8 +54,6 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char 
   _varList("varList","List of variables",this),
   _setting(setting)
 { 
-  // CTOR
-
   // observables
   TIterator* varItr = varList.createIterator() ;
   RooAbsArg* var ;
@@ -75,7 +76,8 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const Roo1DMomentMorphFunction& other, const char* name) :  
   RooAbsReal(other,name), 
   m("m",this,other.m),
@@ -90,7 +92,8 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const Roo1DMomentMorphFunctio
   initialize();
 } 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Roo1DMomentMorphFunction::~Roo1DMomentMorphFunction() 
 {
   if (_mref)   delete _mref;
@@ -101,7 +104,8 @@ Roo1DMomentMorphFunction::~Roo1DMomentMorphFunction()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Roo1DMomentMorphFunction::initialize() 
 {
   Int_t nVar = _varList.getSize();
@@ -135,7 +139,8 @@ void Roo1DMomentMorphFunction::initialize()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t Roo1DMomentMorphFunction::evaluate() const 
 { 
   calculateFractions(); // this sets _frac vector, based on function of m
@@ -152,7 +157,8 @@ Double_t Roo1DMomentMorphFunction::evaluate() const
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Roo1DMomentMorphFunction::calculateFractions() const
 {
   Int_t nVar = _varList.getSize();
@@ -205,7 +211,8 @@ void Roo1DMomentMorphFunction::calculateFractions() const
   } 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int Roo1DMomentMorphFunction::idxmin(const double& mval) const
 {
   int imin(0);
@@ -217,7 +224,8 @@ int Roo1DMomentMorphFunction::idxmin(const double& mval) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int Roo1DMomentMorphFunction::idxmax(const double& mval) const
 {
   int imax(0);

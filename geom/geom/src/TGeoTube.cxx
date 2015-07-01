@@ -106,10 +106,11 @@
 
 ClassImp(TGeoTube)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoTube::TGeoTube()
 {
-// Default constructor
    SetShapeBit(TGeoShape::kGeoTube);
    fRmin = 0.0;
    fRmax = 0.0;
@@ -117,11 +118,12 @@ TGeoTube::TGeoTube()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying minimum and maximum radius
+
 TGeoTube::TGeoTube(Double_t rmin, Double_t rmax, Double_t dz)
            :TGeoBBox(0, 0, 0)
 {
-// Default constructor specifying minimum and maximum radius
    SetShapeBit(TGeoShape::kGeoTube);
    SetTubeDimensions(rmin, rmax, dz);
    if ((fDz<0) || (fRmin<0) || (fRmax<0)) {
@@ -131,11 +133,12 @@ TGeoTube::TGeoTube(Double_t rmin, Double_t rmax, Double_t dz)
    }
    ComputeBBox();
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying minimum and maximum radius
+
 TGeoTube::TGeoTube(const char *name, Double_t rmin, Double_t rmax, Double_t dz)
            :TGeoBBox(name, 0, 0, 0)
 {
-// Default constructor specifying minimum and maximum radius
    SetShapeBit(TGeoShape::kGeoTube);
    SetTubeDimensions(rmin, rmax, dz);
    if ((fDz<0) || (fRmin<0) || (fRmax<0)) {
@@ -146,53 +149,59 @@ TGeoTube::TGeoTube(const char *name, Double_t rmin, Double_t rmax, Double_t dz)
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying minimum and maximum radius
+/// param[0] = Rmin
+/// param[1] = Rmax
+/// param[2] = dz
+
 TGeoTube::TGeoTube(Double_t *param)
          :TGeoBBox(0, 0, 0)
 {
-// Default constructor specifying minimum and maximum radius
-// param[0] = Rmin
-// param[1] = Rmax
-// param[2] = dz
    SetShapeBit(TGeoShape::kGeoTube);
    SetDimensions(param);
    if ((fDz<0) || (fRmin<0) || (fRmax<0)) SetShapeBit(kGeoRunTimeShape);
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoTube::~TGeoTube()
 {
-// destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes capacity of the shape in [length^3]
+
 Double_t TGeoTube::Capacity() const
 {
-// Computes capacity of the shape in [length^3]
    return TGeoTube::Capacity(fRmin,fRmax, fDz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes capacity of the shape in [length^3]
+
 Double_t TGeoTube::Capacity(Double_t rmin, Double_t rmax, Double_t dz)
 {
-// Computes capacity of the shape in [length^3]
    Double_t capacity = 2.*TMath::Pi()*(rmax*rmax-rmin*rmin)*dz;
    return capacity;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute bounding box of the tube
+
 void TGeoTube::ComputeBBox()
 {
-// compute bounding box of the tube
    fDX = fDY = fRmax;
    fDZ = fDz;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute normal to closest surface from POINT.
+
 void TGeoTube::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT.
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
@@ -215,11 +224,12 @@ void TGeoTube::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute normal to closest surface from POINT.
+
 void TGeoTube::ComputeNormalS(const Double_t *point, const Double_t *dir, Double_t *norm,
                               Double_t /*rmin*/, Double_t /*rmax*/, Double_t /*dz*/)
 {
-// Compute normal to closest surface from POINT.
    norm[2] = 0;
    Double_t phi = TMath::ATan2(point[1], point[0]);
    norm[0] = TMath::Cos(phi);
@@ -230,33 +240,36 @@ void TGeoTube::ComputeNormalS(const Double_t *point, const Double_t *dir, Double
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if point is inside this tube
+
 Bool_t TGeoTube::Contains(const Double_t *point) const
 {
-// test if point is inside this tube
    if (TMath::Abs(point[2]) > fDz) return kFALSE;
    Double_t r2 = point[0]*point[0]+point[1]*point[1];
    if ((r2<fRmin*fRmin) || (r2>fRmax*fRmax)) return kFALSE;
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute closest distance from point px,py to each corner
+
 Int_t TGeoTube::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// compute closest distance from point px,py to each corner
    Int_t n = gGeoManager->GetNsegments();
    Int_t numPoints = 4*n;
    if (!HasRmin()) numPoints = 2*(n+1);
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from inside point to surface of the tube (static)
+/// Boundary safe algorithm.
+/// compute distance to surface
+/// Do Z
+
 Double_t TGeoTube::DistFromInsideS(const Double_t *point, const Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz)
 {
-// Compute distance from inside point to surface of the tube (static)
-// Boundary safe algorithm.
-   // compute distance to surface
-   // Do Z
    Double_t sz = TGeoShape::Big();
    if (dir[2]) {
       sz = (TMath::Sign(dz, dir[2])-point[2])/dir[2];
@@ -296,11 +309,12 @@ Double_t TGeoTube::DistFromInsideS(const Double_t *point, const Double_t *dir, D
    return 0.;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from inside point to surface of the tube
+/// Boundary safe algorithm.
+
 Double_t TGeoTube::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// Compute distance from inside point to surface of the tube
-// Boundary safe algorithm.
    if (iact<3 && safe) {
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
@@ -310,12 +324,13 @@ Double_t TGeoTube::DistFromInside(const Double_t *point, const Double_t *dir, In
    return DistFromInsideS(point, dir, fRmin, fRmax, fDz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to compute distance from outside point to a tube with given parameters
+/// Boundary safe algorithm.
+/// check Z planes
+
 Double_t TGeoTube::DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz)
 {
-// Static method to compute distance from outside point to a tube with given parameters
-// Boundary safe algorithm.
-   // check Z planes
    Double_t xi,yi,zi;
    Double_t rmaxsq = rmax*rmax;
    Double_t rminsq = rmin*rmin;
@@ -397,12 +412,13 @@ Double_t TGeoTube::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
    return TGeoShape::Big();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from outside point to surface of the tube and safe distance
+/// Boundary safe algorithm.
+/// fist localize point w.r.t tube
+
 Double_t TGeoTube::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// Compute distance from outside point to surface of the tube and safe distance
-// Boundary safe algorithm.
-   // fist localize point w.r.t tube
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
       if (iact==0) return TGeoShape::Big();
@@ -415,18 +431,18 @@ Double_t TGeoTube::DistFromOutside(const Double_t *point, const Double_t *dir, I
    return DistFromOutsideS(point, dir, fRmin, fRmax, fDz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method computing the distance to a tube with given radius, starting from
+/// POINT along DIR director cosines. The distance is computed as :
+///    RSQ   = point[0]*point[0]+point[1]*point[1]
+///    NSQ   = dir[0]*dir[0]+dir[1]*dir[1]  ---> should NOT be 0 !!!
+///    RDOTN = point[0]*dir[0]+point[1]*dir[1]
+/// The distance can be computed as :
+///    D = -B +/- DELTA
+/// where DELTA.GT.0 and D.GT.0
+
 void TGeoTube::DistToTube(Double_t rsq, Double_t nsq, Double_t rdotn, Double_t radius, Double_t &b, Double_t &delta)
 {
-// Static method computing the distance to a tube with given radius, starting from
-// POINT along DIR director cosines. The distance is computed as :
-//    RSQ   = point[0]*point[0]+point[1]*point[1]
-//    NSQ   = dir[0]*dir[0]+dir[1]*dir[1]  ---> should NOT be 0 !!!
-//    RDOTN = point[0]*dir[0]+point[1]*dir[1]
-// The distance can be computed as :
-//    D = -B +/- DELTA
-// where DELTA.GT.0 and D.GT.0
-
    Double_t t1 = 1./nsq;
    Double_t t3=rsq-(radius*radius);
    b          = t1*rdotn;
@@ -439,16 +455,17 @@ void TGeoTube::DistToTube(Double_t rsq, Double_t nsq, Double_t rdotn, Double_t r
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Divide this tube shape belonging to volume "voldiv" into ndiv volumes
+/// called divname, from start position with the given step. Returns pointer
+/// to created division cell volume in case of Z divisions. For radial division
+/// creates all volumes with different shapes and returns pointer to volume that
+/// was divided. In case a wrong division axis is supplied, returns pointer to
+/// volume that was divided.
+
 TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
                              Double_t start, Double_t step)
 {
-//--- Divide this tube shape belonging to volume "voldiv" into ndiv volumes
-// called divname, from start position with the given step. Returns pointer
-// to created division cell volume in case of Z divisions. For radial division
-// creates all volumes with different shapes and returns pointer to volume that
-// was divided. In case a wrong division axis is supplied, returns pointer to
-// volume that was divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
@@ -505,10 +522,11 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns name of axis IAXIS.
+
 const char *TGeoTube::GetAxisName(Int_t iaxis) const
 {
-// Returns name of axis IAXIS.
    switch (iaxis) {
       case 1:
          return "R";
@@ -521,10 +539,11 @@ const char *TGeoTube::GetAxisName(Int_t iaxis) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get range of shape for a given axis.
+
 Double_t TGeoTube::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
-// Get range of shape for a given axis.
    xlo = 0;
    xhi = 0;
    Double_t dx = 0;
@@ -548,11 +567,12 @@ Double_t TGeoTube::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
    return dx;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// is the following : Rmin, Rmax, Phi1, Phi2, dZ
+
 void TGeoTube::GetBoundingCylinder(Double_t *param) const
 {
-//--- Fill vector param[4] with the bounding cylinder parameters. The order
-// is the following : Rmin, Rmax, Phi1, Phi2, dZ
    param[0] = fRmin; // Rmin
    param[0] *= param[0];
    param[1] = fRmax; // Rmax
@@ -561,11 +581,12 @@ void TGeoTube::GetBoundingCylinder(Double_t *param) const
    param[3] = 360.;  // Phi2
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// in case shape has some negative parameters, these has to be computed
+/// in order to fit the mother
+
 TGeoShape *TGeoTube::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-// in case shape has some negative parameters, these has to be computed
-// in order to fit the mother
    if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    Double_t rmin, rmax, dz;
    Double_t xmin,xmax;
@@ -590,10 +611,11 @@ TGeoShape *TGeoTube::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
    return (new TGeoTube(GetName(), rmin, rmax, dz));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print shape parameters
+
 void TGeoTube::InspectShape() const
 {
-// print shape parameters
    printf("*** Shape %s: TGeoTube ***\n", GetName());
    printf("    Rmin = %11.5f\n", fRmin);
    printf("    Rmax = %11.5f\n", fRmax);
@@ -602,12 +624,12 @@ void TGeoTube::InspectShape() const
    TGeoBBox::InspectShape();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a TBuffer3D describing *this* shape.
+/// Coordinates are in local reference frame.
+
 TBuffer3D *TGeoTube::MakeBuffer3D() const
 {
-   // Creates a TBuffer3D describing *this* shape.
-   // Coordinates are in local reference frame.
-
    Int_t n = gGeoManager->GetNsegments();
    Int_t nbPnts = 4*n;
    Int_t nbSegs = 8*n;
@@ -628,10 +650,11 @@ TBuffer3D *TGeoTube::MakeBuffer3D() const
    return buff;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill TBuffer3D structure for segments and polygons.
+
 void TGeoTube::SetSegsAndPols(TBuffer3D &buffer) const
 {
-// Fill TBuffer3D structure for segments and polygons.
    Int_t i, j,indx;
    Int_t n = gGeoManager->GetNsegments();
    Int_t c = (((buffer.fColor) %8) -1) * 4;
@@ -781,11 +804,12 @@ void TGeoTube::SetSegsAndPols(TBuffer3D &buffer) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes the closest distance from given point to this shape, according
+/// to option. The matching point on the shape is stored in spoint.
+
 Double_t TGeoTube::Safety(const Double_t *point, Bool_t in) const
 {
-// computes the closest distance from given point to this shape, according
-// to option. The matching point on the shape is stored in spoint.
 #ifndef NEVER
    Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
    Double_t safe, safrmin, safrmax;
@@ -820,11 +844,12 @@ Double_t TGeoTube::Safety(const Double_t *point, Bool_t in) const
 #endif
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes the closest distance from given point to this shape, according
+/// to option. The matching point on the shape is stored in spoint.
+
 Double_t TGeoTube::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, Int_t skipz)
 {
-// computes the closest distance from given point to this shape, according
-// to option. The matching point on the shape is stored in spoint.
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
@@ -849,10 +874,11 @@ Double_t TGeoTube::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, Doub
    return saf[TMath::LocMax(3,saf)];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoTube::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    out << "   rmin = " << fRmin << ";" << std::endl;
@@ -862,10 +888,11 @@ void TGeoTube::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tube dimensions.
+
 void TGeoTube::SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz)
 {
-// Set tube dimensions.
    fRmin = rmin;
    fRmax = rmax;
    fDz   = dz;
@@ -873,22 +900,24 @@ void TGeoTube::SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz)
       Error("SetTubeDimensions", "In shape %s wrong rmin=%g rmax=%g", GetName(), rmin,rmax);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tube dimensions starting from a list.
+
 void TGeoTube::SetDimensions(Double_t *param)
 {
-// Set tube dimensions starting from a list.
    Double_t rmin = param[0];
    Double_t rmax = param[1];
    Double_t dz   = param[2];
    SetTubeDimensions(rmin, rmax, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills array with n random points located on the line segments of the shape mesh.
+/// The output array must be provided with a length of minimum 3*npoints. Returns
+/// true if operation is implemented.
+
 Bool_t TGeoTube::GetPointsOnSegments(Int_t npoints, Double_t *array) const
 {
-// Fills array with n random points located on the line segments of the shape mesh.
-// The output array must be provided with a length of minimum 3*npoints. Returns
-// true if operation is implemented.
    if (npoints > (npoints/2)*2) {
       Error("GetPointsOnSegments","Npoints must be even number");
       return kFALSE;
@@ -925,10 +954,11 @@ Bool_t TGeoTube::GetPointsOnSegments(Int_t npoints, Double_t *array) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create tube mesh points
+
 void TGeoTube::SetPoints(Double_t *points) const
 {
-// create tube mesh points
    Double_t dz;
    Int_t j, n;
    n = gGeoManager->GetNsegments();
@@ -987,10 +1017,11 @@ void TGeoTube::SetPoints(Double_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create tube mesh points
+
 void TGeoTube::SetPoints(Float_t *points) const
 {
-// create tube mesh points
    Double_t dz;
    Int_t j, n;
    n = gGeoManager->GetNsegments();
@@ -1049,20 +1080,22 @@ void TGeoTube::SetPoints(Float_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of vertices of the mesh representation
+
 Int_t TGeoTube::GetNmeshVertices() const
 {
-// Return number of vertices of the mesh representation
    Int_t n = gGeoManager->GetNsegments();
    Int_t numPoints = n*4;
    if (!HasRmin()) numPoints = 2*(n+1);
    return numPoints;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns numbers of vertices, segments and polygons composing the shape mesh.
+
 void TGeoTube::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
-// Returns numbers of vertices, segments and polygons composing the shape mesh.
    Int_t n = gGeoManager->GetNsegments();
    nvert = n*4;
    nsegs = n*8;
@@ -1078,23 +1111,25 @@ void TGeoTube::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////// fill size of this 3-D object
+////    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+////    if (!painter) return;
+////    Int_t n = gGeoManager->GetNsegments();
+////    Int_t numPoints = n*4;
+////    Int_t numSegs   = n*8;
+////    Int_t numPolys  = n*4;
+////    painter->AddSize3D(numPoints, numSegs, numPolys);
+
 void TGeoTube::Sizeof3D() const
 {
-///// fill size of this 3-D object
-///    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-///    if (!painter) return;
-///    Int_t n = gGeoManager->GetNsegments();
-///    Int_t numPoints = n*4;
-///    Int_t numSegs   = n*8;
-///    Int_t numPolys  = n*4;
-///    painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a static 3D buffer and returns a reference.
+
 const TBuffer3D & TGeoTube::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
-// Fills a static 3D buffer and returns a reference.
    static TBuffer3DTube buffer;
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 
@@ -1130,115 +1165,127 @@ const TBuffer3D & TGeoTube::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    return buffer;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the inside status for each of the points in the array.
+/// Input: Array of point coordinates + vector size
+/// Output: Array of Booleans for the inside of each point
+
 void TGeoTube::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
 {
-// Check the inside status for each of the points in the array.
-// Input: Array of point coordinates + vector size
-// Output: Array of Booleans for the inside of each point
    for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the normal for an array o points so that norm.dot.dir is positive
+/// Input: Arrays of point coordinates and directions + vector size
+/// Output: Array of normal directions
+
 void TGeoTube::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
 {
-// Compute the normal for an array o points so that norm.dot.dir is positive
-// Input: Arrays of point coordinates and directions + vector size
-// Output: Array of normal directions
    for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoTube::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoTube::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from each of the points in the input array.
+/// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+/// Output: Safety values
+
 void TGeoTube::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
 {
-// Compute safe distance from each of the points in the input array.
-// Input: Array of point coordinates, array of statuses for these points, size of the arrays
-// Output: Safety values
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }
 
 ClassImp(TGeoTubeSeg)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoTubeSeg::TGeoTubeSeg()
             :TGeoTube(),
              fPhi1(0.), fPhi2(0.), fS1(0.), fC1(0.), fS2(0.), fC2(0.), fSm(0.), fCm(0.), fCdfi(0.)
 {
-// Default constructor
    SetShapeBit(TGeoShape::kGeoTubeSeg);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying minimum and maximum radius.
+/// The segment will be from phiStart to phiEnd expressed in degree.
+
 TGeoTubeSeg::TGeoTubeSeg(Double_t rmin, Double_t rmax, Double_t dz,
                           Double_t phiStart, Double_t phiEnd)
             :TGeoTube(rmin, rmax, dz),
              fPhi1(0.), fPhi2(0.), fS1(0.), fC1(0.), fS2(0.), fC2(0.), fSm(0.), fCm(0.), fCdfi(0.)
 {
-   // Default constructor specifying minimum and maximum radius.
-   // The segment will be from phiStart to phiEnd expressed in degree.
    SetShapeBit(TGeoShape::kGeoTubeSeg);
    SetTubsDimensions(rmin, rmax, dz, phiStart, phiEnd);
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying minimum and maximum radius
+/// The segment will be from phiStart to phiEnd expressed in degree.
+
 TGeoTubeSeg::TGeoTubeSeg(const char *name, Double_t rmin, Double_t rmax, Double_t dz,
                           Double_t phiStart, Double_t phiEnd)
             :TGeoTube(name, rmin, rmax, dz)
 {
-   // Default constructor specifying minimum and maximum radius
-   // The segment will be from phiStart to phiEnd expressed in degree.
    SetShapeBit(TGeoShape::kGeoTubeSeg);
    SetTubsDimensions(rmin, rmax, dz, phiStart, phiEnd);
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying minimum and maximum radius
+/// param[0] = Rmin
+/// param[1] = Rmax
+/// param[2] = dz
+/// param[3] = phi1
+/// param[4] = phi2
+
 TGeoTubeSeg::TGeoTubeSeg(Double_t *param)
             :TGeoTube(0, 0, 0)
 {
-// Default constructor specifying minimum and maximum radius
-// param[0] = Rmin
-// param[1] = Rmax
-// param[2] = dz
-// param[3] = phi1
-// param[4] = phi2
    SetShapeBit(TGeoShape::kGeoTubeSeg);
    SetDimensions(param);
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoTubeSeg::~TGeoTubeSeg()
 {
-// destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Function called after streaming an object of this class.
+
 void TGeoTubeSeg::AfterStreamer()
 {
-// Function called after streaming an object of this class.
    InitTrigonometry();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init frequently used trigonometric values
+
 void TGeoTubeSeg::InitTrigonometry()
 {
-// Init frequently used trigonometric values
    Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t phi2 = fPhi2*TMath::DegToRad();
    fC1 = TMath::Cos(phi1);
@@ -1252,25 +1299,28 @@ void TGeoTubeSeg::InitTrigonometry()
    fCdfi = TMath::Cos(dfi);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes capacity of the shape in [length^3]
+
 Double_t TGeoTubeSeg::Capacity() const
 {
-// Computes capacity of the shape in [length^3]
    return TGeoTubeSeg::Capacity(fRmin,fRmax,fDz,fPhi1,fPhi2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes capacity of the shape in [length^3]
+
 Double_t TGeoTubeSeg::Capacity(Double_t rmin, Double_t rmax, Double_t dz, Double_t phiStart, Double_t phiEnd)
 {
-// Computes capacity of the shape in [length^3]
    Double_t capacity = TMath::Abs(phiEnd-phiStart)*TMath::DegToRad()*(rmax*rmax-rmin*rmin)*dz;
    return capacity;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute bounding box of the tube segment
+
 void TGeoTubeSeg::ComputeBBox()
 {
-// compute bounding box of the tube segment
    Double_t xc[4];
    Double_t yc[4];
    xc[0] = fRmax*fC1;
@@ -1313,10 +1363,11 @@ void TGeoTubeSeg::ComputeBBox()
    fDZ = fDz;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute normal to closest surface from POINT.
+
 void TGeoTubeSeg::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT.
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
@@ -1343,12 +1394,13 @@ void TGeoTubeSeg::ComputeNormal(const Double_t *point, const Double_t *dir, Doub
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute normal to closest surface from POINT.
+
 void TGeoTubeSeg::ComputeNormalS(const Double_t *point, const Double_t *dir, Double_t *norm,
                                  Double_t rmin, Double_t rmax, Double_t /*dz*/,
                                  Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
-// Compute normal to closest surface from POINT.
    Double_t saf[2];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
@@ -1369,31 +1421,34 @@ void TGeoTubeSeg::ComputeNormalS(const Double_t *point, const Double_t *dir, Dou
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if point is inside this tube segment
+/// first check if point is inside the tube
+
 Bool_t TGeoTubeSeg::Contains(const Double_t *point) const
 {
-// test if point is inside this tube segment
-   // first check if point is inside the tube
    if (!TGeoTube::Contains(point)) return kFALSE;
    return IsInPhiRange(point, fPhi1, fPhi2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute closest distance from point px,py to each corner
+
 Int_t TGeoTubeSeg::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// compute closest distance from point px,py to each corner
    Int_t n = gGeoManager->GetNsegments()+1;
    const Int_t numPoints = 4*n;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from inside point to surface of the tube segment (static)
+/// Boundary safe algorithm.
+/// Do Z
+
 Double_t TGeoTubeSeg::DistFromInsideS(const Double_t *point, const Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz,
                                  Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi)
 {
-// Compute distance from inside point to surface of the tube segment (static)
-// Boundary safe algorithm.
-   // Do Z
    Double_t stube = TGeoTube::DistFromInsideS(point,dir,rmin,rmax,dz);
    if (stube<=0) return 0.0;
    Double_t sfmin = TGeoShape::Big();
@@ -1435,11 +1490,12 @@ Double_t TGeoTubeSeg::DistFromInsideS(const Double_t *point, const Double_t *dir
    return sfmin;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from inside point to surface of the tube segment
+/// Boundary safe algorithm.
+
 Double_t TGeoTubeSeg::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// Compute distance from inside point to surface of the tube segment
-// Boundary safe algorithm.
    if (iact<3 && safe) {
       *safe = SafetyS(point, kTRUE, fRmin, fRmax, fDz, fPhi1, fPhi2);
       if (iact==0) return TGeoShape::Big();
@@ -1451,13 +1507,14 @@ Double_t TGeoTubeSeg::DistFromInside(const Double_t *point, const Double_t *dir,
    return TGeoTubeSeg::DistFromInsideS(point,dir,fRmin,fRmax,fDz,fC1,fS1,fC2,fS2,fCm,fSm,fCdfi);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to compute distance to arbitrary tube segment from outside point
+/// Boundary safe algorithm.
+
 Double_t TGeoTubeSeg::DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t rmin, Double_t rmax,
                                 Double_t dz, Double_t c1, Double_t s1, Double_t c2, Double_t s2,
                                 Double_t cm, Double_t sm, Double_t cdfi)
 {
-// Static method to compute distance to arbitrary tube segment from outside point
-// Boundary safe algorithm.
    Double_t r2, cpsi;
    // check Z planes
    Double_t xi, yi, zi;
@@ -1707,11 +1764,12 @@ Double_t TGeoTubeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
    return snxt;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from outside point to surface of the tube segment
+/// fist localize point w.r.t tube
+
 Double_t TGeoTubeSeg::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from outside point to surface of the tube segment
-   // fist localize point w.r.t tube
    if (iact<3 && safe) {
       *safe = SafetyS(point, kFALSE, fRmin, fRmax, fDz, fPhi1, fPhi2);
       if (iact==0) return TGeoShape::Big();
@@ -1726,16 +1784,17 @@ Double_t TGeoTubeSeg::DistFromOutside(const Double_t *point, const Double_t *dir
    return TGeoTubeSeg::DistFromOutsideS(point, dir, fRmin, fRmax, fDz, fC1, fS1, fC2, fS2, fCm, fSm, fCdfi);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Divide this tube segment shape belonging to volume "voldiv" into ndiv volumes
+/// called divname, from start position with the given step. Returns pointer
+/// to created division cell volume in case of Z divisions. For radialdivision
+/// creates all volumes with different shapes and returns pointer to volume that
+/// was divided. In case a wrong division axis is supplied, returns pointer to
+/// volume that was divided.
+
 TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
                              Double_t start, Double_t step)
 {
-//--- Divide this tube segment shape belonging to volume "voldiv" into ndiv volumes
-// called divname, from start position with the given step. Returns pointer
-// to created division cell volume in case of Z divisions. For radialdivision
-// creates all volumes with different shapes and returns pointer to volume that
-// was divided. In case a wrong division axis is supplied, returns pointer to
-// volume that was divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
@@ -1796,10 +1855,11 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get range of shape for a given axis.
+
 Double_t TGeoTubeSeg::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
-// Get range of shape for a given axis.
    xlo = 0;
    xhi = 0;
    Double_t dx = 0;
@@ -1823,11 +1883,12 @@ Double_t TGeoTubeSeg::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) co
    return dx;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// is the following : Rmin, Rmax, Phi1, Phi2
+
 void TGeoTubeSeg::GetBoundingCylinder(Double_t *param) const
 {
-//--- Fill vector param[4] with the bounding cylinder parameters. The order
-// is the following : Rmin, Rmax, Phi1, Phi2
    param[0] = fRmin;
    param[0] *= param[0];
    param[1] = fRmax;
@@ -1836,11 +1897,12 @@ void TGeoTubeSeg::GetBoundingCylinder(Double_t *param) const
    param[3] = fPhi2;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// in case shape has some negative parameters, these has to be computed
+/// in order to fit the mother
+
 TGeoShape *TGeoTubeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-// in case shape has some negative parameters, these has to be computed
-// in order to fit the mother
    if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    if (!mother->TestShapeBit(kGeoTube)) {
       Error("GetMakeRuntimeShape", "Invalid mother for shape %s", GetName());
@@ -1859,10 +1921,11 @@ TGeoShape *TGeoTubeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*ma
    return (new TGeoTubeSeg(GetName(),rmin, rmax, dz, fPhi1, fPhi2));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print shape parameters
+
 void TGeoTubeSeg::InspectShape() const
 {
-// print shape parameters
    printf("*** Shape %s: TGeoTubeSeg ***\n", GetName());
    printf("    Rmin = %11.5f\n", fRmin);
    printf("    Rmax = %11.5f\n", fRmax);
@@ -1873,12 +1936,12 @@ void TGeoTubeSeg::InspectShape() const
    TGeoBBox::InspectShape();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a TBuffer3D describing *this* shape.
+/// Coordinates are in local reference frame.
+
 TBuffer3D *TGeoTubeSeg::MakeBuffer3D() const
 {
-   // Creates a TBuffer3D describing *this* shape.
-   // Coordinates are in local reference frame.
-
    Int_t n = gGeoManager->GetNsegments()+1;
    Int_t nbPnts = 4*n;
    Int_t nbSegs = 2*nbPnts;
@@ -1895,10 +1958,11 @@ TBuffer3D *TGeoTubeSeg::MakeBuffer3D() const
    return buff;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill TBuffer3D structure for segments and polygons.
+
 void TGeoTubeSeg::SetSegsAndPols(TBuffer3D &buff) const
 {
-// Fill TBuffer3D structure for segments and polygons.
    Int_t i, j;
    Int_t n = gGeoManager->GetNsegments()+1;
    Int_t c = GetBasicColor();
@@ -1978,11 +2042,12 @@ void TGeoTubeSeg::SetSegsAndPols(TBuffer3D &buff) const
    buff.fPols[indx++] = 7*n-1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes the closest distance from given point InitTrigonometry();to this shape, according
+/// to option. The matching point on the shape is stored in spoint.
+
 Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
 {
-// computes the closest distance from given point InitTrigonometry();to this shape, according
-// to option. The matching point on the shape is stored in spoint.
    Double_t safe = TGeoShape::Big();
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
@@ -2025,11 +2090,12 @@ Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
    return (saf[0]<0) ? safphi : TMath::Sqrt(saf[0]*saf[0]+safphi*safphi);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to compute the closest distance from given point to this shape.
+
 Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz,
                               Double_t phi1d, Double_t phi2d, Int_t skipz)
 {
-// Static method to compute the closest distance from given point to this shape.
    Double_t safe = TGeoShape::Big();
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
@@ -2099,10 +2165,11 @@ Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, D
    return (saf[0]<0) ? safphi : TMath::Sqrt(saf[0]*saf[0]+safphi*safphi);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoTubeSeg::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    out << "   rmin = " << fRmin << ";" << std::endl;
@@ -2114,12 +2181,13 @@ void TGeoTubeSeg::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set dimensions of the tube segment.
+/// The segment will be from phiStart to phiEnd expressed in degree.
+
 void TGeoTubeSeg::SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                     Double_t phiStart, Double_t phiEnd)
 {
-   // Set dimensions of the tube segment.
-   // The segment will be from phiStart to phiEnd expressed in degree.
    fRmin = rmin;
    fRmax = rmax;
    fDz   = dz;
@@ -2131,10 +2199,11 @@ void TGeoTubeSeg::SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
    InitTrigonometry();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set dimensions of the tube segment starting from a list.
+
 void TGeoTubeSeg::SetDimensions(Double_t *param)
 {
-// Set dimensions of the tube segment starting from a list.
    Double_t rmin = param[0];
    Double_t rmax = param[1];
    Double_t dz   = param[2];
@@ -2143,12 +2212,13 @@ void TGeoTubeSeg::SetDimensions(Double_t *param)
    SetTubsDimensions(rmin, rmax, dz, phi1, phi2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills array with n random points located on the line segments of the shape mesh.
+/// The output array must be provided with a length of minimum 3*npoints. Returns
+/// true if operation is implemented.
+
 Bool_t TGeoTubeSeg::GetPointsOnSegments(Int_t npoints, Double_t *array) const
 {
-// Fills array with n random points located on the line segments of the shape mesh.
-// The output array must be provided with a length of minimum 3*npoints. Returns
-// true if operation is implemented.
    if (npoints > (npoints/2)*2) {
       Error("GetPointsOnSegments","Npoints must be even number");
       return kFALSE;
@@ -2183,10 +2253,11 @@ Bool_t TGeoTubeSeg::GetPointsOnSegments(Int_t npoints, Double_t *array) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create tube segment mesh points.
+
 void TGeoTubeSeg::SetPoints(Double_t *points) const
 {
-// Create tube segment mesh points.
    Double_t dz;
    Int_t j, n;
    Double_t phi, phi1, phi2, dphi;
@@ -2224,10 +2295,11 @@ void TGeoTubeSeg::SetPoints(Double_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create tube segment mesh points.
+
 void TGeoTubeSeg::SetPoints(Float_t *points) const
 {
-// Create tube segment mesh points.
    Double_t dz;
    Int_t j, n;
    Double_t phi, phi1, phi2, dphi;
@@ -2265,44 +2337,48 @@ void TGeoTubeSeg::SetPoints(Float_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns numbers of vertices, segments and polygons composing the shape mesh.
+
 void TGeoTubeSeg::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
-// Returns numbers of vertices, segments and polygons composing the shape mesh.
    Int_t n = gGeoManager->GetNsegments()+1;
    nvert = n*4;
    nsegs = n*8;
    npols = n*4 - 2;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of vertices of the mesh representation
+
 Int_t TGeoTubeSeg::GetNmeshVertices() const
 {
-// Return number of vertices of the mesh representation
    Int_t n = gGeoManager->GetNsegments()+1;
    Int_t numPoints = n*4;
    return numPoints;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////// fill size of this 3-D object
+////    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+////    if (!painter) return;
+////
+////    Int_t n = gGeoManager->GetNsegments()+1;
+////    Int_t numPoints = n*4;
+////    Int_t numSegs   = n*8;
+////    Int_t numPolys  = n*4-2;
+////
+////    painter->AddSize3D(numPoints, numSegs, numPolys);
+
 void TGeoTubeSeg::Sizeof3D() const
 {
-///// fill size of this 3-D object
-///    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-///    if (!painter) return;
-///
-///    Int_t n = gGeoManager->GetNsegments()+1;
-///    Int_t numPoints = n*4;
-///    Int_t numSegs   = n*8;
-///    Int_t numPolys  = n*4-2;
-///
-///    painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a static 3D buffer and returns a reference.
+
 const TBuffer3D & TGeoTubeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
-// Fills a static 3D buffer and returns a reference.
    static TBuffer3DTubeSeg buffer;
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 
@@ -2336,44 +2412,49 @@ const TBuffer3D & TGeoTubeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame)
    return buffer;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the inside status for each of the points in the array.
+/// Input: Array of point coordinates + vector size
+/// Output: Array of Booleans for the inside of each point
+
 void TGeoTubeSeg::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
 {
-// Check the inside status for each of the points in the array.
-// Input: Array of point coordinates + vector size
-// Output: Array of Booleans for the inside of each point
    for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the normal for an array o points so that norm.dot.dir is positive
+/// Input: Arrays of point coordinates and directions + vector size
+/// Output: Array of normal directions
+
 void TGeoTubeSeg::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
 {
-// Compute the normal for an array o points so that norm.dot.dir is positive
-// Input: Arrays of point coordinates and directions + vector size
-// Output: Array of normal directions
    for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoTubeSeg::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoTubeSeg::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from each of the points in the input array.
+/// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+/// Output: Safety values
+
 void TGeoTubeSeg::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
 {
-// Compute safe distance from each of the points in the input array.
-// Input: Array of point coordinates, array of statuses for these points, size of the arrays
-// Output: Safety values
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }
 
@@ -2387,12 +2468,13 @@ TGeoCtub::TGeoCtub()
    fNhigh[2] = 1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoCtub::TGeoCtub(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
                    Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
          :TGeoTubeSeg(rmin, rmax, dz, phi1, phi2)
 {
-// constructor
    fNlow[0] = lx;
    fNlow[1] = ly;
    fNlow[2] = lz;
@@ -2403,12 +2485,13 @@ TGeoCtub::TGeoCtub(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Dou
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoCtub::TGeoCtub(const char *name, Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
                    Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
          :TGeoTubeSeg(name, rmin, rmax, dz, phi1, phi2)
 {
-// constructor
    fNlow[0] = lx;
    fNlow[1] = ly;
    fNlow[2] = lz;
@@ -2419,34 +2502,38 @@ TGeoCtub::TGeoCtub(const char *name, Double_t rmin, Double_t rmax, Double_t dz, 
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ctor with parameters
+
 TGeoCtub::TGeoCtub(Double_t *params)
          :TGeoTubeSeg(0,0,0,0,0)
 {
-// ctor with parameters
    SetCtubDimensions(params[0], params[1], params[2], params[3], params[4], params[5],
                      params[6], params[7], params[8], params[9], params[10]);
    SetShapeBit(kGeoCtub);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoCtub::~TGeoCtub()
 {
-// destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes capacity of the shape in [length^3]
+
 Double_t TGeoCtub::Capacity() const
 {
-// Computes capacity of the shape in [length^3]
    Double_t capacity = TGeoTubeSeg::Capacity();
    return capacity;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute minimum bounding box of the ctub
+
 void TGeoCtub::ComputeBBox()
 {
-// compute minimum bounding box of the ctub
    TGeoTubeSeg::ComputeBBox();
    if ((fNlow[2]>-(1E-10)) || (fNhigh[2]<1E-10)) {
       Error("ComputeBBox", "In shape %s wrong definition of cut planes", GetName());
@@ -2546,10 +2633,11 @@ void TGeoCtub::ComputeBBox()
    fOrigin[2] = 0.5*(zmax+zmin);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute normal to closest surface from POINT.
+
 void TGeoCtub::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT.
    Double_t saf[4];
    Bool_t isseg = kTRUE;
    if (TMath::Abs(fPhi2-fPhi1-360.)<1E-8) isseg=kFALSE;
@@ -2596,11 +2684,12 @@ void TGeoCtub::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check if point is contained in the cut tube
+/// check the lower cut plane
+
 Bool_t TGeoCtub::Contains(const Double_t *point) const
 {
-// check if point is contained in the cut tube
-   // check the lower cut plane
    Double_t zin = point[0]*fNlow[0]+point[1]*fNlow[1]+(point[2]+fDz)*fNlow[2];
    if (zin>0) return kFALSE;
    // check the higher cut plane
@@ -2620,10 +2709,11 @@ Bool_t TGeoCtub::Contains(const Double_t *point) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get range of shape for a given axis.
+
 Double_t TGeoCtub::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
-// Get range of shape for a given axis.
    xlo = 0;
    xhi = 0;
    Double_t dx = 0;
@@ -2642,21 +2732,23 @@ Double_t TGeoCtub::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
    return dx;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute real Z coordinate of a point belonging to either lower or
+/// higher caps (z should be either +fDz or -fDz)
+
 Double_t TGeoCtub::GetZcoord(Double_t xc, Double_t yc, Double_t zc) const
 {
-// compute real Z coordinate of a point belonging to either lower or
-// higher caps (z should be either +fDz or -fDz)
    Double_t newz = 0;
    if (zc<0) newz =  -fDz-(xc*fNlow[0]+yc*fNlow[1])/fNlow[2];
    else      newz = fDz-(xc*fNhigh[0]+yc*fNhigh[1])/fNhigh[2];
    return newz;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from outside point to surface of the cut tube
+
 Double_t TGeoCtub::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from outside point to surface of the cut tube
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
       if (iact==0) return TGeoShape::Big();
@@ -2795,10 +2887,11 @@ Double_t TGeoCtub::DistFromOutside(const Double_t *point, const Double_t *dir, I
    return snxt;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from inside point to surface of the cut tube
+
 Double_t TGeoCtub::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from inside point to surface of the cut tube
    if (iact<3 && safe) *safe = Safety(point, kTRUE);
    if (iact==0) return TGeoShape::Big();
    if ((iact==1) && (*safe>step)) return TGeoShape::Big();
@@ -2853,20 +2946,22 @@ Double_t TGeoCtub::DistFromInside(const Double_t *point, const Double_t *dir, In
    return TMath::Min(TMath::Min(sz,sr), sfmin);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divide the tube along one axis.
+
 TGeoVolume *TGeoCtub::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
                              Double_t /*start*/, Double_t /*step*/)
 {
-// Divide the tube along one axis.
    Warning("Divide", "In shape %s division of a cut tube not implemented", GetName());
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// in case shape has some negative parameters, these has to be computed
+/// in order to fit the mother
+
 TGeoShape *TGeoCtub::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-// in case shape has some negative parameters, these has to be computed
-// in order to fit the mother
    if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    if (!mother->TestShapeBit(kGeoTube)) {
       Error("GetMakeRuntimeShape", "Invalid mother for shape %s", GetName());
@@ -2886,10 +2981,11 @@ TGeoShape *TGeoCtub::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
                         fNhigh[0], fNhigh[1], fNhigh[2]));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print shape parameters
+
 void TGeoCtub::InspectShape() const
 {
-// print shape parameters
    printf("*** Shape %s: TGeoCtub ***\n", GetName());
    printf("    lx = %11.5f\n", fNlow[0]);
    printf("    ly = %11.5f\n", fNlow[1]);
@@ -2900,11 +2996,12 @@ void TGeoCtub::InspectShape() const
    TGeoTubeSeg::InspectShape();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes the closest distance from given point to this shape, according
+/// to option. The matching point on the shape is stored in spoint.
+
 Double_t TGeoCtub::Safety(const Double_t *point, Bool_t in) const
 {
-// computes the closest distance from given point to this shape, according
-// to option. The matching point on the shape is stored in spoint.
    Double_t saf[4];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
@@ -2929,11 +3026,12 @@ Double_t TGeoCtub::Safety(const Double_t *point, Bool_t in) const
    return safe;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set dimensions of a cut tube
+
 void TGeoCtub::SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
                    Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
 {
-// set dimensions of a cut tube
    SetTubsDimensions(rmin, rmax, dz, phi1, phi2);
    fNlow[0] = lx;
    fNlow[1] = ly;
@@ -2944,10 +3042,11 @@ void TGeoCtub::SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz, Doub
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoCtub::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    out << "   rmin = " << fRmin << ";" << std::endl;
@@ -2964,28 +3063,31 @@ void TGeoCtub::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    out << "   TGeoShape *" << GetPointerName() << " = new TGeoCtub(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2,lx,ly,lz,tx,ty,tz);" << std::endl;   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set dimensions of the cut tube starting from a list.
+
 void TGeoCtub::SetDimensions(Double_t *param)
 {
-// Set dimensions of the cut tube starting from a list.
    SetCtubDimensions(param[0], param[1], param[2], param[3], param[4], param[5],
                      param[6], param[7], param[8], param[9], param[10]);
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills array with n random points located on the line segments of the shape mesh.
+/// The output array must be provided with a length of minimum 3*npoints. Returns
+/// true if operation is implemented.
+
 Bool_t TGeoCtub::GetPointsOnSegments(Int_t /*npoints*/, Double_t * /*array*/) const
 {
-// Fills array with n random points located on the line segments of the shape mesh.
-// The output array must be provided with a length of minimum 3*npoints. Returns
-// true if operation is implemented.
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create mesh points for the cut tube.
+
 void TGeoCtub::SetPoints(Double_t *points) const
 {
-// Create mesh points for the cut tube.
    Double_t dz;
    Int_t j, n;
    Double_t phi, phi1, phi2, dphi;
@@ -3023,10 +3125,11 @@ void TGeoCtub::SetPoints(Double_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create mesh points for the cut tube.
+
 void TGeoCtub::SetPoints(Float_t *points) const
 {
-// Create mesh points for the cut tube.
    Double_t dz;
    Int_t j, n;
    Double_t phi, phi1, phi2, dphi;
@@ -3064,26 +3167,29 @@ void TGeoCtub::SetPoints(Float_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns numbers of vertices, segments and polygons composing the shape mesh.
+
 void TGeoCtub::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
-// Returns numbers of vertices, segments and polygons composing the shape mesh.
    TGeoTubeSeg::GetMeshNumbers(nvert,nsegs,npols);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of vertices of the mesh representation
+
 Int_t TGeoCtub::GetNmeshVertices() const
 {
-// Return number of vertices of the mesh representation
    Int_t n = gGeoManager->GetNsegments()+1;
    Int_t numPoints = n*4;
    return numPoints;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a static 3D buffer and returns a reference.
+
 const TBuffer3D & TGeoCtub::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
-// Fills a static 3D buffer and returns a reference.
    static TBuffer3DCutTube buffer;
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
@@ -3123,43 +3229,48 @@ const TBuffer3D & TGeoCtub::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    return buffer;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the inside status for each of the points in the array.
+/// Input: Array of point coordinates + vector size
+/// Output: Array of Booleans for the inside of each point
+
 void TGeoCtub::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
 {
-// Check the inside status for each of the points in the array.
-// Input: Array of point coordinates + vector size
-// Output: Array of Booleans for the inside of each point
    for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the normal for an array o points so that norm.dot.dir is positive
+/// Input: Arrays of point coordinates and directions + vector size
+/// Output: Array of normal directions
+
 void TGeoCtub::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
 {
-// Compute the normal for an array o points so that norm.dot.dir is positive
-// Input: Arrays of point coordinates and directions + vector size
-// Output: Array of normal directions
    for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoCtub::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoCtub::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from each of the points in the input array.
+/// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+/// Output: Safety values
+
 void TGeoCtub::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
 {
-// Compute safe distance from each of the points in the input array.
-// Input: Array of point coordinates, array of statuses for these points, size of the arrays
-// Output: Safety values
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }

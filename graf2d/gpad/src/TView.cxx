@@ -15,24 +15,26 @@
 
 ClassImp(TView)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 See TView3D
 End_Html */
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TView::TView(const TView& tv) :
    TObject(tv),
    TAttLine(tv)
 {
-   // Copy constructor.
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a concrete default 3-d view via the plug-in manager
+
 TView *TView::CreateView(Int_t system, const Double_t *rmin, const Double_t *rmax)
 {
-   // Create a concrete default 3-d view via the plug-in manager
-
    TView *view = 0;
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TView"))) {

@@ -32,73 +32,81 @@
 
 ClassImp(TGeoEltu)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy constructor
+
 TGeoEltu::TGeoEltu()
 {
-// Dummy constructor
    SetShapeBit(TGeoShape::kGeoEltu);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying X and Y semiaxis length
+
 TGeoEltu::TGeoEltu(Double_t a, Double_t b, Double_t dz)
            :TGeoTube()
 {
-// Default constructor specifying X and Y semiaxis length
    SetShapeBit(TGeoShape::kGeoEltu);
    SetEltuDimensions(a, b, dz);
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying X and Y semiaxis length
+
 TGeoEltu::TGeoEltu(const char *name, Double_t a, Double_t b, Double_t dz)
            :TGeoTube(name,0.,b,dz)
 {
-// Default constructor specifying X and Y semiaxis length
    SetName(name);
    SetShapeBit(TGeoShape::kGeoEltu);
    SetEltuDimensions(a, b, dz);
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying minimum and maximum radius
+/// param[0] =  A
+/// param[1] =  B
+/// param[2] = dz
+
 TGeoEltu::TGeoEltu(Double_t *param)
 {
-// Default constructor specifying minimum and maximum radius
-// param[0] =  A
-// param[1] =  B
-// param[2] = dz
    SetShapeBit(TGeoShape::kGeoEltu);
    SetDimensions(param);
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoEltu::~TGeoEltu()
 {
-// destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes capacity of the shape in [length^3]
+
 Double_t TGeoEltu::Capacity() const
 {
-// Computes capacity of the shape in [length^3]
    Double_t capacity = 2.*TMath::Pi()*fDz*fRmin*fRmax;
    return capacity;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute bounding box of the tube
+
 void TGeoEltu::ComputeBBox()
 {
-// compute bounding box of the tube
    fDX = fRmin;
    fDY = fRmax;
    fDZ = fDz;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute normal to closest surface from POINT.
+
 void TGeoEltu::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT.
    Double_t a = fRmin;
    Double_t b = fRmax;
    Double_t safr = TMath::Abs(TMath::Sqrt(point[0]*point[0]/(a*a)+point[1]*point[1]/(b*b))-1.);
@@ -115,29 +123,32 @@ void TGeoEltu::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
    TMath::Normalize(norm);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if point is inside the elliptical tube
+
 Bool_t TGeoEltu::Contains(const Double_t *point) const
 {
-// test if point is inside the elliptical tube
    if (TMath::Abs(point[2]) > fDz) return kFALSE;
    Double_t r2 = (point[0]*point[0])/(fRmin*fRmin)+(point[1]*point[1])/(fRmax*fRmax);
    if (r2>1.)  return kFALSE;
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute closest distance from point px,py to each vertex
+
 Int_t TGeoEltu::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// compute closest distance from point px,py to each vertex
    Int_t n = gGeoManager->GetNsegments();
    const Int_t numPoints=4*n;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from inside point to surface of the tube
+
 Double_t TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from inside point to surface of the tube
    Double_t a2=fRmin*fRmin;
    Double_t b2=fRmax*fRmax;
    Double_t safz1=fDz-point[2];
@@ -205,10 +216,11 @@ Double_t TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, In
    return snxt;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from outside point to surface of the tube and safe distance
+
 Double_t TGeoEltu::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from outside point to surface of the tube and safe distance
    Double_t safz=TMath::Abs(point[2])-fDz;
    Double_t a2=fRmin*fRmin;
    Double_t b2=fRmax*fRmax;
@@ -281,20 +293,22 @@ Double_t TGeoEltu::DistFromOutside(const Double_t *point, const Double_t *dir, I
    return tau;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divide the shape along one axis.
+
 TGeoVolume *TGeoEltu::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
                              Double_t /*start*/, Double_t /*step*/)
 {
-// Divide the shape along one axis.
    Error("Divide", "Elliptical tubes divisions not implemenetd");
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// is the following : Rmin, Rmax, Phi1, Phi2
+
 void TGeoEltu::GetBoundingCylinder(Double_t *param) const
 {
-//--- Fill vector param[4] with the bounding cylinder parameters. The order
-// is the following : Rmin, Rmax, Phi1, Phi2
    param[0] = 0.;                  // Rmin
    param[1] = TMath::Max(fRmin, fRmax); // Rmax
    param[1] *= param[1];
@@ -302,11 +316,12 @@ void TGeoEltu::GetBoundingCylinder(Double_t *param) const
    param[3] = 360.;                // Phi2
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// in case shape has some negative parameters, these has to be computed
+/// in order to fit the mother
+
 TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-// in case shape has some negative parameters, these has to be computed
-// in order to fit the mother
    if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    if (!mother->TestShapeBit(kGeoEltu)) {
       Error("GetMakeRuntimeShape", "invalid mother");
@@ -325,10 +340,11 @@ TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
    return (new TGeoEltu(a, b, dz));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print shape parameters
+
 void TGeoEltu::InspectShape() const
 {
-// print shape parameters
    printf("*** Shape %s: TGeoEltu ***\n", GetName());
    printf("    A    = %11.5f\n", fRmin);
    printf("    B    = %11.5f\n", fRmax);
@@ -337,11 +353,12 @@ void TGeoEltu::InspectShape() const
    TGeoBBox::InspectShape();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes the closest distance from given point to this shape, according
+/// to option. The matching point on the shape is stored in spoint.
+
 Double_t TGeoEltu::Safety(const Double_t *point, Bool_t /*in*/) const
 {
-// computes the closest distance from given point to this shape, according
-// to option. The matching point on the shape is stored in spoint.
    Double_t x0 = TMath::Abs(point[0]);
    Double_t y0 = TMath::Abs(point[1]);
    Double_t x1, y1, dx, dy;
@@ -387,10 +404,11 @@ Double_t TGeoEltu::Safety(const Double_t *point, Bool_t /*in*/) const
    return TMath::Max(safr, safz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoEltu::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    out << "   a  = " << fRmin << ";" << std::endl;
@@ -400,10 +418,11 @@ void TGeoEltu::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set dimensions of the eliptical tube.
+
 void TGeoEltu::SetEltuDimensions(Double_t a, Double_t b, Double_t dz)
 {
-// Set dimensions of the eliptical tube.
    if ((a<=0) || (b<0) || (dz<0)) {
       SetShapeBit(kGeoRunTimeShape);
    }
@@ -412,20 +431,22 @@ void TGeoEltu::SetEltuDimensions(Double_t a, Double_t b, Double_t dz)
    fDz=dz;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set shape dimensions starting from an array.
+
 void TGeoEltu::SetDimensions(Double_t *param)
 {
-// Set shape dimensions starting from an array.
    Double_t a    = param[0];
    Double_t b    = param[1];
    Double_t dz   = param[2];
    SetEltuDimensions(a, b, dz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create eliptical tube mesh points
+
 void TGeoEltu::SetPoints(Double_t *points) const
 {
-// Create eliptical tube mesh points
    Double_t dz;
    Int_t j, n;
 
@@ -467,24 +488,27 @@ void TGeoEltu::SetPoints(Double_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns numbers of vertices, segments and polygons composing the shape mesh.
+
 void TGeoEltu::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
-// Returns numbers of vertices, segments and polygons composing the shape mesh.
    TGeoTube::GetMeshNumbers(nvert,nsegs,npols);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of vertices on the mesh.
+
 Int_t TGeoEltu::GetNmeshVertices() const
 {
-// Returns the number of vertices on the mesh.
    return TGeoTube::GetNmeshVertices();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create eliptical tube mesh points
+
 void TGeoEltu::SetPoints(Float_t *points) const
 {
-// Create eliptical tube mesh points
    Double_t dz;
    Int_t j, n;
 
@@ -526,10 +550,11 @@ void TGeoEltu::SetPoints(Float_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a static 3D buffer and returns a reference.
+
 const TBuffer3D & TGeoEltu::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
-// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 
@@ -554,43 +579,48 @@ const TBuffer3D & TGeoEltu::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    return buffer;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the inside status for each of the points in the array.
+/// Input: Array of point coordinates + vector size
+/// Output: Array of Booleans for the inside of each point
+
 void TGeoEltu::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
 {
-// Check the inside status for each of the points in the array.
-// Input: Array of point coordinates + vector size
-// Output: Array of Booleans for the inside of each point
    for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the normal for an array o points so that norm.dot.dir is positive
+/// Input: Arrays of point coordinates and directions + vector size
+/// Output: Array of normal directions
+
 void TGeoEltu::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
 {
-// Compute the normal for an array o points so that norm.dot.dir is positive
-// Input: Arrays of point coordinates and directions + vector size
-// Output: Array of normal directions
    for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoEltu::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoEltu::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from each of the points in the input array.
+/// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+/// Output: Safety values
+
 void TGeoEltu::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
 {
-// Compute safe distance from each of the points in the input array.
-// Input: Array of point coordinates, array of statuses for these points, size of the arrays
-// Output: Safety values
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }

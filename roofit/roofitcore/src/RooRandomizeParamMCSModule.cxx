@@ -52,32 +52,34 @@ ClassImp(RooRandomizeParamMCSModule)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooRandomizeParamMCSModule::RooRandomizeParamMCSModule() : 
   RooAbsMCStudyModule("RooRandomizeParamMCSModule","RooRandomizeParamMCSModule"), _data(0)
 {
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooRandomizeParamMCSModule::RooRandomizeParamMCSModule(const RooRandomizeParamMCSModule& other) : 
   RooAbsMCStudyModule(other), 
   _unifParams(other._unifParams),
   _gausParams(other._gausParams), 
   _data(0)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooRandomizeParamMCSModule:: ~RooRandomizeParamMCSModule() 
 {
-  // Destructor
-
   if (_data) {
     delete _data ;
   }
@@ -85,12 +87,12 @@ RooRandomizeParamMCSModule:: ~RooRandomizeParamMCSModule()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Request uniform smearing of param in range [lo,hi] in RooMCStudy
+/// generation cycle
+
 void RooRandomizeParamMCSModule::sampleUniform(RooRealVar& param, Double_t lo, Double_t hi) 
 {  
-  // Request uniform smearing of param in range [lo,hi] in RooMCStudy
-  // generation cycle
-
   // If we're already attached to a RooMCStudy, check that given param is actual generator model parameter
   // If not attached, this check is repeated at the attachment moment
   if (genParams()) {
@@ -106,12 +108,12 @@ void RooRandomizeParamMCSModule::sampleUniform(RooRealVar& param, Double_t lo, D
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Request Gaussian smearing of param in with mean 'mean' and width
+/// 'sigma' in RooMCStudy generation cycle
+
 void RooRandomizeParamMCSModule::sampleGaussian(RooRealVar& param, Double_t mean, Double_t sigma) 
 {
-  // Request Gaussian smearing of param in with mean 'mean' and width
-  // 'sigma' in RooMCStudy generation cycle
-
   // If we're already attached to a RooMCStudy, check that given param is actual generator model parameter
   // If not attached, this check is repeated at the attachment moment
   if (genParams()) {
@@ -128,15 +130,15 @@ void RooRandomizeParamMCSModule::sampleGaussian(RooRealVar& param, Double_t mean
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Request uniform smearing of sum of parameters in paramSet uniform
+/// smearing in range [lo,hi] in RooMCStudy generation cycle.  This
+/// option applies a common multiplicative factor to each parameter
+/// in paramSet to make the sum of the parameters add up to the
+/// sampled value in the range [lo,hi]
+
 void RooRandomizeParamMCSModule::sampleSumUniform(const RooArgSet& paramSet, Double_t lo, Double_t hi) 
 {
-  // Request uniform smearing of sum of parameters in paramSet uniform
-  // smearing in range [lo,hi] in RooMCStudy generation cycle.  This
-  // option applies a common multiplicative factor to each parameter
-  // in paramSet to make the sum of the parameters add up to the
-  // sampled value in the range [lo,hi]
-
   // Check that all args are RooRealVars
   RooArgSet okset ;
   TIterator* iter = paramSet.createIterator() ;
@@ -182,16 +184,16 @@ void RooRandomizeParamMCSModule::sampleSumUniform(const RooArgSet& paramSet, Dou
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Request gaussian smearing of sum of parameters in paramSet
+/// uniform smearing with mean 'mean' and width 'sigma' in RooMCStudy
+/// generation cycle.  This option applies a common multiplicative
+/// factor to each parameter in paramSet to make the sum of the
+/// parameters add up to the sampled value from the
+/// gaussian(mean,sigma)
+
 void RooRandomizeParamMCSModule::sampleSumGauss(const RooArgSet& paramSet, Double_t mean, Double_t sigma) 
 {
-  // Request gaussian smearing of sum of parameters in paramSet
-  // uniform smearing with mean 'mean' and width 'sigma' in RooMCStudy
-  // generation cycle.  This option applies a common multiplicative
-  // factor to each parameter in paramSet to make the sum of the
-  // parameters add up to the sampled value from the
-  // gaussian(mean,sigma)
-
   // Check that all args are RooRealVars
   RooArgSet okset ;
   TIterator* iter = paramSet.createIterator() ;
@@ -235,11 +237,11 @@ void RooRandomizeParamMCSModule::sampleSumGauss(const RooArgSet& paramSet, Doubl
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize module after attachment to RooMCStudy object
+
 Bool_t RooRandomizeParamMCSModule::initializeInstance()
 {
-  // Initialize module after attachment to RooMCStudy object
-
   // Loop over all uniform smearing parameters
   std::list<UniParam>::iterator uiter ;
   for (uiter= _unifParams.begin() ; uiter!= _unifParams.end() ; ++uiter) {
@@ -351,11 +353,11 @@ Bool_t RooRandomizeParamMCSModule::initializeInstance()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize module at beginning of RooCMStudy run
+
 Bool_t RooRandomizeParamMCSModule::initializeRun(Int_t /*numSamples*/) 
 {
-  // Initialize module at beginning of RooCMStudy run
-
   // Clear dataset at beginning of run
   _data->reset() ;
   return kTRUE ;
@@ -363,11 +365,11 @@ Bool_t RooRandomizeParamMCSModule::initializeRun(Int_t /*numSamples*/)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply all smearings to generator parameters
+
 Bool_t RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/) 
 {
-  // Apply all smearings to generator parameters
-
   // Apply uniform smearing to all generator parameters for which it is requested
   std::list<UniParam>::iterator uiter ;
   for (uiter= _unifParams.begin() ; uiter!= _unifParams.end() ; ++uiter) {
@@ -450,11 +452,12 @@ Bool_t RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return auxiliary data of this module so that it is merged with
+/// RooMCStudy::fitParDataSet()
+
 RooDataSet* RooRandomizeParamMCSModule::finalizeRun() 
 {
-  // Return auxiliary data of this module so that it is merged with
-  // RooMCStudy::fitParDataSet()
   return _data ;
 }
 

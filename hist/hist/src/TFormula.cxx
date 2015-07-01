@@ -43,7 +43,8 @@ using namespace std;
 #include "v5/TFormula.h"
 
 ClassImp(TFormula)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /******************************************************************************
 Begin_Html
 <h1>The  F O R M U L A  class</h1>
@@ -236,7 +237,8 @@ TFormula::TFormula()
    fFormula = "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static bool IsReservedName(const char* name){
    if (strlen(name)!=1) return false;
    for (auto const & specialName : {"x","y","z","t"}){
@@ -2375,14 +2377,14 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the expression formula
+/// If option = "P" replace the parameter names with their values
+/// If option = "CLING" return the actual expression used to build the function  passed to cling
+/// If option = "CLINGP" replace in the CLING expression the parameter with their values 
+
 TString TFormula::GetExpFormula(Option_t *option) const
 {
-   // return the expression formula
-   // If option = "P" replace the parameter names with their values
-   // If option = "CLING" return the actual expression used to build the function  passed to cling
-   // If option = "CLINGP" replace in the CLING expression the parameter with their values 
-
    TString opt(option);
    if (opt.IsNull() ) return fFormula;
    opt.ToUpper();
@@ -2450,10 +2452,11 @@ TString TFormula::GetExpFormula(Option_t *option) const
    Warning("GetExpFormula","Invalid option - return defult formula expression");
    return fFormula; 
 }   
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print the formula and its attributes
+
 void TFormula::Print(Option_t *option) const
 {
-   // print the formula and its attributes
    printf(" %20s : %s Ndim= %d, Npar= %d, Number= %d \n",GetName(),GetTitle(), fNdim,fNpar,fNumber);
    printf(" Formula expression: \n");
    printf("\t%s \n",fFormula.Data() );
@@ -2512,10 +2515,11 @@ void TFormula::Print(Option_t *option) const
 
 
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object.
+
 void TFormula::Streamer(TBuffer &b)
 {
-   // Stream a class object.
    if (b.IsReading() ) {
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);

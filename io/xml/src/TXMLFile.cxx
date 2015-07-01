@@ -90,7 +90,9 @@
 
 ClassImp(TXMLFile);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default TXMLFile constructor
+
 TXMLFile::TXMLFile() :
    TFile(),
    TXMLSetup(),
@@ -99,14 +101,33 @@ TXMLFile::TXMLFile() :
    fXML(0),
    fKeyCounter(0)
 {
-   // default TXMLFile constructor
-
    SetBit(kBinaryFile, kFALSE);
    fIOVersion  = TXMLFile::Class_Version();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open or creates local XML file with name filename.
+/// It is recommended to specify filename as "<file>.xml". The suffix ".xml"
+/// will be used by object browsers to automatically identify the file as
+/// a XML file. If the constructor fails in any way IsZombie() will
+/// return true. Use IsOpen() to check if the file is (still) open.
+///
+/// If option = NEW or CREATE   create a new file and open it for writing,
+///                             if the file already exists the file is
+///                             not opened.
+///           = RECREATE        create a new file, if the file already
+///                             exists it will be overwritten.
+///           = 2xoo            create a new file with specified xml settings
+///                             for more details see TXMLSetup class
+///           = UPDATE          open an existing file for writing.
+///                             if no file exists, it is created.
+///           = READ            open an existing file for reading.
+///
+/// For more details see comments for TFile::TFile() constructor
+///
+/// For a moment TXMLFile does not support TTree objects and subdirectories
+
 TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, Int_t compression) :
    TFile(),
    TXMLSetup(),
@@ -115,27 +136,6 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    fXML(0),
    fKeyCounter(0)
 {
-   // Open or creates local XML file with name filename.
-   // It is recommended to specify filename as "<file>.xml". The suffix ".xml"
-   // will be used by object browsers to automatically identify the file as
-   // a XML file. If the constructor fails in any way IsZombie() will
-   // return true. Use IsOpen() to check if the file is (still) open.
-   //
-   // If option = NEW or CREATE   create a new file and open it for writing,
-   //                             if the file already exists the file is
-   //                             not opened.
-   //           = RECREATE        create a new file, if the file already
-   //                             exists it will be overwritten.
-   //           = 2xoo            create a new file with specified xml settings
-   //                             for more details see TXMLSetup class
-   //           = UPDATE          open an existing file for writing.
-   //                             if no file exists, it is created.
-   //           = READ            open an existing file for reading.
-   //
-   // For more details see comments for TFile::TFile() constructor
-   //
-   // For a moment TXMLFile does not support TTree objects and subdirectories
-
    fXML = new TXMLEngine();
 
    if (!gROOT)
@@ -276,12 +276,12 @@ zombie:
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialize xml file and correspondent structures
+/// identical to TFile::Init() function
+
 void TXMLFile::InitXmlFile(Bool_t create)
 {
-   // initialize xml file and correspondent structures
-   // identical to TFile::Init() function
-
    Int_t len = gROOT->GetListOfStreamerInfo()->GetSize()+1;
    if (len<5000) len = 5000;
    fClassIndex = new TArrayC(len);
@@ -311,12 +311,12 @@ void TXMLFile::InitXmlFile(Bool_t create)
    fProcessIDs = new TObjArray(fNProcessIDs+1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close a XML file
+/// For more comments see TFile::Close() function
+
 void TXMLFile::Close(Option_t *option)
 {
-   // Close a XML file
-   // For more comments see TFile::Close() function
-
    if (!IsOpen()) return;
 
    TString opt = option;
@@ -365,11 +365,11 @@ void TXMLFile::Close(Option_t *option)
    gROOT->GetListOfFiles()->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor of TXMLFile object
+
 TXMLFile::~TXMLFile()
 {
-   // destructor of TXMLFile object
-
    Close();
 
    if (fXML!=0) {
@@ -378,26 +378,27 @@ TXMLFile::~TXMLFile()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make private to exclude copy operator
+
 void TXMLFile::operator=(const TXMLFile &)
 {
-   // make private to exclude copy operator
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return kTRUE if file is opened and can be accessed
+
 Bool_t TXMLFile::IsOpen() const
 {
-   // return kTRUE if file is opened and can be accessed
-
    return fDoc != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reopen a file with a different access mode, like from READ to
+/// See TFile::Open() for details
+
 Int_t TXMLFile::ReOpen(Option_t* mode)
 {
-   // Reopen a file with a different access mode, like from READ to
-   // See TFile::Open() for details
-
    cd();
 
    TString opt = mode;
@@ -429,27 +430,27 @@ Int_t TXMLFile::ReOpen(Option_t* mode)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create XML key, which will store object in xml structures
+
 TKey* TXMLFile::CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t)
 {
-   // create XML key, which will store object in xml structures
-
    return new TKeyXML(mother, ++fKeyCounter, obj, name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create XML key, which will store object in xml structures
+
 TKey* TXMLFile::CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t)
 {
-   // create XML key, which will store object in xml structures
-
    return new TKeyXML(mother, ++fKeyCounter, obj, cl, name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// function produces pair of xml and dtd file names
+
 void TXMLFile::ProduceFileNames(const char* filename, TString& fname, TString& dtdname)
 {
-   // function produces pair of xml and dtd file names
-
    fname = filename;
    dtdname = filename;
 
@@ -469,17 +470,17 @@ void TXMLFile::ProduceFileNames(const char* filename, TString& fname, TString& d
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Saves xml structures to file
+/// xml elements are kept in list of TKeyXML objects
+/// When saving, all this elements are linked to root xml node
+/// In the end StreamerInfo structures are added
+/// After xml document is saved, all nodes will be unlinked from root node
+/// and kept in memory.
+/// Only Close() or destructor relase memory, used by xml structures
+
 void TXMLFile::SaveToFile()
 {
-   // Saves xml structures to file
-   // xml elements are kept in list of TKeyXML objects
-   // When saving, all this elements are linked to root xml node
-   // In the end StreamerInfo structures are added
-   // After xml document is saved, all nodes will be unlinked from root node
-   // and kept in memory.
-   // Only Close() or destructor relase memory, used by xml structures
-
    if (fDoc==0) return;
 
    if (gDebug>1)
@@ -546,11 +547,11 @@ void TXMLFile::SaveToFile()
       fXML->UnlinkNode(fStreamerInfoNode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect/disconnect all file nodes to single tree before/after saving
+
 void TXMLFile::CombineNodesTree(TDirectory* dir, XMLNodePointer_t topnode, Bool_t dolink)
 {
-   // Connect/disconnect all file nodes to single tree before/after saving
-
    if (dir==0) return;
 
    TIter iter(dir->GetListOfKeys());
@@ -567,14 +568,14 @@ void TXMLFile::CombineNodesTree(TDirectory* dir, XMLNodePointer_t topnode, Bool_
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read document from file
+/// Now full content of docuument reads into the memory
+/// Then document decomposed to separate keys and streamer info structures
+/// All inrelevant data will be cleaned
+
 Bool_t TXMLFile::ReadFromFile()
 {
-   // read document from file
-   // Now full content of docuument reads into the memory
-   // Then document decomposed to separate keys and streamer info structures
-   // All inrelevant data will be cleaned
-
    fDoc = fXML->ParseFile(fRealName);
    if (fDoc==0) return kFALSE;
 
@@ -639,11 +640,11 @@ Bool_t TXMLFile::ReadFromFile()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read list of keys for directory
+
 Int_t TXMLFile::ReadKeysList(TDirectory* dir, XMLNodePointer_t topnode)
 {
-   // Read list of keys for directory
-
    if ((dir==0) || (topnode==0)) return 0;
 
    Int_t nkeys = 0;
@@ -672,11 +673,11 @@ Int_t TXMLFile::ReadKeysList(TDirectory* dir, XMLNodePointer_t topnode)
    return nkeys;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert all TStreamerInfo, used in file, to xml format
+
 void TXMLFile::WriteStreamerInfo()
 {
-   // convert all TStreamerInfo, used in file, to xml format
-
    if (fStreamerInfoNode) {
       fXML->FreeNode(fStreamerInfoNode);
       fStreamerInfoNode = 0;
@@ -720,12 +721,12 @@ void TXMLFile::WriteStreamerInfo()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read streamerinfo structures from xml format and provide them in the list
+/// It is user responsibility to destroy this list
+
 TList* TXMLFile::GetStreamerInfoList()
 {
-   // Read streamerinfo structures from xml format and provide them in the list
-   // It is user responsibility to destroy this list
-
    if (fStreamerInfoNode==0) return 0;
 
    TList* list = new TList();
@@ -770,11 +771,11 @@ TList* TXMLFile::GetStreamerInfoList()
    return list;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// store data of single TStreamerElement in streamer node
+
 void TXMLFile::StoreStreamerElement(XMLNodePointer_t infonode, TStreamerElement* elem)
 {
-   // store data of single TStreamerElement in streamer node
-
    TClass* cl = elem->IsA();
 
    XMLNodePointer_t node = fXML->NewChild(infonode, 0, cl->GetName());
@@ -829,11 +830,11 @@ void TXMLFile::StoreStreamerElement(XMLNodePointer_t infonode, TStreamerElement*
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read and reconstruct single TStreamerElement from xml node
+
 void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo* info)
 {
-  // read and reconstruct single TStreamerElement from xml node
-
    TClass* cl = TClass::GetClass(fXML->GetNodeName(node));
    if ((cl==0) || !cl->InheritsFrom(TStreamerElement::Class())) return;
 
@@ -896,94 +897,103 @@ void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo* info)
    info->GetElements()->Add(elem);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change layout of objects in xml file
+/// Can be changed only for newly created file.
+///
+/// Currently there are two supported layouts:
+///
+/// TXMLSetup::kSpecialized = 2
+///    This is default layout of the file, when xml nodes names class names and data member
+///    names are used. For instance:
+///          <TAttLine version="1">
+///            <fLineColor v="1"/>
+///            <fLineStyle v="1"/>
+///            <fLineWidth v="1"/>
+///          </TAttLine>
+///
+/// TXMLSetup::kGeneralized = 3
+///    For this layout all nodes name does not depend from class definitions.
+///    The same class looks like
+///          <Class name="TAttLine" version="1">
+///            <Member name="fLineColor" v="1"/>
+///            <Member name="fLineStyle" v="1"/>
+///            <Member name="fLineWidth" v="1"/>
+///          </Member>
+///
+
 void TXMLFile::SetXmlLayout(EXMLLayout layout)
 {
-   // Change layout of objects in xml file
-   // Can be changed only for newly created file.
-   //
-   // Currently there are two supported layouts:
-   //
-   // TXMLSetup::kSpecialized = 2
-   //    This is default layout of the file, when xml nodes names class names and data member
-   //    names are used. For instance:
-   //          <TAttLine version="1">
-   //            <fLineColor v="1"/>
-   //            <fLineStyle v="1"/>
-   //            <fLineWidth v="1"/>
-   //          </TAttLine>
-   //
-   // TXMLSetup::kGeneralized = 3
-   //    For this layout all nodes name does not depend from class definitions.
-   //    The same class looks like
-   //          <Class name="TAttLine" version="1">
-   //            <Member name="fLineColor" v="1"/>
-   //            <Member name="fLineStyle" v="1"/>
-   //            <Member name="fLineWidth" v="1"/>
-   //          </Member>
-   //
-
    if (IsWritable() && (GetListOfKeys()->GetSize()==0))
       TXMLSetup::SetXmlLayout(layout);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If true, all correspondent to file TStreamerInfo objects will be stored in file
+/// this allows to apply schema avolution later for this file
+/// may be usefull, when file used outside ROOT and TStreamerInfo objects does not required
+/// Can be changed only for newly created file.
+
 void TXMLFile::SetStoreStreamerInfos(Bool_t iConvert)
 {
-   // If true, all correspondent to file TStreamerInfo objects will be stored in file
-   // this allows to apply schema avolution later for this file
-   // may be usefull, when file used outside ROOT and TStreamerInfo objects does not required
-   // Can be changed only for newly created file.
-
    if (IsWritable() &&  (GetListOfKeys()->GetSize()==0))
       TXMLSetup::SetStoreStreamerInfos(iConvert);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify usage of DTD for this file.
+/// Currently this option not available (always false).
+/// Can be changed only for newly created file.
+
 void TXMLFile::SetUsedDtd(Bool_t use)
 {
-   // Specify usage of DTD for this file.
-   // Currently this option not available (always false).
-   // Can be changed only for newly created file.
-
    if (IsWritable() &&  (GetListOfKeys()->GetSize()==0))
       TXMLSetup::SetUsedDtd(use);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specifiy usage of namespaces in xml file
+/// In current implementation every instrumented class in file gets its unique namespace,
+/// which is equal to name of class and refer to root documentation page like
+/// <TAttPad xmlns:TAttPad="http://root.cern.ch/root/htmldoc/TAttPad.html" version="3">
+/// And xml node for class member gets its name as combination of class name and member name
+///            <TAttPad:fLeftMargin v="0.100000"/>
+///            <TAttPad:fRightMargin v="0.100000"/>
+///            <TAttPad:fBottomMargin v="0.100000"/>
+///            and so on
+/// Usage of namespace increase size of xml file, but makes file more readable
+/// and allows to produce DTD in the case, when in several classes data member has same name
+/// Can be changed only for newly created file.
+
 void TXMLFile::SetUseNamespaces(Bool_t iUseNamespaces)
 {
-   // Specifiy usage of namespaces in xml file
-   // In current implementation every instrumented class in file gets its unique namespace,
-   // which is equal to name of class and refer to root documentation page like
-   // <TAttPad xmlns:TAttPad="http://root.cern.ch/root/htmldoc/TAttPad.html" version="3">
-   // And xml node for class member gets its name as combination of class name and member name
-   //            <TAttPad:fLeftMargin v="0.100000"/>
-   //            <TAttPad:fRightMargin v="0.100000"/>
-   //            <TAttPad:fBottomMargin v="0.100000"/>
-   //            and so on
-   // Usage of namespace increase size of xml file, but makes file more readable
-   // and allows to produce DTD in the case, when in several classes data member has same name
-   // Can be changed only for newly created file.
-
    if (IsWritable() && (GetListOfKeys()->GetSize()==0))
       TXMLSetup::SetUseNamespaces(iUseNamespaces);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add comment line on the top of the xml document
+/// This line can only be seen in xml editor and cannot be accessed later
+/// with TXMLFile methods
+
 Bool_t TXMLFile::AddXmlComment(const char* comment)
 {
-   // Add comment line on the top of the xml document
-   // This line can only be seen in xml editor and cannot be accessed later
-   // with TXMLFile methods
-
    if (!IsWritable() || (fXML==0)) return kFALSE;
 
    return fXML->AddDocComment(fDoc, comment);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds style sheet definition on the top of xml document
+/// Creates <?xml-stylesheet alternate="yes" title="compact" href="small-base.css" type="text/css"?>
+/// Attributes href and type must be supplied,
+///  other attributes: title, alternate, media, charset are optional
+/// if alternate==0, attribyte alternate="no" will be created,
+/// if alternate>0, attribute alternate="yes"
+/// if alternate<0, attribute will not be created
+/// This style sheet definition cannot be later access with TXMLFile methods.
+
 Bool_t TXMLFile::AddXmlStyleSheet(const char* href,
                                   const char* type,
                                   const char* title,
@@ -991,39 +1001,30 @@ Bool_t TXMLFile::AddXmlStyleSheet(const char* href,
                                   const char* media,
                                   const char* charset)
 {
-   // Adds style sheet definition on the top of xml document
-   // Creates <?xml-stylesheet alternate="yes" title="compact" href="small-base.css" type="text/css"?>
-   // Attributes href and type must be supplied,
-   //  other attributes: title, alternate, media, charset are optional
-   // if alternate==0, attribyte alternate="no" will be created,
-   // if alternate>0, attribute alternate="yes"
-   // if alternate<0, attribute will not be created
-   // This style sheet definition cannot be later access with TXMLFile methods.
-
    if (!IsWritable() || (fXML==0)) return kFALSE;
 
    return fXML->AddDocStyleSheet(fDoc, href,type,title,alternate,media,charset);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add just one line on the top of xml document
+/// For instance, line can contain special xml processing instructions
+/// Line should has correct xml syntax that later it can be decoded by xml parser
+/// To be parsed later by TXMLFile again, this line should contain either
+/// xml comments or xml processing instruction
+
 Bool_t TXMLFile::AddXmlLine(const char* line)
 {
-   // Add just one line on the top of xml document
-   // For instance, line can contain special xml processing instructions
-   // Line should has correct xml syntax that later it can be decoded by xml parser
-   // To be parsed later by TXMLFile again, this line should contain either
-   // xml comments or xml processing instruction
-
    if (!IsWritable() || (fXML==0)) return kFALSE;
 
    return fXML->AddDocRawLine(fDoc, line);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create key for directory entry in the key
+
 Long64_t TXMLFile::DirCreateEntry(TDirectory* dir)
 {
-   // Create key for directory entry in the key
-
    TDirectory* mother = dir->GetMotherDir();
    if (mother==0) mother = this;
 
@@ -1034,11 +1035,11 @@ Long64_t TXMLFile::DirCreateEntry(TDirectory* dir)
    return key->GetKeyId();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Serach for key which correspond to direcory dir
+
 TKeyXML* TXMLFile::FindDirKey(TDirectory* dir)
 {
-   // Serach for key which correspond to direcory dir
-
    TDirectory* motherdir = dir->GetMotherDir();
    if (motherdir==0) motherdir = this;
 
@@ -1056,10 +1057,11 @@ TKeyXML* TXMLFile::FindDirKey(TDirectory* dir)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find a directory in motherdir with a seek equal to keyid
+
 TDirectory* TXMLFile::FindKeyDir(TDirectory* motherdir, Long64_t keyid)
 {
-   //Find a directory in motherdir with a seek equal to keyid
    if (motherdir==0) motherdir = this;
 
    TIter next(motherdir->GetList());
@@ -1075,23 +1077,23 @@ TDirectory* TXMLFile::FindKeyDir(TDirectory* motherdir, Long64_t keyid)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read keys for directory
+/// Make sence only once, while next time no new subnodes will be created
+
 Int_t TXMLFile::DirReadKeys(TDirectory* dir)
 {
-   // Read keys for directory
-   // Make sence only once, while next time no new subnodes will be created
-
    TKeyXML* key = FindDirKey(dir);
    if (key==0) return 0;
 
    return ReadKeysList(dir, key->KeyNode());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update key attributes
+
 void TXMLFile::DirWriteKeys(TDirectory*)
 {
-   // Update key attributes
-
    TIter next(GetListOfKeys());
    TObject* obj = 0;
 
@@ -1101,10 +1103,11 @@ void TXMLFile::DirWriteKeys(TDirectory*)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Write the directory header
+
 void TXMLFile::DirWriteHeader(TDirectory* dir)
 {
-   //Write the directory header
    TKeyXML* key = FindDirKey(dir);
    if (key!=0)
       key->UpdateObject(dir);

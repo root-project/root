@@ -44,19 +44,20 @@
 
 ClassImp(TGLiteResult)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump result set.
+
 void TGLiteResult::DumpResult()
 {
-   // Dump result set.
-
    std::cout << "BEGIN DUMP" << std::endl;
    std::cout << "END DUMP" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return a file name
+
 const char *TGLiteResult::GetFileName(UInt_t i) const
 {
-   //return a file name
    if (At(i)) {
       TObjString * entry;
       if ((entry = (TObjString*)((TMap*) At(i)) ->GetValue("name"))) {
@@ -66,10 +67,11 @@ const char *TGLiteResult::GetFileName(UInt_t i) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return file name path
+
 const char *TGLiteResult::GetFileNamePath(UInt_t i) const
 {
-   //return file name path
    if (At(i)) {
       TObjString * entry;
       if ((entry = (TObjString*)((TMap*) At(i)) ->GetValue("name"))) {
@@ -83,10 +85,11 @@ const char *TGLiteResult::GetFileNamePath(UInt_t i) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return path
+
 const char *TGLiteResult::GetPath(UInt_t i) const
 {
-   //return path
    if (At(i)) {
       TObjString * entry;
       if ((entry = (TObjString*)((TMap*) At(i)) ->GetValue("path"))) {
@@ -96,10 +99,11 @@ const char *TGLiteResult::GetPath(UInt_t i) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return the key
+
 const char *TGLiteResult::GetKey(UInt_t i, const char* key) const
 {
-   //return the key
    if (At(i)) {
       TObjString * entry;
       if ((entry = (TObjString*)((TMap*) At(i)) ->GetValue(key))) {
@@ -109,10 +113,11 @@ const char *TGLiteResult::GetKey(UInt_t i, const char* key) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set the key
+
 Bool_t TGLiteResult::SetKey(UInt_t i, const char* key, const char* value)
 {
-   //set the key
    if (At(i)) {
       TPair * entry;
       if ((entry = (TPair*)((TMap*) At(i)) ->FindObject(key))) {
@@ -128,10 +133,11 @@ Bool_t TGLiteResult::SetKey(UInt_t i, const char* key, const char* value)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return a file info list
+
 TList *TGLiteResult::GetFileInfoList() const
 {
-   //return a file info list
    TList * newfileinfolist = new TList();
 
 
@@ -172,11 +178,11 @@ TList *TGLiteResult::GetFileInfoList() const
    return newfileinfolist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///print the GLiteResult info
+
 void TGLiteResult::Print(Option_t * /*wildcard*/, Option_t *option) const
 {
-   //print the GLiteResult info
-
    if (TString(option) != TString("all")) {
       //  TODO: Complete me!
       // Long64_t totaldata = 0;
@@ -217,9 +223,10 @@ void TGLiteResult::Print(Option_t * /*wildcard*/, Option_t *option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///print the GLiteResult info
+
 void TGLiteResult::Print(Option_t *option) const
 {
-   //print the GLiteResult info
    Print("", option);
 }

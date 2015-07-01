@@ -67,11 +67,11 @@ int HtmlDepth = 0;
 #define DEF_BUTTON_HIGHLIGHT      "black"
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML Widget constructor.
+
 TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
 {
-   // HTML Widget constructor.
-
    int i;
 
    fExiting = 0;
@@ -212,11 +212,11 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
    fUidTable = new THashTable(100);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML widget destructor.
+
 TGHtml::~TGHtml()
 {
-   // HTML widget destructor.
-
    int i;
 
    fExiting = 1;
@@ -230,11 +230,11 @@ TGHtml::~TGHtml()
   // TODO: should also free colors!
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start background update.
+
 void TGHtml::UpdateBackgroundStart()
 {
-   // Start background update.
-
    //GCValues_t gcv;
    //unsigned int mask = GCTileStipXOrigin | GCTileStipYOrigin;
 //
@@ -243,20 +243,20 @@ void TGHtml::UpdateBackgroundStart()
    //XChangeGC(GetDisplay(), _backGC, mask, &gcv);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free system color.
+
 void TGHtml::FreeColor(ColorStruct_t *color)
 {
-   // Free system color.
-
    gVirtualX->FreeColor(gClient->GetDefaultColormap(), color->fPixel);
    delete color;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate system color by name.
+
 ColorStruct_t *TGHtml::AllocColor(const char *name)
 {
-   // Allocate system color by name.
-
    ColorStruct_t *color = new ColorStruct_t;
 
    color->fPixel = 0;
@@ -271,11 +271,11 @@ ColorStruct_t *TGHtml::AllocColor(const char *name)
    return color;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate system color by value.
+
 ColorStruct_t *TGHtml::AllocColorByValue(ColorStruct_t *color)
 {
-   // Allocate system color by value.
-
    ColorStruct_t *c = new ColorStruct_t;
    *c = *color;
 
@@ -289,27 +289,27 @@ ColorStruct_t *TGHtml::AllocColorByValue(ColorStruct_t *color)
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Erase all HTML from this widget and clear the screen. This is
+/// typically done before loading a new document.
+
 void TGHtml::Clear(Option_t *)
 {
-   // Erase all HTML from this widget and clear the screen. This is
-   // typically done before loading a new document.
-
    HClear();
    TGView::Clear();
    fFlags |= REDRAW_TEXT | VSCROLL | HSCROLL;
    ScheduleRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Appends (or insert at the specified position) the given HTML text to the
+/// end of any HTML text that may have been inserted by prior calls to this
+/// command.  Then it runs the tokenizer, parser and layout engine as far as
+/// possible with the text that is available. The display is updated
+/// appropriately.
+
 int TGHtml::ParseText(char *text, const char *index)
 {
-   // Appends (or insert at the specified position) the given HTML text to the
-   // end of any HTML text that may have been inserted by prior calls to this
-   // command.  Then it runs the tokenizer, parser and layout engine as far as
-   // possible with the text that is available. The display is updated
-   // appropriately.
-
    SHtmlIndex_t iStart;
    TGHtmlElement *savePtr=0;
 
@@ -364,11 +364,11 @@ int TGHtml::ParseText(char *text, const char *index)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets relief mode of html table.
+
 void TGHtml::SetTableRelief(int relief)
 {
-   // Sets relief mode of html table.
-
    if (fTableRelief != relief) {
       fTableRelief = relief;
       fFlags |= RELAYOUT;
@@ -376,11 +376,11 @@ void TGHtml::SetTableRelief(int relief)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets relief mode of html rule.
+
 void TGHtml::SetRuleRelief(int relief)
 {
-   // Sets relief mode of html rule.
-
    if (fRuleRelief != relief) {
       fRuleRelief = relief;
       fFlags |= RELAYOUT;
@@ -388,11 +388,11 @@ void TGHtml::SetRuleRelief(int relief)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set/reset html links underline.
+
 void TGHtml::UnderlineLinks(int onoff)
 {
-   // Set/reset html links underline.
-
    if (fUnderlineLinks != onoff) {
       fUnderlineLinks = onoff;
 //    fFlags |= RESIZE_ELEMENTS | RELAYOUT;
@@ -431,21 +431,21 @@ void TGHtml::UnderlineLinks(int onoff)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets base URI.
+
 void TGHtml::SetBaseUri(const char *uri)
 {
-   // Sets base URI.
-
    if (fZBase) delete[] fZBase;
    fZBase = 0;
    if (uri) fZBase = StrDup(uri);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go to anchor position.
+
 int TGHtml::GotoAnchor(const char *name)
 {
-   // Go to anchor position.
-
    const char *z;
    TGHtmlElement *p;
 
@@ -462,19 +462,19 @@ int TGHtml::GotoAnchor(const char *name)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a string, this procedure returns a unique identifier for the
+/// string.
+///
+/// This procedure returns a pointer to a new char string corresponding to
+/// the "string" argument. The new string has a value identical to string
+/// (strcmp will return 0), but it's guaranteed that any other calls to this
+/// procedure with a string equal to "string" will return exactly the same
+/// result (i.e. can compare pointer *values* directly, without having to
+/// call strcmp on what they point to).
+
 const char *TGHtml::GetUid(const char *string)
 {
-   // Given a string, this procedure returns a unique identifier for the
-   // string.
-   //
-   // This procedure returns a pointer to a new char string corresponding to
-   // the "string" argument. The new string has a value identical to string
-   // (strcmp will return 0), but it's guaranteed that any other calls to this
-   // procedure with a string equal to "string" will return exactly the same
-   // result (i.e. can compare pointer *values* directly, without having to
-   // call strcmp on what they point to).
-
    //int dummy;
 
    TObjString *obj = 0;
@@ -488,19 +488,19 @@ const char *TGHtml::GetUid(const char *string)
    return (const char *)obj->GetName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes virtual size of html area.
+
 void TGHtml::ComputeVirtualSize()
 {
-   // Computes virtual size of html area.
-
    fVirtualSize = TGDimension(fMaxX, fMaxY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the cache of GCs
+
 void TGHtml::ClearGcCache()
 {
-   // Clear the cache of GCs
-
    int i;
 
    for (i = 0; i < N_CACHE_GC; i++) {
@@ -512,23 +512,23 @@ void TGHtml::ClearGcCache()
    fGcNextToFree = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the main layout context in the main widget.  This happens
+/// before we redo the layout, or just before deleting the widget.
+
 void TGHtml::ResetLayoutContext()
 {
-   // Reset the main layout context in the main widget.  This happens
-   // before we redo the layout, or just before deleting the widget.
-
    fLayoutContext.Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine is invoked in order to redraw all or part of the HTML
+/// widget. This might happen because the display has changed, or in
+/// response to an expose event. In all cases, though, this routine
+/// is called by an idle handler.
+
 void TGHtml::Redraw()
 {
-   // This routine is invoked in order to redraw all or part of the HTML
-   // widget. This might happen because the display has changed, or in
-   // response to an expose event. In all cases, though, this routine
-   // is called by an idle handler.
-
    Pixmap_t pixmap;           // The buffer on which to render HTML
    int x, y, w, h;          // Virtual canvas coordinates of area to draw
    int hw;                  // highlight thickness
@@ -742,22 +742,22 @@ earlyOut:
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that a call to the Redraw() routine has been queued.
+
 void TGHtml::ScheduleRedraw()
 {
-   // Make sure that a call to the Redraw() routine has been queued.
-
    if ((fFlags & REDRAW_PENDING) == 0 /*&& IsMapped()*/) {
       if (!fIdle) fIdle = new TGIdleHandler(this);
       fFlags |= REDRAW_PENDING;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handles idle event.
+
 Bool_t TGHtml::HandleIdleEvent(TGIdleHandler *idle)
 {
-   // Handles idle event.
-
    if (idle != fIdle) return kFALSE;
    Redraw();
    delete fIdle;
@@ -765,15 +765,15 @@ Bool_t TGHtml::HandleIdleEvent(TGIdleHandler *idle)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If any part of the screen needs to be redrawn, then call this routine
+/// with the values of a box (in window coordinates) that needs to be
+/// redrawn. This routine will schedule an idle handler to do the redraw.
+///
+/// The box coordinates are relative to the clipping window (fCanvas).
+
 void TGHtml::RedrawArea(int left, int top, int right, int bottom)
 {
-   // If any part of the screen needs to be redrawn, then call this routine
-   // with the values of a box (in window coordinates) that needs to be
-   // redrawn. This routine will schedule an idle handler to do the redraw.
-   //
-   // The box coordinates are relative to the clipping window (fCanvas).
-
    if (bottom < 0) return;
    if (top > (int)fCanvas->GetHeight()) return;
    if (right < 0) return;
@@ -785,11 +785,11 @@ void TGHtml::RedrawArea(int left, int top, int right, int bottom)
    ScheduleRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw region defined by [x,y] [w,h].
+
 void TGHtml::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Draw region defined by [x,y] [w,h].
-
    TGView::DrawRegion(x, y, w, h);
 
 #if 0
@@ -814,11 +814,11 @@ void TGHtml::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout html widget.
+
 Bool_t TGHtml::ItemLayout()
 {
-   // Layout html widget.
-
 #if 0
    fFlags |= RELAYOUT | VSCROLL | HSCROLL;
    Redraw(); //RedrawEverything();
@@ -846,32 +846,32 @@ Bool_t TGHtml::ItemLayout()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw the TGHtmlBlock given.
+
 void TGHtml::RedrawBlock(TGHtmlBlock *p)
 {
-   // Redraw the TGHtmlBlock given.
-
    if (p) {
       RedrawArea(p->fLeft - fVisible.fX, p->fTop - fVisible.fY,
                  p->fRight - fVisible.fX + 1, p->fBottom - fVisible.fY);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call this routine to force the entire widget to be redrawn.
+
 void TGHtml::RedrawEverything()
 {
-   // Call this routine to force the entire widget to be redrawn.
-
    fFlags |= REDRAW_FOCUS | REDRAW_TEXT;
    ScheduleRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call this routine to cause all of the rendered HTML at the
+/// virtual canvas coordinate of Y and beyond to be redrawn.
+
 void TGHtml::RedrawText(int y)
 {
-   // Call this routine to cause all of the rendered HTML at the
-   // virtual canvas coordinate of Y and beyond to be redrawn.
-
    int clipHeight;     // Height of the clipping window
 
    clipHeight = fCanvas->GetHeight();
@@ -881,11 +881,11 @@ void TGHtml::RedrawText(int y)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Erase all data from the HTML widget. Bring it back to an empty screen.
+
 void TGHtml::HClear()
 {
-   // Erase all data from the HTML widget. Bring it back to an empty screen.
-
    int i;
    TGHtmlElement *p, *fPNext;
 
@@ -984,11 +984,11 @@ void TGHtml::HClear()
    fLastUri = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle timer event.
+
 Bool_t TGHtml::HandleTimer(TTimer *t)
 {
-   // Handle timer event.
-
    if (t == fInsTimer) {
       if (fInsTimer) delete fInsTimer;
       fInsTimer = NULL;
@@ -1006,11 +1006,11 @@ Bool_t TGHtml::HandleTimer(TTimer *t)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Flash the insertion cursor.
+
 void TGHtml::FlashCursor()
 {
-   // Flash the insertion cursor.
-
    if (fPInsBlock == 0 || fInsOnTime <= 0 || fInsOffTime <= 0) return;
    RedrawBlock(fPInsBlock);
    if ((fFlags & GOT_FOCUS) == 0) {
@@ -1024,14 +1024,14 @@ void TGHtml::FlashCursor()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a GC from the cache.  As many as N_CACHE_GCs are kept valid
+/// at any one time.  They are replaced using an LRU algorithm.
+///
+/// A value of FONT_Any (-1) for the font means "don't care".
+
 GContext_t TGHtml::GetGC(int color, int font)
 {
-   // Return a GC from the cache.  As many as N_CACHE_GCs are kept valid
-   // at any one time.  They are replaced using an LRU algorithm.
-   //
-   // A value of FONT_Any (-1) for the font means "don't care".
-
    int i, j;
    GcCache_t *p = fAGcCache;
    GCValues_t gcValues;
@@ -1096,12 +1096,12 @@ GContext_t TGHtml::GetGC(int color, int font)
    return p->fGc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve any valid GC. The font and color don't matter since the
+/// GC will only be used for copying.
+
 GContext_t TGHtml::GetAnyGC()
 {
-   // Retrieve any valid GC. The font and color don't matter since the
-   // GC will only be used for copying.
-
    int i;
    GcCache_t *p = fAGcCache;
 
@@ -1112,11 +1112,11 @@ GContext_t TGHtml::GetAnyGC()
    return GetGC(COLOR_Normal, FONT_Default);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle focus change event.
+
 Bool_t TGHtml::HandleFocusChange(Event_t *event)
 {
-   // Handle focus change event.
-
    if (event->fType == kFocusIn) {
       fFlags |= GOT_FOCUS | REDRAW_FOCUS;
       ScheduleRedraw();
@@ -1129,13 +1129,13 @@ Bool_t TGHtml::HandleFocusChange(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine searchs for a hyperlink beneath the coordinates x,y
+/// and returns a pointer to the HREF for that hyperlink. The text
+/// is held in one of the markup argv[] fields of the <a> markup.
+
 TGHtmlInput *TGHtml::GetInputElement(int x, int y)
 {
-   // This routine searchs for a hyperlink beneath the coordinates x,y
-   // and returns a pointer to the HREF for that hyperlink. The text
-   // is held in one of the markup argv[] fields of the <a> markup.
-
    TGHtmlInput *p;     // For looping over all controls
    int vx, vy, vw, vh;    // Part of the virtual canvas that is visible
 
@@ -1156,11 +1156,11 @@ TGHtmlInput *TGHtml::GetInputElement(int x, int y)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle html input (button, checkbox, ...) event.
+
 Bool_t TGHtml::HandleHtmlInput(TGHtmlInput *pr, Event_t *event)
 {
-   // Handle html input (button, checkbox, ...) event.
-
    Window_t childdum;
    Event_t eventSt;
    eventSt.fType      = event->fType;
@@ -1247,11 +1247,11 @@ Bool_t TGHtml::HandleHtmlInput(TGHtmlInput *pr, Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle radio button event.
+
 Bool_t TGHtml::HandleRadioButton(TGHtmlInput *p)
 {
-   // Handle radio button event.
-
    TGHtmlInput *pr;
    for (pr = fFirstInput; pr; pr = pr->fINext) {
       if ((pr->fPForm == p->fPForm) && (pr->fItype == INPUT_TYPE_Radio)) {
@@ -1266,11 +1266,11 @@ Bool_t TGHtml::HandleRadioButton(TGHtmlInput *p)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit ButtonClicked() signal.
+
 void TGHtml::ButtonClicked(const char *name, const char *val)
 {
-   // Emit ButtonClicked() signal.
-
    Long_t args[2];
 
    args[0] = (Long_t)name;
@@ -1279,11 +1279,11 @@ void TGHtml::ButtonClicked(const char *name, const char *val)
    Emit("ButtonClicked(char*,char*)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit CheckToggled() signal.
+
 void TGHtml::CheckToggled(const char *name, Bool_t on, const char *val)
 {
-   // Emit CheckToggled() signal.
-
    Long_t args[3];
 
    args[0] = (Long_t)name;
@@ -1293,11 +1293,11 @@ void TGHtml::CheckToggled(const char *name, Bool_t on, const char *val)
    Emit("CheckToggled(char*,Bool_t,char*)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit RadioChanged() signal.
+
 void TGHtml::RadioChanged(const char *name, const char *val)
 {
-   // Emit RadioChanged() signal.
-
    Long_t args[2];
 
    args[0] = (Long_t)name;
@@ -1306,11 +1306,11 @@ void TGHtml::RadioChanged(const char *name, const char *val)
    Emit("RadioChanged(char*,char*)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Selected() signal.
+
 void TGHtml::InputSelected(const char *name, const char *val)
 {
-   // Emit Selected() signal.
-
    Long_t args[2];
 
    args[0] = (Long_t)name;
@@ -1319,19 +1319,19 @@ void TGHtml::InputSelected(const char *name, const char *val)
    Emit("InputSelected(char*,char*)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit SubmitClicked() signal.
+
 void TGHtml::SubmitClicked(const char *val)
 {
-   // Emit SubmitClicked() signal.
-
    Emit("SubmitClicked(char*)", val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event.
+
 Bool_t TGHtml::HandleButton(Event_t *event)
 {
-   // Handle mouse button event.
-
    int amount, ch;
 
    ch = fCanvas->GetHeight();
@@ -1371,11 +1371,11 @@ Bool_t TGHtml::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// handle mouse motion events
+
 Bool_t TGHtml::HandleMotion(Event_t *event)
 {
-   // handle mouse motion events
-
    int x = event->fX + fVisible.fX;
    int y = event->fY + fVisible.fY;
    const char *uri = GetHref(x, y);
@@ -1396,13 +1396,13 @@ Bool_t TGHtml::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The rendering and layout routines should call this routine in order to
+/// get a font structure. The iFont parameter specifies which of the N_FONT
+/// fonts should be obtained. The font is allocated if necessary.
+
 TGFont *TGHtml::GetFont(int iFont)
 {
-   // The rendering and layout routines should call this routine in order to
-   // get a font structure. The iFont parameter specifies which of the N_FONT
-   // fonts should be obtained. The font is allocated if necessary.
-
    TGFont *toFree = 0;
 
    if (iFont < 0) iFont = 0;
@@ -1507,11 +1507,11 @@ TGFont *TGHtml::GetFont(int iFont)
    return fAFont[iFont];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Only support rect and circles for now
+
 int TGHtml::InArea(TGHtmlMapArea *p, int left, int top, int x, int y)
 {
-   // Only support rect and circles for now
-
    int *ip = p->fCoords;
    if (!ip) return 0;
 
@@ -1526,11 +1526,11 @@ int TGHtml::InArea(TGHtmlMapArea *p, int left, int top, int x, int y)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns html map element.
+
 TGHtmlElement *TGHtml::GetMap(const char *name)
 {
-   // Returns html map element.
-
    TGHtmlElement *p = fPFirst;
    const char *z, *zb;
 
@@ -1546,11 +1546,11 @@ TGHtmlElement *TGHtml::GetMap(const char *name)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the squared distance between two colors
+
 float TGHtml::ColorDistance(ColorStruct_t *pA, ColorStruct_t *pB)
 {
-   // Compute the squared distance between two colors
-
    float x, y, z;
 
    x = 0.30 * (pA->fRed - pB->fRed);
@@ -1560,13 +1560,13 @@ float TGHtml::ColorDistance(ColorStruct_t *pA, ColorStruct_t *pB)
    return x*x + y*y + z*z;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine returns an index between 0 and N_COLOR-1 which indicates
+/// which ColorStruct_t structure in the fApColor[] array should be used to describe
+/// the color specified by the given name.
+
 int TGHtml::GetColorByName(const char *zColor)
 {
-   // This routine returns an index between 0 and N_COLOR-1 which indicates
-   // which ColorStruct_t structure in the fApColor[] array should be used to describe
-   // the color specified by the given name.
-
    ColorStruct_t *pNew;
    int iColor;
    const char *name;  // unique!
@@ -1610,12 +1610,12 @@ int TGHtml::GetColorByName(const char *zColor)
 #define MAX(A,B)     ((A)<(B)?(B):(A))
 #define MIN(A,B)     ((A)<(B)?(A):(B))
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check to see if the given color is too dark to be easily distinguished
+/// from black.
+
 int TGHtml::IsDarkColor(ColorStruct_t *p)
 {
-   // Check to see if the given color is too dark to be easily distinguished
-   // from black.
-
    float x, y, z;
 
    x = 0.50 * p->fRed;
@@ -1624,12 +1624,12 @@ int TGHtml::IsDarkColor(ColorStruct_t *p)
    return (x*x + y*y + z*z) < (0.05 * MAX_COLOR * MAX_COLOR);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given that the background color is iBgColor, figure out an
+/// appropriate color for the dark part of a 3D shadow.
+
 int TGHtml::GetDarkShadowColor(int iBgColor)
 {
-   // Given that the background color is iBgColor, figure out an
-   // appropriate color for the dark part of a 3D shadow.
-
    if (fIDark[iBgColor] == 0) {
       ColorStruct_t *pRef, val;
       val.fMask = kDoRed | kDoGreen | kDoBlue;
@@ -1657,21 +1657,21 @@ int TGHtml::GetDarkShadowColor(int iBgColor)
    return fIDark[iBgColor] - 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check to see if the given color is too light to be easily distinguished
+/// from white.
+
 int TGHtml::IsLightColor(ColorStruct_t *p)
 {
-   // Check to see if the given color is too light to be easily distinguished
-   // from white.
-
    return p->fGreen >= 0.85 * MAX_COLOR;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given that the background color is iBgColor, figure out an
+/// appropriate color for the bright part of the 3D shadow.
+
 int TGHtml::GetLightShadowColor(int iBgColor)
 {
-   // Given that the background color is iBgColor, figure out an
-   // appropriate color for the bright part of the 3D shadow.
-
    if (fILight[iBgColor] == 0) {
       ColorStruct_t *pRef, val;
       val.fMask = kDoRed | kDoGreen | kDoBlue;
@@ -1699,12 +1699,12 @@ int TGHtml::GetLightShadowColor(int iBgColor)
    return fILight[iBgColor] - 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find a color integer for the color whose color components
+/// are given by pRef.
+
 int TGHtml::GetColorByValue(ColorStruct_t *pRef)
 {
-   // Find a color integer for the color whose color components
-   // are given by pRef.
-
    int i;
    float dist;
    float closestDist;
@@ -1762,13 +1762,13 @@ int TGHtml::GetColorByValue(ColorStruct_t *pRef)
    return closest;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine searchs for a hyperlink beneath the coordinates x,y
+/// and returns a pointer to the HREF for that hyperlink. The text
+/// is held in one of the markup argv[] fields of the <a> markup.
+
 const char *TGHtml::GetHref(int x, int y, const char **target)
 {
-   // This routine searchs for a hyperlink beneath the coordinates x,y
-   // and returns a pointer to the HREF for that hyperlink. The text
-   // is held in one of the markup argv[] fields of the <a> markup.
-
    TGHtmlBlock *pBlock;
    TGHtmlElement *pElem;
 
@@ -1810,11 +1810,11 @@ const char *TGHtml::GetHref(int x, int y, const char **target)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return coordinates of item
+
 int TGHtml::ElementCoords(TGHtmlElement *p, int /*i*/, int pct, int *coords)
 {
-   // Return coordinates of item
-
    TGHtmlBlock *pBlock;
 
    while (p && p->fType != Html_Block) p = p->fPPrev;
@@ -1840,11 +1840,11 @@ int TGHtml::ElementCoords(TGHtmlElement *p, int /*i*/, int pct, int *coords)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns html element matching attribute name and value.
+
 TGHtmlElement *TGHtml::AttrElem(const char *name, char *value)
 {
-   // Returns html element matching attribute name and value.
-
    TGHtmlElement *p;
    const char *z;
 
@@ -1856,16 +1856,16 @@ TGHtmlElement *TGHtml::AttrElem(const char *name, char *value)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given the selection end-points in fSelBegin and fSelEnd, recompute
+/// pSelBeginBlock and fPSelEndBlock, then call UpdateSelectionDisplay()
+/// to update the display.
+///
+/// This routine should be called whenever the selection changes or
+/// whenever the set of TGHtmlBlock structures change.
+
 void TGHtml::UpdateSelection(int forceUpdate)
 {
-   // Given the selection end-points in fSelBegin and fSelEnd, recompute
-   // pSelBeginBlock and fPSelEndBlock, then call UpdateSelectionDisplay()
-   // to update the display.
-   //
-   // This routine should be called whenever the selection changes or
-   // whenever the set of TGHtmlBlock structures change.
-
    TGHtmlBlock *pBlock;
    int index;
    int needUpdate = forceUpdate;
@@ -1910,15 +1910,15 @@ void TGHtml::UpdateSelection(int forceUpdate)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The fPSelStartBlock and fPSelEndBlock values have been changed.
+/// This routine's job is to loop over all TGHtmlBlocks and either
+/// set or clear the HTML_Selected bits in the .fFlags field
+/// as appropriate.  For every TGHtmlBlock where the bit changes,
+/// mark that block for redrawing.
+
 void TGHtml::UpdateSelectionDisplay()
 {
-   // The fPSelStartBlock and fPSelEndBlock values have been changed.
-   // This routine's job is to loop over all TGHtmlBlocks and either
-   // set or clear the HTML_Selected bits in the .fFlags field
-   // as appropriate.  For every TGHtmlBlock where the bit changes,
-   // mark that block for redrawing.
-
    int selected = 0;
    SHtmlIndex_t tempIndex;
    TGHtmlBlock *pTempBlock;
@@ -1960,11 +1960,11 @@ void TGHtml::UpdateSelectionDisplay()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear selection.
+
 void TGHtml::LostSelection()
 {
-   // Clear selection.
-
    if (fExportSelection) {
       // clear selection
       fPSelStartBlock = 0;
@@ -1975,11 +1975,11 @@ void TGHtml::LostSelection()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set selection.
+
 int TGHtml::SelectionSet(const char *startIx, const char *endIx)
 {
-   // Set selection.
-
    SHtmlIndex_t sBegin, sEnd;
    int bi, ei;
 
@@ -2016,12 +2016,12 @@ int TGHtml::SelectionSet(const char *startIx, const char *endIx)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recompute the position of the insertion cursor based on the
+/// position in fIns.
+
 void TGHtml::UpdateInsert()
 {
-   // Recompute the position of the insertion cursor based on the
-   // position in fIns.
-
    IndexToBlockIndex(fIns, &fPInsBlock, &fInsIndex);
    RedrawBlock(fPInsBlock);
    if (fInsTimer == 0) {
@@ -2030,11 +2030,11 @@ void TGHtml::UpdateInsert()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the position of the insertion cursor.
+
 int TGHtml::SetInsert(const char *insIx)
 {
-   // Set the position of the insertion cursor.
-
    SHtmlIndex_t i;
 
    if (!insIx) {
@@ -2055,11 +2055,11 @@ int TGHtml::SetInsert(const char *insIx)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a html widget as a C++ statement(s) on output stream out.
+
 void TGHtml::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a html widget as a C++ statement(s) on output stream out.
-
    out << "   TGHtml *";
    out << GetName() << " = new TGHtml(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight()

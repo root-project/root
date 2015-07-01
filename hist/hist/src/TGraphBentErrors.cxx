@@ -26,7 +26,8 @@
 ClassImp(TGraphBentErrors)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TGraphBentErrors class</h2></center>
 A TGraphBentErrors is a TGraph with bent, assymetric error bars.
@@ -62,21 +63,21 @@ Begin_Macro(source)
 End_Macro */
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphBentErrors default constructor.
+
 TGraphBentErrors::TGraphBentErrors(): TGraph()
 {
-   // TGraphBentErrors default constructor.
-
    if (!CtorAllocate()) return;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphBentErrors copy constructor
+
 TGraphBentErrors::TGraphBentErrors(const TGraphBentErrors &gr)
        : TGraph(gr)
 {
-   // TGraphBentErrors copy constructor
-
    if (!CtorAllocate()) return;
    Int_t n = fNpoints*sizeof(Double_t);
    memcpy(fEXlow, gr.fEXlow, n);
@@ -90,20 +91,24 @@ TGraphBentErrors::TGraphBentErrors(const TGraphBentErrors &gr)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphBentErrors normal constructor.
+///
+///  the arrays are preset to zero
+
 TGraphBentErrors::TGraphBentErrors(Int_t n)
        : TGraph(n)
 {
-   // TGraphBentErrors normal constructor.
-   //
-   //  the arrays are preset to zero
-
    if (!CtorAllocate()) return;
    FillZero(0, fNpoints);
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphBentErrors normal constructor.
+///
+/// if exl,h or eyl,h are null, the corresponding arrays are preset to zero
+
 TGraphBentErrors::TGraphBentErrors(Int_t n,
                                    const Float_t *x, const Float_t *y,
                                    const Float_t *exl, const Float_t *exh,
@@ -112,10 +117,6 @@ TGraphBentErrors::TGraphBentErrors(Int_t n,
                                    const Float_t *eyld, const Float_t *eyhd)
   : TGraph(n,x,y)
 {
-   // TGraphBentErrors normal constructor.
-   //
-   // if exl,h or eyl,h are null, the corresponding arrays are preset to zero
-
    if (!CtorAllocate()) return;
 
    for (Int_t i=0;i<n;i++) {
@@ -140,7 +141,11 @@ TGraphBentErrors::TGraphBentErrors(Int_t n,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphBentErrors normal constructor.
+///
+/// if exl,h or eyl,h are null, the corresponding arrays are preset to zero
+
 TGraphBentErrors::TGraphBentErrors(Int_t n,
                                    const Double_t *x, const Double_t *y,
                                    const Double_t *exl, const Double_t *exh,
@@ -149,10 +154,6 @@ TGraphBentErrors::TGraphBentErrors(Int_t n,
                                    const Double_t *eyld, const Double_t *eyhd)
   : TGraph(n,x,y)
 {
-   // TGraphBentErrors normal constructor.
-   //
-   // if exl,h or eyl,h are null, the corresponding arrays are preset to zero
-
    if (!CtorAllocate()) return;
    n = sizeof(Double_t)*fNpoints;
 
@@ -176,11 +177,11 @@ TGraphBentErrors::TGraphBentErrors(Int_t n,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphBentErrors default destructor.
+
 TGraphBentErrors::~TGraphBentErrors()
 {
-   // TGraphBentErrors default destructor.
-
    delete [] fEXlow;
    delete [] fEXhigh;
    delete [] fEYlow;
@@ -193,19 +194,19 @@ TGraphBentErrors::~TGraphBentErrors()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// apply a function to all data points
+/// y = f(x,y)
+///
+/// Errors are calculated as eyh = f(x,y+eyh)-f(x,y) and
+/// eyl = f(x,y)-f(x,y-eyl)
+///
+/// Special treatment has to be applied for the functions where the
+/// role of "up" and "down" is reversed.
+/// function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
+
 void TGraphBentErrors::Apply(TF1 *f)
 {
-   // apply a function to all data points
-   // y = f(x,y)
-   //
-   // Errors are calculated as eyh = f(x,y+eyh)-f(x,y) and
-   // eyl = f(x,y)-f(x,y-eyl)
-   //
-   // Special treatment has to be applied for the functions where the
-   // role of "up" and "down" is reversed.
-   // function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
-
    Double_t x,y,exl,exh,eyl,eyh,eyl_new,eyh_new,fxy;
 
    if (fHistogram) {
@@ -240,11 +241,11 @@ void TGraphBentErrors::Apply(TF1 *f)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute range.
+
 void TGraphBentErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const
 {
-   // Compute range.
-
    TGraph::ComputeRange(xmin,ymin,xmax,ymax);
 
    for (Int_t i=0;i<fNpoints;i++) {
@@ -270,12 +271,12 @@ void TGraphBentErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xm
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy and release.
+
 void TGraphBentErrors::CopyAndRelease(Double_t **newarrays,
                                       Int_t ibegin, Int_t iend, Int_t obegin)
 {
-   // Copy and release.
-
    CopyPoints(newarrays, ibegin, iend, obegin);
    if (newarrays) {
       delete[] fEXlow;
@@ -303,13 +304,13 @@ void TGraphBentErrors::CopyAndRelease(Double_t **newarrays,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy errors from fE*** to arrays[***]
+/// or to f*** Copy points.
+
 Bool_t TGraphBentErrors::CopyPoints(Double_t **arrays,
                                     Int_t ibegin, Int_t iend, Int_t obegin)
 {
-   // Copy errors from fE*** to arrays[***]
-   // or to f*** Copy points.
-
    if (TGraph::CopyPoints(arrays ? arrays+8 : 0, ibegin, iend, obegin)) {
       Int_t n = (iend - ibegin)*sizeof(Double_t);
       if (arrays) {
@@ -338,11 +339,11 @@ Bool_t TGraphBentErrors::CopyPoints(Double_t **arrays,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Should be called from ctors after fNpoints has been set
+
 Bool_t TGraphBentErrors::CtorAllocate(void)
 {
-   // Should be called from ctors after fNpoints has been set
-
    if (!fNpoints) {
       fEXlow = fEYlow = fEXhigh = fEYhigh = 0;
       fEXlowd = fEYlowd = fEXhighd = fEYhighd = 0;
@@ -359,10 +360,11 @@ Bool_t TGraphBentErrors::CtorAllocate(void)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  protected function to perform the merge operation of a graph with asymmetric errors
+
 Bool_t TGraphBentErrors::DoMerge(const TGraph *g)
 {
-   //  protected function to perform the merge operation of a graph with asymmetric errors
    if (g->GetN() == 0) return kFALSE;
 
    Double_t * exl = g->GetEXlow();
@@ -393,12 +395,12 @@ Bool_t TGraphBentErrors::DoMerge(const TGraph *g)
    return kTRUE;
 
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by GraphFitChisquare.
+/// It returns the error along X at point i.
+
 Double_t TGraphBentErrors::GetErrorX(Int_t i) const
 {
-   // This function is called by GraphFitChisquare.
-   // It returns the error along X at point i.
-
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEXlow && !fEXhigh) return -1;
    Double_t elow=0, ehigh=0;
@@ -408,12 +410,12 @@ Double_t TGraphBentErrors::GetErrorX(Int_t i) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by GraphFitChisquare.
+/// It returns the error along Y at point i.
+
 Double_t TGraphBentErrors::GetErrorY(Int_t i) const
 {
-   // This function is called by GraphFitChisquare.
-   // It returns the error along Y at point i.
-
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEYlow && !fEYhigh) return -1;
    Double_t elow=0, ehigh=0;
@@ -423,56 +425,56 @@ Double_t TGraphBentErrors::GetErrorY(Int_t i) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get high error on X[i].
+
 Double_t TGraphBentErrors::GetErrorXhigh(Int_t i) const
 {
-   // Get high error on X[i].
-
    if (i<0 || i>fNpoints) return -1;
    if (fEXhigh) return fEXhigh[i];
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get low error on X[i].
+
 Double_t TGraphBentErrors::GetErrorXlow(Int_t i) const
 {
-   // Get low error on X[i].
-
    if (i<0 || i>fNpoints) return -1;
    if (fEXlow) return fEXlow[i];
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get high error on Y[i].
+
 Double_t TGraphBentErrors::GetErrorYhigh(Int_t i) const
 {
-   // Get high error on Y[i].
-
    if (i<0 || i>fNpoints) return -1;
    if (fEYhigh) return fEYhigh[i];
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get low error on Y[i].
+
 Double_t TGraphBentErrors::GetErrorYlow(Int_t i) const
 {
-   // Get low error on Y[i].
-
    if (i<0 || i>fNpoints) return -1;
    if (fEYlow) return fEYlow[i];
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set zero values for point arrays in the range [begin, end)
+
 void TGraphBentErrors::FillZero(Int_t begin, Int_t end,
                                  Bool_t from_ctor)
 {
-   // Set zero values for point arrays in the range [begin, end)
-
    if (!from_ctor) {
       TGraph::FillZero(begin, end, from_ctor);
    }
@@ -488,11 +490,11 @@ void TGraphBentErrors::FillZero(Int_t begin, Int_t end,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print graph and errors values.
+
 void TGraphBentErrors::Print(Option_t *) const
 {
-   // Print graph and errors values.
-
    for (Int_t i=0;i<fNpoints;i++) {
       printf("x[%d]=%g, y[%d]=%g, exl[%d]=%g, exh[%d]=%g, eyl[%d]=%g, eyh[%d]=%g\n"
          ,i,fX[i],i,fY[i],i,fEXlow[i],i,fEXhigh[i],i,fEYlow[i],i,fEYhigh[i]);
@@ -500,11 +502,11 @@ void TGraphBentErrors::Print(Option_t *) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    char quote = '"';
    out << "   " << std::endl;
    static Int_t frameNumber = 2000;
@@ -601,12 +603,12 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set ex and ey values for point pointed by the mouse.
+
 void TGraphBentErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh,
                                      Double_t exld, Double_t exhd, Double_t eyld, Double_t eyhd)
 {
-   // Set ex and ey values for point pointed by the mouse.
-
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
@@ -633,12 +635,12 @@ void TGraphBentErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, D
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set ex and ey values for point number i.
+
 void TGraphBentErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh,
                                      Double_t exld, Double_t exhd, Double_t eyld, Double_t eyhd)
 {
-   // Set ex and ey values for point number i.
-
    if (i < 0) return;
    if (i >= fNpoints) {
    // re-allocate the object
@@ -655,11 +657,11 @@ void TGraphBentErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Double
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Swap points.
+
 void TGraphBentErrors::SwapPoints(Int_t pos1, Int_t pos2)
 {
-   // Swap points.
-
    SwapValues(fEXlow,  pos1, pos2);
    SwapValues(fEXhigh, pos1, pos2);
    SwapValues(fEYlow,  pos1, pos2);

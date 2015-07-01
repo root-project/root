@@ -1,6 +1,7 @@
 // @(#)root/hist:$Id$
 
-//___________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /**
 Class HybridPlot
 Authors: D. Piparo, G. Schott - Universitaet Karlsruhe

@@ -583,14 +583,14 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
 }
 
 
-//___________________________________________________________________________________________________________________________
-double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g) {
-   // evaluate the chi2 contribution (residual term) only for data with no coord-errors
-   // This function is used in the specialized least square algorithms like FUMILI or L.M.
-   // if we have error on the coordinates the method is not yet implemented
-   //  integral option is also not yet implemented
-   //  one can use in that case normal chi2 method
+////////////////////////////////////////////////////////////////////////////////
+/// evaluate the chi2 contribution (residual term) only for data with no coord-errors
+/// This function is used in the specialized least square algorithms like FUMILI or L.M.
+/// if we have error on the coordinates the method is not yet implemented
+///  integral option is also not yet implemented
+///  one can use in that case normal chi2 method
 
+double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g) {
    if (data.GetErrorType() == BinData::kCoordError && data.Opt().fCoordErrors ) {
       MATH_ERROR_MSG("FitUtil::EvaluateChi2Residual","Error on the coordinates are not used in calculating Chi2 residual");
       return 0; // it will assert otherwise later in GetPoint
@@ -1051,11 +1051,11 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction & f, const UnBinData & d
 }
 //_________________________________________________________________________________________________
 // for binned log likelihood functions
-//------------------------------------------------------------------------------------------------
-double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g ) {
-   // evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
-   // and its gradient
+////////////////////////////////////////////////////////////////////////////////
+/// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
+/// and its gradient
 
+double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g ) {
    double y = 0;
    const double * x1 = data.GetPoint(i,y);
 

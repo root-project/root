@@ -44,46 +44,49 @@ ClassImp(RooAbsCachedReal)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsCachedReal::RooAbsCachedReal(const char *name, const char *title, Int_t ipOrder) :
   RooAbsReal(name,title), 
   _cacheMgr(this,10),
   _ipOrder(ipOrder),
   _disableCache(kFALSE)
  { 
-   // Constructor
  } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAbsCachedReal::RooAbsCachedReal(const RooAbsCachedReal& other, const char* name) :  
    RooAbsReal(other,name), 
    _cacheMgr(other._cacheMgr,this),
    _ipOrder(other._ipOrder),
    _disableCache(other._disableCache)
  { 
-   // Copy constructor
  } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAbsCachedReal::~RooAbsCachedReal() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implementation of getVal() overriding default implementation
+/// of RooAbsReal. Return value stored in cache p.d.f
+/// rather than return value of evaluate() which is undefined
+/// for RooAbsCachedReal
+
 Double_t RooAbsCachedReal::getValV(const RooArgSet* nset) const 
 {
-  // Implementation of getVal() overriding default implementation
-  // of RooAbsReal. Return value stored in cache p.d.f
-  // rather than return value of evaluate() which is undefined
-  // for RooAbsCachedReal
-
   if (_disableCache) {
     return RooAbsReal::getValV(nset) ;
   }
@@ -102,34 +105,35 @@ Double_t RooAbsCachedReal::getValV(const RooArgSet* nset) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark all bins as unitialized (value -1)
+
 void RooAbsCachedReal::clearCacheObject(FuncCacheElem& cache) const 
 {
-  // Mark all bins as unitialized (value -1)
   cache.hist()->setAllWeights(-1) ;  
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface function to create an internal cache object that represent
+/// each cached function configuration. This interface allows to create and
+/// return a class derived from RooAbsCachedReal::FuncCacheElem so that
+/// a derived class fillCacheObject implementation can utilize extra functionality
+/// defined in such a derived cache class
+
 RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::createCache(const RooArgSet* nset) const
 {
-  // Interface function to create an internal cache object that represent
-  // each cached function configuration. This interface allows to create and
-  // return a class derived from RooAbsCachedReal::FuncCacheElem so that
-  // a derived class fillCacheObject implementation can utilize extra functionality
-  // defined in such a derived cache class
-
   return new FuncCacheElem(const_cast<RooAbsCachedReal&>(*this),nset) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve cache corresponding to observables in nset
+
 RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nset) const
 {
-  // Retrieve cache corresponding to observables in nset
- 
   // Check if this configuration was created becfore
   Int_t sterileIdx(-1) ;
   FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx) ;
@@ -178,16 +182,16 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of cache storage unit class
+///
+/// Create RooDataHist that will cache function values and create
+/// RooHistFunc that represent s RooDataHist shape as function, create
+/// meta object that tracks changes in declared parameters of p.d.f
+/// through actualParameters() 
+
 RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, const RooArgSet* nset) 
 {
-  // Constructor of cache storage unit class
-  //
-  // Create RooDataHist that will cache function values and create
-  // RooHistFunc that represent s RooDataHist shape as function, create
-  // meta object that tracks changes in declared parameters of p.d.f
-  // through actualParameters() 
-
   // Disable source caching by default
   _cacheSource = kFALSE ;
   _sourceClone = 0 ;
@@ -235,7 +239,8 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAbsCachedReal::FuncCacheElem::~FuncCacheElem()
 {
   if (_sourceClone) { delete _sourceClone ; }
@@ -247,11 +252,11 @@ RooAbsCachedReal::FuncCacheElem::~FuncCacheElem()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct unique suffix name for cache p.d.f object 
+
 TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const 
 {
-  // Construct unique suffix name for cache p.d.f object 
-
   TString name ;
   name.Append("_Obs[") ;
   if (nset.getSize()>0) {
@@ -279,11 +284,11 @@ TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set interpolation order of RooHistFunct representing cache histogram
+
 void RooAbsCachedReal::setInterpolationOrder(Int_t order) 
 {
-  // Set interpolation order of RooHistFunct representing cache histogram
-
   _ipOrder = order ;
 
   for (Int_t i=0 ; i<_cacheMgr.cacheSize() ; i++) {
@@ -296,10 +301,11 @@ void RooAbsCachedReal::setInterpolationOrder(Int_t order)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of contained RooAbsArg objects
+
 RooArgList RooAbsCachedReal::FuncCacheElem::containedArgs(Action) 
 {
-  // Return list of contained RooAbsArg objects
   RooArgList ret(*func()) ;
 
   ret.add(*_paramTracker) ;
@@ -310,11 +316,11 @@ RooArgList RooAbsCachedReal::FuncCacheElem::containedArgs(Action)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print contents of cache when printing self as part of object tree
+
 void RooAbsCachedReal::FuncCacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem) 
 {
-  // Print contents of cache when printing self as part of object tree
-
   if (curElem==0) {
     os << indent << "--- RooAbsCachedReal begin cache ---" << endl ;
   }
@@ -330,11 +336,11 @@ void RooAbsCachedReal::FuncCacheElem::printCompactTreeHook(ostream& os, const ch
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return analytical integration capabilities of the RooHistFunc that corresponds to the set of observables in allVars
+
 Int_t RooAbsCachedReal::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName) const 
 {
-  // Return analytical integration capabilities of the RooHistFunc that corresponds to the set of observables in allVars
-
   FuncCacheElem* cache = getCache(normSet?normSet:&allVars) ;
   Int_t code = cache->func()->getAnalyticalIntegralWN(allVars,analVars,normSet,rangeName) ;
   _anaIntMap[code].first = &allVars ;
@@ -344,11 +350,11 @@ Int_t RooAbsCachedReal::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& a
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forward call to implementation in relevant RooHistFunc instance
+
 Double_t RooAbsCachedReal::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
 {  
-  // Forward call to implementation in relevant RooHistFunc instance
-
   if (code==0) {
     return getVal(normSet) ; 
   }  

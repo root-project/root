@@ -53,41 +53,46 @@ ClassImp(TGeoBuilder)
 
 TGeoBuilder *TGeoBuilder::fgInstance = NULL;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TGeoBuilder::TGeoBuilder()
             :fGeometry(NULL)
 {
-// Default constructor.
    fgInstance = this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TGeoBuilder::TGeoBuilder(const TGeoBuilder& other)
             :TObject(other)
 {
-// Copy constructor.
    Error("copy constructor","copying not allowed for TGeoBuilder");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoBuilder::~TGeoBuilder()
 {
-// Destructor.
    fgInstance = NULL;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment.
+
 TGeoBuilder &TGeoBuilder::operator=(const TGeoBuilder&)
 {
-// Assignment.
    Error("Assignment","assignment not allowed for TGeoBuilder");
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to singleton.
+
 TGeoBuilder *TGeoBuilder::Instance(TGeoManager *geom)
 {
-// Return pointer to singleton.
    if (!geom) {
       printf("ERROR: Cannot create geometry builder with NULL geometry\n");
       return NULL;
@@ -97,10 +102,11 @@ TGeoBuilder *TGeoBuilder::Instance(TGeoManager *geom)
    return fgInstance;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a material to the list. Returns index of the material in list.
+
 Int_t TGeoBuilder::AddMaterial(TGeoMaterial *material)
 {
-// Add a material to the list. Returns index of the material in list.
    if (!material) return -1;
    TList *materials = fGeometry->GetListOfMaterials();
    Int_t index = materials->GetSize();
@@ -109,10 +115,11 @@ Int_t TGeoBuilder::AddMaterial(TGeoMaterial *material)
    return index;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a matrix to the list. Returns index of the matrix in list.
+
 Int_t TGeoBuilder::AddTransformation(TGeoMatrix *matrix)
 {
-// Add a matrix to the list. Returns index of the matrix in list.
    Int_t index = -1;
    if (!matrix) return -1;
    TObjArray *matrices = fGeometry->GetListOfMatrices();
@@ -121,10 +128,11 @@ Int_t TGeoBuilder::AddTransformation(TGeoMatrix *matrix)
    return index;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a shape to the list. Returns index of the shape in list.
+
 Int_t TGeoBuilder::AddShape(TGeoShape *shape)
 {
-// Add a shape to the list. Returns index of the shape in list.
    Int_t index = -1;
    if (!shape) return -1;
    TObjArray *shapes = fGeometry->GetListOfShapes();
@@ -134,32 +142,35 @@ Int_t TGeoBuilder::AddShape(TGeoShape *shape)
    return index;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register a matrix to the list of matrices. It will be cleaned-up at the
+/// destruction TGeoManager.
+
 void TGeoBuilder::RegisterMatrix(TGeoMatrix *matrix)
 {
-// Register a matrix to the list of matrices. It will be cleaned-up at the
-// destruction TGeoManager.
    if (matrix->IsRegistered()) return;
    TObjArray *matrices = fGeometry->GetListOfMatrices();
    Int_t nmat = matrices->GetEntriesFast();
    matrices->AddAtAndExpand(matrix, nmat);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make an TGeoArb8 volume.
+
 TGeoVolume *TGeoBuilder::MakeArb8(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t *vertices)
 {
-// Make an TGeoArb8 volume.
    TGeoArb8 *arb = new TGeoArb8(name, dz, vertices);
    TGeoVolume *vol = new TGeoVolume(name, arb, medium);
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a box shape with given medium.
+
 TGeoVolume *TGeoBuilder::MakeBox(const char *name, TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz)
 {
-// Make in one step a volume pointing to a box shape with given medium.
    TGeoBBox *box = new TGeoBBox(name, dx, dy, dz);
    TGeoVolume *vol = 0;
    if (box->IsRunTimeShape()) {
@@ -171,12 +182,13 @@ TGeoVolume *TGeoBuilder::MakeBox(const char *name, TGeoMedium *medium,
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a paralelipiped shape with given medium.
+
 TGeoVolume *TGeoBuilder::MakePara(const char *name, TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz,
                                     Double_t alpha, Double_t theta, Double_t phi)
 {
-// Make in one step a volume pointing to a paralelipiped shape with given medium.
    if (TMath::Abs(alpha)<TGeoShape::Tolerance() && TMath::Abs(theta)<TGeoShape::Tolerance()) {
       Warning("MakePara","parallelipiped %s having alpha=0, theta=0 -> making box instead", name);
       return MakeBox(name, medium, dx, dy, dz);
@@ -193,32 +205,35 @@ TGeoVolume *TGeoBuilder::MakePara(const char *name, TGeoMedium *medium,
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a sphere shape with given medium
+
 TGeoVolume *TGeoBuilder::MakeSphere(const char *name, TGeoMedium *medium,
                                     Double_t rmin, Double_t rmax, Double_t themin, Double_t themax,
                                     Double_t phimin, Double_t phimax)
 {
-// Make in one step a volume pointing to a sphere shape with given medium
    TGeoSphere *sph = new TGeoSphere(name, rmin, rmax, themin, themax, phimin, phimax);
    TGeoVolume *vol = new TGeoVolume(name, sph, medium);
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a torus shape with given medium.
+
 TGeoVolume *TGeoBuilder::MakeTorus(const char *name, TGeoMedium *medium, Double_t r,
                                    Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi)
 {
-// Make in one step a volume pointing to a torus shape with given medium.
    TGeoTorus *tor = new TGeoTorus(name,r,rmin,rmax,phi1,dphi);
    TGeoVolume *vol = new TGeoVolume(name, tor, medium);
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a tube shape with given medium.
+
 TGeoVolume *TGeoBuilder::MakeTube(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz)
 {
-// Make in one step a volume pointing to a tube shape with given medium.
    if (rmin>rmax) {
       Error("MakeTube", "tube %s, Rmin=%g greater than Rmax=%g", name,rmin,rmax);
    }
@@ -233,12 +248,13 @@ TGeoVolume *TGeoBuilder::MakeTube(const char *name, TGeoMedium *medium,
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a tube segment shape with given medium.
+
 TGeoVolume *TGeoBuilder::MakeTubs(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz,
                                      Double_t phi1, Double_t phi2)
 {
-// Make in one step a volume pointing to a tube segment shape with given medium.
    TGeoTubeSeg *tubs = new TGeoTubeSeg(name, rmin, rmax, dz, phi1, phi2);
    TGeoVolume *vol = 0;
    if (tubs->IsRunTimeShape()) {
@@ -250,11 +266,12 @@ TGeoVolume *TGeoBuilder::MakeTubs(const char *name, TGeoMedium *medium,
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a tube shape with given medium
+
 TGeoVolume *TGeoBuilder::MakeEltu(const char *name, TGeoMedium *medium,
                                      Double_t a, Double_t b, Double_t dz)
 {
-// Make in one step a volume pointing to a tube shape with given medium
    TGeoEltu *eltu = new TGeoEltu(name, a, b, dz);
    TGeoVolume *vol = 0;
    if (eltu->IsRunTimeShape()) {
@@ -266,11 +283,12 @@ TGeoVolume *TGeoBuilder::MakeEltu(const char *name, TGeoMedium *medium,
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a tube shape with given medium
+
 TGeoVolume *TGeoBuilder::MakeHype(const char *name, TGeoMedium *medium,
                                         Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
 {
-// Make in one step a volume pointing to a tube shape with given medium
    TGeoHype * hype =  new TGeoHype(name, rin,stin,rout,stout,dz);
    TGeoVolume *vol = 0;
    if (hype->IsRunTimeShape()) {
@@ -282,11 +300,12 @@ TGeoVolume *TGeoBuilder::MakeHype(const char *name, TGeoMedium *medium,
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a tube shape with given medium
+
 TGeoVolume *TGeoBuilder::MakeParaboloid(const char *name, TGeoMedium *medium,
                                         Double_t rlo, Double_t rhi, Double_t dz)
 {
-// Make in one step a volume pointing to a tube shape with given medium
    TGeoParaboloid *parab = new TGeoParaboloid(name, rlo, rhi, dz);
    TGeoVolume *vol = 0;
    if (parab->IsRunTimeShape()) {
@@ -298,23 +317,25 @@ TGeoVolume *TGeoBuilder::MakeParaboloid(const char *name, TGeoMedium *medium,
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a tube segment shape with given medium
+
 TGeoVolume *TGeoBuilder::MakeCtub(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
                                      Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
 {
-// Make in one step a volume pointing to a tube segment shape with given medium
    TGeoCtub *ctub = new TGeoCtub(name, rmin, rmax, dz, phi1, phi2, lx, ly, lz, tx, ty, tz);
    TGeoVolume *vol = new TGeoVolume(name, ctub, medium);
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a cone shape with given medium.
+
 TGeoVolume *TGeoBuilder::MakeCone(const char *name, TGeoMedium *medium,
                                      Double_t dz, Double_t rmin1, Double_t rmax1,
                                      Double_t rmin2, Double_t rmax2)
 {
-// Make in one step a volume pointing to a cone shape with given medium.
    TGeoCone *cone = new TGeoCone(dz, rmin1, rmax1, rmin2, rmax2);
    TGeoVolume *vol = 0;
    if (cone->IsRunTimeShape()) {
@@ -326,13 +347,14 @@ TGeoVolume *TGeoBuilder::MakeCone(const char *name, TGeoMedium *medium,
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a cone segment shape with given medium
+
 TGeoVolume *TGeoBuilder::MakeCons(const char *name, TGeoMedium *medium,
                                      Double_t dz, Double_t rmin1, Double_t rmax1,
                                      Double_t rmin2, Double_t rmax2,
                                      Double_t phi1, Double_t phi2)
 {
-// Make in one step a volume pointing to a cone segment shape with given medium
    TGeoConeSeg *cons = new TGeoConeSeg(name, dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
    TGeoVolume *vol = 0;
    if (cons->IsRunTimeShape()) {
@@ -344,31 +366,34 @@ TGeoVolume *TGeoBuilder::MakeCons(const char *name, TGeoMedium *medium,
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a polycone shape with given medium.
+
 TGeoVolume *TGeoBuilder::MakePcon(const char *name, TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nz)
 {
-// Make in one step a volume pointing to a polycone shape with given medium.
    TGeoPcon *pcon = new TGeoPcon(name, phi, dphi, nz);
    TGeoVolume *vol = new TGeoVolume(name, pcon, medium);
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a polygone shape with given medium.
+
 TGeoVolume *TGeoBuilder::MakePgon(const char *name, TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
 {
-// Make in one step a volume pointing to a polygone shape with given medium.
    TGeoPgon *pgon = new TGeoPgon(name, phi, dphi, nedges, nz);
    TGeoVolume *vol = new TGeoVolume(name, pgon, medium);
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a TGeoTrd1 shape with given medium.
+
 TGeoVolume *TGeoBuilder::MakeTrd1(const char *name, TGeoMedium *medium,
                                   Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
 {
-// Make in one step a volume pointing to a TGeoTrd1 shape with given medium.
    TGeoTrd1 *trd1 = new TGeoTrd1(name, dx1, dx2, dy, dz);
    TGeoVolume *vol = 0;
    if (trd1->IsRunTimeShape()) {
@@ -380,12 +405,13 @@ TGeoVolume *TGeoBuilder::MakeTrd1(const char *name, TGeoMedium *medium,
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a TGeoTrd2 shape with given medium.
+
 TGeoVolume *TGeoBuilder::MakeTrd2(const char *name, TGeoMedium *medium,
                                   Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2,
                                   Double_t dz)
 {
-// Make in one step a volume pointing to a TGeoTrd2 shape with given medium.
    TGeoTrd2 *trd2 = new TGeoTrd2(name, dx1, dx2, dy1, dy2, dz);
    TGeoVolume *vol = 0;
    if (trd2->IsRunTimeShape()) {
@@ -397,74 +423,79 @@ TGeoVolume *TGeoBuilder::MakeTrd2(const char *name, TGeoMedium *medium,
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a trapezoid shape with given medium.
+
 TGeoVolume *TGeoBuilder::MakeTrap(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t theta, Double_t phi, Double_t h1,
                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
 {
-// Make in one step a volume pointing to a trapezoid shape with given medium.
    TGeoTrap *trap = new TGeoTrap(name, dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2,
                                  tl2, alpha2);
    TGeoVolume *vol = new TGeoVolume(name, trap, medium);
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make in one step a volume pointing to a twisted trapezoid shape with given medium.
+
 TGeoVolume *TGeoBuilder::MakeGtra(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
 {
-// Make in one step a volume pointing to a twisted trapezoid shape with given medium.
    TGeoGtra *gtra = new TGeoGtra(name, dz, theta, phi, twist, h1, bl1, tl1, alpha1, h2, bl2,
                                  tl2, alpha2);
    TGeoVolume *vol = new TGeoVolume(name, gtra, medium);
    return vol;
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a TGeoXtru-shaped volume with nz planes
+
 TGeoVolume *TGeoBuilder::MakeXtru(const char *name, TGeoMedium *medium, Int_t nz)
 {
-// Make a TGeoXtru-shaped volume with nz planes
    TGeoXtru *xtru = new TGeoXtru(nz);
    xtru->SetName(name);
    TGeoVolume *vol = new TGeoVolume(name, xtru, medium);
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make an assembly of volumes.
+
 TGeoVolumeAssembly *TGeoBuilder::MakeVolumeAssembly(const char *name)
 {
-// Make an assembly of volumes.
    return (new TGeoVolumeAssembly(name));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a TGeoVolumeMulti handling a list of volumes.
+
 TGeoVolumeMulti *TGeoBuilder::MakeVolumeMulti(const char *name, TGeoMedium *medium)
 {
-// Make a TGeoVolumeMulti handling a list of volumes.
    return (new TGeoVolumeMulti(name, medium));
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new volume by dividing an existing one (GEANT3 like)
+///
+/// Divides MOTHER into NDIV divisions called NAME
+/// along axis IAXIS starting at coordinate value START
+/// and having size STEP. The created volumes will have tracking
+/// media ID=NUMED (if NUMED=0 -> same media as MOTHER)
+///    The behavior of the division operation can be triggered using OPTION :
+/// OPTION (case insensitive) :
+///  N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
+///  NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
+///  S  - divide all range with given STEP. NDIV is computed and divisions will be centered
+///         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
+///  SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
+
 TGeoVolume *TGeoBuilder::Division(const char *name, const char *mother, Int_t iaxis,
                                   Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)
 {
-// Create a new volume by dividing an existing one (GEANT3 like)
-//
-// Divides MOTHER into NDIV divisions called NAME
-// along axis IAXIS starting at coordinate value START
-// and having size STEP. The created volumes will have tracking
-// media ID=NUMED (if NUMED=0 -> same media as MOTHER)
-//    The behavior of the division operation can be triggered using OPTION :
-// OPTION (case insensitive) :
-//  N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
-//  NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
-//  S  - divide all range with given STEP. NDIV is computed and divisions will be centered
-//         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
-//  SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
-
    TGeoVolume *amother;
    TString sname = name;
    sname = sname.Strip();
@@ -482,41 +513,44 @@ TGeoVolume *TGeoBuilder::Division(const char *name, const char *mother, Int_t ia
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create rotation matrix named 'mat<index>'.
+///
+///  index    rotation matrix number
+///  theta1   polar angle for axis X
+///  phi1     azimuthal angle for axis X
+///  theta2   polar angle for axis Y
+///  phi2     azimuthal angle for axis Y
+///  theta3   polar angle for axis Z
+///  phi3     azimuthal angle for axis Z
+///
+
 void TGeoBuilder::Matrix(Int_t index, Double_t theta1, Double_t phi1,
                          Double_t theta2, Double_t phi2,
                          Double_t theta3, Double_t phi3)
 {
-// Create rotation matrix named 'mat<index>'.
-//
-//  index    rotation matrix number
-//  theta1   polar angle for axis X
-//  phi1     azimuthal angle for axis X
-//  theta2   polar angle for axis Y
-//  phi2     azimuthal angle for axis Y
-//  theta3   polar angle for axis Z
-//  phi3     azimuthal angle for axis Z
-//
    TGeoRotation * rot = new TGeoRotation("",theta1,phi1,theta2,phi2,theta3,phi3);
    rot->SetUniqueID(index);
    rot->RegisterYourself();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create material with given A, Z and density, having an unique id.
+
 TGeoMaterial *TGeoBuilder::Material(const char *name, Double_t a, Double_t z, Double_t dens, Int_t uid,Double_t radlen, Double_t intlen)
 {
-// Create material with given A, Z and density, having an unique id.
    TGeoMaterial *material = new TGeoMaterial(name,a,z,dens,radlen,intlen);
    material->SetUniqueID(uid);
    return material;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create mixture OR COMPOUND IMAT as composed by THE BASIC nelem
+/// materials defined by arrays A,Z and WMAT, having an unique id.
+
 TGeoMaterial *TGeoBuilder::Mixture(const char *name, Float_t *a, Float_t *z, Double_t dens,
                                    Int_t nelem, Float_t *wmat, Int_t uid)
 {
-// Create mixture OR COMPOUND IMAT as composed by THE BASIC nelem
-// materials defined by arrays A,Z and WMAT, having an unique id.
    TGeoMixture *mix = new TGeoMixture(name,nelem,dens);
    mix->SetUniqueID(uid);
    Int_t i;
@@ -526,12 +560,13 @@ TGeoMaterial *TGeoBuilder::Mixture(const char *name, Float_t *a, Float_t *z, Dou
    return (TGeoMaterial*)mix;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create mixture OR COMPOUND IMAT as composed by THE BASIC nelem
+/// materials defined by arrays A,Z and WMAT, having an unique id.
+
 TGeoMaterial *TGeoBuilder::Mixture(const char *name, Double_t *a, Double_t *z, Double_t dens,
                                    Int_t nelem, Double_t *wmat, Int_t uid)
 {
-// Create mixture OR COMPOUND IMAT as composed by THE BASIC nelem
-// materials defined by arrays A,Z and WMAT, having an unique id.
    TGeoMixture *mix = new TGeoMixture(name,nelem,dens);
    mix->SetUniqueID(uid);
    Int_t i;
@@ -541,51 +576,53 @@ TGeoMaterial *TGeoBuilder::Mixture(const char *name, Double_t *a, Double_t *z, D
    return (TGeoMaterial*)mix;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create tracking medium
+///
+///  numed      tracking medium number assigned
+///  name      tracking medium name
+///  nmat      material number
+///  isvol     sensitive volume flag
+///  ifield    magnetic field
+///  fieldm    max. field value (kilogauss)
+///  tmaxfd    max. angle due to field (deg/step)
+///  stemax    max. step allowed
+///  deemax    max. fraction of energy lost in a step
+///  epsil     tracking precision (cm)
+///  stmin     min. step due to continuous processes (cm)
+///
+///  ifield = 0 if no magnetic field; ifield = -1 if user decision in guswim;
+///  ifield = 1 if tracking performed with g3rkuta; ifield = 2 if tracking
+///  performed with g3helix; ifield = 3 if tracking performed with g3helx3.
+///
+
 TGeoMedium *TGeoBuilder::Medium(const char *name, Int_t numed, Int_t nmat, Int_t isvol,
                                 Int_t ifield, Double_t fieldm, Double_t tmaxfd,
                                 Double_t stemax, Double_t deemax, Double_t epsil,
                                 Double_t stmin)
 {
-// Create tracking medium
-  //
-  //  numed      tracking medium number assigned
-  //  name      tracking medium name
-  //  nmat      material number
-  //  isvol     sensitive volume flag
-  //  ifield    magnetic field
-  //  fieldm    max. field value (kilogauss)
-  //  tmaxfd    max. angle due to field (deg/step)
-  //  stemax    max. step allowed
-  //  deemax    max. fraction of energy lost in a step
-  //  epsil     tracking precision (cm)
-  //  stmin     min. step due to continuous processes (cm)
-  //
-  //  ifield = 0 if no magnetic field; ifield = -1 if user decision in guswim;
-  //  ifield = 1 if tracking performed with g3rkuta; ifield = 2 if tracking
-  //  performed with g3helix; ifield = 3 if tracking performed with g3helx3.
-  //
    return new TGeoMedium(name,numed,nmat,isvol,ifield,fieldm,tmaxfd,stemax,deemax,epsil,stmin);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a node called <name_nr> pointing to the volume called <name>
+/// as daughter of the volume called <mother> (gspos). The relative matrix is
+/// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
+/// In case npar>0, create the volume to be positioned in mother, according
+/// its actual parameters (gsposp).
+///  NAME   Volume name
+///  NUMBER Copy number of the volume
+///  MOTHER Mother volume name
+///  X      X coord. of the volume in mother ref. sys.
+///  Y      Y coord. of the volume in mother ref. sys.
+///  Z      Z coord. of the volume in mother ref. sys.
+///  IROT   Rotation matrix number w.r.t. mother ref. sys.
+///  ISONLY ONLY/MANY flag
+
 void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
                        Double_t x, Double_t y, Double_t z, Int_t irot,
                        Bool_t isOnly, Float_t *upar, Int_t npar)
 {
-// Create a node called <name_nr> pointing to the volume called <name>
-// as daughter of the volume called <mother> (gspos). The relative matrix is
-// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
-// In case npar>0, create the volume to be positioned in mother, according
-// its actual parameters (gsposp).
-//  NAME   Volume name
-//  NUMBER Copy number of the volume
-//  MOTHER Mother volume name
-//  X      X coord. of the volume in mother ref. sys.
-//  Y      Y coord. of the volume in mother ref. sys.
-//  Z      Z coord. of the volume in mother ref. sys.
-//  IROT   Rotation matrix number w.r.t. mother ref. sys.
-//  ISONLY ONLY/MANY flag
    TGeoVolume *amother= 0;
    TGeoVolume *volume = 0;
 
@@ -707,24 +744,25 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a node called <name_nr> pointing to the volume called <name>
+/// as daughter of the volume called <mother> (gspos). The relative matrix is
+/// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
+/// In case npar>0, create the volume to be positioned in mother, according
+/// its actual parameters (gsposp).
+///  NAME   Volume name
+///  NUMBER Copy number of the volume
+///  MOTHER Mother volume name
+///  X      X coord. of the volume in mother ref. sys.
+///  Y      Y coord. of the volume in mother ref. sys.
+///  Z      Z coord. of the volume in mother ref. sys.
+///  IROT   Rotation matrix number w.r.t. mother ref. sys.
+///  ISONLY ONLY/MANY flag
+
 void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
                        Double_t x, Double_t y, Double_t z, Int_t irot,
                        Bool_t isOnly, Double_t *upar, Int_t npar)
 {
-// Create a node called <name_nr> pointing to the volume called <name>
-// as daughter of the volume called <mother> (gspos). The relative matrix is
-// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
-// In case npar>0, create the volume to be positioned in mother, according
-// its actual parameters (gsposp).
-//  NAME   Volume name
-//  NUMBER Copy number of the volume
-//  MOTHER Mother volume name
-//  X      X coord. of the volume in mother ref. sys.
-//  Y      Y coord. of the volume in mother ref. sys.
-//  Z      Z coord. of the volume in mother ref. sys.
-//  IROT   Rotation matrix number w.r.t. mother ref. sys.
-//  ISONLY ONLY/MANY flag
    TGeoVolume *amother= 0;
    TGeoVolume *volume = 0;
 
@@ -846,16 +884,17 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a volume in GEANT3 style.
+///  NAME   Volume name
+///  SHAPE  Volume type
+///  NMED   Tracking medium number
+///  NPAR   Number of shape parameters
+///  UPAR   Vector containing shape parameters
+
 TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
                                 Float_t *upar, Int_t npar)
 {
-// Create a volume in GEANT3 style.
-//  NAME   Volume name
-//  SHAPE  Volume type
-//  NMED   Tracking medium number
-//  NPAR   Number of shape parameters
-//  UPAR   Vector containing shape parameters
    Int_t i;
    TGeoVolume *volume = 0;
    TGeoMedium *medium = fGeometry->GetMedium(nmed);
@@ -930,16 +969,17 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a volume in GEANT3 style.
+///  NAME   Volume name
+///  SHAPE  Volume type
+///  NMED   Tracking medium number
+///  NPAR   Number of shape parameters
+///  UPAR   Vector containing shape parameters
+
 TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
                                 Double_t *upar, Int_t npar)
 {
-// Create a volume in GEANT3 style.
-//  NAME   Volume name
-//  SHAPE  Volume type
-//  NMED   Tracking medium number
-//  NPAR   Number of shape parameters
-//  UPAR   Vector containing shape parameters
    Int_t i;
    TGeoVolume *volume = 0;
    TGeoMedium *medium = fGeometry->GetMedium(nmed);

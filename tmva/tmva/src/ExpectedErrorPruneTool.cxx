@@ -29,7 +29,8 @@
 
 #include <map>
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::ExpectedErrorPruneTool::ExpectedErrorPruneTool() :
    IPruneTool(),
    fDeltaPruneStrength(0),
@@ -37,13 +38,15 @@ TMVA::ExpectedErrorPruneTool::ExpectedErrorPruneTool() :
    fLogger( new MsgLogger("ExpectedErrorPruneTool") )
 {}
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::ExpectedErrorPruneTool::~ExpectedErrorPruneTool()
 {
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::PruningInfo*
 TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
                                                     const IPruneTool::EventSample* validationSample,
@@ -138,10 +141,11 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// recursive pruning of nodes using the Expected Error Pruning (EEP)
+
 void TMVA::ExpectedErrorPruneTool::FindListOfNodes( DecisionTreeNode* node ) 
 {
-   // recursive pruning of nodes using the Expected Error Pruning (EEP)
    TMVA::DecisionTreeNode *l = (TMVA::DecisionTreeNode*)node->GetLeft();
    TMVA::DecisionTreeNode *r = (TMVA::DecisionTreeNode*)node->GetRight();
    if (node->GetNodeType() == 0 && !(node->IsTerminal())) { // check all internal nodes
@@ -154,11 +158,12 @@ void TMVA::ExpectedErrorPruneTool::FindListOfNodes( DecisionTreeNode* node )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the expected statistical error on the subtree below "node"
+/// which is used in the expected error pruning
+
 Double_t TMVA::ExpectedErrorPruneTool::GetSubTreeError( DecisionTreeNode* node ) const 
 {
-   // calculate the expected statistical error on the subtree below "node"
-   // which is used in the expected error pruning
    DecisionTreeNode *l = (DecisionTreeNode*)node->GetLeft();
    DecisionTreeNode *r = (DecisionTreeNode*)node->GetRight();
    if (node->GetNodeType() == 0 && !(node->IsTerminal())) {
@@ -173,17 +178,17 @@ Double_t TMVA::ExpectedErrorPruneTool::GetSubTreeError( DecisionTreeNode* node )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate an UPPER limit on the error made by the classification done
+/// by this node. If the S/S+B of the node is f, then according to the
+/// training sample, the error rate (fraction of misclassified events by
+/// this node) is (1-f)
+/// Now f has a statistical error according to the binomial distribution
+/// hence the error on f can be estimated (same error as the binomial error
+/// for efficency calculations ( sigma = sqrt(eff(1-eff)/nEvts ) )
+
 Double_t TMVA::ExpectedErrorPruneTool::GetNodeError( DecisionTreeNode *node ) const 
 {
-   // Calculate an UPPER limit on the error made by the classification done
-   // by this node. If the S/S+B of the node is f, then according to the
-   // training sample, the error rate (fraction of misclassified events by
-   // this node) is (1-f)
-   // Now f has a statistical error according to the binomial distribution
-   // hence the error on f can be estimated (same error as the binomial error
-   // for efficency calculations ( sigma = sqrt(eff(1-eff)/nEvts ) )
-
    Double_t errorRate = 0;
 
    Double_t nEvts = node->GetNEvents();

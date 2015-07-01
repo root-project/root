@@ -23,12 +23,12 @@
 
 ClassImp(TWin32Thread)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Win32 threads -- spawn new thread (like pthread_create).
+/// Win32 has a thread handle in addition to the thread ID.
+
 Int_t TWin32Thread::Run(TThread *th)
 {
-   // Win32 threads -- spawn new thread (like pthread_create).
-   // Win32 has a thread handle in addition to the thread ID.
-
    DWORD  dwThreadId;
    HANDLE hHandle = CreateThread(0, 0,
                                  (LPTHREAD_START_ROUTINE)&TThread::Function,
@@ -44,12 +44,12 @@ Int_t TWin32Thread::Run(TThread *th)
    return hHandle ? 0 : EINVAL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wait for specified thread execution (if any) to complete
+/// (like pthread_join).
+
 Int_t TWin32Thread::Join(TThread *th, void **ret)
 {
-   // Wait for specified thread execution (if any) to complete
-   // (like pthread_join).
-
    DWORD R = WaitForSingleObject((HANDLE)th->fHandle, INFINITE);
 
    if ( (R == WAIT_OBJECT_0) || (R == WAIT_ABANDONED) ) {
@@ -61,21 +61,21 @@ Int_t TWin32Thread::Join(TThread *th, void **ret)
    return EINVAL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exit the thread.
+
 Int_t TWin32Thread::Exit(void *ret)
 {
-   // Exit the thread.
-
    ExitThread(0);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is a somewhat dangerous function; it's not
+/// suggested to Stop() threads a lot.
+
 Int_t TWin32Thread::Kill(TThread *th)
 {
-   // This is a somewhat dangerous function; it's not
-   // suggested to Stop() threads a lot.
-
    if (TerminateThread((HANDLE)th->fHandle,0)) {
       th->fState = TThread::kCanceledState;
       return 0;
@@ -83,7 +83,8 @@ Int_t TWin32Thread::Kill(TThread *th)
    return EINVAL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TWin32Thread::CleanUpPush(void **main, void *free,void *arg)
 {
    if (!free) fprintf(stderr, "CleanUpPush ***ERROR*** Routine=0\n");
@@ -91,7 +92,8 @@ Int_t TWin32Thread::CleanUpPush(void **main, void *free,void *arg)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TWin32Thread::CleanUpPop(void **main,Int_t exe)
 {
    if (!*main) return 1;
@@ -102,7 +104,8 @@ Int_t TWin32Thread::CleanUpPop(void **main,Int_t exe)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TWin32Thread::CleanUp(void **main)
 {
    fprintf(stderr," CleanUp %lx\n",(ULong_t)*main);
@@ -110,15 +113,16 @@ Int_t TWin32Thread::CleanUp(void **main)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current thread's ID.
+
 Long_t TWin32Thread::SelfId()
 {
-   // Return the current thread's ID.
-
    return (Long_t)::GetCurrentThreadId();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TWin32Thread::SetCancelOff()
 {
    if (gDebug)
@@ -126,7 +130,8 @@ Int_t TWin32Thread::SetCancelOff()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TWin32Thread::SetCancelOn()
 {
    if (gDebug)
@@ -134,7 +139,8 @@ Int_t TWin32Thread::SetCancelOn()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TWin32Thread::SetCancelAsynchronous()
 {
    if (gDebug)
@@ -142,7 +148,8 @@ Int_t TWin32Thread::SetCancelAsynchronous()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TWin32Thread::SetCancelDeferred()
 {
    if (gDebug)
@@ -150,7 +157,8 @@ Int_t TWin32Thread::SetCancelDeferred()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TWin32Thread::CancelPoint()
 {
    if (gDebug)
@@ -162,7 +170,8 @@ Int_t TWin32Thread::CancelPoint()
 //   too different and often too bad. Temporary I invent my own bicycle.
 //                                                              V.Perev.
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TWin32ThreadCleanUp::TWin32ThreadCleanUp(void **main, void *routine, void *arg)
 {
    fNext = (TWin32ThreadCleanUp*)*main;

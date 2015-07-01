@@ -25,7 +25,8 @@
 #include "TGedPatternSelect.h"
 #include "TColor.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>The TSpider editor class</h2></center>
 Provides the graphical user interface to the spider plots.
@@ -54,11 +55,11 @@ enum ESpiderWid {
    kAvFillStyle
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+
 TSpiderEditor::TSpiderEditor(const TGWindow* /*p*/, Int_t /*width*/, Int_t /*height*/, UInt_t /*options*/, Pixel_t /*back*/)
 {
-   // Normal constructor.
-
    fPriority = 1;
    MakeTitle("Spider");
 
@@ -129,20 +130,20 @@ TSpiderEditor::TSpiderEditor(const TGWindow* /*p*/, Int_t /*width*/, Int_t /*hei
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of the TSpidereditor.
+
 TSpiderEditor::~TSpiderEditor()
 {
-   // Destructor of the TSpidereditor.
-
    delete fPolyLines;
    delete fSegment;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TSpiderEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fDisplayAverage->Connect("Toggled(Bool_t)", "TSpiderEditor", this, "DoDisplayAverage(Bool_t)");
    fSetNx->Connect("ReturnPressed()", "TSpiderEditor", this, "DoSetNx()");
    fSetNy->Connect("ReturnPressed()", "TSpiderEditor", this, "DoSetNy()");
@@ -164,11 +165,11 @@ void TSpiderEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make the Browse tab.
+
 void TSpiderEditor::MakeBrowse()
 {
-   // Make the Browse tab.
-
    fBrowse = CreateEditorTabSubFrame("Browse");
 
    TGHorizontalFrame *title1 = new TGHorizontalFrame(fBrowse);
@@ -253,11 +254,11 @@ void TSpiderEditor::MakeBrowse()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the used spider attributes.
+
 void TSpiderEditor::SetModel(TObject* obj)
 {
-   // Pick up the used spider attributes.
-
    if (!obj) return;
    fSpider = dynamic_cast<TSpider*>(obj);
    if (!fSpider) return;
@@ -296,11 +297,11 @@ void TSpiderEditor::SetModel(TObject* obj)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to add a variable.
+
 void TSpiderEditor::DoAddVar()
 {
-   // Slot to add a variable.
-
    if (fAvoidSignal) return;
 
    const char * var = fAddVar->GetText();
@@ -309,11 +310,11 @@ void TSpiderEditor::DoAddVar()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the average LineStyle.
+
 void TSpiderEditor::DoAvLineStyle(Int_t a)
 {
-   // Slot to set the average LineStyle.
-
    if (fAvoidSignal) return;
 
    fSpider->SetAverageLineStyle(a);
@@ -321,11 +322,11 @@ void TSpiderEditor::DoAvLineStyle(Int_t a)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the average LineWidth.
+
 void TSpiderEditor::DoAvLineWidth(Int_t a)
 {
-   // Slot to set the average LineWidth.
-
    if (fAvoidSignal) return;
 
    fSpider->SetAverageLineWidth(a);
@@ -333,11 +334,11 @@ void TSpiderEditor::DoAvLineWidth(Int_t a)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the average LineColor.
+
 void TSpiderEditor::DoAvLineColor(Pixel_t a)
 {
-   // Slot to set the average LineColor.
-
    if (fAvoidSignal) return;
 
    fSpider->SetAverageLineColor(TColor::GetColor(a));
@@ -345,11 +346,11 @@ void TSpiderEditor::DoAvLineColor(Pixel_t a)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the average FillColor.
+
 void TSpiderEditor::DoAvFillColor(Pixel_t a)
 {
-   // Slot to set the average FillColor.
-
    if (fAvoidSignal) return;
 
    fSpider->SetAverageFillColor(TColor::GetColor(a));
@@ -357,11 +358,11 @@ void TSpiderEditor::DoAvFillColor(Pixel_t a)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the average FillStyle.
+
 void TSpiderEditor::DoAvFillPattern(Style_t a)
 {
-   // Slot to set the average FillStyle.
-
    if (fAvoidSignal) return;
 
    fSpider->SetAverageFillStyle(a);
@@ -369,11 +370,11 @@ void TSpiderEditor::DoAvFillPattern(Style_t a)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to delete a variable.
+
 void TSpiderEditor::DoDeleteVar()
 {
-   // Slot to delete a variable.
-
    if (fAvoidSignal) return;
 
    const char * var = fDeleteVar->GetText();
@@ -382,11 +383,11 @@ void TSpiderEditor::DoDeleteVar()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot Connected to the average display.
+
 void TSpiderEditor::DoDisplayAverage(Bool_t av)
 {
-   // Slot Connected to the average display.
-
    if (fAvoidSignal) return;
 
    fSpider->SetDisplayAverage(av);
@@ -394,11 +395,11 @@ void TSpiderEditor::DoDisplayAverage(Bool_t av)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to select an entry by number.
+
 void  TSpiderEditor::DoGotoEntry()
 {
-   // Slot to select an entry by number.
-
    if (fAvoidSignal) return;
    Long64_t ev = (Long64_t)fGotoEntry->GetNumber();
    fSpider->GotoEntry(ev);
@@ -406,77 +407,77 @@ void  TSpiderEditor::DoGotoEntry()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to Go to next entries.
+
 void  TSpiderEditor::DoGotoNext()
 {
-   // Slot to Go to next entries.
-
    if (fAvoidSignal) return;
    fSpider->GotoNext();
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to go to previous entries.
+
 void  TSpiderEditor::DoGotoPrevious()
 {
-   // Slot to go to previous entries.
-
    if (fAvoidSignal) return;
    fSpider->GotoPrevious();
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to go to next entry.
+
 void  TSpiderEditor::DoGotoFollowing()
 {
-   // Slot to go to next entry.
-
    if (fAvoidSignal) return;
    fSpider->GotoFollowing();
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to go to last entry.
+
 void  TSpiderEditor::DoGotoPreceding()
 {
-   // Slot to go to last entry.
-
    if (fAvoidSignal) return;
    fSpider->GotoPreceding();
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the nx setting.
+
 void  TSpiderEditor::DoSetNx()
 {
-   // Slot connected to the nx setting.
-
    if (fAvoidSignal) return;
    UInt_t nx = (UInt_t)fSetNx->GetNumber();
    fSpider->SetNx(nx);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the nx setting.
+
 void  TSpiderEditor::DoSetNy()
 {
-   // Slot connected to the nx setting.
-
    if (fAvoidSignal) return;
    UInt_t ny = (UInt_t)fSetNy->GetNumber();
    fSpider->SetNy(ny);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the plot type.
+
 void  TSpiderEditor::DoSetPlotType()
 {
-   // Slot to set the plot type.
-
    if(fSegment->GetState() == kButtonDown) fSpider->SetSegmentDisplay(kTRUE);
    else fSpider->SetSegmentDisplay(kFALSE);
    Update();

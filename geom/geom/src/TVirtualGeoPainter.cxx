@@ -24,30 +24,31 @@ TVirtualGeoPainter  *TVirtualGeoPainter::fgGeoPainter = 0;
 
 ClassImp(TVirtualGeoPainter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Geometry painter default constructor*-*-*-*-*-*-*-*-*
+///*-*                  ====================================
+
 TVirtualGeoPainter::TVirtualGeoPainter(TGeoManager *)
 {
-//*-*-*-*-*-*-*-*-*-*-*Geometry painter default constructor*-*-*-*-*-*-*-*-*
-//*-*                  ====================================
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Geometry painter default destructor*-*-*-*-*-*-*-*-*
+///*-*                  ===================================
+
 TVirtualGeoPainter::~TVirtualGeoPainter()
 {
-//*-*-*-*-*-*-*-*-*-*-*Geometry painter default destructor*-*-*-*-*-*-*-*-*
-//*-*                  ===================================
-
    fgGeoPainter = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning a pointer to the geometry painter.
+/// The painter will paint objects from the specified geometry.
+/// If the geometry painter does not exist a default painter is created.
+
 TVirtualGeoPainter *TVirtualGeoPainter::GeoPainter()
 {
-   // Static function returning a pointer to the geometry painter.
-   // The painter will paint objects from the specified geometry.
-   // If the geometry painter does not exist a default painter is created.
-
    // if no painter set yet, create a default painter via the PluginManager
    if (!fgGeoPainter) {
       TPluginHandler *h;
@@ -60,10 +61,10 @@ TVirtualGeoPainter *TVirtualGeoPainter::GeoPainter()
    return fgGeoPainter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set an alternative histogram painter.
+
 void TVirtualGeoPainter::SetPainter(const TVirtualGeoPainter *painter)
 {
-   // Static function to set an alternative histogram painter.
-
    fgGeoPainter = (TVirtualGeoPainter*)painter;
 }

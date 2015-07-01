@@ -45,10 +45,11 @@
 // Tracing utilities
 #include "XrdProofdTrace.h"
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decrease active session counters on worker w
+
 static int ExportCpCmd(const char *k, XpdAdminCpCmd *cc, void *s)
 {
-   // Decrease active session counters on worker w
    XPDLOC(PMGR, "ExportCpCmd")
 
    XrdOucString *ccs = (XrdOucString *)s;
@@ -66,13 +67,13 @@ static int ExportCpCmd(const char *k, XpdAdminCpCmd *cc, void *s)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 XrdProofdAdmin::XrdProofdAdmin(XrdProofdManager *mgr,
                                XrdProtocol_Config *pi, XrdSysError *e)
                   : XrdProofdConfig(pi->ConfigFN, e)
 {
-   // Constructor
-
    fMgr = mgr;
    fExportPaths.clear();
    // Map of default copy commands supported / allowed, keyed by the protocol
@@ -93,19 +94,20 @@ XrdProofdAdmin::XrdProofdAdmin(XrdProofdManager *mgr,
    RegisterDirectives();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register directives for configuration
+
 void XrdProofdAdmin::RegisterDirectives()
 {
-   // Register directives for configuration
-
    Register("exportpath", new XrdProofdDirective("exportpath", this, &DoDirectiveClass));
    Register("cpcmd", new XrdProofdDirective("cpcmd", this, &DoDirectiveClass));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process admin request
+
 int XrdProofdAdmin::Process(XrdProofdProtocol *p, int type)
 {
-   // Process admin request
    XPDLOC(ALL, "Admin::Process")
 
    int rc = 0;
@@ -163,11 +165,12 @@ int XrdProofdAdmin::Process(XrdProofdProtocol *p, int type)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run configuration and parse the entered config directives.
+/// Return 0 on success, -1 on error
+
 int XrdProofdAdmin::Config(bool rcf)
 {
-   // Run configuration and parse the entered config directives.
-   // Return 0 on success, -1 on error
    XPDLOC(ALL, "Admin::Config")
 
    // Run first the configurator
@@ -193,11 +196,12 @@ int XrdProofdAdmin::Config(bool rcf)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the priorities of the active sessions.
+
 int XrdProofdAdmin::DoDirective(XrdProofdDirective *d,
                                     char *val, XrdOucStream *cfg, bool rcf)
 {
-   // Update the priorities of the active sessions.
    XPDLOC(SMGR, "Admin::DoDirective")
 
    if (!d)
@@ -213,12 +217,12 @@ int XrdProofdAdmin::DoDirective(XrdProofdDirective *d,
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'exportpath' directives
+/// eg: xpd.exportpath /tmp/data /data2/data
+
 int XrdProofdAdmin::DoDirectiveExportPath(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'exportpath' directives
-   // eg: xpd.exportpath /tmp/data /data2/data
-
    XPDLOC(SMGR, "Admin::DoDirectiveExportPath")
 
    if (!val || !cfg)
@@ -240,12 +244,12 @@ int XrdProofdAdmin::DoDirectiveExportPath(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'cpcmd' directives
+/// eg: xpd.cpcmd alien aliencp  fmt:"%s %s" put:0
+
 int XrdProofdAdmin::DoDirectiveCpCmd(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'cpcmd' directives
-   // eg: xpd.cpcmd alien aliencp  fmt:"%s %s" put:0
-
    XPDLOC(SMGR, "Admin::DoDirectiveCpCmd")
 
    if (!val || !cfg)
@@ -301,11 +305,12 @@ int XrdProofdAdmin::DoDirectiveCpCmd(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for the URL to the MSS attached to the cluster.
+/// The reply contains also the namespace, i.e. proto://host:port//namespace
+
 int XrdProofdAdmin::QueryMssUrl(XrdProofdProtocol *p)
 {
-   // Handle request for the URL to the MSS attached to the cluster.
-   // The reply contains also the namespace, i.e. proto://host:port//namespace
    XPDLOC(ALL, "Admin::QueryMssUrl")
 
    int rc = 0;
@@ -324,10 +329,11 @@ int XrdProofdAdmin::QueryMssUrl(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for list of ROOT versions
+
 int XrdProofdAdmin::QueryROOTVersions(XrdProofdProtocol *p)
 {
-   // Handle request for list of ROOT versions
    XPDLOC(ALL, "Admin::QueryROOTVersions")
 
    int rc = 0;
@@ -344,10 +350,11 @@ int XrdProofdAdmin::QueryROOTVersions(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for changing the default ROOT version
+
 int XrdProofdAdmin::SetROOTVersion(XrdProofdProtocol *p)
 {
-   // Handle request for changing the default ROOT version
    XPDLOC(ALL, "Admin::SetROOTVersion")
 
    int rc = 0;
@@ -451,10 +458,11 @@ int XrdProofdAdmin::SetROOTVersion(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for getting the list of potential workers
+
 int XrdProofdAdmin::QueryWorkers(XrdProofdProtocol *p)
 {
-   // Handle request for getting the list of potential workers
    XPDLOC(ALL, "Admin::QueryWorkers")
 
    int rc = 0;
@@ -476,10 +484,11 @@ int XrdProofdAdmin::QueryWorkers(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for getting the best set of workers
+
 int XrdProofdAdmin::GetWorkers(XrdProofdProtocol *p)
 {
-   // Handle request for getting the best set of workers
    XPDLOC(ALL, "Admin::GetWorkers")
 
    int rc = 0;
@@ -531,10 +540,11 @@ int XrdProofdAdmin::GetWorkers(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for setting group properties
+
 int XrdProofdAdmin::SetGroupProperties(XrdProofdProtocol *p)
 {
-   // Handle request for setting group properties
    XPDLOC(ALL, "Admin::SetGroupProperties")
 
    int rc = 1;
@@ -585,10 +595,11 @@ int XrdProofdAdmin::SetGroupProperties(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for sending a message to a user
+
 int XrdProofdAdmin::SendMsgToUser(XrdProofdProtocol *p)
 {
-   // Handle request for sending a message to a user
    XPDLOC(ALL, "Admin::SendMsgToUser")
 
    int rc = 0;
@@ -672,10 +683,11 @@ int XrdProofdAdmin::SendMsgToUser(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for list of sessions
+
 int XrdProofdAdmin::QuerySessions(XrdProofdProtocol *p)
 {
-   // Handle request for list of sessions
    XPDLOC(ALL, "Admin::QuerySessions")
 
    int rc = 0;
@@ -701,10 +713,11 @@ int XrdProofdAdmin::QuerySessions(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for log paths
+
 int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
 {
-   // Handle request for log paths
    XPDLOC(ALL, "Admin::QueryLogPaths")
 
    int rc = 0;
@@ -917,10 +930,11 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request of
+
 int XrdProofdAdmin::CleanupSessions(XrdProofdProtocol *p)
 {
-   // Handle request of
    XPDLOC(ALL, "Admin::CleanupSessions")
 
    int rc = 0;
@@ -1036,10 +1050,11 @@ int XrdProofdAdmin::CleanupSessions(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for setting the session alias
+
 int XrdProofdAdmin::SetSessionAlias(XrdProofdProtocol *p)
 {
-   // Handle request for setting the session alias
    XPDLOC(ALL, "Admin::SetSessionAlias")
 
    int rc = 0;
@@ -1077,10 +1092,11 @@ int XrdProofdAdmin::SetSessionAlias(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for setting the session tag
+
 int XrdProofdAdmin::SetSessionTag(XrdProofdProtocol *p)
 {
-   // Handle request for setting the session tag
    XPDLOC(ALL, "Admin::SetSessionTag")
 
    int rc = 0;
@@ -1117,10 +1133,11 @@ int XrdProofdAdmin::SetSessionTag(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for releasing a worker
+
 int XrdProofdAdmin::ReleaseWorker(XrdProofdProtocol *p)
 {
-   // Handle request for releasing a worker
    XPDLOC(ALL, "Admin::ReleaseWorker")
 
    int rc = 0;
@@ -1155,12 +1172,12 @@ int XrdProofdAdmin::ReleaseWorker(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check is 's' contains any of the forbidden chars '(){};'
+/// Return 0 if OK (no forbidden chars), -1 in not OK
+
 int XrdProofdAdmin::CheckForbiddenChars(const char *s)
 {
-   // Check is 's' contains any of the forbidden chars '(){};'
-   // Return 0 if OK (no forbidden chars), -1 in not OK
-
    int len = 0;
    if (!s || (len = strlen(s)) <= 0) return 0;
 
@@ -1175,11 +1192,11 @@ int XrdProofdAdmin::CheckForbiddenChars(const char *s)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request of cleaning parts of the sandbox
+
 int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
 {
-   // Handle request of cleaning parts of the sandbox
-
    XPDLOC(ALL, "Admin::Exec")
 
    // Commands; must be synchronized with EAdminExecType in XProofProtocol.h
@@ -1473,16 +1490,16 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Low-level execution handler. The commands must be executed in user space.
+/// We do that by forking and logging as user in the forked instance. The
+/// parent will just send over te messages received from the user-child via
+/// the pipe.
+/// Return 0 on success, -1 on error
+
 int XrdProofdAdmin::ExecCmd(XrdProofdProtocol *p, XrdProofdResponse *r,
                          int action, const char *cmd, XrdOucString &emsg)
 {
-   // Low-level execution handler. The commands must be executed in user space.
-   // We do that by forking and logging as user in the forked instance. The
-   // parent will just send over te messages received from the user-child via
-   // the pipe.
-   // Return 0 on success, -1 on error
-
    XPDLOC(ALL, "Admin::ExecCmd")
 
    int rc = 0;
@@ -1699,13 +1716,13 @@ int XrdProofdAdmin::ExecCmd(XrdProofdProtocol *p, XrdProofdResponse *r,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for sending a file
+
 int XrdProofdAdmin::CheckPath(bool superuser, const char *sbdir,
                               XrdOucString &fullpath, int check, bool &sandbox,
                               struct stat *st, XrdOucString &emsg)
 {
-   // Handle request for sending a file
-
    if (!sbdir || strlen(sbdir) <= 0) {
       emsg = "CheckPath: sandbox dir undefined!";
       return -1;
@@ -1763,11 +1780,11 @@ int XrdProofdAdmin::CheckPath(bool superuser, const char *sbdir,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for sending a file
+
 int XrdProofdAdmin::GetFile(XrdProofdProtocol *p)
 {
-   // Handle request for sending a file
-
    XPDLOC(ALL, "Admin::GetFile")
 
    int rc = 0;
@@ -1974,11 +1991,11 @@ int XrdProofdAdmin::GetFile(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for recieving a file
+
 int XrdProofdAdmin::PutFile(XrdProofdProtocol *p)
 {
-   // Handle request for recieving a file
-
    XPDLOC(ALL, "Admin::PutFile")
 
    int rc = 0;
@@ -2222,11 +2239,11 @@ int XrdProofdAdmin::PutFile(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for copy files from / to the sandbox
+
 int XrdProofdAdmin::CpFile(XrdProofdProtocol *p)
 {
-   // Handle request for copy files from / to the sandbox
-
    XPDLOC(ALL, "Admin::CpFile")
 
    int rc = 0;

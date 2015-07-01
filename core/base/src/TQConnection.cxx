@@ -89,19 +89,19 @@ public:
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the method invocation environment. Necessary input
+/// information: the class, full method name with prototype
+/// string of the form: method(char*,int,float).
+/// To initialize class method with default arguments, method
+/// string with default parameters should be of the form:
+/// method(=\"ABC\",1234,3.14) (!! parameter string should
+/// consists of '=').
+/// To execute the method call TQSlot::ExecuteMethod(object,...).
+
 TQSlot::TQSlot(TClass *cl, const char *method_name,
                const char *funcname) : TObject(), TRefCnt()
 {
-   // Create the method invocation environment. Necessary input
-   // information: the class, full method name with prototype
-   // string of the form: method(char*,int,float).
-   // To initialize class method with default arguments, method
-   // string with default parameters should be of the form:
-   // method(=\"ABC\",1234,3.14) (!! parameter string should
-   // consists of '=').
-   // To execute the method call TQSlot::ExecuteMethod(object,...).
-
    fFunc      = 0;
    fClass     = 0;
    fOffset    = 0;
@@ -161,20 +161,20 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
    delete [] method;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the method invocation environment. Necessary input
+/// information: the name of class (could be interpreted class),
+/// full method name with prototype or parameter string
+/// of the form: method(char*,int,float).
+/// To initialize class method with default arguments, method
+/// string with default parameters  should be of the form:
+/// method(=\"ABC\",1234,3.14) (!! parameter string should
+/// consists of '=').
+/// To execute the method call TQSlot::ExecuteMethod(object,...).
+
 TQSlot::TQSlot(const char *class_name, const char *funcname) :
    TObject(), TRefCnt()
 {
-   // Create the method invocation environment. Necessary input
-   // information: the name of class (could be interpreted class),
-   // full method name with prototype or parameter string
-   // of the form: method(char*,int,float).
-   // To initialize class method with default arguments, method
-   // string with default parameters  should be of the form:
-   // method(=\"ABC\",1234,3.14) (!! parameter string should
-   // consists of '=').
-   // To execute the method call TQSlot::ExecuteMethod(object,...).
-
    fFunc      = 0;
    fClass     = 0;
    fOffset    = 0;
@@ -228,11 +228,11 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    delete [] method;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TQSlot dtor.
+
 TQSlot::~TQSlot()
 {
-   // TQSlot dtor.
-
    // don't delete executing environment of a slot that is being executed
    if (!fExecuting) {
       gCling->CallFunc_Delete(fFunc);
@@ -240,22 +240,22 @@ TQSlot::~TQSlot()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ExecuteMethod the method (with preset arguments) for
+/// the specified object.
+
 inline void TQSlot::ExecuteMethod(void *object)
 {
-   // ExecuteMethod the method (with preset arguments) for
-   // the specified object.
-
    ExecuteMethod(object, (Long_t*)nullptr, 0);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the method is valid and the number of arguments is
+/// acceptable.
+
 inline Bool_t TQSlot::CheckSlot(Int_t nargs) const
 {
-   // Return true if the method is valid and the number of arguments is
-   // acceptable.
-
    if (!fMethod) {
       Error("ExecuteMethod", "method %s not found,"
             "\n(note: interpreted methods are not supported with varargs)",
@@ -274,76 +274,76 @@ inline Bool_t TQSlot::CheckSlot(Int_t nargs) const
    return kTRUE;
 }
 
-//______________________________________________________________________________
-CallFunc_t *TQSlot::StartExecuting() {
-   // Mark the slot as executing.
+////////////////////////////////////////////////////////////////////////////////
+/// Mark the slot as executing.
 
+CallFunc_t *TQSlot::StartExecuting() {
    fExecuting++;
    return fFunc;
 }
 
-//______________________________________________________________________________
-void TQSlot::EndExecuting() {
-   // Mark the slot as no longer executing and cleanup if need be.
+////////////////////////////////////////////////////////////////////////////////
+/// Mark the slot as no longer executing and cleanup if need be.
 
+void TQSlot::EndExecuting() {
    fExecuting--;
    if (!TestBit(kNotDeleted) && !fExecuting)
       gCling->CallFunc_Delete(fFunc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ExecuteMethod the method for the specified object and
+/// with single argument value.
+
 inline void TQSlot::ExecuteMethod(void *object, Long_t param)
 {
-   // ExecuteMethod the method for the specified object and
-   // with single argument value.
-
    ExecuteMethod(object, &param, 1);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ExecuteMethod the method for the specified object and
+/// with single argument value.
+
 inline void TQSlot::ExecuteMethod(void *object, Long64_t param)
 {
-   // ExecuteMethod the method for the specified object and
-   // with single argument value.
-
    Long_t *arg = reinterpret_cast<Long_t *>(&param);
    ExecuteMethod(object, arg, 1);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ExecuteMethod the method for the specified object and
+/// with single argument value.
+
 inline void TQSlot::ExecuteMethod(void *object, Double_t param)
 {
-   // ExecuteMethod the method for the specified object and
-   // with single argument value.
-
    Long_t *arg = reinterpret_cast<Long_t *>(&param);
    ExecuteMethod(object, arg, 1);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ExecuteMethod the method for the specified object and text param.
+
 inline void TQSlot::ExecuteMethod(void *object, const char *param)
 {
-   // ExecuteMethod the method for the specified object and text param.
-
    Long_t arg = reinterpret_cast<Long_t>(param);
    ExecuteMethod(object, &arg, 1);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ExecuteMethod the method for the specified object and with
+/// several argument values.
+/// ParamArr is an array containing the function argument values.
+/// If nparam = -1 then paramArr must contain values for all function
+/// arguments, otherwise Nargs-NargsOpt <= nparam <= Nargs, where
+/// Nargs is the number of all arguments and NargsOpt is the number
+/// of default arguments.
+
 inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam)
 {
-   // ExecuteMethod the method for the specified object and with
-   // several argument values.
-   // ParamArr is an array containing the function argument values.
-   // If nparam = -1 then paramArr must contain values for all function
-   // arguments, otherwise Nargs-NargsOpt <= nparam <= Nargs, where
-   // Nargs is the number of all arguments and NargsOpt is the number
-   // of default arguments.
-
    void *address = 0;
    R__LOCKGUARD2(gInterpreterMutex);
    if (paramArr) gCling->CallFunc_SetArgArray(fFunc, paramArr, nparam);
@@ -355,11 +355,11 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam)
       gCling->CallFunc_Delete(fFunc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info about slot.
+
 void TQSlot::Print(Option_t *) const
 {
-   // Print info about slot.
-
    std::cout << IsA()->GetName() << "\t" << GetName() << "\t"
              << "Number of Connections = " << References() << std::endl;
 }
@@ -382,11 +382,11 @@ public:
    void     Free(TQSlot *slot);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create new slot or return already existing one.
+
 TQSlot *TQSlotPool::New(const char *class_name, const char *funcname)
 {
-   // Create new slot or return already existing one.
-
    TString name = class_name;
    name += "::";
    name += funcname;
@@ -401,11 +401,11 @@ TQSlot *TQSlotPool::New(const char *class_name, const char *funcname)
    return slot;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create new slot or return already existing one.
+
 TQSlot *TQSlotPool::New(TClass *cl, const char *method, const char *func)
 {
-   // Create new slot or return already existing one.
-
    TString name;
 
    if (cl) {
@@ -427,11 +427,11 @@ TQSlot *TQSlotPool::New(TClass *cl, const char *method, const char *func)
    return slot;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete slot if there is no reference to it.
+
 void TQSlotPool::Free(TQSlot *slot)
 {
-   // Delete slot if there is no reference to it.
-
    slot->RemoveReference();  // decrease references to slot
 
    if (slot->References() <= 0) {
@@ -444,24 +444,24 @@ static TQSlotPool gSlotPool;  // global pool of slots
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TQConnection::TQConnection() : TList(), TQObject()
 {
-   // Default constructor.
-
    fReceiver = 0;
    fSlot     = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TQConnection ctor.
+///    cl != 0  - connection to object == receiver of class == cl
+///               and method == method_name
+///    cl == 0  - connection to function with name == method_name
+
 TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
    : TList(), TQObject()
 {
-   // TQConnection ctor.
-   //    cl != 0  - connection to object == receiver of class == cl
-   //               and method == method_name
-   //    cl == 0  - connection to function with name == method_name
-
    const char *funcname = 0;
    fReceiver = receiver;      // fReceiver is pointer to receiver
 
@@ -475,38 +475,38 @@ TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
    fSlot = gSlotPool.New(cl, method_name, funcname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TQConnection ctor.
+///    Creates connection to method of class specified by name,
+///    it could be interpreted class and with method == funcname.
+
 TQConnection::TQConnection(const char *class_name, void *receiver,
                            const char *funcname) : TList(), TQObject()
 {
-   // TQConnection ctor.
-   //    Creates connection to method of class specified by name,
-   //    it could be interpreted class and with method == funcname.
-
    fClassName = class_name;
    fSlot = gSlotPool.New(class_name, funcname);  // new slot-method
    fReceiver = receiver;      // fReceiver is pointer to receiver
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor. Ignore connections to this TQConnections
+
 TQConnection::TQConnection(const TQConnection &con): TList(), TQObject()
 {
-   // Copy constructor. Ignore connections to this TQConnections
-
    fClassName = con.fClassName;
    fSlot = con.fSlot;
    fSlot->AddReference();
    fReceiver = con.fReceiver;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TQConnection dtor.
+///    - remove this connection from all signal lists
+///    - we do not delete fSlot if it has other connections,
+///      TQSlot::fCounter > 0 .
+
 TQConnection::~TQConnection()
 {
-   // TQConnection dtor.
-   //    - remove this connection from all signal lists
-   //    - we do not delete fSlot if it has other connections,
-   //      TQSlot::fCounter > 0 .
-
    TIter next(this);
    TList *list;
 
@@ -520,48 +520,48 @@ TQConnection::~TQConnection()
    gSlotPool.Free(fSlot);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns name of connection (aka name of slot)
+
 const char *TQConnection::GetName() const
 {
-   // Returns name of connection (aka name of slot)
-
    return fSlot->GetName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Signal Destroyed tells that connection is destroyed.
+
 void TQConnection::Destroyed()
 {
-   // Signal Destroyed tells that connection is destroyed.
-
    MakeZombie();
    Emit("Destroyed()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List TQConnection full method name and list all signals
+/// connected to this connection.
+
 void TQConnection::ls(Option_t *option) const
 {
-   // List TQConnection full method name and list all signals
-   // connected to this connection.
-
    std::cout << "\t" <<  IsA()->GetName() << "\t" << GetName() << std::endl;
    ((TQConnection *)this)->R__FOR_EACH(TList, ls)(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print TQConnection full method name and print all
+/// signals connected to this connection.
+
 void TQConnection::PrintCollectionHeader(Option_t *) const
 {
-   // Print TQConnection full method name and print all
-   // signals connected to this connection.
-
    TROOT::IndentLevel();
    std::cout << IsA()->GetName() << "\t" << fReceiver << "\t" << GetName() << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply slot-method to the fReceiver object without arguments.
+
 void TQConnection::ExecuteMethod()
 {
-   // Apply slot-method to the fReceiver object without arguments.
-
    // This connection might be deleted in result of the method execution
    // (for example in case of a Disconnect).  Hence we do not assume
    // the object is still valid on return.
@@ -570,12 +570,12 @@ void TQConnection::ExecuteMethod()
    if (s->References() <= 0) delete s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply slot-method to the fReceiver object with
+/// single argument value.
+
 void TQConnection::ExecuteMethod(Long_t param)
 {
-   // Apply slot-method to the fReceiver object with
-   // single argument value.
-
    // This connection might be deleted in result of the method execution
    // (for example in case of a Disconnect).  Hence we do not assume
    // the object is still valid on return.
@@ -584,12 +584,12 @@ void TQConnection::ExecuteMethod(Long_t param)
    if (s->References() <= 0) delete s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply slot-method to the fReceiver object with
+/// single argument value.
+
 void TQConnection::ExecuteMethod(Long64_t param)
 {
-   // Apply slot-method to the fReceiver object with
-   // single argument value.
-
    // This connection might be deleted in result of the method execution
    // (for example in case of a Disconnect).  Hence we do not assume
    // the object is still valid on return.
@@ -598,12 +598,12 @@ void TQConnection::ExecuteMethod(Long64_t param)
    if (s->References() <= 0) delete s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply slot-method to the fReceiver object with
+/// single argument value.
+
 void TQConnection::ExecuteMethod(Double_t param)
 {
-   // Apply slot-method to the fReceiver object with
-   // single argument value.
-
    // This connection might be deleted in result of the method execution
    // (for example in case of a Disconnect).  Hence we do not assume
    // the object is still valid on return.
@@ -612,12 +612,12 @@ void TQConnection::ExecuteMethod(Double_t param)
    if (s->References() <= 0) delete s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply slot-method to the fReceiver object with variable
+/// number of argument values.
+
 void TQConnection::ExecuteMethod(Long_t *params, Int_t nparam)
 {
-   // Apply slot-method to the fReceiver object with variable
-   // number of argument values.
-
    // This connection might be deleted in result of the method execution
    // (for example in case of a Disconnect).  Hence we do not assume
    // the object is still valid on return.
@@ -626,12 +626,12 @@ void TQConnection::ExecuteMethod(Long_t *params, Int_t nparam)
    if (s->References() <= 0) delete s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply slot-method to the fReceiver object and
+/// with string parameter.
+
 void TQConnection::ExecuteMethod(const char *param)
 {
-   // Apply slot-method to the fReceiver object and
-   // with string parameter.
-
    // This connection might be deleted in result of the method execution
    // (for example in case of a Disconnect).  Hence we do not assume
    // the object is still valid on return.
@@ -640,34 +640,34 @@ void TQConnection::ExecuteMethod(const char *param)
    if (s->References() <= 0) delete s;
 }
 
-//______________________________________________________________________________
-Bool_t TQConnection::CheckSlot(Int_t nargs) const {
-   // Return true if the underlying method is value and the number of argument
-   // is compatible.
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the underlying method is value and the number of argument
+/// is compatible.
 
+Bool_t TQConnection::CheckSlot(Int_t nargs) const {
    return fSlot->CheckSlot(nargs);
 }
 
-//______________________________________________________________________________
-void *TQConnection::GetSlotAddress() const {
-   // Return the object address to be passed to the function.
+////////////////////////////////////////////////////////////////////////////////
+/// Return the object address to be passed to the function.
 
+void *TQConnection::GetSlotAddress() const {
    if (fReceiver) return (void *)((Long_t)fReceiver + fSlot->GetOffset());
    else return nullptr;
 }
 
-//______________________________________________________________________________
-CallFunc_t *TQConnection::LockSlot() const {
-   // Lock the interpreter and mark the slot as executing.
+////////////////////////////////////////////////////////////////////////////////
+/// Lock the interpreter and mark the slot as executing.
 
+CallFunc_t *TQConnection::LockSlot() const {
    if (gInterpreterMutex) gInterpreterMutex->Lock();
    return fSlot->StartExecuting();
 }
 
-//______________________________________________________________________________
-void TQConnection::UnLockSlot(TQSlot *s) const {
-   // Unlock the interpreter and mark the slot as no longer executing.
+////////////////////////////////////////////////////////////////////////////////
+/// Unlock the interpreter and mark the slot as no longer executing.
 
+void TQConnection::UnLockSlot(TQSlot *s) const {
    s->EndExecuting();
    if (s->References() <= 0) delete s;
    if (gInterpreterMutex) gInterpreterMutex->UnLock();

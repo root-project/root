@@ -8,7 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 BEGIN_HTML
 <p>
@@ -882,7 +883,8 @@ namespace HistFactory{
 
   }
 
-  //_____________________________________________________________
+  //////////////////////////////////////////////////////////////////////////////
+
   void HistoToWorkspaceFactoryFast::EditSyst(RooWorkspace* proto, const char* pdfNameChar, 
 					     map<string,double> gammaSyst, 
 					     map<string,double> uniformSyst, 

@@ -44,11 +44,11 @@ ClassImp(TSelectorDraw)
 
 const Int_t kCustomHistogram = BIT(17);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default selector constructor.
+
 TSelectorDraw::TSelectorDraw()
 {
-   // Default selector constructor.
-
    fTree           = 0;
    fW              = 0;
    fValSize        = 4;
@@ -83,11 +83,11 @@ TSelectorDraw::TSelectorDraw()
    fTreeElistArray  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Selector destructor.
+
 TSelectorDraw::~TSelectorDraw()
 {
-   // Selector destructor.
-
    ClearFormula();
    delete [] fVar;
    if (fVal) {
@@ -102,11 +102,11 @@ TSelectorDraw::~TSelectorDraw()
    if (fW)     delete [] fW;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called everytime a loop on the tree(s) starts.
+
 void TSelectorDraw::Begin(TTree *tree)
 {
-   // Called everytime a loop on the tree(s) starts.
-
    SetStatus(0);
    ResetAbort();
    ResetBit(kCustomHistogram);
@@ -917,11 +917,11 @@ void TSelectorDraw::Begin(TTree *tree)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete internal buffers.
+
 void TSelectorDraw::ClearFormula()
 {
-   // Delete internal buffers.
-
    ResetBit(kWarn);
    for (Int_t i = 0; i < fValSize; ++i) {
       delete fVar[i];
@@ -932,26 +932,26 @@ void TSelectorDraw::ClearFormula()
    fMultiplicity = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compile input variables and selection expression.
+///
+///  varexp is an expression of the general form e1:e2:e3
+///    where e1,etc is a formula referencing a combination of the columns
+///  Example:
+///     varexp = x  simplest case: draw a 1-Dim distribution of column named x
+///            = sqrt(x)         : draw distribution of sqrt(x)
+///            = x*y/z
+///            = y:sqrt(x) 2-Dim dsitribution of y versus sqrt(x)
+///
+///  selection is an expression with a combination of the columns
+///  Example:
+///      selection = "x<y && sqrt(z)>3.2"
+///       in a selection all the C++ operators are authorized
+///
+///  Return kFALSE if any of the variable is not compilable.
+
 Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
 {
-   // Compile input variables and selection expression.
-   //
-   //  varexp is an expression of the general form e1:e2:e3
-   //    where e1,etc is a formula referencing a combination of the columns
-   //  Example:
-   //     varexp = x  simplest case: draw a 1-Dim distribution of column named x
-   //            = sqrt(x)         : draw distribution of sqrt(x)
-   //            = x*y/z
-   //            = y:sqrt(x) 2-Dim dsitribution of y versus sqrt(x)
-   //
-   //  selection is an expression with a combination of the columns
-   //  Example:
-   //      selection = "x<y && sqrt(z)>3.2"
-   //       in a selection all the C++ operators are authorized
-   //
-   //  Return kFALSE if any of the variable is not compilable.
-
    Int_t i, nch, ncols;
 
    // Compile selection expression if there is one
@@ -1017,48 +1017,48 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the last values corresponding to the i-th component
+/// of the formula being processed (where the component are ':' separated).
+/// The actual number of entries is:
+///     GetSelectedRows() % tree->GetEstimate()
+/// Note GetSelectedRows currently returns the actual number of values plotted
+/// and thus if the formula contains arrays, this number might be greater than
+/// the number of entries in the trees.
+/// By default TTree::Draw creates the arrays obtained
+///    with all GetVal and GetW with a length corresponding to the
+///    parameter fEstimate. By default fEstimate=10000 and can be modified
+///    via TTree::SetEstimate. A possible recipee is to do
+///       tree->SetEstimate(tree->GetEntries());
+///    You must call SetEstimate if the expected number of selected rows
+///    is greater than 10000.
+/// See TTree::Draw for additional details.
+
 Double_t* TSelectorDraw::GetVal(Int_t i) const
 {
-   // Return the last values corresponding to the i-th component
-   // of the formula being processed (where the component are ':' separated).
-   // The actual number of entries is:
-   //     GetSelectedRows() % tree->GetEstimate()
-   // Note GetSelectedRows currently returns the actual number of values plotted
-   // and thus if the formula contains arrays, this number might be greater than
-   // the number of entries in the trees.
-   // By default TTree::Draw creates the arrays obtained
-   //    with all GetVal and GetW with a length corresponding to the
-   //    parameter fEstimate. By default fEstimate=10000 and can be modified
-   //    via TTree::SetEstimate. A possible recipee is to do
-   //       tree->SetEstimate(tree->GetEntries());
-   //    You must call SetEstimate if the expected number of selected rows
-   //    is greater than 10000.
-   // See TTree::Draw for additional details.
-
    if (i < 0 || i >= fDimension)
       return 0;
    else
       return fVal[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the TTreeFormula corresponding to the i-th component
+/// of the request formula (where the component are ':' separated).
+
 TTreeFormula* TSelectorDraw::GetVar(Int_t i) const
 {
-   // Return the TTreeFormula corresponding to the i-th component
-   // of the request formula (where the component are ':' separated).
-
    if (i < 0 || i >= fDimension)
       return 0;
    else
       return fVar[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization of the primitive type arrays if the new size is bigger than the available space.
+
 void TSelectorDraw::InitArrays(Int_t newsize)
 {
-   // Initialization of the primitive type arrays if the new size is bigger than the available space.
-
    if (newsize > fValSize) {
       Int_t oldsize = fValSize;
       while (fValSize < newsize)
@@ -1086,12 +1086,12 @@ void TSelectorDraw::InitArrays(Int_t newsize)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build Index array for names in varexp.
+/// This will allocated a C style array of TString and Ints
+
 UInt_t TSelectorDraw::SplitNames(const TString &varexp, std::vector<TString> &names)
 {
-   // Build Index array for names in varexp.
-   // This will allocated a C style array of TString and Ints
-
    names.clear();
 
    Bool_t ternary = kFALSE;
@@ -1116,11 +1116,11 @@ UInt_t TSelectorDraw::SplitNames(const TString &varexp, std::vector<TString> &na
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called at the first entry of a new tree in a chain.
+
 Bool_t TSelectorDraw::Notify()
 {
-   // This function is called at the first entry of a new tree in a chain.
-
    if (fTree) fWeight  = fTree->GetWeight();
    if (fVar) {
       for (Int_t i = 0; i < fDimension; ++i) {
@@ -1131,11 +1131,11 @@ Bool_t TSelectorDraw::Notify()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called in the entry loop for all entries accepted by Select.
+
 void TSelectorDraw::ProcessFill(Long64_t entry)
 {
-   // Called in the entry loop for all entries accepted by Select.
-
    if (fObjEval) {
       ProcessFillObject(entry);
       return;
@@ -1165,12 +1165,12 @@ void TSelectorDraw::ProcessFill(Long64_t entry)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called in the entry loop for all entries accepted by Select.
+/// Complex case with multiplicity.
+
 void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
 {
-   // Called in the entry loop for all entries accepted by Select.
-   // Complex case with multiplicity.
-
    // Grab the array size of the formulas for this entry
    Int_t ndata = fManager->GetNdata();
 
@@ -1238,12 +1238,12 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called in the entry loop for all entries accepted by Select.
+/// Case where the only variable returns an object (or pointer to).
+
 void TSelectorDraw::ProcessFillObject(Long64_t /*entry*/)
 {
-   // Called in the entry loop for all entries accepted by Select.
-   // Case where the only variable returns an object (or pointer to).
-
    // Complex case with multiplicity.
 
    // Grab the array size of the formulas for this entry
@@ -1305,11 +1305,11 @@ void TSelectorDraw::ProcessFillObject(Long64_t /*entry*/)
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set number of entries to estimate variable limits.
+
 void TSelectorDraw::SetEstimate(Long64_t)
 {
-   // Set number of entries to estimate variable limits.
-
    if (fVal) {
       for (Int_t i = 0; i < fValSize; ++i) {
          delete [] fVal[i];
@@ -1319,11 +1319,11 @@ void TSelectorDraw::SetEstimate(Long64_t)
    delete [] fW;   fW  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action for object obj fNfill times.
+
 void TSelectorDraw::TakeAction()
 {
-   // Execute action for object obj fNfill times.
-
    Int_t i;
    //__________________________1-D histogram_______________________
    if (fAction ==  1)((TH1*)fObject)->FillN(fNfill, fVal[0], fW);
@@ -1509,11 +1509,11 @@ void TSelectorDraw::TakeAction()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Estimate limits for 1-D, 2-D or 3-D objects.
+
 void TSelectorDraw::TakeEstimate()
 {
-   // Estimate limits for 1-D, 2-D or 3-D objects.
-
    Int_t i;
    Double_t rmin[3], rmax[3];
    Double_t vminOld[4], vmaxOld[4];
@@ -1780,11 +1780,11 @@ void TSelectorDraw::TakeEstimate()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called at the end of a loop on a TTree.
+
 void TSelectorDraw::Terminate()
 {
-   // Called at the end of a loop on a TTree.
-
    if (fNfill) TakeAction();
 
    if ((fSelectedRows == 0) && (TestBit(kCustomHistogram) == 0)) fDraw = 1; // do not draw

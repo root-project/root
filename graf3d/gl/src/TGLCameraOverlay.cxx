@@ -28,7 +28,8 @@
 
 ClassImp(TGLCameraOverlay);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLCameraOverlay::TGLCameraOverlay(Bool_t showOrtho, Bool_t showPersp) :
    TGLOverlayElement(),
 
@@ -62,28 +63,28 @@ TGLCameraOverlay::TGLCameraOverlay(Bool_t showOrtho, Bool_t showPersp) :
    fAxisPainter->SetUseAxisColors(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLCameraOverlay::~TGLCameraOverlay()
 {
-   // Destructor.
-
    delete  fAxisPainter;
    delete  fAxis;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get axis attributes.
+
 TAttAxis* TGLCameraOverlay::GetAttAxis()
 {
-   // Get axis attributes.
-
    return dynamic_cast<TAttAxis*>(fAxis);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set frustum values from given camera.
+
 void TGLCameraOverlay::SetFrustum(TGLCamera& cam)
 {
-   // Set frustum values from given camera.
-
    TGLVector3 absRef(1., 1., 1.); // needed in case if orthographic camera is negative
    Float_t l = -cam.FrustumPlane(TGLCamera::kLeft).D()  * Dot(cam.GetCamBase().GetBaseVec(2), absRef);
    Float_t r =  cam.FrustumPlane(TGLCamera::kRight).D() * Dot(cam.GetCamBase().GetBaseVec(2), absRef);
@@ -96,11 +97,11 @@ void TGLCameraOverlay::SetFrustum(TGLCamera& cam)
    fFrustum[3] = t;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw cross section coordinates in top right corner of screen.
+
 void TGLCameraOverlay::RenderPlaneIntersect(TGLRnrCtx& rnrCtx)
 {
-   // Draw cross section coordinates in top right corner of screen.
-
    TGLCamera &cam = rnrCtx.RefCamera();
    // get eye line
    const TGLMatrix& mx =  cam.GetCamBase() * cam.GetCamTrans();
@@ -160,11 +161,11 @@ void TGLCameraOverlay::RenderPlaneIntersect(TGLRnrCtx& rnrCtx)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw axis on four edges and a transparent grid.
+
 void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx, Bool_t grid)
 {
-   // Draw axis on four edges and a transparent grid.
-
    fAxisPainter->SetAttAxis(fAxis);
    fAxisPainter->SetUseAxisColors(fUseAxisColors);
 
@@ -371,11 +372,11 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx, Bool_t grid)
    } // draw grid
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show frustum size with fixed screen line length and printed value.
+
 void TGLCameraOverlay::RenderBar(TGLRnrCtx&  rnrCtx)
 {
-   // Show frustum size with fixed screen line length and printed value.
-
    // factors 10, 5 and 2 are allowed
    Double_t wfrust     = TMath::Abs(fFrustum[2]-fFrustum[0]);
    Float_t barsize= 0.14* wfrust;
@@ -455,11 +456,11 @@ void TGLCameraOverlay::RenderBar(TGLRnrCtx&  rnrCtx)
    glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display coodinates info of current frustum.
+
 void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
 {
-   // Display coodinates info of current frustum.
-
    TGLCamera &cam = rnrCtx.RefCamera();
 
    if (rnrCtx.Selection() ||

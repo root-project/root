@@ -91,10 +91,10 @@ const Double_t kDefaultEpsilon = 1E-12;
 ClassImp(TBinomialEfficiencyFitter)
 
 
-//______________________________________________________________________________
-TBinomialEfficiencyFitter::TBinomialEfficiencyFitter() {
-   // default constructor
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
 
+TBinomialEfficiencyFitter::TBinomialEfficiencyFitter() {
    fNumerator   = 0;
    fDenominator = 0;
    fFunction    = 0;
@@ -105,35 +105,35 @@ TBinomialEfficiencyFitter::TBinomialEfficiencyFitter() {
    fFitter      = 0;
 }
 
-//______________________________________________________________________________
-TBinomialEfficiencyFitter::TBinomialEfficiencyFitter(const TH1 *numerator, const TH1 *denominator) {
-   // Constructor.
-   //
-   // Note that no objects are copied, so it is up to the user to ensure that the
-   // histogram pointers remain valid.
-   //
-   // Both histograms need to be "consistent". This is not checked here, but in
-   // TBinomialEfficiencyFitter::Fit().
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+///
+/// Note that no objects are copied, so it is up to the user to ensure that the
+/// histogram pointers remain valid.
+///
+/// Both histograms need to be "consistent". This is not checked here, but in
+/// TBinomialEfficiencyFitter::Fit().
 
+TBinomialEfficiencyFitter::TBinomialEfficiencyFitter(const TH1 *numerator, const TH1 *denominator) {
    fEpsilon  = kDefaultEpsilon;
    fFunction = 0;
    fFitter   = 0;
    Set(numerator,denominator);
 }
 
-//______________________________________________________________________________
-TBinomialEfficiencyFitter::~TBinomialEfficiencyFitter() {
-   // destructor
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
 
+TBinomialEfficiencyFitter::~TBinomialEfficiencyFitter() {
    if (fFitter) delete fFitter;
    fFitter = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize with a new set of inputs.
+
 void TBinomialEfficiencyFitter::Set(const TH1 *numerator, const TH1 *denominator)
 {
-   // Initialize with a new set of inputs.
-
    fNumerator   = (TH1*)numerator;
    fDenominator = (TH1*)denominator;
 
@@ -142,53 +142,54 @@ void TBinomialEfficiencyFitter::Set(const TH1 *numerator, const TH1 *denominator
    fRange       = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the required integration precision, see TF1::Integral()
+
 void TBinomialEfficiencyFitter::SetPrecision(Double_t epsilon)
 {
-   // Set the required integration precision, see TF1::Integral()
    fEpsilon = epsilon;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Provide access to the underlying fitter object.
+/// This may be useful e.g. for the retrieval of additional information (such
+/// as the output covariance matrix of the fit).
+
 ROOT::Fit::Fitter* TBinomialEfficiencyFitter::GetFitter()
 {
-   // Provide access to the underlying fitter object.
-   // This may be useful e.g. for the retrieval of additional information (such
-   // as the output covariance matrix of the fit).
-
    if (!fFitter)  fFitter = new ROOT::Fit::Fitter();
    return fFitter;
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Carry out the fit of the given function to the given histograms.
+///
+/// If option "I" is used, the fit function will be averaged over the
+/// bin (the default is to evaluate it simply at the bin center).
+///
+/// If option "R" is used, the fit range will be taken from the fit
+/// function (the default is to use the entire histogram).
+///
+/// If option "S" a TFitResult object is returned and it can be used to obtain
+///  additional fit information, like covariance or correlation matrix.
+///
+/// Note that all parameter values, limits, and step sizes are copied
+/// from the input fit function f1 (so they should be set before calling
+/// this method. This is particularly relevant for the step sizes, taken
+/// to be the "error" set on input, as a null step size usually fixes the
+/// corresponding parameter. That is protected against, but in such cases
+/// an arbitrary starting step size will be used, and the reliability of
+/// the fit should be questioned). If parameters are to be fixed, this
+/// should be done by specifying non-null parameter limits, with lower
+/// limits larger than upper limits.
+///
+/// On output, f1 contains the fitted parameters and errors, as well as
+/// the number of degrees of freedom, and the goodness-of-fit estimator
+/// as given by S. Baker and R. Cousins, Nucl. Instr. Meth. A221 (1984) 437.
+
 TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
 {
-   // Carry out the fit of the given function to the given histograms.
-   //
-   // If option "I" is used, the fit function will be averaged over the
-   // bin (the default is to evaluate it simply at the bin center).
-   //
-   // If option "R" is used, the fit range will be taken from the fit
-   // function (the default is to use the entire histogram).
-   //
-   // If option "S" a TFitResult object is returned and it can be used to obtain
-   //  additional fit information, like covariance or correlation matrix.
-   //
-   // Note that all parameter values, limits, and step sizes are copied
-   // from the input fit function f1 (so they should be set before calling
-   // this method. This is particularly relevant for the step sizes, taken
-   // to be the "error" set on input, as a null step size usually fixes the
-   // corresponding parameter. That is protected against, but in such cases
-   // an arbitrary starting step size will be used, and the reliability of
-   // the fit should be questioned). If parameters are to be fixed, this
-   // should be done by specifying non-null parameter limits, with lower
-   // limits larger than upper limits.
-   //
-   // On output, f1 contains the fitted parameters and errors, as well as
-   // the number of degrees of freedom, and the goodness-of-fit estimator
-   // as given by S. Baker and R. Cousins, Nucl. Instr. Meth. A221 (1984) 437.
-
    TString opt = option;
    opt.ToUpper();
    fAverage  = opt.Contains("I");
@@ -309,11 +310,11 @@ TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the likelihood.
+
 void TBinomialEfficiencyFitter::ComputeFCN(Double_t& f, const Double_t* par)
 {
-   // Compute the likelihood.
-
    int nDim = fDenominator->GetDimension();
 
    int xlowbin  = fDenominator->GetXaxis()->GetFirst();

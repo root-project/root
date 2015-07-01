@@ -49,23 +49,23 @@ ClassImp(TShape)
 //
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shape default constructor
+
 TShape::TShape()
 {
-   // Shape default constructor
-
    fVisibility = 1;
    fMaterial   = 0;
    fNumber     = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shape normal constructor
+
 TShape::TShape(const char *name,const char *title, const char *materialname)
        : TNamed (name, title), TAttLine(), TAttFill()
 {
-   // Shape normal constructor
-
    fVisibility = 1;
    if (!gGeometry) gGeometry = new TGeometry("Geometry","Default Geometry");
    fMaterial   = gGeometry->GetMaterial(materialname);
@@ -78,7 +78,9 @@ TShape::TShape(const char *name,const char *title, const char *materialname)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TShape::TShape(const TShape& ts) :
   TNamed(ts),
   TAttLine(ts),
@@ -88,13 +90,13 @@ TShape::TShape(const TShape& ts) :
   fVisibility(ts.fVisibility),
   fMaterial(ts.fMaterial)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignement operator
+
 TShape& TShape::operator=(const TShape& ts)
 {
-   //assignement operator
    if (this!=&ts) {
       TNamed::operator=(ts);
       TAttLine::operator=(ts);
@@ -107,20 +109,20 @@ TShape& TShape::operator=(const TShape& ts)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shape default destructor
+
 TShape::~TShape()
 {
-   // Shape default destructor
-
    if (gGeometry) gGeometry->GetListOfShapes()->Remove(this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Distance to primitive.
+
 Int_t TShape::ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py)
 {
-   // Distance to primitive.
-
    Int_t dist = 9999;
 
    TView *view = gPad->GetView();
@@ -142,11 +144,11 @@ Int_t TShape::ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method is used only when a shape is painted outside a TNode.
+
 void TShape::Paint(Option_t *)
 {
-   // This method is used only when a shape is painted outside a TNode.
-
    TVirtualViewer3D * viewer3D = gPad->GetViewer3D();
    if (viewer3D) {
       const TBuffer3D & buffer = GetBuffer3D(TBuffer3D::kAll);
@@ -154,20 +156,20 @@ void TShape::Paint(Option_t *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set points.
+
 void TShape::SetPoints(Double_t *) const
 {
-   // Set points.
-
    AbstractMethod("SetPoints(Double_t *buffer) const");
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TShape.
+
 void TShape::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TShape.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -192,11 +194,11 @@ void TShape::Streamer(TBuffer &R__b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tranform points (LocalToMaster)
+
 void TShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
 {
-   // Tranform points (LocalToMaster)
-
    if (gGeometry && points) {
       Double_t dlocal[3];
       Double_t dmaster[3];
@@ -213,12 +215,12 @@ void TShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// We have to set kRawSize (unless already done) to allocate buffer space
+/// before kRaw can be filled
+
 void TShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const
 {
-   // We have to set kRawSize (unless already done) to allocate buffer space
-   // before kRaw can be filled
-
    if (reqSections & TBuffer3D::kRaw)
    {
       if (!(reqSections & TBuffer3D::kRawSizes) && !buffer.SectionsValid(TBuffer3D::kRawSizes))
@@ -245,11 +247,11 @@ void TShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get basic solor.
+
 Int_t TShape::GetBasicColor() const
 {
-   // Get basic solor.
-
    Int_t basicColor = ((GetLineColor() %8) -1) * 4;
    if (basicColor < 0) basicColor = 0;
 
@@ -257,11 +259,11 @@ Int_t TShape::GetBasicColor() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stub to avoid forcing implementation at this stage
+
 const TBuffer3D &TShape::GetBuffer3D(Int_t /* reqSections */ ) const
 {
-   // Stub to avoid forcing implementation at this stage
-
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
    Warning("GetBuffer3D", "this must be implemented for shapes in a TNode::Paint hierarchy. This will become a pure virtual fn eventually.");
    return buffer;

@@ -49,14 +49,16 @@
 
 R__EXTERN void *gMmallocDesc; //is used and set in TMapFile and TClass
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static Int_t Key_Pressed(Int_t key)
 {
    gApplication->KeyPressed(key);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static Int_t BeepHook()
 {
    if (!gSystem) return 0;
@@ -64,28 +66,29 @@ static Int_t BeepHook()
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore terminal to non-raw mode.
+
 static void ResetTermAtExit()
 {
-   // Restore terminal to non-raw mode.
-
    Getlinem(kCleanUp, 0);
 }
 
 
 //----- Interrupt signal handler -----------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TInterruptHandler : public TSignalHandler {
 public:
    TInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE) { }
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TRint interrupt handler.
+
 Bool_t TInterruptHandler::Notify()
 {
-   // TRint interrupt handler.
-
    if (fDelay) {
       fDelay++;
       return kTRUE;
@@ -108,7 +111,8 @@ Bool_t TInterruptHandler::Notify()
 }
 
 //----- Terminal Input file handler --------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TTermInputHandler : public TFileHandler {
 public:
    TTermInputHandler(Int_t fd) : TFileHandler(fd, 1) { }
@@ -116,28 +120,28 @@ public:
    Bool_t ReadNotify() { return Notify(); }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notify implementation.  Call the application interupt handler.
+
 Bool_t TTermInputHandler::Notify()
 {
-   // Notify implementation.  Call the application interupt handler.
-
    return gApplication->HandleTermInput();
 }
 
 
 ClassImp(TRint)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an application environment. The TRint environment provides an
+/// interface to the WM manager functionality and eventloop via inheritance
+/// of TApplication and in addition provides interactive access to
+/// the CINT C++ interpreter via the command line.
+
 TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
              Int_t numOptions, Bool_t noLogo):
    TApplication(appClassName, argc, argv, options, numOptions),
    fCaughtException(kFALSE)
 {
-   // Create an application environment. The TRint environment provides an
-   // interface to the WM manager functionality and eventloop via inheritance
-   // of TApplication and in addition provides interactive access to
-   // the CINT C++ interpreter via the command line.
-
    fNcmd          = 0;
    fDefaultPrompt = "root [%d] ";
    fInterrupt     = kFALSE;
@@ -262,11 +266,11 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    gCling->SetGetline(Getline, Gl_histadd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TRint::~TRint()
 {
-   // Destructor.
-
    delete gTabCom;
    gTabCom = 0;
    Gl_in_key = 0;
@@ -281,17 +285,17 @@ TRint::~TRint()
 //   delete ih;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute logon macro's. There are three levels of logon macros that
+/// will be executed: the system logon etc/system.rootlogon.C, the global
+/// user logon ~/.rootlogon.C and the local ./.rootlogon.C. For backward
+/// compatibility also the logon macro as specified by the Rint.Logon
+/// environment setting, by default ./rootlogon.C, will be executed.
+/// No logon macros will be executed when the system is started with
+/// the -n option.
+
 void TRint::ExecLogon()
 {
-   // Execute logon macro's. There are three levels of logon macros that
-   // will be executed: the system logon etc/system.rootlogon.C, the global
-   // user logon ~/.rootlogon.C and the local ./.rootlogon.C. For backward
-   // compatibility also the logon macro as specified by the Rint.Logon
-   // environment setting, by default ./rootlogon.C, will be executed.
-   // No logon macros will be executed when the system is started with
-   // the -n option.
-
    if (NoLogOpt()) return;
 
    TString name = ".rootlogon.C";
@@ -333,18 +337,18 @@ void TRint::ExecLogon()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main application eventloop. First process files given on the command
+/// line and then go into the main application event loop, unless the -q
+/// command line option was specfied in which case the program terminates.
+/// When retrun is true this method returns even when -q was specified.
+///
+/// When QuitOpt is true and retrn is false, terminate the application with
+/// an error code equal to either the ProcessLine error (if any) or the
+/// return value of the command casted to a long.
+
 void TRint::Run(Bool_t retrn)
 {
-   // Main application eventloop. First process files given on the command
-   // line and then go into the main application event loop, unless the -q
-   // command line option was specfied in which case the program terminates.
-   // When retrun is true this method returns even when -q was specified.
-   //
-   // When QuitOpt is true and retrn is false, terminate the application with
-   // an error code equal to either the ProcessLine error (if any) or the
-   // return value of the command casted to a long.
-
    Getlinem(kInit, GetPrompt());
 
    Long_t retval = 0;
@@ -457,11 +461,11 @@ void TRint::Run(Bool_t retrn)
    Getlinem(kCleanUp, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the ROOT logo on standard output.
+
 void TRint::PrintLogo(Bool_t lite)
 {
-   // Print the ROOT logo on standard output.
-
    if (!lite) {
       // Fancy formatting: the content of lines are format strings; their %s is
       // replaced by spaces needed to make all lines as long as the longest line.
@@ -518,11 +522,11 @@ void TRint::PrintLogo(Bool_t lite)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get prompt from interpreter. Either "root [n]" or "end with '}'".
+
 char *TRint::GetPrompt()
 {
-   // Get prompt from interpreter. Either "root [n]" or "end with '}'".
-
    char *s = gCling->GetPrompt();
    if (s[0])
       strlcpy(fPrompt, s, sizeof(fPrompt));
@@ -532,17 +536,17 @@ char *TRint::GetPrompt()
    return fPrompt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a new default prompt. It returns the previous prompt.
+/// The prompt may contain a %d which will be replaced by the commend
+/// number. The default prompt is "root [%d] ". The maximum length of
+/// the prompt is 55 characters. To set the prompt in an interactive
+/// session do:
+/// root [0] ((TRint*)gROOT->GetApplication())->SetPrompt("aap> ")
+/// aap>
+
 const char *TRint::SetPrompt(const char *newPrompt)
 {
-   // Set a new default prompt. It returns the previous prompt.
-   // The prompt may contain a %d which will be replaced by the commend
-   // number. The default prompt is "root [%d] ". The maximum length of
-   // the prompt is 55 characters. To set the prompt in an interactive
-   // session do:
-   // root [0] ((TRint*)gROOT->GetApplication())->SetPrompt("aap> ")
-   // aap>
-
    static TString op = fDefaultPrompt;
 
    if (newPrompt && strlen(newPrompt) <= 55)
@@ -553,11 +557,11 @@ const char *TRint::SetPrompt(const char *newPrompt)
    return op.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle input coming from terminal.
+
 Bool_t TRint::HandleTermInput()
 {
-   // Handle input coming from terminal.
-
    static TStopwatch timer;
    const char *line;
 
@@ -631,13 +635,13 @@ Bool_t TRint::HandleTermInput()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle exceptions (kSigBus, kSigSegmentationViolation,
+/// kSigIllegalInstruction and kSigFloatingException) trapped in TSystem.
+/// Specific TApplication implementations may want something different here.
+
 void TRint::HandleException(Int_t sig)
 {
-   // Handle exceptions (kSigBus, kSigSegmentationViolation,
-   // kSigIllegalInstruction and kSigFloatingException) trapped in TSystem.
-   // Specific TApplication implementations may want something different here.
-
    fCaughtException = kTRUE;
    if (TROOT::Initialized()) {
       if (gException) {
@@ -648,12 +652,12 @@ void TRint::HandleException(Int_t sig)
    TApplication::HandleException(sig);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate the application. Reset the terminal to sane mode and call
+/// the logoff macro defined via Rint.Logoff environment variable.
+
 void TRint::Terminate(Int_t status)
 {
-   // Terminate the application. Reset the terminal to sane mode and call
-   // the logoff macro defined via Rint.Logoff environment variable.
-
    Getlinem(kCleanUp, 0);
 
    if (ReturnFromRun()) {
@@ -676,30 +680,30 @@ void TRint::Terminate(Int_t status)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set console mode:
+///
+///  mode = kTRUE  - echo input symbols
+///  mode = kFALSE - noecho input symbols
+
 void TRint::SetEchoMode(Bool_t mode)
 {
-   // Set console mode:
-   //
-   //  mode = kTRUE  - echo input symbols
-   //  mode = kFALSE - noecho input symbols
-
    Gl_config("noecho", mode ? 0 : 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process the content of a line starting with ".R" (already stripped-off)
+/// The format is
+///      [user@]host[:dir] [-l user] [-d dbg] [script]
+/// The variable 'dir' is the remote directory to be used as working dir.
+/// The username can be specified in two ways, "-l" having the priority
+/// (as in ssh).
+/// A 'dbg' value > 0 gives increasing verbosity.
+/// The last argument 'script' allows to specify an alternative script to
+/// be executed remotely to startup the session.
+
 Long_t TRint::ProcessRemote(const char *line, Int_t *)
 {
-   // Process the content of a line starting with ".R" (already stripped-off)
-   // The format is
-   //      [user@]host[:dir] [-l user] [-d dbg] [script]
-   // The variable 'dir' is the remote directory to be used as working dir.
-   // The username can be specified in two ways, "-l" having the priority
-   // (as in ssh).
-   // A 'dbg' value > 0 gives increasing verbosity.
-   // The last argument 'script' allows to specify an alternative script to
-   // be executed remotely to startup the session.
-
    Long_t ret = TApplication::ProcessRemote(line);
 
    if (ret == 1) {
@@ -715,12 +719,13 @@ Long_t TRint::ProcessRemote(const char *line, Int_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calls ProcessLine() possibly prepending a #line directive for
+/// better diagnostics. Must be called after fNcmd has been increased for
+/// the next line.
+
 Long_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *error /*= 0*/)
 {
-   // Calls ProcessLine() possibly prepending a #line directive for
-   // better diagnostics. Must be called after fNcmd has been increased for
-   // the next line.
    Int_t err;
    if (!error)
       error = &err;
@@ -741,10 +746,11 @@ Long_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *erro
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forward tab completion request to our TTabCom::Hook().
+
 Int_t TRint::TabCompletionHook(char *buf, int *pLoc, std::ostream& out)
 {
-   // Forward tab completion request to our TTabCom::Hook().
    if (gTabCom)
       return gTabCom->Hook(buf, pLoc, out);
 

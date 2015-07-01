@@ -47,24 +47,25 @@ ClassImp(RooConstraintSum)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooConstraintSum::RooConstraintSum()
 {
-  // Default constructor
   _setIter1 = _set1.createIterator() ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with set of constraint p.d.f.s. All elements in constraintSet must inherit from RooAbsPdf
+
 RooConstraintSum::RooConstraintSum(const char* name, const char* title, const RooArgSet& constraintSet, const RooArgSet& normSet) :
   RooAbsReal(name, title),
   _set1("set1","First set of components",this),
   _paramSet("paramSet","Set of parameters",this)
 {
-  // Constructor with set of constraint p.d.f.s. All elements in constraintSet must inherit from RooAbsPdf
-
 
   _setIter1 = _set1.createIterator() ;
 
@@ -88,33 +89,34 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooConstraintSum::RooConstraintSum(const RooConstraintSum& other, const char* name) :
   RooAbsReal(other, name), 
   _set1("set1",this,other._set1),
   _paramSet("paramSet",this,other._paramSet)
 {
-  // Copy constructor
-
   _setIter1 = _set1.createIterator() ;  
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooConstraintSum::~RooConstraintSum() 
 {
-  // Destructor
-
   if (_setIter1) delete _setIter1 ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return sum of -log of constraint p.d.f.s
+
 Double_t RooConstraintSum::evaluate() const 
 {
-  // Return sum of -log of constraint p.d.f.s
   Double_t sum(0);
   RooAbsReal* comp ;
   RooFIter setIter1 = _set1.fwdIterator() ;

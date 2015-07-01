@@ -68,35 +68,38 @@ const Int_t   TMVA::Timer::fgNbins     = 24;
 
 ClassImp(TMVA::Timer)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::Timer::Timer( const char* prefix, Bool_t colourfulOutput )
    : fNcounts        ( 0 ),
      fPrefix         ( strcmp(prefix,"")==0?Timer::fgClassName:TString(prefix) ),
      fColourfulOutput( colourfulOutput ),
      fLogger         ( new MsgLogger( fPrefix.Data() ) )
 {
-   // constructor
    Reset();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor: ncounts gives the total number of counts that 
+/// the loop will iterate through. At each call of the timer, the current
+/// number of counts is provided by the user, so that the timer can obtain
+/// the due time from linearly interpolating the spent time.
+
 TMVA::Timer::Timer( Int_t ncounts, const char* prefix, Bool_t colourfulOutput  )
    : fNcounts        ( ncounts ),
      fPrefix         ( strcmp(prefix,"")==0?Timer::fgClassName:TString(prefix) ),
      fColourfulOutput( colourfulOutput ),
      fLogger         ( new MsgLogger( fPrefix.Data() ) )
 {
-   // standard constructor: ncounts gives the total number of counts that 
-   // the loop will iterate through. At each call of the timer, the current
-   // number of counts is provided by the user, so that the timer can obtain
-   // the due time from linearly interpolating the spent time.
    Reset();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::Timer::~Timer( void )
 {
-   // destructor
    delete fLogger;
 }
 
@@ -107,17 +110,19 @@ void TMVA::Timer::Init( Int_t ncounts )
    Reset();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// resets timer
+
 void TMVA::Timer::Reset( void )
 {
-   // resets timer
    TStopwatch::Start( kTRUE );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes elapsed tim in seconds
+
 Double_t TMVA::Timer::ElapsedSeconds( void ) 
 {
-   // computes elapsed tim in seconds
    Double_t rt = TStopwatch::RealTime(); TStopwatch::Start( kFALSE );
    return rt;
 }
@@ -129,10 +134,11 @@ TString TMVA::Timer::GetElapsedTime( Bool_t Scientific )
    return SecToText( ElapsedSeconds(), Scientific );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns pretty string with time left
+
 TString TMVA::Timer::GetLeftTime( Int_t icounts ) 
 {
-   // returns pretty string with time left
    Double_t leftTime = ( icounts <= 0 ? -1 :
                          icounts > fNcounts ? -1 :
                          Double_t(fNcounts - icounts)/Double_t(icounts)*ElapsedSeconds() );
@@ -140,10 +146,11 @@ TString TMVA::Timer::GetLeftTime( Int_t icounts )
    return SecToText( leftTime, kFALSE );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// draws the progressbar
+
 void TMVA::Timer::DrawProgressBar() 
 {
-   // draws the progressbar
    fNcounts++;
    if (fNcounts == 1) {
       std::clog << fLogger->GetPrintedSource();
@@ -153,10 +160,11 @@ void TMVA::Timer::DrawProgressBar()
    std::clog << "." << std::flush;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// draws a string in the progress bar
+
 void TMVA::Timer::DrawProgressBar( TString theString ) 
 {
-   // draws a string in the progress bar
    std::clog << fLogger->GetPrintedSource();
 
    std::clog << gTools().Color("white_on_green") << gTools().Color("dyellow") << "[" << gTools().Color("reset");
@@ -168,12 +176,12 @@ void TMVA::Timer::DrawProgressBar( TString theString )
    std::clog << "\r" << std::flush; 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// draws progress bar in color or B&W
+/// caution: 
+
 void TMVA::Timer::DrawProgressBar( Int_t icounts, const TString& comment  ) 
 {
-   // draws progress bar in color or B&W
-   // caution: 
-
    if (!gConfig().DrawProgressBar()) return;
 
    // sanity check:
@@ -214,10 +222,11 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts, const TString& comment  )
    std::clog << "\r" << std::flush; 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// pretty string output
+
 TString TMVA::Timer::SecToText( Double_t seconds, Bool_t Scientific ) const
 {
-   // pretty string output
    TString out = "";
    if      (Scientific    ) out = Form( "%.3g sec", seconds );
    else if (seconds <  0  ) out = "unknown";

@@ -30,20 +30,21 @@
 
 ClassImp(TXMLNode);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TXMLNode constructor.
+
 TXMLNode::TXMLNode(xmlNode *node, TXMLNode *parent, TXMLNode *previous) :
    fXMLNode(node), fParent(parent), fChildren(0), fNextNode(0),
    fPreviousNode(previous), fAttrList(0)
 {
-   // TXMLNode constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. It deletes the node's child, next sibling and the
+/// attribute list.
+
 TXMLNode::~TXMLNode()
 {
-   // Destructor. It deletes the node's child, next sibling and the
-   // attribute list.
-
    delete fChildren;
    delete fNextNode;
    if (fAttrList)
@@ -52,27 +53,27 @@ TXMLNode::~TXMLNode()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the node's type.
+
 TXMLNode::EXMLElementType TXMLNode::GetNodeType() const
 {
-   // Returns the node's type.
-
    return (TXMLNode::EXMLElementType) fXMLNode->type;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the node's name.
+
 const char *TXMLNode::GetNodeName() const
 {
-   // Returns the node's name.
-
    return (const char *) fXMLNode->name;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the node's child if any, returns 0 if no child.
+
 TXMLNode *TXMLNode::GetChildren()
 {
-   // Returns the node's child if any, returns 0 if no child.
-
    if (fChildren)
       return fChildren;
 
@@ -83,30 +84,30 @@ TXMLNode *TXMLNode::GetChildren()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the node's parent if any, returns 0 if no parent.
+
 TXMLNode *TXMLNode::GetParent() const
 {
-   // Returns the node's parent if any, returns 0 if no parent.
-
    return fParent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the content if any, or 0.
+
 const char *TXMLNode::GetContent() const
 {
-   // Returns the content if any, or 0.
-
    if (fXMLNode->content)
       return (const char *) fXMLNode->content;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a list of node's attribute if any,
+/// returns 0 if no attribute.
+
 TList *TXMLNode::GetAttributes()
 {
-   // Returns a list of node's attribute if any,
-   // returns 0 if no attribute.
-
    if (fAttrList)
       return fAttrList;
 
@@ -123,12 +124,12 @@ TList *TXMLNode::GetAttributes()
    return fAttrList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the next sibling XMLNode in the DOM tree, if any
+/// return 0 if no next node.
+
 TXMLNode *TXMLNode::GetNextNode()
 {
-   // Returns the next sibling XMLNode in the DOM tree, if any
-   // return 0 if no next node.
-
    if (fNextNode)
       return fNextNode;
 
@@ -139,20 +140,20 @@ TXMLNode *TXMLNode::GetNextNode()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the previous sibling XMLNode in the DOM tree, if any
+/// return 0 if no previous node
+
 TXMLNode *TXMLNode::GetPreviousNode() const
 {
-   // Returns the previous sibling XMLNode in the DOM tree, if any
-   // return 0 if no previous node
-
    return fPreviousNode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the content of a Text node if node is a TextNode, 0 otherwise.
+
 const char *TXMLNode::GetText() const
 {
-   // Returns the content of a Text node if node is a TextNode, 0 otherwise.
-
    if (GetNodeType() == kXMLElementNode && HasChildren()) {
       if (fXMLNode->children->type == XML_TEXT_NODE)
          return (const char *) fXMLNode->children->content;
@@ -160,62 +161,62 @@ const char *TXMLNode::GetText() const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if node has children.
+
 Bool_t TXMLNode::HasChildren() const
 {
-   // Returns true if node has children.
-
    return fXMLNode->children ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if has next node.
+
 Bool_t TXMLNode::HasNextNode() const
 {
-   // Returns true if has next node.
-
    return fXMLNode->next ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if node has parent.
+
 Bool_t TXMLNode::HasParent() const
 {
-   // Returns true if node has parent.
-
    return fXMLNode->parent ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if has previous node.
+
 Bool_t TXMLNode::HasPreviousNode() const
 {
-   // Returns true if has previous node.
-
    return fXMLNode->prev ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if Element node has attribute.
+
 Bool_t TXMLNode::HasAttributes() const
 {
-   // Returns true if Element node has attribute.
-
    return fXMLNode->properties ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the URL for the namespace, or 0 if no namespace.
+
 const char *TXMLNode::GetNamespaceHref() const
 {
-   // Returns the URL for the namespace, or 0 if no namespace.
-
    if (fXMLNode->ns) {
       return (const char *) fXMLNode->ns->href;
    }
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns prefix for the namespace, or 0 if no namespace.
+
 const char *TXMLNode::GetNamespacePrefix() const
 {
-   // Returns prefix for the namespace, or 0 if no namespace.
-
    if (fXMLNode->ns) {
       return (const char *) fXMLNode->ns->prefix;
    }

@@ -246,20 +246,23 @@ using namespace ROOT;
 
 //--- Error handlers -----------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Err(int level, const char *msg, int size)
 {
    Perror((char *)msg, size);
    if (level > -1) NetSend(level, kROOTD_ERR);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ErrFatal(int level, const char *msg, int size)
 {
    Perror((char *)msg, size);
    if (level > -1) NetSend(msg, kMESS_STRING);
    exit(1);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ErrSys(int level, const char *msg, int size)
 {
    Perror((char *)msg, size);
@@ -283,11 +286,11 @@ extern "C" { void ProofdTerm(int)
    exit(0);
 }}
 #else
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Termination upon receipt of a SIGTERM or SIGINT.
+
 static void ProofdTerm(int)
 {
-   // Termination upon receipt of a SIGTERM or SIGINT.
-
    ErrorInfo("ProofdTerm: rootd.cxx: got a SIGTERM/SIGINT");
    // Terminate properly
    RpdAuthCleanup(0,0);
@@ -298,11 +301,11 @@ static void ProofdTerm(int)
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Look if user should be rerouted to another server node.
+
 const char *RerouteUser()
 {
-   // Look if user should be rerouted to another server node.
-
    std::string conffile = "proof.conf";
    FILE *proofconf;
 
@@ -407,11 +410,12 @@ const char *RerouteUser()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive buffer for final setup of authentication related stuff
+/// This is base 64 string to decoded by proofserv, if needed
+
 int RpdProofGetAuthSetup(char **abuf)
 {
-   // Receive buffer for final setup of authentication related stuff
-   // This is base 64 string to decoded by proofserv, if needed
    int nrec = -1;
 
    if (RpdGetOffSet() > -1) {
@@ -446,12 +450,12 @@ int RpdProofGetAuthSetup(char **abuf)
    return nrec;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Authenticate the user and exec the proofserv program.
+/// gConfdir is the location where the PROOF config files and binaries live.
+
 void ProofdExec()
 {
-   // Authenticate the user and exec the proofserv program.
-   // gConfdir is the location where the PROOF config files and binaries live.
-
    char *argvv[3];
    std::string arg0;
    std::string msg;
@@ -748,7 +752,8 @@ void ProofdExec()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Usage(const char* name, int rc)
 {
    fprintf(stderr, "\nUsage: %s [options] [rootsys-dir]\n", name);
@@ -780,7 +785,8 @@ void Usage(const char* name, int rc)
    exit(rc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int main(int argc, char **argv)
 {
    char *s;

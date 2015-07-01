@@ -63,11 +63,11 @@ private:
 //
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// InspectCanvas default constructor.
+
 TInspectCanvas::TInspectCanvas() : TCanvas()
 {
-   // InspectCanvas default constructor.
-
    fBackward   = 0;
    fForward    = 0;
    fCurObject  = 0;
@@ -78,12 +78,12 @@ TInspectCanvas::TInspectCanvas() : TCanvas()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// InspectCanvas constructor.
+
 TInspectCanvas::TInspectCanvas(UInt_t ww, UInt_t wh)
             : TCanvas("inspect","ROOT Object Inspector",ww,wh)
 {
-   // InspectCanvas constructor.
-
    fBackward   = 0;
    fForward    = 0;
    fCurObject  = 0;
@@ -94,11 +94,11 @@ TInspectCanvas::TInspectCanvas(UInt_t ww, UInt_t wh)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// InspectCanvas default destructor.
+
 TInspectCanvas::~TInspectCanvas()
 {
-   // InspectCanvas default destructor.
-
    if (fObjects) {
       fObjects->Clear("nodelete");
       delete fObjects;
@@ -106,15 +106,16 @@ TInspectCanvas::~TInspectCanvas()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump contents of obj in a graphics canvas.
+/// Same action as TObject::Dump but in a graphical form.
+/// In addition pointers to other objects can be followed.
+///
+/// The following picture is the Inspect of a histogram object:
+///Begin_Html
+
 void TInspectCanvas::InspectObject(TObject *obj)
 {
-   // Dump contents of obj in a graphics canvas.
-   // Same action as TObject::Dump but in a graphical form.
-   // In addition pointers to other objects can be followed.
-   //
-   // The following picture is the Inspect of a histogram object:
-   //Begin_Html
    /*
    <img src="gif/hpxinspect.gif">
    */
@@ -357,11 +358,11 @@ void TInspectCanvas::InspectObject(TObject *obj)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function , inspect previous object
+
 void TInspectCanvas::GoBackward()
 {
-   // static function , inspect previous object
-
    TInspectCanvas *inspect = (TInspectCanvas*)(gROOT->GetListOfCanvases())->FindObject("inspect");
    if (!inspect) return;
    TObject *cur = inspect->GetCurObject();
@@ -370,11 +371,11 @@ void TInspectCanvas::GoBackward()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function , inspect next object
+
 void TInspectCanvas::GoForward()
 {
-   // static function , inspect next object
-
    TInspectCanvas *inspect = (TInspectCanvas*)(gROOT->GetListOfCanvases())->FindObject("inspect");
    if (!inspect) return;
    TObject *cur = inspect->GetCurObject();
@@ -383,12 +384,12 @@ void TInspectCanvas::GoForward()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function , interface to InspectObject.
+/// Create the InspectCanvas if it does not exist yet.
+
 void TInspectCanvas::Inspector(TObject *obj)
 {
-   // static function , interface to InspectObject.
-   // Create the InspectCanvas if it does not exist yet.
-
    TVirtualPad *padsav = gPad;
    TInspectCanvas *inspect = (TInspectCanvas*)(gROOT->GetListOfCanvases())->FindObject("inspect");
    if (!inspect) inspect = new TInspectCanvas(700,600);
@@ -402,11 +403,11 @@ void TInspectCanvas::Inspector(TObject *obj)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove object from the list of objects.
+
 void TInspectCanvas::RecursiveRemove(TObject *obj)
 {
-   // Recursively remove object from the list of objects.
-
    fObjects->Remove(obj);
    TPad::RecursiveRemove(obj);
 }

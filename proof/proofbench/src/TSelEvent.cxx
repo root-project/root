@@ -43,7 +43,9 @@
 
 ClassImp(TSelEvent)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TSelEvent::TSelEvent(TTree *)
           : fReadType(0), fDebug(kFALSE), fCHist(0), fPtHist(0),
             fNTracksHist(0), fEventName(0), fTracks(0), fHighPt(0), fMuons(0),
@@ -54,11 +56,11 @@ TSelEvent::TSelEvent(TTree *)
             b_event_fLastTrack(0), b_event_fWebHistogram(0), b_fH(0),
             b_event_fTriggerBits(0), b_event_fIsValid(0)
 {
-   // Constructor
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TSelEvent::TSelEvent()
           : fReadType(0), fDebug(kFALSE), fCHist(0), fPtHist(0),
             fNTracksHist(0), fEventName(0), fTracks(0), fHighPt(0), fMuons(0),
@@ -69,17 +71,15 @@ TSelEvent::TSelEvent()
             b_event_fLastTrack(0), b_event_fWebHistogram(0), b_fH(0),
             b_event_fTriggerBits(0), b_event_fIsValid(0)
 {
-   // Constructor
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Begin() function is called at the start of the query.
+/// When running with PROOF Begin() is only called on the client.
+/// The tree argument is deprecated (on PROOF 0 is passed).
+
 void TSelEvent::Begin(TTree *)
 {
-   // The Begin() function is called at the start of the query.
-   // When running with PROOF Begin() is only called on the client.
-   // The tree argument is deprecated (on PROOF 0 is passed).
-
    TString option = GetOption();
 
    //get parameters
@@ -122,13 +122,13 @@ void TSelEvent::Begin(TTree *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The SlaveBegin() function is called after the Begin() function.
+/// When running with PROOF SlaveBegin() is called on each slave server.
+/// The tree argument is deprecated (on PROOF 0 is passed).
+
 void TSelEvent::SlaveBegin(TTree *tree)
 {
-   // The SlaveBegin() function is called after the Begin() function.
-   // When running with PROOF SlaveBegin() is called on each slave server.
-   // The tree argument is deprecated (on PROOF 0 is passed).
-
    Init(tree);
 
    TString option = GetOption();
@@ -186,21 +186,21 @@ void TSelEvent::SlaveBegin(TTree *tree)
    fNTracksHist->GetYaxis()->SetTitle("N_{Events}");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Process() function is called for each entry in the tree (or possibly
+/// keyed object in the case of PROOF) to be processed. The entry argument
+/// specifies which entry in the currently loaded tree is to be processed.
+/// It can be passed to either TTree::GetEntry() or TBranch::GetEntry()
+/// to read either all or the required parts of the data. When processing
+/// keyed objects with PROOF, the object is already loaded and is available
+/// via the fObject pointer.
+///
+/// This function should contain the "body" of the analysis. It can contain
+/// simple or elaborate selection criteria, run algorithms on the data
+/// of the event and typically fill histograms.
+
 Bool_t TSelEvent::Process(Long64_t entry)
 {
-   // The Process() function is called for each entry in the tree (or possibly
-   // keyed object in the case of PROOF) to be processed. The entry argument
-   // specifies which entry in the currently loaded tree is to be processed.
-   // It can be passed to either TTree::GetEntry() or TBranch::GetEntry()
-   // to read either all or the required parts of the data. When processing
-   // keyed objects with PROOF, the object is already loaded and is available
-   // via the fObject pointer.
-   //
-   // This function should contain the "body" of the analysis. It can contain
-   // simple or elaborate selection criteria, run algorithms on the data
-   // of the event and typically fill histograms.
-
    // WARNING when a selector is used with a TChain, you must use
    //  the pointer to the current TTree to call GetEntry(entry).
    //  The entry is always the local entry number in the current tree.
@@ -247,19 +247,20 @@ Bool_t TSelEvent::Process(Long64_t entry)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The SlaveTerminate() function is called after all entries or objects
+/// have been processed. When running with PROOF SlaveTerminate() is called
+/// on each slave server.
+
 void TSelEvent::SlaveTerminate()
 {
-   // The SlaveTerminate() function is called after all entries or objects
-   // have been processed. When running with PROOF SlaveTerminate() is called
-   // on each slave server.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Terminate() function is the last function to be called during
+/// a query. It always runs on the client, it can be used to present
+/// the results graphically or save the results to file.
+
 void TSelEvent::Terminate()
 {
-   // The Terminate() function is the last function to be called during
-   // a query. It always runs on the client, it can be used to present
-   // the results graphically or save the results to file.
 }

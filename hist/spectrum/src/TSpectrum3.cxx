@@ -58,11 +58,11 @@
 
 ClassImp(TSpectrum3)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TSpectrum3::TSpectrum3() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
-   // Constructor.
-
    Int_t n = 100;
    fMaxPeaks   = n;
    fPosition   = new Double_t[n];
@@ -75,15 +75,16 @@ TSpectrum3::TSpectrum3() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  maxpositions:  maximum number of peaks
+///  resolution:    determines resolution of the neighboring peaks
+///                 default value is 1 correspond to 3 sigma distance
+///                 between peaks. Higher values allow higher resolution
+///                 (smaller distance between peaks.
+///                 May be set later through SetResolution.
+
 TSpectrum3::TSpectrum3(Int_t maxpositions, Double_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
-//  maxpositions:  maximum number of peaks
-//  resolution:    determines resolution of the neighboring peaks
-//                 default value is 1 correspond to 3 sigma distance
-//                 between peaks. Higher values allow higher resolution
-//                 (smaller distance between peaks.
-//                 May be set later through SetResolution.
    Int_t n = TMath::Max(maxpositions, 100);
    fMaxPeaks  = n;
    fPosition  = new Double_t[n];
@@ -96,11 +97,11 @@ TSpectrum3::TSpectrum3(Int_t maxpositions, Double_t resolution) :TNamed("Spectru
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TSpectrum3::~TSpectrum3()
 {
-   // Destructor.
-
    delete [] fPosition;
    delete [] fPositionX;
    delete [] fPositionY;
@@ -108,31 +109,32 @@ TSpectrum3::~TSpectrum3()
    delete    fHistogram;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+///   ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
+///   This function calculates background spectrum from source in h.        //
+///   The result is placed in the vector pointed by spectrum pointer.       //
+///                                                                         //
+///   Function parameters:                                                  //
+///   spectrum:  pointer to the vector of source spectrum                   //
+///   size:      length of spectrum and working space vectors               //
+///   number_of_iterations, for details we refer to manual                  //
+///                                                                         //
+//////////////////////////////////////////////////////////////////////////////
+
 const char *TSpectrum3::Background(const TH1 * h, Int_t number_of_iterations,
                                    Option_t * option)
 {
-/////////////////////////////////////////////////////////////////////////////
-//   ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
-//   This function calculates background spectrum from source in h.        //
-//   The result is placed in the vector pointed by spectrum pointer.       //
-//                                                                         //
-//   Function parameters:                                                  //
-//   spectrum:  pointer to the vector of source spectrum                   //
-//   size:      length of spectrum and working space vectors               //
-//   number_of_iterations, for details we refer to manual                  //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
    Error("Background","function not yet implemented: h=%s, iter=%d, option=%sn"
         , h->GetName(), number_of_iterations, option);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the array of positions
+
 void TSpectrum3::Print(Option_t *) const
 {
-   // Print the array of positions
-
    printf("\nNumber of positions = %d\n",fNPeaks);
    for (Int_t i=0;i<fNPeaks;i++) {
       printf(" x[%d] = %g, y[%d] = %g, z[%d] = %g\n",i,fPositionX[i],i,fPositionY[i],i,fPositionZ[i]);
@@ -141,34 +143,35 @@ void TSpectrum3::Print(Option_t *) const
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+///   ONE-DIMENSIONAL PEAK SEARCH FUNCTION                                  //
+///   This function searches for peaks in source spectrum in hin            //
+///   The number of found peaks and their positions are written into        //
+///   the members fNpeaks and fPositionX.                                   //
+///                                                                         //
+///   Function parameters:                                                  //
+///   hin:       pointer to the histogram of source spectrum                //
+///   sigma:   sigma of searched peaks, for details we refer to manual      //
+///            Note that sigma is in number of bins                         //
+///   threshold: (default=0.05)  peaks with amplitude less than             //
+///       threshold*highest_peak are discarded.                             //
+///                                                                         //
+///   if option is not equal to "goff" (goff is the default), then          //
+///   a polymarker object is created and added to the list of functions of  //
+///   the histogram. The histogram is drawn with the specified option and   //
+///   the polymarker object drawn on top of the histogram.                  //
+///   The polymarker coordinates correspond to the npeaks peaks found in    //
+///   the histogram.                                                        //
+///   A pointer to the polymarker object can be retrieved later via:        //
+///    TList *functions = hin->GetListOfFunctions();                        //
+///    TPolyMarker *pm = (TPolyMarker*)functions->FindObject("TPolyMarker") //
+///                                                                         //
+//////////////////////////////////////////////////////////////////////////////
+
 Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
                              Option_t * option, Double_t threshold)
 {
-/////////////////////////////////////////////////////////////////////////////
-//   ONE-DIMENSIONAL PEAK SEARCH FUNCTION                                  //
-//   This function searches for peaks in source spectrum in hin            //
-//   The number of found peaks and their positions are written into        //
-//   the members fNpeaks and fPositionX.                                   //
-//                                                                         //
-//   Function parameters:                                                  //
-//   hin:       pointer to the histogram of source spectrum                //
-//   sigma:   sigma of searched peaks, for details we refer to manual      //
-//            Note that sigma is in number of bins                         //
-//   threshold: (default=0.05)  peaks with amplitude less than             //
-//       threshold*highest_peak are discarded.                             //
-//                                                                         //
-//   if option is not equal to "goff" (goff is the default), then          //
-//   a polymarker object is created and added to the list of functions of  //
-//   the histogram. The histogram is drawn with the specified option and   //
-//   the polymarker object drawn on top of the histogram.                  //
-//   The polymarker coordinates correspond to the npeaks peaks found in    //
-//   the histogram.                                                        //
-//   A pointer to the polymarker object can be retrieved later via:        //
-//    TList *functions = hin->GetListOfFunctions();                        //
-//    TPolyMarker *pm = (TPolyMarker*)functions->FindObject("TPolyMarker") //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
    if (hin == 0)
       return 0;
    Int_t dimension = hin->GetDimension();
@@ -225,21 +228,47 @@ Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  resolution: determines resolution of the neighboring peaks
+///              default value is 1 correspond to 3 sigma distance
+///              between peaks. Higher values allow higher resolution
+///              (smaller distance between peaks.
+///              May be set later through SetResolution.
+
 void TSpectrum3::SetResolution(Double_t resolution)
 {
-//  resolution: determines resolution of the neighboring peaks
-//              default value is 1 correspond to 3 sigma distance
-//              between peaks. Higher values allow higher resolution
-//              (smaller distance between peaks.
-//              May be set later through SetResolution.
    if (resolution > 1)
       fResolution = resolution;
    else
       fResolution = 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// THREE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTIONS                         //
+/// This function calculates background spectrum from source spectrum.        //
+/// The result is placed to the array pointed by spectrum pointer.            //
+///                                                                           //
+/// Function parameters:                                                      //
+/// spectrum-pointer to the array of source spectrum                          //
+/// ssizex-x length of spectrum                                               //
+/// ssizey-y length of spectrum                                               //
+/// ssizez-z length of spectrum                                               //
+/// numberIterationsX-maximal x width of clipping window                      //
+/// numberIterationsY-maximal y width of clipping window                      //
+/// numberIterationsZ-maximal z width of clipping window                      //
+///                           for details we refer to manual                  //
+/// direction- direction of change of clipping window                         //
+///               - possible values=kBackIncreasingWindow                     //
+///                                 kBackDecreasingWindow                     //
+/// filterType-determines the algorithm of the filtering                      //
+///                  -possible values=kBackSuccessiveFiltering                //
+///                                   kBackOneStepFiltering                   //
+///                                                                           //
+///                                                                           //
+////////////////////////////////////////////////////////////////////////////////
+///Begin_Html <!--
+
 const char *TSpectrum3::Background(Double_t***spectrum,
                        Int_t ssizex, Int_t ssizey, Int_t ssizez,
                        Int_t numberIterationsX,
@@ -248,30 +277,6 @@ const char *TSpectrum3::Background(Double_t***spectrum,
                        Int_t direction,
                        Int_t filterType)
 {
-///////////////////////////////////////////////////////////////////////////////
-// THREE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTIONS                         //
-// This function calculates background spectrum from source spectrum.        //
-// The result is placed to the array pointed by spectrum pointer.            //
-//                                                                           //
-// Function parameters:                                                      //
-// spectrum-pointer to the array of source spectrum                          //
-// ssizex-x length of spectrum                                               //
-// ssizey-y length of spectrum                                               //
-// ssizez-z length of spectrum                                               //
-// numberIterationsX-maximal x width of clipping window                      //
-// numberIterationsY-maximal y width of clipping window                      //
-// numberIterationsZ-maximal z width of clipping window                      //
-//                           for details we refer to manual                  //
-// direction- direction of change of clipping window                         //
-//               - possible values=kBackIncreasingWindow                     //
-//                                 kBackDecreasingWindow                     //
-// filterType-determines the algorithm of the filtering                      //
-//                  -possible values=kBackSuccessiveFiltering                //
-//                                   kBackOneStepFiltering                   //
-//                                                                           //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
 /* -->
 <div class=Section1>
 
@@ -1041,26 +1046,27 @@ back-&gt;Draw(&quot;&quot;);  </span></p>
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+/// THREE-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION                    //
+///                                                                         //
+/// This function calculates smoothed spectrum from source spectrum         //
+///      based on Markov chain method.                                      //
+/// The result is placed in the array pointed by spectrum pointer.          //
+///                                                                         //
+/// Function parameters:                                                    //
+/// source-pointer to the array of source spectrum                          //
+/// working_space-pointer to the working array                              //
+/// ssizex-x length of spectrum and working space arrays                    //
+/// ssizey-y length of spectrum and working space arrays                    //
+/// ssizey-z length of spectrum and working space arrays                    //
+/// averWindow-width of averaging smoothing window                          //
+///                                                                         //
+//////////////////////////////////////////////////////////////////////////////
+///Begin_Html <!--
+
 const char* TSpectrum3::SmoothMarkov(Double_t***source, Int_t ssizex, Int_t ssizey, Int_t ssizez, Int_t averWindow)
 {
-/////////////////////////////////////////////////////////////////////////////
-// THREE-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION                    //
-//                                                                         //
-// This function calculates smoothed spectrum from source spectrum         //
-//      based on Markov chain method.                                      //
-// The result is placed in the array pointed by spectrum pointer.          //
-//                                                                         //
-// Function parameters:                                                    //
-// source-pointer to the array of source spectrum                          //
-// working_space-pointer to the working array                              //
-// ssizex-x length of spectrum and working space arrays                    //
-// ssizey-y length of spectrum and working space arrays                    //
-// ssizey-z length of spectrum and working space arrays                    //
-// averWindow-width of averaging smoothing window                          //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
 /* -->
 
 <div class=Section2>
@@ -1838,31 +1844,32 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
    return 0;
 }
 
-//______________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+/// THREE-DIMENSIONAL DECONVOLUTION FUNCTION                                //
+/// This function calculates deconvolution from source spectrum             //
+/// according to response spectrum                                          //
+/// The result is placed in the cube pointed by source pointer.             //
+///                                                                         //
+/// Function parameters:                                                    //
+/// source-pointer to the cube of source spectrum                           //
+/// resp-pointer to the cube of response spectrum                           //
+/// ssizex-x length of source and response spectra                          //
+/// ssizey-y length of source and response spectra                          //
+/// ssizey-y length of source and response spectra                          //
+/// numberIterations, for details we refer to manual                        //
+/// numberRepetitions, for details we refer to manual                       //
+/// boost, boosting factor, for details we refer to manual                  //
+///                                                                         //
+//////////////////////////////////////////////////////////////////////////////
+///Begin_Html <!--
+
 const char *TSpectrum3::Deconvolution(Double_t***source, const Double_t***resp,
                                        Int_t ssizex, Int_t ssizey, Int_t ssizez,
                                        Int_t numberIterations,
                                        Int_t numberRepetitions,
                                        Double_t boost)
 {
-/////////////////////////////////////////////////////////////////////////////
-// THREE-DIMENSIONAL DECONVOLUTION FUNCTION                                //
-// This function calculates deconvolution from source spectrum             //
-// according to response spectrum                                          //
-// The result is placed in the cube pointed by source pointer.             //
-//                                                                         //
-// Function parameters:                                                    //
-// source-pointer to the cube of source spectrum                           //
-// resp-pointer to the cube of response spectrum                           //
-// ssizex-x length of source and response spectra                          //
-// ssizey-y length of source and response spectra                          //
-// ssizey-y length of source and response spectra                          //
-// numberIterations, for details we refer to manual                        //
-// numberRepetitions, for details we refer to manual                       //
-// boost, boosting factor, for details we refer to manual                  //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
 /* -->
 
 <div class=Section3>
@@ -2540,7 +2547,8 @@ decon_in-&gt;Draw(&quot;&quot;);  </span></p>
    return 0;
 }
 
-//__________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TSpectrum3::SearchHighRes(const Double_t***source,Double_t***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez,
                                  Double_t sigma, Double_t threshold,
                                  Bool_t backgroundRemove,Int_t deconIterations,
@@ -4085,7 +4093,8 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
    return fNPeaks;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez,
                                  Double_t sigma, Double_t threshold,
                                  Bool_t markov, Int_t averWindow)

@@ -113,7 +113,9 @@ static bool &TPH__IsReadingDirs() {
 
 ClassImp(TPluginHandler)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a plugin handler. Called by TPluginManager.
+
 TPluginHandler::TPluginHandler(const char *base, const char *regexp,
                                const char *className, const char *pluginName,
                                const char *ctor, const char *origin):
@@ -129,8 +131,6 @@ TPluginHandler::TPluginHandler(const char *base, const char *regexp,
    fIsMacro(kFALSE),
    fIsGlobal(kFALSE)
 {
-   // Create a plugin handler. Called by TPluginManager.
-
    TString aclicMode, arguments, io;
    TString fname = gSystem->SplitAclicMode(fPlugin, aclicMode, arguments, io);
    Bool_t validMacro = kFALSE;
@@ -147,20 +147,20 @@ TPluginHandler::TPluginHandler(const char *base, const char *regexp,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup plugin handler object.
+
 TPluginHandler::~TPluginHandler()
 {
-   // Cleanup plugin handler object.
-
    delete fCallEnv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if regular expression appears in the URI, if so return kTRUE.
+/// If URI = 0 always return kTRUE.
+
 Bool_t TPluginHandler::CanHandle(const char *base, const char *uri)
 {
-   // Check if regular expression appears in the URI, if so return kTRUE.
-   // If URI = 0 always return kTRUE.
-
    if (fBase != base)
       return kFALSE;
 
@@ -179,11 +179,11 @@ Bool_t TPluginHandler::CanHandle(const char *base, const char *uri)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup ctor or static method call environment.
+
 void TPluginHandler::SetupCallEnv()
 {
-   // Setup ctor or static method call environment.
-
    fCanCall = -1;
 
    // check if class exists
@@ -227,12 +227,12 @@ void TPluginHandler::SetupCallEnv()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the plugin library for this handler exits. Returns 0
+/// when it exists and -1 in case the plugin does not exist.
+
 Int_t TPluginHandler::CheckPlugin() const
 {
-   // Check if the plugin library for this handler exits. Returns 0
-   // when it exists and -1 in case the plugin does not exist.
-
    if (fIsMacro) {
       if (TClass::GetClass(fClass)) return 0;
       return gROOT->LoadMacro(fPlugin, 0, kTRUE);
@@ -240,12 +240,12 @@ Int_t TPluginHandler::CheckPlugin() const
       return gROOT->LoadClass(fClass, fPlugin, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load the plugin library for this handler. Returns 0 on successful loading
+/// and -1 in case the library does not exist or in case of error.
+
 Int_t TPluginHandler::LoadPlugin()
 {
-   // Load the plugin library for this handler. Returns 0 on successful loading
-   // and -1 in case the library does not exist or in case of error.
-
    if (fIsMacro) {
       if (TClass::GetClass(fClass)) return 0;
       return gROOT->LoadMacro(fPlugin);
@@ -256,11 +256,11 @@ Int_t TPluginHandler::LoadPlugin()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that we can properly run ExecPlugin.
+
 Bool_t TPluginHandler::CheckForExecPlugin(Int_t nargs)
 {
-   // Check that we can properly run ExecPlugin.
-
    if (fCtor.IsNull()) {
       Error("ExecPlugin", "no ctor specified for this handler %s", fClass.Data());
       return kFALSE;
@@ -283,12 +283,12 @@ Bool_t TPluginHandler::CheckForExecPlugin(Int_t nargs)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info about the plugin handler. If option is "a" print
+/// also the ctor's that will be used.
+
 void TPluginHandler::Print(Option_t *opt) const
 {
-   // Print info about the plugin handler. If option is "a" print
-   // also the ctor's that will be used.
-
    const char *exist = "";
    if (CheckPlugin() == -1)
       exist = " [*]";
@@ -312,24 +312,24 @@ void TPluginHandler::Print(Option_t *opt) const
 
 ClassImp(TPluginManager)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up the plugin manager.
+
 TPluginManager::~TPluginManager()
 {
-   // Clean up the plugin manager.
-
    delete fHandlers;
    delete fBasesLoaded;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load plugin handlers specified in config file, like:
+///    Plugin.TFile:       ^rfio:    TRFIOFile      RFIO  "TRFIOFile(...)"
+///    Plugin.TSQLServer:  ^mysql:   TMySQLServer   MySQL "TMySQLServer(...)"
+///    +Plugin.TSQLServer: ^pgsql:   TPgSQLServer   PgSQL "TPgSQLServer(...)"
+/// The + allows the extension of an already defined resource (see TEnv).
+
 void TPluginManager::LoadHandlersFromEnv(TEnv *env)
 {
-   // Load plugin handlers specified in config file, like:
-   //    Plugin.TFile:       ^rfio:    TRFIOFile      RFIO  "TRFIOFile(...)"
-   //    Plugin.TSQLServer:  ^mysql:   TMySQLServer   MySQL "TMySQLServer(...)"
-   //    +Plugin.TSQLServer: ^pgsql:   TPgSQLServer   PgSQL "TPgSQLServer(...)"
-   // The + allows the extension of an already defined resource (see TEnv).
-
    if (!env) return;
 
    TIter next(env->GetTable());
@@ -365,11 +365,11 @@ void TPluginManager::LoadHandlersFromEnv(TEnv *env)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load all plugin macros from the specified path/base directory.
+
 void TPluginManager::LoadHandlerMacros(const char *path)
 {
-   // Load all plugin macros from the specified path/base directory.
-
    void *dirp = gSystem->OpenDirectory(path);
    if (dirp) {
       if (gDebug > 0)
@@ -403,31 +403,31 @@ void TPluginManager::LoadHandlerMacros(const char *path)
    gSystem->FreeDirectory(dirp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load plugin handlers specified via macros in a list of plugin
+/// directories. The $ROOTSYS/etc/plugins is the default top plugin directory
+/// specified in $ROOTSYS/etc/system.rootrc. The macros must have names
+/// like <BaseClass>/PX0_<PluginClass>.C, e.g.:
+///    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.
+/// to allow easy sorting and grouping. If the BaseClass is in a namespace
+/// the directory must have the name NameSpace@@BaseClass as : is a reserved
+/// pathname character on some operating systems. Macros not beginning with
+/// 'P' and ending with ".C" are ignored. If base is specified only plugin
+/// macros for that base class are loaded. The macros typically
+/// should look like:
+///   void P10_TDCacheFile()
+///   {
+///       gPluginMgr->AddHandler("TFile", "^dcache", "TDCacheFile",
+///          "DCache", "TDCacheFile(const char*,Option_t*,const char*,Int_t)");
+///   }
+/// In general these macros should not cause side effects, by changing global
+/// ROOT state via, e.g. gSystem calls, etc. However, in specific cases
+/// this might be useful, e.g. adding a library search path, adding a specific
+/// dependency, check on some OS or ROOT capability or downloading
+/// of the plugin.
+
 void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
 {
-   // Load plugin handlers specified via macros in a list of plugin
-   // directories. The $ROOTSYS/etc/plugins is the default top plugin directory
-   // specified in $ROOTSYS/etc/system.rootrc. The macros must have names
-   // like <BaseClass>/PX0_<PluginClass>.C, e.g.:
-   //    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.
-   // to allow easy sorting and grouping. If the BaseClass is in a namespace
-   // the directory must have the name NameSpace@@BaseClass as : is a reserved
-   // pathname character on some operating systems. Macros not beginning with
-   // 'P' and ending with ".C" are ignored. If base is specified only plugin
-   // macros for that base class are loaded. The macros typically
-   // should look like:
-   //   void P10_TDCacheFile()
-   //   {
-   //       gPluginMgr->AddHandler("TFile", "^dcache", "TDCacheFile",
-   //          "DCache", "TDCacheFile(const char*,Option_t*,const char*,Int_t)");
-   //   }
-   // In general these macros should not cause side effects, by changing global
-   // ROOT state via, e.g. gSystem calls, etc. However, in specific cases
-   // this might be useful, e.g. adding a library search path, adding a specific
-   // dependency, check on some OS or ROOT capability or downloading
-   // of the plugin.
-
    //The destructor of TObjArray takes the gROOTMutex lock so we want to
    // delete the object after release the gInterpreterMutex lock
    TObjArray *dirs = nullptr;
@@ -493,14 +493,14 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
    delete dirs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add plugin handler to the list of handlers. If there is already a
+/// handler defined for the same base and regexp it will be replaced.
+
 void TPluginManager::AddHandler(const char *base, const char *regexp,
                                 const char *className, const char *pluginName,
                                 const char *ctor, const char *origin)
 {
-   // Add plugin handler to the list of handlers. If there is already a
-   // handler defined for the same base and regexp it will be replaced.
-
    {
       R__LOCKGUARD2(gPluginManagerMutex);
       if (!fHandlers) {
@@ -522,11 +522,12 @@ void TPluginManager::AddHandler(const char *base, const char *regexp,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove handler for the specified base class and the specified
+/// regexp. If regexp=0 remove all handlers for the specified base.
+
 void TPluginManager::RemoveHandler(const char *base, const char *regexp)
 {
-   // Remove handler for the specified base class and the specified
-   // regexp. If regexp=0 remove all handlers for the specified base.
    R__LOCKGUARD2(gPluginManagerMutex);
    if (!fHandlers) return;
 
@@ -543,13 +544,13 @@ void TPluginManager::RemoveHandler(const char *base, const char *regexp)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the handler if there exists a handler for the specified URI.
+/// The uri can be 0 in which case the first matching plugin handler
+/// will be returned. Returns 0 in case handler is not found.
+
 TPluginHandler *TPluginManager::FindHandler(const char *base, const char *uri)
 {
-   // Returns the handler if there exists a handler for the specified URI.
-   // The uri can be 0 in which case the first matching plugin handler
-   // will be returned. Returns 0 in case handler is not found.
-
    LoadHandlersFromPluginDirs(base);
 
    R__LOCKGUARD2(gPluginManagerMutex);
@@ -574,12 +575,12 @@ TPluginHandler *TPluginManager::FindHandler(const char *base, const char *uri)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print list of registered plugin handlers. If option is "a" print
+/// also the ctor's that will be used.
+
 void TPluginManager::Print(Option_t *opt) const
 {
-   // Print list of registered plugin handlers. If option is "a" print
-   // also the ctor's that will be used.
-
    if (!fHandlers) return;
 
    TIter next(fHandlers);
@@ -602,14 +603,14 @@ void TPluginManager::Print(Option_t *opt) const
    Printf("=====================================================================\n");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write in the specified directory the plugin macros. If plugin is specified
+/// and if it is a base class all macros for that base will be written. If it
+/// is a plugin class name, only that one macro will be written. If plugin
+/// is 0 all macros are written. Returns -1 if dir does not exist, 0 otherwise.
+
 Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) const
 {
-   // Write in the specified directory the plugin macros. If plugin is specified
-   // and if it is a base class all macros for that base will be written. If it
-   // is a plugin class name, only that one macro will be written. If plugin
-   // is 0 all macros are written. Returns -1 if dir does not exist, 0 otherwise.
-
    const_cast<TPluginManager*>(this)->LoadHandlersFromPluginDirs();
 
    if (!fHandlers) return 0;
@@ -684,16 +685,16 @@ Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) con
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write in the specified environment config file the plugin records. If
+/// plugin is specified and if it is a base class all records for that
+/// base will be written. If it is a plugin class name, only that one
+/// record will be written. If plugin is 0 all macros are written.
+/// If envFile is 0 or "" the records are written to stdout.
+/// Returns -1 if envFile cannot be created or opened, 0 otherwise.
+
 Int_t TPluginManager::WritePluginRecords(const char *envFile, const char *plugin) const
 {
-   // Write in the specified environment config file the plugin records. If
-   // plugin is specified and if it is a base class all records for that
-   // base will be written. If it is a plugin class name, only that one
-   // record will be written. If plugin is 0 all macros are written.
-   // If envFile is 0 or "" the records are written to stdout.
-   // Returns -1 if envFile cannot be created or opened, 0 otherwise.
-
    const_cast<TPluginManager*>(this)->LoadHandlersFromPluginDirs();
 
    if (!fHandlers) return 0;

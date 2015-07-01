@@ -45,19 +45,20 @@ ClassImp(RooErrorVar)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct an lvalue variable representing the error of RooRealVar input
+
 RooErrorVar::RooErrorVar(const char *name, const char *title, const RooRealVar& input) :
   RooAbsRealLValue(name,title),
   _realVar("realVar","RooRealVar with error",this,(RooAbsReal&)input)
 {
-  // Construct an lvalue variable representing the error of RooRealVar input
-
   _binning = new RooUniformBinning(-1,1,100) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooErrorVar::RooErrorVar(const RooErrorVar& other, const char* name) :
   RooAbsRealLValue(other,name),
   _realVar("realVar",this,other._realVar)
@@ -76,53 +77,53 @@ RooErrorVar::RooErrorVar(const RooErrorVar& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor 
+
 RooErrorVar::~RooErrorVar()
 {
-  // Destructor 
-
   delete _binning ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return value, i.e. error on input variable
+
 Double_t RooErrorVar::getValV(const RooArgSet*) const 
 { 
-  // Return value, i.e. error on input variable
-
   return evaluate();
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if we have binning with given name
+
 Bool_t RooErrorVar::hasBinning(const char* name) const
 {
-  // Return true if we have binning with given name
-  
   return _altBinning.FindObject(name) ? kTRUE : kFALSE ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return binning with given name. If no binning exists with such a name, clone the default
+/// binning on the fly if so requested
+
 const RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) const 
 {
-  // Return binning with given name. If no binning exists with such a name, clone the default
-  // binning on the fly if so requested
-
   return const_cast<RooErrorVar*>(this)->getBinning(name,verbose,createOnTheFly) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return binning with given name. If no binning exists with such a name, clone the default
+/// binning on the fly if so requested
+
 RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t /*verbose*/, Bool_t createOnTheFly) 
 {
-  // Return binning with given name. If no binning exists with such a name, clone the default
-  // binning on the fly if so requested
-  
   // Return default (normalization) binning and range if no name is specified
   if (name==0) {
     return *_binning ;
@@ -149,11 +150,12 @@ RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t /*verbose*/, Boo
   return *binning ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a list of all binning names. An empty name implies the default binning.
+/// A 0 pointer should be passed to getBinning in this case.
+
 std::list<std::string> RooErrorVar::getBinningNames() const
 {
-  // Get a list of all binning names. An empty name implies the default binning.
-  // A 0 pointer should be passed to getBinning in this case.
   std::list<std::string> binningNames(1, "");
 
   RooFIter iter = _altBinning.fwdIterator();
@@ -165,11 +167,11 @@ std::list<std::string> RooErrorVar::getBinningNames() const
   return binningNames;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store given binning with this variable under the given name
+
 void RooErrorVar::setBinning(const RooAbsBinning& binning, const char* name) 
 {
-  // Store given binning with this variable under the given name
-
   if (!name) {
     if (_binning) delete _binning ;
     _binning = binning.clone() ;
@@ -195,12 +197,12 @@ void RooErrorVar::setBinning(const RooAbsBinning& binning, const char* name)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the lower bound of the range with the given name to the given value
+/// If name is a null pointer, set the lower bound of the default range
+
 void RooErrorVar::setMin(const char* name, Double_t value) 
 {
-  // Set the lower bound of the range with the given name to the given value
-  // If name is a null pointer, set the lower bound of the default range
-
   // Set new minimum of fit range 
   RooAbsBinning& binning = getBinning(name) ;
 
@@ -225,12 +227,12 @@ void RooErrorVar::setMin(const char* name, Double_t value)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the upper bound of the range with the given name to the given value
+/// If name is a null pointer, set the upper bound of the default range
+
 void RooErrorVar::setMax(const char* name, Double_t value)
 {
-  // Set the upper bound of the range with the given name to the given value
-  // If name is a null pointer, set the upper bound of the default range
-
   // Set new maximum of fit range 
   RooAbsBinning& binning = getBinning(name) ;
 
@@ -256,12 +258,12 @@ void RooErrorVar::setMax(const char* name, Double_t value)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the upper and lower lower bound of the range with the given name to the given values
+/// If name is a null pointer, set the upper and lower bounds of the default range
+
 void RooErrorVar::setRange( const char* name, Double_t min, Double_t max) 
 {
-  // Set the upper and lower lower bound of the range with the given name to the given values
-  // If name is a null pointer, set the upper and lower bounds of the default range
-
   Bool_t exists = name ? (_altBinning.FindObject(name)?kTRUE:kFALSE) : kTRUE ;
 
   // Set new fit range 
@@ -287,11 +289,11 @@ void RooErrorVar::setRange( const char* name, Double_t min, Double_t max)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read object contents from given stream
+
 Bool_t RooErrorVar::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbose) 
 {
-  // Read object contents from given stream
-
   TString token,errorPrefix("RooErrorVar::readFromStream(") ;
   errorPrefix.Append(GetName()) ;
   errorPrefix.Append(")") ;
@@ -310,20 +312,20 @@ Bool_t RooErrorVar::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbo
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write value to stream
+
 void RooErrorVar::writeToStream(ostream& os, Bool_t /*compact*/) const
 {
-  // Write value to stream
-
   os << getVal() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Force the internal value cache to be up to date
+
 void RooErrorVar::syncCache(const RooArgSet*) 
 { 
-  // Force the internal value cache to be up to date
-
   _value = evaluate() ; 
 }
 

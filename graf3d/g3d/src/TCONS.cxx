@@ -40,50 +40,51 @@ ClassImp(TCONS)
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CONS shape default constructor
+
 TCONS::TCONS()
 {
-   // CONS shape default constructor
-
    fRmin2 = 0.;
    fRmax2 = 0.;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CONS shape normal constructor
+
 TCONS::TCONS(const char *name, const char *title, const char *material, Float_t dz, Float_t rmin1, Float_t rmax1, Float_t rmin2, Float_t rmax2,
              Float_t phi1, Float_t phi2)
       : TTUBS(name,title,material,rmin1,rmax1,dz,phi1,phi2)
 {
-   // CONS shape normal constructor
-
    fRmin2 = rmin2;
    fRmax2 = rmax2;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CONS shape normal constructor
+
 TCONS::TCONS(const char *name, const char *title, const char *material,  Float_t rmax1, Float_t dz
                           , Float_t phi1, Float_t phi2, Float_t rmax2)
              : TTUBS(name,title,material,rmax1,dz,phi1,phi2)
 {
-   // CONS shape normal constructor
-
    fRmin2 = 0;
    fRmax2 = rmax2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CONS shape default destructor
+
 TCONS::~TCONS()
 {
-   // CONS shape default destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create CONS points
+
 void TCONS::SetPoints(Double_t *points) const
 {
-   // Create CONS points
-
    Int_t j, n;
    Float_t rmin1, rmax1, dz;
 

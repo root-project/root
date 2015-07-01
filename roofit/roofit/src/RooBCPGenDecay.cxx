@@ -41,7 +41,9 @@ ClassImp(RooBCPGenDecay)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title, 
 			       RooRealVar& t, RooAbsCategory& tag,
 			       RooAbsReal& tau, RooAbsReal& dm,
@@ -63,7 +65,6 @@ RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
   _genB0Frac(0),
   _type(type)
 {
-  // Constructor
   switch(type) {
   case SingleSided:
     _basisExp = declareBasis("exp(-@0/@1)",RooArgList(tau,dm)) ;
@@ -85,7 +86,9 @@ RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) : 
   RooAbsAnaConvPdf(other,name), 
   _avgC("C",this,other._avgC),
@@ -103,25 +106,25 @@ RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) :
   _basisSin(other._basisSin),
   _basisCos(other._basisCos)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooBCPGenDecay::~RooBCPGenDecay()
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// B0    : _tag = +1 
+/// B0bar : _tag = -1 
+
 Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const 
 {
-  // B0    : _tag = +1 
-  // B0bar : _tag = -1 
-
   if (basisIndex==_basisExp) {
     //exp term: (1 -/+ dw + mu*_tag*w)
     return (1 - _tag*_delMistag + _mu*_tag*(1. - 2.*_avgMistag)) ;
@@ -145,7 +148,8 @@ Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooBCPGenDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (rangeName) return 0 ;
@@ -155,7 +159,8 @@ Int_t RooBCPGenDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVa
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const 
 {
   switch(code) {
@@ -185,7 +190,8 @@ Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, co
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooBCPGenDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
   if (staticInitOK) {
@@ -197,7 +203,8 @@ Int_t RooBCPGenDecay::getGenerator(const RooArgSet& directVars, RooArgSet &gener
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooBCPGenDecay::initGenerator(Int_t code)
 {
   if (code==2) {
@@ -211,10 +218,11 @@ void RooBCPGenDecay::initGenerator(Int_t code)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate mix-state dependent
+
 void RooBCPGenDecay::generateEvent(Int_t code)
 {
-  // Generate mix-state dependent
   if (code==2) {
     Double_t rand = RooRandom::uniform() ;
     _tag = (rand<=_genB0Frac) ? 1 : -1 ;

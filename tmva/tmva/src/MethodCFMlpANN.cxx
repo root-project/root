@@ -92,7 +92,35 @@ namespace TMVA {
 
 TMVA::MethodCFMlpANN* TMVA::MethodCFMlpANN::fgThis = 0;
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+/// option string: "n_training_cycles:n_hidden_layers"
+/// default is:  n_training_cycles = 5000, n_layers = 4
+///
+/// * note that the number of hidden layers in the NN is:
+///   n_hidden_layers = n_layers - 2
+///
+/// * since there is one input and one output layer. The number of
+///   nodes (neurons) is predefined to be:
+///   n_nodes[i] = nvars + 1 - i (where i=1..n_layers)
+///
+///   with nvars being the number of variables used in the NN.
+///
+/// Hence, the default case is: n_neurons(layer 1 (input)) : nvars
+///                             n_neurons(layer 2 (hidden)): nvars-1
+///                             n_neurons(layer 3 (hidden)): nvars-1
+///                             n_neurons(layer 4 (out))   : 2
+///
+/// This artificial neural network usually needs a relatively large
+/// number of cycles to converge (8000 and more). Overtraining can
+/// be efficienctly tested by comparing the signal and background
+/// output of the NN for the events that were used for training and
+/// an independent data sample (with equal properties). If the separation
+/// performance is significantly better for the training sample, the
+/// NN interprets statistical effects, and is hence overtrained. In
+/// this case, the number of cycles should be reduced, or the size
+/// of the training sample increased.
+
 TMVA::MethodCFMlpANN::MethodCFMlpANN( const TString& jobName,
                                       const TString& methodTitle,
                                       DataSetInfo& theData,
@@ -106,39 +134,13 @@ TMVA::MethodCFMlpANN::MethodCFMlpANN( const TString& jobName,
    fNodes(0),
    fYNN(0)
 {
-   // standard constructor
-   // option string: "n_training_cycles:n_hidden_layers"
-   // default is:  n_training_cycles = 5000, n_layers = 4
-   //
-   // * note that the number of hidden layers in the NN is:
-   //   n_hidden_layers = n_layers - 2
-   //
-   // * since there is one input and one output layer. The number of
-   //   nodes (neurons) is predefined to be:
-   //   n_nodes[i] = nvars + 1 - i (where i=1..n_layers)
-   //
-   //   with nvars being the number of variables used in the NN.
-   //
-   // Hence, the default case is: n_neurons(layer 1 (input)) : nvars
-   //                             n_neurons(layer 2 (hidden)): nvars-1
-   //                             n_neurons(layer 3 (hidden)): nvars-1
-   //                             n_neurons(layer 4 (out))   : 2
-   //
-   // This artificial neural network usually needs a relatively large
-   // number of cycles to converge (8000 and more). Overtraining can
-   // be efficienctly tested by comparing the signal and background
-   // output of the NN for the events that were used for training and
-   // an independent data sample (with equal properties). If the separation
-   // performance is significantly better for the training sample, the
-   // NN interprets statistical effects, and is hence overtrained. In
-   // this case, the number of cycles should be reduced, or the size
-   // of the training sample increased.
-
    MethodCFMlpANN_Utils::SetLogger(&Log());
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from weight file
+
 TMVA::MethodCFMlpANN::MethodCFMlpANN( DataSetInfo& theData,
                                       const TString& theWeightFile,
                                       TDirectory* theTargetDir ):
@@ -150,32 +152,33 @@ TMVA::MethodCFMlpANN::MethodCFMlpANN( DataSetInfo& theData,
    fNodes(0),
    fYNN(0)
 {
-   // constructor from weight file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CFMlpANN can handle classification with 2 classes
+
 Bool_t TMVA::MethodCFMlpANN::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
-   // CFMlpANN can handle classification with 2 classes
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    return kFALSE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define the options (their key words) that can be set in the option string
+/// know options: NCycles=xx              :the number of training cycles
+///               HiddenLayser="N-1,N-2"  :the specification of the hidden layers
+
 void TMVA::MethodCFMlpANN::DeclareOptions()
 {
-   // define the options (their key words) that can be set in the option string
-   // know options: NCycles=xx              :the number of training cycles
-   //               HiddenLayser="N-1,N-2"  :the specification of the hidden layers
-
    DeclareOptionRef( fNcycles  =3000,      "NCycles",      "Number of training cycles" );
    DeclareOptionRef( fLayerSpec="N,N-1",   "HiddenLayers", "Specification of hidden layer architecture" );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// decode the options in the option string
+
 void TMVA::MethodCFMlpANN::ProcessOptions()
 {
-   // decode the options in the option string
    fNodes = new Int_t[20]; // number of nodes per layer (maximum 20 layers)
    fNlayers = 2;
    Int_t currentHiddenLayer = 1;
@@ -243,11 +246,11 @@ void TMVA::MethodCFMlpANN::ProcessOptions()
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initialisation called by all constructors
+
 void TMVA::MethodCFMlpANN::Init( void )
 {
-   // default initialisation called by all constructors
-
    // CFMlpANN prefers normalised input variables
    SetNormalised( kTRUE );
 
@@ -258,10 +261,11 @@ void TMVA::MethodCFMlpANN::Init( void )
    TMVA::MethodCFMlpANN_nsel = 0;  
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodCFMlpANN::~MethodCFMlpANN( void )
 {
-   // destructor
    delete fData;
    delete fClass;
    delete[] fNodes;
@@ -273,11 +277,11 @@ TMVA::MethodCFMlpANN::~MethodCFMlpANN( void )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// training of the Clement-Ferrand NN classifier
+
 void TMVA::MethodCFMlpANN::Train( void )
 {
-   // training of the Clement-Ferrand NN classifier
-
    Double_t dumDat(0);
    Int_t ntrain(Data()->GetNTrainingEvents());
    Int_t ntest(0);
@@ -307,10 +311,11 @@ void TMVA::MethodCFMlpANN::Train( void )
    delete [] nodes;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns CFMlpANN output (normalised within [0,1])
+
 Double_t TMVA::MethodCFMlpANN::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // returns CFMlpANN output (normalised within [0,1])
    Bool_t isOK = kTRUE;
 
    const Event* ev = GetEvent();
@@ -328,11 +333,11 @@ Double_t TMVA::MethodCFMlpANN::GetMvaValue( Double_t* err, Double_t* errUpper )
    return myMVA;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// evaluates NN value as function of input variables
+
 Double_t TMVA::MethodCFMlpANN::EvalANN( std::vector<Double_t>& inVar, Bool_t& isOK )
 {
-   // evaluates NN value as function of input variables
-
    // hardcopy of input variables (necessary because they are update later)
    Double_t* xeev = new Double_t[GetNvar()];
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) xeev[ivar] = inVar[ivar];
@@ -362,10 +367,11 @@ Double_t TMVA::MethodCFMlpANN::EvalANN( std::vector<Double_t>& inVar, Bool_t& is
    return retval;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// auxiliary functions
+
 void  TMVA::MethodCFMlpANN::NN_ava( Double_t* xeev )
 {  
-   // auxiliary functions
    for (Int_t ivar=0; ivar<fNeur_1.neuron[0]; ivar++) fYNN[0][ivar] = xeev[ivar];
 
    for (Int_t layer=1; layer<fParam_1.layerm; layer++) {
@@ -381,10 +387,11 @@ void  TMVA::MethodCFMlpANN::NN_ava( Double_t* xeev )
    }  
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// activation function
+
 Double_t TMVA::MethodCFMlpANN::NN_fonc( Int_t i, Double_t u ) const
 {
-   // activation function
    Double_t f(0);
   
    if      (u/fDel_1.temp[i] >  170) f = +1;
@@ -397,10 +404,11 @@ Double_t TMVA::MethodCFMlpANN::NN_fonc( Int_t i, Double_t u ) const
    return f;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read back the weight from the training from file (stream)
+
 void TMVA::MethodCFMlpANN::ReadWeightsFromStream( std::istream & istr )
 {
-   // read back the weight from the training from file (stream)
    TString var;
 
    // read number of variables and classes
@@ -488,14 +496,14 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromStream( std::istream & istr )
    delete[] dumchar;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// data interface function 
+
 Int_t TMVA::MethodCFMlpANN::DataInterface( Double_t* /*tout2*/, Double_t*  /*tin2*/, 
                                            Int_t* /* icode*/, Int_t*  /*flag*/, 
                                            Int_t*  /*nalire*/, Int_t* nvar, 
                                            Double_t* xpg, Int_t* iclass, Int_t* ikend )
 {
-   // data interface function 
-   
    // icode and ikend are dummies needed to match f2c mlpl3 functions
    *ikend = 0; 
 
@@ -521,11 +529,11 @@ Int_t TMVA::MethodCFMlpANN::DataInterface( Double_t* /*tout2*/, Double_t*  /*tin
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write weights to xml file
+
 void TMVA::MethodCFMlpANN::AddWeightsXMLTo( void* parent ) const 
 {
-   // write weights to xml file
-
    void *wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr(wght,"NVars",fParam_1.nvar);
    gTools().AddAttr(wght,"NClasses",fParam_1.lclass);
@@ -565,10 +573,11 @@ void TMVA::MethodCFMlpANN::AddWeightsXMLTo( void* parent ) const
    }   
    gTools().AddRawLine(tempnode, temp.str().c_str() );
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read weights from xml file
+
 void TMVA::MethodCFMlpANN::ReadWeightsFromXML( void* wghtnode )
 {
-   // read weights from xml file
    gTools().ReadAttr( wghtnode, "NLayers",fParam_1.layerm );
    void* minmaxnode = gTools().GetChild(wghtnode);
    const char* minmaxcontent = gTools().GetContent(minmaxnode);
@@ -613,11 +622,11 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromXML( void* wghtnode )
    fNlayers = fParam_1.layerm;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write the weights of the neural net
+
 void TMVA::MethodCFMlpANN::PrintWeights( std::ostream & o ) const
 {
-   // write the weights of the neural net
-
    // write number of variables and classes
    o << "Number of vars " << fParam_1.nvar << std::endl;
    o << "Output nodes   " << fParam_1.lclass << std::endl;
@@ -674,10 +683,11 @@ void TMVA::MethodCFMlpANN::PrintWeights( std::ostream & o ) const
       o << "Del.temp in layer " << layer << " :  " << fDel_1.temp[layer] << std::endl;
    }      
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static pointer to this object (required for external functions
+
 TMVA::MethodCFMlpANN* TMVA::MethodCFMlpANN::This( void ) 
 { 
-// static pointer to this object (required for external functions
    return fgThis; 
 }  
 void TMVA::MethodCFMlpANN::MakeClassSpecific( std::ostream& fout, const TString& className ) const
@@ -687,19 +697,21 @@ void TMVA::MethodCFMlpANN::MakeClassSpecific( std::ostream& fout, const TString&
    fout << "};" << std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write specific classifier response for header
+
 void TMVA::MethodCFMlpANN::MakeClassSpecificHeader( std::ostream& , const TString&  ) const
 {
-   // write specific classifier response for header
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get help message text
+///
+/// typical length of text line: 
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodCFMlpANN::GetHelpMessage() const
 {
-   // get help message text
-   //
-   // typical length of text line: 
-   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;

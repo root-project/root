@@ -424,26 +424,27 @@ public:
    }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default (normal) constructor of TXMLEngine class
+
 TXMLEngine::TXMLEngine()
 {
-   // default (normal) constructor of TXMLEngine class
    fSkipComments = kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor for TXMLEngine object
+
 TXMLEngine::~TXMLEngine()
 {
-   // destructor for TXMLEngine object
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// checks if node has attribute of specified name
+
 Bool_t TXMLEngine::HasAttr(XMLNodePointer_t xmlnode, const char* name)
 {
-   // checks if node has attribute of specified name
-
    if ((xmlnode==0) || (name==0)) return kFALSE;
    SXmlAttr_t* attr = ((SXmlNode_t*)xmlnode)->fAttr;
    while (attr!=0) {
@@ -453,11 +454,11 @@ Bool_t TXMLEngine::HasAttr(XMLNodePointer_t xmlnode, const char* name)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns value of attribute for xmlnode
+
 const char* TXMLEngine::GetAttr(XMLNodePointer_t xmlnode, const char* name)
 {
-   // returns value of attribute for xmlnode
-
    if (xmlnode==0) return 0;
    SXmlAttr_t* attr = ((SXmlNode_t*)xmlnode)->fAttr;
    while (attr!=0) {
@@ -468,11 +469,11 @@ const char* TXMLEngine::GetAttr(XMLNodePointer_t xmlnode, const char* name)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns value of attribute as integer
+
 Int_t TXMLEngine::GetIntAttr(XMLNodePointer_t xmlnode, const char* name)
 {
-   // returns value of attribute as integer
-
    if (xmlnode==0) return 0;
    Int_t res = 0;
    const char* attr = GetAttr(xmlnode, name);
@@ -480,13 +481,13 @@ Int_t TXMLEngine::GetIntAttr(XMLNodePointer_t xmlnode, const char* name)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates new attribute for xmlnode,
+/// namespaces are not supported for attributes
+
 XMLAttrPointer_t TXMLEngine::NewAttr(XMLNodePointer_t xmlnode, XMLNsPointer_t,
                                      const char* name, const char* value)
 {
-   // creates new attribute for xmlnode,
-   // namespaces are not supported for attributes
-
    if (xmlnode==0) return 0;
 
    int namelen(name != 0 ? strlen(name) : 0);
@@ -507,23 +508,23 @@ XMLAttrPointer_t TXMLEngine::NewAttr(XMLNodePointer_t xmlnode, XMLNsPointer_t,
    return (XMLAttrPointer_t) attr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create node attribute with integer value
+
 XMLAttrPointer_t TXMLEngine::NewIntAttr(XMLNodePointer_t xmlnode,
                                       const char* name,
                                       Int_t value)
 {
-   // create node attribute with integer value
-
    char sbuf[30];
    sprintf(sbuf,"%d",value);
    return NewAttr(xmlnode, 0, name, sbuf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// remove attribute from xmlnode
+
 void TXMLEngine::FreeAttr(XMLNodePointer_t xmlnode, const char* name)
 {
-   // remove attribute from xmlnode
-
    if (xmlnode==0) return;
    SXmlAttr_t* attr = ((SXmlNode_t*) xmlnode)->fAttr;
    SXmlAttr_t* prev = 0;
@@ -543,10 +544,11 @@ void TXMLEngine::FreeAttr(XMLNodePointer_t xmlnode, const char* name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free all attributes of the node
+
 void TXMLEngine::FreeAllAttr(XMLNodePointer_t xmlnode)
 {
-   // Free all attributes of the node
    if (xmlnode==0) return;
 
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
@@ -560,11 +562,11 @@ void TXMLEngine::FreeAllAttr(XMLNodePointer_t xmlnode)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return first attribute in the list, namespace (if exists) will be skiped
+
 XMLAttrPointer_t TXMLEngine::GetFirstAttr(XMLNodePointer_t xmlnode)
 {
-   // return first attribute in the list, namespace (if exists) will be skiped
-
    if (xmlnode==0) return 0;
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
 
@@ -574,44 +576,44 @@ XMLAttrPointer_t TXMLEngine::GetFirstAttr(XMLNodePointer_t xmlnode)
    return (XMLAttrPointer_t) attr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return next attribute in the list
+
 XMLAttrPointer_t TXMLEngine::GetNextAttr(XMLAttrPointer_t xmlattr)
 {
-   // return next attribute in the list
-
    if (xmlattr==0) return 0;
 
    return (XMLAttrPointer_t) ((SXmlAttr_t*) xmlattr)->fNext;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return name of the attribute
+
 const char* TXMLEngine::GetAttrName(XMLAttrPointer_t xmlattr)
 {
-   // return name of the attribute
-
    if (xmlattr==0) return 0;
 
    return SXmlAttr_t::Name(xmlattr);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return value of attribute
+
 const char* TXMLEngine::GetAttrValue(XMLAttrPointer_t xmlattr)
 {
-   // return value of attribute
-
    if (xmlattr==0) return 0;
 
    const char* attrname = SXmlAttr_t::Name(xmlattr);
    return attrname + strlen(attrname) + 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create new child element for parent node
+
 XMLNodePointer_t TXMLEngine::NewChild(XMLNodePointer_t parent, XMLNsPointer_t ns,
                                       const char* name, const char* content)
 {
-   // create new child element for parent node
-
    int namelen(name!=0 ? strlen(name) : 0);
 
    SXmlNode_t* node = (SXmlNode_t*) AllocateNode(namelen, parent);
@@ -632,12 +634,12 @@ XMLNodePointer_t TXMLEngine::NewChild(XMLNodePointer_t parent, XMLNsPointer_t ns
    return (XMLNodePointer_t) node;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create namespace attribute for xmlnode.
+/// namespace attribute will be always the first in list of node attributes
+
 XMLNsPointer_t TXMLEngine::NewNS(XMLNodePointer_t xmlnode, const char* reference, const char* name)
 {
-   // create namespace attribute for xmlnode.
-   // namespace attribute will be always the first in list of node attributes
-
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
    if (name==0) name = SXmlNode_t::Name(node);
    int namelen = strlen(name);
@@ -657,22 +659,22 @@ XMLNsPointer_t TXMLEngine::NewNS(XMLNodePointer_t xmlnode, const char* reference
    return (XMLNsPointer_t) nsattr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return namespace attribute  (if exists)
+
 XMLNsPointer_t TXMLEngine::GetNS(XMLNodePointer_t xmlnode)
 {
-   // return namespace attribute  (if exists)
-
    if (xmlnode==0) return 0;
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
 
    return (XMLNsPointer_t) node->fNs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return name id of namespace
+
 const char* TXMLEngine::GetNSName(XMLNsPointer_t ns)
 {
-   // return name id of namespace
-
    const char* nsname = GetAttrName((XMLAttrPointer_t)ns);
 
    if ((nsname!=0) && (strncmp(nsname,"xmlns:",6)==0)) nsname+=6;
@@ -680,20 +682,20 @@ const char* TXMLEngine::GetNSName(XMLNsPointer_t ns)
    return nsname;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return reference id of namespace
+
 const char* TXMLEngine::GetNSReference(XMLNsPointer_t ns)
 {
-   // return reference id of namespace
-
    return GetAttrValue((XMLAttrPointer_t)ns);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add child element to xmlnode
+
 void TXMLEngine::AddChild(XMLNodePointer_t parent, XMLNodePointer_t child)
 {
-   // add child element to xmlnode
-
    if ((parent==0) || (child==0)) return;
    SXmlNode_t* pnode = (SXmlNode_t*) parent;
    SXmlNode_t* cnode = (SXmlNode_t*) child;
@@ -709,11 +711,11 @@ void TXMLEngine::AddChild(XMLNodePointer_t parent, XMLNodePointer_t child)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add node as first child
+
 void TXMLEngine::AddChildFirst(XMLNodePointer_t parent, XMLNodePointer_t child)
 {
-   // add node as first child
-
    if ((parent==0) || (child==0)) return;
    SXmlNode_t* pnode = (SXmlNode_t*) parent;
    SXmlNode_t* cnode = (SXmlNode_t*) child;
@@ -726,11 +728,11 @@ void TXMLEngine::AddChildFirst(XMLNodePointer_t parent, XMLNodePointer_t child)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds comment line to the node
+
 Bool_t TXMLEngine::AddComment(XMLNodePointer_t xmlnode, const char* comment)
 {
-   // Adds comment line to the node
-
    if ((xmlnode==0) || (comment==0)) return kFALSE;
 
    int commentlen = strlen(comment);
@@ -742,11 +744,11 @@ Bool_t TXMLEngine::AddComment(XMLNodePointer_t xmlnode, const char* comment)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add comment line to the top of the document
+
 Bool_t TXMLEngine::AddDocComment(XMLDocPointer_t xmldoc, const char* comment)
 {
-   // add comment line to the top of the document
-
    if (xmldoc==0) return kFALSE;
 
    XMLNodePointer_t rootnode = DocGetRootElement(xmldoc);
@@ -759,13 +761,13 @@ Bool_t TXMLEngine::AddDocComment(XMLDocPointer_t xmldoc, const char* comment)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add just line into xml file
+/// Line should has correct xml syntax that later it can be decoded by xml parser
+/// For instance, it can be comment or processing instructions
+
 Bool_t TXMLEngine::AddRawLine(XMLNodePointer_t xmlnode, const char* line)
 {
-   // Add just line into xml file
-   // Line should has correct xml syntax that later it can be decoded by xml parser
-   // For instance, it can be comment or processing instructions
-
    if ((xmlnode==0) || (line==0)) return kFALSE;
 
    int linelen = strlen(line);
@@ -776,12 +778,12 @@ Bool_t TXMLEngine::AddRawLine(XMLNodePointer_t xmlnode, const char* line)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add just line on the top of xml document
+/// Line should has correct xml syntax that later it can be decoded by xml parser
+
 Bool_t TXMLEngine::AddDocRawLine(XMLDocPointer_t xmldoc, const char* line)
 {
-   // Add just line on the top of xml document
-   // Line should has correct xml syntax that later it can be decoded by xml parser
-
    XMLNodePointer_t rootnode = DocGetRootElement(xmldoc);
    UnlinkNode(rootnode);
 
@@ -794,7 +796,15 @@ Bool_t TXMLEngine::AddDocRawLine(XMLDocPointer_t xmldoc, const char* line)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds style sheet definition to the specified node
+/// Creates <?xml-stylesheet alternate="yes" title="compact" href="small-base.css" type="text/css"?>
+/// Attributes href and type must be supplied,
+///  other attributes: title, alternate, media, charset are optional
+/// if alternate==0, attribyte alternate="no" will be created,
+/// if alternate>0, attribute alternate="yes"
+/// if alternate<0, attribute will not be created
+
 Bool_t TXMLEngine::AddStyleSheet(XMLNodePointer_t xmlnode,
                                  const char* href,
                                  const char* type,
@@ -803,14 +813,6 @@ Bool_t TXMLEngine::AddStyleSheet(XMLNodePointer_t xmlnode,
                                  const char* media,
                                  const char* charset)
 {
-   // Adds style sheet definition to the specified node
-   // Creates <?xml-stylesheet alternate="yes" title="compact" href="small-base.css" type="text/css"?>
-   // Attributes href and type must be supplied,
-   //  other attributes: title, alternate, media, charset are optional
-   // if alternate==0, attribyte alternate="no" will be created,
-   // if alternate>0, attribute alternate="yes"
-   // if alternate<0, attribute will not be created
-
    if ((xmlnode==0) || (href==0) || (type==0)) return kFALSE;
 
    const char* nodename = "xml-stylesheet";
@@ -835,7 +837,9 @@ Bool_t TXMLEngine::AddStyleSheet(XMLNodePointer_t xmlnode,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add style sheet definition on the top of document
+
 Bool_t TXMLEngine::AddDocStyleSheet(XMLDocPointer_t xmldoc,
                                     const char* href,
                                     const char* type,
@@ -844,8 +848,6 @@ Bool_t TXMLEngine::AddDocStyleSheet(XMLDocPointer_t xmldoc,
                                     const char* media,
                                     const char* charset)
 {
-   // Add style sheet definition on the top of document
-
    if (xmldoc==0) return kFALSE;
 
    XMLNodePointer_t rootnode = DocGetRootElement(xmldoc);
@@ -859,11 +861,11 @@ Bool_t TXMLEngine::AddDocStyleSheet(XMLDocPointer_t xmldoc,
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// unlink (dettach) xml node from parent
+
 void TXMLEngine::UnlinkNode(XMLNodePointer_t xmlnode)
 {
-   // unlink (dettach) xml node from parent
-
    if (xmlnode==0) return;
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
 
@@ -884,12 +886,12 @@ void TXMLEngine::UnlinkNode(XMLNodePointer_t xmlnode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// release all memory, allocated fro this node and
+/// destroyes node itself
+
 void TXMLEngine::FreeNode(XMLNodePointer_t xmlnode)
 {
-   // release all memory, allocated fro this node and
-   // destroyes node itself
-
    if (xmlnode==0) return;
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
 
@@ -913,28 +915,28 @@ void TXMLEngine::FreeNode(XMLNodePointer_t xmlnode)
    //fNumNodes--;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// combined operation. Unlink node and free used memory
+
 void TXMLEngine::UnlinkFreeNode(XMLNodePointer_t xmlnode)
 {
-   // combined operation. Unlink node and free used memory
-
    UnlinkNode(xmlnode);
    FreeNode(xmlnode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns name of xmlnode
+
 const char* TXMLEngine::GetNodeName(XMLNodePointer_t xmlnode)
 {
-   // returns name of xmlnode
-
    return xmlnode==0 ? 0 : SXmlNode_t::Name(xmlnode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get contents (if any) of xml node
+
 const char* TXMLEngine::GetNodeContent(XMLNodePointer_t xmlnode)
 {
-   // get contents (if any) of xml node
-
    if (xmlnode==0) return 0;
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
    if (node->fChild == 0) return 0;
@@ -944,12 +946,12 @@ const char* TXMLEngine::GetNodeContent(XMLNodePointer_t xmlnode)
    return SXmlNode_t::Name(node->fChild);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set content of the xml node
+/// if old node content was exists, it will be replaced
+
 void TXMLEngine::SetNodeContent(XMLNodePointer_t xmlnode, const char* content, Int_t len)
 {
-   // set content of the xml node
-   // if old node content was exists, it will be replaced
-
    if (xmlnode==0) return;
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
    if ((node->fChild != 0) && (node->fChild->fType == kXML_CONTENT))
@@ -968,12 +970,12 @@ void TXMLEngine::SetNodeContent(XMLNodePointer_t xmlnode, const char* content, I
    AddChildFirst(xmlnode, (XMLNodePointer_t)contnode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add new content of the xml node
+/// old content will be preserved, one could mix content with child nodes
+
 void TXMLEngine::AddNodeContent(XMLNodePointer_t xmlnode, const char* content, Int_t len)
 {
-   // add new content of the xml node
-   // old content will be preserved, one could mix content with child nodes
-
    if ((xmlnode==0) || (content==0)) return;
    if (len<=0) len = strlen(content);
 
@@ -985,31 +987,31 @@ void TXMLEngine::AddNodeContent(XMLNodePointer_t xmlnode, const char* content, I
    *nameptr = 0; // here we add padding 0 to get normal string
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns first child of xml node
+
 XMLNodePointer_t TXMLEngine::GetChild(XMLNodePointer_t xmlnode, Bool_t realnode)
 {
-   // returns first child of xml node
-
    XMLNodePointer_t res = xmlnode==0 ? 0 :((SXmlNode_t*) xmlnode)->fChild;
    // skip content(s) node, if specified
    if (realnode && (res!=0) && (((SXmlNode_t*)res)->fType != kXML_NODE)) ShiftToNext(res, kTRUE);
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns parent of xmlnode
+
 XMLNodePointer_t TXMLEngine::GetParent(XMLNodePointer_t xmlnode)
 {
-   // returns parent of xmlnode
-
    return xmlnode==0 ? 0 : (XMLNodePointer_t) ((SXmlNode_t*) xmlnode)->fParent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return next to xmlnode node
+/// if realnode==kTRUE, any special nodes in between will be skipped
+
 XMLNodePointer_t TXMLEngine::GetNext(XMLNodePointer_t xmlnode, Bool_t realnode)
 {
-   // return next to xmlnode node
-   // if realnode==kTRUE, any special nodes in between will be skipped
-
    do {
       xmlnode = xmlnode==0 ? 0 : (XMLNodePointer_t) ((SXmlNode_t*) xmlnode)->fNext;
       if ((xmlnode==0) || !realnode) return xmlnode;
@@ -1018,65 +1020,65 @@ XMLNodePointer_t TXMLEngine::GetNext(XMLNodePointer_t xmlnode, Bool_t realnode)
    return xmlnode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// shifts specified node to next
+/// if realnode==kTRUE, any special nodes in between will be skipped
+
 void TXMLEngine::ShiftToNext(XMLNodePointer_t &xmlnode, Bool_t realnode)
 {
-   // shifts specified node to next
-   // if realnode==kTRUE, any special nodes in between will be skipped
-
    do {
       xmlnode = xmlnode==0 ? 0 : (XMLNodePointer_t) ((SXmlNode_t*) xmlnode)->fNext;
       if ((xmlnode==0) || !realnode) return;
    } while (((SXmlNode_t*) xmlnode)->fType != kXML_NODE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return kTRUE is this is normal xml node
+
 Bool_t TXMLEngine::IsXmlNode(XMLNodePointer_t xmlnode)
 {
-   // return kTRUE is this is normal xml node
-
    return xmlnode==0 ? kFALSE : (((SXmlNode_t*) xmlnode)->fType == kXML_NODE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return kTRUE is this is node with special data like comments to data processing instructions
+
 Bool_t TXMLEngine::IsEmptyNode(XMLNodePointer_t xmlnode)
 {
-   // return kTRUE is this is node with special data like comments to data processing instructions
-
    return xmlnode==0 ? kTRUE : (((SXmlNode_t*) xmlnode)->fType != kXML_NODE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return kTRUE is this is special node with content
+
 Bool_t TXMLEngine::IsContentNode(XMLNodePointer_t xmlnode)
 {
-   // return kTRUE is this is special node with content
-
    return xmlnode==0 ? kFALSE : (((SXmlNode_t*) xmlnode)->fType == kXML_CONTENT);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return kTRUE is this is special node with content
+
 Bool_t TXMLEngine::IsCommentNode(XMLNodePointer_t xmlnode)
 {
-   // return kTRUE is this is special node with content
-
    return xmlnode==0 ? kFALSE : (((SXmlNode_t*) xmlnode)->fType == kXML_COMMENT);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Skip all current empty nodes and locate on first "true" node
+
 void TXMLEngine::SkipEmpty(XMLNodePointer_t &xmlnode)
 {
-   // Skip all current empty nodes and locate on first "true" node
-
    if (IsEmptyNode(xmlnode)) ShiftToNext(xmlnode);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// remove all children node from xmlnode
+
 void TXMLEngine::CleanNode(XMLNodePointer_t xmlnode)
 {
-   // remove all children node from xmlnode
-
    if (xmlnode==0) return;
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
 
@@ -1091,11 +1093,11 @@ void TXMLEngine::CleanNode(XMLNodePointer_t xmlnode)
    node->fLastChild = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates new xml document with provided version
+
 XMLDocPointer_t TXMLEngine::NewDoc(const char* version)
 {
-   // creates new xml document with provided version
-
    SXmlDoc_t* doc = new SXmlDoc_t;
    doc->fRootNode = (SXmlNode_t*) NewChild(0, 0, "??DummyTopNode??", 0);
 
@@ -1110,11 +1112,11 @@ XMLDocPointer_t TXMLEngine::NewDoc(const char* version)
    return (XMLDocPointer_t) doc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assignes dtd filename to document
+
 void TXMLEngine::AssignDtd(XMLDocPointer_t xmldoc, const char* dtdname, const char* rootname)
 {
-   // assignes dtd filename to document
-
    if (xmldoc==0) return;
    SXmlDoc_t* doc = (SXmlDoc_t*) xmldoc;
    delete[] doc->fDtdName;
@@ -1123,11 +1125,11 @@ void TXMLEngine::AssignDtd(XMLDocPointer_t xmldoc, const char* dtdname, const ch
    doc->fDtdRoot = Makestr(rootname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// frees allocated document data and deletes document itself
+
 void TXMLEngine::FreeDoc(XMLDocPointer_t xmldoc)
 {
-   // frees allocated document data and deletes document itself
-
    if (xmldoc==0) return;
    SXmlDoc_t* doc = (SXmlDoc_t*) xmldoc;
    FreeNode((XMLNodePointer_t) doc->fRootNode);
@@ -1136,15 +1138,15 @@ void TXMLEngine::FreeDoc(XMLDocPointer_t xmldoc)
    delete doc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// store document content to file
+/// if layout<=0, no any spaces or newlines will be placed between
+/// xmlnodes. Xml file will have minimum size, but nonreadable structure
+/// if (layout>0) each node will be started from new line,
+/// and number of spaces will correspond to structure depth.
+
 void TXMLEngine::SaveDoc(XMLDocPointer_t xmldoc, const char* filename, Int_t layout)
 {
-   // store document content to file
-   // if layout<=0, no any spaces or newlines will be placed between
-   // xmlnodes. Xml file will have minimum size, but nonreadable structure
-   // if (layout>0) each node will be started from new line,
-   // and number of spaces will correspond to structure depth.
-
    if (xmldoc==0) return;
 
    SXmlDoc_t* doc = (SXmlDoc_t*) xmldoc;
@@ -1160,11 +1162,11 @@ void TXMLEngine::SaveDoc(XMLDocPointer_t xmldoc, const char* filename, Int_t lay
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set main (root) node for document
+
 void TXMLEngine::DocSetRootElement(XMLDocPointer_t xmldoc, XMLNodePointer_t xmlnode)
 {
-   // set main (root) node for document
-
    if (xmldoc==0) return;
 
    FreeNode(DocGetRootElement(xmldoc));
@@ -1172,11 +1174,11 @@ void TXMLEngine::DocSetRootElement(XMLDocPointer_t xmldoc, XMLNodePointer_t xmln
    AddChild((XMLNodePointer_t) ((SXmlDoc_t*)xmldoc)->fRootNode, xmlnode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns root node of document
+
 XMLNodePointer_t TXMLEngine::DocGetRootElement(XMLDocPointer_t xmldoc)
 {
-   // returns root node of document
-
    if (xmldoc==0) return 0;
 
    XMLNodePointer_t xmlnode = (XMLNodePointer_t) ((SXmlDoc_t*)xmldoc)->fRootNode;
@@ -1186,34 +1188,34 @@ XMLNodePointer_t TXMLEngine::DocGetRootElement(XMLDocPointer_t xmldoc)
    return GetChild(xmlnode, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parses content of file and tries to produce xml structures.
+/// The maxbuf argument specifies the max size of the XML file to be
+/// parsed. The default value is 100000.
+
 XMLDocPointer_t TXMLEngine::ParseFile(const char* filename, Int_t maxbuf)
 {
-   // Parses content of file and tries to produce xml structures.
-   // The maxbuf argument specifies the max size of the XML file to be
-   // parsed. The default value is 100000.
-
    if ((filename==0) || (strlen(filename)==0)) return 0;
    if (maxbuf < 100000) maxbuf = 100000;
    TXMLInputStream inp(true, filename, maxbuf);
    return ParseStream(&inp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// parses content of string and tries to produce xml structures
+
 XMLDocPointer_t TXMLEngine::ParseString(const char* xmlstring)
 {
-   // parses content of string and tries to produce xml structures
-
    if ((xmlstring==0) || (strlen(xmlstring)==0)) return 0;
    TXMLInputStream inp(false, xmlstring, 2*strlen(xmlstring) );
    return ParseStream(&inp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// parses content of the stream and tries to produce xml structures
+
 XMLDocPointer_t TXMLEngine::ParseStream(TXMLInputStream* inp)
 {
-   // parses content of the stream and tries to produce xml structures
-
    if (inp == 0) return 0;
 
    XMLDocPointer_t xmldoc = NewDoc(0);
@@ -1245,11 +1247,11 @@ XMLDocPointer_t TXMLEngine::ParseStream(TXMLInputStream* inp)
    return xmldoc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check that first node is xml processing instruction with correct xml version number
+
 Bool_t TXMLEngine::ValidateVersion(XMLDocPointer_t xmldoc, const char* version)
 {
-   // check that first node is xml processing instruction with correct xml version number
-
    if (xmldoc==0) return kFALSE;
 
    XMLNodePointer_t vernode = GetChild((XMLNodePointer_t) ((SXmlDoc_t*) xmldoc)->fRootNode, kFALSE);
@@ -1265,15 +1267,15 @@ Bool_t TXMLEngine::ValidateVersion(XMLDocPointer_t xmldoc, const char* version)
    return strcmp(version,value)==0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert single xml node (and its child node) to string
+/// if layout<=0, no any spaces or newlines will be placed between
+/// xmlnodes. Xml file will have minimum size, but nonreadable structure
+/// if (layout>0) each node will be started from new line,
+/// and number of spaces will correspond to structure depth.
+
 void TXMLEngine::SaveSingleNode(XMLNodePointer_t xmlnode, TString* res, Int_t layout)
 {
-   // convert single xml node (and its child node) to string
-   // if layout<=0, no any spaces or newlines will be placed between
-   // xmlnodes. Xml file will have minimum size, but nonreadable structure
-   // if (layout>0) each node will be started from new line,
-   // and number of spaces will correspond to structure depth.
-
    if ((res==0) || (xmlnode==0)) return;
 
    TXMLOutputStream out(res, 10000);
@@ -1281,11 +1283,11 @@ void TXMLEngine::SaveSingleNode(XMLNodePointer_t xmlnode, TString* res, Int_t la
    SaveNode(xmlnode, &out, layout, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read single xml node from provided string
+
 XMLNodePointer_t TXMLEngine::ReadSingleNode(const char* src)
 {
-   // read single xml node from provided string
-
    if (src==0) return 0;
 
    TXMLInputStream inp(false, src, 10000);
@@ -1303,11 +1305,11 @@ XMLNodePointer_t TXMLEngine::ReadSingleNode(const char* src)
    return xmlnode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates char* variable with copy of provided string
+
 char* TXMLEngine::Makestr(const char* str)
 {
-   // creates char* variable with copy of provided string
-
    if (str==0) return 0;
    int len = strlen(str);
    if (len==0) return 0;
@@ -1316,11 +1318,11 @@ char* TXMLEngine::Makestr(const char* str)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates char* variable with copy of len symbols from provided string
+
 char* TXMLEngine::Makenstr(const char* str, int len)
 {
-   // creates char* variable with copy of len symbols from provided string
-
    if ((str==0) || (len==0)) return 0;
    char* res = new char[len+1];
    strncpy(res, str, len);
@@ -1328,11 +1330,11 @@ char* TXMLEngine::Makenstr(const char* str, int len)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocates new xml node with specified namelength
+
 XMLNodePointer_t TXMLEngine::AllocateNode(int namelen, XMLNodePointer_t parent)
 {
-   // Allocates new xml node with specified namelength
-
    //fNumNodes++;
 
    SXmlNode_t* node = (SXmlNode_t*) malloc(sizeof(SXmlNode_t) + namelen + 1);
@@ -1351,11 +1353,11 @@ XMLNodePointer_t TXMLEngine::AllocateNode(int namelen, XMLNodePointer_t parent)
    return (XMLNodePointer_t) node;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate new attribute with specified name length and value length
+
 XMLAttrPointer_t TXMLEngine::AllocateAttr(int namelen, int valuelen, XMLNodePointer_t xmlnode)
 {
-   // Allocate new attribute with specified name length and value length
-
    //fNumNodes++;
 
    SXmlAttr_t* attr = (SXmlAttr_t*) malloc(sizeof(SXmlAttr_t) + namelen + 1 + valuelen + 1);
@@ -1375,11 +1377,11 @@ XMLAttrPointer_t TXMLEngine::AllocateAttr(int namelen, int valuelen, XMLNodePoin
    return (XMLAttrPointer_t) attr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define if namespace of that name exists for xmlnode
+
 XMLNsPointer_t TXMLEngine::FindNs(XMLNodePointer_t xmlnode, const char* name)
 {
-   // define if namespace of that name exists for xmlnode
-
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
    while (node!=0) {
       if (node->fNs!=0) {
@@ -1391,11 +1393,11 @@ XMLNsPointer_t TXMLEngine::FindNs(XMLNodePointer_t xmlnode, const char* name)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// removes namespace extension of nodename
+
 void TXMLEngine::TruncateNsExtension(XMLNodePointer_t xmlnode)
 {
-   // removes namespace extension of nodename
-
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
    if (node==0) return;
    char* colon = strchr(SXmlNode_t::Name(node),':');
@@ -1407,12 +1409,12 @@ void TXMLEngine::TruncateNsExtension(XMLNodePointer_t xmlnode)
      *(copyname++) = *(++colon);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// unpack special symbols, used in xml syntax to code characters
+/// these symbols: '<' - &lt, '>' - &gt, '&' - &amp, '"' - &quot, ''' - &apos
+
 void TXMLEngine::UnpackSpecialCharacters(char* target, const char* source, int srclen)
 {
-   // unpack special symbols, used in xml syntax to code characters
-   // these symbols: '<' - &lt, '>' - &gt, '&' - &amp, '"' - &quot, ''' - &apos
-
    while (srclen>0) {
       if (*source=='&') {
          if ((srclen>3) && (*(source+1)=='l') && (*(source+2)=='t') && (*(source+3)==';')) {
@@ -1440,13 +1442,13 @@ void TXMLEngine::UnpackSpecialCharacters(char* target, const char* source, int s
    *target = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// output value to output stream
+/// if symbols '<' '&' '>' '"' ''' appears in the string, they
+/// will be encoded to appropriate xml symbols: &lt, &amp, &gt, &quot, &apos
+
 void TXMLEngine::OutputValue(char* value, TXMLOutputStream* out)
 {
-   // output value to output stream
-   // if symbols '<' '&' '>' '"' ''' appears in the string, they
-   // will be encoded to appropriate xml symbols: &lt, &amp, &gt, &quot, &apos
-
    if (value==0) return;
 
    char* last = value;
@@ -1467,11 +1469,11 @@ void TXMLEngine::OutputValue(char* value, TXMLOutputStream* out)
       out->Write(last);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// stream data of xmlnode to output
+
 void TXMLEngine::SaveNode(XMLNodePointer_t xmlnode, TXMLOutputStream* out, Int_t layout, Int_t level)
 {
-   // stream data of xmlnode to output
-
    if (xmlnode==0) return;
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
 
@@ -1555,15 +1557,15 @@ void TXMLEngine::SaveNode(XMLNodePointer_t xmlnode, TXMLOutputStream* out, Int_t
    if (layout>0) out->Put('\n');
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tries to construct xml node from input stream. Node should be
+/// child of xmlparent node or it can be closing tag of xmlparent.
+/// resvalue <= 0 if error
+/// resvalue == 1 if this is endnode of parent
+/// resvalue == 2 if this is child
+
 XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStream* inp, Int_t& resvalue)
 {
-   // Tries to construct xml node from input stream. Node should be
-   // child of xmlparent node or it can be closing tag of xmlparent.
-   // resvalue <= 0 if error
-   // resvalue == 1 if this is endnode of parent
-   // resvalue == 2 if this is child
-
    resvalue = 0;
 
    if (inp==0) return 0;
@@ -1885,10 +1887,11 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Displays xml parsing error
+
 void TXMLEngine::DisplayError(Int_t error, Int_t linenumber)
 {
-   // Displays xml parsing error
    switch(error) {
       case -14: Error("ParseFile", "Error include external XML file at line %d", linenumber); break;
       case -13: Error("ParseFile", "Error processing DTD part of XML file at line %d", linenumber); break;

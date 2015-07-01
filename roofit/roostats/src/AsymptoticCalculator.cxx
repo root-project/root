@@ -257,9 +257,9 @@ bool AsymptoticCalculator::Initialize() const {
    return true; 
 }
 
-//_________________________________________________________________
-Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   const RooArgSet * condObs, const RooArgSet *poiSet) {
+////////////////////////////////////////////////////////////////////////////////
 
+Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   const RooArgSet * condObs, const RooArgSet *poiSet) {
     int verbose = fgPrintLevel;
       
     
@@ -429,16 +429,16 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
     return val;
 }
 
-//____________________________________________________
-HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
-   // It performs an hypothesis tests using the likelihood function
-   // and computes the p values for the null and the alternate using the asymptotic 
-   // formulae for the profile likelihood ratio.
-   // See G. Cowan, K. Cranmer, E. Gross and O. Vitells.
-   // Asymptotic formulae for likelihood- based tests of new physics. Eur. Phys. J., C71:1–19, 2011.
-   // The formulae are valid only for one POI. If more than one POI exists consider as POI only the 
-   // first one
+////////////////////////////////////////////////////////////////////////////////
+/// It performs an hypothesis tests using the likelihood function
+/// and computes the p values for the null and the alternate using the asymptotic 
+/// formulae for the profile likelihood ratio.
+/// See G. Cowan, K. Cranmer, E. Gross and O. Vitells.
+/// Asymptotic formulae for likelihood- based tests of new physics. Eur. Phys. J., C71:1–19, 2011.
+/// The formulae are valid only for one POI. If more than one POI exists consider as POI only the 
+/// first one
 
+HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    int verbose = fgPrintLevel;
 
    // re-initialized the calculator in case it is needed (pdf or data modifided)
@@ -1145,12 +1145,12 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
 
 }
 
-//______________________________________________________________________________
-RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const ModelConfig & model, const  RooArgSet & paramValues, RooArgSet & asimovGlobObs, const RooArgSet * genPoiValues )  {
-   // static function to the an Asimov data set
-   // given an observed dat set, a model and a snapshot of poi. 
-   // Return the asimov data set + global observables set to values satisfying the constraints
+////////////////////////////////////////////////////////////////////////////////
+/// static function to the an Asimov data set
+/// given an observed dat set, a model and a snapshot of poi. 
+/// Return the asimov data set + global observables set to values satisfying the constraints
 
+RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const ModelConfig & model, const  RooArgSet & paramValues, RooArgSet & asimovGlobObs, const RooArgSet * genPoiValues )  {
 
    int verbose = fgPrintLevel;
 
@@ -1248,12 +1248,12 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 
 }
 
-//______________________________________________________________________________
-RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, const  RooArgSet & allParamValues, RooArgSet & asimovGlobObs)  {
-   // static function to the an Asimov data set
-   // given the model and the values of all parameters including the nuisance 
-   // Return the asimov data set + global observables set to values satisfying the constraints
+////////////////////////////////////////////////////////////////////////////////
+/// static function to the an Asimov data set
+/// given the model and the values of all parameters including the nuisance 
+/// Return the asimov data set + global observables set to values satisfying the constraints
 
+RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, const  RooArgSet & allParamValues, RooArgSet & asimovGlobObs)  {
 
    int verbose = fgPrintLevel;
  

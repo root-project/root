@@ -54,36 +54,39 @@
 
 ClassImp(TMVA::PDEFoamDiscriminant)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer, user should not use it.
+
 TMVA::PDEFoamDiscriminant::PDEFoamDiscriminant()
    : PDEFoam()
    , fClass(0)
 {
-   // Default constructor for streamer, user should not use it.
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::PDEFoamDiscriminant::PDEFoamDiscriminant(const TString& name, UInt_t cls)
    : PDEFoam(name)
    , fClass(cls)
 {}
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy Constructor  NOT IMPLEMENTED (NEVER USED)
+
 TMVA::PDEFoamDiscriminant::PDEFoamDiscriminant(const PDEFoamDiscriminant &from)
    : PDEFoam(from)
    , fClass(from.fClass)
 {
-   // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function fills an event into the discriminant PDEFoam.  The
+/// event weight 'wt' is filled into cell element 0 if the event is
+/// of class fClass, and filled into cell element 1 otherwise.
+
 void TMVA::PDEFoamDiscriminant::FillFoamCells(const Event* ev, Float_t wt)
 {
-   // This function fills an event into the discriminant PDEFoam.  The
-   // event weight 'wt' is filled into cell element 0 if the event is
-   // of class fClass, and filled into cell element 1 otherwise.
-
    // find corresponding foam cell
    std::vector<Float_t> values  = ev->GetValues();
    std::vector<Float_t> tvalues = VarTransform(values);
@@ -97,12 +100,12 @@ void TMVA::PDEFoamDiscriminant::FillFoamCells(const Event* ev, Float_t wt)
       SetCellElement(cell, 1, GetCellElement(cell, 1) + wt);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calc discriminator and its error for every cell and save it to
+/// the cell.
+
 void TMVA::PDEFoamDiscriminant::Finalize()
 {
-   // Calc discriminator and its error for every cell and save it to
-   // the cell.
-
    // loop over cells
    for (Long_t iCell = 0; iCell <= fLastCe; iCell++) {
       if (!(fCells[iCell]->GetStat()))
@@ -137,32 +140,32 @@ void TMVA::PDEFoamDiscriminant::Finalize()
    }
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project foam variable idim1 and variable idim2 to histogram.
+/// The projection algorithm is modified such that the z axis range
+/// of the returned histogram is [0, 1], as necessary for the
+/// interpretation as a discriminator.  This is done by weighting
+/// the cell values (in case of cell_value = kValue) by the cell
+/// volume in all dimensions, excluding 'idim1' and 'idim2'.
+///
+/// Parameters:
+///
+/// - idim1, idim2 - dimensions to project to
+///
+/// - cell_value - the cell value to draw
+///
+/// - kernel - a PDEFoam kernel (optional).  If NULL is given, the
+///            kernel is ignored and the pure cell values are
+///            plotted.
+///
+/// - nbin - number of bins in x and y direction of result histogram
+///          (optional, default is 50).
+///
+/// Returns:
+/// a 2-dimensional histogram
+
 TH2D* TMVA::PDEFoamDiscriminant::Project2(Int_t idim1, Int_t idim2, ECellValue cell_value, PDEFoamKernelBase *kernel, UInt_t nbin)
 {
-   // Project foam variable idim1 and variable idim2 to histogram.
-   // The projection algorithm is modified such that the z axis range
-   // of the returned histogram is [0, 1], as necessary for the
-   // interpretation as a discriminator.  This is done by weighting
-   // the cell values (in case of cell_value = kValue) by the cell
-   // volume in all dimensions, excluding 'idim1' and 'idim2'.
-   //
-   // Parameters:
-   //
-   // - idim1, idim2 - dimensions to project to
-   //
-   // - cell_value - the cell value to draw
-   //
-   // - kernel - a PDEFoam kernel (optional).  If NULL is given, the
-   //            kernel is ignored and the pure cell values are
-   //            plotted.
-   //
-   // - nbin - number of bins in x and y direction of result histogram
-   //          (optional, default is 50).
-   //
-   // Returns:
-   // a 2-dimensional histogram
-
    // avoid plotting of wrong dimensions
    if ((idim1 >= GetTotDim()) || (idim1 < 0) ||
        (idim2 >= GetTotDim()) || (idim2 < 0) ||

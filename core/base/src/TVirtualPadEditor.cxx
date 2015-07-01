@@ -27,27 +27,27 @@ TString            TVirtualPadEditor::fgEditorName = "";
 
 ClassImp(TVirtualPadEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual editor ctor.
+
 TVirtualPadEditor::TVirtualPadEditor()
 {
-   // Virtual editor ctor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual editor dtor.
+
 TVirtualPadEditor::~TVirtualPadEditor()
 {
-   // Virtual editor dtor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning a pointer to a new pad editor.
+/// This pointer can be adopted by a TCanvas (i.e. TRootCanvas)
+/// when it embeds the editor.
+
 TVirtualPadEditor *TVirtualPadEditor::LoadEditor()
 {
-   // Static function returning a pointer to a new pad editor.
-   // This pointer can be adopted by a TCanvas (i.e. TRootCanvas)
-   // when it embeds the editor.
-
    TPluginHandler *h;
    if (fgEditorName.Length() == 0)
       fgEditorName = gEnv->GetValue("Root.PadEditor","Ged");
@@ -62,41 +62,41 @@ TVirtualPadEditor *TVirtualPadEditor::LoadEditor()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the type of the default pad editor. Static method.
+
 const char *TVirtualPadEditor::GetEditorName()
 {
-   // Returns the type of the default pad editor. Static method.
-
    return fgEditorName;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the pad editor dialog. Static method.
+
 TVirtualPadEditor *TVirtualPadEditor::GetPadEditor(Bool_t load)
 {
-   // Returns the pad editor dialog. Static method.
-
    if (!fgPadEditor && load)
       fgPadEditor = LoadEditor();
 
    return fgPadEditor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set type of default pad editor. Static method.
+
 void TVirtualPadEditor::SetPadEditorName(const char *name)
 {
-   // Set type of default pad editor. Static method.
-
    if (fgEditorName == name) return;
    delete fgPadEditor;
    fgPadEditor = 0;
    fgEditorName = name;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show the global pad editor. Static method.
+
 void TVirtualPadEditor::ShowEditor()
 {
-   // Show the global pad editor. Static method.
-
    if (!fgPadEditor) {
       GetPadEditor();
       if (!fgPadEditor) return;
@@ -105,67 +105,67 @@ void TVirtualPadEditor::ShowEditor()
    fgPadEditor->Show();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Hide the pad editor. Static method.
+
 void TVirtualPadEditor::HideEditor()
 {
-   //  Hide the pad editor. Static method.
-
    if (fgPadEditor)
       fgPadEditor->Hide();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the global pad editor. Static method.
+
 void TVirtualPadEditor::Terminate()
 {
-   // Close the global pad editor. Static method.
-
    if (!fgPadEditor) return;
 
    delete fgPadEditor;
    fgPadEditor = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update fill attributes via the pad editor
+
 void TVirtualPadEditor::UpdateFillAttributes(Int_t color, Int_t style)
 {
-   // Update fill attributes via the pad editor
-
    ShowEditor();
 
    if (fgPadEditor)
       fgPadEditor->FillAttributes(color, style);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update text attributes via the pad editor
+
 void TVirtualPadEditor::UpdateTextAttributes(Int_t align, Float_t angle,
                                              Int_t col, Int_t font, Float_t tsize)
 {
-   // Update text attributes via the pad editor
-
    ShowEditor();
 
    if (fgPadEditor)
       fgPadEditor->TextAttributes(align, angle, col, font, tsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update line attributes via the pad editor
+
 void TVirtualPadEditor::UpdateLineAttributes(Int_t color, Int_t style,
                                              Int_t width)
 {
-   // Update line attributes via the pad editor
-
    ShowEditor();
 
    if (fgPadEditor)
       fgPadEditor->LineAttributes(color, style, width);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update marker attributes via the pad editor
+
 void TVirtualPadEditor::UpdateMarkerAttributes(Int_t color, Int_t style,
                                                Float_t msize)
 {
-   // Update marker attributes via the pad editor
-
    ShowEditor();
 
    if (fgPadEditor)

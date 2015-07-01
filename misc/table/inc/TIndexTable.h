@@ -72,10 +72,10 @@ protected:
    virtual TTableDescriptor *GetDescriptorPointer() const;
    virtual void SetDescriptorPointer(TTableDescriptor *list);
 public:
-   TIndexTable() : TTable("TIndexTable",sizeof(int))    {SetType("int");}
-   TIndexTable(const char *name) : TTable(name,sizeof(int)) {SetType("int");}
-   TIndexTable(Int_t n) : TTable("TIndexTable",n,sizeof(int)) {SetType("int");}
-   TIndexTable(const char *name,Int_t n) : TTable(name,n,sizeof(int)) {SetType("int");}
+   TIndexTable() : TTable("TIndexTable",sizeof(int)), fRefTable(0)   {SetType("int");}
+   TIndexTable(const char *name) : TTable(name,sizeof(int)), fRefTable(0) {SetType("int");}
+   TIndexTable(Int_t n) : TTable("TIndexTable",n,sizeof(int)), fRefTable(0) {SetType("int");}
+   TIndexTable(const char *name,Int_t n) : TTable(name,n,sizeof(int)), fRefTable(0) {SetType("int");}
    virtual ~TIndexTable() {}
    const int *GetTable(Int_t i=0) const;
    int &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }

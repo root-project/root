@@ -21,10 +21,11 @@
 
 ClassImp(TGeoAtt)
 
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoAtt::TGeoAtt()
 {
-// Default constructor
    fGeoAtt = 0;
    if (!gGeoManager) return;
    SetActivity(kTRUE);
@@ -35,10 +36,11 @@ TGeoAtt::TGeoAtt()
    SetVisTouched(kFALSE);
    SetVisLeaves();
 }
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TGeoAtt::TGeoAtt(Option_t * /*vis_opt*/, Option_t * /*activity_opt*/, Option_t * /*optimization_opt*/)
 {
-// Constructor
    fGeoAtt = 0;
    SetActivity(kTRUE);
    SetActiveDaughters(kTRUE);
@@ -48,79 +50,89 @@ TGeoAtt::TGeoAtt(Option_t * /*vis_opt*/, Option_t * /*activity_opt*/, Option_t *
    SetVisTouched(kFALSE);
    SetVisLeaves();
 }
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoAtt::~TGeoAtt()
 {
-// Destructor
 }
 
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Set branch type visibility.
+
 void TGeoAtt::SetVisBranch()
 {
-// Set branch type visibility.
    SetAttBit(kVisBranch, kTRUE);
    SetAttBit(kVisContainers, kFALSE);
    SetAttBit(kVisOnly, kFALSE);
 }
 
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Set branch type visibility.
+
 void TGeoAtt::SetVisContainers(Bool_t flag)
 {
-// Set branch type visibility.
    SetVisLeaves(!flag);
 }
 
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Set branch type visibility.
+
 void TGeoAtt::SetVisLeaves(Bool_t flag)
 {
-// Set branch type visibility.
    SetAttBit(kVisBranch, kFALSE);
    SetAttBit(kVisContainers, !flag);
    SetAttBit(kVisOnly, kFALSE);
 }
 
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Set branch type visibility.
+
 void TGeoAtt::SetVisOnly(Bool_t flag)
 {
-// Set branch type visibility.
    SetAttBit(kVisBranch, kFALSE);
    SetAttBit(kVisContainers, kFALSE);
    SetAttBit(kVisOnly, flag);
 }
 
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Set visibility for this object
+
 void TGeoAtt::SetVisibility(Bool_t vis)
 {
-// Set visibility for this object
    if (vis)  SetAttBit(kVisThis);
    else      ResetAttBit(kVisThis);
    if (gGeoManager && gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Set visibility for the daughters.
+
 void TGeoAtt::SetVisDaughters(Bool_t vis)
 {
-// Set visibility for the daughters.
    if (vis)  SetAttBit(kVisDaughters);
    else      ResetAttBit(kVisDaughters);
    if (gGeoManager && gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Mark attributes as "streamed to file".
+
 void TGeoAtt::SetVisStreamed(Bool_t vis)
 {
-// Mark attributes as "streamed to file".
    if (vis)  SetAttBit(kVisStreamed);
    else      ResetAttBit(kVisStreamed);
 }
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Mark visualization attributes as "modified".
+
 void TGeoAtt::SetVisTouched(Bool_t vis)
 {
-// Mark visualization attributes as "modified".
    if (vis)  SetAttBit(kVisTouched);
    else      ResetAttBit(kVisTouched);
 }
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Set optimization flags.
+
 void TGeoAtt::SetOptimization(Option_t * /*option*/)
 {
-// Set optimization flags.
 }
 

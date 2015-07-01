@@ -48,7 +48,9 @@ enum EParametersDialogWid {
 
 ClassImp(TFunctionParametersDialog)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the parameters' dialog of currently selected function 'func'.
+
 TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
                                                      const TGWindow *main,
                                                      TF1 *func,
@@ -56,8 +58,6 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
                                                      Double_t rx, Double_t ry) :
    TGTransientFrame(p, main, 10, 10, kVerticalFrame)
 {
-   // Create the parameters' dialog of currently selected function 'func'.
-
    fFunc = func;
    fFpad = pad;
    fRXmin = rx;
@@ -261,11 +261,11 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
    gClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TFunctionParametersDialog::~TFunctionParametersDialog()
 {
-   // Destructor.
-
    TGFrameElement *el;
    TIter next(GetList());
 
@@ -287,11 +287,11 @@ TFunctionParametersDialog::~TFunctionParametersDialog()
    delete [] fPerr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close parameters' dialog.
+
 void TFunctionParametersDialog::CloseWindow()
 {
-   // Close parameters' dialog.
-
    if (fHasChanges) {
       Int_t ret;
       const char *txt;
@@ -309,21 +309,21 @@ void TFunctionParametersDialog::CloseWindow()
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the Cancel button.
+
 void TFunctionParametersDialog::DoCancel()
 {
-   // Slot related to the Cancel button.
-
    if (fHasChanges)
       DoReset();
    TTimer::SingleShot(50, "TFunctionParametersDialog", this, "CloseWindow()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the Fix check button.
+
 void TFunctionParametersDialog::DoFix(Bool_t on)
 {
-   // Slot related to the Fix check button.
-
    fReset->SetState(kButtonUp);
    TGButton *bt = (TGButton *) gTQSender;
    Int_t id = bt->WidgetId();
@@ -399,33 +399,33 @@ void TFunctionParametersDialog::DoFix(Bool_t on)
       fApply->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the OK button.
+
 void TFunctionParametersDialog::DoOK()
 {
-   // Slot related to the OK button.
-
    if (fHasChanges)
       RedrawFunction();
    fFunc->SetRange(fRangexmin, fRangexmax);
    TTimer::SingleShot(50, "TFunctionParametersDialog", this, "CloseWindow()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the Preview button.
+
 void TFunctionParametersDialog::DoApply()
 {
-   // Slot related to the Preview button.
-
    RedrawFunction();
    fApply->SetState(kButtonDisabled);
    if (fReset->GetState() == kButtonDisabled)
       fReset->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the Reset button.
+
 void TFunctionParametersDialog::DoReset()
 {
-   // Slot related to the Reset button.
-
    fHasChanges = kTRUE;
    Int_t k = fNP;
    for (Int_t i = 0; i < fNP; i++) {
@@ -509,11 +509,11 @@ void TFunctionParametersDialog::DoReset()
    fReset->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the parameters' value settings.
+
 void TFunctionParametersDialog::DoSlider()
 {
-   // Slot related to the parameters' value settings.
-
    TGTripleHSlider *sl = (TGTripleHSlider *) gTQSender;
    Int_t id = sl->WidgetId();
 
@@ -536,11 +536,11 @@ void TFunctionParametersDialog::DoSlider()
       fReset->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the parameter value settings.
+
 void TFunctionParametersDialog::DoParValue()
 {
-   // Slot related to the parameter value settings.
-
    TGNumberEntry *ne = (TGNumberEntry *) gTQSender;
    Int_t id = ne->WidgetId();
 
@@ -578,11 +578,11 @@ void TFunctionParametersDialog::DoParValue()
       fReset->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the minumum parameter limit settings.
+
 void TFunctionParametersDialog::DoParMinLimit()
 {
-   // Slot related to the minumum parameter limit settings.
-
    TGNumberEntryField *ne = (TGNumberEntryField *) gTQSender;
    Int_t id = ne->WidgetId();
 
@@ -614,11 +614,11 @@ void TFunctionParametersDialog::DoParMinLimit()
       fReset->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the maximum parameter limit settings.
+
 void TFunctionParametersDialog::DoParMaxLimit()
 {
-   // Slot related to the maximum parameter limit settings.
-
    TGNumberEntryField *ne = (TGNumberEntryField *) gTQSender;
    Int_t id = ne->WidgetId();
 
@@ -650,11 +650,11 @@ void TFunctionParametersDialog::DoParMaxLimit()
       fReset->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw function graphics.
+
 void TFunctionParametersDialog::RedrawFunction()
 {
-   // Redraw function graphics.
-
    TString opt = fFunc->GetDrawOption();
    opt.ToUpper();
    if (!opt.Contains("SAME"))
@@ -666,11 +666,11 @@ void TFunctionParametersDialog::RedrawFunction()
    fHasChanges = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle the button dependent states in this dialog.
+
 void TFunctionParametersDialog::HandleButtons(Bool_t update)
 {
-   // Handle the button dependent states in this dialog.
-
    if (update && fHasChanges)
       RedrawFunction();
    else if ((fApply->GetState() == kButtonDisabled) && fHasChanges) {

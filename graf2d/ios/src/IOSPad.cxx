@@ -39,7 +39,8 @@
 namespace ROOT {
 namespace iOS {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Pad::Pad(UInt_t w, UInt_t h)
 {
    fViewW = w;
@@ -99,7 +100,8 @@ Pad::Pad(UInt_t w, UInt_t h)
    Range(0., 0., 1., 1.);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Pad::~Pad()
 {
    delete fFrame;
@@ -112,19 +114,22 @@ Pad::~Pad()
    delete fView;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *Pad::GetName() const
 {
    return "iOSPad";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *Pad::GetTitle() const
 {
    return "iOSPad";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::Clear(Option_t *)
 {
    fSelectionIsValid = kFALSE;
@@ -143,7 +148,8 @@ void Pad::Clear(Option_t *)
    Range(0., 0., 1., 1.);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::SetViewWH(UInt_t viewW, UInt_t viewH)
 {
    fViewW = viewW;
@@ -154,22 +160,25 @@ void Pad::SetViewWH(UInt_t viewW, UInt_t viewH)
    fPainter.SetTransform(fViewW, GetX1(), GetX2(), fViewH, GetY1(), GetY2());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 UInt_t Pad::GetWw() const
 {
    return fViewW;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 UInt_t Pad::GetWh() const
 {
    return fViewH;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fix pad aspect ratio to current value if fixed is true.
+
 void Pad::SetFixedAspectRatio(Bool_t fixed)
 {
-   // Fix pad aspect ratio to current value if fixed is true.
    if (fixed) {
       if (!fFixedAspectRatio) {
          if (fHNDC != 0.)
@@ -186,30 +195,33 @@ void Pad::SetFixedAspectRatio(Bool_t fixed)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert x from pad to X.
+
 Double_t Pad::PadtoX(Double_t x) const
 {
-   // Convert x from pad to X.
    if (fLogx && x < 50)
       return Double_t(TMath::Exp(2.302585092994 * x));
 
    return x;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert y from pad to Y.
+
 Double_t Pad::PadtoY(Double_t y) const
 {
-   // Convert y from pad to Y.
    if (fLogy && y < 50)
       return Double_t(TMath::Exp(2.302585092994 * y));
 
    return y;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert x from X to pad.
+
 Double_t Pad::XtoPad(Double_t x) const
 {
-   // Convert x from X to pad.
    if (fLogx) {
       if (x > 0)
          x = TMath::Log10(x);
@@ -220,10 +232,11 @@ Double_t Pad::XtoPad(Double_t x) const
    return x;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert y from Y to pad.
+
 Double_t Pad::YtoPad(Double_t y) const
 {
-   // Convert y from Y to pad.
    if (fLogy) {
       if (y > 0)
          y = TMath::Log10(y);
@@ -234,7 +247,8 @@ Double_t Pad::YtoPad(Double_t y) const
    return y;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t Pad::UtoPixel(Double_t u) const
 {
    Double_t val;
@@ -252,7 +266,8 @@ Int_t Pad::UtoPixel(Double_t u) const
    return Int_t(val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t Pad::VtoPixel(Double_t v) const
 {
    Double_t val;
@@ -270,7 +285,8 @@ Int_t Pad::VtoPixel(Double_t v) const
    return Int_t(val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t Pad::XtoAbsPixel(Double_t x) const
 {
    const Double_t val = fXtoAbsPixelk + x * fXtoPixel;
@@ -282,7 +298,8 @@ Int_t Pad::XtoAbsPixel(Double_t x) const
    return Int_t(val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t Pad::YtoAbsPixel(Double_t y) const
 {
    const Double_t val = fYtoAbsPixelk + y*fYtoPixel;
@@ -294,7 +311,8 @@ Int_t Pad::YtoAbsPixel(Double_t y) const
    return Int_t(val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t Pad::XtoPixel(Double_t x) const
 {
    Double_t val;
@@ -311,7 +329,8 @@ Int_t Pad::XtoPixel(Double_t x) const
    return Int_t(val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t Pad::YtoPixel(Double_t y) const
 {
    Double_t val;
@@ -328,7 +347,8 @@ Int_t Pad::YtoPixel(Double_t y) const
    return Int_t(val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t Pad::PixeltoX(Int_t px)
 {
    if (fAbsCoord)
@@ -337,7 +357,8 @@ Double_t Pad::PixeltoX(Int_t px)
       return fPixeltoXk + px * fPixeltoX;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t Pad::PixeltoY(Int_t py)
 {
    if (fAbsCoord)
@@ -346,49 +367,50 @@ Double_t Pad::PixeltoY(Int_t py)
       return fPixeltoYk + py * fPixeltoY;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Lin/Log scale for X
+///   value = 0 X scale will be linear
+///   value = 1 X scale will be logarithmic (base 10)
+///   value > 1 reserved for possible support of base e or other
+
 void Pad::SetLogx(Int_t value)
 {
-   // Set Lin/Log scale for X
-   //   value = 0 X scale will be linear
-   //   value = 1 X scale will be logarithmic (base 10)
-   //   value > 1 reserved for possible support of base e or other
    fLogx = value;
    delete fView;
    fView = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Lin/Log scale for Y
+///   value = 0 Y scale will be linear
+///   value = 1 Y scale will be logarithmic (base 10)
+///   value > 1 reserved for possible support of base e or other
+
 void Pad::SetLogy(Int_t value)
 {
-   // Set Lin/Log scale for Y
-   //   value = 0 Y scale will be linear
-   //   value = 1 Y scale will be logarithmic (base 10)
-   //   value > 1 reserved for possible support of base e or other
-
    fLogy = value;
    delete fView;
    fView=0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Lin/Log scale for Z
+
 void Pad::SetLogz(Int_t value)
 {
-   // Set Lin/Log scale for Z
-
    fLogz = value;
    delete fView;
    fView=0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set canvas range for pad and resize the pad. If the aspect ratio
+/// was fixed before the call it will be un-fixed.
+
 void Pad::SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup)
 {
-   // Set canvas range for pad and resize the pad. If the aspect ratio
-   // was fixed before the call it will be un-fixed.
-
    // Reorder points to make sure xlow,ylow is bottom left point and
    // xup,yup is top right point.
    if (xup < xlow)
@@ -407,11 +429,12 @@ void Pad::SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup)
    ResizePad();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set all pad parameters.
+
 void Pad::SetPad(const char *, const char *, Double_t xlow, Double_t ylow, Double_t xup,
                  Double_t yup, Color_t color, Short_t bordersize, Short_t bordermode)
 {
-   // Set all pad parameters.
    SetFillStyle(1001);
    SetBottomMargin(gStyle->GetPadBottomMargin());
    SetTopMargin(gStyle->GetPadTopMargin());
@@ -436,33 +459,35 @@ void Pad::SetPad(const char *, const char *, Double_t xlow, Double_t ylow, Doubl
    SetPad(xlow, ylow, xup, yup);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pad vertical (default) or horizontal
+
 void Pad::SetVertical(Bool_t vert)
 {
-   // Set pad vertical (default) or horizontal
    if (vert)
       ResetBit(kHori);
    else
       SetBit(kHori);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pad world coordinates range.
+
 void Pad::GetRange(Double_t &x1, Double_t &y1, Double_t &x2, Double_t &y2)
 {
-   // Return pad world coordinates range.
    x1 = fX1;
    y1 = fY1;
    x2 = fX2;
    y2 = fY2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set world coordinate system for the pad.
+/// Emits signal "RangeChanged()", in the slot get the range
+/// via GetRange().
+
 void Pad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   // Set world coordinate system for the pad.
-   // Emits signal "RangeChanged()", in the slot get the range
-   // via GetRange().
-
    if ((x1 >= x2) || (y1 >= y2)) {
       //Error("Range", "illegal world coordinates range: x1=%f, y1=%f, x2=%f, y2=%f",x1,y1,x2,y2);
       return;
@@ -486,27 +511,28 @@ void Pad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    fPainter.SetTransform(GetWw(), GetX1(), GetX2(), GetWh(), GetY1(), GetY2());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pad axis coordinates range.
+
 void Pad::GetRangeAxis(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax)
 {
-   // Return pad axis coordinates range.
    xmin = fUxmin;
    ymin = fUymin;
    xmax = fUxmax;
    ymax = fUymax;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set axis coordinate system for the pad.
+/// The axis coordinate system is a subset of the world coordinate system
+/// xmin,ymin is the origin of the current coordinate system,
+/// xmax is the end of the X axis, ymax is the end of the Y axis.
+/// By default a margin of 10 per cent is left on all sides of the pad
+/// Emits signal "RangeAxisChanged()", in the slot get the axis range
+/// via GetRangeAxis().
+
 void Pad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 {
-   // Set axis coordinate system for the pad.
-   // The axis coordinate system is a subset of the world coordinate system
-   // xmin,ymin is the origin of the current coordinate system,
-   // xmax is the end of the X axis, ymax is the end of the Y axis.
-   // By default a margin of 10 per cent is left on all sides of the pad
-   // Emits signal "RangeAxisChanged()", in the slot get the axis range
-   // via GetRangeAxis().
-
    if ((xmin >= xmax) || (ymin >= ymax)) {
       //Error("RangeAxis", "illegal axis coordinates range: xmin=%f, ymin=%f, xmax=%f, ymax=%f", xmin, ymin, xmax, ymax);
       return;
@@ -518,40 +544,42 @@ void Pad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
    fUymax  = ymax;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return lower and upper bounds of the pad in NDC coordinates.
+
 void Pad::GetPadPar(Double_t &xlow, Double_t &ylow, Double_t &xup, Double_t &yup)
 {
-   // Return lower and upper bounds of the pad in NDC coordinates.
    xlow = fXlowNDC;
    ylow = fYlowNDC;
    xup  = fXlowNDC+fWNDC;
    yup  = fYlowNDC+fHNDC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overrride TAttFill::FillStyle for TPad because we want to handle style=0
+/// as style 4000.
+
 void Pad::SetFillStyle(Style_t fillStyle)
 {
-   // Overrride TAttFill::FillStyle for TPad because we want to handle style=0
-   // as style 4000.
-
    if (!fillStyle)
       fillStyle = 4000;
 
    TAttFill::SetFillStyle(fillStyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pad editable yes/no
+/// If a pad is not editable:
+/// - one cannot modify the pad and its objects via the mouse.
+/// - one cannot add new objects to the pad
+
 void Pad::SetEditable(Bool_t mode)
 {
-   // Set pad editable yes/no
-   // If a pad is not editable:
-   // - one cannot modify the pad and its objects via the mouse.
-   // - one cannot add new objects to the pad
-
    fEditable = mode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TVirtualPad *Pad::cd(Int_t)
 {
    gPad = this;
@@ -560,13 +588,14 @@ TVirtualPad *Pad::cd(Int_t)
    return this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the current TView. Delete previous view if view=0.
+/// This code was taken from original TPad and it dies after
+/// attempt to free memory - view was already deleted by THistPainter.
+/// So, I simply assume, that pad does not own fView.
+
 void Pad::SetView(TView *view)
 {
-   // Set the current TView. Delete previous view if view=0.
-   // This code was taken from original TPad and it dies after
-   // attempt to free memory - view was already deleted by THistPainter.
-   // So, I simply assume, that pad does not own fView.
    /*
    if (!view)
       delete fView;
@@ -574,104 +603,104 @@ void Pad::SetView(TView *view)
    fView = view;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute pad conversion coefficients.
+///
+///   Conversion from x to px & y to py
+///   =================================
+///
+///       x - xmin     px - pxlow              xrange  = xmax-xmin
+///       --------  =  ----------      with
+///        xrange        pxrange               pxrange = pxmax-pxmin
+///
+///               pxrange(x-xmin)
+///   ==>  px =   ---------------  + pxlow   = fXtoPixelk + fXtoPixel * x
+///                    xrange
+///
+///   ==>  fXtoPixelk = pxlow - pxrange*xmin/xrange
+///        fXtoPixel  = pxrange/xrange
+///           where  pxlow   = fAbsXlowNDC*fCw
+///                  pxrange = fAbsWNDC*fCw
+///
+///
+///       y - ymin     py - pylow              yrange  = ymax-ymin
+///       --------  =  ----------      with
+///        yrange        pyrange               pyrange = pymax-pymin
+///
+///               pyrange(y-ymin)
+///   ==>  py =   ---------------  + pylow   = fYtoPixelk + fYtoPixel * y
+///                    yrange
+///
+///   ==>  fYtoPixelk = pylow - pyrange*ymin/yrange
+///        fYtoPixel  = pyrange/yrange
+///           where  pylow   = (1-fAbsYlowNDC)*fCh
+///                  pyrange = -fAbsHNDC*fCh
+///
+///-  Conversion from px to x & py to y
+///   =================================
+///
+///             xrange(px-pxlow)
+///   ==>  x =  ----------------  + xmin  = fPixeltoXk + fPixeltoX * px
+///                 pxrange
+///-
+///   ==>  fPixeltoXk = xmin - pxlow*xrange/pxrange
+///        fPixeltoX  = xrange/pxrange
+///
+///             yrange(py-pylow)
+///   ==>  y =  ----------------  + ymin  = fPixeltoYk + fPixeltoY * py
+///                 pyrange
+///-
+///   ==>  fPixeltoYk = ymin - pylow*yrange/pyrange
+///        fPixeltoY  = yrange/pyrange
+///
+///-----------------------------------------------------------------------
+///
+///  Computation of the coefficients in case of LOG scales
+///- =====================================================
+///
+///   A, Conversion from pixel coordinates to world coordinates
+///
+///       Log(x) - Log(xmin)      Log(x/xmin)       px - pxlow
+///  u = --------------------- =  -------------  =  -----------
+///      Log(xmax) - Log(xmin)    Log(xmax/xmin)     pxrange
+///
+///  ==> Log(x/xmin) = u*Log(xmax/xmin)
+///      x = xmin*exp(u*Log(xmax/xmin)
+///   Let alfa = Log(xmax/xmin)/fAbsWNDC
+///
+///      x = xmin*exp(-alfa*pxlow) + exp(alfa*px)
+///      x = fPixeltoXk*exp(fPixeltoX*px)
+///  ==> fPixeltoXk = xmin*exp(-alfa*pxlow)
+///      fPixeltoX  = alfa
+///
+///       Log(y) - Log(ymin)      Log(y/ymin)       pylow - py
+///  v = --------------------- =  -------------  =  -----------
+///      Log(ymax) - Log(ymin)    Log(ymax/ymin)     pyrange
+///
+///   Let beta = Log(ymax/ymin)/pyrange
+///      Log(y/ymin) = beta*pylow - beta*py
+///      y/ymin = exp(beta*pylow - beta*py)
+///      y = ymin*exp(beta*pylow)*exp(-beta*py)
+///  ==> y = fPixeltoYk*exp(fPixeltoY*py)
+///      fPixeltoYk = ymin*exp(beta*pylow)
+///      fPixeltoY  = -beta
+///
+///-  B, Conversion from World coordinates to pixel coordinates
+///
+///  px = pxlow + u*pxrange
+///     = pxlow + Log(x/xmin)/alfa
+///     = pxlow -Log(xmin)/alfa  + Log(x)/alfa
+///     = fXtoPixelk + fXtoPixel*Log(x)
+///  ==> fXtoPixelk = pxlow -Log(xmin)/alfa
+///  ==> fXtoPixel  = 1/alfa
+///
+///  py = pylow - Log(y/ymin)/beta
+///     = fYtoPixelk + fYtoPixel*Log(y)
+///  ==> fYtoPixelk = pylow - Log(ymin)/beta
+///      fYtoPixel  = 1/beta
+
 void Pad::ResizePad(Option_t *)
 {
-   // Compute pad conversion coefficients.
-   //
-   //   Conversion from x to px & y to py
-   //   =================================
-   //
-   //       x - xmin     px - pxlow              xrange  = xmax-xmin
-   //       --------  =  ----------      with
-   //        xrange        pxrange               pxrange = pxmax-pxmin
-   //
-   //               pxrange(x-xmin)
-   //   ==>  px =   ---------------  + pxlow   = fXtoPixelk + fXtoPixel * x
-   //                    xrange
-   //
-   //   ==>  fXtoPixelk = pxlow - pxrange*xmin/xrange
-   //        fXtoPixel  = pxrange/xrange
-   //           where  pxlow   = fAbsXlowNDC*fCw
-   //                  pxrange = fAbsWNDC*fCw
-   //
-   //
-   //       y - ymin     py - pylow              yrange  = ymax-ymin
-   //       --------  =  ----------      with
-   //        yrange        pyrange               pyrange = pymax-pymin
-   //
-   //               pyrange(y-ymin)
-   //   ==>  py =   ---------------  + pylow   = fYtoPixelk + fYtoPixel * y
-   //                    yrange
-   //
-   //   ==>  fYtoPixelk = pylow - pyrange*ymin/yrange
-   //        fYtoPixel  = pyrange/yrange
-   //           where  pylow   = (1-fAbsYlowNDC)*fCh
-   //                  pyrange = -fAbsHNDC*fCh
-   //
-   //-  Conversion from px to x & py to y
-   //   =================================
-   //
-   //             xrange(px-pxlow)
-   //   ==>  x =  ----------------  + xmin  = fPixeltoXk + fPixeltoX * px
-   //                 pxrange
-   //-
-   //   ==>  fPixeltoXk = xmin - pxlow*xrange/pxrange
-   //        fPixeltoX  = xrange/pxrange
-   //
-   //             yrange(py-pylow)
-   //   ==>  y =  ----------------  + ymin  = fPixeltoYk + fPixeltoY * py
-   //                 pyrange
-   //-
-   //   ==>  fPixeltoYk = ymin - pylow*yrange/pyrange
-   //        fPixeltoY  = yrange/pyrange
-   //
-   //-----------------------------------------------------------------------
-   //
-   //  Computation of the coefficients in case of LOG scales
-   //- =====================================================
-   //
-   //   A, Conversion from pixel coordinates to world coordinates
-   //
-   //       Log(x) - Log(xmin)      Log(x/xmin)       px - pxlow
-   //  u = --------------------- =  -------------  =  -----------
-   //      Log(xmax) - Log(xmin)    Log(xmax/xmin)     pxrange
-   //
-   //  ==> Log(x/xmin) = u*Log(xmax/xmin)
-   //      x = xmin*exp(u*Log(xmax/xmin)
-   //   Let alfa = Log(xmax/xmin)/fAbsWNDC
-   //
-   //      x = xmin*exp(-alfa*pxlow) + exp(alfa*px)
-   //      x = fPixeltoXk*exp(fPixeltoX*px)
-   //  ==> fPixeltoXk = xmin*exp(-alfa*pxlow)
-   //      fPixeltoX  = alfa
-   //
-   //       Log(y) - Log(ymin)      Log(y/ymin)       pylow - py
-   //  v = --------------------- =  -------------  =  -----------
-   //      Log(ymax) - Log(ymin)    Log(ymax/ymin)     pyrange
-   //
-   //   Let beta = Log(ymax/ymin)/pyrange
-   //      Log(y/ymin) = beta*pylow - beta*py
-   //      y/ymin = exp(beta*pylow - beta*py)
-   //      y = ymin*exp(beta*pylow)*exp(-beta*py)
-   //  ==> y = fPixeltoYk*exp(fPixeltoY*py)
-   //      fPixeltoYk = ymin*exp(beta*pylow)
-   //      fPixeltoY  = -beta
-   //
-   //-  B, Conversion from World coordinates to pixel coordinates
-   //
-   //  px = pxlow + u*pxrange
-   //     = pxlow + Log(x/xmin)/alfa
-   //     = pxlow -Log(xmin)/alfa  + Log(x)/alfa
-   //     = fXtoPixelk + fXtoPixel*Log(x)
-   //  ==> fXtoPixelk = pxlow -Log(xmin)/alfa
-   //  ==> fXtoPixel  = 1/alfa
-   //
-   //  py = pylow - Log(y/ymin)/beta
-   //     = fYtoPixelk + fYtoPixel*Log(y)
-   //  ==> fYtoPixelk = pylow - Log(ymin)/beta
-   //      fYtoPixel  = 1/beta
-
    // Recompute subpad positions in case pad has been moved/resized
    fAbsXlowNDC  = fXlowNDC;
    fAbsYlowNDC  = fYlowNDC;
@@ -714,11 +743,12 @@ void Pad::ResizePad(Option_t *)
       fView->ResizePad();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get frame.
+///Original TPad has a COMPLETE MESS here. I'm trying to fix this.
+
 TFrame *Pad::GetFrame()
 {
-   // Get frame.
-   //Original TPad has a COMPLETE MESS here. I'm trying to fix this.
    if (!fFrame) {
       fFrame = new TFrame(0., 0., 1., 1.);
 
@@ -739,11 +769,11 @@ TFrame *Pad::GetFrame()
    return fFrame;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Final-overrider for TVirtualPad.
+
 TObject *Pad::GetPrimitive(const char *name) const
 {
-   // Final-overrider for TVirtualPad.
-
    TIter next(&fPrimitives);
    TObject *obj = 0;
 
@@ -759,7 +789,8 @@ TObject *Pad::GetPrimitive(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::Paint(Option_t *)
 {
    cd();
@@ -790,7 +821,8 @@ void Pad::Paint(Option_t *)
    Modified(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::PaintForSelection()
 {
    fInSelectionMode = kTRUE;
@@ -813,7 +845,8 @@ void Pad::PaintForSelection()
    fInSelectionMode = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::PaintShadowForSelected() const
 {
    fInHighlightMode = kTRUE;
@@ -829,7 +862,8 @@ void Pad::PaintShadowForSelected() const
    fInHighlightMode = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::PaintSelected() const
 {
    fInHighlightMode = kTRUE;
@@ -845,14 +879,14 @@ void Pad::PaintSelected() const
    fInHighlightMode = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint box in CurrentPad World coordinates.
+///
+/// if option[0] = 's' the box is forced to be paint with style=0
+/// if option[0] = 'l' the box contour is drawn
+
 void Pad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
 {
-   // Paint box in CurrentPad World coordinates.
-   //
-   // if option[0] = 's' the box is forced to be paint with style=0
-   // if option[0] = 'l' the box contour is drawn
-
    Int_t style0 = gVirtualX->GetFillStyle();
    Int_t style  = style0;
 
@@ -897,18 +931,19 @@ void Pad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t 
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint fill area in CurrentPad World coordinates.
+
 void Pad::PaintFillArea(Int_t, Float_t *, Float_t *, Option_t *)
 {
-   // Paint fill area in CurrentPad World coordinates.
    throw std::runtime_error("Dummy version for floats");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint fill area in CurrentPad World coordinates.
+
 void Pad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
 {
-   // Paint fill area in CurrentPad World coordinates.
-
    if (nn < 3) return;
    Int_t n=0;
    Double_t xmin,xmax,ymin,ymax;
@@ -938,13 +973,14 @@ void Pad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
    fPainter.DrawFillArea(n, &x[0], &y[0]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Paint histogram/graph frame.
+///Original TPad has a COMPLETE MESS here, I can
+///not understand, how it was possible to write.
+///Trying to fix it at least to something sane.
+
 void Pad::PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 {
-   //Paint histogram/graph frame.
-   //Original TPad has a COMPLETE MESS here, I can
-   //not understand, how it was possible to write.
-   //Trying to fix it at least to something sane.
    if (!fFrame)
       GetFrame();
 
@@ -964,11 +1000,11 @@ void Pad::PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ym
    fFrame->Paint();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint line in CurrentPad World coordinates.
+
 void Pad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   // Paint line in CurrentPad World coordinates.
-
    Double_t x[2], y[2];
    x[0] = x1;   x[1] = x2;   y[0] = y1;   y[1] = y2;
 
@@ -982,7 +1018,8 @@ void Pad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    fPainter.DrawLine(x[0], y[0], x[1], y[1]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2)
 {
    const Double_t xRange = GetX2() - GetX1();
@@ -992,11 +1029,11 @@ void Pad::PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2)
                      GetX1() + u2 * xRange, GetY1() + v2 * yRange);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint 3-D line in the CurrentPad.
+
 void Pad::PaintLine3D(Float_t *p1, Float_t *p2)
 {
-   // Paint 3-D line in the CurrentPad.
-
    if (!fView) return;
 
    // convert from 3-D to 2-D pad coordinate system
@@ -1010,11 +1047,11 @@ void Pad::PaintLine3D(Float_t *p1, Float_t *p2)
    PaintLine(xpad[0],xpad[1],xpad[3],xpad[4]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint 3-D line in the CurrentPad.
+
 void Pad::PaintLine3D(Double_t *p1, Double_t *p2)
 {
-   // Paint 3-D line in the CurrentPad.
-
    //take into account perspective view
    if (!fView) return;
    // convert from 3-D to 2-D pad coordinate system
@@ -1029,11 +1066,11 @@ void Pad::PaintLine3D(Double_t *p1, Double_t *p2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint polyline in CurrentPad World coordinates.
+
 void Pad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
 {
-   // Paint polyline in CurrentPad World coordinates.
-
    if (n < 2) return;
 
    Double_t xmin,xmax,ymin,ymax;
@@ -1068,13 +1105,13 @@ void Pad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint polyline in CurrentPad World coordinates.
+///
+///  If option[0] == 'C' no clipping
+
 void Pad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
-   // Paint polyline in CurrentPad World coordinates.
-   //
-   //  If option[0] == 'C' no clipping
-
    if (n < 2) return;
 
    Double_t xmin,xmax,ymin,ymax;
@@ -1116,7 +1153,8 @@ void Pad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
 {
    if (n <= 0) //Check from original TPad.
@@ -1125,10 +1163,11 @@ void Pad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
    fPainter.DrawPolyLineNDC(n, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint 3-D polyline in the CurrentPad.
+
 void Pad::PaintPolyLine3D(Int_t n, Double_t *p)
 {
-   // Paint 3-D polyline in the CurrentPad.
    if (!fView) return;
 
    // Loop on each individual line
@@ -1137,11 +1176,11 @@ void Pad::PaintPolyLine3D(Int_t n, Double_t *p)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint polymarker in CurrentPad World coordinates.
+
 void Pad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
 {
-   // Paint polymarker in CurrentPad World coordinates.
-
    Int_t n = TMath::Abs(nn);
    Double_t xmin,xmax,ymin,ymax;
    if (nn > 0 || TestBit(TGraph::kClipFrame)) {
@@ -1166,11 +1205,11 @@ void Pad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint polymarker in CurrentPad World coordinates.
+
 void Pad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
 {
-   // Paint polymarker in CurrentPad World coordinates.
-
    Int_t n = TMath::Abs(nn);
    Double_t xmin,xmax,ymin,ymax;
    if (nn > 0 || TestBit(TGraph::kClipFrame)) {
@@ -1194,40 +1233,45 @@ void Pad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint text in CurrentPad World coordinates.
+
 void Pad::PaintText(Double_t x, Double_t y, const char *text)
 {
-   // Paint text in CurrentPad World coordinates.
    fPainter.DrawText(x, y, text, TVirtualPadPainter::kClear);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::PaintText(Double_t, Double_t, const wchar_t *)
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint text in CurrentPad NDC coordinates.
+
 void Pad::PaintTextNDC(Double_t u, Double_t v, const char *text)
 {
-   // Paint text in CurrentPad NDC coordinates.
    const Double_t xRange = GetX2() - GetX1();
    const Double_t yRange = GetY2() - GetY1();
    fPainter.DrawText(gPad->GetX1() + u * xRange, gPad->GetY1() + v * yRange, text, TVirtualPadPainter::kClear);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void PaintTextNDC(Double_t, Double_t, const wchar_t *)
 {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Draw a pad frame
+///
+///  Compute real pad range taking into account all margins
+///  Use services of TH1F class
+
 TH1F *Pad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title)
 {
-   //  Draw a pad frame
-   //
-   //  Compute real pad range taking into account all margins
-   //  Use services of TH1F class
    Pad *padsav = (Pad*)gPad;
    if (this !=  padsav) {
       Warning("DrawFrame","Drawframe must be called for the current pad only");
@@ -1268,21 +1312,21 @@ TH1F *Pad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    return hframe;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Redraw the frame axis
+///  Redrawing axis may be necessary in case of superimposed histograms
+///  when one or more histograms have a fill color
+///  Instead of calling this function, it may be more convenient
+///  to call directly h1->Draw("sameaxis") where h1 is the pointer
+///  to the first histogram drawn in the pad.
+///
+///  By default, if the pad has the options gridx or/and gridy activated,
+///  the grid is not drawn by this function.
+///  if option="g" is specified, this will force the drawing of the grid
+///  on top of the picture
+
 void Pad::RedrawAxis(Option_t *option)
 {
-   //  Redraw the frame axis
-   //  Redrawing axis may be necessary in case of superimposed histograms
-   //  when one or more histograms have a fill color
-   //  Instead of calling this function, it may be more convenient
-   //  to call directly h1->Draw("sameaxis") where h1 is the pointer
-   //  to the first histogram drawn in the pad.
-   //
-   //  By default, if the pad has the options gridx or/and gridy activated,
-   //  the grid is not drawn by this function.
-   //  if option="g" is specified, this will force the drawing of the grid
-   //  on top of the picture
-
    // get first histogram in the list of primitives
    TString opt = option;
    opt.ToLower();
@@ -1317,22 +1361,25 @@ void Pad::RedrawAxis(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::GetTextExtent(UInt_t &w, UInt_t &h, const char *text)
 {
    fPainter.GetTextExtent(w, h, text);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::SetContext(CGContextRef ctx)
 {
    fPainter.SetContext(ctx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Linear search :) But list is very short.
+
 const char *Pad::GetSelectedParentDrawOption()const
 {
-   //Linear search :) But list is very short.
    TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
    while (lnk) {
       TObject *obj = lnk->GetObject();
@@ -1344,10 +1391,11 @@ const char *Pad::GetSelectedParentDrawOption()const
    return "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Linear search :) But list is very short.
+
 const char *Pad::GetSelectedDrawOption()const
 {
-   //Linear search :) But list is very short.
    TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
    while (lnk) {
       TObject *obj = lnk->GetObject();
@@ -1359,37 +1407,39 @@ const char *Pad::GetSelectedDrawOption()const
    return "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TObject *Pad::FindObject(const char *name) const
 {
    return fPrimitives.FindObject(name);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TObject *Pad::FindObject(const TObject *obj) const
 {
    return fPrimitives.FindObject(obj);
 }
 
-//___________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clipping routine: Cohen Sutherland algorithm.
+///
+///   If Clip ==2 the segment is outside the boundary.
+///   If Clip ==1 the segment has one point outside the boundary.
+///   If Clip ==0 the segment is inside the boundary.
+///
+/// _Input parameters:
+///
+///  x[2], y[2] : Segment coordinates
+///  xclipl, yclipb, xclipr, yclipt : Clipping boundary
+///
+/// _Output parameters:
+///
+///  x[2], y[2] : New segment coordinates
+
 Int_t Pad::Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t xclipr, Float_t yclipt)
 {
-   // Clipping routine: Cohen Sutherland algorithm.
-   //
-   //   If Clip ==2 the segment is outside the boundary.
-   //   If Clip ==1 the segment has one point outside the boundary.
-   //   If Clip ==0 the segment is inside the boundary.
-   //
-   // _Input parameters:
-   //
-   //  x[2], y[2] : Segment coordinates
-   //  xclipl, yclipb, xclipr, yclipt : Clipping boundary
-   //
-   // _Output parameters:
-   //
-   //  x[2], y[2] : New segment coordinates
-
    const Float_t kP=10000;
    Int_t clip = 0;
 
@@ -1449,24 +1499,24 @@ Int_t Pad::Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t 
 }
 
 
-//___________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clipping routine: Cohen Sutherland algorithm.
+///
+///   If Clip ==2 the segment is outside the boundary.
+///   If Clip ==1 the segment has one point outside the boundary.
+///   If Clip ==0 the segment is inside the boundary.
+///
+/// _Input parameters:
+///
+///  x[2], y[2] : Segment coordinates
+///  xclipl, yclipb, xclipr, yclipt : Clipping boundary
+///
+/// _Output parameters:
+///
+///  x[2], y[2] : New segment coordinates
+
 Int_t Pad::Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt)
 {
-   // Clipping routine: Cohen Sutherland algorithm.
-   //
-   //   If Clip ==2 the segment is outside the boundary.
-   //   If Clip ==1 the segment has one point outside the boundary.
-   //   If Clip ==0 the segment is inside the boundary.
-   //
-   // _Input parameters:
-   //
-   //  x[2], y[2] : Segment coordinates
-   //  xclipl, yclipb, xclipr, yclipt : Clipping boundary
-   //
-   // _Output parameters:
-   //
-   //  x[2], y[2] : New segment coordinates
-
    const Double_t kP=10000;
    Int_t clip = 0;
 
@@ -1534,11 +1584,11 @@ Int_t Pad::Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Doub
 }
 
 
-//___________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the endpoint codes for TPad::Clip.
+
 Int_t Pad::ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, Double_t xcl2, Double_t ycl2)
 {
-   // Compute the endpoint codes for TPad::Clip.
-
    Int_t code = 0;
    if (x < xcl1) code = code | 0x1;
    if (x > xcl2) code = code | 0x2;
@@ -1548,48 +1598,48 @@ Int_t Pad::ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, Do
 }
 
 
-//___________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clip polygon using the Sutherland-Hodgman algorithm.
+///
+/// Input parameters:
+///
+///  n: Number of points in the polygon to be clipped
+///  x[n], y[n] : Polygon do be clipped vertices
+///  xclipl, yclipb, xclipr, yclipt : Clipping boundary
+///
+/// Output parameters:
+///
+/// nn: number of points in xc and yc
+/// xc, yc: clipped polygon vertices. The Int_t returned by this function is
+///         the number of points in the clipped polygon. These vectors must
+///         be allocated by the calling function. A size of 2*n for each is
+///         enough.
+///
+/// Sutherland and Hodgman's polygon-clipping algorithm uses a divide-and-conquer
+/// strategy: It solves a series of simple and identical problems that, when
+/// combined, solve the overall problem. The simple problem is to clip a polygon
+/// against a single infinite clip edge. Four clip edges, each defining one boundary
+/// of the clip rectangle, successively clip a polygon against a clip rectangle.
+///
+/// Steps of Sutherland-Hodgman's polygon-clipping algorithm:
+///
+/// * Polygons can be clipped against each edge of the window one at a time.
+///   Windows/edge intersections, if any, are easy to find since the X or Y coordinates
+///   are already known.
+/// * Vertices which are kept after clipping against one window edge are saved for
+///   clipping against the remaining edges.
+/// * Note that the number of vertices usually changes and will often increases.
+///
+/// The clip boundary determines a visible and invisible region. The edges from
+/// vertex i to vertex i+1 can be one of four types:
+///
+/// * Case 1 : Wholly inside visible region - save endpoint
+/// * Case 2 : Exit visible region - save the intersection
+/// * Case 3 : Wholly outside visible region - save nothing
+/// * Case 4 : Enter visible region - save intersection and endpoint
+
 Int_t Pad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *xc, Double_t *yc, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt)
 {
-   // Clip polygon using the Sutherland-Hodgman algorithm.
-   //
-   // Input parameters:
-   //
-   //  n: Number of points in the polygon to be clipped
-   //  x[n], y[n] : Polygon do be clipped vertices
-   //  xclipl, yclipb, xclipr, yclipt : Clipping boundary
-   //
-   // Output parameters:
-   //
-   // nn: number of points in xc and yc
-   // xc, yc: clipped polygon vertices. The Int_t returned by this function is
-   //         the number of points in the clipped polygon. These vectors must
-   //         be allocated by the calling function. A size of 2*n for each is
-   //         enough.
-   //
-   // Sutherland and Hodgman's polygon-clipping algorithm uses a divide-and-conquer
-   // strategy: It solves a series of simple and identical problems that, when
-   // combined, solve the overall problem. The simple problem is to clip a polygon
-   // against a single infinite clip edge. Four clip edges, each defining one boundary
-   // of the clip rectangle, successively clip a polygon against a clip rectangle.
-   //
-   // Steps of Sutherland-Hodgman's polygon-clipping algorithm:
-   //
-   // * Polygons can be clipped against each edge of the window one at a time.
-   //   Windows/edge intersections, if any, are easy to find since the X or Y coordinates
-   //   are already known.
-   // * Vertices which are kept after clipping against one window edge are saved for
-   //   clipping against the remaining edges.
-   // * Note that the number of vertices usually changes and will often increases.
-   //
-   // The clip boundary determines a visible and invisible region. The edges from
-   // vertex i to vertex i+1 can be one of four types:
-   //
-   // * Case 1 : Wholly inside visible region - save endpoint
-   // * Case 2 : Exit visible region - save the intersection
-   // * Case 3 : Wholly outside visible region - save nothing
-   // * Case 4 : Enter visible region - save intersection and endpoint
-
    Int_t nc, nc2;
    Double_t x1, y1, x2, y2, slope; // Segment to be clipped
 
@@ -1701,11 +1751,12 @@ Int_t Pad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *xc
    return nc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the pad border.
+/// Draw first  a box as a normal filled box
+
 void Pad::PaintBorder(Color_t color, Bool_t tops)
 {
-   // Paint the pad border.
-   // Draw first  a box as a normal filled box
    if(color >= 0) {
       TAttLine::Modify();  //Change line attributes only if necessary
       TAttFill::Modify();  //Change fill area attributes only if necessary
@@ -1786,44 +1837,44 @@ void Pad::PaintBorder(Color_t color, Bool_t tops)
       return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function paints hatched fill area arcording to the FillStyle value
+/// The convention for the Hatch is the following:
+///
+///            FillStyle = 3ijk
+///
+///    i (1-9) : specify the space between each hatch
+///              1 = minimum  9 = maximum
+///              the final spacing is i*GetHatchesSpacing(). The hatches spacing
+///              is set by SetHatchesSpacing()
+///
+///    j (0-9) : specify angle between 0 and 90 degrees
+///
+///              0 = 0
+///              1 = 10
+///              2 = 20
+///              3 = 30
+///              4 = 45
+///              5 = Not drawn
+///              6 = 60
+///              7 = 70
+///              8 = 80
+///              9 = 90
+///
+///    k (0-9) : specify angle between 90 and 180 degrees
+///              0 = 180
+///              1 = 170
+///              2 = 160
+///              3 = 150
+///              4 = 135
+///              5 = Not drawn
+///              6 = 120
+///              7 = 110
+///              8 = 100
+///              9 = 90
+
 void Pad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t FillStyle)
 {
-   //   This function paints hatched fill area arcording to the FillStyle value
-   // The convention for the Hatch is the following:
-   //
-   //            FillStyle = 3ijk
-   //
-   //    i (1-9) : specify the space between each hatch
-   //              1 = minimum  9 = maximum
-   //              the final spacing is i*GetHatchesSpacing(). The hatches spacing
-   //              is set by SetHatchesSpacing()
-   //
-   //    j (0-9) : specify angle between 0 and 90 degrees
-   //
-   //              0 = 0
-   //              1 = 10
-   //              2 = 20
-   //              3 = 30
-   //              4 = 45
-   //              5 = Not drawn
-   //              6 = 60
-   //              7 = 70
-   //              8 = 80
-   //              9 = 90
-   //
-   //    k (0-9) : specify angle between 90 and 180 degrees
-   //              0 = 180
-   //              1 = 170
-   //              2 = 160
-   //              3 = 150
-   //              4 = 135
-   //              5 = Not drawn
-   //              6 = 120
-   //              7 = 110
-   //              8 = 100
-   //              9 = 90
-
    static Double_t ang1[10] = {0., 10., 20., 30., 45.,5., 60., 70., 80., 90.};
    static Double_t ang2[10] = {180.,170.,160.,150.,135.,5.,120.,110.,100., 90.};
 
@@ -1858,14 +1909,14 @@ void Pad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t FillS
    gVirtualX->SetLineColor(lcs);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine draw hatches inclined with the
+/// angle "angle" and spaced of "dy" in normalized device
+/// coordinates in the surface defined by n,xx,yy.
+
 void Pad::PaintHatches(Double_t dy, Double_t angle,
                         Int_t nn, Double_t *xx, Double_t *yy)
 {
-   // This routine draw hatches inclined with the
-   // angle "angle" and spaced of "dy" in normalized device
-   // coordinates in the surface defined by n,xx,yy.
-
    Int_t i, i1, i2, nbi, m, inv;
    Double_t ratiox, ratioy, ymin, ymax, yrot, ycur;
    const Double_t angr  = TMath::Pi()*(180-angle)/180.;
@@ -2012,7 +2063,8 @@ L50:
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TVirtualViewer3D *Pad::GetViewer3D(Option_t *)
 {
    if (!fViewer3D)
@@ -2020,18 +2072,19 @@ TVirtualViewer3D *Pad::GetViewer3D(Option_t *)
    return fViewer3D;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::ExecuteRotateView(Int_t evType, Int_t px, Int_t py)
 {
    fView->ExecuteRotateView(evType, px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///This copy is a copy&paste&cut_half_of_guts from original TPad.
+///I do not understand at the moment, why this code is here and not in TAxis.
+
 void Pad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
 {
-   //This copy is a copy&paste&cut_half_of_guts from original TPad.
-   //I do not understand at the moment, why this code is here and not in TAxis.
-
    static Int_t axisNumber;
    static Double_t ratio1, ratio2;
    static Int_t px1old, py1old, px2old, py2old;
@@ -2139,13 +2192,15 @@ void Pad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t Pad::SelectionIsValid() const
 {
    return fSelectionIsValid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::InvalidateSelection(Bool_t invalidateBufferOnly)
 {
    fSelectionIsValid = kFALSE;
@@ -2155,7 +2210,8 @@ void Pad::InvalidateSelection(Bool_t invalidateBufferOnly)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::SetSelectionBuffer(UInt_t w, UInt_t h, unsigned char *buff)
 {
    fSelectionAreaWidth = w;
@@ -2163,7 +2219,8 @@ void Pad::SetSelectionBuffer(UInt_t w, UInt_t h, unsigned char *buff)
    fSelectionBuffer.assign(buff, buff + w * h * 4);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::Pick(Int_t px, Int_t py)
 {
    if (fContains3DObject) {/* && fView) {
@@ -2206,14 +2263,16 @@ void Pad::Pick(Int_t px, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::Unpick()
 {
    fSelected = 0;
    fParentOfSelected = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TObject *Pad::ObjectInPoint(Int_t px, Int_t py)
 {
    const UInt_t offset = (py * fSelectionAreaWidth + px) * 4;
@@ -2231,7 +2290,8 @@ TObject *Pad::ObjectInPoint(Int_t px, Int_t py)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::PushTopLevelSelectable(TObject *top)
 {
    if (!fInSelectionMode)
@@ -2245,7 +2305,8 @@ void Pad::PushTopLevelSelectable(TObject *top)
    fSelectables.push_back(newPair);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::PushSelectableObject(TObject *obj)
 {
    if (!fInSelectionMode)
@@ -2259,7 +2320,8 @@ void Pad::PushSelectableObject(TObject *obj)
    fObjectID++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::PopTopLevelSelectable()
 {
    if (!fInSelectionMode)
@@ -2271,13 +2333,15 @@ void Pad::PopTopLevelSelectable()
       fPainter.SetCurrentObjectID(fParentPainters.back().second);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TObject *Pad::GetSelected()const
 {
    return fSelected;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::PaintThumbnail()
 {
    cd();
@@ -2302,7 +2366,8 @@ void Pad::PaintThumbnail()
    fPainter.SetPainterMode(Painter::kPaintToView);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void Pad::SetPaintOption(const TObject *obj, const char *option)
 {
    TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();

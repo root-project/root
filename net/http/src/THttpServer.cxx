@@ -33,7 +33,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class THttpTimer : public TTimer {
 public:
 
@@ -102,7 +103,9 @@ public:
 
 ClassImp(THttpServer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 THttpServer::THttpServer(const char *engine) :
    TNamed("http", "ROOT http server"),
    fEngines(),
@@ -120,8 +123,6 @@ THttpServer::THttpServer(const char *engine) :
    fMutex(),
    fCallArgs()
 {
-   // constructor
-
    // As argument, one specifies engine kind which should be
    // created like "http:8080". One could specify several engines
    // at once, separating them with ; like "http:8080;fastcgi:9000"
@@ -201,12 +202,12 @@ THttpServer::THttpServer(const char *engine) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+/// delete all http engines and sniffer
+
 THttpServer::~THttpServer()
 {
-   // destructor
-   // delete all http engines and sniffer
-
    fEngines.Delete();
 
    SetSniffer(0);
@@ -214,42 +215,42 @@ THttpServer::~THttpServer()
    SetTimer(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set TRootSniffer to the server
+/// Server takes ownership over sniffer
+
 void THttpServer::SetSniffer(TRootSniffer *sniff)
 {
-   // Set TRootSniffer to the server
-   // Server takes ownership over sniffer
-
    if (fSniffer) delete fSniffer;
    fSniffer = sniff;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns read-only mode
+
 Bool_t THttpServer::IsReadOnly() const
 {
-   // returns read-only mode
-
    return fSniffer ? fSniffer->IsReadOnly() : kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set read-only mode for the server (default on)
+/// In read-only server is not allowed to change any ROOT object, registered to the server
+/// Server also cannot execute objects method via exe.json request
+
 void THttpServer::SetReadOnly(Bool_t readonly)
 {
-   // Set read-only mode for the server (default on)
-   // In read-only server is not allowed to change any ROOT object, registered to the server
-   // Server also cannot execute objects method via exe.json request
-
    if (fSniffer) fSniffer->SetReadOnly(readonly);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add files location, which could be used in the server
+/// one could map some system folder to the server like AddLocation("mydir/","/home/user/specials");
+/// Than files from this directory could be addressed via server like
+/// http://localhost:8080/mydir/myfile.root
+
 void THttpServer::AddLocation(const char *prefix, const char *path)
 {
-   // add files location, which could be used in the server
-   // one could map some system folder to the server like AddLocation("mydir/","/home/user/specials");
-   // Than files from this directory could be addressed via server like
-   // http://localhost:8080/mydir/myfile.root
-
    if ((prefix==0) || (*prefix==0)) return;
 
    TNamed *obj = dynamic_cast<TNamed*> (fLocations.FindObject(prefix));
@@ -260,28 +261,28 @@ void THttpServer::AddLocation(const char *prefix, const char *path)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set location of JSROOT to use with the server
+/// One could specify address like:
+///   https://root.cern.ch/js/3.3/
+///   http://web-docs.gsi.de/~linev/js/3.3/
+/// This allows to get new JSROOT features with old server,
+/// reduce load on THttpServer instance, also startup time can be improved
+/// When empty string specified (default), local copy of JSROOT is used (distributed with ROOT)
+
 void THttpServer::SetJSROOT(const char* location)
 {
-   // Set location of JSROOT to use with the server
-   // One could specify address like:
-   //   https://root.cern.ch/js/3.3/
-   //   http://web-docs.gsi.de/~linev/js/3.3/
-   // This allows to get new JSROOT features with old server,
-   // reduce load on THttpServer instance, also startup time can be improved
-   // When empty string specified (default), local copy of JSROOT is used (distributed with ROOT)
-
    fJSROOT = location ? location : "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set file name of HTML page, delivered by the server when
+/// http address is opened in the browser.
+/// By default, $ROOTSYS/etc/http/files/online.htm page is used
+/// When empty filename is specified, default page will be used
+
 void THttpServer::SetDefaultPage(const char* filename)
 {
-   // Set file name of HTML page, delivered by the server when
-   // http address is opened in the browser.
-   // By default, $ROOTSYS/etc/http/files/online.htm page is used
-   // When empty filename is specified, default page will be used
-
    if ((filename!=0) && (*filename!=0))
       fDefaultPage = filename;
    else
@@ -291,14 +292,14 @@ void THttpServer::SetDefaultPage(const char* filename)
    fDefaultPageCont.Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set file name of HTML page, delivered by the server when
+/// objects drawing page is requested from the browser
+/// By default, $ROOTSYS/etc/http/files/draw.htm page is used
+/// When empty filename is specified, default page will be used
+
 void THttpServer::SetDrawPage(const char* filename)
 {
-   // Set file name of HTML page, delivered by the server when
-   // objects drawing page is requested from the browser
-   // By default, $ROOTSYS/etc/http/files/draw.htm page is used
-   // When empty filename is specified, default page will be used
-
    if ((filename!=0) && (*filename!=0))
       fDrawPage = filename;
    else
@@ -308,18 +309,18 @@ void THttpServer::SetDrawPage(const char* filename)
    fDrawPageCont.Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// factory method to create different http engines
+/// At the moment two engine kinds are supported:
+///  civetweb (default) and fastcgi
+/// Examples:
+///   "civetweb:8080" or "http:8080" or ":8080" - creates civetweb web server with http port 8080
+///   "fastcgi:9000" - creates fastcgi server with port 9000
+///   "dabc:1237"    - create DABC server with port 1237 (only available with DABC installed)
+///   "dabc:master_host:port" - attach to DABC master, running on master_host:port (only available with DABC installed)
+
 Bool_t THttpServer::CreateEngine(const char *engine)
 {
-   // factory method to create different http engines
-   // At the moment two engine kinds are supported:
-   //  civetweb (default) and fastcgi
-   // Examples:
-   //   "civetweb:8080" or "http:8080" or ":8080" - creates civetweb web server with http port 8080
-   //   "fastcgi:9000" - creates fastcgi server with port 9000
-   //   "dabc:1237"    - create DABC server with port 1237 (only available with DABC installed)
-   //   "dabc:master_host:port" - attach to DABC master, running on master_host:port (only available with DABC installed)
-
    if (engine == 0) return kFALSE;
 
    const char *arg = strchr(engine, ':');
@@ -354,17 +355,17 @@ Bool_t THttpServer::CreateEngine(const char *engine)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create timer which will invoke ProcessRequests() function periodically
+/// Timer is required to perform all actions in main ROOT thread
+/// Method arguments are the same as for TTimer constructor
+/// By default, sync timer with 100 ms period is created
+///
+/// If milliSec == 0, no timer will be created.
+/// In this case application should regularly call ProcessRequests() method.
+
 void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 {
-   // create timer which will invoke ProcessRequests() function periodically
-   // Timer is required to perform all actions in main ROOT thread
-   // Method arguments are the same as for TTimer constructor
-   // By default, sync timer with 100 ms period is created
-   //
-   // If milliSec == 0, no timer will be created.
-   // In this case application should regularly call ProcessRequests() method.
-
    if (fTimer) {
       fTimer->Stop();
       delete fTimer;
@@ -376,12 +377,12 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checked that filename does not contains relative path below current directory
+/// Used to prevent access to files below current directory
+
 Bool_t THttpServer::VerifyFilePath(const char *fname)
 {
-   // Checked that filename does not contains relative path below current directory
-   // Used to prevent access to files below current directory
-
    if ((fname == 0) || (*fname == 0)) return kFALSE;
 
    Int_t level = 0;
@@ -419,15 +420,15 @@ Bool_t THttpServer::VerifyFilePath(const char *fname)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Verifies that request is just file name
+/// File names typically contains prefix like "jsrootsys/"
+/// If true, method returns real name of the file,
+/// which should be delivered to the client
+/// Method is thread safe and can be called from any thread
+
 Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 {
-   // Verifies that request is just file name
-   // File names typically contains prefix like "jsrootsys/"
-   // If true, method returns real name of the file,
-   // which should be delivered to the client
-   // Method is thread safe and can be called from any thread
-
    if ((uri == 0) || (strlen(uri) == 0)) return kFALSE;
 
    TString fname = uri;
@@ -448,13 +449,13 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Executes http request, specified in THttpCallArg structure
+/// Method can be called from any thread
+/// Actual execution will be done in main ROOT thread, where analysis code is running.
+
 Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 {
-   // Executes http request, specified in THttpCallArg structure
-   // Method can be called from any thread
-   // Actual execution will be done in main ROOT thread, where analysis code is running.
-
    if ((fMainThrdId!=0) && (fMainThrdId == TThread::SelfId())) {
       // should not happen, but one could process requests directly without any signaling
 
@@ -474,14 +475,14 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process requests, submitted for execution
+/// Regularly invoked by THttpTimer, when somewhere in the code
+/// gSystem->ProcessEvents() is called.
+/// User can call serv->ProcessRequests() directly, but only from main analysis thread.
+
 void THttpServer::ProcessRequests()
 {
-   // Process requests, submitted for execution
-   // Regularly invoked by THttpTimer, when somewhere in the code
-   // gSystem->ProcessEvents() is called.
-   // User can call serv->ProcessRequests() directly, but only from main analysis thread.
-
    if (fMainThrdId==0) fMainThrdId = TThread::SelfId();
 
    if (fMainThrdId != TThread::SelfId()) {
@@ -520,13 +521,13 @@ void THttpServer::ProcessRequests()
       engine->Process();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process single http request
+/// Depending from requested path and filename different actions will be performed.
+/// In most cases information is provided by TRootSniffer class
+
 void THttpServer::ProcessRequest(THttpCallArg *arg)
 {
-   // Process single http request
-   // Depending from requested path and filename different actions will be performed.
-   // In most cases information is provided by TRootSniffer class
-
 
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
 
@@ -688,111 +689,114 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register object in folders hierarchy
+///
+/// See TRootSniffer::RegisterObject() for more details
+
 Bool_t THttpServer::Register(const char *subfolder, TObject *obj)
 {
-   // Register object in folders hierarchy
-   //
-   // See TRootSniffer::RegisterObject() for more details
-
    return fSniffer->RegisterObject(subfolder, obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unregister object in folders hierarchy
+///
+/// See TRootSniffer::UnregisterObject() for more details
+
 Bool_t THttpServer::Unregister(TObject *obj)
 {
-   // Unregister object in folders hierarchy
-   //
-   // See TRootSniffer::UnregisterObject() for more details
-
    return fSniffer->UnregisterObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restrict access to specified object
+///
+/// See TRootSniffer::Restrict() for more details
+
 void THttpServer::Restrict(const char *path, const char* options)
 {
-   // Restrict access to specified object
-   //
-   // See TRootSniffer::Restrict() for more details
-
    fSniffer->Restrict(path, options);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register command which can be executed from web interface
+///
+/// As method one typically specifies string, which is executed with
+/// gROOT->ProcessLine() method. For instance
+///    serv->RegisterCommand("Invoke","InvokeFunction()");
+///
+/// Or one could specify any method of the object which is already registered
+/// to the server. For instance:
+///     serv->Register("/", hpx);
+///     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()");
+/// Here symbols '/->' separates item name from method to be executed
+///
+/// One could specify additional arguments in the command with
+/// syntax like %arg1%, %arg2% and so on. For example:
+///     serv->RegisterCommand("/ResetHPX", "/hpx/->SetTitle(\"%arg1%\")");
+///     serv->RegisterCommand("/RebinHPXPY", "/hpxpy/->Rebin2D(%arg1%,%arg2%)");
+/// Such parameter(s) will be requested when command clicked in the browser.
+///
+/// Once command is registered, one could specify icon which will appear in the browser:
+///     serv->SetIcon("/ResetHPX", "rootsys/icons/ed_execute.png");
+///
+/// One also can set extra property '_fastcmd', that command appear as
+/// tool button on the top of the browser tree:
+///     serv->SetItemField("/ResetHPX", "_fastcmd", "true");
+/// Or it is equivalent to specifying extra argument when register command:
+///     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()", "button;rootsys/icons/ed_delete.png");
+
 Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, const char *icon)
 {
-   // Register command which can be executed from web interface
-   //
-   // As method one typically specifies string, which is executed with
-   // gROOT->ProcessLine() method. For instance
-   //    serv->RegisterCommand("Invoke","InvokeFunction()");
-   //
-   // Or one could specify any method of the object which is already registered
-   // to the server. For instance:
-   //     serv->Register("/", hpx);
-   //     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()");
-   // Here symbols '/->' separates item name from method to be executed
-   //
-   // One could specify additional arguments in the command with
-   // syntax like %arg1%, %arg2% and so on. For example:
-   //     serv->RegisterCommand("/ResetHPX", "/hpx/->SetTitle(\"%arg1%\")");
-   //     serv->RegisterCommand("/RebinHPXPY", "/hpxpy/->Rebin2D(%arg1%,%arg2%)");
-   // Such parameter(s) will be requested when command clicked in the browser.
-   //
-   // Once command is registered, one could specify icon which will appear in the browser:
-   //     serv->SetIcon("/ResetHPX", "rootsys/icons/ed_execute.png");
-   //
-   // One also can set extra property '_fastcmd', that command appear as
-   // tool button on the top of the browser tree:
-   //     serv->SetItemField("/ResetHPX", "_fastcmd", "true");
-   // Or it is equivalent to specifying extra argument when register command:
-   //     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()", "button;rootsys/icons/ed_delete.png");
-
    return fSniffer->RegisterCommand(cmdname, method, icon);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// hides folder or element from web gui
+
 Bool_t THttpServer::Hide(const char *foldername, Bool_t hide)
 {
-   // hides folder or element from web gui
-
    return SetItemField(foldername, "_hidden", hide ? "true" : (const char *) 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set name of icon, used in browser together with the item
+///
+/// One could use images from $ROOTSYS directory like:
+///    serv->SetIcon("/ResetHPX","/rootsys/icons/ed_execute.png");
+
 Bool_t THttpServer::SetIcon(const char *fullname, const char *iconname)
 {
-   // set name of icon, used in browser together with the item
-   //
-   // One could use images from $ROOTSYS directory like:
-   //    serv->SetIcon("/ResetHPX","/rootsys/icons/ed_execute.png");
-
    return SetItemField(fullname, "_icon", iconname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t THttpServer::CreateItem(const char *fullname, const char *title)
 {
    return fSniffer->CreateItem(fullname, title);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t THttpServer::SetItemField(const char *fullname, const char *name, const char *value)
 {
    return fSniffer->SetItemField(fullname, name, value);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *THttpServer::GetItemField(const char *fullname, const char *name)
 {
    return fSniffer->GetItemField(fullname, name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns MIME type base on file extension
+
 const char *THttpServer::GetMimeType(const char *path)
 {
-   // Returns MIME type base on file extension
-
    static const struct {
       const char *extension;
       int ext_len;
@@ -862,11 +866,11 @@ const char *THttpServer::GetMimeType(const char *path)
    return "text/plain";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reads file content
+
 char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
 {
-   // reads file content
-
    len = 0;
 
    std::ifstream is(filename);

@@ -58,13 +58,13 @@
 
 ClassImp(TObjArray)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an object array. Using s one can set the array size (default is
+/// kInitCapacity=16) and lowerBound can be used to set the array lowerbound
+/// index (default is 0).
+
 TObjArray::TObjArray(Int_t s, Int_t lowerBound)
 {
-   // Create an object array. Using s one can set the array size (default is
-   // kInitCapacity=16) and lowerBound can be used to set the array lowerbound
-   // index (default is 0).
-
    if (s < 0) {
       Warning("TObjArray", "size (%d) < 0", s);
       s = TCollection::kInitCapacity;
@@ -74,11 +74,11 @@ TObjArray::TObjArray(Int_t s, Int_t lowerBound)
    Init(s, lowerBound);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a copy of TObjArray a. Note, does not copy the kIsOwner flag.
+
 TObjArray::TObjArray(const TObjArray &a) : TSeqCollection()
 {
-   // Create a copy of TObjArray a. Note, does not copy the kIsOwner flag.
-
    fCont = 0;
    Init(a.fSize, a.fLowerBound);
 
@@ -89,12 +89,12 @@ TObjArray::TObjArray(const TObjArray &a) : TSeqCollection()
    fName = a.fName;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete an array. Objects are not deleted unless the TObjArray is the
+/// owner (set via SetOwner()).
+
 TObjArray::~TObjArray()
 {
-   // Delete an array. Objects are not deleted unless the TObjArray is the
-   // owner (set via SetOwner()).
-
    if (IsOwner())
       Delete();
 
@@ -103,11 +103,11 @@ TObjArray::~TObjArray()
    fSize = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator. Note, unsets the kIsOwner flag.
+
 TObjArray& TObjArray::operator=(const TObjArray &a)
 {
-   // Assignment operator. Note, unsets the kIsOwner flag.
-
    if (this != &a) {
       if (IsOwner())
          Delete();
@@ -124,12 +124,12 @@ TObjArray& TObjArray::operator=(const TObjArray &a)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the object at position i. Returns address at position 0
+/// if i is out of bounds. Result may be used as an lvalue.
+
 TObject *&TObjArray::operator[](Int_t i)
 {
-   // Return the object at position i. Returns address at position 0
-   // if i is out of bounds. Result may be used as an lvalue.
-
    int j = i-fLowerBound;
    if (j >= 0 && j < fSize) {
       fLast = TMath::Max(j, GetAbsLast());
@@ -141,47 +141,47 @@ TObject *&TObjArray::operator[](Int_t i)
    return fCont[0];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the object at position at. Returns 0 if i is out of bounds.
+
 TObject *TObjArray::operator[](Int_t i) const
 {
-   // Return the object at position at. Returns 0 if i is out of bounds.
-
    int j = i-fLowerBound;
    if (j >= 0 && j < fSize) return fCont[j];
    BoundsOk("operator[] const", i);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object in the first slot of the array. This will overwrite the
+/// first element that might have been there. To have insertion semantics
+/// use either a TList or a TOrdCollection.
+
 void TObjArray::AddFirst(TObject *obj)
 {
-   // Add object in the first slot of the array. This will overwrite the
-   // first element that might have been there. To have insertion semantics
-   // use either a TList or a TOrdCollection.
-
    fCont[0] = obj;
    if (fLast == -1)
       fLast = 0;
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object in the next empty slot in the array. Expand the array
+/// if necessary.
+
 void TObjArray::AddLast(TObject *obj)
 {
-   // Add object in the next empty slot in the array. Expand the array
-   // if necessary.
-
    AddAtAndExpand(obj, GetAbsLast()+1+fLowerBound);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object in the slot before object before. If before=0 add object
+/// in the first slot. Note that this will overwrite any object that
+/// might have already been in this slot. For insertion semantics use
+/// either a TList or a TOrdCollection.
+
 void TObjArray::AddBefore(const TObject *before, TObject *obj)
 {
-   // Add object in the slot before object before. If before=0 add object
-   // in the first slot. Note that this will overwrite any object that
-   // might have already been in this slot. For insertion semantics use
-   // either a TList or a TOrdCollection.
-
    if (!before)
       AddFirst(obj);
    else {
@@ -198,14 +198,14 @@ void TObjArray::AddBefore(const TObject *before, TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object in the slot after object after. If after=0 add object in
+/// the last empty slot. Note that this will overwrite any object that
+/// might have already been in this slot. For insertion semantics use
+/// either a TList or a TOrdCollection.
+
 void TObjArray::AddAfter(const TObject *after, TObject *obj)
 {
-   // Add object in the slot after object after. If after=0 add object in
-   // the last empty slot. Note that this will overwrite any object that
-   // might have already been in this slot. For insertion semantics use
-   // either a TList or a TOrdCollection.
-
    if (!after)
       AddLast(obj);
    else {
@@ -218,12 +218,12 @@ void TObjArray::AddAfter(const TObject *after, TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at position idx. If idx is larger than the current size
+/// of the array, expand the array (double its size).
+
 void TObjArray::AddAtAndExpand(TObject *obj, Int_t idx)
 {
-   // Add object at position idx. If idx is larger than the current size
-   // of the array, expand the array (double its size).
-
    if (idx < fLowerBound) {
       Error("AddAt", "out of bounds at %d in %lx", idx, (Long_t)this);
       return;
@@ -235,12 +235,12 @@ void TObjArray::AddAtAndExpand(TObject *obj, Int_t idx)
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object at position ids. Give an error when idx is out of bounds
+/// (i.e. the array is not expanded).
+
 void TObjArray::AddAt(TObject *obj, Int_t idx)
 {
-   // Add object at position ids. Give an error when idx is out of bounds
-   // (i.e. the array is not expanded).
-
    if (!BoundsOk("AddAt", idx)) return;
 
    fCont[idx-fLowerBound] = obj;
@@ -248,12 +248,12 @@ void TObjArray::AddAt(TObject *obj, Int_t idx)
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the position of the new object.
+/// Find the first empty cell or AddLast if there is no empty cell
+
 Int_t  TObjArray::AddAtFree(TObject *obj)
 {
-   // Return the position of the new object.
-   // Find the first empty cell or AddLast if there is no empty cell
-
    if (Last()) {    // <---------- This is to take in account "empty" TObjArray's
       Int_t i;
       for (i = 0; i < fSize; i++)
@@ -268,11 +268,11 @@ Int_t  TObjArray::AddAtFree(TObject *obj)
    return GetLast();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the object after obj. Returns 0 if obj is last object.
+
 TObject *TObjArray::After(const TObject *obj) const
 {
-   // Return the object after obj. Returns 0 if obj is last object.
-
    if (!obj) return 0;
 
    Int_t idx = IndexOf(obj) - fLowerBound;
@@ -281,11 +281,11 @@ TObject *TObjArray::After(const TObject *obj) const
    return fCont[idx+1];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the object before obj. Returns 0 if obj is first object.
+
 TObject *TObjArray::Before(const TObject *obj) const
 {
-   // Return the object before obj. Returns 0 if obj is first object.
-
    if (!obj) return 0;
 
    Int_t idx = IndexOf(obj) - fLowerBound;
@@ -294,23 +294,23 @@ TObject *TObjArray::Before(const TObject *obj) const
    return fCont[idx-1];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all objects from the array. Does not delete the objects
+/// unless the TObjArray is the owner (set via SetOwner()).
+
 void TObjArray::Clear(Option_t *)
 {
-   // Remove all objects from the array. Does not delete the objects
-   // unless the TObjArray is the owner (set via SetOwner()).
-
    if (IsOwner())
       Delete();
    else
       Init(fSize, fLowerBound);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove empty slots from array.
+
 void TObjArray::Compress()
 {
-   // Remove empty slots from array.
-
    Int_t j = 0;
 
    for (Int_t i = 0; i < fSize; i++) {
@@ -326,11 +326,11 @@ void TObjArray::Compress()
       fCont[j] = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all objects from the array AND delete all heap based objects.
+
 void TObjArray::Delete(Option_t *)
 {
-   // Remove all objects from the array AND delete all heap based objects.
-
    // In some case, for example TParallelCoord, a list (the pad's list of
    // primitives) will contain both the container and the containees
    // (the TParallelCoorVar) but if the Clear is being called from
@@ -362,11 +362,11 @@ void TObjArray::Delete(Option_t *)
    Init(fSize, fLowerBound);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand or shrink the array to newSize elements.
+
 void TObjArray::Expand(Int_t newSize)
 {
-   // Expand or shrink the array to newSize elements.
-
    if (newSize < 0) {
       Error ("Expand", "newSize must be positive (%d)", newSize);
       return;
@@ -386,13 +386,13 @@ void TObjArray::Expand(Int_t newSize)
    fSize = newSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find an object in this collection using its name. Requires a sequential
+/// scan till the object has been found. Returns 0 if object with specified
+/// name is not found.
+
 TObject *TObjArray::FindObject(const char *name) const
 {
-   // Find an object in this collection using its name. Requires a sequential
-   // scan till the object has been found. Returns 0 if object with specified
-   // name is not found.
-
    Int_t nobjects = GetAbsLast()+1;
    for (Int_t i = 0; i < nobjects; ++i) {
       TObject *obj = fCont[i];
@@ -401,15 +401,15 @@ TObject *TObjArray::FindObject(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find an object in this collection using the object's IsEqual()
+/// member function. Requires a sequential scan till the object has
+/// been found. Returns 0 if object is not found.
+/// Typically this function is overridden by a more efficient version
+/// in concrete collection classes (e.g. THashTable).
+
 TObject *TObjArray::FindObject(const TObject *iobj) const
 {
-   // Find an object in this collection using the object's IsEqual()
-   // member function. Requires a sequential scan till the object has
-   // been found. Returns 0 if object is not found.
-   // Typically this function is overridden by a more efficient version
-   // in concrete collection classes (e.g. THashTable).
-
    Int_t nobjects = GetAbsLast()+1;
    for (Int_t i = 0; i < nobjects; ++i) {
       TObject *obj = fCont[i];
@@ -418,11 +418,11 @@ TObject *TObjArray::FindObject(const TObject *iobj) const
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream all objects in the array to or from the I/O buffer.
+
 void TObjArray::Streamer(TBuffer &b)
 {
-   // Stream all objects in the array to or from the I/O buffer.
-
    UInt_t R__s, R__c;
    Int_t nobjects;
    if (b.IsReading()) {
@@ -463,34 +463,34 @@ void TObjArray::Streamer(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the object in the first slot.
+
 TObject *TObjArray::First() const
 {
-   // Return the object in the first slot.
-
    return fCont[0];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the object in the last filled slot. Returns 0 if no entries.
+
 TObject *TObjArray::Last() const
 {
-   // Return the object in the last filled slot. Returns 0 if no entries.
-
    if (fLast == -1)
       return 0;
    else
       return fCont[GetAbsLast()];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of objects in array (i.e. number of non-empty slots).
+/// Attention: use this method ONLY if you want to know the number of
+/// non-empty slots. This function loops over the complete array and
+/// is therefore very slow when applied in a loop. Most of the time you
+/// better use GetEntriesFast() (only in case when there are no empty slots).
+
 Int_t TObjArray::GetEntries() const
 {
-   // Return the number of objects in array (i.e. number of non-empty slots).
-   // Attention: use this method ONLY if you want to know the number of
-   // non-empty slots. This function loops over the complete array and
-   // is therefore very slow when applied in a loop. Most of the time you
-   // better use GetEntriesFast() (only in case when there are no empty slots).
-
    Int_t cnt = 0;
 
    for (Int_t i = 0; i < fSize; i++)
@@ -499,12 +499,12 @@ Int_t TObjArray::GetEntries() const
    return cnt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return absolute index to last object in array. Returns -1 in case
+/// array is empty.
+
 Int_t TObjArray::GetAbsLast() const
 {
-   // Return absolute index to last object in array. Returns -1 in case
-   // array is empty.
-
    // For efficiency we need sometimes to update fLast so we have
    // to cast const away. Ugly, but making GetAbsLast() not const breaks
    // many other const functions.
@@ -519,20 +519,20 @@ Int_t TObjArray::GetAbsLast() const
    return fLast;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return index of last object in array. Returns lowerBound-1 in case
+/// array is empty.
+
 Int_t TObjArray::GetLast() const
 {
-   // Return index of last object in array. Returns lowerBound-1 in case
-   // array is empty.
-
    return fLowerBound+GetAbsLast();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return address of pointer obj. If obj is 0 returns address of container.
+
 TObject **TObjArray::GetObjectRef(const TObject *obj) const
 {
-   // Return address of pointer obj. If obj is 0 returns address of container.
-
    if (!obj)
       return fCont;
 
@@ -540,15 +540,15 @@ TObject **TObjArray::GetObjectRef(const TObject *obj) const
    return &fCont[index];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// obj != 0 Return index of object in array.
+///          Returns lowerBound-1 in case array doesn't contain the obj.
+///
+/// obj == 0 Return the index of the first empty slot.
+///          Returns lowerBound-1 in case array doesn't contain any empty slot.
+
 Int_t TObjArray::IndexOf(const TObject *obj) const
 {
-   // obj != 0 Return index of object in array.
-   //          Returns lowerBound-1 in case array doesn't contain the obj.
-   //
-   // obj == 0 Return the index of the first empty slot.
-   //          Returns lowerBound-1 in case array doesn't contain any empty slot.
-
    Int_t i;
    if (obj) {
       for (i = 0; i < fSize; i++)
@@ -563,11 +563,11 @@ Int_t TObjArray::IndexOf(const TObject *obj) const
    return fLowerBound-1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a TObjArray.
+
 void TObjArray::Init(Int_t s, Int_t lowerBound)
 {
-   // Initialize a TObjArray.
-
    if (fCont && fSize != s) {
       TStorage::Dealloc(fCont);
       fCont = 0;
@@ -583,29 +583,29 @@ void TObjArray::Init(Int_t s, Int_t lowerBound)
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns an array iterator.
+
 TIterator *TObjArray::MakeIterator(Bool_t dir) const
 {
-   // Returns an array iterator.
-
    return new TObjArrayIter(this, dir);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate an out-of-bounds error. Always returns false.
+
 Bool_t TObjArray::OutOfBoundsError(const char *where, Int_t i) const
 {
-   // Generate an out-of-bounds error. Always returns false.
-
    Error(where, "index %d out of bounds (size: %d, this: 0x%lx)", i, fSize, (Long_t)this);
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from this collection and recursively remove the object
+/// from all other objects (and collections).
+
 void TObjArray::RecursiveRemove(TObject *obj)
 {
-   // Remove object from this collection and recursively remove the object
-   // from all other objects (and collections).
-
    if (!obj) return;
 
    for (int i = 0; i < fSize; i++) {
@@ -622,11 +622,11 @@ void TObjArray::RecursiveRemove(TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object at index idx.
+
 TObject *TObjArray::RemoveAt(Int_t idx)
 {
-   // Remove object at index idx.
-
    if (!BoundsOk("RemoveAt", idx)) return 0;
 
    int i = idx-fLowerBound;
@@ -645,11 +645,11 @@ TObject *TObjArray::RemoveAt(Int_t idx)
    return obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from array.
+
 TObject *TObjArray::Remove(TObject *obj)
 {
-   // Remove object from array.
-
    if (!obj) return 0;
 
    Int_t idx = IndexOf(obj) - fLowerBound;
@@ -667,11 +667,11 @@ TObject *TObjArray::Remove(TObject *obj)
    return ob;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove objects from index idx1 to idx2 included.
+
 void TObjArray::RemoveRange(Int_t idx1, Int_t idx2)
 {
-   // Remove objects from index idx1 to idx2 included.
-
    if (!BoundsOk("RemoveRange", idx1)) return;
    if (!BoundsOk("RemoveRange", idx2)) return;
 
@@ -692,33 +692,33 @@ void TObjArray::RemoveRange(Int_t idx1, Int_t idx2)
    do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set index of last object in array, effectively truncating the
+/// array. Use carefully since whenever last position has to be
+/// recalculated, e.g. after a Remove() or Sort() it will be reset
+/// to the last non-empty slot. If last is -2 this will force the
+/// recalculation of the last used slot.
+/// If last is -1, this effectively truncate the array completely.
+
 void TObjArray::SetLast(Int_t last)
 {
-   // Set index of last object in array, effectively truncating the
-   // array. Use carefully since whenever last position has to be
-   // recalculated, e.g. after a Remove() or Sort() it will be reset
-   // to the last non-empty slot. If last is -2 this will force the
-   // recalculation of the last used slot.
-   // If last is -1, this effectively truncate the array completely.
-
    if (last == -2 || last == -1)
       fLast = last;
    else if (BoundsOk("SetLast", last))
       fLast = last - fLowerBound;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Randomize objects inside the array, i.e. permute randomly objects.
+/// With fLast being the index of the last entry in the array, the following
+/// algorithm is applied to the array:
+///   - for each entry j between 0 and fLast, another entry k is chosen
+///     randomly between 0 and fLast.
+///   - the objects at j and k are swapped.
+///   - this process is repeated ntimes (ntimes = 1 by default).
+
 void TObjArray::Randomize(Int_t ntimes)
 {
-   // Randomize objects inside the array, i.e. permute randomly objects.
-   // With fLast being the index of the last entry in the array, the following
-   // algorithm is applied to the array:
-   //   - for each entry j between 0 and fLast, another entry k is chosen
-   //     randomly between 0 and fLast.
-   //   - the objects at j and k are swapped.
-   //   - this process is repeated ntimes (ntimes = 1 by default).
-
    for (Int_t i = 0; i < ntimes; i++) {
       for (Int_t j = 0; j < fLast; j++) {
 #ifdef R__WIN32
@@ -734,12 +734,12 @@ void TObjArray::Randomize(Int_t ntimes)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If objects in array are sortable (i.e. IsSortable() returns true
+/// for all objects) then sort array.
+
 void TObjArray::Sort(Int_t upto)
 {
-   // If objects in array are sortable (i.e. IsSortable() returns true
-   // for all objects) then sort array.
-
    if (GetAbsLast() == -1 || fSorted) return;
    for (Int_t i = 0; i < fSize; i++)
       if (fCont[i]) {
@@ -755,12 +755,12 @@ void TObjArray::Sort(Int_t upto)
    fSorted = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find object using a binary search. Array must first have been sorted.
+/// Search can be limited by setting upto to desired index.
+
 Int_t TObjArray::BinarySearch(TObject *op, Int_t upto)
 {
-   // Find object using a binary search. Array must first have been sorted.
-   // Search can be limited by setting upto to desired index.
-
    Int_t   base, position, last, result = 0;
    TObject *op2;
 
@@ -798,33 +798,33 @@ Int_t TObjArray::BinarySearch(TObject *op, Int_t upto)
 
 ClassImp(TObjArrayIter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create array iterator. By default the iteration direction
+/// is kIterForward. To go backward use kIterBackward.
+
 TObjArrayIter::TObjArrayIter(const TObjArray *arr, Bool_t dir)
 {
-   // Create array iterator. By default the iteration direction
-   // is kIterForward. To go backward use kIterBackward.
-
    fArray     = arr;
    fDirection = dir;
    Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TObjArrayIter::TObjArrayIter(const TObjArrayIter &iter) : TIterator(iter)
 {
-   // Copy ctor.
-
    fArray     = iter.fArray;
    fDirection = iter.fDirection;
    fCursor    = iter.fCursor;
    fCurCursor = iter.fCurCursor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overridden assignment operator.
+
 TIterator &TObjArrayIter::operator=(const TIterator &rhs)
 {
-   // Overridden assignment operator.
-
    if (this != &rhs && rhs.IsA() == TObjArrayIter::Class()) {
       const TObjArrayIter &rhs1 = (const TObjArrayIter &)rhs;
       fArray     = rhs1.fArray;
@@ -835,11 +835,11 @@ TIterator &TObjArrayIter::operator=(const TIterator &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overloaded assignment operator.
+
 TObjArrayIter &TObjArrayIter::operator=(const TObjArrayIter &rhs)
 {
-   // Overloaded assignment operator.
-
    if (this != &rhs) {
       fArray     = rhs.fArray;
       fDirection = rhs.fDirection;
@@ -849,11 +849,11 @@ TObjArrayIter &TObjArrayIter::operator=(const TObjArrayIter &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return next object in array. Returns 0 when no more objects in array.
+
 TObject *TObjArrayIter::Next()
 {
-   // Return next object in array. Returns 0 when no more objects in array.
-
    if (fDirection == kIterForward) {
       for ( ; fCursor < fArray->Capacity() && fArray->fCont[fCursor] == 0;
               fCursor++) { }
@@ -874,11 +874,11 @@ TObject *TObjArrayIter::Next()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset array iterator.
+
 void TObjArrayIter::Reset()
 {
-   // Reset array iterator.
-
    if (fDirection == kIterForward)
       fCursor = 0;
    else
@@ -887,11 +887,11 @@ void TObjArrayIter::Reset()
    fCurCursor = fCursor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This operator compares two TIterator objects.
+
 Bool_t TObjArrayIter::operator!=(const TIterator &aIter) const
 {
-   // This operator compares two TIterator objects.
-
    if (aIter.IsA() == TObjArrayIter::Class()) {
       const TObjArrayIter &iter(dynamic_cast<const TObjArrayIter &>(aIter));
       return (fCurCursor != iter.fCurCursor);
@@ -899,19 +899,19 @@ Bool_t TObjArrayIter::operator!=(const TIterator &aIter) const
    return false; // for base class we don't implement a comparison
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This operator compares two TObjArrayIter objects.
+
 Bool_t TObjArrayIter::operator!=(const TObjArrayIter &aIter) const
 {
-   // This operator compares two TObjArrayIter objects.
-
    return (fCurCursor != aIter.fCurCursor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return current object or nullptr.
+
 TObject *TObjArrayIter::operator*() const
 {
-   // Return current object or nullptr.
-
    return (((fCurCursor >= 0) && (fCurCursor < fArray->Capacity())) ?
            fArray->fCont[fCurCursor] : nullptr);
 }

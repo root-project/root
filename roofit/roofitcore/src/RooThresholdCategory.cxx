@@ -41,26 +41,26 @@ ClassImp(RooThresholdCategory)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with input function to be mapped and name and index of default
+/// output state of unmapped values
+
 RooThresholdCategory::RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar, 
 					   const char* defOut, Int_t defIdx) :
   RooAbsCategory(name, title), _inputVar("inputVar","Input category",this,inputVar)
 {
-  // Constructor with input function to be mapped and name and index of default
-  // output state of unmapped values
-
   _defCat = (RooCatType*) defineType(defOut,defIdx) ;
   _threshIter = _threshList.MakeIterator() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, const char *name) :
   RooAbsCategory(other,name), _inputVar("inputVar",this,other._inputVar)
 {
-  // Copy constructor
-
   _defCat = (RooCatType*) lookupType(other._defCat->GetName()) ;
 
   other._threshIter->Reset() ;
@@ -74,23 +74,23 @@ RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, co
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooThresholdCategory::~RooThresholdCategory() 
 {
-  // Destructor
-
   _threshList.Delete() ;
   delete _threshIter ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert threshold at value upperLimit. All values below upper limit (and above any lower
+/// thresholds, if any) will be mapped to a state name 'catName' with index 'catIdx'
+
 Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx) 
 {  
-  // Insert threshold at value upperLimit. All values below upper limit (and above any lower
-  // thresholds, if any) will be mapped to a state name 'catName' with index 'catIdx'
-
   // Check if identical threshold values is not defined yet
   _threshIter->Reset() ;
   RooThreshEntry* te ;
@@ -120,11 +120,11 @@ Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catNa
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return the value of the mapping function
+
 RooCatType RooThresholdCategory::evaluate() const
 {
-  // Calculate and return the value of the mapping function
-
   // Scan the threshold list
   _threshIter->Reset() ;
   RooThreshEntry* te ;
@@ -138,11 +138,11 @@ RooCatType RooThresholdCategory::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write object contents to given stream
+
 void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
 {
-  // Write object contents to given stream
-
   if (compact) {
     // Write value only
     os << getLabel() ;
@@ -161,16 +161,16 @@ void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info about this threshold category to the specified stream. In addition to the info
+/// from RooAbsCategory::printStream() we add:
+///
+///  Standard : input category
+///     Shape : default value
+///   Verbose : list of thresholds
+
 void RooThresholdCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
-  // Print info about this threshold category to the specified stream. In addition to the info
-  // from RooAbsCategory::printStream() we add:
-  //
-  //  Standard : input category
-  //     Shape : default value
-  //   Verbose : list of thresholds
-
    RooAbsCategory::printMultiline(os,content,verbose,indent);
 
    if (verbose) {

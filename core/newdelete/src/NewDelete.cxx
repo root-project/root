@@ -150,7 +150,8 @@ static TReAllocInit gReallocInit;
 #   define CheckObjPtr(p, name)
 #endif
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 #ifdef MEM_STAT
 
 #define EnterStat(s, p) \
@@ -189,11 +190,11 @@ static TReAllocInit gReallocInit;
 static const char *gSpaceErr = "storage exhausted (failed to allocate %ld bytes)";
 static int gNewInit = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Custom new() operator.
+
 void *operator new(size_t size) R__THROW_BAD
 {
-   // Custom new() operator.
-
    // use memory checker
    if (TROOT::MemCheck())
       return TMemHashTable::AddPointer(size);
@@ -217,11 +218,11 @@ void *operator new(size_t size) R__THROW_BAD
 }
 
 #ifndef R__PLACEMENTINLINE
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Custom new() operator with placement argument.
+
 void *operator new(size_t size, void *vp) R__THROW_NULL
 {
-   // Custom new() operator with placement argument.
-
    static const char *where = "operator new(void *at)";
 
    if (!gNewInit) {
@@ -248,11 +249,11 @@ void *operator new(size_t size, void *vp) R__THROW_NULL
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Custom delete() operator.
+
 void operator delete(void *ptr) R__THROW_NULL
 {
-   // Custom delete() operator.
-
    // use memory checker
    if (TROOT::MemCheck()) {
       TMemHashTable::FreePointer(ptr);
@@ -285,36 +286,37 @@ void operator delete(void *ptr) R__THROW_NULL
 }
 
 #ifdef R__VECNEWDELETE
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Custom vector new operator.
+
 void *operator new[](size_t size) R__THROW_BAD
 {
-   // Custom vector new operator.
-
    return ::operator new(size);
 }
 
 #ifndef R__PLACEMENTINLINE
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Custom vector new() operator with placement argument.
+
 void *operator new[](size_t size, void *vp) R__THROW_NULL
 {
-   // Custom vector new() operator with placement argument.
-
    return ::operator new(size, vp);
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void operator delete[](void *ptr) R__THROW_NULL
 {
    ::operator delete(ptr);
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reallocate (i.e. resize) block of memory.
+
 void *CustomReAlloc1(void *ovp, size_t size)
 {
-   // Reallocate (i.e. resize) block of memory.
-
    // use memory checker
    if (TROOT::MemCheck())
       return TMemHashTable::AddPointer(size, ovp);
@@ -345,12 +347,12 @@ void *CustomReAlloc1(void *ovp, size_t size)
    return ExtStart(vp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reallocate (i.e. resize) block of memory. Checks if current size is
+/// equal to oldsize. If not memory was overwritten.
+
 void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
 {
-   // Reallocate (i.e. resize) block of memory. Checks if current size is
-   // equal to oldsize. If not memory was overwritten.
-
    // use memory checker
    if (TROOT::MemCheck())
       return TMemHashTable::AddPointer(size, ovp);

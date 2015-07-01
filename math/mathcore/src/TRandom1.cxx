@@ -247,22 +247,23 @@ const UInt_t fgSeedTable[215][2] = {
 
 ClassImp(TRandom1)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Luxury level is set in the same way as the original FORTRAN routine.
+///  level 0  (p=24): equivalent to the original RCARRY of Marsaglia
+///           and Zaman, very long period, but fails many tests.
+///  level 1  (p=48): considerable improvement in quality over level 0,
+///           now passes the gap test, but still fails spectral test.
+///  level 2  (p=97): passes all known tests, but theoretically still
+///           defective.
+///  level 3  (p=223): DEFAULT VALUE.  Any theoretically possible
+///           correlations have very small chance of being observed.
+///  level 4  (p=389): highest possible luxury, all 24 bits chaotic.
+
 TRandom1::TRandom1(UInt_t seed, Int_t lux)
         : fIntModulus(0x1000000),
           fMantissaBit24( TMath::Power(0.5,24.) ),
           fMantissaBit12( TMath::Power(0.5,12.) )
 {
-// Luxury level is set in the same way as the original FORTRAN routine.
-//  level 0  (p=24): equivalent to the original RCARRY of Marsaglia
-//           and Zaman, very long period, but fails many tests.
-//  level 1  (p=48): considerable improvement in quality over level 0,
-//           now passes the gap test, but still fails spectral test.
-//  level 2  (p=97): passes all known tests, but theoretically still
-//           defective.
-//  level 3  (p=223): DEFAULT VALUE.  Any theoretically possible
-//           correlations have very small chance of being observed.
-//  level 4  (p=389): highest possible luxury, all 24 bits chaotic.
    UInt_t seedlist[2]={0,0};
 
    fTheSeeds = &fSeed;
@@ -277,13 +278,14 @@ TRandom1::TRandom1(UInt_t seed, Int_t lux)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default constructor
+
 TRandom1::TRandom1()
         : fIntModulus(0x1000000),
           fMantissaBit24( TMath::Power(0.5,24.) ),
           fMantissaBit12( TMath::Power(0.5,12.) )
 {
-   //default constructor
    fTheSeeds = &fSeed;
    UInt_t seed;
    UInt_t seedlist[2]={0,0};
@@ -303,13 +305,14 @@ TRandom1::TRandom1()
    SetSeeds(seedlist, fLuxury);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TRandom1::TRandom1(int rowIndex, int colIndex, int lux)
         : fIntModulus(0x1000000),
           fMantissaBit24( TMath::Power(0.5,24.) ),
           fMantissaBit12( TMath::Power(0.5,12.) )
 {
-   //constructor
    fTheSeeds = &fSeed;
    UInt_t seed;
    UInt_t seedlist[2]={0,0};
@@ -329,16 +332,18 @@ TRandom1::TRandom1(int rowIndex, int colIndex, int lux)
    SetSeeds(seedlist, fLuxury);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TRandom1::~TRandom1()
 {
-   //destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///static function returning the table of seeds
+
 void TRandom1::GetTableSeeds(UInt_t* seeds, Int_t index)
 {
-   //static function returning the table of seeds
    if ((index >= 0) && (index < 215)) {
       seeds[0] = fgSeedTable[index][0];
       seeds[1] = fgSeedTable[index][1];
@@ -346,10 +351,11 @@ void TRandom1::GetTableSeeds(UInt_t* seeds, Int_t index)
    else seeds = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return a random number in ]0,1]
+
 Double_t TRandom1::Rndm(Int_t)
 {
-   //return a random number in ]0,1]
    float next_random;
    float uni;
    int i;
@@ -398,17 +404,19 @@ Double_t TRandom1::Rndm(Int_t)
    return (double) next_random;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return an array of random numbers in ]0,1]
+
 void TRandom1::RndmArray(const Int_t size, Float_t *vect)
 {
-   //return an array of random numbers in ]0,1]
    for (Int_t i=0;i<size;i++) vect[i] = Rndm();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return an array of random numbers in ]0,1[
+
 void TRandom1::RndmArray(const Int_t size, Double_t *vect)
 {
-   //return an array of random numbers in ]0,1[
    float next_random;
    float uni;
    int i;
@@ -461,10 +469,11 @@ void TRandom1::RndmArray(const Int_t size, Double_t *vect)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set seeds
+
 void TRandom1::SetSeeds(const UInt_t *seeds, int lux)
 {
-   //set seeds
    const int ecuyer_a = 53668;
    const int ecuyer_b = 40014;
    const int ecuyer_c = 12211;
@@ -529,19 +538,19 @@ void TRandom1::SetSeeds(const UInt_t *seeds, int lux)
    fCount24 = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The initialisation is carried out using a Multiplicative
+/// Congruential generator using formula constants of L'Ecuyer
+/// as described in "A review of pseudorandom number generators"
+/// (Fred James) published in Computer Physics Communications 60 (1990)
+/// pages 329-344
+///
+/// modified for the case of seed = 0. In that case a random 64 bits seed based on
+/// TUUID (using TRandom3(0) ) is generated in order to have a unique seed
+///
+
 void TRandom1::SetSeed2(UInt_t seed, int lux)
 {
-// The initialisation is carried out using a Multiplicative
-// Congruential generator using formula constants of L'Ecuyer
-// as described in "A review of pseudorandom number generators"
-// (Fred James) published in Computer Physics Communications 60 (1990)
-// pages 329-344
-//
-// modified for the case of seed = 0. In that case a random 64 bits seed based on
-// TUUID (using TRandom3(0) ) is generated in order to have a unique seed
-//
-
    const int ecuyer_a = 53668;
    const int ecuyer_b = 40014;
    const int ecuyer_c = 12211;

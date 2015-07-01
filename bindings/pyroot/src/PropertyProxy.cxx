@@ -61,10 +61,11 @@ namespace {
       return 0;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the C++ datum held.
+
    int pp_set( PropertyProxy* pyprop, ObjectProxy* pyobj, PyObject* value )
    {
-   // Set the value of the C++ datum held.
       const int errret = -1;
 
    // filter const objects to prevent changing their values
@@ -109,10 +110,11 @@ namespace {
       return pyprop;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deallocate memory held by this descriptor.
+
    void pp_dealloc( PropertyProxy* pyprop )
    {
-   // Deallocate memory held by this descriptor.
       using namespace std;
       delete pyprop->fConverter;
       pyprop->fName.~string();
@@ -209,7 +211,8 @@ void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t id
    fConverter = CreateConverter( fullType, size );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, const std::string& name, void* address )
 {
    fEnclosingScope = scope;
@@ -219,9 +222,10 @@ void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, const std::string& na
    fConverter      = CreateConverter( "UInt_t", -1 );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// class attributes, global properties
+
 void* PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
-// class attributes, global properties
    if ( fProperty & kIsStaticData )
       return (void*)fOffset;
 

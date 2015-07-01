@@ -36,10 +36,11 @@
 
 ClassImp(TSpectrumTransform)
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default constructor
+
 TSpectrumTransform::TSpectrumTransform()
 {
-   //default constructor
    fSize=0;
    fTransformType=kTransformCos;
    fDegree=0;
@@ -50,11 +51,12 @@ TSpectrumTransform::TSpectrumTransform()
    fEnhanceCoeff=0.5;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///the constructor creates TSpectrumTransform object. Its size must be > than zero and must be power of 2.
+///It sets default transform type to be Cosine transform. Transform parameters can be changed using setter functions.
+
 TSpectrumTransform::TSpectrumTransform(Int_t size):TNamed("SpectrumTransform", "Miroslav Morhac transformer")
 {
-//the constructor creates TSpectrumTransform object. Its size must be > than zero and must be power of 2.
-//It sets default transform type to be Cosine transform. Transform parameters can be changed using setter functions.
    Int_t j,n;
    if (size <= 0){
       Error ("TSpectrumTransform","Invalid length, must be > than 0");
@@ -81,25 +83,27 @@ TSpectrumTransform::TSpectrumTransform(Int_t size):TNamed("SpectrumTransform", "
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TSpectrumTransform::~TSpectrumTransform()
 {
-   //destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCION                                                          //
+///                                                                              //
+///   This function calculates Haar transform of a part of data                   //
+///      Function parameters:                                                    //
+///              -working_space-pointer to vector of transformed data            //
+///              -num-length of processed data                                   //
+///              -direction-forward or inverse transform                         //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumTransform::Haar(Double_t *working_space, int num, int direction)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCION                                                          //
-//                                                                              //
-//   This function calculates Haar transform of a part of data                   //
-//      Function parameters:                                                    //
-//              -working_space-pointer to vector of transformed data            //
-//              -num-length of processed data                                   //
-//              -direction-forward or inverse transform                         //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    int i, ii, li, l2, l3, j, jj, jj1, lj, iter, m, jmin, jmax;
    Double_t a, b, c, wlk;
    Double_t val;
@@ -170,18 +174,19 @@ void TSpectrumTransform::Haar(Double_t *working_space, int num, int direction)
    return;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCION                                                          //
+///                                                                              //
+///   This function calculates Walsh transform of a part of data                  //
+///      Function parameters:                                                    //
+///              -working_space-pointer to vector of transformed data            //
+///              -num-length of processed data                                   //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumTransform::Walsh(Double_t *working_space, int num)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCION                                                          //
-//                                                                              //
-//   This function calculates Walsh transform of a part of data                  //
-//      Function parameters:                                                    //
-//              -working_space-pointer to vector of transformed data            //
-//              -num-length of processed data                                   //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    int i, m, nump = 1, mnum, mnum2, mp, ib, mp2, mnum21, iba, iter;
    Double_t a;
    Double_t val1, val2;
@@ -227,18 +232,19 @@ void TSpectrumTransform::Walsh(Double_t *working_space, int num)
    return;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCION                                                          //
+///                                                                              //
+///   This function carries out bir-reverse reordering of data                    //
+///      Function parameters:                                                    //
+///              -working_space-pointer to vector of processed data              //
+///              -num-length of processed data                                   //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumTransform::BitReverse(Double_t *working_space, int num)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCION                                                          //
-//                                                                              //
-//   This function carries out bir-reverse reordering of data                    //
-//      Function parameters:                                                    //
-//              -working_space-pointer to vector of processed data              //
-//              -num-length of processed data                                   //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    int ipower[26];
    int i, ib, il, ibd, ip, ifac, i1;
    for (i = 0; i < num; i++) {
@@ -267,21 +273,22 @@ void TSpectrumTransform::BitReverse(Double_t *working_space, int num)
    return;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCION                                                          //
+///                                                                              //
+///   This function calculates Fourier based transform of a part of data          //
+///      Function parameters:                                                    //
+///              -working_space-pointer to vector of transformed data            //
+///              -num-length of processed data                                   //
+///              -hartley-1 if it is Hartley transform, 0 othewise               //
+///              -direction-forward or inverse transform                         //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumTransform::Fourier(Double_t *working_space, int num, int hartley,
                           int direction, int zt_clear)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCION                                                          //
-//                                                                              //
-//   This function calculates Fourier based transform of a part of data          //
-//      Function parameters:                                                    //
-//              -working_space-pointer to vector of transformed data            //
-//              -num-length of processed data                                   //
-//              -hartley-1 if it is Hartley transform, 0 othewise               //
-//              -direction-forward or inverse transform                         //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    int nxp2, nxp, i, j, k, m, iter, mxp, j1, j2, n1, n2, it;
    Double_t a, b, c, d, sign, wpwr, arg, wr, wi, tr, ti, pi =
        3.14159265358979323846;
@@ -392,21 +399,22 @@ void TSpectrumTransform::Fourier(Double_t *working_space, int num, int hartley,
    return;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCION                                                          //
+///                                                                              //
+///   This function carries out bir-reverse reordering for Haar transform         //
+///      Function parameters:                                                    //
+///              -working_space-pointer to vector of processed data              //
+///              -shift-shift of position of processing                          //
+///              -start-initial position of processed data                       //
+///              -num-length of processed data                                   //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumTransform::BitReverseHaar(Double_t *working_space, int shift, int num,
                                  int start)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCION                                                          //
-//                                                                              //
-//   This function carries out bir-reverse reordering for Haar transform         //
-//      Function parameters:                                                    //
-//              -working_space-pointer to vector of processed data              //
-//              -shift-shift of position of processing                          //
-//              -start-initial position of processed data                       //
-//              -num-length of processed data                                   //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    int ipower[26];
    int i, ib, il, ibd, ip, ifac, i1;
    for (i = 0; i < num; i++) {
@@ -440,22 +448,23 @@ void TSpectrumTransform::BitReverseHaar(Double_t *working_space, int shift, int 
    return;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCION                                                          //
+///                                                                              //
+///   This function calculates generalized (mixed) transforms of different degrees//
+///      Function parameters:                                                    //
+///              -working_space-pointer to vector of transformed data            //
+///              -zt_clear-flag to clear imaginary data before staring           //
+///              -num-length of processed data                                   //
+///              -degree-degree of transform (see manual)                        //
+///              -type-type of mixed transform (see manual)                      //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 int TSpectrumTransform::GeneralExe(Double_t *working_space, int zt_clear, int num,
                             int degree, int type)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCION                                                          //
-//                                                                              //
-//   This function calculates generalized (mixed) transforms of different degrees//
-//      Function parameters:                                                    //
-//              -working_space-pointer to vector of transformed data            //
-//              -zt_clear-flag to clear imaginary data before staring           //
-//              -num-length of processed data                                   //
-//              -degree-degree of transform (see manual)                        //
-//              -type-type of mixed transform (see manual)                      //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    int i, j, k, m, nump, mnum, mnum2, mp, ib, mp2, mnum21, iba, iter,
        mp2step, mppom, ring;
    Double_t a, b, c, d, wpwr, arg, wr, wi, tr, ti, pi =
@@ -561,21 +570,22 @@ int TSpectrumTransform::GeneralExe(Double_t *working_space, int zt_clear, int nu
    return (0);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+///   AUXILIARY FUNCION                                                          //
+///                                                                              //
+///   This function calculates inverse generalized (mixed) transforms             //
+///      Function parameters:                                                    //
+///              -working_space-pointer to vector of transformed data            //
+///              -num-length of processed data                                   //
+///              -degree-degree of transform (see manual)                        //
+///              -type-type of mixed transform (see manual)                      //
+///                                                                              //
+///////////////////////////////////////////////////////////////////////////////////
+
 int TSpectrumTransform::GeneralInv(Double_t *working_space, int num, int degree,
                             int type)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCION                                                          //
-//                                                                              //
-//   This function calculates inverse generalized (mixed) transforms             //
-//      Function parameters:                                                    //
-//              -working_space-pointer to vector of transformed data            //
-//              -num-length of processed data                                   //
-//              -degree-degree of transform (see manual)                        //
-//              -type-type of mixed transform (see manual)                      //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    int i, j, k, m, nump =
        1, mnum, mnum2, mp, ib, mp2, mnum21, iba, iter, mp2step, mppom,
        ring;
@@ -686,26 +696,27 @@ int TSpectrumTransform::GeneralInv(Double_t *working_space, int num, int degree,
 //////////END OF AUXILIARY FUNCTIONS FOR TRANSFORM! FUNCTION////////////////////////
 //////////TRANSFORM FUNCTION - CALCULATES DIFFERENT 1-D DIRECT AND INVERSE ORTHOGONAL TRANSFORMS//////
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///        ONE-DIMENSIONAL TRANSFORM FUNCTION
+///        This function transforms the source spectrum. The calling program
+///        should fill in input parameters.
+///        Transformed data are written into dest spectrum.
+///
+///        Function parameters:
+///        source-pointer to the vector of source spectrum, its length should
+///             be size except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
+///             transform. These need 2*size length to supply real and
+///             imaginary coefficients.
+///        destVector-pointer to the vector of dest data, its length should be
+///             size except for direct FOURIER, FOUR-WALSH, FOUR-HAAR. These
+///             need 2*size length to store real and imaginary coefficients
+///
+////////////////////////////////////////////////////////////////////////////////
+///Begin_Html <!--
+
 void TSpectrumTransform::Transform(const Double_t *source, Double_t *destVector)
 {
-///////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL TRANSFORM FUNCTION
-//        This function transforms the source spectrum. The calling program
-//        should fill in input parameters.
-//        Transformed data are written into dest spectrum.
-//
-//        Function parameters:
-//        source-pointer to the vector of source spectrum, its length should
-//             be size except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
-//             transform. These need 2*size length to supply real and
-//             imaginary coefficients.
-//        destVector-pointer to the vector of dest data, its length should be
-//             size except for direct FOURIER, FOUR-WALSH, FOUR-HAAR. These
-//             need 2*size length to store real and imaginary coefficients
-//
-///////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
 /* -->
 <div class=Section1>
 
@@ -1425,29 +1436,30 @@ h-&gt;SetLineColor(kRed);      </span></p>
 
 //////////FilterZonal FUNCTION - CALCULATES DIFFERENT 1-D ORTHOGONAL TRANSFORMS, SETS GIVEN REGION TO FILTER COEFFICIENT AND TRANSFORMS IT BACK//////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+///        ONE-DIMENSIONAL FILTER ZONAL FUNCTION
+///        This function transforms the source spectrum. The calling program
+///        should fill in input parameters. Then it sets transformed
+///        coefficients in the given region (fXmin, fXmax) to the given
+///        fFilterCoeff and transforms it back.
+///        Filtered data are written into dest spectrum.
+///
+///        Function parameters:
+///        source-pointer to the vector of source spectrum, its length should
+///             be size except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
+///             transform. These need 2*size length to supply real and
+///             imaginary coefficients.
+///        destVector-pointer to the vector of dest data, its length should be
+///           size except for direct FOURIER, FOUR-WALSH, FOUR-HAAR. These
+///           need 2*size length to store real and imaginary coefficients
+///
+/////////////////////////////////////////////////////////////////////////////////
+///
+///Begin_Html <!--
+
 void TSpectrumTransform::FilterZonal(const Double_t *source, Double_t *destVector)
 {
-////////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL FILTER ZONAL FUNCTION
-//        This function transforms the source spectrum. The calling program
-//        should fill in input parameters. Then it sets transformed
-//        coefficients in the given region (fXmin, fXmax) to the given
-//        fFilterCoeff and transforms it back.
-//        Filtered data are written into dest spectrum.
-//
-//        Function parameters:
-//        source-pointer to the vector of source spectrum, its length should
-//             be size except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
-//             transform. These need 2*size length to supply real and
-//             imaginary coefficients.
-//        destVector-pointer to the vector of dest data, its length should be
-//           size except for direct FOURIER, FOUR-WALSH, FOUR-HAAR. These
-//           need 2*size length to store real and imaginary coefficients
-//
-////////////////////////////////////////////////////////////////////////////////
-//
-//Begin_Html <!--
 /* -->
 <div class=Section2>
 
@@ -2034,28 +2046,29 @@ L&quot;);</span></p>
 }
 
 //////////ENHANCE FUNCTION - CALCULATES DIFFERENT 1-D ORTHOGONAL TRANSFORMS, MULTIPLIES GIVEN REGION BY ENHANCE COEFFICIENT AND TRANSFORMS IT BACK//////
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+///        ONE-DIMENSIONAL ENHANCE ZONAL FUNCTION
+///        This function transforms the source spectrum. The calling program
+///      should fill in input parameters. Then it multiplies transformed
+///      coefficients in the given region (fXmin, fXmax) by the given
+///      fEnhanceCoeff and transforms it back
+///        Processed data are written into dest spectrum.
+///
+///        Function parameters:
+///        source-pointer to the vector of source spectrum, its length should
+///             be size except for inverse FOURIER, FOUR-WALSh, FOUR-HAAR
+///             transform. These need 2*size length to supply real and
+///             imaginary coefficients.
+///        destVector-pointer to the vector of dest data, its length should be
+///           size except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These
+///           need 2*size length to store real and imaginary coefficients
+///
+/////////////////////////////////////////////////////////////////////////////////
+///Begin_Html <!--
+
 void TSpectrumTransform::Enhance(const Double_t *source, Double_t *destVector)
 {
-////////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL ENHANCE ZONAL FUNCTION
-//        This function transforms the source spectrum. The calling program
-//      should fill in input parameters. Then it multiplies transformed
-//      coefficients in the given region (fXmin, fXmax) by the given
-//      fEnhanceCoeff and transforms it back
-//        Processed data are written into dest spectrum.
-//
-//        Function parameters:
-//        source-pointer to the vector of source spectrum, its length should
-//             be size except for inverse FOURIER, FOUR-WALSh, FOUR-HAAR
-//             transform. These need 2*size length to supply real and
-//             imaginary coefficients.
-//        destVector-pointer to the vector of dest data, its length should be
-//           size except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These
-//           need 2*size length to store real and imaginary coefficients
-//
-////////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
 /* -->
 <div class=Section3>
 
@@ -2640,16 +2653,17 @@ L&quot;);</span></p>
    return;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   SETTER FUNCION
+///
+///   This function sets the following parameters for transform:
+///         -transType - type of transform (Haar, Walsh, Cosine, Sine, Fourier, Hartley, Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar)
+///         -degree - degree of mixed transform, applies only for Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar transforms
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumTransform::SetTransformType(Int_t transType, Int_t degree)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION
-//
-//   This function sets the following parameters for transform:
-//         -transType - type of transform (Haar, Walsh, Cosine, Sine, Fourier, Hartley, Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar)
-//         -degree - degree of mixed transform, applies only for Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar transforms
-//////////////////////////////////////////////////////////////////////////////
    Int_t j, n;
    j = 0;
    n = 1;
@@ -2672,15 +2686,16 @@ void TSpectrumTransform::SetTransformType(Int_t transType, Int_t degree)
 }
 
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   SETTER FUNCION
+///
+///   This function sets the filtering or enhancement region:
+///         -xmin, xmax
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumTransform::SetRegion(Int_t xmin, Int_t xmax)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION
-//
-//   This function sets the filtering or enhancement region:
-//         -xmin, xmax
-//////////////////////////////////////////////////////////////////////////////
    if(xmin<0 || xmax < xmin || xmax >= fSize){
       Error("TSpectrumTransform", "Wrong range");
       return;
@@ -2689,15 +2704,16 @@ void TSpectrumTransform::SetRegion(Int_t xmin, Int_t xmax)
    fXmax = xmax;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   SETTER FUNCION
+///
+///   This function sets the direction of the transform:
+///         -direction (forward or inverse)
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumTransform::SetDirection(Int_t direction)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION
-//
-//   This function sets the direction of the transform:
-//         -direction (forward or inverse)
-//////////////////////////////////////////////////////////////////////////////
    if(direction != kTransformForward && direction != kTransformInverse){
       Error("TSpectrumTransform", "Wrong direction");
       return;
@@ -2705,26 +2721,28 @@ void TSpectrumTransform::SetDirection(Int_t direction)
    fDirection = direction;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   SETTER FUNCION
+///
+///   This function sets the filter coefficient:
+///         -filterCoeff - after the transform the filtered region (xmin, xmax) is replaced by this coefficient. Applies only for filtereng operation.
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumTransform::SetFilterCoeff(Double_t filterCoeff)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION
-//
-//   This function sets the filter coefficient:
-//         -filterCoeff - after the transform the filtered region (xmin, xmax) is replaced by this coefficient. Applies only for filtereng operation.
-//////////////////////////////////////////////////////////////////////////////
    fFilterCoeff = filterCoeff;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///   SETTER FUNCION
+///
+///   This function sets the enhancement coefficient:
+///         -enhanceCoeff - after the transform the enhanced region (xmin, xmax) is multiplied by this coefficient. Applies only for enhancement operation.
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumTransform::SetEnhanceCoeff(Double_t enhanceCoeff)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION
-//
-//   This function sets the enhancement coefficient:
-//         -enhanceCoeff - after the transform the enhanced region (xmin, xmax) is multiplied by this coefficient. Applies only for enhancement operation.
-//////////////////////////////////////////////////////////////////////////////
    fEnhanceCoeff = enhanceCoeff;
 }

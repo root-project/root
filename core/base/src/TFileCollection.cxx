@@ -37,16 +37,16 @@
 
 ClassImp(TFileCollection)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TFileCollection constructor. Specify a name and title describing
+/// the list. If textfile is specified the file is opened and a
+/// TFileCollection is created containing the files in the textfile.
+
 TFileCollection::TFileCollection(const char *name, const char *title,
                                  const char *textfile, Int_t nfiles, Int_t firstfile)
    : TNamed(name, title), fList(0), fMetaDataList(0), fDefaultTree(),
      fTotalSize(0), fNFiles(0), fNStagedFiles(0), fNCorruptFiles(0)
 {
-   // TFileCollection constructor. Specify a name and title describing
-   // the list. If textfile is specified the file is opened and a
-   // TFileCollection is created containing the files in the textfile.
-
    fList = new THashList();
    fList->SetOwner();
 
@@ -56,20 +56,20 @@ TFileCollection::TFileCollection(const char *name, const char *title,
    AddFromFile(textfile, nfiles, firstfile);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TFileCollection::~TFileCollection()
 {
-   // Cleanup.
-
    delete fList;
    delete fMetaDataList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add TFileInfo to the collection.
+
 Int_t TFileCollection::Add(TFileInfo *info)
 {
-   // Add TFileInfo to the collection.
-
    if (fList && info) {
       if (!fList->FindObject(info->GetName())) {
          fList->Add(info);
@@ -83,11 +83,11 @@ Int_t TFileCollection::Add(TFileInfo *info)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add content of the TFileCollection to this collection.
+
 Int_t TFileCollection::Add(TFileCollection *coll)
 {
-   // Add content of the TFileCollection to this collection.
-
    if (fList && coll && coll->GetList()) {
       TIter nxfi(coll->GetList());
       TFileInfo *fi = 0;
@@ -102,15 +102,15 @@ Int_t TFileCollection::Add(TFileCollection *coll)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add file names contained in the specified text file.
+/// The file should contain one url per line; empty lines or lines starting with '#'
+/// (commented lines) are ignored.
+/// If nfiles > 0 only nfiles files are added, starting from file 'firstfile' (>= 1).
+/// The method returns the number of added files.
+
 Int_t TFileCollection::AddFromFile(const char *textfile, Int_t nfiles, Int_t firstfile)
 {
-   // Add file names contained in the specified text file.
-   // The file should contain one url per line; empty lines or lines starting with '#'
-   // (commented lines) are ignored.
-   // If nfiles > 0 only nfiles files are added, starting from file 'firstfile' (>= 1).
-   // The method returns the number of added files.
-
    if (!fList)
      return 0;
 
@@ -145,15 +145,15 @@ Int_t TFileCollection::AddFromFile(const char *textfile, Int_t nfiles, Int_t fir
    return nf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add all files matching the specified pattern to the collection.
+/// 'dir' can include wildcards after the last slash, which causes all
+/// matching files in that directory to be added.
+/// If dir is the full path of a file, only one element is added.
+/// Return value is the number of added files.
+
 Int_t TFileCollection::Add(const char *dir)
 {
-   // Add all files matching the specified pattern to the collection.
-   // 'dir' can include wildcards after the last slash, which causes all
-   // matching files in that directory to be added.
-   // If dir is the full path of a file, only one element is added.
-   // Return value is the number of added files.
-
    Int_t nf = 0;
 
    if (!fList)
@@ -216,12 +216,12 @@ Int_t TFileCollection::Add(const char *dir)
    return nf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove duplicates based on the UUID, typically after a verification.
+/// Return the number of entries removed.
+
 Int_t TFileCollection::RemoveDuplicates()
 {
-   // Remove duplicates based on the UUID, typically after a verification.
-   // Return the number of entries removed.
-
    THashList *hl = new THashList;
    hl->SetOwner();
 
@@ -246,11 +246,11 @@ Int_t TFileCollection::RemoveDuplicates()
    return nr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a subset of the files that have the kStaged & !kCorrupted bit set.
+
 TFileCollection *TFileCollection::GetStagedSubset()
 {
-   // Creates a subset of the files that have the kStaged & !kCorrupted bit set.
-
    if (!fList)
      return 0;
 
@@ -268,13 +268,13 @@ TFileCollection *TFileCollection::GetStagedSubset()
    return subset;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge all TFileCollection objects in li into this TFileCollection object.
+/// Updates counters at the end.
+/// Returns the number of merged collections or -1 in case of error.
+
 Long64_t TFileCollection::Merge(TCollection *li)
 {
-   // Merge all TFileCollection objects in li into this TFileCollection object.
-   // Updates counters at the end.
-   // Returns the number of merged collections or -1 in case of error.
-
 
    if (!li) return 0;
    if (li->IsEmpty()) return 0;
@@ -296,17 +296,17 @@ Long64_t TFileCollection::Merge(TCollection *li)
    return nentries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update accumulated information about the elements of the collection
+/// (e.g. fTotalSize). If 'avgsize' > 0, use an average file size of 'avgsize'
+/// bytes when the size info is not available.
+/// Also updates the meta data information by summarizing
+/// the meta data of the contained objects.
+/// Return -1 in case of any failure, 0 if the total size is exact, 1 if
+/// incomplete, 2 if complete but (at least partially) estimated.
+
 Int_t TFileCollection::Update(Long64_t avgsize)
 {
-   // Update accumulated information about the elements of the collection
-   // (e.g. fTotalSize). If 'avgsize' > 0, use an average file size of 'avgsize'
-   // bytes when the size info is not available.
-   // Also updates the meta data information by summarizing
-   // the meta data of the contained objects.
-   // Return -1 in case of any failure, 0 if the total size is exact, 1 if
-   // incomplete, 2 if complete but (at least partially) estimated.
-
    if (!fList)
      return -1;
 
@@ -383,21 +383,21 @@ Int_t TFileCollection::Update(Long64_t avgsize)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints the contents of the TFileCollection.
+/// If option contains:
+///      'M'             print global meta information
+///      'F'             print all the files in the collection in compact form
+///                      (current url, default tree name|class|entries, md5)
+///      'L'             together with 'F', print all the files in the collection
+///                      in long form (uuid, md5, all URLs, all meta objects; on
+///                      many lines)
+///      "filter:[SsCc]" invokes PrintDetailed() which prints out dataset
+///                      content in a formatted fashion by filtering on files
+///                      which are (S)taged or not (s), (C)orrupted or not (c)
+
 void TFileCollection::Print(Option_t *option) const
 {
-   // Prints the contents of the TFileCollection.
-   // If option contains:
-   //      'M'             print global meta information
-   //      'F'             print all the files in the collection in compact form
-   //                      (current url, default tree name|class|entries, md5)
-   //      'L'             together with 'F', print all the files in the collection
-   //                      in long form (uuid, md5, all URLs, all meta objects; on
-   //                      many lines)
-   //      "filter:[SsCc]" invokes PrintDetailed() which prints out dataset
-   //                      content in a formatted fashion by filtering on files
-   //                      which are (S)taged or not (s), (C)orrupted or not (c)
-
    TString opt(option);
    TPMERegexp re("(^|;| )filter:([SsCc]+)( |;|$)", 4);
    if (re.Match(option) == 4) {
@@ -432,10 +432,10 @@ void TFileCollection::Print(Option_t *option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TFileCollection::PrintDetailed(TString &showOnly) const
 {
-
    Bool_t bS, bs, bC, bc;
    bS = bs = bC = bc = kFALSE;
 
@@ -521,11 +521,11 @@ void TFileCollection::PrintDetailed(TString &showOnly) const
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TFileCollection::FormatSize(Long64_t bytes, TString &um,
    Double_t &size) const
 {
-
    static const char *ums[] = { "byt", "KiB", "MiB", "GiB", "TiB" };
    Int_t maxDiv = sizeof(ums)/sizeof(const char *);
    Int_t nDiv = 0;
@@ -540,11 +540,11 @@ void TFileCollection::FormatSize(Long64_t bytes, TString &um,
    size = b;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calls TUrl::SetAnchor() for all URLs contained in all TFileInfos.
+
 void TFileCollection::SetAnchor(const char *anchor)
 {
-   // Calls TUrl::SetAnchor() for all URLs contained in all TFileInfos.
-
    if (!fList)
      return;
 
@@ -559,11 +559,11 @@ void TFileCollection::SetAnchor(const char *anchor)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the bit for all TFileInfos
+
 void TFileCollection::SetBitAll(UInt_t f)
 {
-   // Set the bit for all TFileInfos
-
    if (!fList)
      return;
 
@@ -573,11 +573,11 @@ void TFileCollection::SetBitAll(UInt_t f)
       fileInfo->SetBit(f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the bit for all TFileInfos
+
 void TFileCollection::ResetBitAll(UInt_t f)
 {
-   // Reset the bit for all TFileInfos
-
    if (!fList)
      return;
 
@@ -587,13 +587,13 @@ void TFileCollection::ResetBitAll(UInt_t f)
       fileInfo->ResetBit(f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the tree set with SetDefaultTreeName if set
+/// Returns the name of the first tree in the meta data list.
+/// Returns 0 in case no trees are found in the meta data list.
+
 const char *TFileCollection::GetDefaultTreeName() const
 {
-   // Returns the tree set with SetDefaultTreeName if set
-   // Returns the name of the first tree in the meta data list.
-   // Returns 0 in case no trees are found in the meta data list.
-
    if (fDefaultTree.Length() > 0)
      return fDefaultTree;
 
@@ -607,13 +607,13 @@ const char *TFileCollection::GetDefaultTreeName() const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of entries for the specified tree (retrieved from meta data).
+/// If tree is not specified, use the default tree name.
+/// Returns -1 in case the specified tree is not found.
+
 Long64_t TFileCollection::GetTotalEntries(const char *tree) const
 {
-   // Returns the number of entries for the specified tree (retrieved from meta data).
-   // If tree is not specified, use the default tree name.
-   // Returns -1 in case the specified tree is not found.
-
    if (!tree || !*tree) {
       tree = GetDefaultTreeName();
       if (!tree)
@@ -627,24 +627,24 @@ Long64_t TFileCollection::GetTotalEntries(const char *tree) const
    return metaData->GetEntries();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the meta data object with the soecified meta name.
+/// Returns 0 in case specified meta data is not found.
+
 TFileInfoMeta *TFileCollection::GetMetaData(const char *meta) const
 {
-   // Returns the meta data object with the soecified meta name.
-   // Returns 0 in case specified meta data is not found.
-
    if (!meta || !*meta)
       return 0;
 
    return dynamic_cast<TFileInfoMeta*>(fMetaDataList->FindObject(meta));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Moves the indicated meta data in the first position, so that
+/// it becomes efectively the default.
+
 void TFileCollection::SetDefaultMetaData(const char *meta)
 {
-   // Moves the indicated meta data in the first position, so that
-   // it becomes efectively the default.
-
    TFileInfoMeta *fim = GetMetaData(meta);
    if (fim) {
       fMetaDataList->Remove(fim);
@@ -652,12 +652,12 @@ void TFileCollection::SetDefaultMetaData(const char *meta)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Removes the indicated meta data object in all TFileInfos and this object
+/// If no name is given all metadata is removed
+
 void TFileCollection::RemoveMetaData(const char *meta)
 {
-   // Removes the indicated meta data object in all TFileInfos and this object
-   // If no name is given all metadata is removed
-
    if (fList) {
       TIter iter(fList);
       TFileInfo *fileInfo = 0;
@@ -675,11 +675,11 @@ void TFileCollection::RemoveMetaData(const char *meta)
       fMetaDataList->Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort the collection.
+
 void TFileCollection::Sort(Bool_t useindex)
 {
-   // Sort the collection.
-
    if (!fList)
      return;
 
@@ -693,13 +693,13 @@ void TFileCollection::Sort(Bool_t useindex)
    fList->Sort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Export the relevant info as a string; use 'name' as collection name,
+/// if defined, else use GetName().
+/// The output object must be destroyed by the caller
+
 TObjString *TFileCollection::ExportInfo(const char *name, Int_t popt)
 {
-   // Export the relevant info as a string; use 'name' as collection name,
-   // if defined, else use GetName().
-   // The output object must be destroyed by the caller
-
    TString treeInfo;
    if (GetDefaultTreeName()) {
       TFileInfoMeta* meta = GetMetaData(GetDefaultTreeName());
@@ -757,12 +757,12 @@ TObjString *TFileCollection::ExportInfo(const char *name, Int_t popt)
    return outs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the subset of files served by 'server'. The sysntax for 'server' is
+/// the standard URI one, i.e. [<scheme>://]<host>[:port]
+
 TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
 {
-   // Return the subset of files served by 'server'. The sysntax for 'server' is
-   // the standard URI one, i.e. [<scheme>://]<host>[:port]
-
    TFileCollection *fc = (TFileCollection *)0;
 
    // Server specification is mandatory
@@ -849,14 +849,14 @@ TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
    return fc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a map of TFileCollections with the files on each data server,
+/// excluding servers in the comma-separated list 'exclude'.
+/// If curronly is kTRUE, only the URL flagged as current in the TFileInfo
+/// are considered.
+
 TMap *TFileCollection::GetFilesPerServer(const char *exclude, Bool_t curronly)
 {
-   // Return a map of TFileCollections with the files on each data server,
-   // excluding servers in the comma-separated list 'exclude'.
-   // If curronly is kTRUE, only the URL flagged as current in the TFileInfo
-   // are considered.
-
    TMap *dsmap = 0;
 
    // Nothing to do for empty lists
@@ -978,17 +978,17 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude, Bool_t curronly)
    return dsmap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add's a meta data object to the file collection object. The object will be
+/// adopted by the TFileCollection and should not be deleted by the user.
+/// Typically objects of class TFileInfoMeta or derivatives should be added,
+/// but any class is accepted.
+/// NB : a call to TFileCollection::Update will remove these objects unless the
+///      bit TFileInfoMeta::kExternal is set.
+/// Returns kTRUE if successful, kFALSE otherwise.
+
 Bool_t TFileCollection::AddMetaData(TObject *meta)
 {
-   // Add's a meta data object to the file collection object. The object will be
-   // adopted by the TFileCollection and should not be deleted by the user.
-   // Typically objects of class TFileInfoMeta or derivatives should be added,
-   // but any class is accepted.
-   // NB : a call to TFileCollection::Update will remove these objects unless the
-   //      bit TFileInfoMeta::kExternal is set.
-   // Returns kTRUE if successful, kFALSE otherwise.
-
    if (meta) {
       if (!fMetaDataList) {
          fMetaDataList = new TList;

@@ -35,7 +35,9 @@ ClassImp(TGLOrthoCamera)
 
 UInt_t   TGLOrthoCamera::fgZoomDeltaSens = 500;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct kXOY orthographic camera.
+
 TGLOrthoCamera::TGLOrthoCamera() :
    TGLCamera(TGLVector3( 0.0, 0.0, 1.0), TGLVector3(0.0, 1.0, 0.0)),
    fType(kXOY),
@@ -44,12 +46,12 @@ TGLOrthoCamera::TGLOrthoCamera() :
    fVolume(TGLVertex3(-100.0, -100.0, -100.0), TGLVertex3(100.0, 100.0, 100.0)),
    fZoom(1.0)
 {
-   // Construct kXOY orthographic camera.
-
    Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct orthographic camera.
+
 TGLOrthoCamera::TGLOrthoCamera(EType type, const TGLVector3 & hAxis, const TGLVector3 & vAxis) :
    TGLCamera(hAxis, vAxis),
    fType(type),
@@ -58,23 +60,22 @@ TGLOrthoCamera::TGLOrthoCamera(EType type, const TGLVector3 & hAxis, const TGLVe
    fVolume(TGLVertex3(-100.0, -100.0, -100.0), TGLVertex3(100.0, 100.0, 100.0)),
    fZoom(1.0)
 {
-   // Construct orthographic camera.
-
    Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy orthographic camera.
+
 TGLOrthoCamera::~TGLOrthoCamera()
 {
-   // Destroy orthographic camera.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup camera limits suitible to view the world volume defined by 'box'
+/// and call Reset() to initialise camera.
+
 void TGLOrthoCamera::Setup(const TGLBoundingBox & box, Bool_t reset)
 {
-   // Setup camera limits suitible to view the world volume defined by 'box'
-   // and call Reset() to initialise camera.
-
    fVolume = box;
 
    if (fExternalCenter == kFALSE)
@@ -93,12 +94,12 @@ void TGLOrthoCamera::Setup(const TGLBoundingBox & box, Bool_t reset)
       Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the camera to defaults - trucking, zooming to reframe the world volume
+/// established in Setup(). Note: limits defined in Setup() are not adjusted.
+
 void TGLOrthoCamera::Reset()
 {
-   // Reset the camera to defaults - trucking, zooming to reframe the world volume
-   // established in Setup(). Note: limits defined in Setup() are not adjusted.
-
    TGLVector3 e = fVolume.Extents();
    switch (fType) {
       case kXOY:
@@ -133,13 +134,13 @@ void TGLOrthoCamera::Reset()
    IncTimeStamp();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dolly the camera.
+/// By default the dolly is reinterpreted to zoom, but it can be
+/// changed by modifying the fDollyToZoom data-member.
+
 Bool_t TGLOrthoCamera::Dolly(Int_t delta, Bool_t mod1, Bool_t mod2)
 {
-   // Dolly the camera.
-   // By default the dolly is reinterpreted to zoom, but it can be
-   // changed by modifying the fDollyToZoom data-member.
-
    if (fDollyToZoom) {
       return Zoom(delta, mod1, mod2);
    } else {
@@ -147,21 +148,21 @@ Bool_t TGLOrthoCamera::Dolly(Int_t delta, Bool_t mod1, Bool_t mod2)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Zoom the camera - 'adjust lens focal length, retaining camera position'.
+/// Arguments are:
+///
+/// 'delta' - mouse viewport delta (pixels) - +ive zoom in, -ive zoom out
+/// 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
+///
+/// For an orthographic camera dollying and zooming are identical and both equate
+/// logically to a rescaling of the viewport limits - without center shift.
+/// There is no perspective foreshortening or lens 'focal length'.
+///
+/// Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+
 Bool_t TGLOrthoCamera::Zoom(Int_t delta, Bool_t mod1, Bool_t mod2)
 {
-   // Zoom the camera - 'adjust lens focal length, retaining camera position'.
-   // Arguments are:
-   //
-   // 'delta' - mouse viewport delta (pixels) - +ive zoom in, -ive zoom out
-   // 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
-   //
-   // For an orthographic camera dollying and zooming are identical and both equate
-   // logically to a rescaling of the viewport limits - without center shift.
-   // There is no perspective foreshortening or lens 'focal length'.
-   //
-   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
-
    if (AdjustAndClampVal(fZoom, fZoomMin, fZoomMax, -delta*2, fgZoomDeltaSens, mod1, mod2))
    {
       IncTimeStamp();
@@ -173,12 +174,12 @@ Bool_t TGLOrthoCamera::Zoom(Int_t delta, Bool_t mod1, Bool_t mod2)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set minimum zoom factor. If current zoom is less than z it is
+/// set to z.
+
 void TGLOrthoCamera::SetZoomMin(Double_t z)
 {
-   // Set minimum zoom factor. If current zoom is less than z it is
-   // set to z.
-
    fZoomMin = z;
    if (fZoom < fZoomMin) {
       fZoom = fZoomMin;
@@ -186,12 +187,12 @@ void TGLOrthoCamera::SetZoomMin(Double_t z)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set maximum zoom factor. If current zoom is greater than z it
+/// is set to z.
+
 void TGLOrthoCamera::SetZoomMax(Double_t z)
 {
-   // Set maximum zoom factor. If current zoom is greater than z it
-   // is set to z.
-
    fZoomMax = z;
    if (fZoom > fZoomMax) {
       fZoom = fZoomMax;
@@ -199,12 +200,12 @@ void TGLOrthoCamera::SetZoomMax(Double_t z)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Truck the camera - 'move camera parallel to film plane'.
+/// Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+
 Bool_t TGLOrthoCamera::Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
 {
-   // Truck the camera - 'move camera parallel to film plane'.
-   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
-
    Double_t xstep = 2.0 * xDelta / fProjM[0] / fViewport.Width();
    Double_t ystep = 2.0 * yDelta / fProjM[5] / fViewport.Height();
 
@@ -214,33 +215,33 @@ Bool_t TGLOrthoCamera::Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod
    return Truck(-xstep, -ystep);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate the camera - 'swivel round the view volume center'.
+/// Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+
 Bool_t TGLOrthoCamera::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
 {
-   // Rotate the camera - 'swivel round the view volume center'.
-   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
-
    if (fEnableRotate)
       return TGLCamera::Rotate(xDelta, yDelta, mod1, mod2);
    else
       return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply the camera to the current GL context, setting the viewport, projection
+/// and modelview matricies. After this verticies etc can be directly entered
+/// in the world frame. This also updates the cached frustum values, enabling
+/// all the projection, overlap tests etc defined in TGLCamera to be used.
+///
+/// Arguments are:
+/// 'box' - view volume box - ignored for ortho camera. Assumed to be same
+/// as one passed to Setup().
+/// 'pickRect' - optional picking rect. If non-null, restrict drawing to this
+/// viewport rect.
+
 void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/,
                            const TGLRect        * pickRect) const
 {
-   // Apply the camera to the current GL context, setting the viewport, projection
-   // and modelview matricies. After this verticies etc can be directly entered
-   // in the world frame. This also updates the cached frustum values, enabling
-   // all the projection, overlap tests etc defined in TGLCamera to be used.
-   //
-   // Arguments are:
-   // 'box' - view volume box - ignored for ortho camera. Assumed to be same
-   // as one passed to Setup().
-   // 'pickRect' - optional picking rect. If non-null, restrict drawing to this
-   // viewport rect.
-
    glViewport(fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height());
 
    if(fViewport.Width() == 0 || fViewport.Height() == 0)
@@ -300,17 +301,17 @@ void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/,
    if (fCacheDirty) UpdateCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Configure the camera state.
+///   zoom    - set directly (default = 0.78);
+///   dolly   - additional move along the camera forward direction;
+///   center  - new camera center (can be 0 for no change);
+///   hRotate - additional "up/down" rotation in radians;
+///   vRotate - additional "left/right" rotation in radians.
+
 void TGLOrthoCamera::Configure(Double_t zoom, Double_t dolly, Double_t center[3],
                                Double_t hRotate, Double_t vRotate)
 {
-   // Configure the camera state.
-   //   zoom    - set directly (default = 0.78);
-   //   dolly   - additional move along the camera forward direction;
-   //   center  - new camera center (can be 0 for no change);
-   //   hRotate - additional "up/down" rotation in radians;
-   //   vRotate - additional "left/right" rotation in radians.
-
    fZoom = zoom;
 
    if (center)

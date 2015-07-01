@@ -17,7 +17,9 @@
 
 ClassImp(THttpCallArg)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 THttpCallArg::THttpCallArg() :
    TObject(),
    fTopName(),
@@ -37,14 +39,13 @@ THttpCallArg::THttpCallArg() :
    fBinData(0),
    fBinDataLength(0)
 {
-   // constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 THttpCallArg::~THttpCallArg()
 {
-   // destructor
-
    if (fPostData) {
       free(fPostData);
       fPostData = 0;
@@ -56,15 +57,15 @@ THttpCallArg::~THttpCallArg()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// method used to get or set http header in the string buffer
+/// Header has following format:
+///   field1 : value1\r\n
+///   field2 : value2\r\n
+/// Such format corresponds to header format in HTTP requests
+
 TString THttpCallArg::AccessHeader(TString& buf, const char* name, const char* value, Bool_t doing_set)
 {
-   // method used to get or set http header in the string buffer
-   // Header has following format:
-   //   field1 : value1\r\n
-   //   field2 : value2\r\n
-   // Such format corresponds to header format in HTTP requests
-
    if (name==0) return TString();
 
    Int_t curr = 0;
@@ -102,11 +103,11 @@ TString THttpCallArg::AccessHeader(TString& buf, const char* name, const char* v
    return TString(value);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// method used to counter number of headers or returns name of specified header
+
 TString THttpCallArg::CountHeader(const TString& buf, Int_t number) const
 {
-   // method used to counter number of headers or returns name of specified header
-
    Int_t curr(0), cnt(0);
 
    while (curr < buf.Length()-2) {
@@ -130,25 +131,25 @@ TString THttpCallArg::CountHeader(const TString& buf, Int_t number) const
    return TString();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set data, posted with the request
+/// buffer should be allocated with malloc(length+1) call,
+/// while last byte will be set to 0
+/// Than one could use post data as null-terminated string
+
 void THttpCallArg::SetPostData(void *data, Long_t length)
 {
-   // set data, posted with the request
-   // buffer should be allocated with malloc(length+1) call,
-   // while last byte will be set to 0
-   // Than one could use post data as null-terminated string
-
    if (fPostData) free(fPostData);
    if (data!=0) *(((char*) data) + length) = 0;
    fPostData = data;
    fPostDataLength = length;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set binary data, which will be returned as reply body
+
 void THttpCallArg::SetBinData(void *data, Long_t length)
 {
-   // set binary data, which will be returned as reply body
-
    if (fBinData) free(fBinData);
    fBinData = data;
    fBinDataLength = length;
@@ -157,14 +158,14 @@ void THttpCallArg::SetBinData(void *data, Long_t length)
    fContent.Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set complete path of requested http element
+/// For instance, it could be "/folder/subfolder/get.bin"
+/// Here "/folder/subfolder/" is element path and "get.bin" requested file.
+/// One could set path and file name separately
+
 void THttpCallArg::SetPathAndFileName(const char *fullpath)
 {
-   // set complete path of requested http element
-   // For instance, it could be "/folder/subfolder/get.bin"
-   // Here "/folder/subfolder/" is element path and "get.bin" requested file.
-   // One could set path and file name separately
-
    fPathName.Clear();
    fFileName.Clear();
 
@@ -181,11 +182,11 @@ void THttpCallArg::SetPathAndFileName(const char *fullpath)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return specified header
+
 TString THttpCallArg::GetHeader(const char* name)
 {
-   // return specified header
-
    if ((name == 0) || (*name == 0)) return TString();
 
    if (strcmp(name,"Content-Type") == 0) return fContentType;
@@ -194,13 +195,13 @@ TString THttpCallArg::GetHeader(const char* name)
    return AccessHeader(fHeader, name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set name: value pair to reply header
+/// Content-Type field handled separately - one should use SetContentType() method
+/// Content-Length field cannot be set at all;
+
 void THttpCallArg::AddHeader(const char *name, const char *value)
 {
-   // Set name: value pair to reply header
-   // Content-Type field handled separately - one should use SetContentType() method
-   // Content-Length field cannot be set at all;
-
    if ((name == 0) || (*name == 0) || (strcmp(name,"Content-Length") == 0)) return;
 
    if (strcmp(name,"Content-Type") == 0)
@@ -209,11 +210,11 @@ void THttpCallArg::AddHeader(const char *name, const char *value)
       AccessHeader(fHeader, name, value, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fill HTTP header
+
 void THttpCallArg::FillHttpHeader(TString &hdr, const char *kind)
 {
-   // fill HTTP header
-
    if (kind == 0) kind = "HTTP/1.1";
 
    if ((fContentType.Length() == 0) || Is404()) {
@@ -233,11 +234,11 @@ void THttpCallArg::FillHttpHeader(TString &hdr, const char *kind)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compress reply data with gzip compression
+
 Bool_t THttpCallArg::CompressWithGzip()
 {
-   // compress reply data with gzip compression
-
    char *objbuf = (char *) GetContent();
    Long_t objlen = GetContentLength();
 

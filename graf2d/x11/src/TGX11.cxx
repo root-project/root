@@ -152,11 +152,11 @@ struct RVisual:Visual{};
 
 ClassImp(TGX11)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TGX11::TGX11()
 {
-   // Default constructor.
-
    int i;
    fDisplay            = 0;
    fScreenNumber       = 0;
@@ -188,11 +188,11 @@ TGX11::TGX11()
    for (i = 0; i < kNumCursors; i++) fCursors[i] = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal Constructor.
+
 TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
 {
-   // Normal Constructor.
-
    int i;
    fDisplay            = 0;
    fScreenNumber       = 0;
@@ -230,11 +230,11 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
    fColors = new TExMap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor. Currently only used by TGX11TTF.
+
 TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
 {
-   // Copy constructor. Currently only used by TGX11TTF.
-
    int i;
 
    fDisplay         = org.fDisplay;
@@ -303,11 +303,11 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGX11::~TGX11()
 {
-   // Destructor.
-
    delete (XEvent*)fXEvent;
    if (fWindows) TStorage::Dealloc(fWindows);
 
@@ -321,33 +321,33 @@ TGX11::~TGX11()
    delete fColors;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize X11 system. Returns kFALSE in case of failure.
+
 Bool_t TGX11::Init(void *display)
 {
-   // Initialize X11 system. Returns kFALSE in case of failure.
-
    if (OpenDisplay((Display *) display) == -1) return kFALSE;
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate color in colormap. If we are on an <= 8 plane machine
+/// we will use XAllocColor. If we are on a >= 15 (15, 16 or 24) plane
+/// true color machine we will calculate the pixel value using:
+/// for 15 and 16 bit true colors have 6 bits precision per color however
+/// only the 5 most significant bits are used in the color index.
+/// Except for 16 bits where green uses all 6 bits. I.e.:
+///   15 bits = rrrrrgggggbbbbb
+///   16 bits = rrrrrggggggbbbbb
+/// for 24 bits each r, g and b are represented by 8 bits.
+///
+/// Since all colors are set with a max of 65535 (16 bits) per r, g, b
+/// we just right shift them by 10, 11 and 10 bits for 16 planes, and
+/// (10, 10, 10 for 15 planes) and by 8 bits for 24 planes.
+/// Returns kFALSE in case color allocation failed.
+
 Bool_t TGX11::AllocColor(Colormap cmap, RXColor *color)
 {
-   // Allocate color in colormap. If we are on an <= 8 plane machine
-   // we will use XAllocColor. If we are on a >= 15 (15, 16 or 24) plane
-   // true color machine we will calculate the pixel value using:
-   // for 15 and 16 bit true colors have 6 bits precision per color however
-   // only the 5 most significant bits are used in the color index.
-   // Except for 16 bits where green uses all 6 bits. I.e.:
-   //   15 bits = rrrrrgggggbbbbb
-   //   16 bits = rrrrrggggggbbbbb
-   // for 24 bits each r, g and b are represented by 8 bits.
-   //
-   // Since all colors are set with a max of 65535 (16 bits) per r, g, b
-   // we just right shift them by 10, 11 and 10 bits for 16 planes, and
-   // (10, 10, 10 for 15 planes) and by 8 bits for 24 planes.
-   // Returns kFALSE in case color allocation failed.
-
    if (fRedDiv == -1) {
       if (XAllocColor((Display*)fDisplay, cmap, color))
          return kTRUE;
@@ -360,11 +360,11 @@ Bool_t TGX11::AllocColor(Colormap cmap, RXColor *color)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the current RGB value for the pixel in the XColor structure.
+
 void TGX11::QueryColors(Colormap cmap, RXColor *color, Int_t ncolors)
 {
-   // Returns the current RGB value for the pixel in the XColor structure.
-
    if (fRedDiv == -1) {
       XQueryColors((Display*)fDisplay, cmap, color, ncolors);
    } else {
@@ -384,11 +384,11 @@ void TGX11::QueryColors(Colormap cmap, RXColor *color, Int_t ncolors)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the pixmap pix.
+
 void TGX11::ClearPixmap(Drawable *pix)
 {
-   // Clear the pixmap pix.
-
    Window root;
    int xx, yy;
    unsigned int ww, hh, border, depth;
@@ -399,11 +399,11 @@ void TGX11::ClearPixmap(Drawable *pix)
    XFlush((Display*)fDisplay);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear current window.
+
 void TGX11::ClearWindow()
 {
-   // Clear current window.
-
    if (!gCws->fIsPixmap && !gCws->fDoubleBuffer) {
       XSetWindowBackground((Display*)fDisplay, gCws->fDrawing, GetColor(0).fPixel);
       XClearWindow((Display*)fDisplay, gCws->fDrawing);
@@ -416,19 +416,19 @@ void TGX11::ClearWindow()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete current pixmap.
+
 void TGX11::ClosePixmap()
 {
-   // Delete current pixmap.
-
    CloseWindow1();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete current window.
+
 void TGX11::CloseWindow()
 {
-   // Delete current window.
-
    if (gCws->fShared)
       gCws->fOpen = 0;
    else
@@ -438,11 +438,11 @@ void TGX11::CloseWindow()
    //   if (!gCws) Close();    // close X when no open window left
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete current window.
+
 void TGX11::CloseWindow1()
 {
-   // Delete current window.
-
    int wid;
 
    if (gCws->fIsPixmap)
@@ -473,11 +473,11 @@ void TGX11::CloseWindow1()
    gCws = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the pixmap wid at the position xpos, ypos in the current window.
+
 void TGX11::CopyPixmap(int wid, int xpos, int ypos)
 {
-   // Copy the pixmap wid at the position xpos, ypos in the current window.
-
    gTws = &fWindows[wid];
 
    XCopyArea((Display*)fDisplay, gTws->fDrawing, gCws->fDrawing, *gGCpxmp, 0, 0, gTws->fWidth,
@@ -485,11 +485,11 @@ void TGX11::CopyPixmap(int wid, int xpos, int ypos)
    XFlush((Display*)fDisplay);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy area of current window in the pixmap pix.
+
 void TGX11::CopyWindowtoPixmap(Drawable *pix, int xpos, int ypos )
 {
-   // Copy area of current window in the pixmap pix.
-
    Window root;
    int xx, yy;
    unsigned int ww, hh, border, depth;
@@ -499,13 +499,13 @@ void TGX11::CopyWindowtoPixmap(Drawable *pix, int xpos, int ypos )
    XFlush((Display*)fDisplay);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a box.
+/// mode=0 hollow  (kHollow)
+/// mode=1 solid   (kSolid)
+
 void TGX11::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 {
-   // Draw a box.
-   // mode=0 hollow  (kHollow)
-   // mode=1 solid   (kSolid)
-
    Int_t x = TMath::Min(x1, x2);
    Int_t y = TMath::Min(y1, y2);
    Int_t w = TMath::Abs(x2 - x1);
@@ -526,19 +526,19 @@ void TGX11::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a cell array.
+/// x1,y1        : left down corner
+/// x2,y2        : right up corner
+/// nx,ny        : array size
+/// ic           : array
+///
+/// Draw a cell array. The drawing is done with the pixel presicion
+/// if (X2-X1)/NX (or Y) is not a exact pixel number the position of
+/// the top rigth corner may be wrong.
+
 void TGX11::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *ic)
 {
-   // Draw a cell array.
-   // x1,y1        : left down corner
-   // x2,y2        : right up corner
-   // nx,ny        : array size
-   // ic           : array
-   //
-   // Draw a cell array. The drawing is done with the pixel presicion
-   // if (X2-X1)/NX (or Y) is not a exact pixel number the position of
-   // the top rigth corner may be wrong.
-
    int i, j, icol, ix, iy, w, h, current_icol;
 
    current_icol = -1;
@@ -561,13 +561,13 @@ void TGX11::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill area described by polygon.
+/// n         : number of points
+/// xy(2,n)   : list of points
+
 void TGX11::DrawFillArea(int n, TPoint *xyt)
 {
-   // Fill area described by polygon.
-   // n         : number of points
-   // xy(2,n)   : list of points
-
    XPoint *xy = (XPoint*)xyt;
 
    if (gFillHollow)
@@ -579,13 +579,13 @@ void TGX11::DrawFillArea(int n, TPoint *xyt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line.
+/// x1,y1        : begin of line
+/// x2,y2        : end of line
+
 void TGX11::DrawLine(int x1, int y1, int x2, int y2)
 {
-   // Draw a line.
-   // x1,y1        : begin of line
-   // x2,y2        : end of line
-
    if (gLineStyle == LineSolid)
       XDrawLine((Display*)fDisplay, gCws->fDrawing, *gGCline, x1, y1, x2, y2);
    else {
@@ -594,13 +594,13 @@ void TGX11::DrawLine(int x1, int y1, int x2, int y2)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line through all points.
+/// n         : number of points
+/// xy        : list of points
+
 void TGX11::DrawPolyLine(int n, TPoint *xyt)
 {
-   // Draw a line through all points.
-   // n         : number of points
-   // xy        : list of points
-
    XPoint *xy = (XPoint*)xyt;
 
    const Int_t kMaxPoints = 1000001;
@@ -645,13 +645,13 @@ void TGX11::DrawPolyLine(int n, TPoint *xyt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw n markers with the current attributes at position x, y.
+/// n    : number of markers to draw
+/// xy   : x,y coordinates of markers
+
 void TGX11::DrawPolyMarker(int n, TPoint *xyt)
 {
-   // Draw n markers with the current attributes at position x, y.
-   // n    : number of markers to draw
-   // xy   : x,y coordinates of markers
-
    XPoint *xy = (XPoint*)xyt;
 
    if (gMarker.n <= 0) {
@@ -714,19 +714,19 @@ void TGX11::DrawPolyMarker(int n, TPoint *xyt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a text string using current font.
+/// mode       : drawing mode
+/// mode=0     : the background is not drawn (kClear)
+/// mode=1     : the background is drawn (kOpaque)
+/// x,y        : text position
+/// angle      : text angle
+/// mgn        : magnification factor
+/// text       : text string
+
 void TGX11::DrawText(int x, int y, float angle, float mgn,
                      const char *text, ETextMode mode)
 {
-   // Draw a text string using current font.
-   // mode       : drawing mode
-   // mode=0     : the background is not drawn (kClear)
-   // mode=1     : the background is drawn (kOpaque)
-   // x,y        : text position
-   // angle      : text angle
-   // mgn        : magnification factor
-   // text       : text string
-
    XRotSetMagnification(mgn);
 
    if (!text) return;
@@ -748,13 +748,13 @@ void TGX11::DrawText(int x, int y, float angle, float mgn,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find best visual, i.e. the one with the most planes and TrueColor or
+/// DirectColor. Sets fVisual, fDepth, fRootWin, fColormap, fBlackPixel
+/// and fWhitePixel.
+
 void TGX11::FindBestVisual()
 {
-   // Find best visual, i.e. the one with the most planes and TrueColor or
-   // DirectColor. Sets fVisual, fDepth, fRootWin, fColormap, fBlackPixel
-   // and fWhitePixel.
-
    Int_t findvis = gEnv->GetValue("X11.FindBestVisual", 1);
 
    Visual *vis = DefaultVisual((Display*)fDisplay, fScreenNumber);
@@ -809,20 +809,20 @@ void TGX11::FindBestVisual()
              "custom");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy error handler for X11. Used by FindUsableVisual().
+
 static Int_t DummyX11ErrorHandler(Display *, XErrorEvent *)
 {
-   // Dummy error handler for X11. Used by FindUsableVisual().
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if visual is usable, if so set fVisual, fDepth, fColormap,
+/// fBlackPixel and fWhitePixel.
+
 void TGX11::FindUsableVisual(RXVisualInfo *vlist, Int_t nitems)
 {
-   // Check if visual is usable, if so set fVisual, fDepth, fColormap,
-   // fBlackPixel and fWhitePixel.
-
    Int_t (*oldErrorHandler)(Display *, XErrorEvent *) =
        XSetErrorHandler(DummyX11ErrorHandler);
 
@@ -869,21 +869,21 @@ void TGX11::FindUsableVisual(RXVisualInfo *vlist, Int_t nitems)
    XSetErrorHandler(oldErrorHandler);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return character up vector.
+
 void TGX11::GetCharacterUp(Float_t &chupx, Float_t &chupy)
 {
-   // Return character up vector.
-
    chupx = fCharacterUpX;
    chupy = fCharacterUpY;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return reference to internal color structure associated
+/// to color index cid.
+
 XColor_t &TGX11::GetColor(Int_t cid)
 {
-   // Return reference to internal color structure associated
-   // to color index cid.
-
    XColor_t *col = (XColor_t*) (Long_t)fColors->GetValue(cid);
    if (!col) {
       col = new XColor_t;
@@ -892,20 +892,20 @@ XColor_t &TGX11::GetColor(Int_t cid)
    return *col;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return current window pointer. Protected method used by TGX11TTF.
+
 Window_t TGX11::GetCurrentWindow() const
 {
-   // Return current window pointer. Protected method used by TGX11TTF.
-
    return (Window_t)(gCws ? gCws->fDrawing : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return desired Graphics Context ("which" maps directly on gGCList[]).
+/// Protected method used by TGX11TTF.
+
 void *TGX11::GetGC(Int_t which) const
 {
-   // Return desired Graphics Context ("which" maps directly on gGCList[]).
-   // Protected method used by TGX11TTF.
-
    if (which >= kMAXGC || which < 0) {
       Error("GetGC", "trying to get illegal GC (which = %d)", which);
       return 0;
@@ -913,11 +913,11 @@ void *TGX11::GetGC(Int_t which) const
    return &gGClist[which];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Query the double buffer value for the window wid.
+
 Int_t TGX11::GetDoubleBuffer(int wid)
 {
-   // Query the double buffer value for the window wid.
-
    gTws = &fWindows[wid];
    if (!gTws->fOpen)
       return -1;
@@ -925,15 +925,15 @@ Int_t TGX11::GetDoubleBuffer(int wid)
       return gTws->fDoubleBuffer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return position and size of window wid.
+/// wid        : window identifier
+/// x,y        : window position (output)
+/// w,h        : window size (output)
+/// if wid < 0 the size of the display is returned
+
 void TGX11::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &h)
 {
-   // Return position and size of window wid.
-   // wid        : window identifier
-   // x,y        : window position (output)
-   // w,h        : window size (output)
-   // if wid < 0 the size of the display is returned
-
    Window junkwin=0;
 
    if (wid < 0) {
@@ -964,19 +964,19 @@ void TGX11::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return hostname on which the display is opened.
+
 const char *TGX11::DisplayName(const char *dpyName)
 {
-   // Return hostname on which the display is opened.
-
    return XDisplayName(dpyName);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pixel value associated to specified ROOT color number.
+
 ULong_t TGX11::GetPixel(Color_t ci)
 {
-   // Return pixel value associated to specified ROOT color number.
-
    TColor *color = gROOT->GetColor(ci);
    if (color)
       SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
@@ -987,19 +987,19 @@ ULong_t TGX11::GetPixel(Color_t ci)
    return col.fPixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get maximum number of planes.
+
 void TGX11::GetPlanes(int &nplanes)
 {
-   // Get maximum number of planes.
-
    nplanes = fDepth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get rgb values for color "index".
+
 void TGX11::GetRGB(int index, float &r, float &g, float &b)
 {
-   // Get rgb values for color "index".
-
    if (index == 0) {
       r = g = b = 1.0;
    } else if (index == 1) {
@@ -1012,14 +1012,14 @@ void TGX11::GetRGB(int index, float &r, float &g, float &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the size of a character string.
+/// iw          : text width
+/// ih          : text height
+/// mess        : message
+
 void TGX11::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
 {
-   // Return the size of a character string.
-   // iw          : text width
-   // ih          : text height
-   // mess        : message
-
    w=0; h=0;
    if (strlen(mess)==0) return;
 
@@ -1033,34 +1033,34 @@ void TGX11::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the X11 window identifier.
+/// wid      : Workstation identifier (input)
+
 Window_t TGX11::GetWindowID(int wid)
 {
-   // Return the X11 window identifier.
-   // wid      : Workstation identifier (input)
-
    return (Window_t) fWindows[wid].fWindow;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move the window wid.
+/// wid  : Window identifier.
+/// x    : x new window position
+/// y    : y new window position
+
 void TGX11::MoveWindow(int wid, int x, int y)
 {
-   // Move the window wid.
-   // wid  : Window identifier.
-   // x    : x new window position
-   // y    : y new window position
-
    gTws = &fWindows[wid];
    if (!gTws->fOpen) return;
 
    XMoveWindow((Display*)fDisplay, gTws->fWindow, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open the display. Return -1 if the opening fails, 0 when ok.
+
 Int_t TGX11::OpenDisplay(void *disp)
 {
-   // Open the display. Return -1 if the opening fails, 0 when ok.
-
    Pixmap  pixmp1, pixmp2;
    XColor  fore, back;
    char  **fontlist;
@@ -1206,12 +1206,12 @@ Int_t TGX11::OpenDisplay(void *disp)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a new pixmap.
+/// w,h : Width and height of the pixmap.
+
 Int_t TGX11::OpenPixmap(unsigned int w, unsigned int h)
 {
-   // Open a new pixmap.
-   // w,h : Width and height of the pixmap.
-
    Window root;
    unsigned int wval, hval;
    int xx, yy, i, wid;
@@ -1263,12 +1263,12 @@ again:
    return wid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open window and return window number.
+/// Return -1 if window initialization fails.
+
 Int_t TGX11::InitWindow(ULong_t win)
 {
-   // Open window and return window number.
-   // Return -1 if window initialization fails.
-
    XSetWindowAttributes attributes;
    ULong_t attr_mask = 0;
    int wid;
@@ -1341,11 +1341,11 @@ again:
    return wid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register a window created by Qt as a ROOT window (like InitWindow()).
+
 Int_t TGX11::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
 {
-   // Register a window created by Qt as a ROOT window (like InitWindow()).
-
    Int_t wid;
 
    // Select next free window number
@@ -1385,11 +1385,11 @@ again:
    return wid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a window created by Qt (like CloseWindow1()).
+
 void TGX11::RemoveWindow(ULong_t qwid)
 {
-   // Remove a window created by Qt (like CloseWindow1()).
-
    SelectWindow((int)qwid);
 
    if (gCws->fBuffer) XFreePixmap((Display*)fDisplay, gCws->fBuffer);
@@ -1413,14 +1413,14 @@ void TGX11::RemoveWindow(ULong_t qwid)
    gCws = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Query pointer position.
+/// ix       : X coordinate of pointer
+/// iy       : Y coordinate of pointer
+/// (both coordinates are relative to the origin of the root window)
+
 void TGX11::QueryPointer(int &ix, int &iy)
 {
-   // Query pointer position.
-   // ix       : X coordinate of pointer
-   // iy       : Y coordinate of pointer
-   // (both coordinates are relative to the origin of the root window)
-
    Window    root_return, child_return;
    int       win_x_return, win_y_return;
    int       root_x_return, root_y_return;
@@ -1434,42 +1434,42 @@ void TGX11::QueryPointer(int &ix, int &iy)
    iy = root_y_return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the pixmap pix.
+
 void  TGX11::RemovePixmap(Drawable *pix)
 {
-   // Remove the pixmap pix.
-
    XFreePixmap((Display*)fDisplay,*pix);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Request Locator position.
+/// x,y       : cursor position at moment of button press (output)
+/// ctyp      : cursor type (input)
+///   ctyp=1 tracking cross
+///   ctyp=2 cross-hair
+///   ctyp=3 rubber circle
+///   ctyp=4 rubber band
+///   ctyp=5 rubber rectangle
+///
+/// mode      : input mode
+///   mode=0 request
+///   mode=1 sample
+///
+/// Request locator:
+/// return button number  1 = left is pressed
+///                       2 = middle is pressed
+///                       3 = right is pressed
+///        in sample mode:
+///                      11 = left is released
+///                      12 = middle is released
+///                      13 = right is released
+///                      -1 = nothing is pressed or released
+///                      -2 = leave the window
+///                    else = keycode (keyboard is pressed)
+
 Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
 {
-   // Request Locator position.
-   // x,y       : cursor position at moment of button press (output)
-   // ctyp      : cursor type (input)
-   //   ctyp=1 tracking cross
-   //   ctyp=2 cross-hair
-   //   ctyp=3 rubber circle
-   //   ctyp=4 rubber band
-   //   ctyp=5 rubber rectangle
-   //
-   // mode      : input mode
-   //   mode=0 request
-   //   mode=1 sample
-   //
-   // Request locator:
-   // return button number  1 = left is pressed
-   //                       2 = middle is pressed
-   //                       3 = right is pressed
-   //        in sample mode:
-   //                      11 = left is released
-   //                      12 = middle is released
-   //                      13 = right is released
-   //                      -1 = nothing is pressed or released
-   //                      -2 = leave the window
-   //                    else = keycode (keyboard is pressed)
-
    static int xloc  = 0;
    static int yloc  = 0;
    static int xlocp = 0;
@@ -1636,17 +1636,17 @@ Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
    return button_press;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Request a string.
+/// x,y         : position where text is displayed
+/// text        : text displayed (input), edited text (output)
+///
+/// Request string:
+/// text is displayed and can be edited with Emacs-like keybinding
+/// return termination code (0 for ESC, 1 for RETURN)
+
 Int_t TGX11::RequestString(int x, int y, char *text)
 {
-   // Request a string.
-   // x,y         : position where text is displayed
-   // text        : text displayed (input), edited text (output)
-   //
-   // Request string:
-   // text is displayed and can be edited with Emacs-like keybinding
-   // return termination code (0 for ESC, 1 for RETURN)
-
    static Cursor cursor = 0;
    static int percent = 0;  // bell volume
    Window focuswindow;
@@ -1796,14 +1796,14 @@ Int_t TGX11::RequestString(int x, int y, char *text)
    return key;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rescale the window wid.
+/// wid  : Window identifier
+/// w    : Width
+/// h    : Heigth
+
 void TGX11::RescaleWindow(int wid, unsigned int w, unsigned int h)
 {
-   // Rescale the window wid.
-   // wid  : Window identifier
-   // w    : Width
-   // h    : Heigth
-
    int i;
 
    gTws = &fWindows[wid];
@@ -1830,13 +1830,13 @@ void TGX11::RescaleWindow(int wid, unsigned int w, unsigned int h)
    gTws->fHeight = h;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize a pixmap.
+/// wid : pixmap to be resized
+/// w,h : Width and height of the pixmap
+
 int TGX11::ResizePixmap(int wid, unsigned int w, unsigned int h)
 {
-   // Resize a pixmap.
-   // wid : pixmap to be resized
-   // w,h : Width and height of the pixmap
-
    Window root;
    unsigned int wval, hval;
    int xx, yy, i;
@@ -1876,11 +1876,11 @@ int TGX11::ResizePixmap(int wid, unsigned int w, unsigned int h)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the current window if necessary.
+
 void TGX11::ResizeWindow(int wid)
 {
-   // Resize the current window if necessary.
-
    int i;
    int xval=0, yval=0;
    Window win, root=0;
@@ -1915,11 +1915,11 @@ void TGX11::ResizeWindow(int wid)
    gTws->fHeight = hval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select window to which subsequent output is directed.
+
 void TGX11::SelectWindow(int wid)
 {
-   // Select window to which subsequent output is directed.
-
    XRectangle region;
    int i;
 
@@ -1940,11 +1940,11 @@ void TGX11::SelectWindow(int wid)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set character up vector.
+
 void TGX11::SetCharacterUp(Float_t chupx, Float_t chupy)
 {
-   // Set character up vector.
-
    if (chupx == fCharacterUpX  && chupy == fCharacterUpY) return;
 
    if      (chupx == 0  && chupy == 0)  fTextAngle = 0;
@@ -1961,11 +1961,11 @@ void TGX11::SetCharacterUp(Float_t chupx, Float_t chupy)
    fCharacterUpY = chupy;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Turn off the clipping for the window wid.
+
 void TGX11::SetClipOFF(int wid)
 {
-   // Turn off the clipping for the window wid.
-
    gTws       = &fWindows[wid];
    gTws->fClip = 0;
 
@@ -1973,14 +1973,14 @@ void TGX11::SetClipOFF(int wid)
       XSetClipMask( (Display*)fDisplay, gGClist[i], None );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set clipping region for the window wid.
+/// wid        : Window indentifier
+/// x,y        : origin of clipping rectangle
+/// w,h        : size of clipping rectangle;
+
 void TGX11::SetClipRegion(int wid, int x, int y, unsigned int w, unsigned int h)
 {
-   // Set clipping region for the window wid.
-   // wid        : Window indentifier
-   // x,y        : origin of clipping rectangle
-   // w,h        : size of clipping rectangle;
-
 
    gTws = &fWindows[wid];
    gTws->fXclip = x;
@@ -1999,11 +1999,11 @@ void TGX11::SetClipRegion(int wid, int x, int y, unsigned int w, unsigned int h)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the foreground color in GC.
+
 void  TGX11::SetColor(void *gci, int ci)
 {
-   // Set the foreground color in GC.
-
    GC gc = *(GC *)gci;
 
    TColor *color = gROOT->GetColor(ci);
@@ -2032,24 +2032,24 @@ void  TGX11::SetColor(void *gci, int ci)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the cursor.
+
 void  TGX11::SetCursor(int wid, ECursor cursor)
 {
-   // Set the cursor.
-
    gTws = &fWindows[wid];
    XDefineCursor((Display*)fDisplay, gTws->fWindow, fCursors[cursor]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the double buffer on/off on window wid.
+/// wid  : Window identifier.
+///        999 means all the opened windows.
+/// mode : 1 double buffer is on
+///        0 double buffer is off
+
 void TGX11::SetDoubleBuffer(int wid, int mode)
 {
-   // Set the double buffer on/off on window wid.
-   // wid  : Window identifier.
-   //        999 means all the opened windows.
-   // mode : 1 double buffer is on
-   //        0 double buffer is off
-
    if (wid == 999) {
       for (int i = 0; i < fMaxNumberOfWindows; i++) {
          gTws = &fWindows[i];
@@ -2078,21 +2078,21 @@ void TGX11::SetDoubleBuffer(int wid, int mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Turn double buffer mode off.
+
 void TGX11::SetDoubleBufferOFF()
 {
-   // Turn double buffer mode off.
-
    if (!gTws->fDoubleBuffer) return;
    gTws->fDoubleBuffer = 0;
    gTws->fDrawing      = gTws->fWindow;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Turn double buffer mode on.
+
 void TGX11::SetDoubleBufferON()
 {
-   // Turn double buffer mode on.
-
    if (gTws->fDoubleBuffer || gTws->fIsPixmap) return;
    if (!gTws->fBuffer) {
       gTws->fBuffer = XCreatePixmap((Display*)fDisplay, fRootWin,
@@ -2106,17 +2106,17 @@ void TGX11::SetDoubleBufferON()
    gTws->fDrawing       = gTws->fBuffer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the drawing mode.
+/// mode : drawing mode
+///   mode=1 copy
+///   mode=2 xor
+///   mode=3 invert
+///   mode=4 set the suitable mode for cursor echo according to
+///          the vendor
+
 void TGX11::SetDrawMode(EDrawMode mode)
 {
-   // Set the drawing mode.
-   // mode : drawing mode
-   //   mode=1 copy
-   //   mode=2 xor
-   //   mode=3 invert
-   //   mode=4 set the suitable mode for cursor echo according to
-   //          the vendor
-
    int i;
    if (fDisplay) {
       switch (mode) {
@@ -2136,11 +2136,11 @@ void TGX11::SetDrawMode(EDrawMode mode)
    fDrawMode = mode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color index for fill areas.
+
 void TGX11::SetFillColor(Color_t cindex)
 {
-   // Set color index for fill areas.
-
    if (!gStyle->GetFillColor() && cindex > 1) cindex = 0;
    if (cindex >= 0) SetColor(gGCfill, Int_t(cindex));
    fFillColor = cindex;
@@ -2152,13 +2152,13 @@ void TGX11::SetFillColor(Color_t cindex)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill area style.
+/// fstyle   : compound fill area interior style
+///    fstyle = 1000*interiorstyle + styleindex
+
 void TGX11::SetFillStyle(Style_t fstyle)
 {
-   // Set fill area style.
-   // fstyle   : compound fill area interior style
-   //    fstyle = 1000*interiorstyle + styleindex
-
    if (fFillStyle == fstyle) return;
    fFillStyle = fstyle;
    Int_t style = fstyle/1000;
@@ -2166,11 +2166,11 @@ void TGX11::SetFillStyle(Style_t fstyle)
    SetFillStyleIndex(style,fasi);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill area style index.
+
 void TGX11::SetFillStyleIndex(Int_t style, Int_t fasi)
 {
-   // Set fill area style index.
-
    static int current_fasi = 0;
 
    fFillStyle = 1000*style + fasi;
@@ -2209,11 +2209,11 @@ void TGX11::SetFillStyleIndex(Int_t style, Int_t fasi)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set input on or off.
+
 void TGX11::SetInput(int inp)
 {
-   // Set input on or off.
-
    XSetWindowAttributes attributes;
    ULong_t attr_mask;
 
@@ -2228,11 +2228,11 @@ void TGX11::SetInput(int inp)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color index for lines.
+
 void TGX11::SetLineColor(Color_t cindex)
 {
-   // Set color index for lines.
-
    if (cindex < 0) return;
 
    TAttLine::SetLineColor(cindex);
@@ -2241,18 +2241,18 @@ void TGX11::SetLineColor(Color_t cindex)
    SetColor(gGCdash, Int_t(cindex));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line type.
+/// n         : length of dash list
+/// dash(n)   : dash segment lengths
+///
+/// if n <= 0 use solid lines
+/// if n >  0 use dashed lines described by DASH(N)
+///    e.g. N=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
+///    and a gap of 7 between dashes
+
 void TGX11::SetLineType(int n, int *dash)
 {
-   // Set line type.
-   // n         : length of dash list
-   // dash(n)   : dash segment lengths
-   //
-   // if n <= 0 use solid lines
-   // if n >  0 use dashed lines described by DASH(N)
-   //    e.g. N=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
-   //    and a gap of 7 between dashes
-
    if (n <= 0) {
       gLineStyle = LineSolid;
       XSetLineAttributes((Display*)fDisplay, *gGCline, gLineWidth,
@@ -2273,11 +2273,11 @@ void TGX11::SetLineType(int n, int *dash)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line style.
+
 void TGX11::SetLineStyle(Style_t lstyle)
 {
-   // Set line style.
-
    static Int_t dashed[2] = {3,3};
    static Int_t dotted[2] = {1,2};
    static Int_t dasheddotted[4] = {3,4,1,4};
@@ -2310,12 +2310,12 @@ void TGX11::SetLineStyle(Style_t lstyle)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line width.
+/// width   : line width in pixels
+
 void TGX11::SetLineWidth(Width_t width )
 {
-   // Set line width.
-   // width   : line width in pixels
-
    if (fLineWidth == width) return;
    fLineWidth = width;
 
@@ -2330,11 +2330,11 @@ void TGX11::SetLineWidth(Width_t width )
               gLineStyle, gCapStyle, gJoinStyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color index for markers.
+
 void TGX11::SetMarkerColor(Color_t cindex)
 {
-   // Set color index for markers.
-
    if (cindex < 0) return;
 
    TAttMarker::SetMarkerColor(cindex);
@@ -2342,12 +2342,12 @@ void TGX11::SetMarkerColor(Color_t cindex)
    SetColor(gGCmark, Int_t(cindex));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker size index.
+/// msize  : marker scale factor
+
 void TGX11::SetMarkerSize(Float_t msize)
 {
-   // Set marker size index.
-   // msize  : marker scale factor
-
    if (msize == fMarkerSize) return;
 
    fMarkerSize = msize;
@@ -2356,22 +2356,22 @@ void TGX11::SetMarkerSize(Float_t msize)
    SetMarkerStyle(-fMarkerStyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker type.
+/// type      : marker type
+/// n         : length of marker description
+/// xy        : list of points describing marker shape
+///
+/// if n == 0 marker is a single point
+/// if TYPE == 0 marker is hollow circle of diameter N
+/// if TYPE == 1 marker is filled circle of diameter N
+/// if TYPE == 2 marker is a hollow polygon describe by line XY
+/// if TYPE == 3 marker is a filled polygon describe by line XY
+/// if TYPE == 4 marker is described by segmented line XY
+///   e.g. TYPE=4,N=4,XY=(-3,0,3,0,0,-3,0,3) sets a plus shape of 7x7 pixels
+
 void TGX11::SetMarkerType(int type, int n, RXPoint *xy)
 {
-   // Set marker type.
-   // type      : marker type
-   // n         : length of marker description
-   // xy        : list of points describing marker shape
-   //
-   // if n == 0 marker is a single point
-   // if TYPE == 0 marker is hollow circle of diameter N
-   // if TYPE == 1 marker is filled circle of diameter N
-   // if TYPE == 2 marker is a hollow polygon describe by line XY
-   // if TYPE == 3 marker is a filled polygon describe by line XY
-   // if TYPE == 4 marker is described by segmented line XY
-   //   e.g. TYPE=4,N=4,XY=(-3,0,3,0,0,-3,0,3) sets a plus shape of 7x7 pixels
-
    gMarker.type = type;
    gMarker.n = n < kMAXMK ? n : kMAXMK;
    if (gMarker.type >= 2) {
@@ -2382,11 +2382,11 @@ void TGX11::SetMarkerType(int type, int n, RXPoint *xy)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker style.
+
 void TGX11::SetMarkerStyle(Style_t markerstyle)
 {
-   // Set marker style.
-
    if (fMarkerStyle == markerstyle) return;
    static RXPoint shape[15];
    if (markerstyle >= 35) return;
@@ -2580,15 +2580,15 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set opacity of a window. This image manipulation routine works
+/// by adding to a percent amount of neutral to each pixels RGB.
+/// Since it requires quite some additional color map entries is it
+/// only supported on displays with more than > 8 color planes (> 256
+/// colors).
+
 void TGX11::SetOpacity(Int_t percent)
 {
-   // Set opacity of a window. This image manipulation routine works
-   // by adding to a percent amount of neutral to each pixels RGB.
-   // Since it requires quite some additional color map entries is it
-   // only supported on displays with more than > 8 color planes (> 256
-   // colors).
-
    if (fDepth <= 8) return;
    if (percent == 0) return;
    // if 100 percent then just make white
@@ -2649,12 +2649,12 @@ void TGX11::SetOpacity(Int_t percent)
    ::operator delete(orgcolors);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect in orgcolors all different original image colors.
+
 void TGX11::CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolors,
                                Int_t &maxcolors)
 {
-   // Collect in orgcolors all different original image colors.
-
    if (maxcolors == 0) {
       ncolors   = 0;
       maxcolors = 100;
@@ -2673,12 +2673,12 @@ void TGX11::CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolor
    orgcolors[ncolors++] = pixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get RGB values for orgcolors, add percent neutral to the RGB and
+/// allocate fNewColors.
+
 void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
 {
-   // Get RGB values for orgcolors, add percent neutral to the RGB and
-   // allocate fNewColors.
-
    if (ncolors == 0) return;
 
    RXColor *xcol = new RXColor[ncolors];
@@ -2719,11 +2719,11 @@ void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
    delete [] xcol;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns index in orgcolors (and fNewColors) for pixel.
+
 Int_t TGX11::FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors)
 {
-   // Returns index in orgcolors (and fNewColors) for pixel.
-
    for (int i = 0; i < ncolors; i++)
       if (pixel == orgcolors[i]) return i;
 
@@ -2732,13 +2732,13 @@ Int_t TGX11::FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color intensities for given color index.
+/// cindex     : color index
+/// r,g,b      : red, green, blue intensities between 0.0 and 1.0
+
 void TGX11::SetRGB(int cindex, float r, float g, float b)
 {
-   // Set color intensities for given color index.
-   // cindex     : color index
-   // r,g,b      : red, green, blue intensities between 0.0 and 1.0
-
    if (fColormap) {
       RXColor xcol;
       xcol.red   = (UShort_t)(r * kBIGGEST_RGB_VALUE);
@@ -2765,13 +2765,13 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text alignment.
+/// txalh   : horizontal text alignment
+/// txalv   : vertical text alignment
+
 void TGX11::SetTextAlign(Short_t talign)
 {
-   // Set text alignment.
-   // txalh   : horizontal text alignment
-   // txalv   : vertical text alignment
-
    Int_t txalh = talign/10;
    Int_t txalv = talign%10;
    fTextAlignH = txalh;
@@ -2824,11 +2824,11 @@ void TGX11::SetTextAlign(Short_t talign)
    TAttText::SetTextAlign(fTextAlign);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color index for text.
+
 void TGX11::SetTextColor(Color_t cindex)
 {
-   // Set color index for text.
-
    if (cindex < 0) return;
 
    TAttText::SetTextColor(cindex);
@@ -2845,18 +2845,18 @@ void TGX11::SetTextColor(Color_t cindex)
    XSetBackground((Display*)fDisplay, *gGCtext, GetColor(0).fPixel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text font to specified name.
+/// mode       : loading flag
+/// mode=0     : search if the font exist (kCheck)
+/// mode=1     : search the font and load it if it exists (kLoad)
+/// font       : font name
+///
+/// Set text font to specified name. This function returns 0 if
+/// the specified font is found, 1 if not.
+
 Int_t TGX11::SetTextFont(char *fontname, ETextSetMode mode)
 {
-   // Set text font to specified name.
-   // mode       : loading flag
-   // mode=0     : search if the font exist (kCheck)
-   // mode=1     : search the font and load it if it exists (kLoad)
-   // font       : font name
-   //
-   // Set text font to specified name. This function returns 0 if
-   // the specified font is found, 1 if not.
-
    char **fontlist;
    int fontcount;
    int i;
@@ -2893,30 +2893,30 @@ Int_t TGX11::SetTextFont(char *fontname, ETextSetMode mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current text font number.
+
 void TGX11::SetTextFont(Font_t fontnumber)
 {
-   // Set current text font number.
-
    fTextFont = fontnumber;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current text size.
+
 void TGX11::SetTextSize(Float_t textsize)
 {
-   // Set current text size.
-
    fTextSize = textsize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set synchronisation on or off.
+/// mode : synchronisation on/off
+///    mode=1  on
+///    mode<>0 off
+
 void TGX11::Sync(int mode)
 {
-   // Set synchronisation on or off.
-   // mode : synchronisation on/off
-   //    mode=1  on
-   //    mode<>0 off
-
    switch (mode) {
 
       case 1 :
@@ -2929,17 +2929,17 @@ void TGX11::Sync(int mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update display.
+/// mode : (1) update
+///        (0) sync
+///
+/// Synchronise client and server once (not permanent).
+/// Copy the pixmap gCws->fDrawing on the window gCws->fWindow
+/// if the double buffer is on.
+
 void TGX11::UpdateWindow(int mode)
 {
-   // Update display.
-   // mode : (1) update
-   //        (0) sync
-   //
-   // Synchronise client and server once (not permanent).
-   // Copy the pixmap gCws->fDrawing on the window gCws->fWindow
-   // if the double buffer is on.
-
    if (gCws->fDoubleBuffer) {
       XCopyArea((Display*)fDisplay, gCws->fDrawing, gCws->fWindow,
                 *gGCpxmp, 0, 0, gCws->fWidth, gCws->fHeight, 0, 0);
@@ -2951,15 +2951,15 @@ void TGX11::UpdateWindow(int mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pointer position.
+/// ix       : New X coordinate of pointer
+/// iy       : New Y coordinate of pointer
+/// Coordinates are relative to the origin of the window id
+/// or to the origin of the current window if id == 0.
+
 void TGX11::Warp(Int_t ix, Int_t iy, Window_t id)
 {
-   // Set pointer position.
-   // ix       : New X coordinate of pointer
-   // iy       : New Y coordinate of pointer
-   // Coordinates are relative to the origin of the window id
-   // or to the origin of the current window if id == 0.
-
    if (!id) {
       // Causes problems when calling ProcessEvents()... BadWindow
       //XWarpPointer((Display*)fDisplay, None, gCws->fWindow, 0, 0, 0, 0, ix, iy);
@@ -2968,15 +2968,15 @@ void TGX11::Warp(Int_t ix, Int_t iy, Window_t id)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the pixmap wid in the bitmap file pxname.
+/// wid         : Pixmap address
+/// w,h         : Width and height of the pixmap.
+/// lenname     : pixmap name length
+/// pxname      : pixmap name
+
 void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
 {
-   // Write the pixmap wid in the bitmap file pxname.
-   // wid         : Pixmap address
-   // w,h         : Width and height of the pixmap.
-   // lenname     : pixmap name length
-   // pxname      : pixmap name
-
    unsigned int wval, hval;
    wval = w;
    hval = h;
@@ -3002,34 +3002,34 @@ extern "C" {
    int GIFinfo(Byte_t *gifArr, int *Width, int *Height, int *Ncols);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get pixels in line y and put in array scline.
+
 static void GetPixel(int y, int width, Byte_t *scline)
 {
-   // Get pixels in line y and put in array scline.
-
    for (int i = 0; i < width; i++)
       scline[i] = Byte_t(XGetPixel(gXimage, i, y));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Put byte b in output stream.
+
 static void PutByte(Byte_t b)
 {
-   // Put byte b in output stream.
-
    if (ferror(gOut) == 0) fputc(b, gOut);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns in R G B the ncol colors of the palette used by the image.
+/// The image pixels are changed to index values in these R G B arrays.
+/// This produces a colormap with only the used colors (so even on displays
+/// with more than 8 planes we will be able to create GIF's when the image
+/// contains no more than 256 different colors). If it does contain more
+/// colors we will have to use GIFquantize to reduce the number of colors.
+/// The R G B arrays must be deleted by the caller.
+
 void TGX11::ImgPickPalette(RXImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B)
 {
-   // Returns in R G B the ncol colors of the palette used by the image.
-   // The image pixels are changed to index values in these R G B arrays.
-   // This produces a colormap with only the used colors (so even on displays
-   // with more than 8 planes we will be able to create GIF's when the image
-   // contains no more than 256 different colors). If it does contain more
-   // colors we will have to use GIFquantize to reduce the number of colors.
-   // The R G B arrays must be deleted by the caller.
-
    ULong_t *orgcolors = 0;
    Int_t    maxcolors = 0, ncolors = 0;
 
@@ -3080,12 +3080,12 @@ void TGX11::ImgPickPalette(RXImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, In
    ::operator delete(orgcolors);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Writes the current window into GIF file. Returns 1 in case of success,
+/// 0 otherwise.
+
 Int_t TGX11::WriteGIF(char *name)
 {
-   // Writes the current window into GIF file. Returns 1 in case of success,
-   // 0 otherwise.
-
    Byte_t    scline[2000], r[256], b[256], g[256];
    Int_t    *red, *green, *blue;
    Int_t     ncol, maxcol, i;
@@ -3144,12 +3144,12 @@ Int_t TGX11::WriteGIF(char *name)
    return i;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw image.
+
 void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,int xmin,
                      int ymin,int xmax,int ymax, unsigned char *image,Drawable_t wid)
 {
-   // Draw image.
-
    const int maxSegment = 20;
    int           i, n, x, y, xcur, x1, x2, y1, y2;
    unsigned char *jimg, *jbase, icol;
@@ -3208,12 +3208,12 @@ void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,int xmin,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If id is NULL - loads the specified gif file at position [x0,y0] in the
+/// current window. Otherwise creates pixmap from gif file
+
 Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
 {
-   // If id is NULL - loads the specified gif file at position [x0,y0] in the
-   // current window. Otherwise creates pixmap from gif file
-
    FILE  *fd;
    Seek_t filesize = 0;
    unsigned char *gifArr, *pixArr, red[256], green[256], blue[256], *j1, *j2, icol;
@@ -3305,41 +3305,42 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns an array of pixels created from a part of drawable (defined by x, y, w, h)
+/// in format:
+/// b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+///
+/// Pixels are numbered from left to right and from top to bottom.
+/// By default all pixels from the whole drawable are returned.
+///
+/// Note that return array is 32-bit aligned
+
 unsigned char *TGX11::GetColorBits(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/,
                                        UInt_t /*w*/, UInt_t /*h*/)
 {
-   // Returns an array of pixels created from a part of drawable (defined by x, y, w, h)
-   // in format:
-   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
-   //
-   // Pixels are numbered from left to right and from top to bottom.
-   // By default all pixels from the whole drawable are returned.
-   //
-   // Note that return array is 32-bit aligned
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create pixmap from RGB data. RGB data is in format :
+/// b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+///
+/// Pixels are numbered from left to right and from top to bottom.
+/// Note that data must be 32-bit aligned
+
 Pixmap_t TGX11::CreatePixmapFromData(unsigned char * /*bits*/, UInt_t /*width*/,
                                        UInt_t /*height*/)
 {
-   // create pixmap from RGB data. RGB data is in format :
-   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
-   //
-   // Pixels are numbered from left to right and from top to bottom.
-   // Note that data must be 32-bit aligned
-
    return (Pixmap_t)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register pixmap created by gVirtualGL
+/// w,h : Width and height of the pixmap.
+///register new pixmap
+
 Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h)
 {
-   // Register pixmap created by gVirtualGL
-   // w,h : Width and height of the pixmap.
-   //register new pixmap
    Int_t wid = 0;
 
    // Select next free window number
@@ -3376,17 +3377,17 @@ Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h)
    return wid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns 1 if window system server supports extension given by the
+/// argument, returns 0 in case extension is not supported and returns -1
+/// in case of error (like server not initialized).
+/// Examples:
+///   "Apple-WM" - does server run on MacOS X;
+///   "XINERAMA" - does server support Xinerama.
+/// See also the output of xdpyinfo.
+
 Int_t TGX11::SupportsExtension(const char *ext) const
 {
-   // Returns 1 if window system server supports extension given by the
-   // argument, returns 0 in case extension is not supported and returns -1
-   // in case of error (like server not initialized).
-   // Examples:
-   //   "Apple-WM" - does server run on MacOS X;
-   //   "XINERAMA" - does server support Xinerama.
-   // See also the output of xdpyinfo.
-
    Int_t major_opcode, first_event, first_error;
    if (!(Display*)fDisplay)
       return -1;

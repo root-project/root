@@ -17,23 +17,24 @@
 
 ClassImp(TGeoGedFrame)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGeoGedFrame::TGeoGedFrame(const TGWindow *p, Int_t width, Int_t height,
                            UInt_t options, Pixel_t back) :
   TGedFrame(p, width, height, options, back),
   fTab(0), fTabMgr(0), fPad(0)
 {
-// Constructor.
    fTab = fGedEditor->GetTab();
    fPad = fGedEditor->GetPad();
    fTabMgr = TGeoTabManager::GetMakeTabManager(fGedEditor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set active GUI attribute frames related to the selected object.
+
 void TGeoGedFrame::SetActive(Bool_t active)
 {
-   // Set active GUI attribute frames related to the selected object.
-
    if (active)
       ((TGCompositeFrame*)GetParent())->ShowFrame(this);
    else
@@ -49,11 +50,11 @@ void TGeoGedFrame::SetActive(Bool_t active)
       fTab->SetTab(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override Update from TGedFrame as fGedEditor can be null.
+
 void TGeoGedFrame::Update()
 {
-   // Override Update from TGedFrame as fGedEditor can be null.
-
    if (fGedEditor) {
       fGedEditor->Update();
    } else {

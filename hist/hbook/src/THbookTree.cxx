@@ -54,10 +54,11 @@
 
 ClassImp(THbookTree)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default constructor
+
 THbookTree::THbookTree(): TTree()
 {
-   //default constructor
    fID   = 0;
    fType = 0;
    fX    = 0;
@@ -65,11 +66,12 @@ THbookTree::THbookTree(): TTree()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 THbookTree::THbookTree(const char *name,Int_t id)
     :TTree(name,name)
 {
-   //constructor
    fID   = id;
    fType = 0;
    fX    = 0;
@@ -78,28 +80,31 @@ THbookTree::THbookTree(const char *name,Int_t id)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 THbookTree::~THbookTree()
 {
-   //destructor
    if (fX) delete [] fX;
    if (fFile) fFile->DeleteID(fID);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///get one entry from the hbook ntuple
+
 Int_t THbookTree::GetEntry(Long64_t entry, Int_t /*getall*/)
 {
-   //get one entry from the hbook ntuple
    fReadEntry = entry;
    return fFile->GetEntry(entry,fID,fType,GetX());
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize the branch addresses
+
 void THbookTree::InitBranches(Long64_t entry)
 {
-   //Initialize the branch addresses
    Int_t nfill = GetPlayer()->GetNfill();
    if (nfill > 0) {fInit = kFALSE; return;}
    if (fInit) return;
@@ -115,17 +120,19 @@ void THbookTree::InitBranches(Long64_t entry)
    fFile->InitLeaves(fID, 1,GetPlayer()->GetVar1());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Print an overview of the hbook ntuple
+
 void THbookTree::Print(Option_t *option) const
 {
-   //Print an overview of the hbook ntuple
    TTree::Print(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set the number of entries in the tree header and its branches
+
 Long64_t THbookTree::SetEntries(Long64_t n)
 {
-   //Set the number of entries in the tree header and its branches
    fEntries = n;
    TIter next(GetListOfBranches());
    THbookBranch *branch;

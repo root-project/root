@@ -33,7 +33,9 @@
 
 ClassImp(TGLTF3Painter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
                   : TGLPlotPainter(hist, camera, coord, kFALSE, kFALSE, kFALSE),
                     fStyle(kDefault),
@@ -42,21 +44,22 @@ TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLPlotCamera *camera, TGLPlot
                     fYOZSlice("YOZ", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kYOZ),
                     fXOYSlice("XOY", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kXOY)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Coords for point on surface under cursor.
+
 char *TGLTF3Painter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
-   //Coords for point on surface under cursor.
    static char mess[] = { "fun3" };
    return mess;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Create mesh.
+
 Bool_t TGLTF3Painter::InitGeometry()
 {
-   //Create mesh.
    fCoord->SetCoordType(kGLCartesian);
 
    if (!fCoord->SetRanges(fHist, kFALSE, kTRUE))
@@ -88,22 +91,24 @@ Bool_t TGLTF3Painter::InitGeometry()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///User clicks right mouse button (in a pad).
+
 void TGLTF3Painter::StartPan(Int_t px, Int_t py)
 {
-   //User clicks right mouse button (in a pad).
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
    fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///User's moving mouse cursor, with middle mouse button pressed (for pad).
+///Calculate 3d shift related to 2d mouse movement.
+///Slicing is disabled (since somebody has broken it).
+
 void TGLTF3Painter::Pan(Int_t px, Int_t py)
 {
-   //User's moving mouse cursor, with middle mouse button pressed (for pad).
-   //Calculate 3d shift related to 2d mouse movement.
-   //Slicing is disabled (since somebody has broken it).
    if (fSelectedPart >= fSelectionBase) {//Pan camera.
       SaveModelviewMatrix();
       SaveProjectionMatrix();
@@ -143,16 +148,18 @@ void TGLTF3Painter::Pan(Int_t px, Int_t py)
    fUpdateSelection = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No options for tf3
+
 void TGLTF3Painter::AddOption(const TString &/*option*/)
 {
-   //No options for tf3
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Change color sheme.
+
 void TGLTF3Painter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
-   //Change color sheme.
    if (event == kKeyPress) {
       if (py == kKey_s || py == kKey_S) {
          fStyle < kMaple2 ? fStyle = ETF3Style(fStyle + 1) : fStyle = kDefault;
@@ -179,10 +186,11 @@ void TGLTF3Painter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize OpenGL state variables.
+
 void TGLTF3Painter::InitGL() const
 {
-   //Initialize OpenGL state variables.
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
    glEnable(GL_DEPTH_TEST);
@@ -190,10 +198,11 @@ void TGLTF3Painter::InitGL() const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize OpenGL state variables.
+
 void TGLTF3Painter::DeInitGL() const
 {
-   //Initialize OpenGL state variables.
    glDisable(GL_LIGHTING);
    glDisable(GL_LIGHT0);
    glDisable(GL_DEPTH_TEST);
@@ -201,10 +210,11 @@ void TGLTF3Painter::DeInitGL() const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw triangles, no normals, no lighting.
+
 void TGLTF3Painter::DrawToSelectionBuffer() const
 {
-   //Draw triangles, no normals, no lighting.
    Rgl::ObjectIDToColor(fSelectionBase, fHighColor);
 
    if (!fBoxCut.IsActive())
@@ -213,10 +223,11 @@ void TGLTF3Painter::DrawToSelectionBuffer() const
       Rgl::DrawMesh(fMesh.fVerts, fMesh.fTris, fBoxCut);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Surface with material properties and lighting.
+
 void TGLTF3Painter::DrawDefaultPlot() const
 {
-   //Surface with material properties and lighting.
    if (HasSections()) {
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -237,11 +248,12 @@ void TGLTF3Painter::DrawDefaultPlot() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Colored surface, without lighting and
+///material properties.
+
 void TGLTF3Painter::DrawMaplePlot() const
 {
-   //Colored surface, without lighting and
-   //material properties.
    const TGLDisableGuard lightGuard(GL_LIGHTING);
 
    if (HasSections() && fStyle < kMaple2) {
@@ -282,11 +294,11 @@ void TGLTF3Painter::DrawMaplePlot() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw mesh.
+
 void TGLTF3Painter::DrawPlot() const
 {
-   //Draw mesh.
-
    //Shift plot to point of origin.
    const Rgl::PlotTranslation trGuard(this);
 
@@ -305,10 +317,11 @@ void TGLTF3Painter::DrawPlot() const
       fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set color for surface.
+
 void TGLTF3Painter::SetSurfaceColor() const
 {
-   //Set color for surface.
    Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.15f};
 
    if (fF3->GetFillColor() != kWhite)
@@ -323,37 +336,41 @@ void TGLTF3Painter::SetSurfaceColor() const
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 70.f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Any section exists.
+
 Bool_t TGLTF3Painter::HasSections() const
 {
-   //Any section exists.
    return fXOZSectionPos > fBackBox.Get3DBox()[0].Y() ||
           fYOZSectionPos > fBackBox.Get3DBox()[0].X() ||
           fXOYSectionPos > fBackBox.Get3DBox()[0].Z();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw XOZ parallel section.
+
 void TGLTF3Painter::DrawSectionXOZ() const
 {
-   // Draw XOZ parallel section.
    if (fSelectionPass)
       return;
    fXOZSlice.DrawSlice(fXOZSectionPos / fCoord->GetYScale());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw YOZ parallel section.
+
 void TGLTF3Painter::DrawSectionYOZ() const
 {
-   // Draw YOZ parallel section.
    if (fSelectionPass)
       return;
    fYOZSlice.DrawSlice(fYOZSectionPos / fCoord->GetXScale());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw XOY parallel section.
+
 void TGLTF3Painter::DrawSectionXOY() const
 {
-   // Draw XOY parallel section.
    if (fSelectionPass)
       return;
    fXOYSlice.DrawSlice(fXOYSectionPos / fCoord->GetZScale());
@@ -366,7 +383,9 @@ void TGLTF3Painter::DrawSectionXOY() const
 
 ClassImp(TGLIsoPainter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Constructor.
+
 TGLIsoPainter::TGLIsoPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
                   : TGLPlotPainter(hist, camera, coord, kFALSE, kFALSE, kFALSE),
                     fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
@@ -374,24 +393,24 @@ TGLIsoPainter::TGLIsoPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinate
                     fXOYSlice("XOY", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOY),
                     fInit(kFALSE)
 {
-   //Constructor.
    if (hist->GetDimension() < 3)
       Error("TGLIsoPainter::TGLIsoPainter", "Wrong type of histogramm, must have 3 dimensions");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Return info for plot part under cursor.
+
 char *TGLIsoPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
-   //Return info for plot part under cursor.
-
    static char mess[] = { "iso" };
    return mess;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initializes meshes for 3d iso contours.
+
 Bool_t TGLIsoPainter::InitGeometry()
 {
-   //Initializes meshes for 3d iso contours.
    if (fHist->GetDimension() < 3) {
       Error("TGLIsoPainter::TGLIsoPainter", "Wrong type of histogramm, must have 3 dimensions");
       return kFALSE;
@@ -475,23 +494,25 @@ Bool_t TGLIsoPainter::InitGeometry()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///User clicks right mouse button (in a pad).
+
 void TGLIsoPainter::StartPan(Int_t px, Int_t py)
 {
-   //User clicks right mouse button (in a pad).
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
    fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///User's moving mouse cursor, with middle mouse button pressed (for pad).
+///Calculate 3d shift related to 2d mouse movement.
+///User's moving mouse cursor, with middle mouse button pressed (for pad).
+///Calculate 3d shift related to 2d mouse movement.
+
 void TGLIsoPainter::Pan(Int_t px, Int_t py)
 {
-   //User's moving mouse cursor, with middle mouse button pressed (for pad).
-   //Calculate 3d shift related to 2d mouse movement.
-   //User's moving mouse cursor, with middle mouse button pressed (for pad).
-   //Calculate 3d shift related to 2d mouse movement.
    if (fSelectedPart >= fSelectionBase) {//Pan camera.
       SaveModelviewMatrix();
       SaveProjectionMatrix();
@@ -532,16 +553,18 @@ void TGLIsoPainter::Pan(Int_t px, Int_t py)
    fUpdateSelection = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No additional options for TGLIsoPainter.
+
 void TGLIsoPainter::AddOption(const TString &/*option*/)
 {
-   //No additional options for TGLIsoPainter.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Change color sheme.
+
 void TGLIsoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
-   //Change color sheme.
    if (event == kKeyPress) {
       if (py == kKey_c || py == kKey_C) {
          if (fHighColor)
@@ -566,10 +589,11 @@ void TGLIsoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize OpenGL state variables.
+
 void TGLIsoPainter::InitGL() const
 {
-   //Initialize OpenGL state variables.
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
    glEnable(GL_DEPTH_TEST);
@@ -577,10 +601,11 @@ void TGLIsoPainter::InitGL() const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize OpenGL state variables.
+
 void TGLIsoPainter::DeInitGL() const
 {
-   //Initialize OpenGL state variables.
    glDisable(GL_LIGHTING);
    glDisable(GL_LIGHT0);
    glDisable(GL_DEPTH_TEST);
@@ -588,11 +613,11 @@ void TGLIsoPainter::DeInitGL() const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw mesh.
+
 void TGLIsoPainter::DrawPlot() const
 {
-   //Draw mesh.
-
    //Shift plot to point of origin.
    const Rgl::PlotTranslation trGuard(this);
 
@@ -630,45 +655,50 @@ void TGLIsoPainter::DrawPlot() const
       fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw XOZ parallel section.
+
 void TGLIsoPainter::DrawSectionXOZ() const
 {
-   // Draw XOZ parallel section.
    if (fSelectionPass)
       return;
    fXOZSlice.DrawSlice(fXOZSectionPos / fCoord->GetYScale());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw YOZ parallel section.
+
 void TGLIsoPainter::DrawSectionYOZ() const
 {
-   // Draw YOZ parallel section.
    if (fSelectionPass)
       return;
    fYOZSlice.DrawSlice(fYOZSectionPos / fCoord->GetXScale());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw XOY parallel section.
+
 void TGLIsoPainter::DrawSectionXOY() const
 {
-   // Draw XOY parallel section.
    if (fSelectionPass)
       return;
    fXOYSlice.DrawSlice(fXOYSectionPos / fCoord->GetZScale());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Any section exists.
+
 Bool_t TGLIsoPainter::HasSections() const
 {
-   //Any section exists.
    return fXOZSectionPos > fBackBox.Get3DBox()[0].Y() || fYOZSectionPos > fBackBox.Get3DBox()[0].X() ||
           fXOYSectionPos > fBackBox.Get3DBox()[0].Z();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set color for surface.
+
 void TGLIsoPainter::SetSurfaceColor(Int_t ind) const
 {
-   //Set color for surface.
    Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.25f};
 
    if (fColorLevels.size() == 1) {
@@ -690,10 +720,11 @@ void TGLIsoPainter::SetSurfaceColor(Int_t ind) const
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 30.f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Grid geometry.
+
 void TGLIsoPainter::SetMesh(Mesh_t &m, Double_t isoValue)
 {
-   //Grid geometry.
    Rgl::Mc::TGridGeometry<Float_t> geom(fXAxis, fYAxis, fZAxis, fCoord->GetXScale(),
                                         fCoord->GetYScale(), fCoord->GetZScale());
    //Clear mesh if it was from cache.
@@ -717,10 +748,11 @@ void TGLIsoPainter::SetMesh(Mesh_t &m, Double_t isoValue)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw TF3 surface
+
 void TGLIsoPainter::DrawMesh(const Mesh_t &m, Int_t level) const
 {
-   //Draw TF3 surface
    if (!fSelectionPass)
       SetSurfaceColor(level);
 
@@ -741,10 +773,11 @@ void TGLIsoPainter::DrawMesh(const Mesh_t &m, Int_t level) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find max/min bin contents for TH3.
+
 void TGLIsoPainter::FindMinMax()
 {
-   //Find max/min bin contents for TH3.
    fMinMax.first  = fHist->GetBinContent(fXAxis->GetFirst(), fYAxis->GetFirst(), fZAxis->GetFirst());
    fMinMax.second = fMinMax.first;
 

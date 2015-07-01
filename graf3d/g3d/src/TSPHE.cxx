@@ -38,11 +38,11 @@ ClassImp(TSPHE)
 // ROOT color indx = max(i-i0,j-j0);
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SPHE shape default constructor
+
 TSPHE::TSPHE()
 {
-   // SPHE shape default constructor
-
    fRmin       = 0;
    fRmax       = 0;
    fThemin     = 0;
@@ -59,13 +59,13 @@ TSPHE::TSPHE()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SPHE shape normal constructor
+
 TSPHE::TSPHE(const char *name, const char *title, const char *material, Float_t rmin, Float_t rmax, Float_t themin,
              Float_t themax, Float_t phimin, Float_t phimax)
      : TShape(name, title,material)
 {
-   // SPHE shape normal constructor
-
    fRmin   = rmin;
    fRmax   = rmax;
    fThemin = themin;
@@ -85,12 +85,12 @@ TSPHE::TSPHE(const char *name, const char *title, const char *material, Float_t 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SPHE shape "simplified" constructor
+
 TSPHE::TSPHE(const char *name, const char *title, const char *material, Float_t rmax)
      : TShape(name, title,material)
 {
-   // SPHE shape "simplified" constructor
-
    fRmin   = 0;
    fRmax   = rmax;
    fThemin = 0;
@@ -110,11 +110,11 @@ TSPHE::TSPHE(const char *name, const char *title, const char *material, Float_t 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SPHE shape default destructor
+
 TSPHE::~TSPHE()
 {
-   // SPHE shape default destructor
-
    if (fCoThetaTab) delete [] fCoThetaTab;
    if (fSiTab) delete [] fSiTab;
    if (fCoTab) delete [] fCoTab;
@@ -125,36 +125,36 @@ TSPHE::~TSPHE()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a PSPHE
+///
+/// Compute the closest distance of approach from point px,py to each
+/// computed outline point of the PSPHE (stolen from PCON).
+
 Int_t TSPHE::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a PSPHE
-   //
-   // Compute the closest distance of approach from point px,py to each
-   // computed outline point of the PSPHE (stolen from PCON).
-
    Int_t n = GetNumberOfDivisions()+1;
    Int_t numPoints = 2*n*(fNz+1);
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set ellipse.
+
 void TSPHE::SetEllipse(const Float_t *factors)
 {
-   // Set ellipse.
-
    if (factors[0] > 0) faX = factors[0];
    if (factors[1] > 0) faY = factors[1];
    if (factors[2] > 0) faZ = factors[2];
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set number of divisions.
+
 void TSPHE::SetNumberOfDivisions (Int_t p)
 {
-   // Set number of divisions.
-
    if (GetNumberOfDivisions () == p) return;
    fNdiv=p;
    fNz = Int_t(fAspectRatio*fNdiv*(fThemax - fThemin )/(fPhimax - fPhimin )) + 1;
@@ -162,11 +162,11 @@ void TSPHE::SetNumberOfDivisions (Int_t p)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create SPHE points
+
 void TSPHE::SetPoints(Double_t *points) const
 {
-   // Create SPHE points
-
    Int_t i, j, n;
    Int_t indx = 0;
 
@@ -196,11 +196,11 @@ void TSPHE::SetPoints(Double_t *points) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return total X3D needed by TNode::ls (when called with option "x")
+
 void TSPHE::Sizeof3D() const
 {
-   // Return total X3D needed by TNode::ls (when called with option "x")
-
    Int_t n;
 
    n = GetNumberOfDivisions()+1;
@@ -216,11 +216,11 @@ void TSPHE::Sizeof3D() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make table of sine and cosine.
+
 void TSPHE::MakeTableOfCoSin() const
 {
-   // Make table of sine and cosine.
-
    const Double_t pi  = TMath::ATan(1) * 4.0;
    const Double_t ragrad  = pi/180.0;
 
@@ -275,11 +275,11 @@ void TSPHE::MakeTableOfCoSin() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object
+
 void TSPHE::Streamer(TBuffer &b)
 {
-   // Stream a class object
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
@@ -315,11 +315,11 @@ void TSPHE::Streamer(TBuffer &b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get buffer 3d.
+
 const TBuffer3D & TSPHE::GetBuffer3D(Int_t reqSections) const
 {
-   // Get buffer 3d.
-
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);

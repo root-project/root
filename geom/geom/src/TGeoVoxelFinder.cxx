@@ -40,10 +40,11 @@
 
 ClassImp(TGeoVoxelFinder)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoVoxelFinder::TGeoVoxelFinder()
 {
-// Default constructor
    fVolume  = 0;
    fNboxes  = 0;
    fIbx     = 0;
@@ -80,10 +81,11 @@ TGeoVoxelFinder::TGeoVoxelFinder()
    memset(fPriority, 0, 3*sizeof(Int_t));
    SetInvalid(kFALSE);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
 {
-// Default constructor
    if (!vol) {
       Fatal("TGeoVoxelFinder", "Null pointer for volume");
       return; // To make code checkers happy
@@ -126,7 +128,9 @@ TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
    SetNeedRebuild();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGeoVoxelFinder::TGeoVoxelFinder(const TGeoVoxelFinder& vf) :
   TObject(vf),
   fVolume(vf.fVolume),
@@ -163,16 +167,16 @@ TGeoVoxelFinder::TGeoVoxelFinder(const TGeoVoxelFinder& vf) :
   fIndcY(vf.fIndcY),
   fIndcZ(vf.fIndcZ)
 {
-   //copy constructor
    for(Int_t i=0; i<3; i++) {
       fPriority[i]=vf.fPriority[i];
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGeoVoxelFinder& TGeoVoxelFinder::operator=(const TGeoVoxelFinder& vf)
 {
-   //assignment operator
    if(this!=&vf) {
       TObject::operator=(vf);
       fVolume=vf.fVolume;
@@ -215,11 +219,12 @@ TGeoVoxelFinder& TGeoVoxelFinder::operator=(const TGeoVoxelFinder& vf)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+///   printf("deleting finder of %s\n", fVolume->GetName());
+
 TGeoVoxelFinder::~TGeoVoxelFinder()
 {
-// Destructor
-//   printf("deleting finder of %s\n", fVolume->GetName());
    if (fOBx) delete [] fOBx;
    if (fOBy) delete [] fOBy;
    if (fOBz) delete [] fOBz;
@@ -245,23 +250,26 @@ TGeoVoxelFinder::~TGeoVoxelFinder()
 //   printf("IndX IndY IndZ...\n");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TGeoVoxelFinder::GetNcandidates(TGeoStateInfo &td) const
 {
    return td.fVoxNcandidates;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t* TGeoVoxelFinder::GetCheckList(Int_t &nelem, TGeoStateInfo &td) const
 {
    nelem = td.fVoxNcandidates;
    return td.fVoxCheckList;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// build the array of bounding boxes of the nodes inside
+
 void TGeoVoxelFinder::BuildVoxelLimits()
 {
-// build the array of bounding boxes of the nodes inside
    Int_t nd = fVolume->GetNdaughters();
    if (!nd) return;
    Int_t id;
@@ -301,20 +309,22 @@ void TGeoVoxelFinder::BuildVoxelLimits()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert a point from the local reference system of node id to reference
+/// system of mother volume
+
 void TGeoVoxelFinder::DaughterToMother(Int_t id, const Double_t *local, Double_t *master) const
 {
-// convert a point from the local reference system of node id to reference
-// system of mother volume
    TGeoMatrix *mat = fVolume->GetNode(id)->GetMatrix();
    if (!mat) memcpy(master,local,3*sizeof(Double_t));
    else      mat->LocalToMaster(local, master);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes squared distance from POINT to the voxel(s) containing node INODE. Returns 0
+/// if POINT inside voxel(s).
+
 Bool_t TGeoVoxelFinder::IsSafeVoxel(const Double_t *point, Int_t inode, Double_t minsafe) const
 {
-// Computes squared distance from POINT to the voxel(s) containing node INODE. Returns 0
-// if POINT inside voxel(s).
    if (NeedRebuild()) {
       TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
       vox->Voxelize();
@@ -332,10 +342,11 @@ Bool_t TGeoVoxelFinder::IsSafeVoxel(const Double_t *point, Int_t inode, Double_t
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Compute voxelization efficiency.
+
 Double_t TGeoVoxelFinder::Efficiency()
 {
-//--- Compute voxelization efficiency.
    printf("Voxelization efficiency for %s\n", fVolume->GetName());
    if (NeedRebuild()) {
       Voxelize();
@@ -378,10 +389,11 @@ Double_t TGeoVoxelFinder::Efficiency()
    printf("Total efficiency : %g\n", eff);
    return eff;
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create the list of nodes for which the bboxes overlap with inode's bbox
+
 void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
 {
-// create the list of nodes for which the bboxes overlap with inode's bbox
    if (!fBoxes) return;
    Double_t xmin, xmax, ymin, ymax, zmin, zmax;
    Double_t xmin1, xmax1, ymin1, ymax1, zmin1, zmax1;
@@ -429,10 +441,11 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
    node->SetOverlaps(ovlps, novlp);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Getindices for current slices on x, y, z
+
 Bool_t TGeoVoxelFinder::GetIndices(const Double_t *point, TGeoStateInfo &td)
 {
-// Getindices for current slices on x, y, z
    td.fVoxSlices[0] = -2; // -2 means 'all daughters in slice'
    td.fVoxSlices[1] = -2;
    td.fVoxSlices[2] = -2;
@@ -472,11 +485,12 @@ Bool_t TGeoVoxelFinder::GetIndices(const Double_t *point, TGeoStateInfo &td)
    return flag;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Return the list of extra candidates in a given X slice compared to
+/// another (left or right)
+
 Int_t *TGeoVoxelFinder::GetExtraX(Int_t islice, Bool_t left, Int_t &nextra) const
 {
-//--- Return the list of extra candidates in a given X slice compared to
-// another (left or right)
    Int_t *list = 0;
    nextra = 0;
    if (fPriority[0]!=2) return list;
@@ -490,11 +504,12 @@ Int_t *TGeoVoxelFinder::GetExtraX(Int_t islice, Bool_t left, Int_t &nextra) cons
    return list;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Return the list of extra candidates in a given Y slice compared to
+/// another (left or right)
+
 Int_t *TGeoVoxelFinder::GetExtraY(Int_t islice, Bool_t left, Int_t &nextra) const
 {
-//--- Return the list of extra candidates in a given Y slice compared to
-// another (left or right)
    Int_t *list = 0;
    nextra = 0;
    if (fPriority[1]!=2) return list;
@@ -508,11 +523,12 @@ Int_t *TGeoVoxelFinder::GetExtraY(Int_t islice, Bool_t left, Int_t &nextra) cons
    return list;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Return the list of extra candidates in a given Z slice compared to
+/// another (left or right)
+
 Int_t *TGeoVoxelFinder::GetExtraZ(Int_t islice, Bool_t left, Int_t &nextra) const
 {
-//--- Return the list of extra candidates in a given Z slice compared to
-// another (left or right)
    Int_t *list = 0;
    nextra = 0;
    if (fPriority[2]!=2) return list;
@@ -526,11 +542,12 @@ Int_t *TGeoVoxelFinder::GetExtraZ(Int_t islice, Bool_t left, Int_t &nextra) cons
    return list;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get extra candidates that are not contained in current check list
+///   UChar_t *bits = gGeoManager->GetBits();
+
 Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck, TGeoStateInfo &td)
 {
-// Get extra candidates that are not contained in current check list
-//   UChar_t *bits = gGeoManager->GetBits();
    td.fVoxNcandidates = 0;
    Int_t icand;
    UInt_t bitnumber, loc;
@@ -546,11 +563,12 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck, TGeoStateInfo 
    return td.fVoxCheckList;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get extra candidates that are contained in array1 but not in current check list
+///   UChar_t *bits = gGeoManager->GetBits();
+
 Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list, Int_t &ncheck, TGeoStateInfo &td)
 {
-// Get extra candidates that are contained in array1 but not in current check list
-//   UChar_t *bits = gGeoManager->GetBits();
    td.fVoxNcandidates = 0;
    Int_t icand;
    UInt_t bitnumber, loc;
@@ -566,11 +584,12 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list
    return td.fVoxCheckList;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get extra candidates that are contained in array1 but not in current check list
+///   UChar_t *bits = gGeoManager->GetBits();
+
 Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t *list, Int_t &ncheck, TGeoStateInfo &td)
 {
-// Get extra candidates that are contained in array1 but not in current check list
-//   UChar_t *bits = gGeoManager->GetBits();
    td.fVoxNcandidates = 0;
    Int_t icand;
    UInt_t bitnumber, loc;
@@ -586,11 +605,12 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*
    return td.fVoxCheckList;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns list of new candidates in next voxel. If NULL, nowhere to
+/// go next.
+
 Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, TGeoStateInfo &td)
 {
-// Returns list of new candidates in next voxel. If NULL, nowhere to
-// go next.
    if (NeedRebuild()) {
       Voxelize();
       fVolume->FindOverlaps();
@@ -1147,10 +1167,11 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the list in the next voxel crossed by a ray
+
 void TGeoVoxelFinder::SortCrossedVoxels(const Double_t *point, const Double_t *dir, TGeoStateInfo &td)
 {
-// get the list in the next voxel crossed by a ray
    if (NeedRebuild()) {
       TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
       vox->Voxelize();
@@ -1280,10 +1301,11 @@ void TGeoVoxelFinder::SortCrossedVoxels(const Double_t *point, const Double_t *d
 //   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the list of daughter indices for which point is inside their bbox
+
 Int_t *TGeoVoxelFinder::GetCheckList(const Double_t *point, Int_t &nelem, TGeoStateInfo &td)
 {
-// get the list of daughter indices for which point is inside their bbox
    if (NeedRebuild()) {
       Voxelize();
       fVolume->FindOverlaps();
@@ -1376,10 +1398,11 @@ Int_t *TGeoVoxelFinder::GetCheckList(const Double_t *point, Int_t &nelem, TGeoSt
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the list of candidates in voxel (i,j,k) - no check
+
 Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &ncheck, TGeoStateInfo &td)
 {
-// get the list of candidates in voxel (i,j,k) - no check
    UChar_t *slice1 = 0;
    UChar_t *slice2 = 0;
    UChar_t *slice3 = 0;
@@ -1438,11 +1461,12 @@ Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &nch
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the list of new candidates for the next voxel crossed by current ray
+///   printf("### GetNextVoxel\n");
+
 Int_t *TGeoVoxelFinder::GetNextVoxel(const Double_t *point, const Double_t * /*dir*/, Int_t &ncheck, TGeoStateInfo &td)
 {
-// get the list of new candidates for the next voxel crossed by current ray
-//   printf("### GetNextVoxel\n");
    if (NeedRebuild()) {
       Voxelize();
       fVolume->FindOverlaps();
@@ -1461,10 +1485,11 @@ Int_t *TGeoVoxelFinder::GetNextVoxel(const Double_t *point, const Double_t * /*d
    return GetNextCandidates(point, ncheck, td);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the list of nodes corresponding to one array of bits
+
 Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t &nf, Int_t *result)
 {
-// return the list of nodes corresponding to one array of bits
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
    nf = 0;
    Int_t nbytes = 1+((nd-1)>>3);
@@ -1489,10 +1514,11 @@ Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t &nf, Int_t *r
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the list of nodes corresponding to one array of bits
+
 Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t n1, UChar_t *array1, TGeoStateInfo &td)
 {
-// return the list of nodes corresponding to one array of bits
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
 //   UChar_t *bits = gGeoManager->GetBits();
    td.fVoxNcandidates = 0;
@@ -1529,11 +1555,12 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t n1, UChar_t *array1, TGeoStateIn
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make union of older bits with new array
+///   printf("Union - one slice\n");
+
 Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1, TGeoStateInfo &td)
 {
-// make union of older bits with new array
-//   printf("Union - one slice\n");
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
 //   UChar_t *bits = gGeoManager->GetBits();
    td.fVoxNcandidates = 0;
@@ -1561,11 +1588,12 @@ Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1, TGeoStateInfo &td)
    return (td.fVoxNcandidates>0);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make union of older bits with new array
+///   printf("Union - two slices\n");
+
 Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, TGeoStateInfo &td)
 {
-// make union of older bits with new array
-//   printf("Union - two slices\n");
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
 //   UChar_t *bits = gGeoManager->GetBits();
    td.fVoxNcandidates = 0;
@@ -1586,12 +1614,13 @@ Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar
    return (td.fVoxNcandidates>0);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make union of older bits with new array
+///   printf("Union - three slices\n");
+///   printf("n1=%i n2=%i n3=%i\n", n1,n2,n3);
+
 Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t /*n3*/, UChar_t *array3, TGeoStateInfo &td)
 {
-// make union of older bits with new array
-//   printf("Union - three slices\n");
-//   printf("n1=%i n2=%i n3=%i\n", n1,n2,n3);
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
 //   UChar_t *bits = gGeoManager->GetBits();
    td.fVoxNcandidates = 0;
@@ -1612,10 +1641,11 @@ Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar
    return (td.fVoxNcandidates>0);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the list of nodes corresponding to the intersection of two arrays of bits
+
 Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2, Int_t &nf, Int_t *result)
 {
-// return the list of nodes corresponding to the intersection of two arrays of bits
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
    nf = 0;
    Int_t nbytes = 1+((nd-1)>>3);
@@ -1640,10 +1670,11 @@ Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *
    return (nf>0);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the list of nodes corresponding to the intersection of two arrays of bits
+
 Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, TGeoStateInfo &td)
 {
-// return the list of nodes corresponding to the intersection of two arrays of bits
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
 //   UChar_t *bits = gGeoManager->GetBits();
    td.fVoxNcandidates = 0;
@@ -1667,10 +1698,11 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /
    return (td.fVoxNcandidates>0);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the list of nodes corresponding to the intersection of three arrays of bits
+
 Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2, Int_t n3, UChar_t *array3, Int_t &nf, Int_t *result)
 {
-// return the list of nodes corresponding to the intersection of three arrays of bits
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
    nf = 0;
    Int_t nbytes = 1+((nd-1)>>3);
@@ -1695,10 +1727,11 @@ Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *
    return (nf>0);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the list of nodes corresponding to the intersection of three arrays of bits
+
 Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t /*n3*/, UChar_t *array3, TGeoStateInfo &td)
 {
-// return the list of nodes corresponding to the intersection of three arrays of bits
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
 //   UChar_t *bits = gGeoManager->GetBits();
    td.fVoxNcandidates = 0;
@@ -1721,10 +1754,11 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /
    }
    return (td.fVoxNcandidates>0);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// order bounding boxes along x, y, z
+
 void TGeoVoxelFinder::SortAll(Option_t *)
 {
-// order bounding boxes along x, y, z
    Int_t nd = fVolume->GetNdaughters();
    Int_t nperslice  = 1+(nd-1)/(8*sizeof(UChar_t)); /*Nbytes per slice*/
    Int_t nmaxslices = 2*nd+1; // max number of slices on each axis
@@ -2144,10 +2178,11 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the voxels.
+
 void TGeoVoxelFinder::Print(Option_t *) const
 {
-// Print the voxels.
    if (NeedRebuild()) {
       TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
       vox->Voxelize();
@@ -2245,10 +2280,11 @@ void TGeoVoxelFinder::Print(Option_t *) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print the voxel containing point
+
 void TGeoVoxelFinder::PrintVoxelLimits(const Double_t *point) const
 {
-// print the voxel containing point
    if (NeedRebuild()) {
       TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
       vox->Voxelize();
@@ -2280,11 +2316,12 @@ void TGeoVoxelFinder::PrintVoxelLimits(const Double_t *point) const
       }
    }
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Voxelize attached volume according to option
+/// If the volume is an assembly, make sure the bbox is computed.
+
 void TGeoVoxelFinder::Voxelize(Option_t * /*option*/)
 {
-// Voxelize attached volume according to option
-   // If the volume is an assembly, make sure the bbox is computed.
    if (fVolume->IsAssembly()) fVolume->GetShape()->ComputeBBox();
    Int_t nd = fVolume->GetNdaughters();
    TGeoVolume *vd;
@@ -2296,10 +2333,11 @@ void TGeoVoxelFinder::Voxelize(Option_t * /*option*/)
    SortAll();
    SetNeedRebuild(kFALSE);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TGeoVoxelFinder.
+
 void TGeoVoxelFinder::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TGeoVoxelFinder.
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

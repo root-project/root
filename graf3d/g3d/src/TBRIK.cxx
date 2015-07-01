@@ -31,54 +31,55 @@ ClassImp(TBRIK)
 //     - dz         half-length of the box along the z-axis
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// BRIK shape default constructor
+
 TBRIK::TBRIK()
 {
-   // BRIK shape default constructor
-
    fDx = 0.;
    fDy = 0.;
    fDz = 0.;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// BRIK shape normal constructor
+
 TBRIK::TBRIK(const char *name, const char *title, const char *material, Float_t dx, Float_t dy, Float_t dz)
       : TShape (name, title,material)
 {
-   // BRIK shape normal constructor
-
    fDx = dx;
    fDy = dy;
    fDz = dz;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// BRIK shape default destructor
+
 TBRIK::~TBRIK()
 {
-  // BRIK shape default destructor
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a BRIK
+///
+/// Compute the closest distance of approach from point px,py to each corner
+/// point of the BRIK.
+
 Int_t TBRIK::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a BRIK
-   //
-   // Compute the closest distance of approach from point px,py to each corner
-   // point of the BRIK.
-
    const Int_t numPoints = 8;
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create BRIK points
+
 void TBRIK::SetPoints(Double_t *points) const
 {
-   // Create BRIK points
-
    if (points) {
       points[ 0] = -fDx ; points[ 1] = -fDy ; points[ 2] = -fDz;
       points[ 3] = -fDx ; points[ 4] =  fDy ; points[ 5] = -fDz;
@@ -92,22 +93,22 @@ void TBRIK::SetPoints(Double_t *points) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return total X3D needed by TNode::ls (when called with option "x")
+
 void TBRIK::Sizeof3D() const
 {
-   // Return total X3D needed by TNode::ls (when called with option "x")
-
    gSize3D.numPoints += 8;
    gSize3D.numSegs   += 12;
    gSize3D.numPolys  += 6;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get buffer 3D
+
 const TBuffer3D & TBRIK::GetBuffer3D(Int_t reqSections) const
 {
-   // Get buffer 3D
-
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);

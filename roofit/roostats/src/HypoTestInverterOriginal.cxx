@@ -8,7 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /**
    HypoTestInverterOriginal class for performing an hypothesis test inversion by scanning the hypothesis test results of the 
   HybridCalculator  for various values of the parameter of interest. By looking at the confidence level curve of 

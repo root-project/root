@@ -52,7 +52,9 @@ const Double_t TMVA::PDF::fgEpsilon           = 1.0e-12;
 
 ClassImp(TMVA::PDF)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor needed for ROOT I/O
+
 TMVA::PDF::PDF( const TString& name, Bool_t norm )
    : Configurable   (""),
      fUseHistogram  ( kFALSE ),
@@ -84,12 +86,13 @@ TMVA::PDF::PDF( const TString& name, Bool_t norm )
      fSuffix        ( "" ),
      fLogger        ( 0 )
 {
-   // default constructor needed for ROOT I/O
    fLogger   = new MsgLogger(this);
    GetThisPdfThreadLocal() = this;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor of spline based PDF:
+
 TMVA::PDF::PDF( const TString& name,
                 const TH1 *hist,
                 PDF::EInterpolateMethod method,
@@ -126,12 +129,13 @@ TMVA::PDF::PDF( const TString& name,
    fSuffix        ( "" ),
    fLogger        ( 0 )
 {
-   // constructor of spline based PDF:
    fLogger   = new MsgLogger(this);
    BuildPDF( hist );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor of kernel based PDF:
+
 TMVA::PDF::PDF( const TString& name,
                 const TH1* hist,
                 KDEKernel::EKernelType ktype,
@@ -169,12 +173,12 @@ TMVA::PDF::PDF( const TString& name,
    fSuffix        ( "" ),
    fLogger        ( 0 )
 {
-   // constructor of kernel based PDF:
    fLogger   = new MsgLogger(this);
    BuildPDF( hist );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::PDF::PDF( const TString& name,
                 const TString& options,
                 const TString& suffix,
@@ -240,7 +244,8 @@ TMVA::PDF::~PDF()
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::PDF::BuildPDF( const TH1* hist )
 {
    GetThisPdfThreadLocal() = this;
@@ -283,7 +288,8 @@ void TMVA::PDF::BuildPDF( const TH1* hist )
    else                              BuildSplinePDF();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TMVA::PDF::GetHistNBins ( Int_t evtNum )
 {
    Int_t ResolutionFactor = (fInterpolMethod == PDF::kKDE) ? 5 : 1;
@@ -298,11 +304,11 @@ Int_t TMVA::PDF::GetHistNBins ( Int_t evtNum )
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// build the PDF from the original histograms
+
 void TMVA::PDF::BuildSplinePDF()
 {
-   // build the PDF from the original histograms
-
    // (not useful for discrete distributions, or if no splines are requested)
    if (fInterpolMethod != PDF::kSpline0 && fCheckHist) CheckHist();
    // use ROOT TH1 smooth method
@@ -363,11 +369,12 @@ void TMVA::PDF::BuildSplinePDF()
    fPDFHist->SetDirectory(0);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates high-binned reference histogram to be used instead of the
+/// PDF for speed reasons
+
 void TMVA::PDF::BuildKDEPDF()
 {
-   // creates high-binned reference histogram to be used instead of the
-   // PDF for speed reasons
    fPDFHist = new TH1F( "", "", fgNbin_PdfHist, GetXmin(), GetXmax() );
    fPDFHist->SetTitle( (TString)fHist->GetTitle() + "_hist from_KDE" );
    fPDFHist->SetName ( (TString)fHist->GetName()  + "_hist_from_KDE" );
@@ -432,7 +439,8 @@ void TMVA::PDF::BuildKDEPDF()
    fPDFHist->SetDirectory(0);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::PDF::SmoothHistogram()
 {
    if(fHist->GetNbinsX()==1) return;
@@ -493,19 +501,20 @@ void TMVA::PDF::SmoothHistogram()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simple conversion
+
 void TMVA::PDF::FillHistToGraph()
 {
-   // Simple conversion
    fGraph=new TGraph(fHist);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates high-binned reference histogram to be used instead of the
+/// PDF for speed reasons
+
 void TMVA::PDF::FillSplineToHist()
 {
-   // creates high-binned reference histogram to be used instead of the
-   // PDF for speed reasons
-
    if (UseHistogram()) {
       // no spline given, use the original histogram
       fPDFHist = (TH1*)fHist->Clone();
@@ -531,10 +540,11 @@ void TMVA::PDF::FillSplineToHist()
    fPDFHist->SetDirectory(0);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// sanity check: compare PDF with original histogram
+
 void TMVA::PDF::CheckHist() const
 {
-   // sanity check: compare PDF with original histogram
    if (fHist == NULL) {
       Log() << kFATAL << "<CheckHist> Called without valid histogram pointer!" << Endl;
    }
@@ -555,11 +565,11 @@ void TMVA::PDF::CheckHist() const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// comparison of original histogram with reference PDF
+
 void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
 {
-   // comparison of original histogram with reference PDF
-
    // if no histogram is given, use the original one (the one the PDF was made from)
    if (!originalHist) originalHist = fHistOriginal;
 
@@ -612,28 +622,30 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
                   nc3, Int_t(TMath::Prob(9.0,1)*ndof), nc6, Int_t(TMath::Prob(36.0,1)*ndof) ) << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes normalisation
+
 Double_t TMVA::PDF::GetIntegral() const
 {
-   // computes normalisation
-
    Double_t integral = fPDFHist->GetSumOfWeights();
    integral *= GetPdfHistBinWidth();
 
    return integral;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static external auxiliary function (integrand)
+
 Double_t TMVA::PDF::IGetVal( Double_t* x, Double_t* )
 {
-   // static external auxiliary function (integrand)
    return ThisPDF()->GetVal( x[0] );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes PDF integral within given ranges
+
 Double_t TMVA::PDF::GetIntegral( Double_t xmin, Double_t xmax )
 {
-   // computes PDF integral within given ranges
    Double_t  integral = 0;
 
    if (fgManualIntegration) {
@@ -676,11 +688,11 @@ Double_t TMVA::PDF::GetIntegral( Double_t xmin, Double_t xmax )
    return integral;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns value PDF(x)
+
 Double_t TMVA::PDF::GetVal( Double_t x ) const
 {
-   // returns value PDF(x)
-
    // check which is filled
    Int_t bin = fPDFHist->FindBin(x);
    bin = TMath::Max(bin,1);
@@ -709,11 +721,11 @@ Double_t TMVA::PDF::GetVal( Double_t x ) const
    return TMath::Max( retval, fgEpsilon );
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns value PDF^{-1}(y)
+
 Double_t TMVA::PDF::GetValInverse( Double_t y, Bool_t isMonotonouslyIncreasingFunction ) const
 {
-   // returns value PDF^{-1}(y)
-
    Int_t    lowerBin=0,      higherBin=0;
    Double_t lowerBinValue=0, higherBinValue=0;
    FindBinInverse(fPDFHist,lowerBin,higherBin,lowerBinValue,higherBinValue,y,isMonotonouslyIncreasingFunction);
@@ -736,11 +748,12 @@ Double_t TMVA::PDF::GetValInverse( Double_t y, Bool_t isMonotonouslyIncreasingFu
    return x;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// find bin from value on ordinate
+
 void TMVA::PDF::FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& higherBin, Double_t& lowerBinValue, Double_t& higherBinValue, 
 				Double_t y, Bool_t isMonotonouslyIncreasingFunction ) const
 {
-   // find bin from value on ordinate
    if (isMonotonouslyIncreasingFunction) {
       higherBin=histogram->GetNbinsX();
       lowerBin =0;
@@ -780,23 +793,23 @@ void TMVA::PDF::FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& hi
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define the options (their key words) that can be set in the option string
+/// know options:
+/// PDFInterpol[ivar] <string>   Spline0, Spline1, Spline2 <default>, Spline3, Spline5, KDE  used to interpolate reference histograms
+///             if no variable index is given, it is valid for ALL the variables
+///
+/// NSmooth           <int>    how often the input histos are smoothed
+/// MinNSmooth        <int>    min number of smoothing iterations, for bins with most data
+/// MaxNSmooth        <int>    max number of smoothing iterations, for bins with least data
+/// NAvEvtPerBin      <int>    minimum average number of events per PDF bin
+/// TransformOutput   <bool>   transform (often strongly peaked) likelihood output through sigmoid inversion
+/// fKDEtype          <KernelType>   type of the Kernel to use (1 is Gaussian)
+/// fKDEiter          <KerneIter>    number of iterations (1 --> "static KDE", 2 --> "adaptive KDE")
+/// fBorderMethod     <KernelBorder> the method to take care about "border" effects (1=no treatment , 2=kernel renormalization, 3=sample mirroring)
+
 void TMVA::PDF::DeclareOptions()
 {
-   // define the options (their key words) that can be set in the option string
-   // know options:
-   // PDFInterpol[ivar] <string>   Spline0, Spline1, Spline2 <default>, Spline3, Spline5, KDE  used to interpolate reference histograms
-   //             if no variable index is given, it is valid for ALL the variables
-   //
-   // NSmooth           <int>    how often the input histos are smoothed
-   // MinNSmooth        <int>    min number of smoothing iterations, for bins with most data
-   // MaxNSmooth        <int>    max number of smoothing iterations, for bins with least data
-   // NAvEvtPerBin      <int>    minimum average number of events per PDF bin
-   // TransformOutput   <bool>   transform (often strongly peaked) likelihood output through sigmoid inversion
-   // fKDEtype          <KernelType>   type of the Kernel to use (1 is Gaussian)
-   // fKDEiter          <KerneIter>    number of iterations (1 --> "static KDE", 2 --> "adaptive KDE")
-   // fBorderMethod     <KernelBorder> the method to take care about "border" effects (1=no treatment , 2=kernel renormalization, 3=sample mirroring)
-
    DeclareOptionRef( fNsmooth, Form("NSmooth%s",fSuffix.Data()),
                      "Number of smoothing iterations for the input histograms" );
    DeclareOptionRef( fMinNsmooth, Form("MinNSmooth%s",fSuffix.Data()),
@@ -843,10 +856,10 @@ void TMVA::PDF::DeclareOptions()
    SetConfigDescription( "Configuration options for the PDF class" );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::PDF::ProcessOptions()
 {
-
    if (fNsmooth < 0) fNsmooth = 0; // set back to default
 
    if (fMaxNsmooth < 0 || fMinNsmooth < 0) { // use "Nsmooth" variable
@@ -891,10 +904,11 @@ void TMVA::PDF::ProcessOptions()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// XML file writing
+
 void TMVA::PDF::AddXMLTo( void* parent )
 {
-   // XML file writing
    void* pdfxml = gTools().AddChild(parent, "PDF");
    gTools().AddAttr(pdfxml, "Name",           fPDFName );
    gTools().AddAttr(pdfxml, "MinNSmooth",     fMinNsmooth );
@@ -932,10 +946,11 @@ void TMVA::PDF::AddXMLTo( void* parent )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// XML file reading
+
 void TMVA::PDF::ReadXML( void* pdfnode )
 {
-   // XML file reading
    UInt_t enumint;
 
    gTools().ReadAttr(pdfnode, "MinNSmooth",     fMinNsmooth );
@@ -1006,10 +1021,11 @@ void TMVA::PDF::ReadXML( void* pdfnode )
    else                              BuildSplinePDF();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write the pdf
+
 std::ostream& TMVA::operator<< ( std::ostream& os, const PDF& pdf )
 {
-   // write the pdf
    Int_t dp = os.precision();
    os << "MinNSmooth      " << pdf.fMinNsmooth << std::endl;
    os << "MaxNSmooth      " << pdf.fMaxNsmooth << std::endl;
@@ -1043,10 +1059,11 @@ std::ostream& TMVA::operator<< ( std::ostream& os, const PDF& pdf )
    return os; // Return the output stream.
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read the tree from an std::istream
+
 std::istream& TMVA::operator>> ( std::istream& istr, PDF& pdf )
 {
-   // read the tree from an std::istream
    TString devnullS;
    Int_t   valI;
    Int_t   nbins=-1; // default binning will cause an exit

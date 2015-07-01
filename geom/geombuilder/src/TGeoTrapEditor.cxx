@@ -46,12 +46,13 @@ enum ETGeoTrapWid {
    kTRAP_SC1, kTRAP_SC2, kTRAP_THETA, kTRAP_PHI, kTRAP_APPLY, kTRAP_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for para editor
+
 TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for para editor
    fShape   = 0;
    fH1i = fBl1i = fTl1i = fDzi = fAlpha1i = fThetai = fPhii = fSci = 0.0;
    fNamei = "";
@@ -193,10 +194,11 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t width,
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoTrapEditor::~TGeoTrapEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -206,10 +208,11 @@ TGeoTrapEditor::~TGeoTrapEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoTrapEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoTrapEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoTrapEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoTrapEditor", this, "DoModified()");
@@ -234,10 +237,11 @@ void TGeoTrapEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoTrapEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTrap::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -276,24 +280,27 @@ void TGeoTrapEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoTrapEditor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for name.
+
 void TGeoTrapEditor::DoName()
 {
-// Slot for name.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying current settings.
+
 void TGeoTrapEditor::DoApply()
 {
-// Slot for applying current settings.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t sc1 = fESc1->GetNumber();
@@ -339,17 +346,19 @@ void TGeoTrapEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for notifying modifications.
+
 void TGeoTrapEditor::DoModified()
 {
-// Slot for notifying modifications.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoTrapEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fEH1->SetNumber(fH1i);
    fEBl1->SetNumber(fBl1i);
    fETl1->SetNumber(fTl1i);
@@ -364,10 +373,11 @@ void TGeoTrapEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for H1.
+
 void TGeoTrapEditor::DoH1()
 {
-// Slot for H1.
    Double_t h1 = fEH1->GetNumber();
    if (h1<=0) {
       h1 = 0.1;
@@ -377,10 +387,11 @@ void TGeoTrapEditor::DoH1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Bl1.
+
 void TGeoTrapEditor::DoBl1()
 {
-// Slot for Bl1.
    Double_t bl1 = fEBl1->GetNumber();
    if (bl1<=0) {
       bl1 = 0.1;
@@ -390,10 +401,11 @@ void TGeoTrapEditor::DoBl1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Tl1.
+
 void TGeoTrapEditor::DoTl1()
 {
-// Slot for Tl1.
    Double_t tl1 = fETl1->GetNumber();
    if (tl1<=0) {
       tl1 = 0.1;
@@ -403,10 +415,11 @@ void TGeoTrapEditor::DoTl1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Z.
+
 void TGeoTrapEditor::DoDz()
 {
-// Slot for Z.
    Double_t dz = fEDz->GetNumber();
    if (dz<=0) {
       dz = 0.1;
@@ -416,10 +429,11 @@ void TGeoTrapEditor::DoDz()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for H2.
+
 void TGeoTrapEditor::DoSc1()
 {
-// Slot for H2.
    Double_t sc1 = fESc1->GetNumber();
    if (sc1<=0) {
       sc1 = 0.1;
@@ -429,10 +443,11 @@ void TGeoTrapEditor::DoSc1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for H2.
+
 void TGeoTrapEditor::DoSc2()
 {
-// Slot for H2.
    Double_t sc2 = fESc2->GetNumber();
    if (sc2<=0) {
       sc2 = 0.1;
@@ -442,10 +457,11 @@ void TGeoTrapEditor::DoSc2()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for alpha1.
+
 void TGeoTrapEditor::DoAlpha1()
 {
-// Slot for alpha1.
    Double_t alpha1 = fEAlpha1->GetNumber();
    if (TMath::Abs(alpha1)>=90) {
       alpha1 = 89.9*TMath::Sign(1.,alpha1);
@@ -455,10 +471,11 @@ void TGeoTrapEditor::DoAlpha1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for theta.
+
 void TGeoTrapEditor::DoTheta()
 {
-// Slot for theta.
    Double_t theta = fETheta->GetNumber(); 
    if (theta<0) {
       theta = 0;
@@ -472,10 +489,11 @@ void TGeoTrapEditor::DoTheta()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi.
+
 void TGeoTrapEditor::DoPhi()
 {
-// Slot for phi.
    Double_t phi = fEPhi->GetNumber();
    if (phi<0 || phi>360) {
       phi = 0;
@@ -507,12 +525,13 @@ enum ETGeoGtraWid {
 */
 //End_Html
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for gtra editor
+
 TGeoGtraEditor::TGeoGtraEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
    : TGeoTrapEditor(p, width, height, options, back)
 {
-   // Constructor for gtra editor
    fTwisti = 0;
    TGTextEntry *nef;
    // Number entry for Twist angle
@@ -530,10 +549,11 @@ TGeoGtraEditor::TGeoGtraEditor(const TGWindow *p, Int_t width,
    fETwist->Connect("ValueSet(Long_t)", "TGeoGtraEditor", this, "DoTwist()");
    nef->Connect("TextChanged(const char *)", "TGeoGtraEditor", this, "DoModified()");
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoGtraEditor::~TGeoGtraEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -543,10 +563,11 @@ TGeoGtraEditor::~TGeoGtraEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to a given twisted trapezoid.
+
 void TGeoGtraEditor::SetModel(TObject* obj)
 {
-   // Connect to a given twisted trapezoid.
    if (obj == 0 || (obj->IsA()!=TGeoGtra::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -587,10 +608,11 @@ void TGeoGtraEditor::SetModel(TObject* obj)
    SetActive();
 }   
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying current settings.
+
 void TGeoGtraEditor::DoApply()
 {
-// Slot for applying current settings.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t sc1 = fESc1->GetNumber();
@@ -639,10 +661,11 @@ void TGeoGtraEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoGtraEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fEH1->SetNumber(fH1i);
    fEBl1->SetNumber(fBl1i);
    fETl1->SetNumber(fTl1i);
@@ -658,10 +681,11 @@ void TGeoGtraEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the twist angle.
+
 void TGeoGtraEditor::DoTwist()
 {
-// Change the twist angle.
    Double_t twist = fETwist->GetNumber();
    if (twist<=-180 || twist>=180) {
       twist = 0.;

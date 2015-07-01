@@ -46,12 +46,13 @@ enum ETGeoTrd1Wid {
    kTRD1_APPLY, kTRD1_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for trd1 editor
+
 TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for trd1 editor
    fShape   = 0;
    fDxi1 = fDxi2 = fDyi = fDzi = 0.0;
    fNamei = "";
@@ -139,10 +140,11 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoTrd1Editor::~TGeoTrd1Editor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -152,10 +154,11 @@ TGeoTrd1Editor::~TGeoTrd1Editor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoTrd1Editor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoTrd1Editor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoTrd1Editor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoTrd1Editor", this, "DoModified()");
@@ -171,10 +174,11 @@ void TGeoTrd1Editor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoTrd1Editor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTrd1::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -202,24 +206,27 @@ void TGeoTrd1Editor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoTrd1Editor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform name change.
+
 void TGeoTrd1Editor::DoName()
 {
-// Perform name change.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoTrd1Editor::DoApply()
 {
-// Slot for applying modifications.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t dx1 = fEDx1->GetNumber();
@@ -243,17 +250,19 @@ void TGeoTrd1Editor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for signaling modifications.
+
 void TGeoTrd1Editor::DoModified()
 {
-// Slot for signaling modifications.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoTrd1Editor::DoUndo()
 {
-// Slot for undoing last operation.
    fEDx1->SetNumber(fDxi1);
    fEDx2->SetNumber(fDxi2);
    fEDy->SetNumber(fDyi);
@@ -263,10 +272,11 @@ void TGeoTrd1Editor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for dx1.
+
 void TGeoTrd1Editor::DoDx1()
 {
-// Slot for dx1.
    Double_t dx1 = fEDx1->GetNumber();
    Double_t dx2 = fEDx2->GetNumber();
    if (dx1<0) {
@@ -281,10 +291,11 @@ void TGeoTrd1Editor::DoDx1()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for dx2.
+
 void TGeoTrd1Editor::DoDx2()
 {
-// Slot for dx2.
    Double_t dx1 = fEDx1->GetNumber();
    Double_t dx2 = fEDx2->GetNumber();
    if (dx2<0) {
@@ -299,10 +310,11 @@ void TGeoTrd1Editor::DoDx2()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for dy.
+
 void TGeoTrd1Editor::DoDy()
 {
-// Slot for dy.
    Double_t dy = fEDy->GetNumber();
    if (dy<=0) {
       dy = 0.1;
@@ -312,10 +324,11 @@ void TGeoTrd1Editor::DoDy()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for dz.
+
 void TGeoTrd1Editor::DoDz()
 {
-// Slot for dz.
    Double_t dz = fEDz->GetNumber();
    if (dz<=0) {
       dz = 0.1;

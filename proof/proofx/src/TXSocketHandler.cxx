@@ -32,11 +32,11 @@ ClassImp(TXSocketHandler)
 // Unique instance of the socket input handler
 TXSocketHandler *TXSocketHandler::fgSocketHandler = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set readiness on the monitor
+
 Bool_t TXSocketHandler::Notify()
 {
-   // Set readiness on the monitor
-
    if (gDebug > 2)
       TXSocket::fgPipe.DumpReadySock();
 
@@ -59,13 +59,13 @@ Bool_t TXSocketHandler::Notify()
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get an instance of the input socket handler with 'h' as handler,
+/// connected to socket 's'.
+/// Create the instance, if not already existing
+
 TXSocketHandler *TXSocketHandler::GetSocketHandler(TFileHandler *h, TSocket *s)
 {
-   // Get an instance of the input socket handler with 'h' as handler,
-   // connected to socket 's'.
-   // Create the instance, if not already existing
-
    if (!fgSocketHandler)
       fgSocketHandler = new TXSocketHandler(h, s);
    else

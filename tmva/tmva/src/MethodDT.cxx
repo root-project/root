@@ -114,7 +114,9 @@ REGISTER_METHOD(DT)
 
 ClassImp(TMVA::MethodDT)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the standard constructor for just an ordinar "decision trees"
+
    TMVA::MethodDT::MethodDT( const TString& jobName,
                              const TString& methodTitle,
                              DataSetInfo& theData,
@@ -138,10 +140,11 @@ ClassImp(TMVA::MethodDT)
    , fUsePoissonNvars(0)  // don't use this initialisation, only here to make  Coverity happy. Is set in Init()
    , fDeltaPruneStrength(0)
 {
-   // the standard constructor for just an ordinar "decision trees"
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor from Reader
+
 TMVA::MethodDT::MethodDT( DataSetInfo& dsi,
                           const TString& theWeightFile,
                           TDirectory* theTargetDir ) :
@@ -162,42 +165,42 @@ TMVA::MethodDT::MethodDT( DataSetInfo& dsi,
    , fUseNvars(0)
    , fDeltaPruneStrength(0)
 {
-   //constructor from Reader
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// FDA can handle classification with 2 classes and regression with one regression-target
+
 Bool_t TMVA::MethodDT::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
-   // FDA can handle classification with 2 classes and regression with one regression-target
    if( type == Types::kClassification && numberClasses == 2 ) return kTRUE;
    return kFALSE;
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define the options (their key words) that can be set in the option string
+/// UseRandomisedTrees  choose at each node splitting a random set of variables 
+/// UseNvars         use UseNvars variables in randomised trees
+/// SeparationType   the separation criterion applied in the node splitting
+///                  known: GiniIndex
+///                         MisClassificationError
+///                         CrossEntropy
+///                         SDivSqrtSPlusB
+/// nEventsMin:      the minimum number of events in a node (leaf criteria, stop splitting)
+/// nCuts:           the number of steps in the optimisation of the cut for a node (if < 0, then
+///                  step size is determined by the events)
+/// UseYesNoLeaf     decide if the classification is done simply by the node type, or the S/B
+///                  (from the training) in the leaf node
+/// NodePurityLimit  the minimum purity to classify a node as a signal node (used in pruning and boosting to determine
+///                  misclassification error rate)
+/// PruneMethod      The Pruning method: 
+///                  known: NoPruning  // switch off pruning completely
+///                         ExpectedError
+///                         CostComplexity 
+/// PruneStrength    a parameter to adjust the amount of pruning. Should be large enouth such that overtraining is avoided");
+
 void TMVA::MethodDT::DeclareOptions()
 {
-   // define the options (their key words) that can be set in the option string
-   // UseRandomisedTrees  choose at each node splitting a random set of variables 
-   // UseNvars         use UseNvars variables in randomised trees
-   // SeparationType   the separation criterion applied in the node splitting
-   //                  known: GiniIndex
-   //                         MisClassificationError
-   //                         CrossEntropy
-   //                         SDivSqrtSPlusB
-   // nEventsMin:      the minimum number of events in a node (leaf criteria, stop splitting)
-   // nCuts:           the number of steps in the optimisation of the cut for a node (if < 0, then
-   //                  step size is determined by the events)
-   // UseYesNoLeaf     decide if the classification is done simply by the node type, or the S/B
-   //                  (from the training) in the leaf node
-   // NodePurityLimit  the minimum purity to classify a node as a signal node (used in pruning and boosting to determine
-   //                  misclassification error rate)
-   // PruneMethod      The Pruning method: 
-   //                  known: NoPruning  // switch off pruning completely
-   //                         ExpectedError
-   //                         CostComplexity 
-   // PruneStrength    a parameter to adjust the amount of pruning. Should be large enouth such that overtraining is avoided");
-
    DeclareOptionRef(fRandomisedTrees,"UseRandomisedTrees","Choose at each node splitting a random set of variables and *bagging*");
    DeclareOptionRef(fUseNvars,"UseNvars","Number of variables used if randomised Tree option is chosen");
    DeclareOptionRef(fUsePoissonNvars,"UsePoissonNvars", "Interpret \"UseNvars\" not as fixed number but as mean of a Possion distribution in each split with RandomisedTree option");
@@ -235,10 +238,11 @@ void TMVA::MethodDT::DeclareCompatibilityOptions() {
                     "--> removed option .. only kept for reader backward compatibility");
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the option string is decoded, for available options see "DeclareOptions"
+
 void TMVA::MethodDT::ProcessOptions() 
 {
-   // the option string is decoded, for available options see "DeclareOptions"
    fSepTypeS.ToLower();
    if      (fSepTypeS == "misclassificationerror") fSepType = new MisClassificationError();
    else if (fSepTypeS == "giniindex")              fSepType = new GiniIndex();
@@ -323,10 +327,11 @@ void TMVA::MethodDT::SetMinNodeSize(TString sizeInPercent){
 
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// common initialisation with defaults for the DT-Method
+
 void TMVA::MethodDT::Init( void )
 {
-   // common initialisation with defaults for the DT-Method
    fMinNodeEvents  = -1;
    fMinNodeSize    = 5;
    fMinNodeSizeS   = "5%";
@@ -347,14 +352,16 @@ void TMVA::MethodDT::Init( void )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TMVA::MethodDT::~MethodDT( void )
 {
-   //destructor
    delete fTree;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDT::Train( void )
 {
    TMVA::DecisionTreeNode::fgIsTraining=true;
@@ -380,13 +387,13 @@ void TMVA::MethodDT::Train( void )
    TMVA::DecisionTreeNode::fgIsTraining=false;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prune the decision tree if requested (good for individual trees that are best grown out, and then
+/// pruned back, while boosted decision trees are best 'small' trees to start with. Well, at least the
+/// standard "optimal pruning algorithms" don't result in 'weak enough' classifiers !!
+
 Double_t TMVA::MethodDT::PruneTree( )
 {
-   // prune the decision tree if requested (good for individual trees that are best grown out, and then
-   // pruned back, while boosted decision trees are best 'small' trees to start with. Well, at least the
-   // standard "optimal pruning algorithms" don't result in 'weak enough' classifiers !!
-
    // remember the number of nodes beforehand (for monitoring purposes)
 
 
@@ -483,7 +490,8 @@ Double_t TMVA::MethodDT::PruneTree( )
    return fPruneStrength;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::MethodDT::TestTreeQuality( DecisionTree *dt )
 {
    Data()->SetCurrentType(Types::kValidation);
@@ -499,14 +507,16 @@ Double_t TMVA::MethodDT::TestTreeQuality( DecisionTree *dt )
    return  SumCorrect / (SumCorrect + SumWrong);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDT::AddWeightsXMLTo( void* parent ) const 
 {
    fTree->AddXMLTo(parent);
    //Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDT::ReadWeightsFromXML( void* wghtnode)
 {
    if(fTree)
@@ -515,7 +525,8 @@ void TMVA::MethodDT::ReadWeightsFromXML( void* wghtnode)
    fTree->ReadXML(wghtnode,GetTrainingTMVAVersionCode());
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void  TMVA::MethodDT::ReadWeightsFromStream( std::istream& istr )
 {
    delete fTree;
@@ -523,23 +534,24 @@ void  TMVA::MethodDT::ReadWeightsFromStream( std::istream& istr )
    fTree->Read(istr);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns MVA value
+
 Double_t TMVA::MethodDT::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // returns MVA value
-
    // cannot determine error
    NoErrorCalc(err, errUpper);
 
    return fTree->CheckEvent(GetEvent(),fUseYesNoLeaf);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodDT::GetHelpMessage() const
 {
-
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const TMVA::Ranking* TMVA::MethodDT::CreateRanking()
 {
    return 0;

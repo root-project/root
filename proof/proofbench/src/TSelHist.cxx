@@ -38,19 +38,20 @@
 
 ClassImp(TSelHist)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Constructor
+
 TSelHist::TSelHist()
          : fHistType(0), fNHists(16), fDraw(0), fHist1D(0), fHist2D(0), fHist3D(0),
            fRandom(0), fCHist1D(0), fCHist2D(0), fCHist3D(0)
 {
-   //Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TSelHist::~TSelHist()
 {
-   // Destructor
-
    //if (fRandom) delete fRandom;
    SafeDelete(fRandom);
 
@@ -74,13 +75,13 @@ TSelHist::~TSelHist()
    SafeDelete(fHist3D);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Begin() function is called at the start of the query.
+/// When running with PROOF Begin() is only called on the client.
+/// The tree argument is deprecated (on PROOF 0 is passed).
+
 void TSelHist::Begin(TTree * /*tree*/)
 {
-   // The Begin() function is called at the start of the query.
-   // When running with PROOF Begin() is only called on the client.
-   // The tree argument is deprecated (on PROOF 0 is passed).
-
    TString option = GetOption();
 
    Bool_t found_histtype=kFALSE;
@@ -146,13 +147,13 @@ void TSelHist::Begin(TTree * /*tree*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The SlaveBegin() function is called after the Begin() function.
+/// When running with PROOF SlaveBegin() is called on each slave server.
+/// The tree argument is deprecated (on PROOF 0 is passed).
+
 void TSelHist::SlaveBegin(TTree * /*tree*/)
 {
-   // The SlaveBegin() function is called after the Begin() function.
-   // When running with PROOF SlaveBegin() is called on each slave server.
-   // The tree argument is deprecated (on PROOF 0 is passed).
-
    TString option = GetOption();
 
    Bool_t found_histtype=kFALSE;
@@ -243,27 +244,27 @@ void TSelHist::SlaveBegin(TTree * /*tree*/)
    fRandom = new TRandom3(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Process() function is called for each entry in the tree (or possibly
+/// keyed object in the case of PROOF) to be processed. The entry argument
+/// specifies which entry in the currently loaded tree is to be processed.
+/// It can be passed to either TSelHist::GetEntry() or TBranch::GetEntry()
+/// to read either all or the required parts of the data. When processing
+/// keyed objects with PROOF, the object is already loaded and is available
+/// via the fObject pointer.
+///
+/// This function should contain the "body" of the analysis. It can contain
+/// simple or elaborate selection criteria, run algorithms on the data
+/// of the event and typically fill histograms.
+///
+/// The processing can be stopped by calling Abort().
+///
+/// Use fStatus to set the return value of TTree::Process().
+///
+/// The return value is currently not used.
+
 Bool_t TSelHist::Process(Long64_t)
 {
-   // The Process() function is called for each entry in the tree (or possibly
-   // keyed object in the case of PROOF) to be processed. The entry argument
-   // specifies which entry in the currently loaded tree is to be processed.
-   // It can be passed to either TSelHist::GetEntry() or TBranch::GetEntry()
-   // to read either all or the required parts of the data. When processing
-   // keyed objects with PROOF, the object is already loaded and is available
-   // via the fObject pointer.
-   //
-   // This function should contain the "body" of the analysis. It can contain
-   // simple or elaborate selection criteria, run algorithms on the data
-   // of the event and typically fill histograms.
-   //
-   // The processing can be stopped by calling Abort().
-   //
-   // Use fStatus to set the return value of TTree::Process().
-   //
-   // The return value is currently not used.
-
    Double_t x, y, z;
    if (fHistType->GetType() & TPBHistType::kHist1D){
       for (Int_t i=0; i < fNHists; i++) {
@@ -296,22 +297,22 @@ Bool_t TSelHist::Process(Long64_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The SlaveTerminate() function is called after all entries or objects
+/// have been processed. When running with PROOF SlaveTerminate() is called
+/// on each slave server.
+
 void TSelHist::SlaveTerminate()
 {
-   // The SlaveTerminate() function is called after all entries or objects
-   // have been processed. When running with PROOF SlaveTerminate() is called
-   // on each slave server.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Terminate() function is the last function to be called during
+/// a query. It always runs on the client, it can be used to present
+/// the results graphically or save the results to file.
+
 void TSelHist::Terminate()
 {
-   // The Terminate() function is the last function to be called during
-   // a query. It always runs on the client, it can be used to present
-   // the results graphically or save the results to file.
-
    //
    // Create a canvas, with 100 pads
    //

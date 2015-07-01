@@ -39,22 +39,22 @@ ClassImp(TDecompLU)
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TDecompLU::TDecompLU()
 {
-// Default constructor
-
    fSign = 0.0;
    fNIndex = 0;
    fIndex = 0;
    fImplicitPivot = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for (nrows x nrows) matrix
+
 TDecompLU::TDecompLU(Int_t nrows)
 {
-// Constructor for (nrows x nrows) matrix
-
    fSign = 1.0;
    fNIndex = nrows;
    fIndex = new Int_t[fNIndex];
@@ -63,11 +63,11 @@ TDecompLU::TDecompLU(Int_t nrows)
    fLU.ResizeTo(nrows,nrows);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for ([row_lwb..row_upb] x [row_lwb..row_upb]) matrix
+
 TDecompLU::TDecompLU(Int_t row_lwb,Int_t row_upb)
 {
-// Constructor for ([row_lwb..row_upb] x [row_lwb..row_upb]) matrix
-
    const Int_t nrows = row_upb-row_lwb+1;
    fSign = 1.0;
    fNIndex = nrows;
@@ -79,11 +79,11 @@ TDecompLU::TDecompLU(Int_t row_lwb,Int_t row_upb)
    fLU.ResizeTo(row_lwb,row_lwb+nrows-1,row_lwb,row_lwb+nrows-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for matrix a
+
 TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
 {
-// Constructor for matrix a
-
    R__ASSERT(a.IsValid());
 
    if (a.GetNrows() != a.GetNcols() || a.GetRowLwb() != a.GetColLwb()) {
@@ -109,22 +109,22 @@ TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
    fLU = a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TDecompLU::TDecompLU(const TDecompLU &another) : TDecompBase(another)
 {
-// Copy constructor
-
    fNIndex = 0;
    fIndex  = 0;
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix A is decomposed in components U and L so that P * A = U * L
+/// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
+
 Bool_t TDecompLU::Decompose()
 {
-// Matrix A is decomposed in components U and L so that P * A = U * L
-// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
-
    if (TestBit(kDecomposed)) return kTRUE;
 
    if ( !TestBit(kMatrixSet) ) {
@@ -145,11 +145,11 @@ Bool_t TDecompLU::Decompose()
    return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reconstruct the original matrix using the decomposition parts
+
 const TMatrixD TDecompLU::GetMatrix()
 {
-// Reconstruct the original matrix using the decomposition parts
-
    if (TestBit(kSingular)) {
       Error("GetMatrix()","Matrix is singular");
       return TMatrixD();
@@ -196,11 +196,11 @@ const TMatrixD TDecompLU::GetMatrix()
    return a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set matrix to be decomposed
+
 void TDecompLU::SetMatrix(const TMatrixD &a)
 {
-// Set matrix to be decomposed
-
    R__ASSERT(a.IsValid());
 
    ResetStatus();
@@ -226,12 +226,12 @@ void TDecompLU::SetMatrix(const TMatrixD &a)
    fLU = a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve Ax=b assuming the LU form of A is stored in fLU, but assume b has *not*
+/// been transformed.  Solution returned in b.
+
 Bool_t TDecompLU::Solve(TVectorD &b)
 {
-// Solve Ax=b assuming the LU form of A is stored in fLU, but assume b has *not*
-// been transformed.  Solution returned in b.
-
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
       Error("Solve()","Matrix is singular");
@@ -292,12 +292,12 @@ Bool_t TDecompLU::Solve(TVectorD &b)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve Ax=b assuming the LU form of A is stored in fLU, but assume b has *not*
+/// been transformed.  Solution returned in b.
+
 Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
 {
-// Solve Ax=b assuming the LU form of A is stored in fLU, but assume b has *not*
-// been transformed.  Solution returned in b.
-
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
@@ -364,12 +364,12 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve A^T x=b assuming the LU form of A^T is stored in fLU, but assume b has *not*
+/// been transformed.  Solution returned in b.
+
 Bool_t TDecompLU::TransSolve(TVectorD &b)
 {
-// Solve A^T x=b assuming the LU form of A^T is stored in fLU, but assume b has *not*
-// been transformed.  Solution returned in b.
-
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
       Error("TransSolve()","Matrix is singular");
@@ -433,12 +433,12 @@ Bool_t TDecompLU::TransSolve(TVectorD &b)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve A^T x=b assuming the LU form of A^T is stored in fLU, but assume b has *not*
+/// been transformed.  Solution returned in b.
+
 Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 {
-// Solve A^T x=b assuming the LU form of A^T is stored in fLU, but assume b has *not*
-// been transformed.  Solution returned in b.
-
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
@@ -503,11 +503,11 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate determinant det = d1*TMath::Power(2.,d2)
+
 void TDecompLU::Det(Double_t &d1,Double_t &d2)
 {
-// Calculate determinant det = d1*TMath::Power(2.,d2)
-
    if ( !TestBit(kDetermined) ) {
       if ( !TestBit(kDecomposed) )
          Decompose();
@@ -519,12 +519,12 @@ void TDecompLU::Det(Double_t &d1,Double_t &d2)
    d2 = fDet2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For a matrix A(m,m), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+/// (m x m) Ainv is returned .
+
 Bool_t TDecompLU::Invert(TMatrixD &inv)
 {
-// For a matrix A(m,m), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
-// (m x m) Ainv is returned .
-
    if (inv.GetNrows()  != GetNrows()  || inv.GetNcols()  != GetNcols() ||
         inv.GetRowLwb() != GetRowLwb() || inv.GetColLwb() != GetColLwb()) {
       Error("Invert(TMatrixD &","Input matrix has wrong shape");
@@ -537,12 +537,12 @@ Bool_t TDecompLU::Invert(TMatrixD &inv)
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+/// (n x m) Ainv is returned .
+
 TMatrixD TDecompLU::Invert(Bool_t &status)
 {
-// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
-// (n x m) Ainv is returned .
-
    const Int_t rowLwb = GetRowLwb();
    const Int_t rowUpb = rowLwb+GetNrows()-1;
 
@@ -553,10 +553,11 @@ TMatrixD TDecompLU::Invert(Bool_t &status)
    return inv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Print internals of this object
+
 void TDecompLU::Print(Option_t *opt) const
 {
-   //Print internals of this object
    TDecompBase::Print(opt);
    printf("fImplicitPivot = %d\n",fImplicitPivot);
    printf("fSign          = %f\n",fSign);
@@ -566,10 +567,11 @@ void TDecompLU::Print(Option_t *opt) const
    fLU.Print("fLU");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignement operator
+
 TDecompLU &TDecompLU::operator=(const TDecompLU &source)
 {
-   //assignement operator
    if (this != &source) {
       TDecompBase::operator=(source);
       fLU.ResizeTo(source.fLU);
@@ -587,16 +589,16 @@ TDecompLU &TDecompLU::operator=(const TDecompLU &source)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Crout/Doolittle algorithm of LU decomposing a square matrix, with implicit partial
+/// pivoting.  The decomposition is stored in fLU: U is explicit in the upper triag
+/// and L is in multiplier form in the subdiagionals .
+/// Row permutations are mapped out in fIndex. fSign, used for calculating the
+/// determinant, is +/- 1 for even/odd row permutations. .
+
 Bool_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
                                    Double_t tol,Int_t &nrZeros)
 {
-// Crout/Doolittle algorithm of LU decomposing a square matrix, with implicit partial
-// pivoting.  The decomposition is stored in fLU: U is explicit in the upper triag
-// and L is in multiplier form in the subdiagionals .
-// Row permutations are mapped out in fIndex. fSign, used for calculating the
-// determinant, is +/- 1 for even/odd row permutations. .
-
    const Int_t     n     = lu.GetNcols();
    Double_t *pLU   = lu.GetMatrixArray();
 
@@ -694,18 +696,18 @@ Bool_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// LU decomposition using Gaussain Elimination with partial pivoting (See Golub &
+/// Van Loan, Matrix Computations, Algorithm 3.4.1) of a square matrix .
+/// The decomposition is stored in fLU: U is explicit in the upper triag and L is in
+/// multiplier form in the subdiagionals . Row permutations are mapped out in fIndex.
+/// fSign, used for calculating the determinant, is +/- 1 for even/odd row permutations.
+/// Since this algorithm uses partial pivoting without scaling like in Crout/Doolitle.
+/// it is somewhat faster but less precise .
+
 Bool_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
                                    Double_t tol,Int_t &nrZeros)
 {
-// LU decomposition using Gaussain Elimination with partial pivoting (See Golub &
-// Van Loan, Matrix Computations, Algorithm 3.4.1) of a square matrix .
-// The decomposition is stored in fLU: U is explicit in the upper triag and L is in
-// multiplier form in the subdiagionals . Row permutations are mapped out in fIndex.
-// fSign, used for calculating the determinant, is +/- 1 for even/odd row permutations.
-// Since this algorithm uses partial pivoting without scaling like in Crout/Doolitle.
-// it is somewhat faster but less precise .
-
    const Int_t     n   = lu.GetNcols();
    Double_t *pLU = lu.GetMatrixArray();
 
@@ -767,11 +769,11 @@ Bool_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate matrix inversion through in place forward/backward substitution
+
 Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
 {
-   // Calculate matrix inversion through in place forward/backward substitution
-
    if (det)
       *det = 0.0;
 

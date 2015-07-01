@@ -45,12 +45,12 @@ gives a nice practical view of Delaunay triangulation and Voronoi diagram.
 //End_Html
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphDelaunay default constructor
+
 TGraphDelaunay::TGraphDelaunay()
             : TNamed("TGraphDelaunay","TGraphDelaunay")
 {
-   // TGraphDelaunay default constructor
-
    fGraph2D      = 0;
    fX            = 0;
    fY            = 0;
@@ -82,12 +82,12 @@ TGraphDelaunay::TGraphDelaunay()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphDelaunay normal constructor
+
 TGraphDelaunay::TGraphDelaunay(TGraph2D *g)
             : TNamed("TGraphDelaunay","TGraphDelaunay")
 {
-   // TGraphDelaunay normal constructor
-
    fGraph2D      = g;
    fX            = fGraph2D->GetX();
    fY            = fGraph2D->GetY();
@@ -119,11 +119,11 @@ TGraphDelaunay::TGraphDelaunay(TGraph2D *g)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphDelaunay destructor.
+
 TGraphDelaunay::~TGraphDelaunay()
 {
-   // TGraphDelaunay destructor.
-
    if (fPTried)     delete [] fPTried;
    if (fNTried)     delete [] fNTried;
    if (fMTried)     delete [] fMTried;
@@ -144,11 +144,11 @@ TGraphDelaunay::~TGraphDelaunay()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the z value corresponding to the (x,y) point in fGraph2D
+
 Double_t TGraphDelaunay::ComputeZ(Double_t x, Double_t y)
 {
-   // Return the z value corresponding to the (x,y) point in fGraph2D
-
    // Initialise the Delaunay algorithm if needed.
    // CreateTrianglesDataStructure computes fXoffset, fYoffset,
    // fXScaleFactor and fYScaleFactor;
@@ -173,12 +173,12 @@ Double_t TGraphDelaunay::ComputeZ(Double_t x, Double_t y)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Function used internally only. It creates the data structures needed to
+/// compute the Delaunay triangles.
+
 void TGraphDelaunay::CreateTrianglesDataStructure()
 {
-   // Function used internally only. It creates the data structures needed to
-   // compute the Delaunay triangles.
-
    // Offset fX and fY so they average zero, and scale so the average
    // of the X and Y ranges is one. The normalized version of fX and fY used
    // in Interpolate.
@@ -211,11 +211,11 @@ void TGraphDelaunay::CreateTrianglesDataStructure()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is point e inside the triangle t1-t2-t3 ?
+
 Bool_t TGraphDelaunay::Enclose(Int_t t1, Int_t t2, Int_t t3, Int_t e) const
 {
-   // Is point e inside the triangle t1-t2-t3 ?
-
    Double_t x[4],y[4],xp, yp;
    x[0] = fXN[t1];
    x[1] = fXN[t2];
@@ -231,13 +231,13 @@ Bool_t TGraphDelaunay::Enclose(Int_t t1, Int_t t2, Int_t t3, Int_t e) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Files the triangle defined by the 3 vertices p, n and m into the
+/// fxTried arrays. If these arrays are to small they are automatically
+/// expanded.
+
 void TGraphDelaunay::FileIt(Int_t p, Int_t n, Int_t m)
 {
-   // Files the triangle defined by the 3 vertices p, n and m into the
-   // fxTried arrays. If these arrays are to small they are automatically
-   // expanded.
-
    Bool_t swap;
    Int_t tmp, ps = p, ns = n, ms = m;
 
@@ -277,20 +277,20 @@ L1:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Attempt to find all the Delaunay triangles of the point set. It is not
+/// guaranteed that it will fully succeed, and no check is made that it has
+/// fully succeeded (such a check would be possible by referencing the points
+/// that make up the convex hull). The method is to check if each triangle
+/// shares all three of its sides with other triangles. If not, a point is
+/// generated just outside the triangle on the side(s) not shared, and a new
+/// triangle is found for that point. If this method is not working properly
+/// (many triangles are not being found) it's probably because the new points
+/// are too far beyond or too close to the non-shared sides. Fiddling with
+/// the size of the `alittlebit' parameter may help.
+
 void TGraphDelaunay::FindAllTriangles()
 {
-   // Attempt to find all the Delaunay triangles of the point set. It is not
-   // guaranteed that it will fully succeed, and no check is made that it has
-   // fully succeeded (such a check would be possible by referencing the points
-   // that make up the convex hull). The method is to check if each triangle
-   // shares all three of its sides with other triangles. If not, a point is
-   // generated just outside the triangle on the side(s) not shared, and a new
-   // triangle is found for that point. If this method is not working properly
-   // (many triangles are not being found) it's probably because the new points
-   // are too far beyond or too close to the non-shared sides. Fiddling with
-   // the size of the `alittlebit' parameter may help.
-
    if (fAllTri) return; else fAllTri = kTRUE;
 
    Double_t xcntr,ycntr,xm,ym,xx,yy;
@@ -413,15 +413,15 @@ void TGraphDelaunay::FindAllTriangles()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finds those points which make up the convex hull of the set. If the xy
+/// plane were a sheet of wood, and the points were nails hammered into it
+/// at the respective coordinates, then if an elastic band were stretched
+/// over all the nails it would form the shape of the convex hull. Those
+/// nails in contact with it are the points that make up the hull.
+
 void TGraphDelaunay::FindHull()
 {
-   // Finds those points which make up the convex hull of the set. If the xy
-   // plane were a sheet of wood, and the points were nails hammered into it
-   // at the respective coordinates, then if an elastic band were stretched
-   // over all the nails it would form the shape of the convex hull. Those
-   // nails in contact with it are the points that make up the hull.
-
    Int_t n,nhull_tmp;
    Bool_t in;
 
@@ -444,11 +444,11 @@ void TGraphDelaunay::FindHull()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is point e inside the hull defined by all points apart from x ?
+
 Bool_t TGraphDelaunay::InHull(Int_t e, Int_t x) const
 {
-   // Is point e inside the hull defined by all points apart from x ?
-
    Int_t n1,n2,n,m,ntry;
    Double_t lastdphi,dd1,dd2,dx1,dx2,dx3,dy1,dy2,dy3;
    Double_t u,v,vNv1,vNv2,phi1,phi2,dphi,xx,yy;
@@ -551,12 +551,12 @@ L999:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finds the z-value at point e given that it lies
+/// on the plane defined by t1,t2,t3
+
 Double_t TGraphDelaunay::InterpolateOnPlane(Int_t TI1, Int_t TI2, Int_t TI3, Int_t e) const
 {
-   // Finds the z-value at point e given that it lies
-   // on the plane defined by t1,t2,t3
-
    Int_t tmp;
    Bool_t swap;
    Double_t x1,x2,x3,y1,y2,y3,f1,f2,f3,u,v,w;
@@ -589,13 +589,13 @@ L1:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and
+/// calculate a z-value for it by linearly interpolating the z-values that
+/// make up that triangle.
+
 Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
 {
-   // Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and
-   // calculate a z-value for it by linearly interpolating the z-values that
-   // make up that triangle.
-
    Double_t thevalue;
 
    Int_t it, ntris_tried, p, n, m;
@@ -927,22 +927,22 @@ L90:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines the number of triangles tested for a Delaunay triangle
+/// (number of iterations) before abandoning the search
+
 void TGraphDelaunay::SetMaxIter(Int_t n)
 {
-   // Defines the number of triangles tested for a Delaunay triangle
-   // (number of iterations) before abandoning the search
-
    fAllTri  = kFALSE;
    fMaxIter = n;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the histogram bin height for points lying outside the convex hull ie:
+/// the bins in the margin.
+
 void TGraphDelaunay::SetMarginBinsContent(Double_t z)
 {
-   // Sets the histogram bin height for points lying outside the convex hull ie:
-   // the bins in the margin.
-
    fZout = z;
 }

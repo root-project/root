@@ -41,7 +41,8 @@ ClassImp(RooGaussModel)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xIn, 
 			     RooAbsReal& _mean, RooAbsReal& _sigma) :
   RooResolutionModel(name,title,xIn), 
@@ -56,7 +57,8 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xI
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xIn, 
 			     RooAbsReal& _mean, RooAbsReal& _sigma, 
 			     RooAbsReal& _msSF) : 
@@ -72,7 +74,8 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xI
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xIn, 
 			     RooAbsReal& _mean, RooAbsReal& _sigma, 
 			     RooAbsReal& _meanSF, RooAbsReal& _sigmaSF) : 
@@ -88,7 +91,8 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xI
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGaussModel::RooGaussModel(const RooGaussModel& other, const char* name) : 
   RooResolutionModel(other,name),
   _flatSFInt(other._flatSFInt),
@@ -102,15 +106,17 @@ RooGaussModel::RooGaussModel(const RooGaussModel& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooGaussModel::~RooGaussModel()
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooGaussModel::basisCode(const char* name) const 
 {
   if (!TString("exp(-@0/@1)").CompareTo(name)) return expBasisPlus ;
@@ -135,11 +141,11 @@ Int_t RooGaussModel::basisCode(const char* name) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///cout << "RooGaussModel::evaluate(" << GetName() << ") basisCode = " << _basisCode << endl ;
+
 Double_t RooGaussModel::evaluate() const 
 {  
-  //cout << "RooGaussModel::evaluate(" << GetName() << ") basisCode = " << _basisCode << endl ;
-  
   // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
   static Double_t root2(std::sqrt(2.)) ;
   static Double_t root2pi(std::sqrt(2.*std::atan2(0.,-1.))) ;
@@ -246,7 +252,8 @@ Double_t RooGaussModel::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   switch(_basisCode) {    
@@ -298,7 +305,8 @@ Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   static const Double_t root2 = std::sqrt(2.) ;
@@ -453,13 +461,13 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
   return 0 ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// use the approximation: erf(z) = exp(-z*z)/(std::sqrt(pi)*z)
+/// to explicitly cancel the divergent exp(y*y) behaviour of
+/// CWERF for z = x + i y with large negative y
+
 std::complex<Double_t> RooGaussModel::evalCerfApprox(Double_t _x, Double_t u, Double_t c)
 {
-  // use the approximation: erf(z) = exp(-z*z)/(std::sqrt(pi)*z)
-  // to explicitly cancel the divergent exp(y*y) behaviour of
-  // CWERF for z = x + i y with large negative y
-
   static const Double_t rootpi= std::sqrt(std::atan2(0.,-1.));
   const std::complex<Double_t> z(_x * c, u + c);  
   const std::complex<Double_t> zc(u + c, - _x * c);
@@ -472,7 +480,8 @@ std::complex<Double_t> RooGaussModel::evalCerfApprox(Double_t _x, Double_t u, Do
   return 2. * (ev * (mez2zcrootpi + 1.));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::complex<Double_t> RooGaussModel::evalCerfInt(Double_t sign, Double_t _x, Double_t tau, Double_t umin, Double_t umax, Double_t c) const
 {
   std::complex<Double_t> diff(2., 0.);
@@ -487,14 +496,16 @@ std::complex<Double_t> RooGaussModel::evalCerfInt(Double_t sign, Double_t _x, Do
   return diff;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooGaussModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
   return 0 ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooGaussModel::generateEvent(Int_t code)
 {
   R__ASSERT(code==1) ;

@@ -60,28 +60,29 @@ using namespace std ;
 ClassImp(RooCurve)
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooCurve::RooCurve() : _showProgress(kFALSE)
 {
-  // Default constructor
   initialize();
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a 1-dim curve of the value of the specified real-valued expression
+/// as a function of x. Use the optional precision parameter to control
+/// how precisely the smooth curve is rasterized. Use the optional argument set
+/// to specify how the expression should be normalized. Use the optional scale
+/// factor to rescale the expression after normalization.
+/// If shiftToZero is set, the entire curve is shift down to make the lowest
+/// point in of the curve go through zero.
+
 RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Double_t xhi, Int_t xbins,
 		   Double_t scaleFactor, const RooArgSet *normVars, Double_t prec, Double_t resolution,
 		   Bool_t shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal, 
 		   Bool_t showProg) : _showProgress(showProg)
 {
-  // Create a 1-dim curve of the value of the specified real-valued expression
-  // as a function of x. Use the optional precision parameter to control
-  // how precisely the smooth curve is rasterized. Use the optional argument set
-  // to specify how the expression should be normalized. Use the optional scale
-  // factor to rescale the expression after normalization.
-  // If shiftToZero is set, the entire curve is shift down to make the lowest
-  // point in of the curve go through zero.
-  
 
   // grab the function's name and title
   TString name(f.GetName());
@@ -143,18 +144,18 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a 1-dim curve of the value of the specified real-valued
+/// expression as a function of x. Use the optional precision
+/// parameter to control how precisely the smooth curve is
+/// rasterized.  If shiftToZero is set, the entire curve is shift
+/// down to make the lowest point in of the curve go through zero.
+
 RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 		   Double_t xlo, Double_t xhi, UInt_t minPoints, Double_t prec, Double_t resolution,
 		   Bool_t shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal) :
   _showProgress(kFALSE)
 {
-  // Create a 1-dim curve of the value of the specified real-valued
-  // expression as a function of x. Use the optional precision
-  // parameter to control how precisely the smooth curve is
-  // rasterized.  If shiftToZero is set, the entire curve is shift
-  // down to make the lowest point in of the curve go through zero.
-
   SetName(name);
   SetTitle(title);
   Double_t prevYMax = getYAxisMax() ;
@@ -173,15 +174,15 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of curve as sum of two other curves
+///
+/// Csum = scale1*c1 + scale2*c2
+///
+
 RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, Double_t scale1, Double_t scale2) :
   _showProgress(kFALSE)
 {
-  // Constructor of curve as sum of two other curves
-  //
-  // Csum = scale1*c1 + scale2*c2
-  //
-  
   initialize() ;
   SetName(name) ;
   SetTitle(title) ;
@@ -223,19 +224,20 @@ RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, cons
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooCurve::~RooCurve() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform initialization that is common to all curves
+
 void RooCurve::initialize() 
 {
-  // Perform initialization that is common to all curves
-
   // set default line width in pixels
   SetLineWidth(3);
   // set default line color
@@ -244,12 +246,12 @@ void RooCurve::initialize()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find lowest point in curve and move all points in curve so that
+/// lowest point will go exactly through zero
+
 void RooCurve::shiftCurveToZero(Double_t prevYMax) 
 {
-  // Find lowest point in curve and move all points in curve so that
-  // lowest point will go exactly through zero
-
   Int_t i ;
   Double_t minVal(1e30) ;
   Double_t maxVal(-1e30) ;
@@ -278,16 +280,16 @@ void RooCurve::shiftCurveToZero(Double_t prevYMax)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add points calculated with the specified function, over the range (xlo,xhi).
+/// Add at least minPoints equally spaced points, and add sufficient points so that
+/// the maximum deviation from the final straight-line segements is prec*(ymax-ymin),
+/// down to a minimum horizontal spacing of resolution*(xhi-xlo).
+
 void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 			 Int_t minPoints, Double_t prec, Double_t resolution, WingMode wmode,
 			 Int_t numee, Bool_t doEEVal, Double_t eeVal, list<Double_t>* samplingHint) 
 {
-  // Add points calculated with the specified function, over the range (xlo,xhi).
-  // Add at least minPoints equally spaced points, and add sufficient points so that
-  // the maximum deviation from the final straight-line segements is prec*(ymax-ymin),
-  // down to a minimum horizontal spacing of resolution*(xhi-xlo).
-
   // check the inputs
   if(!func.isValid()) {
     coutE(InputArguments) << fName << "::addPoints: input function is not valid" << endl;
@@ -401,16 +403,16 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the range (x1,x2) with points calculated using func(&x). No point will
+/// be added at x1, and a point will always be added at x2. The density of points
+/// will be calculated so that the maximum deviation from a straight line
+/// approximation is prec*(ymax-ymin) down to the specified minimum horizontal spacing.
+
 void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
 			Double_t y1, Double_t y2, Double_t minDy, Double_t minDx,
 			Int_t numee, Bool_t doEEVal, Double_t eeVal) 
 {
-  // Fill the range (x1,x2) with points calculated using func(&x). No point will
-  // be added at x1, and a point will always be added at x2. The density of points
-  // will be calculated so that the maximum deviation from a straight line
-  // approximation is prec*(ymax-ymin) down to the specified minimum horizontal spacing.
-
   // Explicitly skip empty ranges to eliminate point duplication
   if (fabs(x2-x1)<1e-20) {
     return ;
@@ -449,11 +451,11 @@ void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a point with the specified coordinates. Update our y-axis limits.
+
 void RooCurve::addPoint(Double_t x, Double_t y) 
 {
-  // Add a point with the specified coordinates. Update our y-axis limits.
-  
 //   cout << "RooCurve("<< GetName() << ") adding point at (" << x << "," << y << ")" << endl ;
   Int_t next= GetN();
   SetPoint(next, x, y);
@@ -461,33 +463,37 @@ void RooCurve::addPoint(Double_t x, Double_t y)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of events associated with the plotable object,
+/// it is always 1 for curves
+
 Double_t RooCurve::getFitRangeNEvt() const {
-  // Return the number of events associated with the plotable object,
-  // it is always 1 for curves
   return 1;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of events associated with the plotable object,
+/// in the given range. It is always 1 for curves
+
 Double_t RooCurve::getFitRangeNEvt(Double_t, Double_t) const 
 {
-  // Return the number of events associated with the plotable object,
-  // in the given range. It is always 1 for curves
   return 1 ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the bin width associated with this plotable object.
+/// It is alwats zero for curves
+
 Double_t RooCurve::getFitRangeBinW() const {
-  // Get the bin width associated with this plotable object.
-  // It is alwats zero for curves
   return 0 ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooCurve::printName(ostream& os) const 
 // 
 {
@@ -496,27 +502,30 @@ void RooCurve::printName(ostream& os) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the title of this curve
+
 void RooCurve::printTitle(ostream& os) const 
 {
-  // Print the title of this curve
   os << GetTitle() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the class name of this curve
+
 void RooCurve::printClassName(ostream& os) const 
 {
-  // Print the class name of this curve
   os << IsA()->GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the details of this curve
+
 void RooCurve::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose*/, TString indent) const
 {
-  // Print the details of this curve
   os << indent << "--- RooCurve ---" << endl ;
   Int_t n= GetN();
   os << indent << "  Contains " << n << " points" << endl;
@@ -528,13 +537,13 @@ void RooCurve::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose*
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the chi^2/NDOF of this curve with respect to the histogram
+/// 'hist' accounting nFitParam floating parameters in case the curve
+/// was the result of a fit
+
 Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const 
 {
-  // Calculate the chi^2/NDOF of this curve with respect to the histogram
-  // 'hist' accounting nFitParam floating parameters in case the curve
-  // was the result of a fit
-
   Int_t i,np = hist.GetN() ;
   Double_t x,y,eyl,eyh,exl,exh ;
 
@@ -582,12 +591,12 @@ Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return average curve value in [xFirst,xLast] by integrating curve between points
+/// and dividing by xLast-xFirst
+
 Double_t RooCurve::average(Double_t xFirst, Double_t xLast) const
 {
-  // Return average curve value in [xFirst,xLast] by integrating curve between points
-  // and dividing by xLast-xFirst
-
   if (xFirst>=xLast) {
     coutE(InputArguments) << "RooCurve::average(" << GetName() 
 			  << ") invalid range (" << xFirst << "," << xLast << ")" << endl ;
@@ -646,12 +655,12 @@ Double_t RooCurve::average(Double_t xFirst, Double_t xLast) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the nearest point to xvalue. Return -1 if distance
+/// exceeds tolerance
+
 Int_t RooCurve::findPoint(Double_t xvalue, Double_t tolerance) const
 {
-  // Find the nearest point to xvalue. Return -1 if distance
-  // exceeds tolerance
-
   Double_t delta(std::numeric_limits<double>::max()),x,y ;
   Int_t i,n = GetN() ;
   Int_t ibest(-1) ;
@@ -667,13 +676,13 @@ Int_t RooCurve::findPoint(Double_t xvalue, Double_t tolerance) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return linearly interpolated value of curve at xvalue. If distance
+/// to nearest point is less than tolerance, return nearest point value
+/// instead
+
 Double_t RooCurve::interpolate(Double_t xvalue, Double_t tolerance) const
 {
-  // Return linearly interpolated value of curve at xvalue. If distance
-  // to nearest point is less than tolerance, return nearest point value
-  // instead
-
   // Find best point
   int n = GetN() ;
   int ibest = findPoint(xvalue,1e10) ;
@@ -714,13 +723,13 @@ Double_t RooCurve::interpolate(Double_t xvalue, Double_t tolerance) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct filled RooCurve represented error band that captures alpha% of the variations
+/// of the curves passed through argument variations, where the percentage alpha corresponds to
+/// the central interval fraction of a significance Z
+
 RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& variations, Double_t Z) const
 {
-  // Construct filled RooCurve represented error band that captures alpha% of the variations
-  // of the curves passed through argument variations, where the percentage alpha corresponds to
-  // the central interval fraction of a significance Z
-  
   RooCurve* band = new RooCurve ;
   band->SetName(Form("%s_errorband",GetName())) ;
   band->SetLineWidth(1) ;
@@ -746,13 +755,13 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& variations, Double_t 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct filled RooCurve represented error band represent the error added in quadrature defined by the curves arguments
+/// plusVar and minusVar corresponding to one-sigma variations of each parameter. The resulting error band, combined used the correlation matrix C
+/// is multiplied with the significance parameter Z to construct the equivalent of a Z sigma error band (in Gaussian approximation)
+
 RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& plusVar, const vector<RooCurve*>& minusVar, const TMatrixD& C, Double_t Z) const
 {
-  // Construct filled RooCurve represented error band represent the error added in quadrature defined by the curves arguments
-  // plusVar and minusVar corresponding to one-sigma variations of each parameter. The resulting error band, combined used the correlation matrix C
-  // is multiplied with the significance parameter Z to construct the equivalent of a Z sigma error band (in Gaussian approximation)
-  
   RooCurve* band = new RooCurve ;
   band->SetName(Form("%s_errorband",GetName())) ;
   band->SetLineWidth(1) ;
@@ -779,10 +788,11 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& plusVar, const vector
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve variation points from curves
+
 void RooCurve::calcBandInterval(const vector<RooCurve*>& plusVar, const vector<RooCurve*>& minusVar,Int_t i, const TMatrixD& C, Double_t /*Z*/, Double_t& lo, Double_t& hi) const
 {
-  // Retrieve variation points from curves
   vector<double> y_plus(plusVar.size()), y_minus(minusVar.size()) ;
   Int_t j(0) ;
   for (vector<RooCurve*>::const_iterator iter=plusVar.begin() ; iter!=plusVar.end() ; iter++) {
@@ -810,7 +820,8 @@ void RooCurve::calcBandInterval(const vector<RooCurve*>& plusVar, const vector<R
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooCurve::calcBandInterval(const vector<RooCurve*>& variations,Int_t i,Double_t Z, Double_t& lo, Double_t& hi, Bool_t approxGauss) const
 {
   vector<double> y(variations.size()) ;
@@ -845,12 +856,12 @@ void RooCurve::calcBandInterval(const vector<RooCurve*>& variations,Int_t i,Doub
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if curve is identical to other curve allowing for given
+/// absolute tolerance on each point compared point.
+
 Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol) const 
 {
-  // Return true if curve is identical to other curve allowing for given
-  // absolute tolerance on each point compared point.
-
   // Determine X range and Y range
   Int_t n= min(GetN(),other.GetN());
   Double_t xmin(1e30), xmax(-1e30), ymin(1e30), ymax(-1e30) ;

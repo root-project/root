@@ -33,9 +33,10 @@
 
 #include "qmessagebox.h"
 
-//________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert the Qversion string into the interger
+
 static int QVersion(const char *ver) {
-   // convert the Qversion string into the interger
     QString version = QString::fromLatin1(ver);
     return   (version.section('.',0,0).toInt()<<16)
           +  (version.section('.',1,1).toInt()<<8 )
@@ -46,7 +47,8 @@ TQtApplication *TQtApplication::fgQtApplication = 0;
 
 ClassImp(TQtApplication)
 //
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQtApplication::TQtApplication(const char * /*appClassName*/, int &argc,char **argv)
                 : fGUIThread(0)
 {
@@ -54,15 +56,16 @@ TQtApplication::TQtApplication(const char * /*appClassName*/, int &argc,char **a
    fgQtApplication  = this;
    CreateGUIThread(argc,argv);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQtApplication::~TQtApplication()
 { }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Initialize the Qt package
+///  Check the QT_BATCH environment variable to disactivate Qt GUI mode
+
 void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled)
 {
-  //  Initialize the Qt package
-  //  Check the QT_BATCH environment variable to disactivate Qt GUI mode
-
   // QApplication must be created in the proper "GUI" thread
   // It may be called from TQtApplicationThread::Run
    if (!qApp) {
@@ -129,10 +132,11 @@ void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled
        qApp->addLibraryPath(qtPluginPath);
    delete [] qtPluginPath;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GUI thread to Qt event loop
+
 void TQtApplication::CreateGUIThread(int &argc, char **argv)
 {
-  // Create GUI thread to Qt event loop
    if (gROOT->IsBatch()) {
      CreateQApplication(argc,argv,kFALSE);
    } else {
@@ -141,10 +145,11 @@ void TQtApplication::CreateGUIThread(int &argc, char **argv)
 }
 //______________________________________________________________________________
 TQtApplication *TQtApplication::GetQtApplication(){return fgQtApplication;}
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate GUI thread
+
 bool TQtApplication::Terminate()
 {
-  // Terminate GUI thread
   if (fgQtApplication) {
     TQtApplication *app = fgQtApplication;
     fgQtApplication = 0;
@@ -152,14 +157,16 @@ bool TQtApplication::Terminate()
   }
   return TRUE;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Qt version the package was compiled with
+
 Int_t TQtApplication::QtVersion(){
-     // The Qt version the package was compiled with
    return  QVersion(QT_VERSION_STR);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether the current thread belongs the GUI
+
 bool TQtApplication::IsThisGuiThread()
 {
-   // Check whether the current thread belongs the GUI
   return true;
 }

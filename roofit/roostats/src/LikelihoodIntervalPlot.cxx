@@ -13,7 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 LikelihoodIntervalPlot : 
 
@@ -51,11 +52,12 @@ ClassImp(RooStats::LikelihoodIntervalPlot);
 
 using namespace RooStats;
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// LikelihoodIntervalPlot default constructor
+/// with default parameters
+
 LikelihoodIntervalPlot::LikelihoodIntervalPlot()
 {
-  // LikelihoodIntervalPlot default constructor
-  // with default parameters
   fInterval = 0;
   fNdimPlot = 0;
   fParamsPlot = 0;
@@ -73,10 +75,11 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot()
   fPlotObject = 0; 
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// LikelihoodIntervalPlot copy constructor
+
 LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval* theInterval)
 {
-  // LikelihoodIntervalPlot copy constructor
   fInterval = theInterval;
   fParamsPlot = fInterval->GetParameters();
   fNdimPlot = fParamsPlot->getSize();
@@ -94,13 +97,15 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval* theInterval)
   fPlotObject = 0; 
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// LikelihoodIntervalPlot destructor
+
 LikelihoodIntervalPlot::~LikelihoodIntervalPlot()
 {
-  // LikelihoodIntervalPlot destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void LikelihoodIntervalPlot::SetLikelihoodInterval(LikelihoodInterval* theInterval)
 {
   fInterval = theInterval;
@@ -110,7 +115,8 @@ void LikelihoodIntervalPlot::SetLikelihoodInterval(LikelihoodInterval* theInterv
   return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void LikelihoodIntervalPlot::SetPlotParameters(const RooArgSet *params) 
 {
   fNdimPlot = params->getSize();
@@ -120,45 +126,45 @@ void LikelihoodIntervalPlot::SetPlotParameters(const RooArgSet *params)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// draw the log of the profiled likelihood function in 1D with the interval or 
+/// as a 2D plot with the contours.
+/// Higher dimensionals intervals cannot be drawn. One needs to call 
+/// SetPlotParameters to project interval in 1 or 2dim
+///
+/// Options for drawing 1D interals
+/// 
+/// For 1D problem the log of the profiled likelihood function is drawn bby default in a RooPlot as a 
+/// RooCurve
+/// The plotting range (default is the full parameter range) and the precision of the RooCurve
+/// can be specified by using SetRange(x1,x2) and SetPrecision(eps). 
+/// SetNPoints(npoints) can also be used  (default is npoints=100) 
+/// Optionally the function can be drawn as a TF1 (option="tf1") obtained by sampling the given npoints
+/// in the given range
+///
+/// Options for drawing 2D intervals
+///
+/// For 2D case, a contour and optionally the profiled likelihood function is drawn by sampling npoints in 
+/// the given range. A 2d histogram of nbinsX=nbinsY = sqrt(npoints) is used for sampling the profiled likelihood.
+/// The contour can be obtained by using Minuit or by the sampled histogram, 
+/// If using Minuit, the number of points specifies the number of contour points. If using an histogram the number of 
+/// points is approximatly the total number of bins of the histogram.
+/// Possible options: 
+///  minuit/nominuit:     use minuit for computing the contour
+///   hist/nohist   :     sample in an histogram the profiled likelihood   
+///
+/// Note that one can have both a drawing of the sampled likelihood and of the contour using minuit. 
+/// The default options is "minuit nohist"
+/// The sampled histogram is drawn first by default using the option "colz" and then 8 probability contours at 
+/// these CL are drawn:  { 0.1,0.3,0.5,0.683,0.95,0.9973,0.9999366575,0.9999994267} re-drawing the histogram with the 
+/// option "cont3"
+///
+/// The drawn object (RooPlot or sampled histogram) is saved in teh class and can be retrieved using GetPlottedObject()
+/// In this way the user can eventually customize further the plot. 
+/// Note that the class does not delete the plotted object. It needs, if needed, to be deleted by the user
+
 void LikelihoodIntervalPlot::Draw(const Option_t *options) 
 {
-   // draw the log of the profiled likelihood function in 1D with the interval or 
-   // as a 2D plot with the contours.
-   // Higher dimensionals intervals cannot be drawn. One needs to call 
-   // SetPlotParameters to project interval in 1 or 2dim
-   //
-   // Options for drawing 1D interals
-   // 
-   // For 1D problem the log of the profiled likelihood function is drawn bby default in a RooPlot as a 
-   // RooCurve
-   // The plotting range (default is the full parameter range) and the precision of the RooCurve
-   // can be specified by using SetRange(x1,x2) and SetPrecision(eps). 
-   // SetNPoints(npoints) can also be used  (default is npoints=100) 
-   // Optionally the function can be drawn as a TF1 (option="tf1") obtained by sampling the given npoints
-   // in the given range
-   //
-   // Options for drawing 2D intervals
-   //
-   // For 2D case, a contour and optionally the profiled likelihood function is drawn by sampling npoints in 
-   // the given range. A 2d histogram of nbinsX=nbinsY = sqrt(npoints) is used for sampling the profiled likelihood.
-   // The contour can be obtained by using Minuit or by the sampled histogram, 
-   // If using Minuit, the number of points specifies the number of contour points. If using an histogram the number of 
-   // points is approximatly the total number of bins of the histogram.
-   // Possible options: 
-   //  minuit/nominuit:     use minuit for computing the contour
-   //   hist/nohist   :     sample in an histogram the profiled likelihood   
-   //
-   // Note that one can have both a drawing of the sampled likelihood and of the contour using minuit. 
-   // The default options is "minuit nohist"
-   // The sampled histogram is drawn first by default using the option "colz" and then 8 probability contours at 
-   // these CL are drawn:  { 0.1,0.3,0.5,0.683,0.95,0.9973,0.9999366575,0.9999994267} re-drawing the histogram with the 
-   // option "cont3"
-   //
-   // The drawn object (RooPlot or sampled histogram) is saved in teh class and can be retrieved using GetPlottedObject()
-   // In this way the user can eventually customize further the plot. 
-   // Note that the class does not delete the plotted object. It needs, if needed, to be deleted by the user
-   
    TIter it = fParamsPlot->createIterator();
    // we need to check if parameters to plot is different than parameters of interval
    RooArgSet* intervalParams = fInterval->GetParameters(); 

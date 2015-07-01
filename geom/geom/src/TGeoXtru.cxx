@@ -62,24 +62,26 @@
 
 ClassImp(TGeoXtru)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGeoXtru::ThreadData_t::ThreadData_t() :
    fSeg(0), fIz(0), fXc(0), fYc(0), fPoly(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoXtru::ThreadData_t::~ThreadData_t()
 {
-   // Destructor.
-
    delete [] fXc;
    delete [] fYc;
    delete fPoly;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGeoXtru::ThreadData_t& TGeoXtru::GetThreadData() const
 {
    if (!fThreadSize) ((TGeoXtru*)this)->CreateThreadData(1);
@@ -116,7 +118,8 @@ TGeoXtru::ThreadData_t& TGeoXtru::GetThreadData() const
    return *fThreadData[tid];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGeoXtru::ClearThreadData() const
 {
    std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
@@ -129,10 +132,11 @@ void TGeoXtru::ClearThreadData() const
    fThreadSize = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create thread data for n threads max.
+
 void TGeoXtru::CreateThreadData(Int_t nthreads)
 {
-// Create thread data for n threads max.
    TThread::Lock();
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
@@ -155,22 +159,24 @@ void TGeoXtru::CreateThreadData(Int_t nthreads)
    TThread::UnLock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current z-plane.
+
 void TGeoXtru::SetIz(Int_t iz)
 {
-   // Set current z-plane.
-
    GetThreadData().fIz = iz;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current segment.
+
 void TGeoXtru::SetSeg(Int_t iseg)
 {
-   // Set current segment.
-
    GetThreadData().fSeg = iseg;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dummy ctor
+
 TGeoXtru::TGeoXtru()
          :TGeoBBox(),
           fNvert(0),
@@ -185,11 +191,12 @@ TGeoXtru::TGeoXtru()
           fThreadData(0),
           fThreadSize(0)
 {
-// dummy ctor
    SetShapeBit(TGeoShape::kGeoXtru);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoXtru::TGeoXtru(Int_t nz)
          :TGeoBBox(0, 0, 0),
           fNvert(0),
@@ -204,7 +211,6 @@ TGeoXtru::TGeoXtru(Int_t nz)
           fThreadData(0),
           fThreadSize(0)
 {
-// Default constructor
    SetShapeBit(TGeoShape::kGeoXtru);
    if (nz<2) {
       Error("ctor", "Cannot create TGeoXtru %s with less than 2 Z planes", GetName());
@@ -213,7 +219,20 @@ TGeoXtru::TGeoXtru(Int_t nz)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor in GEANT3 style
+/// param[0] = nz  // number of z planes
+///
+/// param[1] = z1  // Z position of first plane
+/// param[2] = x1  // X position of first plane
+/// param[3] = y1  // Y position of first plane
+/// param[4] = scale1  // scale factor for first plane
+/// ...
+/// param[4*(nz-1]+1] = zn
+/// param[4*(nz-1)+2] = xn
+/// param[4*(nz-1)+3] = yn
+/// param[4*(nz-1)+4] = scalen
+
 TGeoXtru::TGeoXtru(Double_t *param)
          :TGeoBBox(0, 0, 0),
           fNvert(0),
@@ -228,23 +247,13 @@ TGeoXtru::TGeoXtru(Double_t *param)
           fThreadData(0),
           fThreadSize(0)
 {
-// Default constructor in GEANT3 style
-// param[0] = nz  // number of z planes
-//
-// param[1] = z1  // Z position of first plane
-// param[2] = x1  // X position of first plane
-// param[3] = y1  // Y position of first plane
-// param[4] = scale1  // scale factor for first plane
-// ...
-// param[4*(nz-1]+1] = zn
-// param[4*(nz-1)+2] = xn
-// param[4*(nz-1)+3] = yn
-// param[4*(nz-1)+4] = scalen
    SetShapeBit(TGeoShape::kGeoXtru);
    SetDimensions(param);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGeoXtru::TGeoXtru(const TGeoXtru& xt) :
   TGeoBBox(xt),
   fNvert(0),
@@ -259,13 +268,13 @@ TGeoXtru::TGeoXtru(const TGeoXtru& xt) :
   fThreadData(0),
   fThreadSize(0)
 {
-   //copy constructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGeoXtru& TGeoXtru::operator=(const TGeoXtru& xt)
 {
-   //assignment operator
    if(this!=&xt) {
       TGeoBBox::operator=(xt);
       fNvert=0;
@@ -282,10 +291,11 @@ TGeoXtru& TGeoXtru::operator=(const TGeoXtru& xt)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoXtru::~TGeoXtru()
 {
-// destructor
    if (fX)  {delete[] fX; fX = 0;}
    if (fY)  {delete[] fY; fY = 0;}
    if (fZ)  {delete[] fZ; fZ = 0;}
@@ -295,10 +305,11 @@ TGeoXtru::~TGeoXtru()
    ClearThreadData();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute capacity [length^3] of this shape.
+
 Double_t TGeoXtru::Capacity() const
 {
-// Compute capacity [length^3] of this shape.
    ThreadData_t& td = GetThreadData();
    Int_t iz;
    Double_t capacity = 0;
@@ -316,10 +327,11 @@ Double_t TGeoXtru::Capacity() const
    return capacity;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute bounding box of the pcon
+
 void TGeoXtru::ComputeBBox()
 {
-// compute bounding box of the pcon
    ThreadData_t& td = GetThreadData();
    if (!fX || !fZ || !fNvert) {
       Error("ComputeBBox", "In shape %s polygon not defined", GetName());
@@ -349,10 +361,11 @@ void TGeoXtru::ComputeBBox()
    fDZ = 0.5*(zmax-zmin);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute normal to closest surface from POINT.
+
 void TGeoXtru::ComputeNormal(const Double_t * /*point*/, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT.
    ThreadData_t& td = GetThreadData();
    if (td.fIz<0) {
       memset(norm,0,3*sizeof(Double_t));
@@ -370,10 +383,11 @@ void TGeoXtru::ComputeNormal(const Double_t * /*point*/, const Double_t *dir, Do
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test if point is inside this shape
+
 Bool_t TGeoXtru::Contains(const Double_t *point) const
 {
-// test if point is inside this shape
    ThreadData_t& td = GetThreadData();
    // Check Z range
    TGeoXtru *xtru = (TGeoXtru*)this;
@@ -400,26 +414,29 @@ Bool_t TGeoXtru::Contains(const Double_t *point) const
    return td.fPoly->Contains(point);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute closest distance from point px,py to each corner
+
 Int_t TGeoXtru::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// compute closest distance from point px,py to each corner
    const Int_t numPoints = fNvert*fNz;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the section polygon.
+
 void TGeoXtru::DrawPolygon(Option_t *option)
  {
-// Draw the section polygon.
    ThreadData_t& td = GetThreadData();
    if (td.fPoly) td.fPoly->Draw(option);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance to a Xtru lateral surface.
+
 Double_t TGeoXtru::DistToPlane(const Double_t *point, const Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax, Bool_t in) const
 {
-// Compute distance to a Xtru lateral surface.
    ThreadData_t& td = GetThreadData();
    Double_t snext;
    Double_t vert[12];
@@ -470,11 +487,12 @@ Double_t TGeoXtru::DistToPlane(const Double_t *point, const Double_t *dir, Int_t
    return TMath::Max(snext, 0.);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from inside point to surface of the polycone
+/// locate Z segment
+
 Double_t TGeoXtru::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from inside point to surface of the polycone
-   // locate Z segment
    ThreadData_t& td = GetThreadData();
    if (iact<3 && safe) {
       *safe = Safety(point, kTRUE);
@@ -583,11 +601,12 @@ Double_t TGeoXtru::DistFromInside(const Double_t *point, const Double_t *dir, In
    return TGeoShape::Tolerance();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from outside point to surface of the tube
+///   Warning("DistFromOutside", "not implemented");
+
 Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// compute distance from outside point to surface of the tube
-//   Warning("DistFromOutside", "not implemented");
    ThreadData_t& td = GetThreadData();
    if (iact<3 && safe) {
       *safe = Safety(point, kTRUE);
@@ -691,14 +710,15 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
    return TGeoShape::Big();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates the polygon representing the blueprint of any Xtru section.
+///   nvert     = number of vertices >2
+///   xv[nvert] = array of X vertex positions
+///   yv[nvert] = array of Y vertex positions
+/// *NOTE* should be called before DefineSection or ctor with 'param'
+
 Bool_t TGeoXtru::DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *yv)
 {
-// Creates the polygon representing the blueprint of any Xtru section.
-//   nvert     = number of vertices >2
-//   xv[nvert] = array of X vertex positions
-//   yv[nvert] = array of Y vertex positions
-// *NOTE* should be called before DefineSection or ctor with 'param'
    if (nvert<3) {
       Error("DefinePolygon","In shape %s cannot create polygon with less than 3 vertices", GetName());
       SetShapeBit(TGeoShape::kGeoBad);
@@ -727,10 +747,11 @@ Bool_t TGeoXtru::DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// defines z position of a section plane, rmin and rmax at this z.
+
 void TGeoXtru::DefineSection(Int_t snum, Double_t z, Double_t x0, Double_t y0, Double_t scale)
 {
-// defines z position of a section plane, rmin and rmax at this z.
    if ((snum<0) || (snum>=fNz)) return;
    fZ[snum]  = z;
    fX0[snum] = x0;
@@ -750,21 +771,23 @@ void TGeoXtru::DefineSection(Int_t snum, Double_t z, Double_t x0, Double_t y0, D
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the Z coordinate for segment ipl.
+
 Double_t TGeoXtru::GetZ(Int_t ipl) const
 {
-// Return the Z coordinate for segment ipl.
    if (ipl<0 || ipl>(fNz-1)) {
       Error("GetZ","In shape %s, ipl=%i out of range (0,%i)",GetName(),ipl,fNz-1);
       return 0.;
    }
    return fZ[ipl];
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns normal vector to the planar quadrilateral defined by vector VERT.
+/// The normal points outwards the xtru.
+
 void TGeoXtru::GetPlaneNormal(const Double_t *vert, Double_t *norm) const
 {
-// Returns normal vector to the planar quadrilateral defined by vector VERT.
-// The normal points outwards the xtru.
    Double_t cross = 0.;
    Double_t v1[3], v2[3];
    v1[0] = vert[9]-vert[0];
@@ -784,11 +807,12 @@ void TGeoXtru::GetPlaneNormal(const Double_t *vert, Double_t *norm) const
    for (Int_t i=0; i<3; i++) norm[i] *= cross;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns (x,y,z) of 3 vertices of the surface defined by Z sections (iz, iz+1)
+/// and polygon vertices (ivert, ivert+1). No range check.
+
 void TGeoXtru::GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const
 {
-// Returns (x,y,z) of 3 vertices of the surface defined by Z sections (iz, iz+1)
-// and polygon vertices (ivert, ivert+1). No range check.
    ThreadData_t& td = GetThreadData();
    Double_t x,y,z1,z2;
    Int_t iv1 = (ivert+1)%fNvert;
@@ -839,10 +863,11 @@ void TGeoXtru::GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const
       vert[icrt++] = z2;
    }
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the quadrilateral defined by VERT contains a coplanar POINT.
+
 Bool_t TGeoXtru::IsPointInsidePlane(const Double_t *point, Double_t *vert, Double_t *norm) const
 {
-// Check if the quadrilateral defined by VERT contains a coplanar POINT.
    Double_t v1[3], v2[3];
    Double_t cross;
    Int_t j,k;
@@ -863,10 +888,11 @@ Bool_t TGeoXtru::IsPointInsidePlane(const Double_t *point, Double_t *vert, Doubl
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print actual Xtru parameters.
+
 void TGeoXtru::InspectShape() const
 {
-// Print actual Xtru parameters.
    printf("*** Shape %s: TGeoXtru ***\n", GetName());
    printf("    Nz    = %i\n", fNz);
    printf("    List of (x,y) of polygon vertices:\n");
@@ -878,11 +904,12 @@ void TGeoXtru::InspectShape() const
    TGeoBBox::InspectShape();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a TBuffer3D describing *this* shape.
+/// Coordinates are in local reference frame.
+
 TBuffer3D *TGeoXtru::MakeBuffer3D() const
 {
-   // Creates a TBuffer3D describing *this* shape.
-   // Coordinates are in local reference frame.
    Int_t nz = GetNz();
    Int_t nvert = GetNvert();
    Int_t nbPnts = nz*nvert;
@@ -900,10 +927,11 @@ TBuffer3D *TGeoXtru::MakeBuffer3D() const
    return buff;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill TBuffer3D structure for segments and polygons.
+
 void TGeoXtru::SetSegsAndPols(TBuffer3D &buff) const
 {
-// Fill TBuffer3D structure for segments and polygons.
    Int_t nz = GetNz();
    Int_t nvert = GetNvert();
    Int_t c = GetBasicColor();
@@ -965,10 +993,11 @@ void TGeoXtru::SetSegsAndPols(TBuffer3D &buff) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safety to sector iz, returning also the closest segment index.
+
 Double_t TGeoXtru::SafetyToSector(const Double_t *point, Int_t iz, Double_t safmin, Bool_t in)
 {
-// Compute safety to sector iz, returning also the closest segment index.
    ThreadData_t& td = GetThreadData();
    Double_t safz = TGeoShape::Big();
    Double_t saf1, saf2;
@@ -1030,12 +1059,13 @@ Double_t TGeoXtru::SafetyToSector(const Double_t *point, Int_t iz, Double_t safm
    return TGeoShape::Big();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes the closest distance from given point to this shape, according
+/// to option. The matching point on the shape is stored in spoint.
+///---> localize the Z segment
+
 Double_t TGeoXtru::Safety(const Double_t *point, Bool_t in) const
 {
-// computes the closest distance from given point to this shape, according
-// to option. The matching point on the shape is stored in spoint.
-   //---> localize the Z segment
    Double_t safmin = TGeoShape::Big();
    Double_t safe;
    Double_t safz = TGeoShape::Big();
@@ -1076,10 +1106,11 @@ Double_t TGeoXtru::Safety(const Double_t *point, Bool_t in) const
    return safe;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoXtru::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    out << "   nz       = " << fNz << ";" << std::endl;
@@ -1102,10 +1133,11 @@ void TGeoXtru::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recompute current section vertices for a given Z position within range of section iz.
+
 void TGeoXtru::SetCurrentZ(Double_t z, Int_t iz)
 {
-// Recompute current section vertices for a given Z position within range of section iz.
    Double_t x0, y0, scale, a, b;
    Int_t ind1, ind2;
    ind1 = iz;
@@ -1123,10 +1155,11 @@ void TGeoXtru::SetCurrentZ(Double_t z, Int_t iz)
    SetCurrentVertices(x0,y0,scale);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current vertex coordinates according X0, Y0 and SCALE.
+
 void TGeoXtru::SetCurrentVertices(Double_t x0, Double_t y0, Double_t scale)
 {
-// Set current vertex coordinates according X0, Y0 and SCALE.
    ThreadData_t& td = GetThreadData();
    for (Int_t i=0; i<fNvert; i++) {
       td.fXc[i] = scale*fX[i] + x0;
@@ -1134,20 +1167,21 @@ void TGeoXtru::SetCurrentVertices(Double_t x0, Double_t y0, Double_t scale)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// param[0] = nz  // number of z planes
+///
+/// param[1] = z1  // Z position of first plane
+/// param[2] = x1  // X position of first plane
+/// param[3] = y1  // Y position of first plane
+/// param[4] = scale1  // scale factor for first plane
+/// ...
+/// param[4*(nz-1]+1] = zn
+/// param[4*(nz-1)+2] = xn
+/// param[4*(nz-1)+3] = yn
+/// param[4*(nz-1)+4] = scalen
+
 void TGeoXtru::SetDimensions(Double_t *param)
 {
-// param[0] = nz  // number of z planes
-//
-// param[1] = z1  // Z position of first plane
-// param[2] = x1  // X position of first plane
-// param[3] = y1  // Y position of first plane
-// param[4] = scale1  // scale factor for first plane
-// ...
-// param[4*(nz-1]+1] = zn
-// param[4*(nz-1)+2] = xn
-// param[4*(nz-1)+3] = yn
-// param[4*(nz-1)+4] = scalen
    fNz = (Int_t)param[0];
    if (fNz<2) {
       Error("SetDimensions","Cannot create TGeoXtru %s with less than 2 Z planes",GetName());
@@ -1167,10 +1201,11 @@ void TGeoXtru::SetDimensions(Double_t *param)
       DefineSection(i, param[1+4*i], param[2+4*i], param[3+4*i], param[4+4*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create polycone mesh points
+
 void TGeoXtru::SetPoints(Double_t *points) const
 {
-// create polycone mesh points
    ThreadData_t& td = GetThreadData();
    Int_t i, j;
    Int_t indx = 0;
@@ -1195,10 +1230,11 @@ void TGeoXtru::SetPoints(Double_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create polycone mesh points
+
 void TGeoXtru::SetPoints(Float_t *points) const
 {
-// create polycone mesh points
    ThreadData_t& td = GetThreadData();
    Int_t i, j;
    Int_t indx = 0;
@@ -1223,10 +1259,11 @@ void TGeoXtru::SetPoints(Float_t *points) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns numbers of vertices, segments and polygons composing the shape mesh.
+
 void TGeoXtru::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
-// Returns numbers of vertices, segments and polygons composing the shape mesh.
    Int_t nz = GetNz();
    Int_t nv = GetNvert();
    nvert = nz*nv;
@@ -1234,31 +1271,34 @@ void TGeoXtru::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
    npols = nv*(nz-1)+2;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of vertices of the mesh representation
+
 Int_t TGeoXtru::GetNmeshVertices() const
 {
-// Return number of vertices of the mesh representation
    Int_t numPoints = fNz*fNvert;
    return numPoints;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////// fill size of this 3-D object
+////   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+////   if (!painter) return;
+////
+////   Int_t numPoints = fNz*fNvert;
+////   Int_t numSegs   = fNvert*(2*fNz-1);
+////   Int_t numPolys  = fNvert*(fNz-1)+2;
+////   painter->AddSize3D(numPoints, numSegs, numPolys);
+
 void TGeoXtru::Sizeof3D() const
 {
-///// fill size of this 3-D object
-///   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-///   if (!painter) return;
-///
-///   Int_t numPoints = fNz*fNvert;
-///   Int_t numSegs   = fNvert*(2*fNz-1);
-///   Int_t numPolys  = fNvert*(fNz-1)+2;
-///   painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a static 3D buffer and returns a reference.
+
 const TBuffer3D & TGeoXtru::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
-// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
@@ -1287,43 +1327,48 @@ const TBuffer3D & TGeoXtru::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    return buffer;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the inside status for each of the points in the array.
+/// Input: Array of point coordinates + vector size
+/// Output: Array of Booleans for the inside of each point
+
 void TGeoXtru::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
 {
-// Check the inside status for each of the points in the array.
-// Input: Array of point coordinates + vector size
-// Output: Array of Booleans for the inside of each point
    for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the normal for an array o points so that norm.dot.dir is positive
+/// Input: Arrays of point coordinates and directions + vector size
+/// Output: Array of normal directions
+
 void TGeoXtru::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
 {
-// Compute the normal for an array o points so that norm.dot.dir is positive
-// Input: Arrays of point coordinates and directions + vector size
-// Output: Array of normal directions
    for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoXtru::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoXtru::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from each of the points in the input array.
+/// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+/// Output: Safety values
+
 void TGeoXtru::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
 {
-// Compute safe distance from each of the points in the input array.
-// Input: Array of point coordinates, array of statuses for these points, size of the arrays
-// Output: Safety values
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }

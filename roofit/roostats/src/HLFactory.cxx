@@ -10,7 +10,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//___________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 BEGIN_HTML
 <p>
@@ -42,7 +43,11 @@ ClassImp(RooStats::HLFactory) ;
 using namespace RooStats;
 using namespace RooFit;
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with the name of the config file to interpret and the
+/// verbosity flag. The extension for the config files is assumed to
+/// be ".rs".
+
 HLFactory::HLFactory(const char *name,
                      const char *fileName,
                      bool isVerbose):
@@ -55,10 +60,6 @@ HLFactory::HLFactory(const char *name,
     fVerbose(isVerbose),
     fInclusionLevel(0),
     fOwnWs(true){
-    // Constructor with the name of the config file to interpret and the
-    // verbosity flag. The extension for the config files is assumed to
-    // be ".rs".
-
     TString wsName(name);
     wsName+="_ws";
     fWs = new RooWorkspace(wsName,true);
@@ -71,7 +72,9 @@ HLFactory::HLFactory(const char *name,
     fReadFile(fileName);
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor without a card but with an exrernal workspace.
+
 HLFactory::HLFactory(const char* name,
                      RooWorkspace* externalWs,
                      bool isVerbose):
@@ -84,8 +87,6 @@ HLFactory::HLFactory(const char* name,
     fVerbose(isVerbose),
     fInclusionLevel(0),
     fOwnWs(false){
-    // Constructor without a card but with an exrernal workspace.
-
     fWs=externalWs;
     fSigBkgPdfNames.SetOwner();
     fBkgPdfNames.SetOwner();
@@ -93,7 +94,8 @@ HLFactory::HLFactory(const char* name,
 
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 HLFactory::HLFactory():
     TNamed("hlfactory","hlfactory"),
     fComboCat(0),
@@ -104,7 +106,6 @@ HLFactory::HLFactory():
     fVerbose(false),
     fInclusionLevel(0),
     fOwnWs(true){
-
     fWs = new RooWorkspace("hlfactory_ws",true);
 
     fSigBkgPdfNames.SetOwner();
@@ -113,10 +114,10 @@ HLFactory::HLFactory():
 
     }
 
-//_______________________________________________________
-HLFactory::~HLFactory(){
-    // destructor
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
 
+HLFactory::~HLFactory(){
     if (fComboSigBkgPdf!=NULL)
         delete fComboSigBkgPdf;
     if (fComboBkgPdf!=NULL)
@@ -130,18 +131,18 @@ HLFactory::~HLFactory(){
         delete fWs;
 }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a channel to the combination. The channel can be specified as:
+///  - A signal plus background pdf
+///  - A background only pdf
+///  - A dataset
+/// Once the combination of the pdfs is done, no more channels should be
+/// added.
+
 int HLFactory::AddChannel(const char* label,
                           const char* SigBkgPdfName,
                           const char* BkgPdfName,
                           const char* DatasetName){
-    // Add a channel to the combination. The channel can be specified as:
-    //  - A signal plus background pdf
-    //  - A background only pdf
-    //  - A dataset
-    // Once the combination of the pdfs is done, no more channels should be
-    // added.
-
     if (fCombinationDone){
         std::cerr << "Cannot add anymore channels. "
                   << "Combination already carried out.\n";
@@ -183,11 +184,11 @@ int HLFactory::AddChannel(const char* label,
 
 }
 
-//_______________________________________________________
-RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
-    // Return the combination of the signal plus background channels.
-    // The facory owns the object.
+////////////////////////////////////////////////////////////////////////////////
+/// Return the combination of the signal plus background channels.
+/// The facory owns the object.
 
+RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
     if (fSigBkgPdfNames.GetSize()==0)
         return 0;
 
@@ -232,12 +233,12 @@ RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
     return fComboSigBkgPdf;
 
     }
-//_______________________________________________________
-RooAbsPdf* HLFactory::GetTotBkgPdf(){
-    // Return the combination of the background only channels.
-    // If no background channel is specified a NULL pointer is returned.
-    // The facory owns the object.
+////////////////////////////////////////////////////////////////////////////////
+/// Return the combination of the background only channels.
+/// If no background channel is specified a NULL pointer is returned.
+/// The facory owns the object.
 
+RooAbsPdf* HLFactory::GetTotBkgPdf(){
     if (fBkgPdfNames.GetSize()==0)
         return 0;
 
@@ -281,12 +282,12 @@ RooAbsPdf* HLFactory::GetTotBkgPdf(){
 
 }
 
-//_______________________________________________________
-RooDataSet* HLFactory::GetTotDataSet(){
-   // Return the combination of the datasets.
-   // If no dataset is specified a NULL pointer is returned.
-   // The facory owns the object.
+////////////////////////////////////////////////////////////////////////////////
+/// Return the combination of the datasets.
+/// If no dataset is specified a NULL pointer is returned.
+/// The facory owns the object.
 
+RooDataSet* HLFactory::GetTotDataSet(){
     if (fDatasetsNames.GetSize()==0)
         return 0;
 
@@ -335,11 +336,11 @@ RooDataSet* HLFactory::GetTotDataSet(){
 
 }
 
-//_______________________________________________________
-RooCategory* HLFactory::GetTotCategory(){
-   // Return the category.
-   // The facory owns the object.
+////////////////////////////////////////////////////////////////////////////////
+/// Return the category.
+/// The facory owns the object.
 
+RooCategory* HLFactory::GetTotCategory(){
     if (fComboCat!=NULL)
         return fComboCat;
 
@@ -353,40 +354,41 @@ RooCategory* HLFactory::GetTotCategory(){
 
     }
 
-//_______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process an additional configuration file
+
 int HLFactory::ProcessCard(const char* filename){
-    // Process an additional configuration file
     return fReadFile(filename,0);
     }
 
-//_______________________________________________________
-int HLFactory::fReadFile(const char*fileName, bool is_included){
-    // Parses the configuration file. The objects can be specified following
-    // the rules of the RooFactoryWSTool, plus some more flexibility.
-    //
-    // The official format for the datacards is ".rs".
-    //
-    // All the instructions end with a ";" (like in C++).
-    //
-    // Carriage returns and white lines are irrelevant but adviced since they
-    // improve readability (like in C++).
-    //
-    // The (Roo)ClassName::objname(description) can be replaced with the more
-    // "pythonic" objname = (Roo)ClassName(description).
-    //
-    // The comments can be specified with a "//" if on a single line or with
-    // /* */ if on multiple lines (like in C++).
-    //
-    // The "#include path/to/file.rs" statement triggers the inclusion of a
-    // configuration fragment.
-    //
-    // The "import myobject:myworkspace:myrootfile" will add to the Workspace
-    // the object myobject located in myworkspace recorded in myrootfile.
-    // Alternatively, one could choose the "import myobject:myrootfile" in case
-    // no Workspace is present.
-    //
-    // The "echo" statement prompts a message on screen.
+////////////////////////////////////////////////////////////////////////////////
+/// Parses the configuration file. The objects can be specified following
+/// the rules of the RooFactoryWSTool, plus some more flexibility.
+///
+/// The official format for the datacards is ".rs".
+///
+/// All the instructions end with a ";" (like in C++).
+///
+/// Carriage returns and white lines are irrelevant but adviced since they
+/// improve readability (like in C++).
+///
+/// The (Roo)ClassName::objname(description) can be replaced with the more
+/// "pythonic" objname = (Roo)ClassName(description).
+///
+/// The comments can be specified with a "//" if on a single line or with
+/// /* */ if on multiple lines (like in C++).
+///
+/// The "#include path/to/file.rs" statement triggers the inclusion of a
+/// configuration fragment.
+///
+/// The "import myobject:myworkspace:myrootfile" will add to the Workspace
+/// the object myobject located in myworkspace recorded in myrootfile.
+/// Alternatively, one could choose the "import myobject:myrootfile" in case
+/// no Workspace is present.
+///
+/// The "echo" statement prompts a message on screen.
 
+int HLFactory::fReadFile(const char*fileName, bool is_included){
     // Check the deepness of the inclusion
     if (is_included)
         fInclusionLevel+=1;
@@ -524,12 +526,12 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
 }
 
 
-//_______________________________________________________
-void HLFactory::fCreateCategory(){
-    // Builds the category necessary for the mutidimensional models. Its name
-    // will be <HLFactory name>_category and the types are specified by the
-    // model labels.
+////////////////////////////////////////////////////////////////////////////////
+/// Builds the category necessary for the mutidimensional models. Its name
+/// will be <HLFactory name>_category and the types are specified by the
+/// model labels.
 
+void HLFactory::fCreateCategory(){
     fCombinationDone=true;
 
     TString name(GetName());
@@ -550,11 +552,11 @@ void HLFactory::fCreateCategory(){
 
     }
 
-//_______________________________________________________
-bool HLFactory::fNamesListsConsistent(){
-    // Check the number of entries in each list. If not the same and the list
-    // is not empty prompt an error.
+////////////////////////////////////////////////////////////////////////////////
+/// Check the number of entries in each list. If not the same and the list
+/// is not empty prompt an error.
 
+bool HLFactory::fNamesListsConsistent(){
     if ((fSigBkgPdfNames.GetEntries()==fBkgPdfNames.GetEntries() || fBkgPdfNames.GetEntries()==0) &&
         (fSigBkgPdfNames.GetEntries()==fDatasetsNames.GetEntries() || fDatasetsNames.GetEntries()==0) &&
         (fSigBkgPdfNames.GetEntries()==fLabelsNames.GetEntries() || fLabelsNames.GetEntries()==0))
@@ -566,10 +568,10 @@ bool HLFactory::fNamesListsConsistent(){
         }
     }
 
-//_______________________________________________________
-int HLFactory::fParseLine(TString& line){
-    // Parse a single line and puts the content in the RooWorkSpace
+////////////////////////////////////////////////////////////////////////////////
+/// Parse a single line and puts the content in the RooWorkSpace
 
+int HLFactory::fParseLine(TString& line){
     if (fVerbose) Info("fParseLine", "Parsing line: %s", line.Data());
 
     TString new_line("");

@@ -158,10 +158,11 @@ ClassImp(TGeoShape)
 
 TGeoMatrix *TGeoShape::fgTransform = NULL;
 Double_t    TGeoShape::fgEpsMch = 2.220446049250313e-16;
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoShape::TGeoShape()
 {
-// Default constructor
    fShapeBits = 0;
    fShapeId   = 0;
    if (!gGeoManager) {
@@ -172,11 +173,12 @@ TGeoShape::TGeoShape()
 //   gGeoManager->AddShape(this);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoShape::TGeoShape(const char *name)
           :TNamed(name, "")
 {
-// Default constructor
    fShapeBits = 0;
    fShapeId   = 0;
    if (!gGeoManager) {
@@ -187,22 +189,24 @@ TGeoShape::TGeoShape(const char *name)
    gGeoManager->AddShape(this);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoShape::~TGeoShape()
 {
-// Destructor
    if (gGeoManager && !gGeoManager->IsCleaning()) gGeoManager->GetListOfShapes()->Remove(this);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test for shape navigation methods. Summary for test numbers:
+///  1: DistFromInside/Outside. Sample points inside the shape. Generate
+///    directions randomly in cos(theta). Compute DistFromInside and move the
+///    point with bigger distance. Compute DistFromOutside back from new point.
+///    Plot d-(d1+d2)
+///
+
 void TGeoShape::CheckShape(Int_t testNo, Int_t nsamples, Option_t *option)
 {
-// Test for shape navigation methods. Summary for test numbers:
-//  1: DistFromInside/Outside. Sample points inside the shape. Generate
-//    directions randomly in cos(theta). Compute DistFromInside and move the
-//    point with bigger distance. Compute DistFromOutside back from new point.
-//    Plot d-(d1+d2)
-//
    if (!gGeoManager) {
       Error("CheckShape","No geometry manager");
       return;
@@ -211,11 +215,12 @@ void TGeoShape::CheckShape(Int_t testNo, Int_t nsamples, Option_t *option)
    gGeoManager->CheckShape(shape, testNo, nsamples, option);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute machine round-off double precision error as the smallest number that
+/// if added to 1.0 is different than 1.0.
+
 Double_t TGeoShape::ComputeEpsMch()
 {
-// Compute machine round-off double precision error as the smallest number that
-// if added to 1.0 is different than 1.0.
    Double_t temp1 = 1.0;
    Double_t temp2 = 1.0 + temp1;
    Double_t mchEps = 0.;
@@ -228,37 +233,40 @@ Double_t TGeoShape::ComputeEpsMch()
    return fgEpsMch;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///static function returning the machine round-off error
+
 Double_t TGeoShape::EpsMch()
 {
-   //static function returning the machine round-off error
-
    return fgEpsMch;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the shape name.
+
 const char *TGeoShape::GetName() const
 {
-// Get the shape name.
    if (!fName[0]) {
       return ((TObject *)this)->ClassName();
    }
    return TNamed::GetName();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns distance to shape primitive mesh.
+
 Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) const
 {
-// Returns distance to shape primitive mesh.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return 9999;
    return painter->ShapeDistancetoPrimitive(this, numpoints, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// True if point is closer than epsil to one of the phi planes defined by c1,s1 or c2,s2
+
 Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, const Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
-// True if point is closer than epsil to one of the phi planes defined by c1,s1 or c2,s2
    Double_t saf1 = TGeoShape::Big();
    Double_t saf2 = TGeoShape::Big();
    if (point[0]*c1+point[1]*s1 >= 0) saf1 = TMath::Abs(-point[0]*s1 + point[1]*c1);
@@ -268,10 +276,11 @@ Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, const Double_t *point, Double_t c
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to check if a point is in the phi range (phi1, phi2) [degrees]
+
 Bool_t TGeoShape::IsInPhiRange(const Double_t *point, Double_t phi1, Double_t phi2)
 {
-// Static method to check if a point is in the phi range (phi1, phi2) [degrees]
    Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
    while (phi<phi1) phi+=360.;
    Double_t ddp = phi-phi1;
@@ -279,12 +288,13 @@ Bool_t TGeoShape::IsInPhiRange(const Double_t *point, Double_t phi1, Double_t ph
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from POINT to semiplane defined by PHI angle along DIR. Computes
+/// also radius at crossing point. This might be negative in case the crossing is
+/// on the other side of the semiplane.
+
 Bool_t TGeoShape::IsCrossingSemiplane(const Double_t *point, const Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy)
 {
-// Compute distance from POINT to semiplane defined by PHI angle along DIR. Computes
-// also radius at crossing point. This might be negative in case the crossing is
-// on the other side of the semiplane.
    snext = rxy = TGeoShape::Big();
    Double_t nx = -sphi;
    Double_t ny = cphi;
@@ -309,19 +319,21 @@ Bool_t TGeoShape::IsCrossingSemiplane(const Double_t *point, const Double_t *dir
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if two numbers differ with less than a tolerance.
+
 Bool_t TGeoShape::IsSameWithinTolerance(Double_t a, Double_t b)
 {
-// Check if two numbers differ with less than a tolerance.
    if (TMath::Abs(a-b)<1.E-10) return kTRUE;
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if segments (A,B) and (C,D) are crossing,
+/// where: A(x1,y1), B(x2,y2), C(x3,y3), D(x4,y4)
+
 Bool_t TGeoShape::IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t y2,Double_t x3, Double_t y3,Double_t x4, Double_t y4)
 {
-// Check if segments (A,B) and (C,D) are crossing,
-// where: A(x1,y1), B(x2,y2), C(x3,y3), D(x4,y4)
    Double_t eps = TGeoShape::Tolerance();
    Bool_t stand1 = kFALSE;
    Double_t dx1 = x2-x1;
@@ -386,11 +398,12 @@ Bool_t TGeoShape::IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t 
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance from point (inside phi) to both phi planes. Return minimum.
+
 Double_t TGeoShape::DistToPhiMin(const Double_t *point, const Double_t *dir, Double_t s1, Double_t c1,
                                  Double_t s2, Double_t c2, Double_t sm, Double_t cm, Bool_t in)
 {
-// compute distance from point (inside phi) to both phi planes. Return minimum.
    Double_t sfi1=TGeoShape::Big();
    Double_t sfi2=TGeoShape::Big();
    Double_t s=0;
@@ -417,10 +430,11 @@ Double_t TGeoShape::DistToPhiMin(const Double_t *point, const Double_t *dir, Dou
    return TMath::Min(sfi1, sfi2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to compute normal to phi planes.
+
 void TGeoShape::NormalPhi(const Double_t *point, const Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
-// Static method to compute normal to phi planes.
    Double_t saf1 = TGeoShape::Big();
    Double_t saf2 = TGeoShape::Big();
    if (point[0]*c1+point[1]*s1 >= 0) saf1 = TMath::Abs(-point[0]*s1 + point[1]*c1);
@@ -442,11 +456,12 @@ void TGeoShape::NormalPhi(const Double_t *point, const Double_t *dir, Double_t *
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to compute safety w.r.t a phi corner defined by cosines/sines
+/// of the angles phi1, phi2.
+
 Double_t TGeoShape::SafetyPhi(const Double_t *point, Bool_t in, Double_t phi1, Double_t phi2)
 {
-// Static method to compute safety w.r.t a phi corner defined by cosines/sines
-// of the angles phi1, phi2.
    Bool_t inphi = TGeoShape::IsInPhiRange(point, phi1, phi2);
    if (inphi && !in) return -TGeoShape::Big();
    phi1 *= TMath::DegToRad();
@@ -472,10 +487,11 @@ Double_t TGeoShape::SafetyPhi(const Double_t *point, Bool_t in, Double_t phi1, D
    return safe;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point of coordinates (r,z) to segment (r1,z1):(r2,z2)
+
 Double_t TGeoShape::SafetySeg(Double_t r, Double_t z, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Bool_t outer)
 {
-// Compute distance from point of coordinates (r,z) to segment (r1,z1):(r2,z2)
    Double_t crossp = (z2-z1)*(r-r1)-(z-z1)*(r2-r1);
    crossp *= (outer) ? 1. : -1.;
    // Positive crossp means point on the requested side of the (1,2) segment
@@ -500,10 +516,11 @@ Double_t TGeoShape::SafetySeg(Double_t r, Double_t z, Double_t r1, Double_t z1, 
    return TMath::Sqrt((r-rp)*(r-rp)+(z-zp)*(z-zp));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Equivalent of TObject::SetBit.
+
 void TGeoShape::SetShapeBit(UInt_t f, Bool_t set)
 {
-// Equivalent of TObject::SetBit.
    if (set) {
       SetShapeBit(f);
    } else {
@@ -511,24 +528,27 @@ void TGeoShape::SetShapeBit(UInt_t f, Bool_t set)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns current transformation matrix that applies to shape.
+
 TGeoMatrix *TGeoShape::GetTransform()
 {
-// Returns current transformation matrix that applies to shape.
    return fgTransform;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current transformation matrix that applies to shape.
+
 void TGeoShape::SetTransform(TGeoMatrix *matrix)
 {
-// Set current transformation matrix that applies to shape.
    fgTransform = matrix;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tranform a set of points (LocalToMaster)
+
 void TGeoShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
 {
-   // Tranform a set of points (LocalToMaster)
    UInt_t i,j;
    Double_t dmaster[3];
    if (fgTransform) {
@@ -560,12 +580,12 @@ void TGeoShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the supplied buffer, with sections in desired frame
+/// See TBuffer3D.h for explanation of sections, frame etc.
+
 void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t localFrame) const
 {
-   // Fill the supplied buffer, with sections in desired frame
-   // See TBuffer3D.h for explanation of sections, frame etc.
-
    // Catch this common potential error here
    // We have to set kRawSize (unless already done) to allocate buffer space
    // before kRaw can be filled
@@ -645,10 +665,11 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the basic color (0-7).
+
 Int_t TGeoShape::GetBasicColor() const
 {
-// Get the basic color (0-7).
    Int_t basicColor = 0; // TODO: Check on sensible fallback
    if (gGeoManager) {
       const TGeoVolume * volume = gGeoManager->GetPaintVolume();
@@ -660,19 +681,21 @@ Int_t TGeoShape::GetBasicColor() const
    return basicColor;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stub implementation to avoid forcing implementation at this stage
+
 const TBuffer3D &TGeoShape::GetBuffer3D(Int_t /*reqSections*/, Bool_t /*localFrame*/) const
 {
-   // Stub implementation to avoid forcing implementation at this stage
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
    Warning("GetBuffer3D", "this must be implemented for shapes in a TGeoPainter hierarchy. This will be come a pure virtual fn eventually.");
    return buffer;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Provide a pointer name containing uid.
+
 const char *TGeoShape::GetPointerName() const
 {
-// Provide a pointer name containing uid.
    static TString name;
    Int_t uid = GetUniqueID();
    if (uid) name = TString::Format("p%s_%d", GetName(),uid);
@@ -680,19 +703,21 @@ const char *TGeoShape::GetPointerName() const
    return name.Data();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute mouse actions on this shape.
+
 void TGeoShape::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-// Execute mouse actions on this shape.
    if (!gGeoManager) return;
    TVirtualGeoPainter *painter = gGeoManager->GetPainter();
    painter->ExecuteShapeEvent(this, event, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this shape.
+
 void TGeoShape::Draw(Option_t *option)
 {
-// Draw this shape.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (option && option[0]) {
       painter->DrawShape(this, option);
@@ -701,10 +726,11 @@ void TGeoShape::Draw(Option_t *option)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this shape.
+
 void TGeoShape::Paint(Option_t *option)
 {
-// Paint this shape.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (option && option[0]) {
       painter->PaintShape(this, option);

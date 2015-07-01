@@ -47,13 +47,13 @@ enum ETGeoBBoxWid {
    kBOX_APPLY, kBOX_CANCEL, kBOX_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for volume editor.
+
 TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for volume editor.
-
    fShape   = 0;
    fDxi = fDyi = fDzi = 0.0;
    memset(fOrigi, 0, 3*sizeof(Double_t));
@@ -167,11 +167,11 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoBBoxEditor::~TGeoBBoxEditor()
 {
-   // Destructor.
-
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -181,11 +181,11 @@ TGeoBBoxEditor::~TGeoBBoxEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoBBoxEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fApply->Connect("Clicked()", "TGeoBBoxEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoBBoxEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoBBoxEditor", this, "DoModified()");
@@ -205,10 +205,11 @@ void TGeoBBoxEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update editor for a new selected box.
+
 void TGeoBBoxEditor::SetModel(TObject* obj)
 {
-   // Update editor for a new selected box.
    if (obj == 0 || (obj->IsA()!=TGeoBBox::Class())) {
       SetActive(kFALSE);
       return;
@@ -237,24 +238,27 @@ void TGeoBBoxEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoBBoxEditor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slot for name.
+
 void TGeoBBoxEditor::DoName()
 {
-   //Slot for name.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slot for applying current parameters.
+
 void TGeoBBoxEditor::DoApply()
 {
-   //Slot for applying current parameters.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t dx = fBoxDx->GetNumber();
@@ -283,17 +287,19 @@ void TGeoBBoxEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slot for modifying current parameters.
+
 void TGeoBBoxEditor::DoModified()
 {
-   //Slot for modifying current parameters.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoBBoxEditor::DoUndo()
 {
-   // Slot for undoing last operation.
    fBoxDx->SetNumber(fDxi);
    fBoxDy->SetNumber(fDyi);
    fBoxDz->SetNumber(fDzi);
@@ -305,10 +311,11 @@ void TGeoBBoxEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slot for Dx modification.
+
 void TGeoBBoxEditor::DoDx()
 {
-   //Slot for Dx modification.
    Double_t dx = fBoxDx->GetNumber();
    if (dx<=0) {
       dx=0.1;
@@ -318,10 +325,11 @@ void TGeoBBoxEditor::DoDx()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slot for Dy modification.
+
 void TGeoBBoxEditor::DoDy()
 {
-   //Slot for Dy modification.
    Double_t dy = fBoxDy->GetNumber();
    if (dy<=0) {
       dy=0.1;
@@ -331,10 +339,11 @@ void TGeoBBoxEditor::DoDy()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slot for Dz modification.
+
 void TGeoBBoxEditor::DoDz()
 {
-   //Slot for Dz modification.
    Double_t dz = fBoxDz->GetNumber();
    if (dz<=0) {
       dz=0.1;
@@ -344,26 +353,29 @@ void TGeoBBoxEditor::DoDz()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slot for Ox modification.
+
 void TGeoBBoxEditor::DoOx()
 {
-   //Slot for Ox modification.
    DoModified();
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slot for Oy modification.
+
 void TGeoBBoxEditor::DoOy()
 {
-   //Slot for Oy modification.
    DoModified();
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slot for Oz modification.
+
 void TGeoBBoxEditor::DoOz()
 {
-   //Slot for Oz modification.
    DoModified();
    if (!IsDelayed()) DoApply();
 }

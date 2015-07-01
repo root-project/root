@@ -330,10 +330,11 @@ namespace {
 
 ClassImp(TTreeReaderArrayBase)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the proxy object for our branch.
+
 void ROOT::TTreeReaderArrayBase::CreateProxy()
 {
-   // Create the proxy object for our branch.
    if (fProxy) {
       return;
    }
@@ -566,20 +567,20 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Access a branch's collection content (not the collection itself)
+/// through a proxy.
+/// Retrieve the type of data contained in the collection stored by branch;
+/// put its dictionary into dict, If there is no dictionary, put its type
+/// name into contentTypeName.
+/// The contentTypeName is set to NULL if the branch does not
+/// contain a collection; in that case, the type of the branch is returned.
+/// In all other cases, NULL is returned.
+
 const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch,
                                                                  TString& contentTypeName,
                                                                  TDictionary* &dict) const
 {
-   // Access a branch's collection content (not the collection itself)
-   // through a proxy.
-   // Retrieve the type of data contained in the collection stored by branch;
-   // put its dictionary into dict, If there is no dictionary, put its type
-   // name into contentTypeName.
-   // The contentTypeName is set to NULL if the branch does not
-   // contain a collection; in that case, the type of the branch is returned.
-   // In all other cases, NULL is returned.
-
    dict = 0;
    contentTypeName = "";
    if (branch->IsA() == TBranchElement::Class()) {
@@ -711,7 +712,10 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
             dict = fDict;
          }
          else if (!dict && (branch->GetSplitLevel() == 0 || brElement->GetClass()->GetCollectionProxy())){
+            // Try getting the contained class
             dict = brElement->GetClass()->GetCollectionProxy()->GetValueClass();
+            // If it fails, try to get the contained type as a primitive type
+            if (!dict) dict = TDataType::GetDataType(brElement->GetClass()->GetCollectionProxy()->GetType());
             if (dict) contentTypeName = dict->GetName();
             return 0;
          }

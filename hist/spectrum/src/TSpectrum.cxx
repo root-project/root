@@ -9,7 +9,8 @@
 #include "TMath.h"
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>Advanced Spectra Processing</h2></center>
 This class contains advanced spectra processing functions for:
@@ -62,7 +63,8 @@ Int_t TSpectrum::fgAverageWindow = 3;
 ClassImp(TSpectrum)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSpectrum::TSpectrum() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
    /* Begin_Html
@@ -80,7 +82,8 @@ TSpectrum::TSpectrum() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSpectrum::TSpectrum(Int_t maxpositions, Double_t resolution)
           :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
@@ -107,7 +110,8 @@ TSpectrum::TSpectrum(Int_t maxpositions, Double_t resolution)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSpectrum::~TSpectrum()
 {
    /* Begin_Html
@@ -121,7 +125,8 @@ TSpectrum::~TSpectrum()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum::SetAverageWindow(Int_t w)
 {
    /* Begin_Html
@@ -133,7 +138,8 @@ void TSpectrum::SetAverageWindow(Int_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum::SetDeconIterations(Int_t n)
 {
    /* Begin_Html
@@ -145,7 +151,8 @@ void TSpectrum::SetDeconIterations(Int_t n)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TH1 *TSpectrum::Background(const TH1 * h, int numberIterations,
                            Option_t * option)
 {
@@ -252,7 +259,8 @@ TH1 *TSpectrum::Background(const TH1 * h, int numberIterations,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum::Print(Option_t *) const
 {
    /* Begin_Html
@@ -266,7 +274,8 @@ void TSpectrum::Print(Option_t *) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option,
                         Double_t threshold)
 {
@@ -385,7 +394,8 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TSpectrum::SetResolution(Double_t resolution)
 {
    /* Begin_Html
@@ -403,7 +413,8 @@ void TSpectrum::SetResolution(Double_t resolution)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *TSpectrum::Background(Double_t *spectrum, int ssize,
                                           int numberIterations,
                                           int direction, int filterOrder,
@@ -1508,7 +1519,8 @@ End_Html */
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char* TSpectrum::SmoothMarkov(Double_t *source, int ssize, int averWindow)
 {
    /* Begin_Html
@@ -1651,7 +1663,8 @@ const char* TSpectrum::SmoothMarkov(Double_t *source, int ssize, int averWindow)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *TSpectrum::Deconvolution(Double_t *source, const Double_t *response,
                                       int ssize, int numberIterations,
                                       int numberRepetitions, Double_t boost )
@@ -2098,7 +2111,8 @@ const char *TSpectrum::Deconvolution(Double_t *source, const Double_t *response,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *response,
                                       int ssize, int numberIterations,
                                       int numberRepetitions, Double_t boost )
@@ -2361,7 +2375,8 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *TSpectrum::Unfolding(Double_t *source,
                                  const Double_t **respMatrix,
                                  int ssizex, int ssizey,
@@ -2622,7 +2637,8 @@ const char *TSpectrum::Unfolding(Double_t *source,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TSpectrum::SearchHighRes(Double_t *source,Double_t *destVector, int ssize,
                                      Double_t sigma, Double_t threshold,
                                      bool backgroundRemove,int deconIterations,
@@ -3299,7 +3315,8 @@ Int_t TSpectrum::SearchHighRes(Double_t *source,Double_t *destVector, int ssize,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TSpectrum::Search1HighRes(Double_t *source,Double_t *destVector, int ssize,
                                      Double_t sigma, Double_t threshold,
                                      bool backgroundRemove,int deconIterations,
@@ -3315,7 +3332,8 @@ Int_t TSpectrum::Search1HighRes(Double_t *source,Double_t *destVector, int ssize
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TSpectrum::StaticSearch(const TH1 *hist, Double_t sigma, Option_t *option, Double_t threshold)
 {
    /* Begin_Html
@@ -3327,7 +3345,8 @@ Int_t TSpectrum::StaticSearch(const TH1 *hist, Double_t sigma, Option_t *option,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TH1 *TSpectrum::StaticBackground(const TH1 *hist,Int_t niter, Option_t *option)
 {
    /* Begin_Html

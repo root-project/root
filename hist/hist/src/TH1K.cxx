@@ -36,11 +36,11 @@
 ClassImp(TH1K)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH1K::TH1K(): TH1(), TArrayF()
 {
-   // Constructor.
-
    fDimension = 1;
    fNIn   = 0;
    fReady = 0;
@@ -49,13 +49,13 @@ TH1K::TH1K(): TH1(), TArrayF()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a 1-Dim histogram with fix bins of type float
+/// (see TH1K::TH1 for explanation of parameters)
+
 TH1K::TH1K(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup,Int_t k)
      : TH1(name,title,nbins,xlow,xup), TArrayF(100)
 {
-   // Create a 1-Dim histogram with fix bins of type float
-   // (see TH1K::TH1 for explanation of parameters)
-
    fDimension = 1;
    fNIn   = 0;
    fReady = 0;
@@ -64,36 +64,37 @@ TH1K::TH1K(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TH1K::~TH1K()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this histogram structure to newth1.
+///
+/// Note that this function does not copy the list of associated functions.
+/// Use TObject::Clone to make a full copy of an histogram.
+
 void TH1K::Copy(TObject &obj) const
 {
-   // Copy this histogram structure to newth1.
-   //
-   // Note that this function does not copy the list of associated functions.
-   // Use TObject::Clone to make a full copy of an histogram.
-
    TH1::Copy(obj);
    ((TH1K&)obj).fNIn = fNIn;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin with abscissa X by 1.
+///
+/// if x is less than the low-edge of the first bin, the Underflow bin is incremented
+/// if x is greater than the upper edge of last bin, the Overflow bin is incremented
+///
+/// If the storage of the sum of squares of weights has been triggered,
+/// via the function Sumw2, then the sum of the squares of weights is incremented
+/// by 1 in the bin corresponding to x.
+
 Int_t TH1K::Fill(Double_t x)
 {
-   // Increment bin with abscissa X by 1.
-   //
-   // if x is less than the low-edge of the first bin, the Underflow bin is incremented
-   // if x is greater than the upper edge of last bin, the Overflow bin is incremented
-   //
-   // If the storage of the sum of squares of weights has been triggered,
-   // via the function Sumw2, then the sum of the squares of weights is incremented
-   // by 1 in the bin corresponding to x.
-
    fReady = 0;
    Int_t bin;
    fEntries++;
@@ -112,11 +113,11 @@ Int_t TH1K::Fill(Double_t x)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return content of global bin number bin.
+
 Double_t TH1K::GetBinContent(Int_t bin) const
 {
-   // Return content of global bin number bin.
-
    if (!fReady) {
       ((TH1K*)this)->Sort();
       ((TH1K*)this)->fReady=1;
@@ -140,35 +141,35 @@ Double_t TH1K::GetBinContent(Int_t bin) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return content of global bin error.
+
 Double_t TH1K::GetBinError(Int_t bin) const
 {
-   // Return content of global bin error.
-
    return TMath::Sqrt(((double)(fNIn-fKCur+1))/((fNIn+1)*(fKCur-1)))*GetBinContent(bin);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset.
+
 void   TH1K::Reset(Option_t *option)
 {
-   // Reset.
-
    fNIn   =0;
    fReady = 0;
    TH1::Reset(option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+/// Note the following restrictions in the code generated:
+///  - variable bin size not implemented
+///  - Objects in list of functions not saved (fits)
+///  - Contours not saved
+
 void TH1K::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-   // Note the following restrictions in the code generated:
-   //  - variable bin size not implemented
-   //  - Objects in list of functions not saved (fits)
-   //  - Contours not saved
-
    char quote = '"';
    out<<"   "<<std::endl;
    out<<"   "<<"TH1 *";
@@ -216,22 +217,22 @@ void TH1K::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare.
+
 static int TH1K_fcompare(const void *f1,const void *f2)
 {
-   // Compare.
-
    if (*((float*)f1) < *((float*)f2)) return -1;
    if (*((float*)f1) > *((float*)f2)) return  1;
    return 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort.
+
 void TH1K::Sort()
 {
-   // Sort.
-
    if (fNIn<2) return;
    qsort(GetArray(),fNIn,sizeof(Float_t),&TH1K_fcompare);
 }

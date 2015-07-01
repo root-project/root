@@ -35,12 +35,13 @@
 
 ClassImp(TMVA::GeneticRange)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// defines the "f" (from) and "t" (to) of the coefficient
+/// and takes a randomgenerator
+///
+
 TMVA::GeneticRange::GeneticRange( TRandom3*rnd, Interval *interval )
 {
-   // defines the "f" (from) and "t" (to) of the coefficient
-   // and takes a randomgenerator
-   //
    fInterval = interval;
    
    fFrom = fInterval->GetMin();
@@ -51,27 +52,29 @@ TMVA::GeneticRange::GeneticRange( TRandom3*rnd, Interval *interval )
    fRandomGenerator = rnd;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates a new random value for the coefficient; returns a discrete value
+///
+
 Double_t TMVA::GeneticRange::RandomDiscrete()
 {
-   // creates a new random value for the coefficient; returns a discrete value
-   //
    Double_t value = fRandomGenerator->Uniform(0, 1);
    return fInterval->GetElement( Int_t(value*fNbins) );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates a new random value for the coefficient
+/// Parameters:
+///        Bool_t near     : takes a random value near the current value
+///        double value  : this is the current value
+///        double spread : the sigma of the gaussian which is taken to calculate the new value
+///        Bool_t mirror   : if the new value would be outside of the range, mirror = false
+///                        maps the value between the constraints by periodic boundary conditions.
+///                        With mirror = true, the value gets "reflected" on the boundaries.
+///
+
 Double_t TMVA::GeneticRange::Random( Bool_t near, Double_t value, Double_t spread, Bool_t mirror )
 {
-   // creates a new random value for the coefficient
-   // Parameters:
-   //        Bool_t near     : takes a random value near the current value
-   //        double value  : this is the current value
-   //        double spread : the sigma of the gaussian which is taken to calculate the new value
-   //        Bool_t mirror   : if the new value would be outside of the range, mirror = false
-   //                        maps the value between the constraints by periodic boundary conditions.
-   //                        With mirror = true, the value gets "reflected" on the boundaries.
-   //
    if (fInterval->GetNbins() > 0) {   // discrete interval
        return RandomDiscrete();
    }
@@ -87,31 +90,34 @@ Double_t TMVA::GeneticRange::Random( Bool_t near, Double_t value, Double_t sprea
    return fRandomGenerator->Uniform(fFrom, fTo);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// remapping the value to the allowed space
+///
+
 Double_t TMVA::GeneticRange::ReMap( Double_t val )
 {
-   // remapping the value to the allowed space
-   //
    if (fFrom >= fTo ) return val;
    if (val < fFrom ) return ReMap( (val-fFrom) + fTo );
    if (val >= fTo )    return ReMap( (val-fTo) + fFrom );
    return val;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// remapping the value to the allowed space by reflecting on the 
+/// boundaries
+
 Double_t TMVA::GeneticRange::ReMapMirror( Double_t val )
 {
-   // remapping the value to the allowed space by reflecting on the 
-   // boundaries
    if (fFrom >= fTo ) return val;
    if (val < fFrom  ) return ReMap( fFrom - (val-fFrom) );
    if (val >= fTo   ) return ReMap( fTo - (val-fTo)  );
    return val;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::GeneticRange::~GeneticRange()
 {
-   // destructor
 }
 

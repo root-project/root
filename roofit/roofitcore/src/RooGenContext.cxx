@@ -56,7 +56,16 @@ ClassImp(RooGenContext)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a new context for generating events with the specified
+/// variables, using the specified PDF model. A prototype dataset (if provided)
+/// is not cloned and still belongs to the caller. The contents and shape
+/// of this dataset can be changed between calls to generate() as long as the
+/// expected columns to be copied to the generated dataset are present.
+/// Any argument supplied in the forceDirect RooArgSet are always offered
+/// for internal generation to the p.d.f., even if this is deemed unsafe by
+/// the logic of RooGenContext.
+
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, const RooArgSet* auxProto,
 			     Bool_t verbose, const RooArgSet* forceDirect) :  
@@ -64,15 +73,6 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0),
   _maxVar(0), _uniIter(0), _updateFMaxPerEvent(0) 
 {
-  // Initialize a new context for generating events with the specified
-  // variables, using the specified PDF model. A prototype dataset (if provided)
-  // is not cloned and still belongs to the caller. The contents and shape
-  // of this dataset can be changed between calls to generate() as long as the
-  // expected columns to be copied to the generated dataset are present.
-  // Any argument supplied in the forceDirect RooArgSet are always offered
-  // for internal generation to the p.d.f., even if this is deemed unsafe by
-  // the logic of RooGenContext.
-
   cxcoutI(Generation) << "RooGenContext::ctor() setting up event generator context for p.d.f. " << model.GetName() 
 			<< " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
@@ -301,11 +301,11 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 RooGenContext::~RooGenContext() 
 {
-  // Destructor.
-
   // Clean up the cloned objects used in this context.
   delete _cloneSet;
 
@@ -318,11 +318,11 @@ RooGenContext::~RooGenContext()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Attach the cloned model to the event buffer we will be filling.
+
 void RooGenContext::attach(const RooArgSet& args) 
 {
-  // Attach the cloned model to the event buffer we will be filling.
-  
   _pdfClone->recursiveRedirectServers(args,kFALSE);
   if (_acceptRejectFunc) {
     _acceptRejectFunc->recursiveRedirectServers(args,kFALSE) ; // WVE DEBUG
@@ -337,11 +337,11 @@ void RooGenContext::attach(const RooArgSet& args)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform one-time initialization of the generator context
+
 void RooGenContext::initGenerator(const RooArgSet &theEvent) 
 {
-  // Perform one-time initialization of the generator context
-
   RooFIter iter = theEvent.fwdIterator() ;
   RooAbsArg* arg ;
   while((arg=iter.next())) {
@@ -366,12 +366,12 @@ void RooGenContext::initGenerator(const RooArgSet &theEvent)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate one event. The 'remaining' integer is not used other than
+/// for printing messages 
+
 void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining) 
 {
-  // Generate one event. The 'remaining' integer is not used other than
-  // for printing messages 
-
   if(_otherVars.getSize() > 0) {
     // call the accept-reject generator to generate its variables
 
@@ -423,11 +423,11 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Printing interface
+
 void RooGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const
 {
-  // Printing interface
-
   RooAbsGenContext::printMultiline(os,content,verbose,indent);
   os << indent << " --- RooGenContext --- " << endl ;
   os << indent << "Using PDF ";

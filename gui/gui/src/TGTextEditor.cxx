@@ -234,12 +234,12 @@ static char *gEPrintCommand = 0;
 
 ClassImp(TGTextEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTextEditor constructor with file name as first argument.
+
 TGTextEditor::TGTextEditor(const char *filename, const TGWindow *p, UInt_t w,
                            UInt_t h) : TGMainFrame(p, w, h)
 {
-   // TGTextEditor constructor with file name as first argument.
-
    Build();
    if (p && p != gClient->GetDefaultRoot()) {
       // special case for TRootBrowser
@@ -257,12 +257,12 @@ TGTextEditor::TGTextEditor(const char *filename, const TGWindow *p, UInt_t w,
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTextEditor constructor with pointer to a TMacro as first argument.
+
 TGTextEditor::TGTextEditor(TMacro *macro, const TGWindow *p, UInt_t w, UInt_t h) :
               TGMainFrame(p, w, h)
 {
-   // TGTextEditor constructor with pointer to a TMacro as first argument.
-
    TString tmp;
    Build();
    if (p && p != gClient->GetDefaultRoot()) {
@@ -292,11 +292,11 @@ TGTextEditor::TGTextEditor(TMacro *macro, const TGWindow *p, UInt_t w, UInt_t h)
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTextEditor destructor.
+
 TGTextEditor::~TGTextEditor()
 {
-   // TGTextEditor destructor.
-
    gApplication->Disconnect("Terminate(Int_t)");
    if (fTimer) delete fTimer;
    if (fMenuFile) delete fMenuFile;
@@ -306,11 +306,11 @@ TGTextEditor::~TGTextEditor()
    if (fMenuHelp) delete fMenuHelp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete TGTextEditor Window.
+
 void TGTextEditor::DeleteWindow()
 {
-   // Delete TGTextEditor Window.
-
    gApplication->Disconnect("Terminate(Int_t)");
    delete fTimer; fTimer = 0;
    delete fMenuFile; fMenuFile = 0;
@@ -322,11 +322,11 @@ void TGTextEditor::DeleteWindow()
    TGMainFrame::DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build TGTextEditor widget.
+
 void TGTextEditor::Build()
 {
-   // Build TGTextEditor widget.
-
    SetCleanup(kDeepCleanup);
    fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 1, 1);
    fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
@@ -475,12 +475,12 @@ void TGTextEditor::Build()
    fTextChanged = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update file information when receiving the signal
+/// DataDropped from TGTextEdit widget.
+
 void TGTextEditor::DataDropped(char *fname)
 {
-   // Update file information when receiving the signal
-   // DataDropped from TGTextEdit widget.
-
    TString tmp;
    fFilename = fname;
    tmp.Form("%s: %ld lines read.", fname, fTextEdit->ReturnLineCount());
@@ -489,20 +489,20 @@ void TGTextEditor::DataDropped(char *fname)
    SetWindowName(tmp.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot setting the fTextChanged flag to true when the text has been
+/// modified in fTextEdit
+
 void TGTextEditor::DataChanged()
 {
-   // Slot setting the fTextChanged flag to true when the text has been
-   // modified in fTextEdit
-
    fTextChanged = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a file into the editor. If fname is 0, a TGFileDialog will popup.
+
 void TGTextEditor::LoadFile(const char *fname)
 {
-   // Load a file into the editor. If fname is 0, a TGFileDialog will popup.
-
    TString tmp;
    TGFileInfo fi;
    fi.fFileTypes = ed_filetypes;
@@ -546,11 +546,11 @@ void TGTextEditor::LoadFile(const char *fname)
    fTextEdit->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the edited text in the file "fname".
+
 void TGTextEditor::SaveFile(const char *fname)
 {
-   // Save the edited text in the file "fname".
-
    char *p;
    TString tmp;
 
@@ -573,12 +573,12 @@ void TGTextEditor::SaveFile(const char *fname)
    fTextChanged = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the edited text in a file selected with TGFileDialog.
+/// Shouldn't we create a backup file?
+
 Bool_t TGTextEditor::SaveFileAs()
 {
-   // Save the edited text in a file selected with TGFileDialog.
-   // Shouldn't we create a backup file?
-
    TString workdir = gSystem->WorkingDirectory();
    static TString dir(".");
    static Bool_t overwr = kFALSE;
@@ -597,11 +597,11 @@ Bool_t TGTextEditor::SaveFileAs()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if file has to be saved in case of modifications.
+
 Int_t TGTextEditor::IsSaved()
 {
-   // Check if file has to be saved in case of modifications.
-
    Int_t ret;
    TString tmp;
    Int_t opt = (kMBYes | kMBNo);
@@ -619,11 +619,11 @@ Int_t TGTextEditor::IsSaved()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open the print dialog and send current buffer to printer.
+
 void TGTextEditor::PrintText()
 {
-   // Open the print dialog and send current buffer to printer.
-
    TString tmp;
    Int_t ret = 0;
    if (!gEPrinter) {
@@ -639,11 +639,11 @@ void TGTextEditor::PrintText()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close TGTextEditor window.
+
 void TGTextEditor::CloseWindow()
 {
-   // Close TGTextEditor window.
-
    if (fExiting) {
       return;
    }
@@ -666,11 +666,11 @@ void TGTextEditor::CloseWindow()
    fExiting = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Keyboard event handler.
+
 Bool_t TGTextEditor::HandleKey(Event_t *event)
 {
-   // Keyboard event handler.
-
    char   input[10];
    UInt_t keysym;
 
@@ -721,11 +721,11 @@ Bool_t TGTextEditor::HandleKey(Event_t *event)
    return TGMainFrame::HandleKey(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear text edit widget.
+
 void TGTextEditor::ClearText()
 {
-   // Clear text edit widget.
-
    fTextEdit->Clear();
    fMacro = 0;
    fFilename = "Untitled";
@@ -734,11 +734,11 @@ void TGTextEditor::ClearText()
    fTextChanged = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invokes search dialog, or just search previous string if again is true.
+
 void TGTextEditor::Search(Bool_t again)
 {
-   // Invokes search dialog, or just search previous string if again is true.
-
    if (again) {
       SendMessage(fTextEdit, MK_MSG(kC_COMMAND, kCM_MENU),
                   TGTextEdit::kM_SEARCH_FINDAGAIN, 0);
@@ -748,11 +748,11 @@ void TGTextEditor::Search(Bool_t again)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invokes goto dialog, and go to the specified line.
+
 void TGTextEditor::Goto()
 {
-   // Invokes goto dialog, and go to the specified line.
-
    Long_t ret;
 
    new TGGotoDialog(fClient->GetDefaultRoot(), this, 400, 150, &ret);
@@ -761,11 +761,11 @@ void TGTextEditor::Goto()
       fTextEdit->Goto(ret-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the edited text in a temporary macro, then compile it.
+
 void TGTextEditor::CompileMacro()
 {
-   // Save the edited text in a temporary macro, then compile it.
-
    if (fTextEdit->ReturnLineCount() < 3)
       return;
    if ((fMacro) || (!fFilename.CompareTo("Untitled"))) {
@@ -780,12 +780,12 @@ void TGTextEditor::CompileMacro()
    delete [] tmpfile;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the edited text in a temporary macro, execute it, and then delete
+/// the temporary file.
+
 void TGTextEditor::ExecuteMacro()
 {
-   // Save the edited text in a temporary macro, execute it, and then delete
-   // the temporary file.
-
    if (fTextEdit->ReturnLineCount() < 3)
       return;
    if (fMacro) {
@@ -828,19 +828,19 @@ void TGTextEditor::ExecuteMacro()
    gInterpreter->Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interrupt execution of a macro.
+
 void TGTextEditor::InterruptMacro()
 {
-   // Interrupt execution of a macro.
-
    gROOT->SetInterrupt(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display ROOT splash screen.
+
 void TGTextEditor::About()
 {
-   // Display ROOT splash screen.
-
 #ifdef R__UNIX
    TString rootx;
 # ifdef ROOTBINDIR
@@ -864,11 +864,11 @@ void TGTextEditor::About()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle timer event.
+
 Bool_t TGTextEditor::HandleTimer(TTimer *t)
 {
-   // Handle timer event.
-
    TString tmp;
    if (t != fTimer) return kTRUE;
    // check if some text is available in the clipboard
@@ -911,11 +911,11 @@ Bool_t TGTextEditor::HandleTimer(TTimer *t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle menu and other command generated by the user.
+
 Bool_t TGTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Handle menu and other command generated by the user.
-
    TRootHelpDialog *hd;
 
    switch(GET_MSG(msg)) {

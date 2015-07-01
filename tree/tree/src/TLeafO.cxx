@@ -22,12 +22,12 @@
 
 ClassImp(TLeafO)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Default constructor for LeafB*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*        ============================
+
 TLeafO::TLeafO(): TLeaf()
 {
-//*-*-*-*-*-*Default constructor for LeafB*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ============================
-
    fValue   = 0;
    fPointer = 0;
    fMinimum = 0;
@@ -35,14 +35,14 @@ TLeafO::TLeafO(): TLeaf()
    fLenType = sizeof(Bool_t);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafB*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                      ==============
+///*-*
+
 TLeafO::TLeafO(TBranch *parent, const char *name, const char *type)
    : TLeaf(parent,name,type)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafB*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ==============
-//*-*
-
    fLenType = sizeof(Bool_t);
    fMinimum = 0;
    fMaximum = 0;
@@ -50,22 +50,22 @@ TLeafO::TLeafO(TBranch *parent, const char *name, const char *type)
    fPointer = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Default destructor for a LeafB*-*-*-*-*-*-*-*-*-*-*-*
+///*-*        ===============================
+
 TLeafO::~TLeafO()
 {
-//*-*-*-*-*-*Default destructor for a LeafB*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ===============================
-
    if (ResetAddress(0,kTRUE)) delete [] fValue;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Export element from local leaf buffer to ClonesArray*-*-*-*-*
+///*-*        ====================================================
+
 void TLeafO::Export(TClonesArray *list, Int_t n)
 {
-//*-*-*-*-*-*Export element from local leaf buffer to ClonesArray*-*-*-*-*
-//*-*        ====================================================
-
    Int_t j = 0;
    for (Int_t i=0;i<n;i++) {
       memcpy((char*)list->UncheckedAt(i) + fOffset,&fValue[j], fLen);
@@ -74,12 +74,12 @@ void TLeafO::Export(TClonesArray *list, Int_t n)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
+///*-*                  ==========================================
+
 void TLeafO::FillBasket(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
-//*-*                  ==========================================
-
    Int_t len = GetLen();
    if (fPointer) fValue = *fPointer;
    if (IsRange()) {
@@ -88,22 +88,22 @@ void TLeafO::FillBasket(TBuffer &b)
    b.WriteFastArray(fValue,len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*Returns name of leaf type*-*-*-*-*-*-*-*-*-*-*-*
+///*-*            =========================
+
 const char *TLeafO::GetTypeName() const
 {
-//*-*-*-*-*-*-*-*Returns name of leaf type*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            =========================
-
    return "Bool_t";
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Import element from ClonesArray into local leaf buffer*-*-*-*-*
+///*-*        ======================================================
+
 void TLeafO::Import(TClonesArray *list, Int_t n)
 {
-//*-*-*-*-*-*Import element from ClonesArray into local leaf buffer*-*-*-*-*
-//*-*        ======================================================
-
    Int_t j = 0;
    for (Int_t i=0;i<n;i++) {
       memcpy(&fValue[j],(char*)list->UncheckedAt(i) + fOffset, fLen);
@@ -111,22 +111,22 @@ void TLeafO::Import(TClonesArray *list, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints leaf value
+
 void TLeafO::PrintValue(Int_t l) const
 {
-// Prints leaf value
-
    char *value = (char*)GetValuePointer();
    printf("%d",(Int_t)value[l]);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
+///*-*                  ===========================================
+
 void TLeafO::ReadBasket(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-//*-*                  ===========================================
-
    if (!fLeafCount && fNdata == 1) {
       b.ReadBool(fValue[0]);
    }else {
@@ -148,12 +148,12 @@ void TLeafO::ReadBasket(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
+///  and export buffer to TClonesArray objects
+
 void TLeafO::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 {
-//*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-//  and export buffer to TClonesArray objects
-
    b.ReadFastArray(fValue,n*fLen);
 
    Int_t j = 0;
@@ -163,20 +163,21 @@ void TLeafO::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read a string from std::istream s and store it into the branch buffer
+
 void TLeafO::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 {
-// read a string from std::istream s and store it into the branch buffer
    char *value = (char*)GetValuePointer();
    s >> value;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
+///*-*                  ============================
+
 void TLeafO::SetAddress(void *add)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
-//*-*                  ============================
-
    if (ResetAddress(add)) {
       delete [] fValue;
    }

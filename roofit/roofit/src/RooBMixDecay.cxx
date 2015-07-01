@@ -39,7 +39,9 @@ ClassImp(RooBMixDecay)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooBMixDecay::RooBMixDecay(const char *name, const char *title, 
 			   RooRealVar& t, RooAbsCategory& mixState,
 			   RooAbsCategory& tagFlav,
@@ -57,7 +59,6 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
   _dm("dm","Mixing frequency",this,dm),
   _t("_t","time",this,t), _genMixFrac(0)
 {
-  // Constructor
   switch(type) {
   case SingleSided:
     _basisExp = declareBasis("exp(-@0/@1)",RooArgList(tau,dm)) ;
@@ -76,7 +77,9 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) : 
   RooAbsAnaConvPdf(other,name), 
   _type(other._type),
@@ -94,23 +97,24 @@ RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) :
   _genFlavFracMix(other._genFlavFracMix),
   _genFlavFracUnmix(other._genFlavFracUnmix)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooBMixDecay::~RooBMixDecay()
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Comp with tFit MC: must be (1 - tagFlav*...)
+
 Double_t RooBMixDecay::coefficient(Int_t basisIndex) const 
 {
-  // Comp with tFit MC: must be (1 - tagFlav*...)
   if (basisIndex==_basisExp) {
     return (1 - _tagFlav*_delMistag) ; 
   }
@@ -124,10 +128,11 @@ Double_t RooBMixDecay::coefficient(Int_t basisIndex) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   cout << "RooBMixDecay::getCoefAI " ; allVars.Print("1") ;
+
 Int_t RooBMixDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
-//   cout << "RooBMixDecay::getCoefAI " ; allVars.Print("1") ;
   if (rangeName) {
     return 0 ;
   }
@@ -140,7 +145,8 @@ Int_t RooBMixDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const 
 {  
   switch(code) {
@@ -186,7 +192,8 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, cons
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
   if (staticInitOK) {
@@ -201,7 +208,8 @@ Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generat
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooBMixDecay::initGenerator(Int_t code)
 {
   switch (code) {
@@ -247,10 +255,11 @@ void RooBMixDecay::initGenerator(Int_t code)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate mix-state dependent
+
 void RooBMixDecay::generateEvent(Int_t code)
 {
-  // Generate mix-state dependent
   switch(code) {
   case 2:
     {

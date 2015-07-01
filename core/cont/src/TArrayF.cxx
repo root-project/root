@@ -23,66 +23,66 @@
 
 ClassImp(TArrayF)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TArrayF ctor.
+
 TArrayF::TArrayF()
 {
-   // Default TArrayF ctor.
-
    fArray = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TArrayF object and set array size to n floats.
+
 TArrayF::TArrayF(Int_t n)
 {
-   // Create TArrayF object and set array size to n floats.
-
    fArray = 0;
    if (n > 0) Set(n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TArrayF object and initialize it with values of array.
+
 TArrayF::TArrayF(Int_t n, const Float_t *array)
 {
-   // Create TArrayF object and initialize it with values of array.
-
    fArray = 0;
    Set(n, array);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TArrayF::TArrayF(const TArrayF &array) : TArray(array)
 {
-   // Copy constructor.
-
    fArray = 0;
    Set(array.fN, array.fArray);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TArrayF assignment operator.
+
 TArrayF &TArrayF::operator=(const TArrayF &rhs)
 {
-   // TArrayF assignment operator.
-
    if (this != &rhs)
       Set(rhs.fN, rhs.fArray);
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete TArrayF object.
+
 TArrayF::~TArrayF()
 {
-   // Delete TArrayF object.
-
    delete [] fArray;
    fArray = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt array arr into TArrayF, i.e. don't copy arr but use it directly
+/// in TArrayF. User may not delete arr, TArrayF dtor will do it.
+
 void TArrayF::Adopt(Int_t n, Float_t *arr)
 {
-   // Adopt array arr into TArrayF, i.e. don't copy arr but use it directly
-   // in TArrayF. User may not delete arr, TArrayF dtor will do it.
-
    if (fArray)
       delete [] fArray;
 
@@ -90,23 +90,23 @@ void TArrayF::Adopt(Int_t n, Float_t *arr)
    fArray = arr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add float c at position i. Check for out of bounds.
+
 void TArrayF::AddAt(Float_t c, Int_t i)
 {
-   // Add float c at position i. Check for out of bounds.
-
    if (!BoundsOk("TArrayF::AddAt", i)) return;
    fArray[i] = c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of this array to n floats.
+/// A new array is created, the old contents copied to the new array,
+/// then the old array is deleted.
+/// This function should not be called if the array was declared via Adopt.
+
 void TArrayF::Set(Int_t n)
 {
-   // Set size of this array to n floats.
-   // A new array is created, the old contents copied to the new array,
-   // then the old array is deleted.
-   // This function should not be called if the array was declared via Adopt.
-
    if (n < 0) return;
    if (n != fN) {
       Float_t *temp = fArray;
@@ -125,12 +125,12 @@ void TArrayF::Set(Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of this array to n floats and set the contents.
+/// This function should not be called if the array was declared via Adopt.
+
 void TArrayF::Set(Int_t n, const Float_t *array)
 {
-   // Set size of this array to n floats and set the contents.
-   // This function should not be called if the array was declared via Adopt.
-
    if (fArray && fN != n) {
       delete [] fArray;
       fArray = 0;
@@ -142,11 +142,11 @@ void TArrayF::Set(Int_t n, const Float_t *array)
    memmove(fArray, array, n*sizeof(Float_t));
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a TArrayF object.
+
 void TArrayF::Streamer(TBuffer &b)
 {
-   // Stream a TArrayF object.
-
    if (b.IsReading()) {
       Int_t n;
       b >> n;

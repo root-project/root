@@ -43,48 +43,49 @@ const unsigned TRegexp::fgMaxpat = 2048;
 
 ClassImp(TRegexp)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a regular expression from the input string. If wildcard is
+/// true then the input string will first be interpreted as a wildcard
+/// expression by MakeWildcard(), and the result then interpreted as a
+/// regular expression.
+
 TRegexp::TRegexp(const char *re, Bool_t wildcard)
 {
-   // Create a regular expression from the input string. If wildcard is
-   // true then the input string will first be interpreted as a wildcard
-   // expression by MakeWildcard(), and the result then interpreted as a
-   // regular expression.
-
    if (wildcard)
       GenPattern(MakeWildcard(re));
    else
       GenPattern(re);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a regular expression from a TString.
+
 TRegexp::TRegexp(const TString& re)
 {
-   // Create a regular expression from a TString.
-
    GenPattern(re.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TRegexp::TRegexp(const TRegexp& r)
 {
-   // Copy ctor.
-
    CopyPattern(r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TRegexp::~TRegexp()
 {
-   // Destructor.
    delete [] fPattern;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TRegexp& TRegexp::operator=(const TRegexp& r)
 {
-   // Assignment operator.
-
    if (this != &r) {
       delete [] fPattern;
       CopyPattern(r);
@@ -92,58 +93,58 @@ TRegexp& TRegexp::operator=(const TRegexp& r)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator taking a char* and assigning it to a regexp.
+
 TRegexp& TRegexp::operator=(const char *str)
 {
-   // Assignment operator taking a char* and assigning it to a regexp.
-
    delete [] fPattern;
    GenPattern(str);
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator taking a TString.
+
 TRegexp& TRegexp::operator=(const TString &str)
 {
-   // Assignment operator taking a TString.
-
    delete [] fPattern;
    GenPattern(str.Data());
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate the regular expression pattern.
+
 void TRegexp::GenPattern(const char *str)
 {
-   // Generate the regular expression pattern.
-
    fPattern = new Pattern_t[fgMaxpat];
    int error = ::Makepat(str, fPattern, fgMaxpat);
    fStat = (error < 3) ? (EStatVal) error : kToolong;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the regular expression pattern.
+
 void TRegexp::CopyPattern(const TRegexp& r)
 {
-   // Copy the regular expression pattern.
-
    fPattern = new Pattern_t[fgMaxpat];
    memcpy(fPattern, r.fPattern, fgMaxpat * sizeof(Pattern_t));
    fStat = r.fStat;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine transforms a wildcarding regular expression into
+/// a general regular expression used for pattern matching.
+/// When using wildcards the regular expression is assumed to be
+/// preceded by a "^" (BOL) and terminated by a "$" (EOL). Also, all
+/// "*"'s and "?"'s (closures) are assumed to be preceded by a "." (i.e. any
+/// character, except "/"'s) and all .'s are escaped (so *.ps is different
+/// from *.eps). The special treatment of "/" allows the easy matching of
+/// pathnames, e.g. "*.root" will match "aap.root", but not "pipo/aap.root".
+
 const char *TRegexp::MakeWildcard(const char *re)
 {
-   // This routine transforms a wildcarding regular expression into
-   // a general regular expression used for pattern matching.
-   // When using wildcards the regular expression is assumed to be
-   // preceded by a "^" (BOL) and terminated by a "$" (EOL). Also, all
-   // "*"'s and "?"'s (closures) are assumed to be preceded by a "." (i.e. any
-   // character, except "/"'s) and all .'s are escaped (so *.ps is different
-   // from *.eps). The special treatment of "/" allows the easy matching of
-   // pathnames, e.g. "*.root" will match "aap.root", but not "pipo/aap.root".
-
    TTHREAD_TLS_ARRAY(char,fgMaxpat,buf);
    char *s = buf;
    if (!re) return "";
@@ -201,13 +202,13 @@ const char *TRegexp::MakeWildcard(const char *re)
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the first occurance of the regexp in string and return the
+/// position, or -1 if there is no match. Len is length of the matched
+/// string and i is the offset at which the matching should start.
+
 Ssiz_t TRegexp::Index(const TString& string, Ssiz_t* len, Ssiz_t i) const
 {
-   // Find the first occurance of the regexp in string and return the
-   // position, or -1 if there is no match. Len is length of the matched
-   // string and i is the offset at which the matching should start.
-
    if (fStat != kOK)
       Error("TRegexp::Index", "Bad Regular Expression");
 
@@ -225,11 +226,11 @@ Ssiz_t TRegexp::Index(const TString& string, Ssiz_t* len, Ssiz_t i) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check status of regexp.
+
 TRegexp::EStatVal TRegexp::Status()
 {
-   // Check status of regexp.
-
    EStatVal temp = fStat;
    fStat = kOK;
    return temp;
@@ -242,66 +243,66 @@ TRegexp::EStatVal TRegexp::Status()
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the first occurance of the regexp in string and return the
+/// position, or -1 if there is no match. Start is the offset at which
+/// the search should start.
+
 Ssiz_t TString::Index(const TRegexp& r, Ssiz_t start) const
 {
-   // Find the first occurance of the regexp in string and return the
-   // position, or -1 if there is no match. Start is the offset at which
-   // the search should start.
-
    Ssiz_t len;
    return r.Index(*this, &len, start); // len not used
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the first occurance of the regexp in string and return the
+/// position, or -1 if there is no match. Extent is length of the matched
+/// string and start is the offset at which the matching should start.
+
 Ssiz_t TString::Index(const TRegexp& r, Ssiz_t* extent, Ssiz_t start) const
 {
-   // Find the first occurance of the regexp in string and return the
-   // position, or -1 if there is no match. Extent is length of the matched
-   // string and start is the offset at which the matching should start.
-
    return r.Index(*this, extent, start);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the substring found by applying the regexp starting at start.
+
 TSubString TString::operator()(const TRegexp& r, Ssiz_t start) const
 {
-   // Return the substring found by applying the regexp starting at start.
-
    Ssiz_t len;
    Ssiz_t begin = Index(r, &len, start);
    return TSubString(*this, begin, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the substring found by applying the regexp.
+
 TSubString TString::operator()(const TRegexp& r) const
 {
-   // Return the substring found by applying the regexp.
-
    return (*this)(r,0);
 }
 
-//__________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for tokens delimited by regular expression 'delim' (default " ")
+/// in this string; search starts at 'from' and the token is returned in 'tok'.
+/// Returns in 'from' the next position after the delimiter.
+/// Returns kTRUE if a token is found, kFALSE if not or if some inconsistency
+/// occured.
+/// This method allows to loop over tokens in this way:
+///
+///    TString myl = "tok1 tok2|tok3";
+///    TString tok;
+///    Ssiz_t from = 0;
+///    while (myl.Tokenize(tok, from, "[ |]")) {
+///       // Analyse tok
+///       ...
+///    }
+///
+/// more convenient of the other Tokenize method when saving the tokens is not
+/// needed.
+
 Bool_t TString::Tokenize(TString &tok, Ssiz_t &from, const char *delim) const
 {
-   // Search for tokens delimited by regular expression 'delim' (default " ")
-   // in this string; search starts at 'from' and the token is returned in 'tok'.
-   // Returns in 'from' the next position after the delimiter.
-   // Returns kTRUE if a token is found, kFALSE if not or if some inconsistency
-   // occured.
-   // This method allows to loop over tokens in this way:
-   //
-   //    TString myl = "tok1 tok2|tok3";
-   //    TString tok;
-   //    Ssiz_t from = 0;
-   //    while (myl.Tokenize(tok, from, "[ |]")) {
-   //       // Analyse tok
-   //       ...
-   //    }
-   //
-   // more convenient of the other Tokenize method when saving the tokens is not
-   // needed.
-
    Bool_t found = kFALSE;
 
    // Reset the token

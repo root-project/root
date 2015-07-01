@@ -27,7 +27,9 @@
 
 ClassImp(TGLClipSetSubEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
    TGVerticalFrame(p),
    fM(0),
@@ -44,8 +46,6 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
    fApplyButton(0),
    fResetButton(0)
 {
-   // Constructor.
-
    fTypeButtons = new TGButtonGroup(this, "Clip Type", kChildFrame|kHorizontalFrame);
    new TGRadioButton(fTypeButtons, "None    ");
    new TGRadioButton(fTypeButtons, "Plane    ");
@@ -104,11 +104,11 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TGLClipSetSubEditor::SetModel(TGLClipSet* m)
 {
-   // Set model object.
-
    fM = m;
 
    fTypeButtons->GetButton(fCurrentClip+1)->SetDown(kFALSE);
@@ -157,29 +157,29 @@ void TGLClipSetSubEditor::SetModel(TGLClipSet* m)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Changed signal.
+
 void TGLClipSetSubEditor::Changed()
 {
-   // Emit Changed signal.
-
    Emit("Changed()");
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One of number entries was changed.
+
 void TGLClipSetSubEditor::ClipValueChanged()
 {
-   // One of number entries was changed.
-
    fApplyButton->SetState(kButtonUp);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clip type radio button changed - update viewer.
+
 void TGLClipSetSubEditor::ClipTypeChanged(Int_t id)
 {
-   // Clip type radio button changed - update viewer.
-
    switch (id)
    {
       case 2:  fCurrentClip = TGLClip::kClipPlane; break;
@@ -193,11 +193,11 @@ void TGLClipSetSubEditor::ClipTypeChanged(Int_t id)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change clipping volume.
+
 void TGLClipSetSubEditor::UpdateViewerClip()
 {
-   // Change clipping volume.
-
    Double_t data[6] = {0.};
    // Fetch GUI state for clip if 'type' into 'data' vector
    if (fCurrentClip == TGLClip::kClipPlane)
@@ -219,11 +219,11 @@ void TGLClipSetSubEditor::UpdateViewerClip()
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset transformation of the current clip.
+
 void TGLClipSetSubEditor::ResetViewerClip()
 {
-   // Reset transformation of the current clip.
-
    if (fCurrentClip != TGLClip::kClipNone) {
       if (fM->GetClipType() == TGLClip::kClipPlane) {
          TGLPlane plane(0.0, -1.0, 0.0, 0.0);
@@ -242,15 +242,15 @@ void TGLClipSetSubEditor::ResetViewerClip()
 
 ClassImp(TGLClipSetEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLClipSetEditor::TGLClipSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                    UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM  (0),
    fSE (0)
 {
-   // Constructor.
-
    MakeTitle("TGLClipSet");
 
    fSE = new TGLClipSetSubEditor(this);
@@ -259,11 +259,11 @@ TGLClipSetEditor::TGLClipSetEditor(const TGWindow *p, Int_t width, Int_t height,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TGLClipSetEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TGLClipSet*>(obj);
    fSE->SetModel(fM);
 }

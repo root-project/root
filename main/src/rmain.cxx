@@ -19,10 +19,11 @@
 
 #include "TRint.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an interactive ROOT application
+
 int main(int argc, char **argv)
 {
-   // Create an interactive ROOT application
    TRint *theApp = new TRint("Rint", &argc, argv);
 
    // and enter the event loop...

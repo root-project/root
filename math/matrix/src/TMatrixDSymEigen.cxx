@@ -28,11 +28,11 @@
 
 ClassImp(TMatrixDSymEigen)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for eigen-problem of symmetric matrix A .
+
 TMatrixDSymEigen::TMatrixDSymEigen(const TMatrixDSym &a)
 {
-// Constructor for eigen-problem of symmetric matrix A .
-
    R__ASSERT(a.IsValid());
 
    const Int_t nRows  = a.GetNrows();
@@ -55,21 +55,21 @@ TMatrixDSymEigen::TMatrixDSymEigen(const TMatrixDSym &a)
    MakeEigenVectors(fEigenVectors,fEigenValues,offDiag);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMatrixDSymEigen::TMatrixDSymEigen(const TMatrixDSymEigen &another)
 {
-// Copy constructor
-
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is derived from the Algol procedures tred2 by Bowdler, Martin, Reinsch, and
+/// Wilkinson, Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
+/// Fortran subroutine in EISPACK.
+
 void TMatrixDSymEigen::MakeTridiagonal(TMatrixD &v,TVectorD &d,TVectorD &e)
 {
-// This is derived from the Algol procedures tred2 by Bowdler, Martin, Reinsch, and
-// Wilkinson, Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
-// Fortran subroutine in EISPACK.
-
    Double_t *pV = v.GetMatrixArray();
    Double_t *pD = d.GetMatrixArray();
    Double_t *pE = e.GetMatrixArray();
@@ -192,14 +192,14 @@ void TMatrixDSymEigen::MakeTridiagonal(TMatrixD &v,TVectorD &d,TVectorD &e)
    pE[0] = 0.0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Symmetric tridiagonal QL algorithm.
+/// This is derived from the Algol procedures tql2, by Bowdler, Martin, Reinsch, and
+/// Wilkinson, Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
+/// Fortran subroutine in EISPACK.
+
 void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
 {
-// Symmetric tridiagonal QL algorithm.
-// This is derived from the Algol procedures tql2, by Bowdler, Martin, Reinsch, and
-// Wilkinson, Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
-// Fortran subroutine in EISPACK.
-
    Double_t *pV = v.GetMatrixArray();
    Double_t *pD = d.GetMatrixArray();
    Double_t *pE = e.GetMatrixArray();
@@ -322,11 +322,11 @@ void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TMatrixDSymEigen &TMatrixDSymEigen::operator=(const TMatrixDSymEigen &source)
 {
-// Assignment operator
-
    if (this != &source) {
       fEigenVectors.ResizeTo(source.fEigenVectors);
       fEigenValues.ResizeTo(source.fEigenValues);

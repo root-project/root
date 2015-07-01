@@ -25,41 +25,41 @@
 
 ClassImp(TEveScalableStraightLineSet);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveScalableStraightLineSet::TEveScalableStraightLineSet(const char* n, const char* t):
    TEveStraightLineSet (n, t),
    fCurrentScale(1.0)
 {
-   // Constructor.
-
    fScaleCenter[0] = 0;
    fScaleCenter[1] = 0;
    fScaleCenter[2] = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set scale center.
+
 void TEveScalableStraightLineSet::SetScaleCenter(Float_t x, Float_t y, Float_t z)
 {
-   // Set scale center.
-
    fScaleCenter[0] = x;
    fScaleCenter[1] = y;
    fScaleCenter[2] = z;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return current scale.
+
 Double_t TEveScalableStraightLineSet::GetScale() const
 {
-   // Return current scale.
-
    return fCurrentScale;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop over line parameters and scale coordinates.
+
 void TEveScalableStraightLineSet::SetScale(Double_t scale)
 {
-   // Loop over line parameters and scale coordinates.
-
    TEveChunkManager::iterator li(GetLinePlex());
    while (li.next())
    {

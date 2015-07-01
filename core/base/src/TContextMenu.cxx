@@ -55,12 +55,12 @@
 ClassImp(TContextMenu)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a context menu.
+
 TContextMenu::TContextMenu(const char *name, const char *title)
              : TNamed(name, title)
 {
-   // Create a context menu.
-
    fSelectedObject   = 0;
    fCalledObject     = 0;
    fSelectedMethod   = 0;
@@ -72,11 +72,11 @@ TContextMenu::TContextMenu(const char *name, const char *title)
    fContextMenuImp = gGuiFactory->CreateContextMenuImp(this, name, title);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy a context menu.
+
 TContextMenu::~TContextMenu()
 {
-   // Destroy a context menu.
-
    delete fContextMenuImp;
 
    fSelectedMethod   = 0;
@@ -86,14 +86,14 @@ TContextMenu::~TContextMenu()
    fContextMenuImp   = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Action to be performed when this menu item is selected.
+/// If the selected method requires arguments we popup an
+/// automatically generated dialog, otherwise the method is
+/// directly executed.
+
 void TContextMenu::Action(TObject *object, TMethod *method)
 {
-   // Action to be performed when this menu item is selected.
-   // If the selected method requires arguments we popup an
-   // automatically generated dialog, otherwise the method is
-   // directly executed.
-
    if (method) {
       SetMethod( method );
       SetSelectedMenuItem(0);
@@ -109,14 +109,14 @@ void TContextMenu::Action(TObject *object, TMethod *method)
    if (fBrowser) fBrowser->Refresh();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Action to be performed when this menu item is selected.
+/// If the selected method requires arguments we popup an
+/// automatically generated dialog, otherwise the method is
+/// directly executed.
+
 void TContextMenu::Action(TClassMenuItem *menuitem)
 {
-   // Action to be performed when this menu item is selected.
-   // If the selected method requires arguments we popup an
-   // automatically generated dialog, otherwise the method is
-   // directly executed.
-
    TObject* object;
    TMethod* method = 0;
 
@@ -209,11 +209,11 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
    if (fBrowser) fBrowser->Refresh();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Action to be performed when this toggle menu item is selected.
+
 void TContextMenu::Action(TObject *object, TToggle *toggle)
 {
-   // Action to be performed when this toggle menu item is selected.
-
    if (object && toggle) {
       TObjectSpy savePad;
 
@@ -246,11 +246,11 @@ void TContextMenu::Action(TObject *object, TToggle *toggle)
    if (fBrowser) fBrowser->Refresh();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create string describing argument (for use in dialog box).
+
 const char *TContextMenu::CreateArgumentTitle(TMethodArg *argument)
 {
-   // Create string describing argument (for use in dialog box).
-
    static TString argTitle;
 
    if (argument) {
@@ -266,11 +266,11 @@ const char *TContextMenu::CreateArgumentTitle(TMethodArg *argument)
    return argTitle.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create title for dialog box retrieving argument values.
+
 const char *TContextMenu::CreateDialogTitle(TObject *object, TFunction *method)
 {
-   // Create title for dialog box retrieving argument values.
-
    static TString methodTitle;
 
    if (object && method)
@@ -283,11 +283,11 @@ const char *TContextMenu::CreateDialogTitle(TObject *object, TFunction *method)
    return methodTitle.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create title for popup menu.
+
 const char *TContextMenu::CreatePopupTitle(TObject *object)
 {
-   // Create title for popup menu.
-
    static TString popupTitle;
 
    if (object) {
@@ -310,11 +310,11 @@ const char *TContextMenu::CreatePopupTitle(TObject *object)
    return popupTitle.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute method with specified arguments for specified object.
+
 void TContextMenu::Execute(TObject *object, TFunction *method, const char *params)
 {
-   // Execute method with specified arguments for specified object.
-
    if (method) {
       TObjectSpy savePad;
 
@@ -352,11 +352,11 @@ void TContextMenu::Execute(TObject *object, TFunction *method, const char *param
    if (fBrowser) fBrowser->Refresh();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute method with specified arguments for specified object.
+
 void TContextMenu::Execute(TObject *object, TFunction *method, TObjArray *params)
 {
-   // Execute method with specified arguments for specified object.
-
    if (method) {
       TObjectSpy savePad;
 
@@ -400,12 +400,12 @@ void TContextMenu::Execute(TObject *object, TFunction *method, TObjArray *params
    if (fBrowser) fBrowser->Refresh();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Popup context menu at given location in canvas c and pad p for selected
+/// object.
+
 void TContextMenu::Popup(Int_t x, Int_t y, TObject *obj, TVirtualPad *c, TVirtualPad *p)
 {
-   // Popup context menu at given location in canvas c and pad p for selected
-   // object.
-
    SetBrowser(0);
    SetObject(obj);
    SetCanvas(c);
@@ -414,11 +414,11 @@ void TContextMenu::Popup(Int_t x, Int_t y, TObject *obj, TVirtualPad *c, TVirtua
    DisplayPopUp(x,y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Popup context menu at given location in browser b for selected object.
+
 void TContextMenu::Popup(Int_t x, Int_t y, TObject *obj, TBrowser *b)
 {
-   // Popup context menu at given location in browser b for selected object.
-
    SetBrowser(b);
    SetObject(obj);
    SetCanvas(0);

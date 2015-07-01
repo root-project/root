@@ -50,7 +50,8 @@ ClassImp(RooChi2Var)
 RooArgSet RooChi2Var::_emptySet ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata,
 		       const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
 		       const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
@@ -93,7 +94,8 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooDataHist& hdata,
 		       const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
 		       const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
@@ -136,81 +138,85 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of a chi2 for given p.d.f. with respect given binned
+/// dataset. If cutRange is specified the calculation of the chi2 is
+/// restricted to that named range. If addCoefRange is specified, the
+/// interpretation of fractions for all component RooAddPdfs that do
+/// not have a frozen range interpretation is set to chosen range
+/// name. If nCPU is greater than one the chi^2 calculation is
+/// paralellized over the specified number of processors. If
+/// interleave is true the partitioning of event over processors
+/// follows a (i % n == i_set) strategy rather than a bulk
+/// partitioning strategy which may result in unequal load balancing
+/// in binned datasets with many (adjacent) zero bins. If
+/// splitCutRange is true the cutRange is used to construct an
+/// individual cutRange for each RooSimultaneous index category state
+/// name cutRange_{indexStateName}.
+
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& hdata,
 		       Bool_t extended, const char* cutRange, const char* addCoefRange,
 		       Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange, RooDataHist::ErrorType etype) : 
   RooAbsOptTestStatistic(name,title,pdf,hdata,RooArgSet(),cutRange,addCoefRange,nCPU,interleave,verbose,splitCutRange),
    _etype(etype), _funcMode(extended?ExtendedPdf:Pdf)
 {
-  // Constructor of a chi2 for given p.d.f. with respect given binned
-  // dataset. If cutRange is specified the calculation of the chi2 is
-  // restricted to that named range. If addCoefRange is specified, the
-  // interpretation of fractions for all component RooAddPdfs that do
-  // not have a frozen range interpretation is set to chosen range
-  // name. If nCPU is greater than one the chi^2 calculation is
-  // paralellized over the specified number of processors. If
-  // interleave is true the partitioning of event over processors
-  // follows a (i % n == i_set) strategy rather than a bulk
-  // partitioning strategy which may result in unequal load balancing
-  // in binned datasets with many (adjacent) zero bins. If
-  // splitCutRange is true the cutRange is used to construct an
-  // individual cutRange for each RooSimultaneous index category state
-  // name cutRange_{indexStateName}.
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of a chi2 for given p.d.f. with respect given binned
+/// dataset taking the observables specified in projDeps as projected
+/// observables. If cutRange is specified the calculation of the chi2
+/// is restricted to that named range. If addCoefRange is specified,
+/// the interpretation of fractions for all component RooAddPdfs that
+/// do not have a frozen range interpretation is set to chosen range
+/// name. If nCPU is greater than one the chi^2 calculation is
+/// paralellized over the specified number of processors. If
+/// interleave is true the partitioning of event over processors
+/// follows a (i % n == i_set) strategy rather than a bulk
+/// partitioning strategy which may result in unequal load balancing
+/// in binned datasets with many (adjacent) zero bins. If
+/// splitCutRange is true the cutRange is used to construct an
+/// individual cutRange for each RooSimultaneous index category state
+/// name cutRange_{indexStateName}.
+
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal& func, RooDataHist& hdata,
 		       const RooArgSet& projDeps, RooChi2Var::FuncMode fmode, const char* cutRange, const char* addCoefRange, 
 		       Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange, RooDataHist::ErrorType etype) : 
   RooAbsOptTestStatistic(name,title,func,hdata,projDeps,cutRange,addCoefRange,nCPU,interleave,verbose,splitCutRange),
   _etype(etype), _funcMode(fmode)
 {
-  // Constructor of a chi2 for given p.d.f. with respect given binned
-  // dataset taking the observables specified in projDeps as projected
-  // observables. If cutRange is specified the calculation of the chi2
-  // is restricted to that named range. If addCoefRange is specified,
-  // the interpretation of fractions for all component RooAddPdfs that
-  // do not have a frozen range interpretation is set to chosen range
-  // name. If nCPU is greater than one the chi^2 calculation is
-  // paralellized over the specified number of processors. If
-  // interleave is true the partitioning of event over processors
-  // follows a (i % n == i_set) strategy rather than a bulk
-  // partitioning strategy which may result in unequal load balancing
-  // in binned datasets with many (adjacent) zero bins. If
-  // splitCutRange is true the cutRange is used to construct an
-  // individual cutRange for each RooSimultaneous index category state
-  // name cutRange_{indexStateName}.
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooChi2Var::RooChi2Var(const RooChi2Var& other, const char* name) : 
   RooAbsOptTestStatistic(other,name),
   _etype(other._etype),
   _funcMode(other._funcMode)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooChi2Var::~RooChi2Var()
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate chi^2 in partition from firstEvent to lastEvent using given stepSize
+
 Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const 
 {
-  // Calculate chi^2 in partition from firstEvent to lastEvent using given stepSize
-
   // Throughout the calculation, we use Kahan's algorithm for summing to
   // prevent loss of precision - this is a factor four more expensive than
   // straight addition, but since evaluating the PDF is usually much more

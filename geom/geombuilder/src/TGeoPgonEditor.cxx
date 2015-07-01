@@ -45,12 +45,13 @@ enum ETGeoPgonWid {
    kPGON_NEDGES
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for polycone editor
+
 TGeoPgonEditor::TGeoPgonEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
    : TGeoPconEditor(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for polycone editor
    fNedgesi = 0;
    CreateEdges();
    TGeoTabManager::MoveFrame(fDFrame, this);
@@ -59,10 +60,11 @@ TGeoPgonEditor::TGeoPgonEditor(const TGWindow *p, Int_t width,
    fENedges->GetNumberEntry()->Connect("TextChanged(const char *)", "TGeoPgonEditor", this, "DoModified()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoPgonEditor::~TGeoPgonEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -72,10 +74,11 @@ TGeoPgonEditor::~TGeoPgonEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to a given pcon.
+
 void TGeoPgonEditor::SetModel(TObject* obj)
 {
-   // Connect to a given pcon.
    if (obj == 0 || (obj->IsA()!=TGeoPgon::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -104,10 +107,11 @@ void TGeoPgonEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoPgonEditor::DoApply()
 {
-// Slot for applying modifications.
    TGeoPgon *shape = (TGeoPgon*)fShape;
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
@@ -180,18 +184,20 @@ void TGeoPgonEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoPgonEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fENedges->SetNumber(fNedgesi);
    TGeoPconEditor::DoUndo();
 }   
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create number entry for Nedges.
+
 void TGeoPgonEditor::CreateEdges()
 {
-// Create number entry for Nedges.
    TGTextEntry *nef;
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Nedges"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -206,10 +212,11 @@ void TGeoPgonEditor::CreateEdges()
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change number of edges.
+
 void TGeoPgonEditor::DoNedges()
 {
-// Change number of edges.
    Int_t nedges = fENedges->GetIntNumber();
    if (nedges < 3) {
       nedges = 3;

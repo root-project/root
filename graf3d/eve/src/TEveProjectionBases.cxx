@@ -35,18 +35,19 @@
 
 ClassImp(TEveProjectable);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveProjectable::TEveProjectable()
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+/// Force projected replicas to unreference *this, then destroy them.
+
 TEveProjectable::~TEveProjectable()
 {
-   // Destructor.
-   // Force projected replicas to unreference *this, then destroy them.
-
    while ( ! fProjectedList.empty())
    {
       TEveProjected* p = fProjectedList.front();
@@ -60,13 +61,13 @@ TEveProjectable::~TEveProjectable()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Optimized destroy of projected elements with condition
+/// there is only one parent for projected element. Method is
+/// called from TEveElement::Annihilate().
+
 void TEveProjectable::AnnihilateProjecteds()
 {
-   // Optimized destroy of projected elements with condition
-   // there is only one parent for projected element. Method is
-   // called from TEveElement::Annihilate().
-
    for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
    {
       (*i)->UnRefProjectable(this, kFALSE);
@@ -75,18 +76,19 @@ void TEveProjectable::AnnihilateProjecteds()
    fProjectedList.clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TEveProjectable::ClearProjectedList()
 {
    fProjectedList.clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the projected elements to the set, dyn-casting them to
+/// TEveElement.
+
 void TEveProjectable::AddProjectedsToSet(std::set<TEveElement*>& set)
 {
-   // Add the projected elements to the set, dyn-casting them to
-   // TEveElement.
-
    for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
    {
       set.insert((*i)->GetProjectedAsElement());
@@ -95,13 +97,13 @@ void TEveProjectable::AddProjectedsToSet(std::set<TEveElement*>& set)
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set visualization parameters of projecteds.
+/// Use element el as model. If el == 0 (default), this casted to
+/// TEveElement is used.
+
 void TEveProjectable::PropagateVizParams(TEveElement* el)
 {
-   // Set visualization parameters of projecteds.
-   // Use element el as model. If el == 0 (default), this casted to
-   // TEveElement is used.
-
    if (el == 0)
       el = dynamic_cast<TEveElement*>(this);
 
@@ -111,11 +113,11 @@ void TEveProjectable::PropagateVizParams(TEveElement* el)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set render state of projecteds.
+
 void TEveProjectable::PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children)
 {
-   // Set render state of projecteds.
-
    for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
    {
       if ((*i)->GetProjectedAsElement()->SetRnrSelfChildren(rnr_self, rnr_children))
@@ -123,11 +125,11 @@ void TEveProjectable::PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set main color of projecteds if their color is the same as old_color.
+
 void TEveProjectable::PropagateMainColor(Color_t color, Color_t old_color)
 {
-   // Set main color of projecteds if their color is the same as old_color.
-
    for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
    {
       if ((*i)->GetProjectedAsElement()->GetMainColor() == old_color)
@@ -135,12 +137,12 @@ void TEveProjectable::PropagateMainColor(Color_t color, Color_t old_color)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set main transparency of projecteds if their transparecy is the
+/// same as the old one.
+
 void TEveProjectable::PropagateMainTransparency(Char_t t, Char_t old_t)
 {
-   // Set main transparency of projecteds if their transparecy is the
-   // same as the old one.
-
    for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
    {
       if ((*i)->GetProjectedAsElement()->GetMainTransparency() == old_t)
@@ -164,53 +166,54 @@ void TEveProjectable::PropagateMainTransparency(Char_t t, Char_t old_t)
 
 ClassImp(TEveProjected);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveProjected::TEveProjected() :
    fManager     (0),
    fProjectable (0),
    fDepth       (0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+/// If fProjectable is non-null, *this is removed from its list of
+/// projected replicas.
+
 TEveProjected::~TEveProjected()
 {
-   // Destructor.
-   // If fProjectable is non-null, *this is removed from its list of
-   // projected replicas.
-
    if (fProjectable) fProjectable->RemoveProjected(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns this projected dynamic-casted to TEveElement.
+/// This is needed as class TEveProjected is used as secondary
+/// inheritance.
+
 TEveElement* TEveProjected::GetProjectedAsElement()
 {
-   // Returns this projected dynamic-casted to TEveElement.
-   // This is needed as class TEveProjected is used as secondary
-   // inheritance.
-
    return dynamic_cast<TEveElement*>(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets projection manager and reference in the projectable object. Method called
+/// immediately after default constructor.
+/// See also TEveProjectionManager::ImportElements().
+
 void TEveProjected::SetProjection(TEveProjectionManager* mng, TEveProjectable* model)
 {
-   // Sets projection manager and reference in the projectable object. Method called
-   // immediately after default constructor.
-   // See also TEveProjectionManager::ImportElements().
-
    fManager   = mng;
    if (fProjectable) fProjectable->RemoveProjected(this);
    fProjectable = model;
    if (fProjectable) fProjectable->AddProjected(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove reference to projectable.
+
 void TEveProjected::UnRefProjectable(TEveProjectable* assumed_parent, bool notifyParent)
 {
-   // Remove reference to projectable.
-
    static const TEveException eH("TEveProjected::UnRefProjectable ");
 
    R__ASSERT(fProjectable == assumed_parent);
@@ -219,13 +222,13 @@ void TEveProjected::UnRefProjectable(TEveProjectable* assumed_parent, bool notif
    fProjectable = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set depth coordinate for the element.
+/// Bounding-box should also be updated.
+/// If projection type is 3D, this only sets fDepth member.
+
 void TEveProjected::SetDepth(Float_t d)
 {
-   // Set depth coordinate for the element.
-   // Bounding-box should also be updated.
-   // If projection type is 3D, this only sets fDepth member.
-
    if (fManager->GetProjection()->Is2D())
    {
       SetDepthLocal(d);
@@ -236,13 +239,13 @@ void TEveProjected::SetDepth(Float_t d)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Utility function to update the z-values of the bounding-box.
+/// As this is an abstract interface, the element and bbox pointers
+/// must be passed from outside.
+
 void TEveProjected::SetDepthCommon(Float_t d, TEveElement* el, Float_t* bbox)
 {
-   // Utility function to update the z-values of the bounding-box.
-   // As this is an abstract interface, the element and bbox pointers
-   // must be passed from outside.
-
    Float_t delta = d - fDepth;
    fDepth = d;
    if (bbox) {
@@ -252,10 +255,10 @@ void TEveProjected::SetDepthCommon(Float_t d, TEveElement* el, Float_t* bbox)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Base-class implementation -- just sets fDepth.
+
 void TEveProjected::SetDepthLocal(Float_t d)
 {
-   // Base-class implementation -- just sets fDepth.
-
    fDepth = d;
 }

@@ -49,48 +49,51 @@
 
 ClassImp(TMVA::PDEFoamEventDensity)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::PDEFoamEventDensity::PDEFoamEventDensity()
    : PDEFoamDensityBase()
 {}
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User construcor
+///
+/// Parameters:
+///
+/// - box - size of sampling box
+
 TMVA::PDEFoamEventDensity::PDEFoamEventDensity(std::vector<Double_t> box)
    : PDEFoamDensityBase(box)
 {
-   // User construcor
-   //
-   // Parameters:
-   //
-   // - box - size of sampling box
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMVA::PDEFoamEventDensity::PDEFoamEventDensity(const PDEFoamEventDensity &distr)
    : PDEFoamDensityBase(distr)
 {
-   // Copy constructor
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is needed during the foam buildup.  It returns the
+/// event density within the range-searching volume (specified by
+/// fBox).
+///
+/// Parameters:
+///
+/// - xev - event vector (in [fXmin,fXmax]) to place the box at
+///
+/// - event_density - here the event density is stored
+///
+/// Returns:
+///
+/// Number of events (event weights), which were found in the
+/// range-searching volume at point 'xev', divided by the box
+/// volume.
+
 Double_t TMVA::PDEFoamEventDensity::Density(std::vector<Double_t> &xev, Double_t &event_density)
 {
-   // This function is needed during the foam buildup.  It returns the
-   // event density within the range-searching volume (specified by
-   // fBox).
-   //
-   // Parameters:
-   //
-   // - xev - event vector (in [fXmin,fXmax]) to place the box at
-   //
-   // - event_density - here the event density is stored
-   //
-   // Returns:
-   //
-   // Number of events (event weights), which were found in the
-   // range-searching volume at point 'xev', divided by the box
-   // volume.
-
    if (!fBst)
       Log() << kFATAL << "<PDEFoamEventDensity::Density()> Binary tree not found!" << Endl;
 
