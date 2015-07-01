@@ -110,7 +110,7 @@ endforeach()
 # Capture their build-time version here, and inject it into runtime.
 foreach(file wchar.h bits/stat.h bits/time.h)
   if(EXISTS /usr/include/${file})
-    list(APPEND copy_commands COMMAND cmake -E copy /usr/include/${file} ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include)
+    list(APPEND copy_commands COMMAND cmake -E copy /usr/include/${file} ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/${file})
   endif()
 endforeach()
 
