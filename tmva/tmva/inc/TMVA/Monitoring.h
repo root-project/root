@@ -4,6 +4,7 @@
 #include "TCanvas.h"
 #include "TSystem.h"
 #include "TStyle.h"
+#include "TH1.h"
 #include "TH1F.h"
 #include "TH2F.h"
 //#include <stdio.h>
@@ -208,7 +209,7 @@ inline void Monitoring::plot (std::string histoName, std::string options, int pa
     {
         TH1F* dummy (NULL);
         TH1F* histogram = getHistogram (dummy, histoName);
-        histogram->SetBit (TH1::kCanRebin);
+//        histogram->SetBit (TH1::kCanRebin);
         histogram->SetLineColor (color);
         histogram->SetMarkerColor (color);
 //        std::cout << "draw " << histoName << " 1D on canvas " << canvas << " on pad " << pad << " with  options " << options << std::endl;
@@ -222,7 +223,7 @@ inline void Monitoring::plot (std::string histoName, std::string options, int pa
     {
         TH2F* dummy (NULL);
         TH2F* histogram = getHistogram (dummy, histoName);
-        histogram->SetBit (TH1::kCanRebin);
+//        histogram->SetBit (TH1::kCanRebin);
         histogram->SetLineColor (color);
         histogram->SetMarkerColor (color);
 //        std::cout << "draw " << histoName << " 2D on canvas " << canvas << " on pad " << pad << " with  options " << options << std::endl;

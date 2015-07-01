@@ -215,7 +215,7 @@ double studenttDouble (double distributionParameter)
                         size_t _convergenceSteps, size_t _batchSize, size_t _testRepetitions, 
                         double _factorWeightDecay, EnumRegularization eRegularization,
                         MinimizerType _eMinimizerType, double _learningRate, 
-                        double _momentum, int _repetitions)
+                        double _momentum, int _repetitions, bool _useMultithreading)
         : m_timer (100, name)
         , m_minProgress (0)
         , m_maxProgress (100)
@@ -232,6 +232,7 @@ double studenttDouble (double distributionParameter)
         , fMomentum (_momentum)
         , fRepetitions (_repetitions)
         , fMinimizerType (_eMinimizerType)
+        , m_useMultithreading (_useMultithreading)
         , fMonitoring (NULL)
     {
     }
