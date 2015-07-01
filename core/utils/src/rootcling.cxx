@@ -2438,7 +2438,7 @@ int CreateCapabilitiesFile(const std::string &capaFileName,
    std::list<std::string> new_lines;
 
    std::string keyNameWithStd;
-   for (auto const keyName : keysNames){
+   for (auto const & keyName : keysNames){
       keyNameWithStd = TClassEdit::InsertStd(keyName.c_str());
       new_lines.push_back(" \"" + capaPre + "/" + keyNameWithStd + "\",\n");
       if (keyName!=keyNameWithStd) {
