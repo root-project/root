@@ -864,7 +864,7 @@ std::string Cppyy::GetDatamemberType( TCppScope_t scope, TCppIndex_t idata )
    TClassRef& cr = type_from_handle( scope );
    if ( cr.GetClass() )  {
       TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At( idata );
-      std::string fullType = m->GetFullTypeName();
+      std::string fullType = m->GetTrueTypeName();
       if ( (int)m->GetArrayDim() > 1 || (!m->IsBasic() && m->IsaPointer()) )
          fullType.append( "*" );
       else if ( (int)m->GetArrayDim() == 1 ) {

@@ -776,7 +776,7 @@ directory - this behavior is now implement by the default constructor.
 ### PyROOT
 
  - Fix lookup of templated classes in namespace with arguments that have 'std::' in their name [ROOT-7448]
-
+ - Use GetTrueTypeName() instead of GetFullTypeName(), as the latter loses namespaces
 
 ### Tree
 
