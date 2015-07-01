@@ -75,6 +75,7 @@ TMVA::Timer::Timer( const char* prefix, Bool_t colourfulOutput )
    : fNcounts        ( 0 ),
      fPrefix         ( strcmp(prefix,"")==0?Timer::fgClassName:TString(prefix) ),
      fColourfulOutput( colourfulOutput ),
+     fProgressBarStringLength (0), 
      fLogger         ( new MsgLogger( fPrefix.Data() ) )
 {
    Reset();
@@ -90,6 +91,7 @@ TMVA::Timer::Timer( Int_t ncounts, const char* prefix, Bool_t colourfulOutput  )
    : fNcounts        ( ncounts ),
      fPrefix         ( strcmp(prefix,"")==0?Timer::fgClassName:TString(prefix) ),
      fColourfulOutput( colourfulOutput ),
+     fProgressBarStringLength (0), 
      fLogger         ( new MsgLogger( fPrefix.Data() ) )
 {
    Reset();
@@ -151,6 +153,7 @@ TString TMVA::Timer::GetLeftTime( Int_t icounts )
 
 void TMVA::Timer::DrawProgressBar() 
 {
+   fProgressBarStringLength = 0;
    fNcounts++;
    if (fNcounts == 1) {
       std::clog << fLogger->GetPrintedSource();
@@ -165,6 +168,7 @@ void TMVA::Timer::DrawProgressBar()
 
 void TMVA::Timer::DrawProgressBar( TString theString ) 
 {
+    
    std::clog << fLogger->GetPrintedSource();
 
    std::clog << gTools().Color("white_on_green") << gTools().Color("dyellow") << "[" << gTools().Color("reset");
@@ -173,7 +177,10 @@ void TMVA::Timer::DrawProgressBar( TString theString )
 
    std::clog << gTools().Color("white_on_green") << gTools().Color("dyellow") << "]" << gTools().Color("reset");
 
-   std::clog << "\r" << std::flush; 
+   for (int i = fProgressBarStringLength; i < theString.Length (); ++i)
+       std::cout << " ";
+   std::clog << "\r" << std::flush;
+   fProgressBarStringLength = theString.Length ();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

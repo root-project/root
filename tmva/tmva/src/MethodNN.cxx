@@ -606,6 +606,7 @@ void TMVA::MethodNN::Train()
             /*E =*/fNet.train (fWeights, trainPattern, testPattern, minimizer, *ptrSettings.get ());
         }
         ptrSettings.reset ();
+        Log () << kINFO << Endl;
     }
     fMonitoring = 0;
 }
