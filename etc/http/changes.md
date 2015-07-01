@@ -1,6 +1,6 @@
 # JSROOT changelog
 
-## Changes in master
+## Changes in 3.6
 1. Try to provide workaround for websites where require.js already loaded.
    This makes problem by direct loading of jquery and jquery-ui 
 2. Provide workaround for older version of jquery-ui 
@@ -17,6 +17,14 @@
    fit format for statistic display 
 10.Implement 'g' formatting kind for stat box output - one need to checks 
    significant digits when producing output.  
+11.Support new draw options for TGraph: 'C', 'B1', '0', '2', '3', '4', '[]'
+12.Primary support for STL containers in IO part. Allows to read ROOT6 TF1.
+13.Full support of TGraphBentErrors
+14.Support objects drawing from JSON files in default user interface, including
+   monitoring. One could open file from link like: 
+      https://root.cern.ch/js/dev/?json=demo/canvas_tf1.json 
+15.Introduce JSROOT.FFormat function to convert numeric values into string according
+   format like 6.4g or 5.7e. Used for statistic display.
 
 
 ## Changes in 3.5
