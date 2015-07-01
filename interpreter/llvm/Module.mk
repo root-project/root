@@ -43,7 +43,7 @@ LLVMVERSION  := $(shell echo $(subst rc,,$(subst svn,,$(subst PACKAGE_VERSION=,,
 	$(shell grep 'PACKAGE_VERSION=' $(LLVMDIRS)/configure)))))
 LLVMRES      := etc/cling/lib/clang/$(LLVMVERSION)/include/stddef.h
 LLVMRESEXTRA := $(addprefix etc/cling/lib/clang/$(LLVMVERSION)/include/, assert.h stdlib.h unistd.h)
-LLVMSYSEXTRA := $(wildcard $(addprefix /usr/include/, wchar.h bits/stat.h))
+LLVMSYSEXTRA := $(wildcard $(addprefix /usr/include/, wchar.h bits/stat.h bits/time.h))
 LLVMSYSEXTRA := $(patsubst /usr/include/%,etc/cling/lib/clang/$(LLVMVERSION)/include/%,$(LLVMSYSEXTRA))
 LLVMDEP      := $(LLVMLIB) $(LLVMRES) $(LLVMRESEXTRA) $(LLVMSYSEXTRA)
 
