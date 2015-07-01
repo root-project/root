@@ -2707,7 +2707,7 @@ void THistPainter::DrawPanel()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute the actions corresponding to "event".
+/// Execute the actions corresponding to `event`.
 ///
 /// This function is called when a histogram is clicked with the locator at
 /// the pixel position px,py.
@@ -3087,7 +3087,7 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if the cell ix, iy is inside one of the graphical cuts.
+/// Return `kTRUE` if the cell `ix`, `iy` is inside one of the graphical cuts.
 
 Bool_t THistPainter::IsInside(Int_t ix, Int_t iy)
 {
@@ -3106,7 +3106,7 @@ Bool_t THistPainter::IsInside(Int_t ix, Int_t iy)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if the point x,y is inside one of the graphical cuts.
+/// Return `kTRUE` if the point `x`, `y` is inside one of the graphical cuts.
 
 Bool_t THistPainter::IsInside(Double_t x, Double_t y)
 {
@@ -3123,7 +3123,7 @@ Bool_t THistPainter::IsInside(Double_t x, Double_t y)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Decode string "choptin" and fill Hoption structure.
+/// Decode string `choptin` and fill Hoption structure.
 
 Int_t THistPainter::MakeChopt(Option_t *choptin)
 {
@@ -3478,7 +3478,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Decode string "choptin" and fill Graphical cuts structure.
+/// Decode string `choptin` and fill Graphical cuts structure.
 
 Int_t THistPainter::MakeCuts(char *choptin)
 {
@@ -3807,8 +3807,8 @@ void THistPainter::PaintArrows(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw axis (2D case) of an histogram.
 ///
-/// If drawGridOnly is TRUE, only the grid is painted (if needed). This allows
-/// to draw the grid and the axis separately. In THistPainter::Paint this
+/// If `drawGridOnly` is `TRUE`, only the grid is painted (if needed). This allows
+/// to draw the grid and the axis separately. In `THistPainter::Paint` this
 /// feature is used to make sure that the grid is drawn in the background and
 /// the axis tick marks in the foreground of the pad.
 
@@ -6529,7 +6529,7 @@ void THistPainter::PaintLego(Option_t *)
    Double_t psideg = view->GetPsi();
    view->SetView(phideg, thedeg, psideg, irep);
 
-   fLego->SetLineColor(kBlack);  /// zgrid color for lego1 & lego2
+   fLego->SetLineColor(kBlack);  // zgrid color for lego1 & lego2
    fLego->SetFillStyle(fH->GetFillStyle());
 
    //     Set color/style for back box
@@ -6942,7 +6942,7 @@ void THistPainter::PaintScatterPlot(Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function to paint special objects like vectors and matrices.
-/// This function is called via gROOT->ProcessLine to paint these objects
+/// This function is called via `gROOT->ProcessLine` to paint these objects
 /// without having a direct dependency of the graphics or histogramming
 /// system.
 
