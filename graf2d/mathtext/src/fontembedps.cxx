@@ -236,10 +236,6 @@ namespace mathtext {
       if(magic_number[0] == '\200') {
          // IBM PC format printer font binary
 
-         // FIXME: Maybe the real name can be parsed out of the
-         // file
-         font_name = "";
-
          struct pfb_segment_header_s segment_header;
          size_t offset = 0;
 
@@ -259,6 +255,7 @@ namespace mathtext {
             bswap_32(segment_header.length);
 #endif // LITTLE_ENDIAN
             char *buffer = new char[segment_header.length];
+            char *fname;
 
             memcpy(buffer, &font_data[offset],
                    segment_header.length);
@@ -278,6 +275,26 @@ namespace mathtext {
                      buffer[segment_header.length - 1] = '\n';
                   }
                   ret.append(buffer, segment_header.length);
+
+                  fname = (char*)memmem(buffer, segment_header.length,
+                                        "/FontName", 9);
+                  if (fname) {
+                     fname += 9;
+                     while (fname < buffer + segment_header.length &&
+                            isspace(*fname)) {
+                        fname++;
+                     }
+                     if (fname < buffer + segment_header.length &&
+                         *fname == '/') {
+                        fname++;
+                     }
+                     int len = 0;
+                     while (fname + len < buffer + segment_header.length &&
+                            isgraph(*(fname + len))) {
+                        len++;
+                     }
+                     font_name.assign(fname, len);
+                  }
                   break;
                case TYPE_BINARY:
                   append_asciihex(
