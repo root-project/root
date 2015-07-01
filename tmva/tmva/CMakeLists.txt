@@ -2,7 +2,7 @@
 # CMakeLists.txt file for building ROOT tmva package
 # @author Pere Mato, CERN
 ############################################################################
-#---The following is needed becuase client codes of TMVA (in ROOT itself) assumes to find header files under /TVMA
+#---The following is needed because client codes of TMVA (in ROOT itself) assumes to find header files under /TVMA
 #execute_process(COMMAND cmake -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/TMVA)
 
 if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
@@ -24,7 +24,7 @@ set(headers1 Configurable.h Event.h Factory.h MethodBase.h MethodCompositeBase.h
 	     MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h
 	     MethodHMatrix.h MethodPDERS.h MethodBDT.h MethodDT.h MethodSVM.h MethodBayesClassifier.h
 	     MethodFDA.h MethodMLP.h MethodBoost.h
-	     MethodPDEFoam.h MethodLD.h MethodCategory.h)
+	     MethodPDEFoam.h MethodLD.h MethodCategory.h MethodNN.h)
 set(headers2 TSpline2.h TSpline1.h PDF.h BinaryTree.h BinarySearchTreeNode.h BinarySearchTree.h 
 	     Timer.h RootFinder.h CrossEntropy.h DecisionTree.h DecisionTreeNode.h MisClassificationError.h 
 	     Node.h SdivSqrtSplusB.h SeparationBase.h RegressionVariance.h Tools.h Reader.h 
