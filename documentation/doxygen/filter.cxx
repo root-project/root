@@ -138,6 +138,8 @@ int main(int argc, char *argv[])
          gLineString = gLine;
          StandardizeKeywords();
 
+         if (gLineString.Index("/*! \\class") >= 0) gClass = kTRUE;
+
          if (gLineString.Index("begin_html") >= 0) {
             if (!gClass) {
                gLineString = TString::Format("/*! \\class %s\n",gClassName.Data());
