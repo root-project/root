@@ -811,9 +811,11 @@ void output(Bool_t printAll, Bool_t testAll, TreeGetter& getter){
     fprintf(stderr, "A1: readNum(): ------------------------------ %s", printAll ? "\n": ""); readNum(                   "A1.", printAll, testAll, getter);
     fprintf(stderr, "A1: readBObject(): -------------------------- %s", printAll ? "\n": ""); readBObject(               "A1.", printAll, testAll, getter);
     fprintf(stderr, "A1: readBStar(): ---------------------------- %s", printAll ? "\n": ""); readBStar(                 "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readVectorFloatValue(): ----------------- %s", printAll ? "\n": ""); readVectorFloatValue(      "A1.", printAll, testAll, getter);
     fprintf(stderr, "A1: readVectorBValue(): --------------------- %s", printAll ? "\n": ""); readVectorBValue(          "A1.", printAll, testAll, getter);
     fprintf(stderr, "A1: readVectorStarBValue(): ----------------- %s", printAll ? "\n": ""); readVectorStarBValue(      "A1.", printAll, testAll, getter);
     fprintf(stderr, "A1: readVectorStarBArray(): ----------------- %s", printAll ? "\n": ""); readVectorStarBArray(      "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readVectorFloatArray(): ----------------- %s", printAll ? "\n": ""); readVectorFloatArray(      "A1.", printAll, testAll, getter);
     fprintf(stderr, "A1: readVectorBArray(): --------------------- %s", printAll ? "\n": ""); readVectorBArray(          "A1.", printAll, testAll, getter);
     fprintf(stderr, "A1: readBArray(): --------------------------- %s", printAll ? "\n": ""); readBArray(                "A1.", printAll, testAll, getter);
     fprintf(stderr, "A1: readBStarArray(): ----------------------- %s", printAll ? "\n": ""); readBStarArray(            "A1.", printAll, testAll, getter);
@@ -827,9 +829,11 @@ void output(Bool_t printAll, Bool_t testAll, TreeGetter& getter){
     fprintf(stderr, "A99: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(               "A99.", printAll, testAll, getter);
     fprintf(stderr, "A99: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(          "A99.", printAll, testAll, getter);
     fprintf(stderr, "A99: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(                 "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readVectorFloatValue(): ---------------- %s", printAll ? "\n": ""); readVectorFloatValue(      "A99.", printAll, testAll, getter);
     fprintf(stderr, "A99: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(          "A99.", printAll, testAll, getter);
     fprintf(stderr, "A99: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(      "A99.", printAll, testAll, getter);
     fprintf(stderr, "A99: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(      "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readVectorFloatArray(): ---------------- %s", printAll ? "\n": ""); readVectorFloatArray(      "A99.", printAll, testAll, getter);
     fprintf(stderr, "A99: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(          "A99.", printAll, testAll, getter);
     fprintf(stderr, "A99: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(                "A99.", printAll, testAll, getter);
     fprintf(stderr, "A99: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(            "A99.", printAll, testAll, getter);
