@@ -287,13 +287,15 @@ class LayerData
 public:
     typedef std::vector<double> container_type;
 
-    typedef typename container_type::iterator iterator_type;
-    typedef typename container_type::const_iterator const_iterator_type;
+    typedef container_type::iterator iterator_type;
+    typedef container_type::const_iterator const_iterator_type;
 
     typedef std::vector<std::function<double(double)> > function_container_type;
-    typedef typename function_container_type::iterator function_iterator_type;
-    typedef typename function_container_type::const_iterator const_function_iterator_type;
+    typedef function_container_type::iterator function_iterator_type;
+    typedef function_container_type::const_iterator const_function_iterator_type;
 
+    typedef DropContainer::const_iterator const_dropout_iterator;
+    
     LayerData (const_iterator_type itInputBegin, const_iterator_type itInputEnd, ModeOutputValues eModeOutput = ModeOutputValues::DIRECT);
 
 
@@ -318,6 +320,7 @@ public:
     , m_deltas (other.m_deltas)
     , m_valueGradients (other.m_valueGradients)
     , m_values (other.m_values)
+    , m_hasDropOut (false)
     , m_itConstWeightBegin   (other.m_itConstWeightBegin)
     , m_itGradientBegin (other.m_itGradientBegin)
     , m_itFunctionBegin (other.m_itFunctionBegin)
@@ -335,6 +338,7 @@ public:
     , m_deltas (other.m_deltas)
     , m_valueGradients (other.m_valueGradients)
     , m_values (other.m_values)
+    , m_hasDropOut (false)
     , m_itConstWeightBegin   (other.m_itConstWeightBegin)
     , m_itGradientBegin (other.m_itGradientBegin)
     , m_itFunctionBegin (other.m_itFunctionBegin)
@@ -387,6 +391,13 @@ public:
     const_function_iterator_type functionBegin () const { return m_itFunctionBegin; }
     const_function_iterator_type inverseFunctionBegin () const { return m_itInverseFunctionBegin; }
 
+    template <typename Iterator>
+        void setDropOut (Iterator itDrop) { m_itDropOut = itDrop; m_hasDropOut = true; }
+    void clearDropOut () { m_hasDropOut = false; }
+    
+    bool hasDropOut () const { return m_hasDropOut; }
+    const_dropout_iterator dropOut () const { return m_itDropOut; }
+    
     size_t size () const { return m_size; }
 
 private:
@@ -403,6 +414,8 @@ private:
     std::vector<double> m_deltas;
     std::vector<double> m_valueGradients;
     std::vector<double> m_values;
+    const_dropout_iterator m_itDropOut; // correlates with m_values
+    bool m_hasDropOut;
 
     const_iterator_type m_itConstWeightBegin;
     iterator_type       m_itGradientBegin;
