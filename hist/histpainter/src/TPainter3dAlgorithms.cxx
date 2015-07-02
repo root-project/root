@@ -12,16 +12,18 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Begin_Html
-<center><h2>Legos and Surfaces package</h2></center>
+/*! \class TPainter3dAlgorithms
+
+## Legos and Surfaces package
+
 This package was originally written by Evgueni Tcherniaev from IHEP/Protvino.
-<p>
+
 The original Fortran implementation was adapted to HIGZ/PAW by Olivier Couet
 and  Evgueni Tcherniaev.
-<p>
+
 This class is a subset of the original system. It has been converted to a C++
 class by Rene Brun.
-End_Html */
+*/
 
 #include <stdlib.h>
 
@@ -263,16 +265,12 @@ TPainter3dAlgorithms::~TPainter3dAlgorithms()
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw back surfaces of surrounding box
 ///
-///    Input  ANG     - angle between X and Y axis
-///
-///           DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
-///             ICODES(*) - set of codes for this face
-///             NP        - number of nodes in face
-///             IFACE(NP) - face
-///             T(NP)     - additional function
+/// \param[in] ang   is the angle between X and Y axis
+
 
 void TPainter3dAlgorithms::BackBox(Double_t ang)
 {
+
    /* Initialized data */
    static Int_t iface1[4] = { 1,4,8,5 };
    static Int_t iface2[4] = { 4,3,7,8 };
@@ -332,15 +330,11 @@ void TPainter3dAlgorithms::ClearRaster()
 ////////////////////////////////////////////////////////////////////////////////
 /// Set correspondance between function and color levels
 ///
-///    Input: NL        - number of levels
-///           FL(NL)    - function levels
-///           ICL(NL+1) - colors for levels
+/// \param[in] nl   number of levels
+/// \param[in] fl   function levels
+/// \param[in] icl   colors for levels
 ///
-///    Output: IREP     - reply: 0 O.K.
-///                             -1 error in parameters:
-///                         illegal number of levels
-///                         function levels must be in increasing order
-///                         negative color index
+/// \param[out] irep   return code.(0 OK, -1 error).
 
 void TPainter3dAlgorithms::ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int_t &irep)
 {
@@ -417,24 +411,17 @@ void TPainter3dAlgorithms::DefineGridLevels(Int_t ndivz)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw face - 1st variant
+/// Draw face - 1st variant (2 colors: 1st for external surface, 2nd for internal)
 ///
-///    Function: Draw face - 1st variant
-///              (2 colors: 1st for external surface, 2nd for internal)
-///
-///    References: WCtoNDC
-///
-///    Input: ICODES(*) - set of codes for the line (not used)
-///             ICODES(1) - IX
-///             ICODES(2) - IY
-///           XYZ(3,*)  - coordinates of nodes
-///           NP        - number of nodes
-///           IFACE(NP) - face
-///           T(NP)     - additional function defined on this face
-///                       (not used in this routine)
+/// \param[in] icodes   set of codes for the line (not used in this method)
+/// \param[in] xyz   coordinates of nodes
+/// \param[in] np   number of nodes
+/// \param[in] iface   face
+/// \param[in] t   additional function defined on this face (not used in this method)
 
 void TPainter3dAlgorithms::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
 {
+
    /* Local variables */
    Int_t i, k,ifneg,i1, i2;
    Double_t x[13], y[13];
@@ -498,20 +485,13 @@ void TPainter3dAlgorithms::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw face - 2nd option
+/// Draw face - 2nd option (fill in correspondance with function levels)
 ///
-///    Function: Draw face - 2nd option
-///              (fill in correspondance with function levels)
-///
-///    References: WCtoNDC, FillPolygon
-///
-///    Input: ICODES(*) - set of codes for the line (not used)
-///             ICODES(1) - IX
-///             ICODES(2) - IY
-///           XYZ(3,*)  - coordinates of nodes
-///           NP        - number of nodes
-///           IFACE(NP) - face
-///           T(NP)     - additional function defined on this face
+/// \param[in] icodes   set of codes for the line (not used in this method)
+/// \param[in] xyz   coordinates of nodes
+/// \param[in] np   number of nodes
+/// \param[in] iface   face
+/// \param[in] t   additional function defined on this face
 
 void TPainter3dAlgorithms::DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
 {
@@ -557,23 +537,13 @@ void TPainter3dAlgorithms::DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw face - 3rd option
+/// Draw face - 3rd option (draw face for stacked lego plot)
 ///
-///    Function: Draw face - 3rd option
-///              (draw face for stacked lego plot)
-///
-///    References: WCtoNDC
-///
-///    Input: ICODES(*) - set of codes for the line
-///             ICODES(1) - IX coordinate of the line cell
-///             ICODES(2) - IY coordinate of the line cell
-///             ICODES(3) - lego number
-///             ICODES(4) - side: 1-face,2-right,3-back,4-left,
-///                               5-bottom, 6-top
-///             XYZ(3,*)  - coordinates of nodes
-///             NP        - number of nodes
-///             IFACE(NP) - face
-///             T(*)      - additional function (not used here)
+/// \param[in] icodes   set of codes for the line
+/// \param[in] xyz   coordinates of nodes
+/// \param[in] np   number of nodes
+/// \param[in] iface   face
+/// \param[in] t   additional function defined on this face (not used in this method)
 
 void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
 {
@@ -624,22 +594,13 @@ void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw face - 1st variant for "MOVING SCREEN" algorithm
+/// Draw face - 1st variant for "MOVING SCREEN" algorithm (draw face with level lines)
 ///
-///    Function: Draw face - 1st variant for "MOVING SCREEN" algorithm
-///              (draw face with level lines)
-///
-///    References: FindLevelLines, WCtoNDC,
-///                FindVisibleDraw, ModifyScreen
-///
-///    Input: ICODES(*) - set of codes for the line (not used)
-///             ICODES(1) - IX
-///             ICODES(2) - IY
-///           XYZ(3,*)  - coordinates of nodes
-///           NP        - number of nodes
-///           IFACE(NP) - face
-///           TT(NP)    - additional function defined on this face
-///                       (not used in this routine)
+/// \param[in] icodes   set of codes for the line (not used in this method)
+/// \param[in] xyz   coordinates of nodes
+/// \param[in] np   number of nodes
+/// \param[in] iface   face
+/// \param[in] t   additional function defined on this face (not used in this method)
 
 void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
                                          Int_t *iface, Double_t *tt)
@@ -735,22 +696,13 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw face - 3rd variant for "MOVING SCREEN" algorithm
+/// Draw face - 3rd variant for "MOVING SCREEN" algorithm (draw level lines only)
 ///
-///    Function: Draw face - 1st variant for "MOVING SCREEN" algorithm
-///              (draw level lines only)
-///
-///    References: FindLevelLines, WCtoNDC,
-///                FindVisibleDraw, ModifyScreen
-///
-///    Input: ICODES(*) - set of codes for the line (not used)
-///             ICODES(1) - IX
-///             ICODES(2) - IY
-///           XYZ(3,*)  - coordinates of nodes
-///           NP        - number of nodes
-///           IFACE(NP) - face
-///           TT(NP)    - additional function defined on this face
-///                       (not used in this routine)
+/// \param[in] icodes   set of codes for the line (not used in this method)
+/// \param[in] xyz   coordinates of nodes
+/// \param[in] np   number of nodes
+/// \param[in] iface   face
+/// \param[in] tt   additional function defined on this face (not used in this method)
 
 void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
                                          Int_t *iface, Double_t *tt)
@@ -818,23 +770,13 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw face - 2nd variant for "MOVING SCREEN" algorithm
+/// Draw face - 2nd variant for "MOVING SCREEN" algorithm (draw face for stacked lego plot)
 ///
-///    Function: Draw face - 2nd variant for "MOVING SCREEN" algorithm
-///              (draw face for stacked lego plot)
-///
-///    References: FindLevelLines, WCtoNDC,
-///                FindVisibleDraw, ModifyScreen
-///
-///    Input: ICODES(*) - set of codes for the line (not used)
-///             ICODES(1) - IX
-///             ICODES(2) - IY
-///             ICODES(3) - line code (N of lego)
-///           XYZ(3,*)  - coordinates of nodes
-///           NP        - number of nodes
-///           IFACE(NP) - face
-///           TT(NP)    - additional function defined on this face
-///                       (not used in this routine)
+/// \param[in] icodes   set of codes for the line (not used in this method)
+/// \param[in] xyz   coordinates of nodes
+/// \param[in] np   number of nodes
+/// \param[in] iface   face
+/// \param[in] tt   additional function defined on this face (not used in this method)
 
 void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
 {
@@ -901,22 +843,13 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw face - 1st variant for "RASTER SCREEN" algorithm
+/// Draw face - 1st variant for "RASTER SCREEN" algorithm (draw face with level lines)
 ///
-///    Function: Draw face - 1st variant for "RASTER SCREEN" algorithm
-///              (draw face with level lines)
-///
-///    References: FindLevelLines, WCtoNDC,
-///                FindVisibleLine, FillPolygonBorder
-///
-///    Input: ICODES(*) - set of codes for the line (not used)
-///             ICODES(1) - IX
-///             ICODES(2) - IY
-///           XYZ(3,*)  - coordinates of nodes
-///           NP        - number of nodes
-///           IFACE(NP) - face
-///           TT(NP)    - additional function defined on this face
-///                       (not used in this routine)
+/// \param[in] icodes   set of codes for the line (not used in this method)
+/// \param[in] xyz   coordinates of nodes
+/// \param[in] np   number of nodes
+/// \param[in] iface   face
+/// \param[in] t   additional function defined on this face (not used in this method)
 
 void TPainter3dAlgorithms::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
 {
@@ -1008,22 +941,13 @@ void TPainter3dAlgorithms::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t n
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw face - 2nd variant for "RASTER SCREEN" algorithm
+/// Draw face - 2nd variant for "RASTER SCREEN" algorithm (draw face for stacked lego plot)
 ///
-///    Function: Draw face - 2nd variant for "RASTER SCREEN" algorithm
-///              (draw face for stacked lego plot)
-///
-///    References: WCtoNDC, FindVisibleLine, FillPolygonBorder
-///
-///    Input: ICODES(*) - set of codes for the line (not used)
-///             ICODES(1) - IX
-///             ICODES(2) - IY
-///             ICODES(3) - line code (N of lego)
-///           XYZ(3,*)  - coordinates of nodes
-///           NP        - number of nodes
-///           IFACE(NP) - face
-///           TT(NP)    - additional function defined on this face
-///                       (not used in this routine)
+/// \param[in] icodes   set of codes for the line (not used in this method)
+/// \param[in] xyz   coordinates of nodes
+/// \param[in] np   number of nodes
+/// \param[in] iface   face
+/// \param[in] tt   additional function defined on this face (not used in this method)
 
 void TPainter3dAlgorithms::DrawFaceRaster2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
 {
@@ -1081,12 +1005,13 @@ void TPainter3dAlgorithms::DrawFaceRaster2(Int_t *icodes, Double_t *xyz, Int_t n
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill polygon with function values at vertexes
 ///
-///    Input: N      - number of vertexes
-///           P(3,*) - polygon
-///           F(*)   - function values at nodes
+/// \param[in] n   number of vertexes
+/// \param[in] p   polygon
+/// \param[in] f   function values at nodes
 ///
-///    Errors: - illegal number of vertexes in polygon
-///            - illegal call of FillPolygon: no levels
+/// Errors:
+/// - illegal number of vertexes in polygon
+/// - illegal call of FillPolygon: no levels
 
 void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
 {
@@ -1163,8 +1088,8 @@ void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill a polygon including border ("RASTER SCREEN")
 ///
-///    Input: NN      - number of polygon nodes
-///           XY(2,*) - polygon nodes
+/// \param[in] nn   number of polygon nodes
+/// \param[in] xy   polygon nodes
 
 void TPainter3dAlgorithms::FillPolygonBorder(Int_t nn, Double_t *xy)
 {
@@ -1393,9 +1318,9 @@ L500:
 ////////////////////////////////////////////////////////////////////////////////
 /// Find level lines for face
 ///
-///    Input: NP      - number of nodes
-///           F(3,NP) - face
-///           T(NP)   - additional function
+/// \param[in] np   number of nodes
+/// \param[in] f   face
+/// \param[in] t   additional function
 ///
 ///    Error: number of points for line not equal 2
 
@@ -1468,20 +1393,18 @@ L340:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find part of edge
+/// Find part of edge where function defined on this edge has value from
+/// `fmin` to `fmax`
 ///
-///    Function: Find part of edge where function defined on this edge
-///              has value from FMIN to FMAX
+/// \param[in] p1   1st point
+/// \param[in] p2   2nd point
+/// \param[in] f1   function value at 1st point
+/// \param[in] f2   function value at 2nd point
+/// \param[in] fmin   min value of layer
+/// \param[in] fmax   max value of layer
 ///
-///    Input: P1(3) - 1st point
-///           P2(3) - 2nd point
-///           F1    - function value at 1st point
-///           F2    - function value at 2nd point
-///           FMIN  - min value of layer
-///           FMAX  - max value of layer
-///
-///    Output: KPP - current number of point
-///            PP(3,*) - coordinates of new face
+/// \param[out] kpp   current number of point
+/// \param[out] pp   coordinates of new face
 
 void TPainter3dAlgorithms::FindPartEdge(Double_t *p1, Double_t *p2, Double_t f1,
                                         Double_t f2, Double_t fmin,
@@ -1629,8 +1552,8 @@ L700:
 ////////////////////////////////////////////////////////////////////////////////
 /// Find visible parts of line (draw line)
 ///
-///    Input: R1(3)  - 1-st point of the line
-///           R2(3)  - 2-nd point of the line
+/// \param[in] r1   1-st point of the line
+/// \param[in] r2   2-nd point of the line
 
 void TPainter3dAlgorithms::FindVisibleDraw(Double_t *r1, Double_t *r2)
 {
@@ -1795,12 +1718,12 @@ void TPainter3dAlgorithms::FindVisibleDraw(Double_t *r1, Double_t *r2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Find visible part of a line ("RASTER SCREEN")
 ///
-///    Input: P1(2) - 1st point of the line
-///           P2(2) - 2nd point of the line
-///           NTMAX - max allowed number of visible segments
+/// \param[in] p1   1st point of the line
+/// \param[in] p2   2nd point of the line
+/// \param[in] ntmax   max allowed number of visible segments
 ///
-///    Output: NT     - number of visible segments of the line
-///            T(2,*) - visible segments
+/// \param[out] nt   number of visible segments of the line
+/// \param[out] t   visible segments
 
 void TPainter3dAlgorithms::FindVisibleLine(Double_t *p1, Double_t *p2, Int_t ntmax, Int_t &nt, Double_t *t)
 {
@@ -1947,17 +1870,7 @@ L300:
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw forward faces of surrounding box & axes
 ///
-///    Function: Draw forward faces of surrounding box & axes
-///
-///    References: AxisVertex, Gaxis
-///
-///    Input  ANG     - angle between X and Y axis
-///
-///           DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
-///             ICODES(*) - set of codes for this face
-///             NP        - number of nodes in face
-///             IFACE(NP) - face
-///             T(NP)     - additional function
+///    `ang`is the  angle between X and Y axis
 
 void TPainter3dAlgorithms::FrontBox(Double_t ang)
 {
@@ -1997,9 +1910,8 @@ void TPainter3dAlgorithms::FrontBox(Double_t ang)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find part of surface with luminosity in the corners
-///
-///              This routine is used for Gouraud shading
+/// Find part of surface with luminosity in the corners. This method is used for
+/// Gouraud shading
 
 void TPainter3dAlgorithms::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, Double_t *t)
 {
@@ -2135,8 +2047,8 @@ void TPainter3dAlgorithms::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, D
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize "MOVING SCREEN" method
 ///
-///    Input: XMIN - left boundary
-///           XMAX - right boundary
+/// \param[in] xmin   left boundary
+/// \param[in] xmax   right boundary
 
 void TPainter3dAlgorithms::InitMoveScreen(Double_t xmin, Double_t xmax)
 {
@@ -2154,12 +2066,12 @@ void TPainter3dAlgorithms::InitMoveScreen(Double_t xmin, Double_t xmax)
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize hidden lines removal algorithm (RASTER SCREEN)
 ///
-///    Input: XMIN - Xmin in the normalized coordinate system
-///           YMIN - Ymin in the normalized coordinate system
-///           XMAX - Xmax in the normalized coordinate system
-///           YMAX - Ymax in the normalized coordinate system
-///           NX   - number of pixels along X
-///           NY   - number of pixels along Y
+/// \param[in] xmin   Xmin in the normalized coordinate system
+/// \param[in] ymin   Ymin in the normalized coordinate system
+/// \param[in] xmax   Xmax in the normalized coordinate system
+/// \param[in] ymax   Ymax in the normalized coordinate system
+/// \param[in] nx   number of pixels along X
+/// \param[in] ny   number of pixels along Y
 
 void TPainter3dAlgorithms::InitRaster(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, Int_t nx, Int_t ny  )
 {
@@ -2369,41 +2281,16 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw stack of lego-plots in cartesian coordinates
 ///
-///    Input: ANG      - angle between X ang Y
-///           NX       - number of cells along X
-///           NY       - number of cells along Y
+/// \param[in] ang   angle between X ang Y
+/// \param[in] nx   number of cells along X
+/// \param[in] ny   number of cells along Y
 ///
-///           FUN(IX,IY,NV,XY,V,T) - external routine
-///             IX     - X number of the cell
-///             IY     - Y number of the cell
-///             NV     - number of values for given cell
-///             XY(2,4)- coordinates of the cell corners
-///             V(NV)  - cell values
-///             T(4,NV)- additional function (for example: temperature)
-///
-///           DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
-///             ICODES(*) - set of codes for this line
-///               ICODES(1) - IX
-///               ICODES(2) - IY
-///               ICODES(3) - IV
-///               ICODES(4) - side: 1-face,2-right,3-back,4-left,
-///                                 5-bottom, 6-top
-///               XYZ(3,*)  - coordinates of nodes
-///               NP        - number of nodes
-///               IFACE(NP) - face
-///                T(4)   - additional function (here Z-coordinate)
-///
-///           CHOPT - options: 'BF' - from BACK to FRONT
-///                            'FB' - from FRONT to BACK
-///
-///Begin_Html
+/// - `chopt` = 'BF' from BACK to FRONT
+/// - `chopt` = 'FB' from FRONT to BACK
 
 void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
 {
-   /*
-   <img src="gif/Lego1Cartesian.gif">
-   */
-   //End_Html
+
 
    // Local variables
    Double_t cosa, sina;
@@ -2576,41 +2463,15 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw stack of lego-plots in polar coordinates
 ///
-///    Input: IORDR - order of variables (0 - R,PHI; 1 - PHI,R)
-///           NA    - number of steps along 1st variable
-///           NB    - number of steps along 2nd variable
+/// \param[in] iordr   order of variables (0 - R,PHI; 1 - PHI,R)
+/// \param[in] na   number of steps along 1st variable
+/// \param[in] nb   number of steps along 2nd variable
 ///
-///           FUN(IA,IB,NV,AB,V,TT) - external routine
-///             IA      - cell number for 1st variable
-///             IB      - cell number for 2nd variable
-///             NV      - number of values for given cell
-///             AB(2,4) - coordinates of the cell corners
-///             V(NV)   - cell values
-///             TT(4,*) - additional function
-///
-///           DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
-///             ICODES(*) - set of codes for this face
-///               ICODES(1) - IA
-///               ICODES(2) - IB
-///               ICODES(3) - IV
-///               ICODES(4) - side: 1-internal,2-right,3-external,4-left
-///                                 5-bottom, 6-top
-///             XYZ(3,*)  - coordinates of nodes
-///             NP        - number of nodes in face
-///             IFACE(NP) - face
-///             T(NP)     - additional function
-///
-///            CHOPT       - options: 'BF' - from BACK to FRONT
-///                                   'FB' - from FRONT to BACK
-///
-///Begin_Html
+/// - `chopt` = 'BF' from BACK to FRONT
+/// - `chopt` = 'FB' from FRONT to BACK
 
 void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 {
-   /*
-   <img src="gif/Lego1Polar.gif">
-   */
-   //End_Html
 
    Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
    Double_t tface[4];
@@ -2812,41 +2673,16 @@ L300:
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw stack of lego-plots in cylindrical coordinates
 ///
-///    Input: IORDR - order of variables (0 - Z,PHI; 1 - PHI,Z)
-///           NA    - number of steps along 1st variable
-///           NPHI  - number of steps along 2nd variable
+/// \param[in] iordr   order of variables (0 - Z,PHI; 1 - PHI,Z)
+/// \param[in] na   number of steps along 1st variable
+/// \param[in] nb   number of steps along 2nd variable
 ///
-///           FUN(IA,IB,NV,AB,V,TT) - external routine
-///             IA      - cell number for 1st variable
-///             IB      - cell number for 2nd variable
-///             NV      - number of values for given cell
-///             AB(2,4) - coordinates of the cell corners
-///             V(NV)   - cell values
-///             TT(4,*) - additional function
-///
-///           DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
-///             ICODES(*) - set of codes for this face
-///               ICODES(1) - IA
-///               ICODES(2) - IB
-///               ICODES(3) - IV
-///               ICODES(4) - side: 1,2,3,4 - ordinary sides
-///                                 5-bottom,6-top
-///             XYZ(3,*)  - coordinates of nodes
-///             NP        - number of nodes in face
-///             IFACE(NP) - face
-///             T(NP)     - additional function
-///
-///           CHOPT       - options: 'BF' - from BACK to FRONT
-///                                  'FB' - from FRONT to BACK
-///
-///Begin_Html
+/// - `chopt` = 'BF' from BACK to FRONT
+/// - `chopt` = 'FB' from FRONT to BACK
 
 void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 {
-   /*
-   <img src="gif/Lego1Cylindrical.gif">
-   */
-   //End_Html
+
 
    Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
    Double_t tface[4], z;
@@ -3052,33 +2888,13 @@ L400:
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw stack of lego-plots spheric coordinates
 ///
-///    Input: IPSDR - pseudo-rapidity flag
-///           IORDR - order of variables (0 - THETA,PHI; 1 - PHI,THETA)
-///           NA    - number of steps along 1st variable
-///           NB    - number of steps along 2nd variable
+/// \param[in] ipsdr    pseudo-rapidity flag
+/// \param[in] iordr   order of variables (0 - THETA,PHI; 1 - PHI,THETA)
+/// \param[in] na   number of steps along 1st variable
+/// \param[in] nb   number of steps along 2nd variable
 ///
-///           FUN(IA,IB,NV,AB,V,TT) - external routine
-///             IA      - cell number for 1st variable
-///             IB      - cell number for 2nd variable
-///             NV      - number of values for given cell
-///             AB(2,4) - coordinates of the cell corners
-///             V(NV)   - cell values
-///             TT(4,*) - additional function
-///
-///           DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
-///             ICODES(*) - set of codes for this face
-///               ICODES(1) - IA
-///               ICODES(2) - IB
-///               ICODES(3) - IV
-///               ICODES(4) - side: 1,2,3,4 - ordinary sides
-///                                 5-bottom,6-top
-///             XYZ(3,*)  - coordinates of nodes
-///             NP        - number of nodes in face
-///             IFACE(NP) - face
-///             T(NP)     - additional function
-///
-///           CHOPT       - options: 'BF' - from BACK to FRONT
-///                                  'FB' - from FRONT to BACK
+/// - `chopt` = 'BF' from BACK to FRONT
+/// - `chopt` = 'FB' from FRONT to BACK
 
 void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 {
@@ -3353,18 +3169,12 @@ L500:
 ////////////////////////////////////////////////////////////////////////////////
 /// Set light source
 ///
-///    Input: NL   - source number: -1 off all light sources
-///                                  0 set diffused light
-///           YL   - intensity of the light source
-///           XSCR |
-///           YSCR  > direction of the light (in respect of the screen)
-///           ZSCR |
+/// \param[in] nl   source number: 1 off all light sources, 0 set diffused light
+/// \param[in] xl   intensity of the light source
+/// \param[in] xscr   `yscr` `zscr`  direction of the light (in respect of the screen)
 ///
-///    Output: IREP   - reply : 0 - O.K.
-///                            -1 - error in light sources definition:
-///                                 negative intensity
-///                                 source number greater than max
-///                                 light source is placed at origin
+/// \param[out] irep   reply (0 - O.K, -1 error)
+
 
 void TPainter3dAlgorithms::LightSource(Int_t nl, Double_t yl, Double_t xscr,
                                        Double_t yscr, Double_t zscr, Int_t &irep)
@@ -3425,28 +3235,10 @@ L400:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find surface luminosity at given point
-///                                         --
-///    Lightness model formula: Y = YD*QA + > YLi*(QD*cosNi+QS*cosRi)
-///                                         --
 ///
-///            B1     = VN(3)*VL(2) - VN(2)*VL(3)
-///            B2     = VN(1)*VL(3) - VN(3)*VL(1)
-///            B3     = VN(2)*VL(1) - VN(1)*VL(2)
-///            B4     = VN(1)*VL(1) + VN(2)*VL(2) + VN(3)*VL(3)
-///            VR(1)  = VN(3)*B2 - VN(2)*B3 + VN(1)*B4
-///            VR(2)  =-VN(3)*B1 + VN(1)*B3 + VN(2)*B4
-///            VR(3)  = VN(2)*B1 - VN(1)*B2 + VN(3)*B4
-///            S      = SQRT(VR(1)*VR(1)+VR(2)*VR(2)+VR(3)*VR(3))
-///            VR(1)  = VR(1)/S
-///            VR(2)  = VR(2)/S
-///            VR(3)  = VR(3)/S
-///            COSR   = VR(1)*0. + VR(2)*0. + VR(3)*1.
+/// \param[in] anorm   surface normal at given point
 ///
-///    References: WCtoNDC
-///
-///    Input: ANORM(3) - surface normal at given point
-///
-///    Output: FLUM - luminosity
+/// \param[out] flum   luminosity
 
 void TPainter3dAlgorithms::Luminosity(Double_t *anorm, Double_t &flum)
 {
@@ -3493,8 +3285,8 @@ void TPainter3dAlgorithms::Luminosity(Double_t *anorm, Double_t &flum)
 ////////////////////////////////////////////////////////////////////////////////
 /// Modify SCREEN
 ///
-///    Input: R1(3) - 1-st point of the line
-///           R2(3) - 2-nd point of the line
+/// \param[in] r1   1-st point of the line
+/// \param[in] r2   2-nd point of the line
 
 void TPainter3dAlgorithms::ModifyScreen(Double_t *r1, Double_t *r2)
 {
@@ -3588,7 +3380,7 @@ void TPainter3dAlgorithms::SetF3(TF3 *f3)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// static function
+/// Static function
 /// Set the implicit function clipping box "off".
 
 void TPainter3dAlgorithms::SetF3ClippingBoxOff()
@@ -3598,7 +3390,7 @@ void TPainter3dAlgorithms::SetF3ClippingBoxOff()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// static function
+/// Static function
 /// Set the implicit function clipping box "on" and define the clipping box.
 /// xclip, yclip and zclip is a point within the function range. All the
 /// function value having x<=xclip and y<=yclip and z>=zclip are clipped.
@@ -3650,10 +3442,10 @@ void TPainter3dAlgorithms::SetEdgeAtt(Color_t color, Style_t style, Width_t widt
 ////////////////////////////////////////////////////////////////////////////////
 /// Decode side visibilities and order along R for sector
 ///
-///    Input: VAL - encoded value
+/// \param[in] val   encoded value
 ///
-///    Output: IV1 ... IV6  - visibility of the sides
-///            IR           - increment along R
+/// \param[out] iv1-iv6   visibility of the sides
+/// \param[out] ir   increment along R
 
 void TPainter3dAlgorithms::SideVisibilityDecode(Double_t val, Int_t &iv1, Int_t &iv2, Int_t &iv3, Int_t &iv4, Int_t &iv5, Int_t &iv6, Int_t &ir)
 {
@@ -3682,12 +3474,11 @@ void TPainter3dAlgorithms::SideVisibilityDecode(Double_t val, Int_t &iv1, Int_t 
 ////////////////////////////////////////////////////////////////////////////////
 /// Encode side visibilities and order along R for sector
 ///
-///    Input: IOPT - options: 1 - from BACK to FRONT 'BF'
-///                           2 - from FRONT to BACK 'FB'
-///           PHI1 - 1st phi of sector
-///           PHI2 - 2nd phi of sector
+/// \param[in] iopt   options: 1: from BACK to FRONT 'BF', 2: from FRONT to BACK 'FB'
+/// \param[in] phi1   1st phi of sector
+/// \param[in] phi2   2nd phi of sector
 ///
-///    Output: VAL - encoded value
+/// \param[out] val   encoded value
 
 void TPainter3dAlgorithms::SideVisibilityEncode(Int_t iopt, Double_t phi1, Double_t phi2, Double_t &val)
 {
@@ -3721,18 +3512,13 @@ void TPainter3dAlgorithms::SideVisibilityEncode(Int_t iopt, Double_t phi1, Doubl
 ////////////////////////////////////////////////////////////////////////////////
 /// Set Spectrum
 ///
-///    Input: NL   - number of levels
-///           FMIN - MIN function value
-///           FMAX - MAX function value
-///           IC   - initial color index (for 1st level)
-///           IDC  - color index increment
+/// \param[in] nl   number of levels
+/// \param[in] fmin   MIN function value
+/// \param[in] fmax   MAX function value
+/// \param[in] ic   initial color index (for 1st level)
+/// \param[in] idc   color index increment
 ///
-///    Output: IREP - reply: 0 O.K.
-///                         -1 error in parameters
-///                            F_max less than F_min
-///                            illegal number of levels
-///                            initial color index is negative
-///                            color index increment must be positive
+/// \param[out] irep   reply (0 O.K., -1 error)
 
 void TPainter3dAlgorithms::Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_t ic, Int_t idc, Int_t &irep)
 {
@@ -3783,26 +3569,12 @@ void TPainter3dAlgorithms::Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw surface in cartesian coordinate system
 ///
-///    Input: ANG      - angle between X ang Y
-///           NX       - number of steps along X
-///           NY       - number of steps along Y
+/// \param[in] ang   angle between X ang Y
+/// \param[in] nx   number of steps along X
+/// \param[in] ny   number of steps along Y
 ///
-///           FUN(IX,IY,F,T) - external routine
-///             IX     - X number of the cell
-///             IY     - Y number of the cell
-///             F(3,4) - face which corresponds to the cell
-///             T(4)   - additional function (for example: temperature)
-///
-///           DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
-///             ICODES(*) - set of codes for this face
-///               ICODES(1) - IX
-///               ICODES(2) - IY
-///             NP        - number of nodes in face
-///             IFACE(NP) - face
-///             T(NP)     - additional function
-///
-///           CHOPT - options: 'BF' - from BACK to FRONT
-///                            'FB' - from FRONT to BACK
+/// - `chopt` = 'BF' from BACK to FRONT
+/// - `chopt` = 'FB' from FRONT to BACK
 
 void TPainter3dAlgorithms::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
 {
@@ -4007,30 +3779,12 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw surface in polar coordinates
 ///
-///    Input: IORDR - order of variables (0 - R,PHI, 1 - PHI,R)
-///           NA    - number of steps along 1st variable
-///           NB    - number of steps along 2nd variable
+/// \param[in] iordr   order of variables (0 - R,PHI, 1 - PHI,R)
+/// \param[in] na   number of steps along 1st variable
+/// \param[in] nb   number of steps along 2nd variable
 ///
-///           FUN(IA,IB,F,T) - external routine
-///             IA     - cell number for 1st variable
-///             IB     - cell number for 2nd variable
-///             F(3,4) - face which corresponds to the cell
-///               F(1,*) - A
-///               F(2,*) - B
-///               F(3,*) - Z
-///             T(4)   - additional function (for example: temperature)
-///
-///           DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
-///             ICODES(*) - set of codes for this face
-///               ICODES(1) - IA
-///               ICODES(2) - IB
-///             XYZ(3,*)  - coordinates of nodes
-///             NP        - number of nodes in face
-///             IFACE(NP) - face
-///             T(NP)     - additional function
-///
-///           CHOPT       - options: 'BF' - from BACK to FRONT
-///                                  'FB' - from FRONT to BACK
+/// - `chopt` = 'BF' from BACK to FRONT
+/// - `chopt` = 'FB' from FRONT to BACK
 
 void TPainter3dAlgorithms::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 {
@@ -4147,39 +3901,16 @@ L300:
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw surface in cylindrical coordinates
 ///
-///    Input: IORDR - order of variables (0 - Z,PHI, 1 - PHI,Z)
-///           NA    - number of steps along 1st variable
-///           NB    - number of steps along 2nd variable
+/// \param[in] iordr   order of variables (0 - Z,PHI; 1 - PHI,Z)
+/// \param[in] na   number of steps along 1st variable
+/// \param[in] nb   number of steps along 2nd variable
 ///
-///           FUN(IA,IB,F,T) - external routine
-///             IA     - cell number for 1st variable
-///             IB     - cell number for 2nd variable
-///             F(3,4) - face which corresponds to the cell
-///               F(1,*) - A
-///               F(2,*) - B
-///               F(3,*) - R
-///             T(4)   - additional function (for example: temperature)
-///
-///           DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
-///             ICODES(*) - set of codes for this face
-///               ICODES(1) - IA
-///               ICODES(2) - IB
-///             XYZ(3,*)  - coordinates of nodes
-///             NP        - number of nodes in face
-///             IFACE(NP) - face
-///             T(NP)     - additional function
-///
-///           CHOPT       - options: 'BF' - from BACK to FRONT
-///                                  'FB' - from FRONT to BACK
-///
-///Begin_Html
+/// - `chopt` = 'BF' from BACK to FRONT
+/// - `chopt` = 'FB' from FRONT to BACK
 
 void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 {
-   /*
-   <img src="gif/Surface1Cylindrical.gif">
-   */
-   //End_Html
+
 
    /* Initialized data */
    static Int_t iface[4] = { 1,2,3,4 };
@@ -4287,31 +4018,13 @@ L400:
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw surface in spheric coordinates
 ///
-///    Input: IPSDR - pseudo-rapidity flag
-///           IORDR - order of variables (0 - THETA,PHI; 1 - PHI,THETA)
-///           NA    - number of steps along 1st variable
-///           NB    - number of steps along 2nd variable
+/// \param[in] ipsdr    pseudo-rapidity flag
+/// \param[in] iordr   order of variables (0 - THETA,PHI; 1 - PHI,THETA)
+/// \param[in] na   number of steps along 1st variable
+/// \param[in] nb   number of steps along 2nd variable
 ///
-///           FUN(IA,IB,F,T) - external routine
-///             IA     - cell number for 1st variable
-///             IB     - cell number for 2nd variable
-///             F(3,4) - face which corresponds to the cell
-///               F(1,*) - A
-///               F(2,*) - B
-///               F(3,*) - R
-///             T(4)   - additional function (for example: temperature)
-///
-///           DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
-///             ICODES(*) - set of codes for this face
-///               ICODES(1) - IA
-///               ICODES(2) - IB
-///             XYZ(3,*)  - coordinates of nodes
-///             NP        - number of nodes in face
-///             IFACE(NP) - face
-///             T(NP)     - additional function
-///
-///           CHOPT       - options: 'BF' - from BACK to FRONT
-///                                  'FB' - from FRONT to BACK
+/// - `chopt` = 'BF' from BACK to FRONT
+/// - `chopt` = 'FB' from FRONT to BACK
 
 void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 {
@@ -4469,17 +4182,14 @@ L500:
 ////////////////////////////////////////////////////////////////////////////////
 /// Set surface property coefficients
 ///
-///    Input: QQA  - diffusion coefficient for diffused light  [0.,1.]
-///           QQD  - diffusion coefficient for direct light    [0.,1.]
-///           QQS  - diffusion coefficient for reflected light [0.,1.]
-///           NNCS - power coefficient for reflected light     (.GE.1)
+/// \param[in] qqa   diffusion coefficient for diffused light  [0.,1.]
+/// \param[in] qqd   diffusion coefficient for direct light    [0.,1.]
+/// \param[in] qqs   diffusion coefficient for reflected light [0.,1.]
+/// \param[in] nncs   power coefficient for reflected light     (.GE.1)
 ///
-///                                         --
 ///    Lightness model formula: Y = YD*QA + > YLi*(QD*cosNi+QS*cosRi)
-///                                         --
 ///
-///    Output: IREP   - reply : 0 - O.K.
-///                            -1 - error in cooefficients
+/// \param[out] irep   reply (0 - O.K, -1 error)
 
 void TPainter3dAlgorithms::SurfaceProperty(Double_t qqa, Double_t qqd, Double_t qqs, Int_t nnqs, Int_t &irep)
 {
@@ -4500,24 +4210,14 @@ void TPainter3dAlgorithms::SurfaceProperty(Double_t qqa, Double_t qqd, Double_t 
 /// Draw implicit function FUN(X,Y,Z) = 0 in cartesian coordinates using
 /// hidden surface removal algorithm "Painter".
 ///
-///     Input: FUN      - external routine FUN(X,Y,Z)
-///            RMIN(3)  - min scope coordinates
-///            RMAX(3)  - max scope coordinates
-///            NX       - number of steps along X
-///            NY       - number of steps along Y
-///            NZ       - number of steps along Z
+/// \param[in] rmin   min scope coordinates
+/// \param[in] rmax   max scope coordinates
+/// \param[in] nx   number of steps along X
+/// \param[in] ny   number of steps along Y
+/// \param[in] nz   number of steps along Z
 ///
-///            DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
-///              ICODES(*) - set of codes for this face
-///                ICODES(1) - 1
-///                ICODES(2) - 1
-///                ICODES(3) - 1
-///              NP        - number of nodes in face
-///              IFACE(NP) - face
-///              T(NP)     - additional function (lightness)
-///
-///            CHOPT - options: 'BF' - from BACK to FRONT
-///                             'FB' - from FRONT to BACK
+/// - `chopt` = 'BF' from BACK to FRONT
+/// - `chopt` = 'FB' from FRONT to BACK
 
 void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
                              Int_t nx, Int_t ny, Int_t nz, const char *chopt)
@@ -4791,19 +4491,17 @@ L510:
 ////////////////////////////////////////////////////////////////////////////////
 /// Topological decider for "Marching Cubes" algorithm Find set of triangles
 /// aproximating the isosurface F(x,y,z)=Fiso inside the cube
-/// (improved version)
 ///
-/// Input: FISO   - function value for isosurface
-///        P(3,8) - cube vertexes
-///        F(8)   - function values at the vertexes
-///        G(3,8) - function gradients at the vertexes
+/// \param[in] fiso    function value for isosurface
+/// \param[in] p   cube vertexes
+/// \param[in] f   function values at the vertexes
+/// \param[in] g   function gradients at the vertexes
 ///
-/// Output: NNOD       - number of nodes     (maximum 13)
-///         NTRIA      - number of triangles (maximum 12)
-///         XYZ(3,*)   - nodes
-///         GRAD(3,*)  - node normales       (not normalized)
-///         ITRIA(3,*) - triangles
-///
+/// \param[out] nnod   number of nodes     (maximum 13)
+/// \param[out] ntria   number of triangles (maximum 12)
+/// \param[out] xyz   nodes
+/// \param[out] grad   node normales       (not normalized)
+/// \param[out] itria   triangles
 
 void TPainter3dAlgorithms::MarchingCube(Double_t fiso, Double_t p[8][3],
                                         Double_t f[8], Double_t g[8][3],
@@ -4993,9 +4691,7 @@ L560:
 ////////////////////////////////////////////////////////////////////////////////
 /// Consideration of trivial cases: 1,2,5,8,9,11,14
 ///
-/// Input: K1,...,K6 - edges intersected with isosurface
-///
-/// Output: the same as for IHMCUB
+/// \param[in] k1-k6   edges intersected with isosurface
 
 void TPainter3dAlgorithms::MarchingCubeCase00(Int_t k1, Int_t k2, Int_t k3,
                                               Int_t k4, Int_t k5, Int_t k6,
@@ -5040,10 +4736,6 @@ void TPainter3dAlgorithms::MarchingCubeCase00(Int_t k1, Int_t k2, Int_t k3,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 3
-///
-/// Input: see common HCMCUB
-///
-/// Output: the same as for IHMCUB
 
 void TPainter3dAlgorithms::MarchingCubeCase03(Int_t &nnod, Int_t &ntria,
                                Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
@@ -5074,10 +4766,6 @@ L100:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 4
-///
-/// Input: see common HCMCUB
-///
-/// Output: the same as for IHMCUB
 
 void TPainter3dAlgorithms::MarchingCubeCase04(Int_t &nnod, Int_t &ntria,
                                Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
@@ -5107,10 +4795,6 @@ void TPainter3dAlgorithms::MarchingCubeCase04(Int_t &nnod, Int_t &ntria,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 6
-///
-/// Input: see common HCMCUB
-///
-/// Output: the same as for IHMCUB
 
 void TPainter3dAlgorithms::MarchingCubeCase06(Int_t &nnod, Int_t &ntria,
                                Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
@@ -5154,10 +4838,6 @@ L100:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 7
-///
-/// Input: see common HCMCUB
-///
-/// Output: the same as for IHMCUB
 
 void TPainter3dAlgorithms::MarchingCubeCase07(Int_t &nnod, Int_t &ntria,
                                Double_t xyz[52][3], Double_t grad[52][3],
@@ -5248,10 +4928,6 @@ L400:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 10
-///
-/// Input: see common HCMCUB
-///
-/// Output: the same as for IHMCUB
 
 void TPainter3dAlgorithms::MarchingCubeCase10(Int_t &nnod, Int_t &ntria,
                                Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
@@ -5318,10 +4994,6 @@ L200:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 12
-///
-/// Input: see common HCMCUB
-///
-/// Output: the same as for IHMCUB
 
 void TPainter3dAlgorithms::MarchingCubeCase12(Int_t &nnod, Int_t &ntria,
                                Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
@@ -5388,10 +5060,6 @@ L200:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Consider case No 13
-///
-/// Input: see common HCMCUB
-///
-/// Output: the same as for IHMCUB
 
 void TPainter3dAlgorithms::MarchingCubeCase13(Int_t &nnod, Int_t &ntria,
                                Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
@@ -5540,10 +5208,10 @@ L300:
 ////////////////////////////////////////////////////////////////////////////////
 /// Set triangles (if parameter IALL=1, all edges will be visible)
 ///
-/// Input: NTRIA   - number of triangles
-///        IT(3,*) - triangles
+/// \param[in] ntria   number of triangles
+/// \param[in] it   triangles
 ///
-/// Output: ITRIA(3,*) - triangles
+/// \param[out] itria   triangles
 
 void TPainter3dAlgorithms::MarchingCubeSetTriangles(Int_t ntria, Int_t it[][3],
                                                     Int_t itria[48][3])
@@ -5562,13 +5230,13 @@ void TPainter3dAlgorithms::MarchingCubeSetTriangles(Int_t ntria, Int_t it[][3],
 ////////////////////////////////////////////////////////////////////////////////
 /// Find middle point of a polygon
 ///
-/// Input: NNOD      - number of nodes in the polygon
-///        XYZ(3,*)  - node coordinates
-///        GRAD(3,*) - node normales
-///        IT(3,*)   - division of the polygons into triangles
+/// \param[in] nnod   number of nodes in the polygon
+/// \param[in] xyz   node coordinates
+/// \param[in] grad   node normales
+/// \param[in] it   division of the polygons into triangles
 ///
-/// Output: PXYZ(3)  - middle point coordinates
-///         PGRAD(3) - middle point normale
+/// \param[out] pxyz   middle point coordinates
+/// \param[out] pgrad   middle point normale
 
 void TPainter3dAlgorithms::MarchingCubeMiddlePoint(Int_t nnod, Double_t xyz[52][3],
                                     Double_t grad[52][3],
@@ -5600,11 +5268,10 @@ void TPainter3dAlgorithms::MarchingCubeMiddlePoint(Int_t nnod, Double_t xyz[52][
 ////////////////////////////////////////////////////////////////////////////////
 /// Check for surface penetration ("bottle neck")
 ///
-/// Input: A00,A10,A11,A01 - vertex values for 1st face
-///        B00,B10,B11,B01 - vertex values for opposite face
+/// \param[in] axx   vertex values for 1st face
+/// \param[in] bxx   vertex values for opposite face
 ///
-/// Output: IREP - 1,2 - there is surface penetration
-///                0   - there is not surface penetration
+/// \param[out] irep   1,2: there is surface penetration, 0: there is not surface penetration
 
 void TPainter3dAlgorithms::MarchingCubeSurfacePenetration(Double_t a00, Double_t a10,
                                            Double_t a11, Double_t a01,
@@ -5673,11 +5340,11 @@ L200:
 ////////////////////////////////////////////////////////////////////////////////
 /// Find nodes and normales
 ///
-/// Input: NNOD  - number of nodes
-///        IE(*) - edges which have section node
+/// \param[in] nnod   number of nodes
+/// \param[in] ie   edges which have section node
 ///
-/// Output: XYZ(3,*)  - nodes
-///         GRAD(3,*) - node normales (not normalized)
+/// \param[out] xyz   nodes
+/// \param[out] grad   ode normales (not normalized)
 
 void TPainter3dAlgorithms::MarchingCubeFindNodes(Int_t nnod,
                                   Int_t *ie, Double_t xyz[52][3],
@@ -5705,14 +5372,14 @@ void TPainter3dAlgorithms::MarchingCubeFindNodes(Int_t nnod,
 ////////////////////////////////////////////////////////////////////////////////
 /// Z-depth algorithm for set of triangles
 ///
-/// Input: XYZ(3,*)   - nodes
-///        NFACE      - number of triangular faces
-///        IFACE(3,*) - faces (triangles)
+/// \param[in] xyz   nodes
+/// \param[in] nface   number of triangular faces
+/// \param[in] iface   faces (triangles)
 ///
-/// Arrays: DFACE(6,*) - array for min-max scopes
-///         ABCD(4,*)  - array for face plane equations
+/// \param[in] dface   array for min-max scopes
+/// \param[in] abcd   array for face plane equations
 ///
-/// Output: IORDER(*) - face order
+/// \param[out] iorder   face order
 
 void TPainter3dAlgorithms::ZDepth(Double_t xyz[52][3], Int_t &nface,
                                   Int_t iface[48][3], Double_t dface[48][6],
@@ -5899,16 +5566,14 @@ L900:
 ////////////////////////////////////////////////////////////////////////////////
 /// Test edge against face (triangle)
 ///
-/// Input: DEL      - precision
-///        XYZ(3,*) - nodes
-///        I1       - 1-st node of edge
-///        I2       - 2-nd node of edge
-///        IFACE(3) - triangular face
-///        ABCD(4)  - face plane
+/// \param[in] del   precision
+/// \param[in] xyz   nodes
+/// \param[in] i1   1-st node of edge
+/// \param[in] i2   2-nd node of edge
+/// \param[in] iface   triangular face
+/// \param[in] abcd   face plane
 ///
-/// Output: IREP:-1 - edge under face
-///               0 - no decision
-///              +1 - edge before face
+/// \param[out] irep   1: edge under face, 0: no decision, +1: edge before face
 
 void TPainter3dAlgorithms::TestEdge(Double_t del, Double_t xyz[52][3], Int_t i1, Int_t i2,
                      Int_t iface[3], Double_t abcd[4], Int_t &irep)
@@ -5975,26 +5640,17 @@ L998:
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw set of isosurfaces for a scalar function defined on a grid.
 ///
-///     Input: NS          - number of isosurfaces
-///            S(*)        - isosurface values
-///            NX          - number of slices along X
-///            NY          - number of slices along Y
-///            NZ          - number of slices along Z
-///            X(*)        - slices along X
-///            Y(*)        - slices along Y
-///            Z(*)        - slices along Z
-///            F(NX,NY,NZ) - function values <- Not used, current histo used instead
+/// \param[in] ns   number of isosurfaces
+/// \param[in] s   isosurface values
+/// \param[in] nx   number of slices along X
+/// \param[in] ny   number of slices along Y
+/// \param[in] nz   number of slices along Z
+/// \param[in] x   slices along X
+/// \param[in] y   slices along Y
+/// \param[in] z   slices along Z
 ///
-///            DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
-///              ICODES(1) - isosurface number
-///              ICODES(2) - isosurface number
-///              ICODES(3) - isosurface number
-///              NP        - number of nodes in face
-///              IFACE(NP) - face
-///              T(NP)     - additional function (lightness)
-///
-///            CHOPT - options: 'BF' - from BACK to FRONT
-///                             'FB' - from FRONT to BACK
+/// - chopt` = 'BF' from BACK to FRONT
+/// - chopt` = 'FB' from FRONT to BACK
 
 void TPainter3dAlgorithms::IsoSurface (Int_t ns, Double_t *s, Int_t nx,
                                        Int_t ny, Int_t nz,
