@@ -26,6 +26,75 @@
 
 namespace PyROOT {
 
+// TODO: only used here, but may be better off integrated with Pythonize.cxx callbacks
+   class TPythonCallback : public PyCallable {
+   public:
+      PyObject* callable;
+
+      TPythonCallback( PyObject* callable_ ) {
+         if ( !PyCallable_Check( callable_ ) ) {
+            PyErr_SetString(PyExc_TypeError, "parameter must be callable");
+            return;
+         }
+         Py_INCREF( callable );
+         callable = callable_;
+      }
+
+      virtual ~TPythonCallback() {
+         Py_DECREF( callable );
+         callable = 0;
+      }
+
+      virtual PyObject* GetSignature() { return PyROOT_PyUnicode_FromString( "*args, **kwargs" ); } ;
+      virtual PyObject* GetPrototype() { return PyROOT_PyUnicode_FromString( "<callback>" ); } ;
+      virtual PyObject* GetDocString() {
+         if ( PyObject_HasAttrString( callable, "__doc__" )) {
+            return PyObject_GetAttrString( callable, "__doc__" );
+         } else {
+            return GetPrototype();
+         }
+      }
+
+      virtual Int_t GetPriority() { return 100; };
+
+      virtual Int_t GetMaxArgs() { return 100; };
+      virtual PyObject* GetCoVarNames() { // TODO: pick these up from th callable
+         Py_INCREF( Py_None );
+         return Py_None;
+      }
+      virtual PyObject* GetArgDefault( Int_t /* iarg */ ) { // TODO: pick these up from th callable
+         Py_INCREF( Py_None );
+         return Py_None;
+      }
+
+      virtual PyObject* GetScopeProxy() { // should this be the module ??
+         Py_INCREF( Py_None );
+         return Py_None;
+      }
+
+      virtual PyCallable* Clone() { return new TPythonCallback( *this ); }
+
+      virtual PyObject* Call(
+            ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt = 0 */ ) {
+         PyObject* newArgs = nullptr;
+         if ( self ) {
+            Py_ssize_t nargs = PyTuple_Size( args );
+            newArgs = PyTuple_New( nargs+1 );
+            Py_INCREF( self );
+            PyTuple_SET_ITEM( newArgs, 0, (PyObject*)self );
+            for ( Py_ssize_t iarg = 1; iarg < nargs; ++iarg ) {
+               PyObject* pyarg = PyTuple_GET_ITEM( args, iarg );
+               Py_INCREF( pyarg );
+               PyTuple_SET_ITEM( newArgs, iarg+1, pyarg );
+            }
+         } else {
+            Py_INCREF( args );
+            newArgs = args;
+         }
+         return PyObject_Call( callable, newArgs, kwds );
+      }
+  };
+
 namespace {
 
 // helper to test whether a method is used in a pseudo-function modus
@@ -693,10 +762,18 @@ namespace {
       return 0;
    }
 
-////////////////////////////////////////////////////////////////////////////////
+//= PyROOT method proxy access to internals =================================
+   PyObject* mp_add_overload( MethodProxy* pymeth, PyObject* new_overload )
+   {
+      TPythonCallback* cb = new TPythonCallback(new_overload);
+      pymeth->AddMethod( cb );
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
 
    PyMethodDef mp_methods[] = {
-      { (char*)"disp", (PyCFunction)mp_disp, METH_O, (char*)"select overload for dispatch" },
+      { (char*)"disp",             (PyCFunction)mp_disp, METH_O, (char*)"select overload for dispatch" },
+      { (char*)"__add_overload__", (PyCFunction)mp_add_overload, METH_O, (char*)"add a new overload" },
       { (char*)NULL, NULL, 0, NULL }
    };
 

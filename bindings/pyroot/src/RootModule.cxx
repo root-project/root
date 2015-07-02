@@ -26,6 +26,8 @@
 // Standard
 #include <string>
 #include <sstream>
+#include <utility>
+#include <vector>
 
 
 //- from Python's dictobject.c -------------------------------------------------
@@ -137,6 +139,8 @@ PyObject _PyROOT_NullPtrStruct = {
 namespace PyROOT {
    PyObject* gRootModule = 0;
    PyObject* gNullPtrObject = 0;
+   std::vector<std::pair<Cppyy::TCppType_t, Cppyy::TCppType_t> > gPinnedTypes;
+   std::vector<Cppyy::TCppType_t> gIgnorePinnings;
 }
 
 
@@ -636,6 +640,46 @@ namespace {
       return Py_None;
    }
 
+//____________________________________________________________________________
+   PyObject* SetTypePinning( PyObject*, PyObject* args )
+   {
+      PyRootClass* derived = nullptr, *base = nullptr;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!" ),
+                               &PyRootType_Type, &derived,
+                               &PyRootType_Type, &base ) )
+         return nullptr;
+      gPinnedTypes.push_back( std::make_pair( derived->fCppType, base->fCppType ) );
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
+//____________________________________________________________________________
+   PyObject* IgnoreTypePinning( PyObject*, PyObject* args )
+   {
+      PyRootClass* derived = nullptr;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ),
+                               &PyRootType_Type, &derived ) )
+         return nullptr;
+      gIgnorePinnings.push_back( derived->fCppType );
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
+//____________________________________________________________________________
+   PyObject* Cast( PyObject*, PyObject* args )
+   {
+      ObjectProxy* obj = nullptr;
+      PyRootClass* type = nullptr;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!" ),
+                               &ObjectProxy_Type, &obj,
+                               &PyRootType_Type, &type ) )
+         return nullptr;
+      // TODO: this misses an offset calculation, and reference type must not
+      // be cast ...
+      return BindCppObjectNoCast( obj->GetObject(), type->fCppType,
+                                  obj->fFlags & ObjectProxy::kIsReference );
+   }
+
 } // unnamed namespace
 
 
@@ -677,6 +721,12 @@ static PyMethodDef gPyROOTMethods[] = {
      METH_NOARGS, (char*) "Install input hook to sent GUI events" },
    { (char*) "RemoveGUIEventInputHook", (PyCFunction)PyROOT::Utility::RemoveGUIEventInputHook,
      METH_NOARGS, (char*) "Remove input hook to sent GUI events" },
+   { (char*) "SetTypePinning", (PyCFunction)SetTypePinning,
+     METH_VARARGS, (char*) "Install a type pinning" },
+   { (char*) "IgnoreTypePinning", (PyCFunction)IgnoreTypePinning,
+     METH_VARARGS, (char*) "Don't pin the given type" },
+   { (char*) "Cast", (PyCFunction)Cast,
+     METH_VARARGS, (char*) "Cast the given object to the given type" },
    { NULL, NULL, 0, NULL }
 };
 
@@ -749,6 +799,15 @@ extern "C" void initlibPyROOT()
 
 // keep gRootModule, but do not increase its reference count even as it is borrowed,
 // or a self-referencing cycle would be created
+
+// Pythonizations ...
+   PyObject* userPythonizations = PyDict_New();
+   PyObject* gblList = PyList_New( 0 );
+   PyDict_SetItemString( userPythonizations, "__global__", gblList );
+   Py_DECREF( gblList );
+   PyModule_AddObject( gRootModule, "UserPythonizations", userPythonizations );
+   PyModule_AddObject( gRootModule, "UserExceptions",     PyDict_New() );
+   PyModule_AddObject( gRootModule, "PythonizationScope", PyROOT_PyUnicode_FromString( "__global__" ) );
 
 // inject meta type
    if ( ! Utility::InitProxy( gRootModule, &PyRootType_Type, "PyRootType" ) )

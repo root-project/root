@@ -232,3 +232,9 @@ if _builtin_cppyy:
 #--- Compatibility ------------------------------------------------------
 if not _builtin_cppyy:
    bind_object = _backend.BindObject
+
+#--- Pythonization factories --------------------------------------------
+import _pythonization
+_pythonization._set_backend( _backend )
+from _pythonization import *
+del _pythonization

@@ -46,6 +46,10 @@
 //- data _______________________________________________________________________
 namespace PyROOT {
    R__EXTERN PyObject* gRootModule;
+
+// TODO: move this to Cppyy.cxx (if possible) (and gPinnedTypes should be a hashmap)
+   R__EXTERN std::vector<std::pair<Cppyy::TCppType_t, Cppyy::TCppType_t> > gPinnedTypes;
+   R__EXTERN std::vector<Cppyy::TCppType_t> gIgnorePinnings;
 }
 
 namespace {
@@ -727,6 +731,14 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
    Py_DECREF( pyactual );
    Py_DECREF( parent );
 
+   if ( pyclass && ! bClassFound ) {
+   // store a ref from ROOT TClass to new python class
+      gPyClasses[ klass ] = PyWeakref_NewRef( pyclass, NULL );
+
+   // add a ref in the class to its scope
+      PyObject_SetAttrString( pyclass, "__scope__", PyROOT_PyUnicode_FromString( scName.c_str() ) );
+   }
+
    if ( ! bClassFound ) {               // add python-style features to newly minted classes
       if ( ! Pythonize( pyclass, actual ) ) {
          Py_XDECREF( pyclass );
@@ -734,8 +746,6 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
       }
    }
 
-   if ( pyclass && ! bClassFound )      // store a ref from ROOT TClass to new python class
-      gPyClasses[ klass ] = PyWeakref_NewRef( pyclass, NULL );
 
    if ( pyclass && Cppyy::IsNamespace( klass ) && actual != "ROOT" ) {
    // add to sys.modules to allow importing from this module
@@ -879,6 +889,18 @@ PyObject* PyROOT::BindCppObject( Cppyy::TCppObject_t address, Cppyy::TCppType_t 
          address = (void*)((Long_t)address + offset);
          klass = clActual;
       }
+   }
+
+
+// check if type is pinned
+   Bool_t ignore_pin = std::find(
+     gIgnorePinnings.begin(), gIgnorePinnings.end(), klass ) != gIgnorePinnings.end();
+
+   if ( ! ignore_pin ) {
+      for ( auto it = gPinnedTypes.cbegin(); it != gPinnedTypes.cend(); ++it ) {
+         if ( klass == std::get<0>(*it) || Cppyy::IsSubtype( klass, std::get<0>(*it) ) )
+            klass = std::get<1>(*it);
+     }
    }
 
 // actual binding

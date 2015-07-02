@@ -2355,10 +2355,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjectIsEqual, METH_O );
       Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) TObjectIsNotEqual, METH_O );
 
-      return kTRUE;
    }
 
-   if ( name == "TClass" ) {
+   else if ( name == "TClass" ) {
    // make DynamicCast return a usable python object, rather than void*
       Utility::AddToClass( pyclass, "_TClass__DynamicCast", "DynamicCast" );
       Utility::AddToClass( pyclass, "DynamicCast", (PyCFunction) TClassDynamicCast );
@@ -2366,10 +2365,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    // the following cast is easier to use (reads both ways)
       Utility::AddToClass( pyclass, "StaticCast", (PyCFunction) TClassStaticCast );
 
-      return kTRUE;
    }
 
-   if ( name == "TCollection" ) {
+   else if ( name == "TCollection" ) {
       Utility::AddToClass( pyclass, "append",   "Add" );
       Utility::AddToClass( pyclass, "extend",   (PyCFunction) TCollectionExtend, METH_O );
       Utility::AddToClass( pyclass, "remove",   (PyCFunction) TCollectionRemove, METH_O );
@@ -2383,10 +2381,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       ((PyTypeObject*)pyclass)->tp_iter = (getiterfunc)TCollectionIter;
       Utility::AddToClass( pyclass, "__iter__",  (PyCFunction)TCollectionIter, METH_NOARGS );
 
-      return kTRUE;
    }
 
-   if ( name == "TSeqCollection" ) {
+   else if ( name == "TSeqCollection" ) {
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) TSeqCollectionGetItem, METH_O );
       Utility::AddToClass( pyclass, "__setitem__", (PyCFunction) TSeqCollectionSetItem );
       Utility::AddToClass( pyclass, "__delitem__", (PyCFunction) TSeqCollectionDelItem, METH_O );
@@ -2399,14 +2396,13 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
       Utility::AddToClass( pyclass, "index", (PyCFunction) TSeqCollectionIndex, METH_O );
 
-      return kTRUE;
    }
 
-   if ( name == "TObjArray" ) {
+   else if ( name == "TObjArray" ) {
       Utility::AddToClass( pyclass, "__len__", (PyCFunction) TObjArrayLen, METH_NOARGS );
    }
 
-   if ( name == "TClonesArray" ) {
+   else if ( name == "TClonesArray" ) {
    // restore base TSeqCollection operator[] to prevent random object creation (it's
    // functionality is equivalent to the operator[](int) const of TClonesArray, but
    // there's no guarantee it'll be selected over the non-const version)
@@ -2415,10 +2411,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    // this setitem should be used with as much care as the C++ one
       Utility::AddToClass( pyclass, "__setitem__", (PyCFunction) TClonesArraySetItem );
 
-      return kTRUE;
    }
 
-   if ( IsTemplatedSTLClass( name, "vector" ) ) {
+   else if ( IsTemplatedSTLClass( name, "vector" ) ) {
 
       if ( HasAttrDirect( pyclass, PyStrings::gLen ) && HasAttrDirect( pyclass, PyStrings::gAt ) ) {
          Utility::AddToClass( pyclass, "_vector__at", "at" );
@@ -2454,23 +2449,20 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          Utility::AddToClass( pyclass, "__setitem__", (PyCFunction) VectorBoolSetItem );
       }
 
-      return kTRUE;
    }
 
-   if ( IsTemplatedSTLClass( name, "map" ) ) {
+   else if ( IsTemplatedSTLClass( name, "map" ) ) {
       Utility::AddToClass( pyclass, "__contains__", (PyCFunction) MapContains, METH_O );
 
-      return kTRUE;
    }
 
-   if ( IsTemplatedSTLClass( name, "pair" ) ) {
+   else if ( IsTemplatedSTLClass( name, "pair" ) ) {
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) PairUnpack, METH_O );
       Utility::AddToClass( pyclass, "__len__", (PyCFunction) ReturnTwo, METH_NOARGS );
 
-      return kTRUE;
    }
 
-   if ( name.find( "iterator" ) != std::string::npos ) {
+   else if ( name.find( "iterator" ) != std::string::npos ) {
       ((PyTypeObject*)pyclass)->tp_iternext = (iternextfunc)StlIterNext;
       Utility::AddToClass( pyclass, "next", (PyCFunction) StlIterNext, METH_NOARGS );
 
@@ -2480,20 +2472,18 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       if ( ! HasAttrDirect( pyclass, PyStrings::gCppNe, kTRUE ) )
          Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) StlIterIsNotEqual, METH_O );
 
-      return kTRUE;
    }
 
-   if ( name == "string" || name == "std::string" ) {
+   else if ( name == "string" || name == "std::string" ) {
       Utility::AddToClass( pyclass, "__repr__", (PyCFunction) StlStringRepr, METH_NOARGS );
       Utility::AddToClass( pyclass, "__str__", "c_str" );
       Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) StlStringCompare, METH_O );
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) StlStringIsEqual, METH_O );
       Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) StlStringIsNotEqual, METH_O );
 
-      return kTRUE;
    }
 
-   if ( name == "TString" ) {
+   else if ( name == "TString" ) {
       Utility::AddToClass( pyclass, "__repr__", (PyCFunction) TStringRepr, METH_NOARGS );
       Utility::AddToClass( pyclass, "__str__", "Data" );
       Utility::AddToClass( pyclass, "__len__", "Length" );
@@ -2502,10 +2492,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TStringIsEqual, METH_O );
       Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) TStringIsNotEqual, METH_O );
 
-      return kTRUE;
    }
 
-   if ( name == "TObjString" ) {
+   else if ( name == "TObjString" ) {
       Utility::AddToClass( pyclass, "__repr__", (PyCFunction) TObjStringRepr, METH_NOARGS );
       Utility::AddToClass( pyclass, "__str__",  "GetName" );
       Utility::AddToClass( pyclass, "__len__",  (PyCFunction) TObjStringLength, METH_NOARGS );
@@ -2514,37 +2503,34 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjStringIsEqual, METH_O );
       Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) TObjStringIsNotEqual, METH_O );
 
-      return kTRUE;
    }
 
-   if ( name == "TIter" ) {
+   else if ( name == "TIter" ) {
       ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)PyObject_SelfIter;
       Utility::AddToClass( pyclass, "__iter__", (PyCFunction) PyObject_SelfIter, METH_NOARGS );
 
       ((PyTypeObject*)pyclass)->tp_iternext = (iternextfunc)TIterNext;
       Utility::AddToClass( pyclass, "next", (PyCFunction) TIterNext, METH_NOARGS );
 
-      return kTRUE;
    }
 
-   if ( name == "TDirectory" ) {
+   else if ( name == "TDirectory" ) {
    // note: this replaces the already existing TDirectory::GetObject()
       Utility::AddToClass( pyclass, "GetObject", (PyCFunction) TDirectoryGetObject );
 
    // note: this replaces the already existing TDirectory::WriteObject()
       Utility::AddToClass( pyclass, "WriteObject", (PyCFunction) TDirectoryWriteObject );
 
-      return kTRUE;
    }
 
-   if ( name == "TDirectoryFile" ) {
+   else if ( name == "TDirectoryFile" ) {
    // add safety for non-TObject derived Get() results
       Utility::AddToClass( pyclass, "Get", (PyCFunction) TDirectoryFileGet,     METH_O );
 
       return kTRUE;
    }
 
-   if ( name == "TTree" ) {
+   else if ( name == "TTree" ) {
    // allow direct browsing of the tree
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TTreeGetAttr, METH_O );
 
@@ -2567,10 +2553,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
       Py_DECREF( method ); method = 0;
 
-      return kTRUE;
    }
 
-   if ( name == "TChain" ) {
+   else if ( name == "TChain" ) {
    // allow SetBranchAddress to take object directly, w/o needing AddressOf()
       MethodProxy* original =
          (MethodProxy*)PyObject_GetAttrFromDict( pyclass, PyStrings::gSetBranchAddress );
@@ -2581,40 +2566,39 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
       Py_DECREF( method ); method = 0;
 
-      return kTRUE;
    }
 
-   if ( name == "TStyle" ) {
+   else if ( name == "TStyle" ) {
       MethodProxy* ctor = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gInit );
       ctor->fMethodInfo->fFlags &= ~TCallContext::kIsCreator;
       Py_DECREF( ctor );
    }
 
-   if ( name == "TH1" )       // allow hist *= scalar
-      return Utility::AddToClass( pyclass, "__imul__", (PyCFunction) THNIMul, METH_O );
+   else if ( name == "TH1" )       // allow hist *= scalar
+      Utility::AddToClass( pyclass, "__imul__", (PyCFunction) THNIMul, METH_O );
 
-   if ( name == "TF1" )       // allow instantiation with python callable
-      return Utility::AddToClass( pyclass, "__init__", new TF1InitWithPyFunc );
+   else if ( name == "TF1" )       // allow instantiation with python callable
+      Utility::AddToClass( pyclass, "__init__", new TF1InitWithPyFunc );
 
-   if ( name == "TF2" )       // allow instantiation with python callable
-      return Utility::AddToClass( pyclass, "__init__", new TF2InitWithPyFunc );
+   else if ( name == "TF2" )       // allow instantiation with python callable
+      Utility::AddToClass( pyclass, "__init__", new TF2InitWithPyFunc );
 
-   if ( name == "TF3" )       // allow instantiation with python callable
-      return Utility::AddToClass( pyclass, "__init__", new TF3InitWithPyFunc );
+   else if ( name == "TF3" )       // allow instantiation with python callable
+      Utility::AddToClass( pyclass, "__init__", new TF3InitWithPyFunc );
 
-   if ( name == "TFunction" ) // allow direct call
-      return Utility::AddToClass( pyclass, "__call__", (PyCFunction) TFunctionCall );
+   else if ( name == "TFunction" ) // allow direct call
+      Utility::AddToClass( pyclass, "__call__", (PyCFunction) TFunctionCall );
 
-   if ( name == "TMinuit" )   // allow call with python callable
-      return Utility::AddToClass( pyclass, "SetFCN", new TMinuitSetFCN );
+   else if ( name == "TMinuit" )   // allow call with python callable
+      Utility::AddToClass( pyclass, "SetFCN", new TMinuitSetFCN );
 
-   if ( name == "TFitter" )   // allow call with python callable (this is not correct)
-      return Utility::AddToClass( pyclass, "SetFCN", new TMinuitFitterSetFCN );
+   else if ( name == "TFitter" )   // allow call with python callable (this is not correct)
+       Utility::AddToClass( pyclass, "SetFCN", new TMinuitFitterSetFCN );
 
-   if ( name == "Fitter" )    // really Fit::Fitter, allow call with python callable
-      return Utility::AddToClass( pyclass, "FitFCN", new TFitterFitFCN );
+   else if ( name == "Fitter" )    // really Fit::Fitter, allow call with python callable
+      Utility::AddToClass( pyclass, "FitFCN", new TFitterFitFCN );
 
-   if ( name == "TFile" ) {
+   else if ( name == "TFile" ) {
    // TFile::Open really is a constructor, really
       PyObject* attr = PyObject_GetAttrString( pyclass, (char*)"Open" );
       if ( MethodProxy_Check( attr ) )
@@ -2624,38 +2608,77 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    // allow member-style access to entries in file
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TFileGetAttr, METH_O );
 
-      return kTRUE;
    }
 
-   if ( name.substr(0,8) == "TVector3" ) {
+   else if ( name.substr(0,8) == "TVector3" ) {
       Utility::AddToClass( pyclass, "__len__", (PyCFunction) ReturnThree, METH_NOARGS );
       Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
 
-      return kTRUE;
    }
 
-   if ( name.substr(0,8) == "TVectorT" ) {  // allow proper iteration
+   else if ( name.substr(0,8) == "TVectorT" ) {  // allow proper iteration
       Utility::AddToClass( pyclass, "__len__", "GetNoElements" );
       Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
 
-      return kTRUE;
    }
 
-   if ( name.substr(0,6) == "TArray" ) {    // allow proper iteration
+   else if ( name.substr(0,6) == "TArray" ) {    // allow proper iteration
       // __len__ is already set from GetSize()
       Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
    }
 
 // Make RooFit 'using' member functions available (not supported by dictionary)
-   if ( name == "RooDataHist" )
-      return Utility::AddUsingToClass( pyclass, "plotOn" );
+   else if ( name == "RooDataHist" )
+      Utility::AddUsingToClass( pyclass, "plotOn" );
 
-   if ( name == "RooSimultaneous" )
-      return Utility::AddUsingToClass( pyclass, "plotOn" );
+   else if ( name == "RooSimultaneous" )
+      Utility::AddUsingToClass( pyclass, "plotOn" );
 
-// default (no pythonization) is by definition ok
-   return kTRUE;
+
+// TODO: store these on the pythonizations module, nog on gRootModule
+// TODO: externalize this code and use update handlers on the python side
+   R__EXTERN PyObject* gRootModule;
+   PyObject* userPythonizations = PyObject_GetAttrString( gRootModule, "UserPythonizations" );
+   PyObject* pythonizationScope = PyObject_GetAttrString( gRootModule, "PythonizationScope" );
+
+   std::vector< std::string > pythonization_scopes;
+   pythonization_scopes.push_back( "__global__" );
+
+   std::string user_scope = PyROOT_PyUnicode_AsString( pythonizationScope );
+   if ( user_scope != "__global__" ) {
+      if ( PyDict_Contains( userPythonizations, pythonizationScope ) ) {
+          pythonization_scopes.push_back( user_scope );
+      }
+   }
+
+   Bool_t pstatus = kTRUE;
+
+   for ( auto key = pythonization_scopes.cbegin(); key != pythonization_scopes.cend(); ++key ) {
+      PyObject* tmp = PyDict_GetItemString( userPythonizations, key->c_str() );
+      Py_ssize_t num_pythonizations = PyList_Size( tmp );
+      PyObject* arglist = nullptr;
+      if ( num_pythonizations )
+         arglist = Py_BuildValue( "O,s", pyclass, name.c_str() );
+      for ( Py_ssize_t i = 0; i < num_pythonizations; ++i ) {
+         PyObject* pythonizor = PyList_GetItem( tmp, i );
+      // TODO: detail error handling for the pythonizors
+         PyObject* result = PyObject_CallObject( pythonizor, arglist );
+         if ( !result ) {
+            pstatus = kFALSE;
+            break;
+         } else
+            Py_DECREF( result );
+      }
+      Py_XDECREF( arglist );
+   }
+
+   Py_DECREF( userPythonizations );
+   Py_DECREF( pythonizationScope );
+
+
+// phew! all done ...
+   return pstatus;
 }
