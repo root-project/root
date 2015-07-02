@@ -323,7 +323,7 @@ void readVectorFloatValue(const char* branchName, Bool_t printOut, Bool_t testVa
         if (printOut) fprintf(stderr, "vectorFloat values:");
 
         for (int j = 0; j < LIST_ENTRIES; ++j){
-            if (testValues && myVectorFloat->at(j) != i * j * MULTIPLIER_VECTOR_FLOAT) success = false;
+            if (testValues && fabs(myVectorFloat->at(j) - i * j * MULTIPLIER_VECTOR_FLOAT) > 0.001f) success = false;
             if (printOut) fprintf(stderr, " %.2f", myVectorFloat->at(j));
         }
 
@@ -426,7 +426,7 @@ void readVectorFloatArray(const char* branchName, Bool_t printOut, Bool_t testVa
         if (printOut) fprintf(stderr, "vectorFloat values(%lu):", myVectorFloat.GetSize());
 
         for (int j = 0; j < LIST_ENTRIES && j < (int)myVectorFloat.GetSize(); ++j){
-            if (testValues && myVectorFloat.At(j) != i * j * MULTIPLIER_VECTOR_FLOAT) success = false;
+            if (testValues && fabs(myVectorFloat.At(j) - i * j * MULTIPLIER_VECTOR_FLOAT) > 0.001f) success = false;
             if (printOut) fprintf(stderr, " %.2f", myVectorFloat.At(j));
         }
 
