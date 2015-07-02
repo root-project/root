@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TApplication.h"
+//#include "TApplication.h"
 #include "TCanvas.h"
 #include "TSystem.h"
 #include "TStyle.h"
@@ -27,7 +27,7 @@ namespace TMVA
         ~Monitoring () 
         { 
             delete fCanvas; 
-            delete fApplication;
+//            delete fApplication;
         }
 
         void Start ()
@@ -83,7 +83,7 @@ namespace TMVA
     private:
         TCanvas* fCanvas;
 
-        TApplication* fApplication;
+//        TApplication* fApplication;
 
 
         std::map<std::string, TH1F*> m_histos1D;
@@ -178,11 +178,11 @@ inline void Monitoring::addPoint (std::string histoName, double x, double y)
 
 inline void Monitoring::clear (std::string histoName)
 {
-    std::cout << "clear histo " << histoName << std::endl;
+//    std::cout << "clear histo " << histoName << std::endl;
     if (!exists (histoName))
         return;
 
-    std::cout << "clear histo which exists " << histoName << std::endl;
+//    std::cout << "clear histo which exists " << histoName << std::endl;
     TH1F* hist1D (NULL);
     TH2F* hist2D (NULL);
     if (exists (hist1D, histoName))
