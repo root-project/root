@@ -6,6 +6,29 @@ struct InterpClass {
   ClassDef(InterpClass,1);
 };
 
-void runInterpClassDef() {
+
+struct Base {
+   ClassDefNV(Base, 1)
+};
+struct Derived: public Base {
+   // Make sure that this Base::IsA() is *not* virtual!
+   TClass *IsA() const { return (TClass*) (long) -1; }
+};
+// Test for the call of Error function
+// from within the Inner struct (ROOT-7441)
+struct Outer: public TObject {
+  struct Inner {
+    ClassDef(Inner, 1);
+  };
+};
+
+
+int runInterpClassDef() {
   InterpClass testCase;
+
+  Derived d;
+  Base* b = &d;
+  if (((long)b->IsA()) == -1)
+    return 1; // FAILURE
+  return 0;
 }
