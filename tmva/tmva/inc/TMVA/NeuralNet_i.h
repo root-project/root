@@ -256,6 +256,7 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
 
+#define USELOCALWEIGHTS 1
 
 
     template <typename Function, typename Weights, typename PassThrough>
@@ -263,7 +264,10 @@ void update (ItSource itSource, ItSource itSourceEnd,
     {
 	size_t numWeights = weights.size ();
 	std::vector<double> gradients (numWeights, 0.0);
+
+#ifdef USELOCALWEIGHTS
 	std::vector<double> localWeights (begin (weights), end (weights));
+#endif
         double E = 1e10;
         if (m_prevGradients.empty ())
             m_prevGradients.assign (weights.size (), 0);
@@ -276,13 +280,16 @@ void update (ItSource itSource, ItSource itSourceEnd,
                 break;
 
             gradients.assign (numWeights, 0.0);
+#ifdef USELOCALWEIGHTS
             E = fitnessFunction (passThrough, localWeights, gradients);
+#else            
+            E = fitnessFunction (passThrough, weights, gradients);
+#endif         
+//            plotGradients (gradients);
 
             double alpha = gaussDouble (m_alpha, m_alpha/2.0);
 //            double alpha = m_alpha;
 
-            /* auto itLocW = begin (localWeights); */
-            /* auto itLocWEnd = end (localWeights); */
             auto itG = begin (gradients);
             auto itGEnd = end (gradients);
             auto itPrevG = begin (m_prevGradients);
@@ -296,8 +303,6 @@ void update (ItSource itSource, ItSource itSourceEnd,
                 (*itPrevG) = m_beta * (prevGrad + currGrad);
                 (*itG) = currGrad + prevGrad;
 
-//                (*itLocW) += (*itG);
-                
                 if (std::fabs (currGrad) > maxGrad)
                     maxGrad = currGrad;
             }
