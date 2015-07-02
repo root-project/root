@@ -70,19 +70,31 @@ void Functions(TString type = "Import")
       ROOT::R::TRFunctionImport c("c");
       ROOT::R::TRFunctionImport require("require");
       ROOT::R::TRFunctionImport plot("plot");
-      ROOT::R::TRFunctionImport devoff("dev.off");
-      
-      ROOT::R::TRFunctionImport rsin("sin");
-      ROOT::R::TRFunctionImport options("options");
+//      ROOT::R::TRFunctionImport devoff("dev.off");
+//      
+      ROOT::R::TRFunctionImport sin("sin");
+//      ROOT::R::TRFunctionImport options("options");
       ROOT::R::TRFunctionImport x11("x11");
-      options("device='x11'");
+      ROOT::R::TRFunctionImport read("read.csv");
+      ROOT::R::TRFunctionImport head("head");
       
+      
+      
+//      options("device='x11'");
+//      
       ROOT::R::TRObjectProxy vector=c(1,2,3,4);
-      x11();
-      plot(rsin);
-//      devoff();
-      print(vector);
+      TVectorF v=vector;
+      print(v);
+//      ROOT::R::TRDataFrame obj=read("training.csv");
       
-      require("C50");
+//      ROOT::R::TRDataFrame df(obj.As<ROOT::R::TRDataFrame>());
+//      print(head(obj));
+//      print(vector);
+//      x11();
+//      plot(sin,0,6,ROOT::R::Label["type"]="s");
+//      devoff();
+//      print(vector);
+      
+//      require("C50");
    }
 }

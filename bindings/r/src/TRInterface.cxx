@@ -25,7 +25,7 @@ The TRInterface class lets you procces R code from ROOT.<br>
 You can call R libraries and their functions, plot results in R or ROOT,<br>
 and use the power of ROOT and R at the same time.<br>
 It also lets you pass scalars, vectors and matrices from ROOT to R<br>
-and from R to ROOT using TRObjectProxy; but you can to use overloaded opetarors [],<< and >> <br>
+and from R to ROOT using TRObject; but you can to use overloaded opetarors [],<< and >> <br>
 to work with ROOTR like work with streams of data.<br>
 
 TRInterface class can not be instantiated directly, but you can create objects using the static methods
@@ -185,7 +185,7 @@ void TRInterface::LoadModule(TString name)
 
 
 //______________________________________________________________________________
-Int_t  TRInterface::Eval(const TString &code, TRObjectProxy  &ans)
+Int_t  TRInterface::Eval(const TString &code, TRObject  &ans)
 {
 // Parse R code and returns status of execution.
 // the RObject's response is saved in  ans
@@ -221,10 +221,10 @@ void TRInterface::Execute(const TString &code)
 }
 
 //______________________________________________________________________________
-TRObjectProxy TRInterface::Eval(const TString &code)
+TRObject TRInterface::Eval(const TString &code)
 {
 // Execute R code. 
-//The RObject result of execution is returned in TRObjectProxy
+//The RObject result of execution is returned in TRObject
   
    SEXP ans;
 
@@ -238,7 +238,7 @@ TRObjectProxy TRInterface::Eval(const TString &code)
    }
    catch(...){Error("Eval", "Can execute the requested code: %s",code.Data());}
 
-   return TRObjectProxy(ans , (rc == 0) ? kTRUE : kFALSE);
+   return TRObject(ans , (rc == 0) ? kTRUE : kFALSE);
 }
 
 

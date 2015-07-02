@@ -12,8 +12,8 @@
 #ifndef ROOT_R_TRInterface
 #define ROOT_R_TRInterface
 
-#ifndef ROOT_R_TRObjectProxy
-#include<TRObjectProxy.h>
+#ifndef ROOT_R_TRObject
+#include<TRObject.h>
 #endif
 
 #ifndef ROOT_R_TRDataFrame
@@ -120,11 +120,11 @@ namespace ROOT {
          ~TRInterface();
 
          void SetVerbose(Bool_t status);
-         Int_t Eval(const TString &code, TRObjectProxy  &ans); // parse line, returns in ans; error code rc
+         Int_t Eval(const TString &code, TRObject  &ans); // parse line, returns in ans; error code rc
          
          void  Execute(const TString &code);
 
-         TRObjectProxy Eval(const TString &code);
+         TRObject Eval(const TString &code);
 
          static void LoadModule(TString name);
 

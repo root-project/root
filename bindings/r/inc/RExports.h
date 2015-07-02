@@ -71,7 +71,7 @@ namespace ROOT {
       class TRFunctionExport;
       class TRFunctionImport;
       class TRDataFrame;
-      class TRObjectProxy;
+      class TRObject;
    }
 }
 
@@ -104,9 +104,9 @@ namespace Rcpp {
    template<> SEXP wrap(const ROOT::R::TRDataFrame &o);
    template<> ROOT::R::TRDataFrame as(SEXP) ;
    
-//TRObjectProxy
-   template<> SEXP wrap(const ROOT::R::TRObjectProxy &o);
-   template<> ROOT::R::TRObjectProxy as(SEXP) ;
+//TRObject
+   template<> SEXP wrap(const ROOT::R::TRObject &o);
+   template<> ROOT::R::TRObject as(SEXP) ;
 
 //TRFunctionImport
    template<> SEXP wrap(const ROOT::R::TRFunctionImport &o);

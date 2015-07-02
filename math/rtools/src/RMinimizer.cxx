@@ -1,6 +1,6 @@
 
 #include "TRInterface.h"
-#include "TRObjectProxy.h"
+#include "TRObject.h"
 #include "Math/RMinimizer.h"
 #include "Math/IFunction.h"
 #include <TVectorD.h>

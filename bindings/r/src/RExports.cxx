@@ -7,7 +7,7 @@
  *************************************************************************/
 #include<RExports.h>
 #include<TRFunctionExport.h>
-#include<TRObjectProxy.h>
+#include<TRObject.h>
 #include<TRDataFrame.h>
 #include<Rcpp/Vector.h>
 namespace Rcpp {
@@ -70,15 +70,15 @@ namespace Rcpp {
       return TMatrixT<Float_t>(mat.rows(), mat.cols(), &dat[0], "F");
    }
 
-//TRObjectProxy   
-   template<> SEXP wrap(const ROOT::R::TRObjectProxy &obj)
+//TRObject   
+   template<> SEXP wrap(const ROOT::R::TRObject &obj)
    {
-      return obj.x;
+      return obj.fObj;
    }
 
-   template<> ROOT::R::TRObjectProxy as(SEXP obj)
+   template<> ROOT::R::TRObject as(SEXP obj)
    {
-      return ROOT::R::TRObjectProxy(obj);
+      return ROOT::R::TRObject(obj);
    }
 //TRDataFrame   
    template<> SEXP wrap(const ROOT::R::TRDataFrame &obj)

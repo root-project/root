@@ -8,8 +8,8 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#ifndef ROOT_R_TRObjectProxy
-#define ROOT_R_TRObjectProxy
+#ifndef ROOT_R_TRObject
+#define ROOT_R_TRObject
 
 #ifndef ROOT_R_RExports
 #include<RExports.h>
@@ -25,31 +25,53 @@
 
 namespace ROOT {
    namespace R {
-      class TRObjectProxy: public TObject {
-	friend SEXP Rcpp::wrap<TRObjectProxy>(const TRObjectProxy &f);
+      class TRObject: public TObject {
+	friend SEXP Rcpp::wrap<TRObject>(const TRObject &f);
       private:
-         Rcpp::RObject x;
+         Rcpp::RObject fObj;
          Bool_t fStatus;//status tell if is a valid object
+         class Attribute
+         {
+             Rcpp::RObject obj;
+             TString fAttName;
+         public:
+             Attribute(){}
+             void SetObject(Rcpp::RObject o){obj=o;}
+             
+             Attribute& operator[](const char* attname)
+             {
+                 fAttName=attname;
+                 return *this;
+             }
+             template<class T,class RT> RT operator=(T o)
+             {
+                 obj.attr(fAttName.Data())=o;
+                 return obj;
+             }
+         };
       public:
-         TRObjectProxy(): TObject() {};
-         TRObjectProxy(SEXP xx);
-         TRObjectProxy(SEXP xx, Bool_t status);
+          Attribute Attr;
+      public:
+         TRObject(): TObject() {};
+         TRObject(SEXP xx);
+         TRObject(SEXP xx, Bool_t status);
 	 
 	 void SetStatus(Bool_t status){ fStatus = status;}
          
          Bool_t GetStatus() { return fStatus;}
-
+         
+                  
          void operator=(SEXP xx);
 
-	 template<class T> TRObjectProxy& Wrap(T obj) {
-            x=::Rcpp::wrap(obj);
+	 template<class T> TRObject& Wrap(T obj) {
+            fObj=::Rcpp::wrap(obj);
 	    return *this;
          }
          
          template<class T> T As() {
 	   if(fStatus)
 	   {
-	    T data=::Rcpp::as<T>(x);
+	    T data=::Rcpp::as<T>(fObj);
             return data;
 	   }else
 	   {
@@ -58,7 +80,7 @@ namespace ROOT {
 	   }
          }
 
-         template<class T> T operator=(TRObjectProxy &obj) {
+         template<class T> T operator=(TRObject &obj) {
             return ::Rcpp::as<T>(obj);
          }
 
@@ -66,7 +88,7 @@ namespace ROOT {
 	     
 	   if(fStatus)
 	   {
-	     T data=::Rcpp::as<T>(x);
+	     T data=::Rcpp::as<T>(fObj);
              return data;
 	   }else
 	   {
@@ -74,7 +96,7 @@ namespace ROOT {
              return T();
 	   }
          }
-         ClassDef(TRObjectProxy, 0) //
+         ClassDef(TRObject, 0) //
       };
 
    }

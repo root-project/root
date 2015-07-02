@@ -10,7 +10,7 @@ set(libname RInterface)
 include_directories(${R_INCLUDE_DIRS})
 
 set(R_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInterface.h
-              ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRObjectProxy.h 
+              ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRObject.h 
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFunctionExport.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFunctionImport.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInternalFunction.h

@@ -16,8 +16,8 @@
 #include<RExports.h>
 #endif
 
-#ifndef ROOT_R_TRObjectProxy
-#include<TRObjectProxy.h>
+#ifndef ROOT_R_TRObject
+#include<TRObject.h>
 #endif
 
 #ifndef ROOT_R_TRFunctionImport
@@ -78,7 +78,6 @@ public:
                     }
                     nDf[size]=var;
                     nnames[size]=fName.Data();
-
                     nDf.attr("class") = fDf.attr("class") ;
                     nDf.attr("row.names") = fDf.attr("row.names") ;
                     nDf.attr("names") = nnames ;
@@ -176,8 +175,10 @@ public:
     };
 
     TRDataFrame();
+    TRDataFrame(SEXP obj){df=Rcpp::as<Rcpp::DataFrame>(obj);}
     TRDataFrame(const TRDataFrame &_df);
     TRDataFrame(const Rcpp::DataFrame &_df):df(_df){};
+    
 #include <TRDataFrame__ctors.h>
     Binding operator[](const TString &name);
     
@@ -189,6 +190,11 @@ public:
             df=obj.df;
             return *this;
          }
+    TRDataFrame& operator=(SEXP obj) {
+            df=Rcpp::as<Rcpp::DataFrame>(obj);
+            return *this;
+    }
+    
     int GetNcols(){return df.size();}
     int GetNrows(){return df.nrows();}
     TVectorString GetColNames()

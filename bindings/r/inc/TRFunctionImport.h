@@ -17,8 +17,8 @@
 #include<RExports.h>
 #endif
 
-#ifndef ROOT_R_TRObjectProxy
-#include<TRObjectProxy.h>
+#ifndef ROOT_R_TRObject
+#include<TRObject.h>
 #endif
 
 #ifndef Rcpp_hpp
