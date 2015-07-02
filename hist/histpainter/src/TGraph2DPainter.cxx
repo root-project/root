@@ -31,10 +31,12 @@ R__EXTERN Hoption_t Hoption;
 ClassImp(TGraph2DPainter)
 
 
-//______________________________________________________________________________
-//
-// TGraph2DPainter paints a TGraphDelaunay
-//
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TGraph2DPainter
+
+TGraph2DPainter paints a TGraphDelaunay
+
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -372,20 +374,17 @@ L02:
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint a TGraphDelaunay according to the value of "option":
 ///
-///   "TRI"  : The Delaunay triangles are drawn using filled area.
-///            An hidden surface drawing technique is used. The surface is
-///            painted with the current fill area color. The edges of each
-///            triangles are painted with the current line color.
-///   "TRIW" : The Delaunay triangles are drawn as wire frame
-///   "TRI1" : The Delaunay triangles are painted with color levels. The edges
-///            of each triangles are painted with the current line color.
-///   "TRI2" : the Delaunay triangles are painted with color levels.
-///   "P"    : Draw a marker at each vertex
-///   "P0"   : Draw a circle at each vertex. Each circle background is white.
-///   "PCOL" : Draw a marker at each vertex. The color of each marker is
-///            defined according to its Z position.
-///   "CONT" : Draw contours
-///   "LINE" : Draw a 3D polyline
+/// | Option   | Description                                                   |
+/// |----------|---------------------------------------------------------------|
+/// | "TRI"    | The Delaunay triangles are drawn using filled area. An hidden surface drawing technique is used. The surface is painted with the current fill area color. The edges of each triangles are painted with the current line color. |
+/// | "TRIW"   | The Delaunay triangles are drawn as wire frame. |
+/// | "TRI1"   | The Delaunay triangles are painted with color levels. The edges of each triangles are painted with the current line color. |
+/// | "TRI2"   | the Delaunay triangles are painted with color levels. |
+/// | "P"      | Draw a marker at each vertex. |
+/// | "P0"     | Draw a circle at each vertex. Each circle background is white. |
+/// | "PCOL"   | Draw a marker at each vertex. The color of each marker is defined according to its Z position. |
+/// | "CONT"   | Draw contours. |
+/// | "LINE"   | Draw a 3D polyline. |
 
 void TGraph2DPainter::Paint(Option_t *option)
 {
@@ -574,8 +573,9 @@ void TGraph2DPainter::PaintErrors(Option_t * /* option */)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paints one triangle.
-/// nblev  = 0 : paint the color levels
-/// nblev != 0 : paint the grid
+///
+/// - nblev  = 0 : paint the color levels
+/// - nblev != 0 : paint the grid
 
 void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
                            Int_t nblev, Double_t *glev)
