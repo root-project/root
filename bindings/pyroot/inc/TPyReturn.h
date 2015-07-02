@@ -50,6 +50,9 @@ public:
 // used for both TObject and PyObject conversions
    operator void*() const;
 
+   template<class T>
+   operator T*() const { return (T*)(void*)*this; }
+
 // used strictly for PyObject conversions
    operator PyObject*() const;
 
