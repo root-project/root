@@ -839,6 +839,10 @@ N: Abdelhalim Ssadik
 E: abdelhalim.ssadik@cern.ch
 D: contribution to GUI classes (TGDockableFrame)
 
+N: Toby St. Clere Smithe
+E: mail@tsmithe.net
+D: cppyy pythonizations API
+
 N: Joerg Stelzer
 E: Joerz.Stelzer@cern.ch
 D: author of the TMVA package
