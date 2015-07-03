@@ -30,14 +30,14 @@
 #ifndef LITTLE_ENDIAN
 #define LITTLE_ENDIAN 1
 #endif // LITTLE_ENDIAN
-#include "Byteswap.h"
-#define bswap_16(x)   Rbswap_16((x))
-#define bswap_32(x)   Rbswap_32((x))
 #else // R__BYTESWAP
 #ifdef LITTLE_ENDIAN
 #undef LITTLE_ENDIAN
 #endif // LITTLE_ENDIAN
 #endif // R__BYTESWAP
+#include "Byteswap.h"
+#define bswap_16(x)   Rbswap_16((x))
+#define bswap_32(x)   Rbswap_32((x))
 
 // References:
 //
