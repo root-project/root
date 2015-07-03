@@ -5089,7 +5089,7 @@ theEND:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill the matrix XARR YARR for Contour Plot.
+/// Fill the matrix `xarr` and `yarr` for Contour Plot.
 
 Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
                             Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,

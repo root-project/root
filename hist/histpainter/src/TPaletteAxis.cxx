@@ -24,30 +24,30 @@ ClassImp(TPaletteAxis)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Begin_Html
-<center><h2>The palette painting class</h2></center>
+/*! \class TPaletteAxis
 
-A <tt>TPaletteAxis</tt> object is used to display the color palette when
+## The palette painting class
+
+A `TPaletteAxis` object is used to display the color palette when
 drawing 2-d histograms.
-<p>
-The <tt>TPaletteAxis</tt> is automatically created drawn when drawing a 2-D
+
+The `TPaletteAxis` is automatically created drawn when drawing a 2-D
 histogram when the option "Z" is specified.
-<p>
-A <tt>TPaletteAxis</tt> object is added to the histogram list of functions and
+
+A `TPaletteAxis` object is added to the histogram list of functions and
 can be retrieved doing:
-<pre>
-   TPaletteAxis *palette = (TPaletteAxis*)h->GetListOfFunctions()->FindObject("palette");
-</pre>
-then the pointer <tt>palette</tt> can be used to change the pallette attributes.
-<p>
+
+    TPaletteAxis *palette = (TPaletteAxis*)h->GetListOfFunctions()->FindObject("palette");
+
+then the pointer `palette` can be used to change the pallette attributes.
+
 Because the palette is created at painting time only, one must issue a:
-<pre>
-   gPad->Update();
-</pre>
+
+    gPad->Update();
+
 before retrieving the palette pointer in order to create the palette. The following
 macro gives an example.
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1","c1",600,400);
@@ -65,17 +65,16 @@ Begin_Macro(source)
    return c1;
 }
 End_Macro
-Begin_Html
 
-<tt>TPaletteAxis</tt> inherits from <tt>TBox</tt> and <tt>TPave</tt>. The methods
+`TPaletteAxis` inherits from `TBox` and `TPave`. The methods
 allowing to specify the palette position are inherited from these two classes.
-<p>
+
 The palette can be interactively moved and resized. The context menu
 can be used to set the axis attributes.
-<p>
+
 It is possible to select a range on the axis to set the min/max in z
 
-End_Html */
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,17 +257,16 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 /// This function should be used after an histogram has been plotted with the
 /// option COL or COLZ like in the following example:
 ///
-///   h2->Draw("COLZ");
-///   gPad->Update();
-///   TPaletteAxis *palette =
-///      (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
-///   Int_t ci = palette->GetBinColor(20,15);
+///     h2->Draw("COLZ");
+///     gPad->Update();
+///     TPaletteAxis *palette = (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
+///     Int_t ci = palette->GetBinColor(20,15);
 ///
 /// Then it is possible to retrieve the RGB components in the following way:
 ///
-///   TColor *c = gROOT->GetColor(ci);
-///   float x,y,z;
-///   c->GetRGB(x,y,z);
+///     TColor *c = gROOT->GetColor(ci);
+///     float x,y,z;
+///     c->GetRGB(x,y,z);
 
 Int_t TPaletteAxis::GetBinColor(Int_t i, Int_t j)
 {
@@ -313,17 +311,16 @@ char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
 /// This function should be used after an histogram has been plotted with the
 /// option COL or COLZ like in the following example:
 ///
-///   h2->Draw("COLZ");
-///   gPad->Update();
-///   TPaletteAxis *palette =
-///      (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
-///   Int_t ci = palette->GetValueColor(30.);
+///     h2->Draw("COLZ");
+///     gPad->Update();
+///     TPaletteAxis *palette = (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
+///     Int_t ci = palette->GetValueColor(30.);
 ///
 /// Then it is possible to retrieve the RGB components in the following way:
 ///
-///   TColor *c = gROOT->GetColor(ci);
-///   float x,y,z;
-///   c->GetRGB(x,y,z);
+///     TColor *c = gROOT->GetColor(ci);
+///     float x,y,z;
+///     c->GetRGB(x,y,z);
 
 Int_t TPaletteAxis::GetValueColor(Double_t zc)
 {
