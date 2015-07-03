@@ -33,8 +33,9 @@ ClassImp(TGraph2DPainter)
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! \class TGraph2DPainter
+\brief The TGraphDelaunay painting class.
 
-TGraph2DPainter paints a TGraphDelaunay
+TGraph2DPainter paints a TGraphDelaunay using triangles or clouds of points.
 
 */
 

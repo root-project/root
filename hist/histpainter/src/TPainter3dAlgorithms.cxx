@@ -13,8 +13,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 /*! \class TPainter3dAlgorithms
+\brief The Legos and Surfaces painter class.
 
-## Legos and Surfaces package
+
 
 This package was originally written by Evgueni Tcherniaev from IHEP/Protvino.
 

@@ -40,8 +40,7 @@ ClassImp(TGraphPainter);
 ////////////////////////////////////////////////////////////////////////////////
 
 /*! \class TGraphPainter
-
-## The graph painter class
+\brief The graph painter class. Implements all graphs' drawing's options.
 
 - [Introduction](#GP00)
 - [Graphs' plotting options](#GP01)

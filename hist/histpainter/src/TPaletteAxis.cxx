@@ -25,8 +25,7 @@ ClassImp(TPaletteAxis)
 ////////////////////////////////////////////////////////////////////////////////
 
 /*! \class TPaletteAxis
-
-## The palette painting class
+\brief The palette painting class.
 
 A `TPaletteAxis` object is used to display the color palette when
 drawing 2-d histograms.
