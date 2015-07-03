@@ -25,17 +25,17 @@ ClassImp(TBox)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/*! \class TBox
+\brief Create a Box.
 
-/* Begin_Html
-<center><h2>Box class</h2></center>
 A box is defined by :
-<ul>
-<li> Its bottom left coordinates x1,y1
-<li> Its top right coordinates x2,y2
-</ul>
+
+- Its bottom left coordinates x1,y1
+- Its top right coordinates x2,y2
+
 A box has line attributes (see TAttLine) and fill area attributes
 (see TAttFill).
-End_Html */
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,19 +216,6 @@ TBox *TBox::DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
 ///
 ///  If the mouse is clicked on the 4 edges (pL,pR,pTop,pBot), the box is
 ///  rescaled parallel to this edge (same as Motif window manager).
-///
-///    pA                 pTop                       pB
-///     +--------------------------------------------+
-///     |                                            |
-///     |                                            |
-///     |                                            |
-///   pL|                  pINSIDE                   |pR
-///     |                                            |
-///     |                                            |
-///     |                                            |
-///     |                                            |
-///     +--------------------------------------------+
-///    pD                 pBot                      pC
 ///
 ///  Note that this function is duplicated on purpose by TPad::ExecuteEvent.
 ///  If somebody modifies this function, may be similar changes should also
