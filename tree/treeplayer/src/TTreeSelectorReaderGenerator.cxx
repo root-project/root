@@ -12,6 +12,7 @@
 #include "TTreeSelectorReaderGenerator.h"
 #include <stdio.h>
 
+#include "TBranchElement.h"
 #include "TChain.h"
 #include "TClass.h"
 #include "TClassEdit.h"
@@ -23,8 +24,10 @@
 #include "TLeafC.h"
 #include "TLeafObject.h"
 #include "TROOT.h"
+#include "TStreamerInfo.h"
 #include "TTree.h"
 #include "TVirtualCollectionProxy.h"
+#include "TVirtualStreamerInfo.h"
 
 namespace ROOT {
 
@@ -39,7 +42,40 @@ namespace ROOT {
       
       WriteSelector();
    }
-   
+
+static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TClass *cl)
+{
+   // Return the correct TStreamerInfo of class 'cname' in the list of
+   // branch (current) [Assuming these branches correspond to a flattened
+   // version of the class.]
+
+   TVirtualStreamerInfo *objInfo = 0;
+   TBranchElement *b = 0;
+   TString cname = cl->GetName();
+
+   while( ( b = (TBranchElement*)current() ) ) {
+      if ( cname == b->GetInfo()->GetName() ) {
+         objInfo = b->GetInfo();
+         break;
+      }
+   }
+   if (objInfo == 0 && branch->GetTree()->GetDirectory()->GetFile()) {
+      const TList *infolist = branch->GetTree()->GetDirectory()->GetFile()->GetStreamerInfoCache();
+      if (infolist) {
+         TVirtualStreamerInfo *i = (TVirtualStreamerInfo *)infolist->FindObject(cname);
+         if (i) {
+            // NOTE: Is this correct for Foreigh classes?
+            objInfo = (TVirtualStreamerInfo *)cl->GetStreamerInfo(i->GetClassVersion());
+         }
+      }
+   }
+   if (objInfo == 0) {
+      // We still haven't found it ... this is likely to be an STL collection .. anyway, use the current StreamerInfo.
+      objInfo = cl->GetStreamerInfo();
+   }
+   return objInfo;
+}
+
    void TTreeSelectorReaderGenerator::AddHeader(TClass *cl)
    {
       // Add a header inclusion request.
@@ -146,8 +182,7 @@ namespace ROOT {
          printf("\t\tAdded directive: %s", directive.Data());
       }
    }
-   
-   
+
    void TTreeSelectorReaderGenerator::AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name, TString branchName)
    {
       fListOfReaders.Add( new TTreeReaderDescriptor(type, dataType, name, branchName) );
@@ -290,6 +325,7 @@ namespace ROOT {
       
       // Loop through branches
       while ( (branch = (TBranch*)next()) ) {
+         TVirtualStreamerInfo *info = 0;
          // Get the name and the class of the branch
          const char *branchName = branch->GetName();
          const char *branchClassName = branch->GetClassName();
@@ -302,37 +338,73 @@ namespace ROOT {
          }
          
          TString type = "unknown";
-         // Classes
+         ELocation isclones = kOut;
+         TString containerName = "";
+         // Check for container classes
          if (cl) {
-            ELocation isclones = kOut;
-            TString containerName = "";
-            
+            // Check if it is a TClonesArray
             if (cl == TClonesArray::Class()) {
-               // TODO: implement this
-               printf("TODO: cl == TClonesArray\n");
+               isclones = kClones;
+               containerName = "TClonesArray";
+               if (branch->IsA()==TBranchElement::Class()) {
+                  // Get the class inside the TClonesArray
+                  const char *cname = ((TBranchElement*)branch)->GetClonesName();
+                  TClass *ncl = TClass::GetClass(cname);
+                  printf("\tClass inside TClonesArray: %s\n", cname);
+                  if (ncl) {
+                     cl = ncl;
+                     info = GetStreamerInfo(branch, branch->GetListOfBranches(), cl);
+                  } else {
+                     Error("AnalyzeTree",
+                           "Introspection of TClonesArray in older file not implemented yet.");
+                  }
+               } else {
+                  TClonesArray **ptr = (TClonesArray**)branch->GetAddress();
+                  TClonesArray *clones = 0;
+                  if (ptr==0) {
+                     clones = new TClonesArray;
+                     branch->SetAddress(&clones);
+                     ptr = &clones;
+                  }
+                  branch->GetEntry(0);
+                  TClass *ncl = *ptr ? (*ptr)->GetClass() : 0;
+                  if (ncl) {
+                     cl = ncl;
+                  } else {
+                     Error("AnalyzeTree",
+                           "Introspection of TClonesArray for %s failed.",branch->GetName());
+                  }
+               }
+            // Check if it is an STL collection
             } else if (cl->GetCollectionProxy()) {
-               // TODO: implement this
-               printf("TODO: cl->GetCollectionProxy\n");
-               
                isclones = kSTL; // It is an STL container
                containerName = cl->GetName();
                // Check the type inside container
                if (cl->GetCollectionProxy()->GetValueClass()) { // Class inside container
                   cl = cl->GetCollectionProxy()->GetValueClass();
                } else { // RAW type (or missing class) inside container
-                  printf("TODO: RAW type or missing class inside container (%s)\n", cl->GetName());
-                  /*CheckForMissingClass(cl->GetName());
-                  type = Form("TStlSimpleProxy<%s >", cl->GetName());
-                  AddHeader(cl);
-                  if (!cl->IsLoaded()) AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
-                  AddDescriptor( new TBranchProxyDescriptor( branchname, type, branchname ) );
-                  continue;*/
+                  // TODO: CheckForMissingClass?
+                  // TODO: AddHeader(cl); (if using TRV)
+                  AddReader(TTreeReaderDescriptor::ReaderType::kArray,
+                            TDataType::GetDataType(cl->GetCollectionProxy()->GetType())->GetName(),
+                            branch->GetName(),
+                            branch->GetName());
+                  continue; // Nothing else to with this branch in these cases
                }
             }
             
             if (cl) {
-               // TODO: implement this
-               printf("TODO: classes, last cl\n");
+               if (cl->TestBit(TClass::kIsEmulation) || branchName[strlen(branchName)-1] == '.' || branch->GetSplitLevel()) {
+                  // TODO: implement this
+                  printf("Classes, emulation/split case\n");
+               } else {
+                  // Generate a value or an array for non-split classes
+                  AddReader(isclones == kOut ?
+                              TTreeReaderDescriptor::ReaderType::kValue
+                            : TTreeReaderDescriptor::ReaderType::kArray,
+                            cl->GetName(), branchName, branchName);
+                  // TODO: can't we just put a continue here?
+               }
             }
          }
          
