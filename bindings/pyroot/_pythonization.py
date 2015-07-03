@@ -45,6 +45,46 @@ def add_class_method(match_class, match_method, addition):
    return method_pythonizor(match_class, match_method, _backend)
 
 
+def compose_method(match_class, match_method, g):
+   class composition_pythonizor:
+      def __init__(self, match_class, match_method, g):
+         import re
+         self.match_class = re.compile(match_class)
+         self.match_method = re.compile(match_method)
+         self.g = g
+
+      def __call__(self, obj, name):
+         if not self.match_class.match(name):
+            return
+         g = self.g
+         for k in obj.__dict__:
+            if not self.match_method.match(k):
+               continue
+            f = getattr(obj, k)
+            def h(self, *args, **kwargs):
+               return g(self, f(self, *args, **kwargs))
+            setattr(obj, k, h)
+   return composition_pythonizor(match_class, match_method, g)
+
+
+def decorate_method(match_class, match_method, decorator):
+   class decoration_pythonizor:
+      def __init__(self, match_class, match_method, decorator):
+         import re
+         self.match_class = re.compile(match_class)
+         self.match_method = re.compile(match_method)
+         self.decorator = decorator
+
+      def __call__(self, obj, name):
+         if not self.match_class.match(name):
+            return
+         for k in obj.__dict__:
+            if not self.match_method.match(k):
+               continue
+            setattr(obj, k, self.decorator(getattr(obj, k)))
+   return decoration_pythonizor(match_class, match_method, decorator)
+
+
 def set_methodproxy_property(match_class, match_method, prop, value):
    class method_pythonizor:
       def __init__(self, match_class, match_method, prop, value, backend):
