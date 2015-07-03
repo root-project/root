@@ -11,78 +11,72 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/*! \class TCutG
+\brief Graphical cut class.
 
-/* Begin_Html
-<center><h2>Graphical cut class</h2></center>
-A Graphical cut.
-<p>
 A TCutG object is a closed polygon defining a closed region in a x,y plot.
 It can be created via the graphics editor option "CutG" or directly by
 invoking its constructor. The first and last points should be the same.
-<p>
+
 To create a TCutG via the graphics editor, use the left button to select the
 points building the contour of the cut. Click on the right button to close the
 TCutG. When it is created via the graphics editor, the TCutG object is named
 "CUTG". It is recommended to immediatly change the name by using the context
 menu item "SetName". When the graphics editor is used, the names of the
 variables X,Y are automatically taken from the current pad title.
-<p>
+
 Example:
-<p>
+
 Assume a TTree object T and:
-<pre>
-     Root > T.Draw("abs(fMomemtum)%fEtot")
-</pre>
+
+    Root > T.Draw("abs(fMomemtum)%fEtot")
+
 the TCutG members fVarX, fVary will be set to:
-<pre>
-     fVarx = fEtot
-     fVary = abs(fMomemtum)
-</pre>
+
+    fVarx = fEtot
+    fVary = abs(fMomemtum)
 
 A graphical cut can be used in a TTree selection expression:
-<pre>
+
     Root > T.Draw("fEtot","cutg1")
-</pre>
+
 where "cutg1" is the name of an existing graphical cut.
-<p>
+
 Note that, as shown in the example above, a graphical cut may be used in a
 selection expression when drawing TTrees expressions of 1-d, 2-d or
 3-dimensions. The expressions used in TTree::Draw can reference the variables in
 the fVarX, fVarY of the graphical cut plus other variables.
-<p>
+
 When the TCutG object is created by TTree::Draw, it is added to the list of special objects in
 the main TROOT object pointed by gROOT. To retrieve a pointer to this object
 from the code or command line, do:
-<pre>
+
     TCutG *mycutg;
     mycutg = (TCutG*)gROOT->GetListOfSpecials()->FindObject("CUTG")
     mycutg->SetName("mycutg");
-</pre>
-<p>
+
 When the TCutG is not created via TTree::Draw, one must set the variable names
 corresponding to x,y if one wants to use the cut as input to TTree::Draw,eg
-<pre>
-   TCutG *cutg = new TCutG("mycut",5);
-   cutg->SetVarX("y");
-   cutg->SetVarY("x");
-   cutg->SetPoint(0,-0.3586207,1.509534);
-   cutg->SetPoint(1,-1.894181,-0.529661);
-   cutg->SetPoint(2,0.07780173,-1.21822);
-   cutg->SetPoint(3,-1.0375,-0.07944915);
-   cutg->SetPoint(4,0.756681,0.1853814);
-   cutg->SetPoint(5,-0.3586207,1.509534);
-</pre>
-<p>
+
+    TCutG *cutg = new TCutG("mycut",5);
+    cutg->SetVarX("y");
+    cutg->SetVarY("x");
+    cutg->SetPoint(0,-0.3586207,1.509534);
+    cutg->SetPoint(1,-1.894181,-0.529661);
+    cutg->SetPoint(2,0.07780173,-1.21822);
+    cutg->SetPoint(3,-1.0375,-0.07944915);
+    cutg->SetPoint(4,0.756681,0.1853814);
+    cutg->SetPoint(5,-0.3586207,1.509534);
+
 Example of use of a TCutG in TTree::Draw:
-<pre>
-   tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")
-</pre>
-<p>
+
+    tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")
+
 A Graphical cut may be drawn via TGraph::Draw. It can be edited like a normal
 TGraph.
-<p>
+
 A Graphical cut may be saved to a file via TCutG::Write.
-End_Html */
+*/
 
 #include <string.h>
 

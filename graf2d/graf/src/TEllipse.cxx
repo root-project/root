@@ -25,25 +25,25 @@ ClassImp(TEllipse)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/*! \class TEllipse
+\brief Draw Ellipses.
 
-/* Begin_Html
-<center><h2>TEllipse : to draw ellipses</h2></center>
-The ellipse can be truncated and rotated.
-It is defined by its center <tt>(x1,y1)</tt> and two radius
-<tt>r1</tt> and <tt>r2</tt>.
-A minimum and maximum angle may be specified <tt>(phimin, phimax)</tt>.
-The ellipse may be rotated with an angle <tt>theta</tt>. All these
+The ellipse can be truncated and rotated. It is defined by its center `(x1,y1)`
+and two radius`r1` and `r2`.
+
+A minimum and maximum angle may be specified `(phimin, phimax)`.
+The ellipse may be rotated with an angle `theta`. All these
 angles are in degrees.
-The attributes of the outline line are given via <tt>TAttLine</tt>.
-The attributes of the fill area are given via <tt>TAttFill</tt>.
+The attributes of the outline line are given via `TAttLine`.
+The attributes of the fill area are given via `TAttFill`.
 The picture below illustrates different types of ellipses.
-<p>
+
 When an ellipse sector only is drawn, the lines connecting the center
 of the ellipse to the edges are drawn by default. One can specify
 the drawing option "only" to not draw these lines or alternatively
-call the function <tt>SetNoEdges()</tt>. To remove completely the ellipse
+call the function `SetNoEdges()`. To remove completely the ellipse
 outline it is enough to specify 0 as line style.
-End_Html
+
 Begin_Macro(source)
 ../../../tutorials/graphics/ellipse.C
 End_Macro */
@@ -193,15 +193,15 @@ void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Doub
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
-///  This member function is called when a line is clicked with the locator
+/// This member function is called when a line is clicked with the locator
 ///
-///  If Left button clicked on one of the line end points, this point
-///     follows the cursor until button is released.
+/// If Left button clicked on one of the line end points, this point
+/// follows the cursor until button is released.
 ///
-///  if Middle button clicked, the line is moved parallel to itself
-///     until the button is released.
+/// if Middle button clicked, the line is moved parallel to itself
+/// until the button is released.
 ///
-///  NOTE that support for log scale is not implemented
+/// NOTE that support for log scale is not implemented
 
 void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
@@ -671,6 +671,7 @@ void TEllipse::Streamer(TBuffer &R__b)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the bounding Box of the Ellipse, currently not taking into
 /// account the rotating angle.
@@ -685,6 +686,7 @@ Rectangle_t TEllipse::GetBBox()
    return (BBox);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the center of the Ellipse as TPoint in pixels
 
@@ -696,6 +698,7 @@ TPoint TEllipse::GetBBoxCenter()
    return(p);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set center of the Ellipse
 
@@ -705,6 +708,7 @@ void TEllipse::SetBBoxCenter(const TPoint &p)
    fY1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0));
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set X coordinate of the center of the Ellipse
 
@@ -713,6 +717,7 @@ void TEllipse::SetBBoxCenterX(const Int_t x)
    fX1 = gPad->PixeltoX(x);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set Y coordinate of the center of the Ellipse
 
@@ -720,6 +725,7 @@ void TEllipse::SetBBoxCenterY(const Int_t y)
 {
    fY1 = gPad->PixeltoY(y-gPad->VtoPixel(0));
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set lefthandside of BoundingBox to a value
@@ -734,6 +740,7 @@ void TEllipse::SetBBoxX1(const Int_t x)
    fX1 = x1 + fR1;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set righthandside of BoundingBox to a value
 /// (resize in x direction on right)
@@ -747,6 +754,7 @@ void TEllipse::SetBBoxX2(const Int_t x)
    fX1 = x2-fR1;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set top of BoundingBox to a value (resize in y direction on top)
 
@@ -758,6 +766,7 @@ void TEllipse::SetBBoxY1(const Int_t y)
    fR2 = (y1-fY1+fR2)*0.5;
    fY1 = y1-fR2;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set bottom of BoundingBox to a value
