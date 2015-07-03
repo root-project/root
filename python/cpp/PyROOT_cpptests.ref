@@ -12,6 +12,7 @@ Verify object and pointer comparisons ... ok
 Test recognition of '_' as part of a valid class name ... ok
 Check that constructor with default argument is found in namespace ... ok
 Templated data members need to retain namespaces of arguments ... ok
+Identity of templated classes with and w/o std:: should match ... ok
 
 ----------------------------------------------------------------------
 

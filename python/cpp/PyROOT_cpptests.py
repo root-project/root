@@ -265,6 +265,18 @@ class Cpp2ClassNamingTestCase( MyTestCase ):
       self.assert_( "vector<PR_NS_A::PR_ST_B>" in type(p.first).__name__ )
       self.assert_( "vector<PR_NS_A::PR_NS_D::PR_ST_E>" in type(p.second).__name__ )
 
+   def test04NamespacedTemplateIdentity( self ):
+      """Identity of templated classes with and w/o std:: should match"""
+
+      gInterpreter.Declare( 'namespace PR_HepMC { class GenParticle {}; }' )
+      gInterpreter.Declare( 'namespace PR_LoKi { template< typename T, typename S > class Functor {}; }' )
+
+      f1 = PR_LoKi.Functor(      "vector<const PR_HepMC::GenParticle*>",      "vector<double>" )
+      f2 = PR_LoKi.Functor( "std::vector<const PR_HepMC::GenParticle*>", "std::vector<double>" )
+
+      self.assert_( f1 is f2 )
+      self.assertEqual( f1, f2 )
+
 
 ## actual test run
 if __name__ == '__main__':

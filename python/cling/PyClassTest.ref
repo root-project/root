@@ -19,3 +19,8 @@ instance count: 2
 in MyOtherPyClass.__del__
 instance count: 1
 in MyOtherPyClass.__del__
+loading MyModule.py ...
+in MyPyClass.__init__
+Derived1 (42):  42
+in MyModule.MyPyClass.__init__
+Derived2 (5.0): 5
