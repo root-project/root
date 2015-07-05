@@ -30,27 +30,6 @@ namespace ROOT {
       private:
          Rcpp::RObject fObj;
          Bool_t fStatus;//status tell if is a valid object
-         class Attribute
-         {
-             Rcpp::RObject obj;
-             TString fAttName;
-         public:
-             Attribute(){}
-             void SetObject(Rcpp::RObject o){obj=o;}
-             
-             Attribute& operator[](const char* attname)
-             {
-                 fAttName=attname;
-                 return *this;
-             }
-             template<class T,class RT> RT operator=(T o)
-             {
-                 obj.attr(fAttName.Data())=o;
-                 return obj;
-             }
-         };
-      public:
-          Attribute Attr;
       public:
          TRObject(): TObject() {};
          TRObject(SEXP xx);
@@ -60,7 +39,16 @@ namespace ROOT {
          
          Bool_t GetStatus() { return fStatus;}
          
-                  
+         template<class T> void SetAttribute(const TString name,T obj)
+         {
+             fObj.attr(name.Data())=obj;
+         }
+         
+         TRObject GetAttribute(const TString name)
+         {
+             return fObj.attr(name.Data());
+         }
+         
          void operator=(SEXP xx);
 
 	 template<class T> TRObject& Wrap(T obj) {

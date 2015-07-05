@@ -36,7 +36,7 @@ using namespace ROOT::R;
 ClassImp(TRObject)
 
 //______________________________________________________________________________
-TRObject::TRObject(SEXP xx): TObject(), fObj(xx),fStatus(kTRUE) {Attr.SetObject(xx); }
+TRObject::TRObject(SEXP xx): TObject(), fObj(xx),fStatus(kTRUE) { }
 
 
 //______________________________________________________________________________
@@ -47,4 +47,4 @@ void TRObject::operator=(SEXP xx)
 }
 
 //______________________________________________________________________________
-TRObject::TRObject(SEXP xx, Bool_t status): fObj(xx), fStatus(status) { Attr.SetObject(xx);}
+TRObject::TRObject(SEXP xx, Bool_t status): fObj(xx), fStatus(status) {}
