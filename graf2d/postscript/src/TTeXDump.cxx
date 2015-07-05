@@ -410,7 +410,7 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    for (Int_t i=1;i<n;i++) {
       x = XtoTeX(xw[i]);
       y = YtoTeX(yw[i]);
-      PrintFast(2,",(");
+      PrintFast(3,", (");
       WriteReal(x, kFALSE);
       PrintFast(1,",");
       WriteReal(y, kFALSE);
