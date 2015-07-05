@@ -455,6 +455,26 @@ bool test27() {
    ok &= (f5.Eval(2) == f6.Eval(2) );
    return ok;
 }
+
+bool test28() {
+   bool ok = true; 
+   // test composition of two functions
+   TF1 fsin("fsin", "[0]*sin(x)", 0., 10.);
+   fsin.SetParNames( "sin");
+   fsin.SetParameter( 0, 2.1);
+
+   TF1  fcos("fcos", "[0]*cos(x)", 0., 10.);
+   fcos.SetParNames( "cos");
+   fcos.SetParameter( 0, 1.1);
+
+   TF1 fsincos("fsc", "fsin+fcos");
+
+   TF1 f0("f0",[](double *x, double *p){ return p[0]*cos(x[0])+p[1]*sin(x[0]);},0.,10.,2);
+   f0.SetParameters(1.1,2.1);
+   ok &= (fsincos.Eval(2) == f0.Eval(2) );
+   return ok;
+
+}
    
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
@@ -500,6 +520,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test25() ) { PrintError(itest); }
    IncrTest(itest); if (!test26() ) { PrintError(itest); }
    IncrTest(itest); if (!test27() ) { PrintError(itest); }
+   IncrTest(itest); if (!test28() ) { PrintError(itest); }
 
    std::cout << ".\n";
     

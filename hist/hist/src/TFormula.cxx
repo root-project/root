@@ -1314,14 +1314,23 @@ void TFormula::ExtractFunctors(TString &formula)
                int nparOffset = 0;
                //if (fParams.find("0") != fParams.end() ) {
                // do in any case if parameters are existing
+               std::vector<TString> newNames;
                if (fNpar > 0) {
                   nparOffset = fNpar;
+                  newNames.resize(f->GetNpar() );
                   // start from higher number to avoid overlap
                   for (int jpar = f->GetNpar()-1; jpar >= 0; --jpar ) {
-                     TString oldName = TString::Format("[%s]",f->GetParName(jpar));
-                     TString newName = TString::Format("[p%d]",nparOffset+jpar);
-                     //std::cout << "replace - parameter " << f->GetParName(jpar) << " with " <<  newName << std::endl;
-                     replacementFormula.ReplaceAll(oldName,newName);
+                     // parameters name have a "p" added in front
+                     TString pj = TString(f->GetParName(jpar));
+                     if ( pj[0] == 'p' && TString(pj(1,pj.Length())).IsDigit() ) { 
+                        TString oldName = TString::Format("[%s]",f->GetParName(jpar));
+                        TString newName = TString::Format("[p%d]",nparOffset+jpar);
+                        //std::cout << "replace - parameter " << f->GetParName(jpar) << " with " <<  newName << std::endl;
+                        replacementFormula.ReplaceAll(oldName,newName);
+                        newNames[jpar] = newName; 
+                     }
+                     else
+                        newNames[jpar] = f->GetParName(jpar);
                   }
                   //std::cout << "after replacing params " << replacementFormula << std::endl;
                }
@@ -1332,8 +1341,8 @@ void TFormula::ExtractFunctors(TString &formula)
                for (int jpar = 0; jpar < f->GetNpar(); ++jpar) {
                   if (nparOffset> 0) {
                      // parameter have an offset- so take this into accound
-                     TString newName = TString::Format("p%d",nparOffset+jpar);
-                     SetParameter(newName,  f->GetParameter(jpar) );
+                     assert((int) newNames.size() == f->GetNpar() );
+                     SetParameter(newNames[jpar],  f->GetParameter(jpar) );
                   }
                   else
                      // names are the same between current formula and replaced one
@@ -1348,6 +1357,7 @@ void TFormula::ExtractFunctors(TString &formula)
 
                // we have extracted all the functor for "fname"
                //std::cout << " i = " << i << " f[i] = " << formula[i] << " - " << formula << std::endl;
+               name = "";
 
                continue;
             }
