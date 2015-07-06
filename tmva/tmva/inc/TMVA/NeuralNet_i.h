@@ -99,6 +99,7 @@ template <typename ItSource, typename ItWeight, typename ItTarget, typename ItDr
 }
 
 
+
 // apply weights without drop-out
 template <typename ItSource, typename ItWeight, typename ItTarget>
     void applyWeights (ItSource itSourceBegin, ItSource itSourceEnd,
@@ -259,6 +260,7 @@ void update (ItSource itSource, ItSource itSourceEnd,
 #define USELOCALWEIGHTS 1
 
 
+
     template <typename Function, typename Weights, typename PassThrough>
         double Steepest::operator() (Function& fitnessFunction, Weights& weights, PassThrough& passThrough) 
     {
@@ -403,7 +405,7 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
 template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-    double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc itInvActFnc, double patternWeight) 
+double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc itInvActFnc, double patternWeight) 
 {
     double errorSum = 0.0;
 
@@ -470,7 +472,7 @@ double crossEntropy (ItProbability itProbabilityBegin, ItProbability itProbabili
 
 
 template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-    double softMaxCrossEntropy (ItOutput itProbabilityBegin, ItOutput itProbabilityEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc /*itInvActFnc*/, double patternWeight) 
+double softMaxCrossEntropy (ItOutput itProbabilityBegin, ItOutput itProbabilityEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc /*itInvActFnc*/, double patternWeight) 
 {
     double errorSum = 0.0;
 
@@ -666,29 +668,32 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
         auto itWeightEnd = std::end (weights);
         auto itDrop = std::begin (drops);
         auto itDropEnd = std::end (drops);
-	size_t numNodes = inputSize ();
-        for (auto itLayer = std::begin (layers ()), itLayerEnd = std::end (layers ()); itLayer != itLayerEnd; ++itLayer)
+	size_t numNodesPrev = inputSize ();
+        double dropFractionPrev = *itDrop;
+	++itDrop;
+
+        for (auto& layer : layers ())
         {
-            const Layer& layer = *itLayer;
             if (itDrop == itDropEnd)
                 break;
 
+	    size_t numNodes = layer.numNodes ();
+
             double dropFraction = *itDrop;
+            double pPrev = 1.0 - dropFractionPrev;
             double p = 1.0 - dropFraction;
 
-            if (itLayer+1 != itLayerEnd && itDrop+1 != itDropEnd) // if not the last layer
-            {
-                double dropFractionNext  = *(itDrop+1);
-                double pNext = 1.0 - dropFractionNext;
+//	    p *= pPrev;
+	    p = pPrev;
 
-                p *= pNext;
-            }
-            
-            if (inverse)
-            {
+	    if (inverse)
+	    {
                 p = 1.0/p;
-            }
-	    size_t _numWeights = layer.numWeights (numNodes);
+	    }
+	    else
+	    {
+	    }
+	    size_t _numWeights = layer.numWeights (numNodesPrev);
             for (size_t iWeight = 0; iWeight < _numWeights; ++iWeight)
             {
                 if (itWeight == itWeightEnd)
@@ -697,12 +702,16 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
                 *itWeight *= p;
                 ++itWeight;
             }
-            numNodes = layer.numNodes ();
-            ++itDrop;
+	    numNodesPrev = numNodes;
+	    dropFractionPrev = dropFraction;
+	    ++itDrop;
         }
     }
 
 
+
+        
+    
 
     template <typename Minimizer>
         double Net::train (std::vector<double>& weights, 
@@ -729,6 +738,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	DropContainer dropContainerTest;
         const std::vector<double>& dropFractions = settings.dropFractions ();
         bool isWeightsForDrop = false;
+
         
         // until convergence
         do
@@ -741,21 +751,21 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	    {
 		// fill the dropOut-container
 		dropContainer.clear ();
+                size_t numNodes = inputSize ();
+                double dropFraction = 0.0;
+                dropFraction = dropFractions.at (dropIndex);
+                ++dropIndex;
+                fillDropContainer (dropContainer, dropFraction, numNodes);
 		for (auto itLayer = begin (m_layers), itLayerEnd = end (m_layers); itLayer != itLayerEnd; ++itLayer, ++dropIndex)
 		{
 		    auto& layer = *itLayer;
+                    numNodes = layer.numNodes ();
 		    // how many nodes have to be dropped
-                    double dropFraction = 0.0;
+                    dropFraction = 0.0;
                     if (dropFractions.size () > dropIndex)
                         dropFraction = dropFractions.at (dropIndex);
                     
-		    size_t numDrops = dropFraction * layer.numNodes ();
-                    if (numDrops >= layer.numNodes ()) // maintain at least one node
-                        numDrops = layer.numNodes () - 1;
-		    dropContainer.insert (end (dropContainer), layer.numNodes ()-numDrops, true); // add the markers for the nodes which are enabled
-		    dropContainer.insert (end (dropContainer), numDrops, false); // add the markers for the disabled nodes
-		    // shuffle 
-		    std::random_shuffle (end (dropContainer)-layer.numNodes (), end (dropContainer)); // shuffle enabled and disabled markers
+                    fillDropContainer (dropContainer, dropFraction, numNodes);
 		}
                 isWeightsForDrop = true;
 	    }
@@ -1042,69 +1052,32 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
         if (usesDropOut)
             itDropOut = std::begin (dropContainer);
         
-	/* std::vector<std::vector<std::function<double(double)> > > activationFunctionsDropOut; */
-	/* std::vector<std::vector<std::function<double(double)> > > inverseActivationFunctionsDropOut; */
-
 	if (_layers.empty ())
         {
             std::cout << "no layers in this net" << std::endl;
 	    throw std::string ("no layers in this net");
         }
 
-	/* if (usesDropOut) */
-	/* { */
-	/*     auto itDrop = begin (drop); */
-	/*     for (auto& layer: _layers) */
-	/*     { */
-	/* 	activationFunctionsDropOut.push_back (std::vector<std::function<double(double)> >()); */
-	/* 	inverseActivationFunctionsDropOut.push_back (std::vector<std::function<double(double)> >()); */
-	/* 	auto& actLine = activationFunctionsDropOut.back (); */
-	/* 	auto& invActLine = inverseActivationFunctionsDropOut.back (); */
-	/* 	auto& actFnc = layer.activationFunctions (); */
-	/* 	auto& invActFnc = layer.inverseActivationFunctions (); */
-	/* 	for (auto itAct = begin (actFnc), itActEnd = end (actFnc), itInv = begin (invActFnc); itAct != itActEnd; ++itAct, ++itInv) */
-	/* 	{ */
-	/* 	    if (!*itDrop) */
-	/* 	    { */
-	/* 		actLine.push_back (ZeroFnc); */
-	/* 		invActLine.push_back (ZeroFnc); */
-	/* 	    } */
-	/* 	    else */
-	/* 	    { */
-	/* 		actLine.push_back (*itAct); */
-	/* 		invActLine.push_back (*itInv); */
-	/* 	    } */
-	/* 	    ++itDrop; */
-	/* 	} */
-	/*     } */
-	/* } */
 
 	double sumError = 0.0;
 	double sumWeights = 0.0;	// -------------
 
         // ----------- create layer data -----------------
-        const Pattern& firstPattern = *batch.begin ();
-        assert (_layers.back ().numNodes () == firstPattern.output ().size ());
+        assert (_layers.back ().numNodes () == outputSize ());
         size_t totalNumWeights = 0;
         std::vector<LayerData> layerData;
         layerData.reserve (_layers.size ()+1);
         ItWeight itWeight = itWeightBegin;
         ItGradient itGradient = itGradientBegin;
-        typename Pattern::const_iterator itInputBegin = firstPattern.beginInput ();
-        typename Pattern::const_iterator itInputEnd = firstPattern.endInput ();
-        layerData.push_back (LayerData (itInputBegin, itInputEnd));
+        size_t numNodesPrev = inputSize ();
+        layerData.push_back (LayerData (numNodesPrev));
         if (usesDropOut)
         {
             layerData.back ().setDropOut (itDropOut);
             itDropOut += _layers.back ().numNodes ();
         }
-        size_t numNodesPrev = inputSize ();
-        /* auto itActFncLayer = begin (activationFunctionsDropOut); */
-        /* auto itInvActFncLayer = begin (inverseActivationFunctionsDropOut); */
         for (auto& layer: _layers)
         {
-            /* const std::vector<std::function<double(double)> >& actFnc = usesDropOut ? (*itActFncLayer) : layer.activationFunctions (); */
-            /* const std::vector<std::function<double(double)> >& invActFnc = usesDropOut ? (*itInvActFncLayer) : layer.inverseActivationFunctions (); */
             if (itGradientBegin == itGradientEnd)
                 layerData.push_back (LayerData (layer.numNodes (), itWeight, 
                                                 std::begin (layer.activationFunctions ()),
@@ -1126,17 +1099,14 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
             itGradient += _numWeights;
             numNodesPrev = layer.numNodes ();
 //                std::cout << layerData.back () << std::endl;
-            /* if (usesDropOut) */
-            /* { */
-            /*     ++itActFncLayer; */
-            /*     ++itInvActFncLayer; */
-            /* } */
         }
 	assert (totalNumWeights > 0);
 
 
 
         // ---------------------------------- loop over pattern -------------------------------------------------------
+        typename Pattern::const_iterator itInputBegin;
+        typename Pattern::const_iterator itInputEnd;
 	for (const Pattern& _pattern : batch)
 	{
             bool isFirst = true;

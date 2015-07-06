@@ -393,43 +393,62 @@ void TMVA::MethodNN::ProcessOptions()
    // create settings
    if (fAnalysisType == Types::kClassification)
    {
-
        if (fErrorStrategy == "SUMOFSQUARES") fModeErrorFunction = TMVA::NN::ModeErrorFunction::SUMOFSQUARES;
        if (fErrorStrategy == "CROSSENTROPY") fModeErrorFunction = TMVA::NN::ModeErrorFunction::CROSSENTROPY;
        if (fErrorStrategy == "MUTUALEXCLUSIVE") fModeErrorFunction = TMVA::NN::ModeErrorFunction::CROSSENTROPY_MUTUALEXCLUSIVE;
-
-       for (auto& block : strategyKeyValues)
+   }
+   else if (fAnalysisType == Types::kMulticlass)
+   {
+       if (fErrorStrategy == "SUMOFSQUARES") fModeErrorFunction = TMVA::NN::ModeErrorFunction::SUMOFSQUARES;
+       if (fErrorStrategy == "CROSSENTROPY") fModeErrorFunction = TMVA::NN::ModeErrorFunction::CROSSENTROPY;
+       if (fErrorStrategy == "MUTUALEXCLUSIVE") fModeErrorFunction = TMVA::NN::ModeErrorFunction::CROSSENTROPY_MUTUALEXCLUSIVE;
+   }
+   else if (fAnalysisType == Types::kRegression)
+   {
+       if (fErrorStrategy != "SUMOFSQUARES")
        {
-           size_t convergenceSteps = fetchValue (block, "ConvergenceSteps", 100);
-           int batchSize = fetchValue (block, "BatchSize", 30);
-           int testRepetitions = fetchValue (block, "TestRepetitions", 7);
-           double factorWeightDecay = fetchValue (block, "WeightDecay", 0.0);
-           TString regularization = fetchValue (block, "Regularization", TString ("NONE"));
-           double learningRate = fetchValue (block, "LearningRate", 1e-5);
-           double momentum = fetchValue (block, "Momentum", 0.3);
-           int repetitions = fetchValue (block, "Repetitions", 3);
-           TString strMultithreading = fetchValue (block, "Multithreading", TString ("True"));
-           std::vector<double> dropConfig;
-           dropConfig = fetchValue (block, "DropConfig", dropConfig);
-           int dropRepetitions = fetchValue (block, "DropRepetitions", 3);
+           Log () << kWARNING 
+                  << "For regression only SUMOFSQUARES is a valid neural net error function."
+                  << "Setting error function to SUMOFSQUARES now."
+                  << Endl;
+       }
+       fModeErrorFunction = TMVA::NN::ModeErrorFunction::SUMOFSQUARES;
+   }
+   
+   for (auto& block : strategyKeyValues)
+   {
+       size_t convergenceSteps = fetchValue (block, "ConvergenceSteps", 100);
+       int batchSize = fetchValue (block, "BatchSize", 30);
+       int testRepetitions = fetchValue (block, "TestRepetitions", 7);
+       double factorWeightDecay = fetchValue (block, "WeightDecay", 0.0);
+       TString regularization = fetchValue (block, "Regularization", TString ("NONE"));
+       double learningRate = fetchValue (block, "LearningRate", 1e-5);
+       double momentum = fetchValue (block, "Momentum", 0.3);
+       int repetitions = fetchValue (block, "Repetitions", 3);
+       TString strMultithreading = fetchValue (block, "Multithreading", TString ("True"));
+       std::vector<double> dropConfig;
+       dropConfig = fetchValue (block, "DropConfig", dropConfig);
+       int dropRepetitions = fetchValue (block, "DropRepetitions", 3);
 
-           TMVA::NN::EnumRegularization eRegularization = TMVA::NN::EnumRegularization::NONE;
-           if (regularization == "L1")
-               eRegularization = TMVA::NN::EnumRegularization::L1;
-           else if (regularization == "L2")
-               eRegularization = TMVA::NN::EnumRegularization::L2;
-           else if (regularization == "L1MAX")
-               eRegularization = TMVA::NN::EnumRegularization::L1MAX;
+       TMVA::NN::EnumRegularization eRegularization = TMVA::NN::EnumRegularization::NONE;
+       if (regularization == "L1")
+           eRegularization = TMVA::NN::EnumRegularization::L1;
+       else if (regularization == "L2")
+           eRegularization = TMVA::NN::EnumRegularization::L2;
+       else if (regularization == "L1MAX")
+           eRegularization = TMVA::NN::EnumRegularization::L1MAX;
 
 
-           strMultithreading.ToUpper ();
-           bool multithreading = true;
-           if (strMultithreading.BeginsWith ("T"))
-               multithreading = true;
-           else
-               multithreading = false;
+       strMultithreading.ToUpper ();
+       bool multithreading = true;
+       if (strMultithreading.BeginsWith ("T"))
+           multithreading = true;
+       else
+           multithreading = false;
            
-           
+
+       if (fAnalysisType == Types::kClassification)
+       {
            std::shared_ptr<TMVA::NN::ClassificationSettings> ptrSettings = make_shared <TMVA::NN::ClassificationSettings> (
                GetName  (),
                convergenceSteps, batchSize, 
@@ -437,33 +456,39 @@ void TMVA::MethodNN::ProcessOptions()
                eRegularization, fScaleToNumEvents, TMVA::NN::MinimizerType::fSteepest,
                learningRate, 
                momentum, repetitions, multithreading);
-
-           if (dropRepetitions > 0 && !dropConfig.empty ())
-           {
-               ptrSettings->setDropOut (std::begin (dropConfig), std::end (dropConfig), dropRepetitions);
-           }
-           
            ptrSettings->setWeightSums (fSumOfSigWeights_test, fSumOfBkgWeights_test);
            fSettings.push_back (ptrSettings);
        }
+       else if (fAnalysisType == Types::kMulticlass)
+       {
+           std::shared_ptr<TMVA::NN::Settings> ptrSettings = make_shared <TMVA::NN::Settings> (
+               GetName  (),
+               convergenceSteps, batchSize, 
+               testRepetitions, factorWeightDecay,
+               eRegularization, TMVA::NN::MinimizerType::fSteepest,
+               learningRate, 
+               momentum, repetitions, multithreading);
+           fSettings.push_back (ptrSettings);
+       }
+       else if (fAnalysisType == Types::kRegression)
+       {
+           std::shared_ptr<TMVA::NN::Settings> ptrSettings = make_shared <TMVA::NN::Settings> (
+               GetName  (),
+               convergenceSteps, batchSize, 
+               testRepetitions, factorWeightDecay,
+               eRegularization, TMVA::NN::MinimizerType::fSteepest,
+               learningRate, 
+               momentum, repetitions, multithreading);
+           fSettings.push_back (ptrSettings);
+       }
+
+           
+       if (dropRepetitions > 0 && !dropConfig.empty ())
+       {
+           fSettings.back ()->setDropOut (std::begin (dropConfig), std::end (dropConfig), dropRepetitions);
+       }
+           
    }
-   // else if (fAnalysisType == Types::kMulticlass)
-   // {
-   //     ptrSettings = std::make_unique <MulticlassSettings> ((*itSetting).convergenceSteps, (*itSetting).batchSize, 
-   //                                                          (*itSetting).testRepetitions, (*itSetting).factorWeightDecay,
-   //                                                          (*itSetting).isL1, (*itSetting).dropFraction, (*itSetting).dropRepetitions,
-   //                                                          fScaleToNumEvents); 
-   // }
-   // else if (fAnalysisType == Types::kRegression)
-   // {
-   //     ptrSettings = std::make_unique <RegressionSettings> ((*itSetting).convergenceSteps, (*itSetting).batchSize, 
-   //                                                          (*itSetting).testRepetitions, (*itSetting).factorWeightDecay,
-   //                                                          (*itSetting).isL1, (*itSetting).dropFraction, (*itSetting).dropRepetitions,
-   //                                                          fScaleToNumEvents);
-   // }
-
-
-
 }
 
 //______________________________________________________________________________
@@ -539,7 +564,7 @@ void TMVA::MethodNN::Train()
         size_t inputSize = GetNVariables (); //trainPattern.front ().input ().size ();
         size_t outputSize = fAnalysisType == Types::kClassification ? 1 : GetNTargets (); //trainPattern.front ().output ().size ();
         fNet.setInputSize (inputSize + 1); // num vars + bias node
-//        fNet.setOutputSize (outputSize); // num vars + bias node
+        fNet.setOutputSize (outputSize); // num vars + bias node
         
         // configure neural net
         auto itLayout = std::begin (fLayout), itLayoutEnd = std::end (fLayout)-1; // all layers except the last one
@@ -551,7 +576,18 @@ void TMVA::MethodNN::Train()
                   << Endl;
         }
 
-        fNet.addLayer (NN::Layer (outputSize, (*itLayout).second, NN::ModeOutputValues::SIGMOID)); 
+        NN::ModeOutputValues eModeOutputValues = NN::ModeOutputValues::SIGMOID;
+        if (fAnalysisType == Types::kRegression)
+        {
+            eModeOutputValues = NN::ModeOutputValues::DIRECT;
+        }
+        else if ((fAnalysisType == Types::kClassification ||
+                  fAnalysisType == Types::kMulticlass) &&
+                 fModeErrorFunction == TMVA::NN::ModeErrorFunction::SUMOFSQUARES)
+        {
+            eModeOutputValues = NN::ModeOutputValues::DIRECT;
+        }
+        fNet.addLayer (NN::Layer (outputSize, (*itLayout).second, eModeOutputValues)); 
         Log() << kINFO 
               << "Add Layer with " << outputSize << " nodes." 
               << Endl << Endl;
@@ -631,6 +667,92 @@ Double_t TMVA::MethodNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUpp
     return output.at (0);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// get the regression value generated by the NN
+
+const std::vector<Float_t> &TMVA::MethodNN::GetRegressionValues() 
+{
+    assert (!fWeights.empty ());
+    if (fWeights.empty ())
+        return *fRegressionReturnVal;
+
+   const Event * ev = GetEvent();
+    
+    const std::vector<Float_t>& inputValues = ev->GetValues ();
+    std::vector<double> input (inputValues.begin (), inputValues.end ());
+    input.push_back (1.0); // bias node
+    std::vector<double> output = fNet.compute (input, fWeights);
+
+   if (fRegressionReturnVal == NULL) fRegressionReturnVal = new std::vector<Float_t>();
+   fRegressionReturnVal->clear();
+
+   assert (!output.empty ());
+   if (output.empty ())
+      return *fRegressionReturnVal;
+
+   Event * evT = new Event(*ev);
+   UInt_t ntgts = fNet.outputSize ();
+   for (UInt_t itgt = 0; itgt < ntgts; ++itgt) {
+       evT->SetTarget(itgt,output.at (itgt));
+   }
+
+   const Event* evT2 = GetTransformationHandler().InverseTransform( evT );
+   for (UInt_t itgt = 0; itgt < ntgts; ++itgt) {
+      fRegressionReturnVal->push_back( evT2->GetTarget(itgt) );
+   }
+
+   delete evT;
+
+   return *fRegressionReturnVal;
+}
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// get the multiclass classification values generated by the NN
+
+const std::vector<Float_t> &TMVA::MethodNN::GetMulticlassValues()
+{
+    if (fWeights.empty ())
+        return *fRegressionReturnVal;
+
+    const std::vector<Float_t>& inputValues = GetEvent ()->GetValues ();
+    std::vector<double> input (inputValues.begin (), inputValues.end ());
+    input.push_back (1.0); // bias node
+    std::vector<double> output = fNet.compute (input, fWeights);
+
+   // check the output of the network
+ 
+   if (fMulticlassReturnVal == NULL) fMulticlassReturnVal = new std::vector<Float_t>();
+   fMulticlassReturnVal->clear();
+   std::vector<Float_t> temp;
+
+   UInt_t nClasses = DataInfo().GetNClasses();
+   assert (nClasses == output.outputSize ());
+   for (UInt_t icls = 0; icls < nClasses; icls++) {
+       temp.push_back (output.at (icls));
+   }
+   
+   for(UInt_t iClass=0; iClass<nClasses; iClass++){
+      Double_t norm = 0.0;
+      for(UInt_t j=0;j<nClasses;j++){
+         if(iClass!=j)
+            norm+=exp(temp[j]-temp[iClass]);
+         }
+      (*fMulticlassReturnVal).push_back(1.0/(1.0+norm));
+   }
+
+
+   
+   return *fMulticlassReturnVal;
+}
+
 
 
 
@@ -663,7 +785,7 @@ void TMVA::MethodNN::AddWeightsXMLTo( void* parent ) const
 
    void* weightsxml = gTools().xmlengine().NewChild(nn, 0, "Synapses");
    gTools().xmlengine().NewAttr (weightsxml, 0, "InputSize", gTools().StringFromInt((int)fNet.inputSize ()));
-//   gTools().xmlengine().NewAttr (weightsxml, 0, "OutputSize", gTools().StringFromInt((int)fNet.outputSize ()));
+   gTools().xmlengine().NewAttr (weightsxml, 0, "OutputSize", gTools().StringFromInt((int)fNet.outputSize ()));
    gTools().xmlengine().NewAttr (weightsxml, 0, "NumberSynapses", gTools().StringFromInt((int)fWeights.size ()));
    std::stringstream s("");
    s.precision( 16 );
@@ -725,12 +847,12 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
 
    Int_t numWeights (0);
    Int_t inputSize (0);
-//   Int_t outputSize (0);
+   Int_t outputSize (0);
    gTools().ReadAttr (xmlWeights, "NumberSynapses", numWeights);
    gTools().ReadAttr (xmlWeights, "InputSize", inputSize);
-//   gTools().ReadAttr (xmlWeights, "OutputSize", outputSize);
+   gTools().ReadAttr (xmlWeights, "OutputSize", outputSize);
    fNet.setInputSize (inputSize);
-//   fNet.setOutputSize (inputSize);
+   fNet.setOutputSize (outputSize); // num vars + bias node
 
    const char* content = gTools().GetContent (xmlWeights);
    std::stringstream sstr (content);
@@ -905,7 +1027,7 @@ void TMVA::MethodNN::checkGradients ()
     fNet.clear ();
 
     fNet.setInputSize (inputSize);
-//    fNet.setOutputSize (outputSize);
+    fNet.setOutputSize (outputSize);
     fNet.addLayer (NN::Layer (100, NN::EnumFunction::SOFTSIGN)); 
     fNet.addLayer (NN::Layer (30, NN::EnumFunction::SOFTSIGN)); 
     fNet.addLayer (NN::Layer (outputSize, NN::EnumFunction::LINEAR, NN::ModeOutputValues::SIGMOID)); 

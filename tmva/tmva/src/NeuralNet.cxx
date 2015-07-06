@@ -43,6 +43,17 @@ double studenttDouble (double distributionParameter)
 }
 
 
+    LayerData::LayerData (size_t inputSize)
+	: m_isInputLayer (true)
+	, m_hasWeights (false)
+	, m_hasGradients (false)
+	, m_eModeOutput (ModeOutputValues::DIRECT) 
+    {
+	m_size = inputSize;
+	m_deltas.assign (m_size, 0);
+    }
+
+
 
     LayerData::LayerData (const_iterator_type itInputBegin, const_iterator_type itInputEnd, ModeOutputValues eModeOutput)
 	: m_isInputLayer (true)
@@ -460,17 +471,13 @@ void ClassificationSettings::startTestCycle ()
 
 
 
+    
 
-
-
-
-
-
-    size_t Net::numWeights (size_t numInputNodes, size_t trainingStartLayer) const 
+    size_t Net::numWeights (size_t trainingStartLayer) const 
     {
 	size_t num (0);
 	size_t index (0);
-	size_t prevNodes (numInputNodes);
+	size_t prevNodes (inputSize ());
 	for (auto& layer : m_layers)
 	{
 	    if (index >= trainingStartLayer)
@@ -483,7 +490,16 @@ void ClassificationSettings::startTestCycle ()
 
 
 
-    
+    void Net::fillDropContainer (DropContainer& dropContainer, double dropFraction, size_t numNodes) const
+    {
+        size_t numDrops = dropFraction * numNodes;
+        if (numDrops >= numNodes) // maintain at least one node
+            numDrops = numNodes - 1;
+        dropContainer.insert (end (dropContainer), numNodes-numDrops, true); // add the markers for the nodes which are enabled
+        dropContainer.insert (end (dropContainer), numDrops, false); // add the markers for the disabled nodes
+        // shuffle 
+        std::random_shuffle (end (dropContainer)-numNodes, end (dropContainer)); // shuffle enabled and disabled markers
+    }
 
 
 

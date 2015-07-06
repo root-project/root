@@ -299,6 +299,7 @@ public:
     LayerData (const_iterator_type itInputBegin, const_iterator_type itInputEnd, ModeOutputValues eModeOutput = ModeOutputValues::DIRECT);
 
 
+    LayerData  (size_t inputSize);
     ~LayerData ()    {}
 
 
@@ -795,11 +796,13 @@ public:
     }
 
     void setInputSize (size_t sizeInput) { m_sizeInput = sizeInput; }
+    void setOutputSize (size_t sizeOutput) { m_sizeOutput = sizeOutput; }
     void addLayer (Layer& layer) { m_layers.push_back (layer); }
     void addLayer (Layer&& layer) { m_layers.push_back (layer); }
     void setErrorFunction (ModeErrorFunction eErrorFunction) { m_eErrorFunction = eErrorFunction; }
     
     size_t inputSize () const { return m_sizeInput; }
+    size_t outputSize () const { return m_sizeOutput; }
 
     template <typename WeightsType, typename DropProbabilities>
         void dropOutWeightFactor (WeightsType& weights,
@@ -817,7 +820,7 @@ public:
     inline double trainCycle (Minimizer& minimizer, std::vector<double>& weights, 
 			      Iterator itPatternBegin, Iterator itPatternEnd, Settings& settings, DropContainer& dropContainer);
 
-    size_t numWeights (size_t numInputNodes, size_t trainingStartLayer = 0) const;
+    size_t numWeights (size_t trainingStartLayer = 0) const;
 
     template <typename Weights>
         std::vector<double> compute (const std::vector<double>& input, const Weights& weights) const;
@@ -878,11 +881,17 @@ public:
 			    ItPat itPatternEnd, 
 			    OutIterator itWeight);
 
+protected:
+
+    void fillDropContainer (DropContainer& dropContainer, double dropFraction, size_t numNodes) const;
+    
+    
 
 private:
 
     ModeErrorFunction m_eErrorFunction;
     size_t m_sizeInput;
+    size_t m_sizeOutput;
     std::vector<Layer> m_layers;
 };
 
