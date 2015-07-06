@@ -563,11 +563,11 @@ del ModuleFacade
 ### Add some infrastructure if we are in a Jupiter Notebook ---------------------
 # We check if the ZMQ shell is in use, which is a sign of usage in the notebook.
 if '__IPYTHON__' in __builtins__ and __IPYTHON__:
-    from IPython import get_ipython
-    pre_execute_callbacks = get_ipython().events.callbacks['pre_execute']
-    zmqIshellName = 'ZMQInteractiveShell'
-    if any(zmqIshellName == callBack.im_class.__name__ for callBack in pre_execute_callbacks):
-       import ROOTaaS.iPyROOT
+   from IPython import get_ipython
+   pre_execute_callbacks = get_ipython().events.callbacks['pre_execute']
+   zmqIshellName = 'ZMQInteractiveShell'
+   if any(zmqIshellName == callBack.im_class.__name__ for callBack in pre_execute_callbacks):
+      import ROOTaaS.iPyROOT
 
 ### b/c of circular references, the facade needs explicit cleanup ---------------
 import atexit
