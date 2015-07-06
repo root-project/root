@@ -42,5 +42,9 @@ foreach(pyfile ${pyfiles})
   file(COPY ${pyfile} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
 endforeach()
 
+set( ROOTaaSDirName "ROOTaaS")
+install (DIRECTORY ${ROOTaaSDirName} DESTINATION ${runtimedir})
+file(COPY ${ROOTaaSDirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
+
 #---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()
