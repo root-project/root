@@ -44,6 +44,7 @@ TQRootCanvas::TQRootCanvas( QWidget *parent, const char *name, TCanvas *c )
    setFocusPolicy( TabFocus );
    setCursor( Qt::crossCursor );
 
+   fTabWin = 0;
    // add the Qt::WinId to TGX11 interface
    fWid=gVirtualX->AddWindow((ULong_t)winId(),100,30);
    if (c == 0) {
@@ -84,6 +85,7 @@ TQRootCanvas::TQRootCanvas( QWidget *parent, QWidget* tabWin, const char *name, 
    setFocusPolicy( TabFocus );
    setCursor( Qt::crossCursor );
 
+   fTabWin = 0;
    // add the Qt::WinId to TGX11 interface
    fWid=gVirtualX->AddWindow((ULong_t)winId(),100,30);
    if (c == 0) {
