@@ -1,84 +1,18 @@
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data1
-                  MACRO writefile.C
-                  MACROARG 1
-                  DEPENDS data1.C)
+foreach(_i 1 2 3 4 5 6)
+  ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data${_i}
+                    MACRO writefile.C
+                    MACROARG ${_i}
+                    DEPENDS data${_i}.C)
+  list(APPEND _data_depends roottest-root-meta-evolution-data${_i})
+endforeach()
 
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data2
-                  MACRO writefile.C
-                  MACROARG 2
-                  DEPENDS data2.C)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data3
-                  MACRO writefile.C
-                  MACROARG 3
-                  DEPENDS data3.C)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data4
-                  MACRO writefile.C
-                  MACROARG 4
-                  DEPENDS data4.C)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data5
-                  MACRO writefile.C
-                  MACROARG 5
-                  DEPENDS data5.C)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data6
-                  MACRO writefile.C
-                  MACROARG 6
-                  DEPENDS data6.C)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn0
+foreach(_i 0 1 2 3 4 10 11 12 13 14 15 17 18)
+  ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn${_i}
                   MACRO checkWarn.C
-                  MACROARG 0)
+                  MACROARG ${_i}
+                  DEPENDS ${_data_depends})
+endforeach()
 
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn1
-                  MACRO checkWarn.C
-                  MACROARG 1)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn2
-                  MACRO checkWarn.C
-                  MACROARG 2)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn3
-                  MACRO checkWarn.C
-                  MACROARG 3)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn4
-                  MACRO checkWarn.C
-                  MACROARG 4)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn10
-                  MACRO checkWarn.C
-                  MACROARG 10)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn11
-                  MACRO checkWarn.C
-                  MACROARG 11)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn12
-                  MACRO checkWarn.C
-                  MACROARG 12)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn13
-                  MACRO checkWarn.C
-                  MACROARG 13)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn14
-                  MACRO checkWarn.C
-                  MACROARG 14)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn15
-                  MACRO checkWarn.C
-                  MACROARG 15)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn17
-                  MACRO checkWarn.C
-                  MACROARG 17)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn18
-                  MACRO checkWarn.C
-                  MACROARG 18)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execBaseClass_v1
                   MACRO execBaseClass_v1.cxx+
