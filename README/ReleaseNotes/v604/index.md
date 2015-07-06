@@ -327,7 +327,7 @@ than the last of the object's data member.
 ##### Command Interface
 One can now register an arbitrary command to the server, which become visible in the web browser. Then, when the item is clicked by the user, the command ends-up in a gROOT->ProcessLineSync() call.
 
-##### Custom Properties 
+##### Custom Properties
 Custom properties can be configured for any item in the server. For example, one could configure an icon for each item visible in the browser. Or one could 'hide' any item from the user (but keep access with normal http requests). With such properties one could specify which item is drawn when web page is loaded, or configure monitoring. See tutorials/http/httpcontrol.C macro for more details.
 
 ##### Method Calls
@@ -781,3 +781,7 @@ directory - this behavior is now implement by the default constructor.
 ### Tree
 
  - `TTreeReaderArray` now supports `vector<builtin-type>`.
+
+### Graphics
+
+ - Fix file corruption in `TTeXDump::DrawPolyMarker`.
