@@ -79,6 +79,7 @@ void TMVARegression( TString myMethodList = "" )
    // 
    // --- Neural Network
    Use["MLP"]             = 1; 
+   Use["NN"]              = 1; 
    // 
    // --- Support Vector Machine 
    Use["SVM"]             = 0;
@@ -246,6 +247,38 @@ void TMVARegression( TString myMethodList = "" )
    if (Use["MLP"])
       factory->BookMethod( TMVA::Types::kMLP, "MLP", "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=20000:HiddenLayers=N+20:TestRate=6:TrainingMethod=BFGS:Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-6:ConvergenceTests=15:!UseRegulator" );
 
+   if (Use["NN"])
+   {
+//       TString layoutString ("Layout=TANH|(N+100)*2,LINEAR");
+//       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+//       TString layoutString ("Layout=RELU|300,RELU|100,RELU|30,RELU|10,LINEAR");
+//       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|30,SOFTSIGN|20,SOFTSIGN|10,LINEAR");
+//       TString layoutString ("Layout=TANH|50,TANH|30,TANH|20,TANH|10,LINEAR");
+//       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+//       TString layoutString ("Layout=TANH|100,TANH|30,LINEAR");
+       TString layoutString ("Layout=TANH|100,LINEAR");
+
+       TString training0 ("LearningRate=1e-5,Momentum=0.5,Repetitions=1,ConvergenceSteps=500,BatchSize=50,TestRepetitions=7,WeightDecay=0.01,Regularization=NONE,DropConfig=0.5+0.5+0.5+0.5,DropRepetitions=2");
+       TString training1 ("LearningRate=1e-5,Momentum=0.9,Repetitions=1,ConvergenceSteps=170,BatchSize=30,TestRepetitions=7,WeightDecay=0.01,Regularization=L2,DropConfig=0.1+0.1+0.1,DropRepetitions=1");
+       TString training2 ("LearningRate=1e-5,Momentum=0.3,Repetitions=1,ConvergenceSteps=150,BatchSize=40,TestRepetitions=7,WeightDecay=0.01,Regularization=NONE");
+       TString training3 ("LearningRate=1e-6,Momentum=0.1,Repetitions=1,ConvergenceSteps=500,BatchSize=100,TestRepetitions=7,WeightDecay=0.0001,Regularization=NONE");
+
+       TString trainingStrategyString ("TrainingStrategy=");
+       trainingStrategyString += training0 + "|" + training1 + "|" + training2 + "|" + training3;
+
+       
+//       TString trainingStrategyString ("TrainingStrategy=LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=20,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,L1=false,DropFraction=0.0,DropRepetitions=5");
+
+       TString nnOptions ("!H:V:ErrorStrategy=SUMOFSQUARES:VarTransform=G:WeightInitialization=XAVIERUNIFORM");
+//       TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CHECKGRADIENTS");
+       nnOptions.Append (":"); nnOptions.Append (layoutString);
+       nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
+
+       factory->BookMethod( TMVA::Types::kNN, "NN", nnOptions ); // NN
+   }
+
+
+   
    // Support Vector Machine
    if (Use["SVM"])
       factory->BookMethod( TMVA::Types::kSVM, "SVM", "Gamma=0.25:Tol=0.001:VarTransform=Norm" );
