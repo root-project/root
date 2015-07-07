@@ -57,6 +57,11 @@ static inline TClass* OP2TCLASS( PyROOT::ObjectProxy* pyobj ) {
 }
 //-- temp
 
+//- data and local helpers ---------------------------------------------------
+namespace PyROOT {
+   R__EXTERN PyObject* gRootModule;
+}
+
 namespace {
 
 // for convenience
@@ -2640,7 +2645,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
 // TODO: store these on the pythonizations module, nog on gRootModule
 // TODO: externalize this code and use update handlers on the python side
-   R__EXTERN PyObject* gRootModule;
    PyObject* userPythonizations = PyObject_GetAttrString( gRootModule, "UserPythonizations" );
    PyObject* pythonizationScope = PyObject_GetAttrString( gRootModule, "PythonizationScope" );
 

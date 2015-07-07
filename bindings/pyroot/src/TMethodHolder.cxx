@@ -71,7 +71,6 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
    // map user exceptions .. this needs to move to Cppyy.cxx
       TClass* cl = TClass::GetClass( typeid(e) );
 
-      R__EXTERN PyObject* gRootModule;
       PyObject* pyUserExcepts = PyObject_GetAttrString( gRootModule, "UserExceptions" );
       std::string exception_type = cl->GetName();
       PyObject* pyexc = PyDict_GetItemString( pyUserExcepts, exception_type.c_str() );
