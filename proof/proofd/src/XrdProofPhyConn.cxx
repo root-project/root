@@ -96,8 +96,10 @@ bool XrdProofPhyConn::Init(const char *url, int fd)
 
    // Host and Port
    if (!fTcp) {
-      fHost = XrdSysDNS::getHostName(((fUrl.Host.length() > 0) ?
+      char *hn = XrdSysDNS::getHostName(((fUrl.Host.length() > 0) ?
                                        fUrl.Host.c_str() : "localhost"));
+      fHost = hn;
+      free(hn);
       fPort = -1;
       fUrl.Host = "";
       fUrl.User = "";
