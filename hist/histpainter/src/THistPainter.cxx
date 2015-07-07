@@ -65,7 +65,6 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
 /*! \class THistPainter
 \brief The histogram painter class. Implements all histograms' drawing's options.
 
