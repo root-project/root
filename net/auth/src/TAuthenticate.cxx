@@ -477,8 +477,11 @@ negotia:
       if (user != "")
          CheckNetrc(user, passwd, pwhash, kFALSE);
       if (passwd == "") {
-         if (fgPromptUser)
-            user = PromptUser(fRemote);
+         if (fgPromptUser) {
+            char *u = PromptUser(fRemote);
+            user = u;
+            delete[] u;
+         }
          rc = GetUserPasswd(user, passwd, pwhash, kFALSE);
       }
       fUser = user;
@@ -2518,8 +2521,11 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
             // Anonymous like login with automatic passwd generation ...
             TString localuser;
             pw = gSystem->GetUserInfo();
-            if (pw)
-               localuser = StrDup(pw->fUser);
+            if (pw) {
+               char *u = StrDup(pw->fUser);
+               localuser = u;
+               delete[] u;
+            }
             delete pw;
             static TString localFQDN;
             if (localFQDN == "") {
