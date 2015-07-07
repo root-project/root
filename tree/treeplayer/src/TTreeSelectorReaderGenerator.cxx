@@ -205,20 +205,16 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       TObjArray *leaves = branch->GetListOfLeaves();
       Int_t nleaves = leaves ? leaves->GetEntriesFast() : 0;
       
-      if (nleaves>1) {
-         // TODO: implement this       
-         // (this happens in the case of embedded objects inside an object inside
-         // a clones array split more than one level)
-         printf("TODO: AnalyzeOldBranch with nleaves>1\n");
-      } else {
-         TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(0);
-         extraLookedAt += AnalyzeOldLeaf(leaf);
+      for(int l=0;l<nleaves;l++) {
+         TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
+         extraLookedAt += AnalyzeOldLeaf(leaf, nleaves);
       }
+
       
       return extraLookedAt;
    }
    
-   UInt_t TTreeSelectorReaderGenerator::AnalyzeOldLeaf(TLeaf *leaf)
+   UInt_t TTreeSelectorReaderGenerator::AnalyzeOldLeaf(TLeaf *leaf, Int_t nleaves)
    {
       // Analyze the leaf and add the variables found.
       
@@ -310,10 +306,17 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             break;
          }
       }
-      
-      
-      AddReader(type, dataType, leaf->GetName(), leaf->GetBranch()->GetName());
-      
+
+      // If there are multiple leaves (leaflist) the name of the branch is
+      // <branch_name>.<leaf_name>
+      // (Otherwise the brach name does not change)
+      TString branchName = leaf->GetBranch()->GetName();
+      if (nleaves > 1) {
+         branchName.Form("%s.%s", leaf->GetBranch()->GetName(), leaf->GetName());
+      }
+
+      AddReader(type, dataType, leaf->GetName(), branchName);         
+
       return 0;
    }
    

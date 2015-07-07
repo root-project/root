@@ -64,7 +64,7 @@ namespace ROOT {
       void   AddHeader(TClass *cl);
       void   AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name, TString branchName);
       UInt_t AnalyzeOldBranch(TBranch *branch, UInt_t level);
-      UInt_t AnalyzeOldLeaf(TLeaf *leaf);
+      UInt_t AnalyzeOldLeaf(TLeaf *leaf, Int_t nleaves);
       
       void   AnalyzeTree(TTree *tree);
       void   WriteSelector();
