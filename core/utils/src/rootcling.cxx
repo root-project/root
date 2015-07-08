@@ -3507,6 +3507,13 @@ bool IsGoodForAutoParseMap(const clang::RecordDecl& rcd){
    auto& astCtxt = rcd.getASTContext();
    auto& templInstArgs = clAsTmplSpecDecl->getTemplateInstantiationArgs();
    for (auto&& arg : templInstArgs.asArray()){
+
+      auto argKind = arg.getKind();
+      if (argKind != clang::TemplateArgument::Type){
+         if (argKind == clang::TemplateArgument::Integral) continue;
+         else return true;
+      }
+
       auto argQualType = arg.getAsType();
       auto isPOD = argQualType.isPODType(astCtxt);
       // This is a POD, we can inspect the next arg
