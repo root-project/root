@@ -102,7 +102,7 @@ if(builtin_lzma)
       set(LZMA_CFLAGS "-Wno-format-nonliteral")
       set(LZMA_LDFLAGS "-Qunused-arguments")
     elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
-      set(LZMA_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179")
+      set(LZMA_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179 -wd2102")
     endif()
     ExternalProject_Add(
       LZMA
