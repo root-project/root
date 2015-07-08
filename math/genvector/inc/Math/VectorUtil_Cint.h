@@ -47,7 +47,7 @@ namespace ROOT {
       return v *= a;
     }
 
-#if defined (linux) || defined (_WIN32) || defined (__APPLE__)
+#if !defined (__INTEL_COMPILER) && ( defined (linux) || defined (_WIN32) || defined (__APPLE__) )
  
     std::ostream & operator<< (std::ostream & os, const XYZVector & v) { 
       return operator<< <char,char_traits<char> > (os,v); 
