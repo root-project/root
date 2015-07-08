@@ -27,13 +27,21 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
+#ifndef ROOT_TNamed
+#include "TNamed.h"
+#endif
+
 
 class TBranch;
+class TBranchElement;
 class TLeaf;
 class TTree;
 
 namespace ROOT {
-   
+   // 0 for the general case, 1 when this a split clases inside a TClonesArray,
+   // 2 when this is a split classes inside an STL container.
+   enum ELocation { kOut=0, kClones, kSTL, kInsideClones, kInsideSTL };
+
    class TTreeReaderDescriptor : public TObject {
    public:
       enum ReaderType { kValue, kArray };
@@ -49,12 +57,33 @@ namespace ROOT {
          fBranchName(branchName) { }
    };
 
+   class TBranchDescriptor : public TNamed {
+   public:
+      ELocation             fIsClones;
+      TString               fContainerName;
+      UInt_t                fSplitLevel;
+      TString               fBranchName;
+      TString               fSubBranchPrefix;
+      TVirtualStreamerInfo *fInfo;
+
+      TBranchDescriptor(const char *type, TVirtualStreamerInfo *info,
+                        const char *branchname, ELocation isclones,
+                        UInt_t splitlevel, const TString &containerName) :
+         TNamed(type,type),
+         fIsClones(isclones),
+         fContainerName(containerName),
+         fSplitLevel(splitlevel),
+         fBranchName(branchname),
+         fSubBranchPrefix(branchname),
+         fInfo(info) { }
+
+      Bool_t IsClones() const { return fIsClones==kClones || fIsClones==kInsideClones; }
+
+      Bool_t IsSTL() const { return fIsClones==kSTL || fIsClones==kInsideSTL; }
+   };
+
    class TTreeSelectorReaderGenerator
    {
-      // 0 for the general case, 1 when this a split clases inside a TClonesArray,
-      // 2 when this is a split classes inside an STL container.
-      enum ELocation { kOut=0, kClones, kSTL, kInsideClones, kInsideSTL };
-      
       TTree   *fTree;          // Pointer to the tree
       TString  fClassname;     // Class name of the selector
       UInt_t   fMaxUnrolling;  // Depth of unrolling for non-split classes
@@ -63,6 +92,8 @@ namespace ROOT {
       
       void   AddHeader(TClass *cl);
       void   AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name, TString branchName);
+      UInt_t AnalyzeBranches(UInt_t level, TBranchDescriptor *desc, TBranchElement *branch, TVirtualStreamerInfo *info);
+      UInt_t AnalyzeBranches(UInt_t level, TBranchDescriptor *desc, TIter &branches, TVirtualStreamerInfo *info);
       UInt_t AnalyzeOldBranch(TBranch *branch, UInt_t level);
       UInt_t AnalyzeOldLeaf(TLeaf *leaf, Int_t nleaves);
       

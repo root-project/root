@@ -24,6 +24,7 @@
 #include "TLeafC.h"
 #include "TLeafObject.h"
 #include "TROOT.h"
+#include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 #include "TTree.h"
 #include "TVirtualCollectionProxy.h"
@@ -42,6 +43,50 @@ namespace ROOT {
       
       WriteSelector();
    }
+
+static TString GetContainedClassName(TBranchElement *branch, TStreamerElement *element, Bool_t ispointer)
+{
+   TString cname = branch->GetClonesName();
+   if (cname.Length()==0) {
+      // We may have any unsplit clones array
+      Long64_t i = branch->GetTree()->GetReadEntry();
+      if (i<0) i = 0;
+      branch->GetEntry(i);
+      char *obj = branch->GetObject();
+
+
+      TBranchElement *parent = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
+      const char *pclname = parent->GetClassName();
+
+      TClass *clparent = TClass::GetClass(pclname);
+      // TClass *clm = TClass::GetClass(GetClassName());
+      Int_t lOffset = 0; // offset in the local streamerInfo.
+      if (clparent) {
+         const char *ename = 0;
+         if (element) {
+            ename = element->GetName();
+            lOffset = clparent->GetStreamerInfo()->GetOffset(ename);
+         } else {
+            lOffset = 0;
+         }
+      }
+      else Error("AnalyzeBranch", "Missing parent for %s.", branch->GetName());
+
+      TClonesArray *arr;
+      if (ispointer) {
+         arr = (TClonesArray*)*(void**)(obj+lOffset);
+      } else {
+         arr = (TClonesArray*)(obj+lOffset);
+      }
+      cname = arr->GetClass()->GetName();
+
+   }
+   if (cname.Length()==0) {
+      Error("AnalyzeBranch",
+         "Introspection of TClonesArray in older file not implemented yet.");
+   }
+   return cname;
+}
 
 static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TClass *cl)
 {
@@ -191,7 +236,262 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                                                                   name.Data(),
                                                                   branchName.Data());
    }
-   
+
+   UInt_t TTreeSelectorReaderGenerator::AnalyzeBranches(UInt_t level, TBranchDescriptor *desc, TBranchElement *branch, TVirtualStreamerInfo *info) {
+      if (info==0) info = branch->GetInfo();
+
+      TIter branches( branch->GetListOfBranches() );
+
+      return AnalyzeBranches( level, desc, branches, info );
+   }
+
+   UInt_t TTreeSelectorReaderGenerator::AnalyzeBranches(UInt_t level, TBranchDescriptor *desc, TIter &branches, TVirtualStreamerInfo *info) {
+      UInt_t lookedAt = 0;
+      ELocation container = kOut;
+      TString proxyTypeName;
+      ELocation outer_isclones = kOut;
+      TString containerName;
+      TString subBranchPrefix;
+      Bool_t skipped = false;
+
+      // Check for containers (TClonesArray or STL)
+      {
+         TIter peek = branches;
+         TBranchElement *branch = (TBranchElement*)peek();
+         if (desc && desc->IsClones()) {
+            container = kClones;
+            outer_isclones = kClones;
+            containerName = "TClonesArray";
+         } else if (desc && desc->IsSTL()) {
+            container = kSTL;
+            outer_isclones = kSTL;
+            containerName = desc->fContainerName;
+         } else if (!desc && branch && branch->GetBranchCount() == branch->GetMother()) {
+            if ( ((TBranchElement*)(branch->GetMother()))->GetType()==3)  {
+               container = kClones;
+               outer_isclones = kClones;
+               containerName = "TClonesArray";
+            } else {
+               container = kSTL;
+               outer_isclones = kSTL;
+               containerName = branch->GetMother()->GetClassName();
+            }
+         } else if (branch->GetType() == 3) {
+            outer_isclones = kClones;
+            containerName = "TClonesArray";
+         } else if (branch->GetType() == 4) {
+            outer_isclones = kSTL;
+            containerName = branch->GetMother()->GetSubBranch(branch)->GetClassName();
+         }
+         if (desc) {
+            subBranchPrefix = desc->fSubBranchPrefix;
+         } else {
+            TBranchElement *mom = (TBranchElement*)branch->GetMother();
+            subBranchPrefix = mom->GetName();
+            if (subBranchPrefix[subBranchPrefix.Length()-1]=='.') {
+               subBranchPrefix.Remove(subBranchPrefix.Length()-1);
+            } else if (mom->GetType()!=3 && mom->GetType() != 4) {
+               subBranchPrefix = "";
+            }
+         }
+      }
+
+      printf("containerName: %s subBranchPrefix: %s\n", containerName.Data(), subBranchPrefix.Data());
+
+      // Loop through sub-branches
+      TIter elements( info->GetElements() );
+      for( TStreamerElement *element = (TStreamerElement*)elements();
+           element;
+           element = (TStreamerElement*)elements() )
+      {
+         //printf("TStreamerElement: %s\n", element->GetName());
+
+         Bool_t isBase = false;
+         Bool_t usedBranch = kTRUE;
+         TString prefix;
+         TIter peek = branches;
+         TBranchElement *branch = (TBranchElement*)peek();
+
+         if (branch==0) {
+            if (desc) {
+               Error("AnalyzeBranches","Ran out of branches when looking in branch %s, class %s",
+                     desc->fBranchName, info->GetName());
+            } else {
+               Error("AnalyzeBranches","Ran out of branches when looking in class %s, element %s",
+                     info->GetName(), element->GetName());
+            }
+            return lookedAt;
+         }
+
+         if (info->GetClass()->GetCollectionProxy() && strcmp(element->GetName(),"This")==0) {
+            continue; // Skip the artifical streamer element.
+         }
+
+         if (element->GetType()==-1) {
+            continue; // This is an ignored TObject base class.
+         }
+
+         TString branchEndName;
+         {
+            TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+            if (leaf && outer_isclones == kOut
+                && !(branch->GetType() == 3 || branch->GetType() == 4)) branchEndName = leaf->GetName();
+            else branchEndName = branch->GetName();
+            Int_t pos;
+            pos = branchEndName.Index(".");
+            if (pos!=-1) {
+               if (subBranchPrefix.Length() && branchEndName.BeginsWith(subBranchPrefix)) {
+                  branchEndName.Remove(0, subBranchPrefix.Length() + 1);
+               }
+            }
+         }
+
+         //printf("branchEndName: %s\n", branchEndName.Data());
+
+         TString dataType;
+         TTreeReaderDescriptor::ReaderType readerType = TTreeReaderDescriptor::ReaderType::kValue;
+         Bool_t ispointer = false;
+         switch(element->GetType()) {
+            // Built-in types
+            case TVirtualStreamerInfo::kBool:    { dataType = "Bool_t";         readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kChar:    { dataType = "Char_t";         readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kShort:   { dataType = "Short_t";        readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kInt:     { dataType = "Int_t";          readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kLong:    { dataType = "Long_t";         readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kLong64:  { dataType = "Long64_t";       readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kFloat:   { dataType = "Float_t";        readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kFloat16: { dataType = "Float16_t";      readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kDouble:  { dataType = "Double_t";       readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kDouble32:{ dataType = "Double32_t";     readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kUChar:   { dataType = "UChar_t";        readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kUShort:  { dataType = "unsigned short"; readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kUInt:    { dataType = "unsigned int";   readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kULong:   { dataType = "ULong_t";        readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kULong64: { dataType = "ULong64_t";      readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            case TVirtualStreamerInfo::kBits:    { dataType = "unsigned int";   readerType = TTreeReaderDescriptor::ReaderType::kValue; break; }
+            // Character arrays
+            case TVirtualStreamerInfo::kCharStar: { dataType = "Char_t"; readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            // Array of built-in types [8]
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kBool:    { dataType = "Bool_t";         readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kChar:    { dataType = "Char_t";         readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kShort:   { dataType = "Short_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kInt:     { dataType = "Int_t";          readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kLong:    { dataType = "Long_t";         readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kLong64:  { dataType = "Long64_t";       readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kFloat:   { dataType = "Float_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kFloat16: { dataType = "Float16_t";      readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kDouble:  { dataType = "Double_t";       readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kDouble32:{ dataType = "Double32_t";     readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUChar:   { dataType = "UChar_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUShort:  { dataType = "unsigned short"; readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUInt:    { dataType = "unsigned int";   readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kULong:   { dataType = "ULong_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kULong64: { dataType = "ULong64_t";      readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kBits:    { dataType = "unsigned int";   readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            // Array of built-in types [n]
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kBool:    { dataType = "Bool_t";         readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kChar:    { dataType = "Char_t";         readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kShort:   { dataType = "Short_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kInt:     { dataType = "Int_t";          readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kLong:    { dataType = "Long_t";         readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kLong64:  { dataType = "Long64_t";       readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kFloat:   { dataType = "Float_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kFloat16: { dataType = "Float16_t";      readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kDouble:  { dataType = "Double_t";       readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kDouble32:{ dataType = "Double32_t";     readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUChar:   { dataType = "UChar_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUShort:  { dataType = "unsigned short"; readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUInt:    { dataType = "unsigned int";   readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kULong:   { dataType = "ULong_t";        readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kULong64: { dataType = "ULong64_t";      readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kBits:    { dataType = "unsigned int";   readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+            // array counter [n]
+            case TVirtualStreamerInfo::kCounter: { dataType = "Int_t"; readerType = TTreeReaderDescriptor::ReaderType::kArray; break; }
+
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kObjectp:
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kObjectP:
+            case TVirtualStreamerInfo::kObjectp:
+            case TVirtualStreamerInfo::kObjectP:
+            case TVirtualStreamerInfo::kAnyp:
+            case TVirtualStreamerInfo::kAnyP:
+            case TVirtualStreamerInfo::kSTL + TVirtualStreamerInfo::kObjectp:
+            case TVirtualStreamerInfo::kSTL + TVirtualStreamerInfo::kObjectP:
+            // set as pointers and fall through to the next switches
+               ispointer = true;
+            case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kObject:
+            case TVirtualStreamerInfo::kObject:
+            case TVirtualStreamerInfo::kTString:
+            case TVirtualStreamerInfo::kTNamed:
+            case TVirtualStreamerInfo::kTObject:
+            case TVirtualStreamerInfo::kAny:
+            case TVirtualStreamerInfo::kBase:
+            case TVirtualStreamerInfo::kSTL: {
+               TClass *cl = element->GetClassPointer();
+               R__ASSERT(cl);
+               printf("Class name: %s\n", cl->GetName());
+               readerType = TTreeReaderDescriptor::ReaderType::kValue;
+               // Check for collections
+               ELocation isclones = outer_isclones;
+               if (cl == TClonesArray::Class()) {
+                  isclones = kClones;
+                  dataType = GetContainedClassName(branch, element, ispointer);
+                  containerName = "TClonesArray";
+                  readerType = TTreeReaderDescriptor::ReaderType::kArray;
+               } else if (cl->GetCollectionProxy()) {
+                  isclones = kSTL;
+                  containerName = cl->GetName();
+                  readerType = TTreeReaderDescriptor::ReaderType::kArray;
+                  TClass *valueClass = cl->GetCollectionProxy()->GetValueClass();
+                  if (valueClass) dataType = valueClass->GetName();
+                  else {
+                     TDataType *valueClassBuiltIn = TDataType::GetDataType(cl->GetCollectionProxy()->GetType());
+                     if (valueClassBuiltIn) dataType = valueClassBuiltIn->GetName();
+                     else printf("Could not get type from collection\n");
+                  }
+               }
+
+               TBranch *parent = branch->GetMother()->GetSubBranch(branch);
+               TVirtualStreamerInfo *objInfo = 0;
+               if (branch->GetListOfBranches()->GetEntries()) {
+                  objInfo = ((TBranchElement*)branch->GetListOfBranches()->At(0))->GetInfo();
+               } else {
+                  objInfo = branch->GetInfo();
+               }
+               if (element->IsBase()) {
+                  printf("TODO: IsBase\n");
+                  isBase = true;
+                  prefix  = "base";
+                  // Ignore TObject
+                  if (cl == TObject::Class()/* && info->GetClass()->CanIgnoreTObjectStreamer()*/)
+                  {
+                     continue;
+                  }
+
+                  if (branchEndName == element->GetName()) {
+                     printf("TODO: branchEndname == element->GetName()\n");
+                  } else {
+                     printf("TODO: branchEndname != element->GetName()\n");
+                  }
+               } else {
+                  printf("TODO: Not IsBase\n");
+               }
+
+               break;
+            }
+            default:
+               Error("AnalyzeBranch", "Unsupported type for %s (%d).", branch->GetName(), element->GetType());
+         }
+
+         TString dataMemberName = element->GetName();
+         if (desc) {
+            dataMemberName.Form("%s_%s", desc->fSubBranchPrefix.Data(), element->GetName());
+         }
+         AddReader(readerType, dataType, dataMemberName, element->GetName());
+      }
+
+      return lookedAt;
+   }
+
    UInt_t TTreeSelectorReaderGenerator::AnalyzeOldBranch(TBranch *branch, UInt_t level)
    {
       // Analyze branch and add the variables found.
@@ -343,6 +643,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          TString type = "unknown";
          ELocation isclones = kOut;
          TString containerName = "";
+         TBranchDescriptor *desc = 0; // TODO: delete after usage
          // Check for container classes
          if (cl) {
             // Check if it is a TClonesArray
@@ -398,8 +699,12 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             
             if (cl) {
                if (cl->TestBit(TClass::kIsEmulation) || branchName[strlen(branchName)-1] == '.' || branch->GetSplitLevel()) {
-                  // TODO: implement this
-                  printf("Classes, emulation/split case\n");
+                  TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
+                  TVirtualStreamerInfo *beinfo = (be && isclones == kOut)
+                     ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
+                  desc = new TBranchDescriptor(cl->GetName(), beinfo, branchName,
+                     isclones, branch->GetSplitLevel(),containerName);
+                  info = beinfo;
                } else {
                   // Generate a value or an array for non-split classes
                   AddReader(isclones == kOut ?
@@ -423,6 +728,10 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          } else { // Branch is splitted
             // TODO: implement this
             printf("TODO: splitted branch\n");
+            TIter subnext( branch->GetListOfBranches() );
+            if (desc) {
+               AnalyzeBranches(1, desc, dynamic_cast<TBranchElement*>(branch), info);
+            }
          }
       }
       
