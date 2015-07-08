@@ -98,6 +98,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fstream>
+#include <memory>
 #ifdef WIN32
 #include <io.h>
 #endif
