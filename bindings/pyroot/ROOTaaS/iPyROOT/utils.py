@@ -164,7 +164,7 @@ class CanvasCapture(object):
         return len(ROOT.gPad.GetListOfPrimitives()) == 0
 
 
-    def _getListOfPrimitivesNames(self):
+    def _getListOfPrimitivesNamesAndTypes(self):
        """
        Get the list of primitives in the pad, recursively descending into
        histograms and graphs looking for fitted functions.
@@ -181,7 +181,7 @@ class CanvasCapture(object):
     def _pre_execute(self):
         if not self._hasGPad(): return 0
         gPad = ROOT.gPad
-        self.primitivesNames = self.getListOfPrimitivesNames()
+        self.primitivesNames = self._getListOfPrimitivesNamesAndTypes()
         self.canvas = gPad
 
     def _hasDifferentPrimitives(self):
@@ -192,7 +192,7 @@ class CanvasCapture(object):
         checks are to be performed such as position, number of points, mean,
         rms and so on.
         '''
-        newPrimitivesNames = self.getListOfPrimitivesNames()
+        newPrimitivesNames = self._getListOfPrimitivesNamesAndTypes()
         return newPrimitivesNames != self.primitivesNames
 
     def _canJsDisplay(self):
@@ -245,11 +245,11 @@ class CanvasCapture(object):
           self._pngDisplay()
           print "JS Visualisation"
           self._jsDisplay()
-
-       if self._canJsDisplay():
-           self._jsDisplay()
        else:
-           self._pngDisplay()
+         if self._canJsDisplay():
+            self._jsDisplay()
+         else:
+            self._pngDisplay()
 
 
     def _post_execute(self):
