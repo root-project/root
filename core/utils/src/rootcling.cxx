@@ -5831,12 +5831,18 @@ int GenReflex(int argc, char **argv)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __ICC
+#pragma warning disable 69
+#endif
+
 int main(int argc, char **argv)
 {
    // Force the emission of the symbol - the compiler cannot know that argv
    // is always set.
    if (!argv) {
-      return (int)(long)&usedToIdentifyRootClingByDlSym;
+
+      auto dummyVal =  (int)(long)&usedToIdentifyRootClingByDlSym;
+      return dummyVal;
    }
 
    const std::string exePath(GetExePath());
