@@ -1,5 +1,11 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-excludedAutoparseKeys
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/excludedAutoparseKeys.h
+                          --select=${CMAKE_CURRENT_SOURCE_DIR}/excludedAutoparseKeys_selection.xml --debug -I ${CMAKE_CURRENT_SOURCE_DIR}
+                  OUTREF  excludedAutoparseKeys.ref
+                  OUTCNV  excludedAutoparseKeysOutputFilter.sh)
+
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-unsupportedClasses
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/unsupportedClasses.h
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/unsupportedClasses_selection.xml -I ${CMAKE_CURRENT_SOURCE_DIR}

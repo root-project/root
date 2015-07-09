@@ -1,0 +1,14 @@
+<rootdict>
+<class name="vector<int>" />
+<class name="A" />
+<class name="vector<map<int,set<double>>>" />
+<class name="floats" />
+<class name="set<PIPPO>" />
+<class name="vector<pair<int,int> >" />
+<class name="vector<string>" />
+<class name="vector<short>" />
+<class name="vector<unsigned int>" />
+<class name="forward_list<unordered_map<string,vector<int>>>" />
+<class name="list<unordered_set<float>>" />
+<class name="vector<vector<bitset<3>>>" />
+<rootdict>
