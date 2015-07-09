@@ -30,20 +30,32 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-struct FormSize_t {
-      Double_t fWidth, fOver, fUnder;
-};
+class TLatex : public TText, public TAttLine {
+protected:
 
-struct TextSpec_t {
-   Double_t fAngle,fSize;
-   Int_t    fColor,fFont;
-};
+////////////////////////////////////////////////////////////////////////////////
+///  @brief TLatex helper struct holding the attributes of a piece of text.
 
-// compute size of a portion of a formula
-class TLatexFormSize {
-private:
+   struct TextSpec_t {
+      Double_t fAngle,fSize;
+      Int_t    fColor,fFont;
+   };
+
+////////////////////////////////////////////////////////////////////////////////
+/// @brief TLatex helper struct holding the dimensions of a piece of text.
+   struct FormSize_t {
       Double_t fWidth, fOver, fUnder;
-public:
+   };
+
+////////////////////////////////////////////////////////////////////////////////
+/// @class TLatexFormSize
+/// @brief TLatex helper class used to compute the size of a portion of a formula.
+
+   class TLatexFormSize {
+   private:
+      Double_t fWidth, fOver, fUnder;
+
+   public:
       TLatexFormSize() : fWidth(0), fOver(0),fUnder(0) { } // constructeur par defaut
       TLatexFormSize(Double_t x, Double_t y1, Double_t y2) : fWidth(x), fOver(y1), fUnder(y2) { } // constructeur
       virtual ~TLatexFormSize() {} //destructeur
@@ -52,28 +64,25 @@ public:
 
       // definition of operators + and +=
       TLatexFormSize operator+(TLatexFormSize f)
-         { return TLatexFormSize(f.Width()+fWidth,TMath::Max(f.Over(),fOver),TMath::Max(f.Under(),fUnder)); }
+      { return TLatexFormSize(f.Width()+fWidth,TMath::Max(f.Over(),fOver),TMath::Max(f.Under(),fUnder)); }
       void operator+=(TLatexFormSize f)
-         { fWidth += f.Width(); fOver = TMath::Max(fOver,f.Over()); fUnder = TMath::Max(fUnder,f.Under()); }
+      { fWidth += f.Width(); fOver = TMath::Max(fOver,f.Over()); fUnder = TMath::Max(fUnder,f.Under()); }
 
       inline void Set(Double_t x, Double_t y1, Double_t y2) { fWidth=x; fOver=y1; fUnder=y2; }
       TLatexFormSize AddOver(TLatexFormSize f)
-         { return TLatexFormSize(f.Width()+fWidth,f.Height()+fOver,fUnder); }
+      { return TLatexFormSize(f.Width()+fWidth,f.Height()+fOver,fUnder); }
       TLatexFormSize AddUnder(TLatexFormSize f)
-         { return TLatexFormSize(f.Width()+fWidth,fOver,f.Height()+fUnder); }
+      { return TLatexFormSize(f.Width()+fWidth,fOver,f.Height()+fUnder); }
       TLatexFormSize AddOver(TLatexFormSize f1, TLatexFormSize f2)
-         { return TLatexFormSize(fWidth+TMath::Max(f1.Width(),f2.Width()),fOver+f1.Over(),fUnder+f2.Under()); }
+      { return TLatexFormSize(fWidth+TMath::Max(f1.Width(),f2.Width()),fOver+f1.Over(),fUnder+f2.Under()); }
 
       // return members
       inline Double_t Width()  const { return fWidth; }
       inline Double_t Over()   const { return fOver; }
       inline Double_t Under()  const { return fUnder; }
       inline Double_t Height() const { return fOver+fUnder; }
-};
+   };
 
-class TLatex : public TText, public TAttLine {
-
-protected:
       Double_t      fFactorSize;      //!Relative size of subscripts and superscripts
       Double_t      fFactorPos;       //!Relative position of subscripts and superscripts
       Int_t         fLimitFactorSize; // lower bound for subscripts/superscripts size
