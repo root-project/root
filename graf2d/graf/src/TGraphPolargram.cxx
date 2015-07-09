@@ -10,13 +10,13 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
+/*! \class TGraphPolargram
+\brief To draw polar axis
 
-/* Begin_Html
-<center><h2>TGraphPolargram : to draw polar axis</h2></center>
 TGraphPolargram draw the polar axis of the TGraphPolar.
-<p>
+
 Example:
-End_Html
+
 Begin_Macro(source)
 {
    TCanvas * CPol = new TCanvas("CPol","TGraphPolar Examples",500,500);
@@ -99,8 +99,8 @@ TGraphPolargram::~TGraphPolargram()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the Polar range.
-/// tmin is the start number.
-/// tmax is the end number.
+/// \param[in] tmin   the start number.
+/// \param[in] tmax   the end number.
 
 void TGraphPolargram::ChangeRangePolar(Double_t tmin, Double_t tmax)
 {
@@ -784,10 +784,9 @@ void TGraphPolargram::SetAxisAngle(Double_t angle)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the number of Polar divisions: enter a number ij with 0<i<99
-///                                                           0<j<99
-/// i sets the major Polar divisions.
-/// j sets the minor Polar divisions.
+/// Set the number of Polar divisions: enter a number ij with 0<i<99 and 0<j<99
+/// - i sets the major Polar divisions.
+/// - j sets the minor Polar divisions.
 
 void TGraphPolargram::SetNdivPolar(Int_t ndiv)
 {
@@ -798,10 +797,9 @@ void TGraphPolargram::SetNdivPolar(Int_t ndiv)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the number of radial divisions: enter a number ij with 0<i<99
-///                                                            0<j<99
-/// i sets the major radial divisions.
-/// j sets the minor radial divisions.
+/// Set the number of radial divisions: enter a number ij with 0<i<99 and 0<j<99
+/// - i sets the major radial divisions.
+/// - j sets the minor radial divisions.
 
 void TGraphPolargram::SetNdivRadial(Int_t ndiv)
 {
@@ -899,8 +897,8 @@ void TGraphPolargram::SetRadialOffset(Double_t radialOffset)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Allows to change range Polar.
-/// tmin is the start number.
-/// tmax is the end number.
+/// \param[in] tmin   the start number.
+/// \param[in] tmax   the end number.
 
 void TGraphPolargram::SetRangePolar(Double_t tmin, Double_t tmax)
 {
@@ -918,8 +916,8 @@ void TGraphPolargram::SetRangePolar(Double_t tmin, Double_t tmax)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the radial range.
-/// rmin is at center of the circle.
-/// rmax is at the intersection of the right X axis part and the circle.
+/// \param[in] rmin   radius at center of the circle.
+/// \param[in] rmax   radius at the intersection of the right X axis part and the circle.
 
 void TGraphPolargram::SetRangeRadial(Double_t rmin, Double_t rmax)
 {
@@ -977,7 +975,7 @@ void TGraphPolargram::SetToRadian()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///set range from 0 to 2*pi
+/// Set range from 0 to 2*pi
 
 void TGraphPolargram::SetTwoPi()
 {
