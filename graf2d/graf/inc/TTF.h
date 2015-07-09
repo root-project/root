@@ -26,6 +26,7 @@
 #include "Rtypes.h"
 #endif
 
+/// @cond DOXYGEN_IGNORE
 // Forward declare for the headers:
 // #  include <ft2build.h>
 // #  include FT_FREETYPE_H
@@ -51,14 +52,7 @@ extern "C" {
    typedef struct FT_Vector_ FT_Vector;
    typedef struct FT_BBox_ FT_BBox;
 }
-
-// Class (actually structure) containing glyphs description
-class TTGlyph {
-public:
-   UInt_t     fIndex; // glyph index in face
-   FT_Vector  fPos;   // position of glyph origin
-   FT_Glyph   fImage; // glyph image
-};
+/// @endcond
 
 
 class TGX11TTF;
@@ -72,27 +66,39 @@ friend class TGX11TTF;
 friend class TGWin32;
 friend class TMathTextRenderer;
 
+public:
+////////////////////////////////////////////////////////////////////////////////
+/// @class TTGlyph
+/// @brief TTF helper class containing glyphs description.
+
+   class TTGlyph {
+   public:
+      UInt_t     fIndex; // glyph index in face
+      FT_Vector  fPos;   // position of glyph origin
+      FT_Glyph   fImage; // glyph image
+   };
+
 protected:
    enum { kTTMaxFonts = 32, kMaxGlyphs = 1024 };
 
-   static Int_t       fgAscent;                // string ascent, used to compute Y alignment
-   static FT_BBox     fgCBox;                  // string control box
-   static FT_CharMap  fgCharMap[kTTMaxFonts];  // font character map
-   static Int_t       fgCurFontIdx;            // current font index
-   static Int_t       fgSymbItaFontIdx;        // Symbol italic font index
-   static Int_t       fgFontCount;             // number of fonts loaded
-   static char       *fgFontName[kTTMaxFonts]; // font name
-   static FT_Face     fgFace[kTTMaxFonts];     // font face
-   static TTGlyph     fgGlyphs[kMaxGlyphs];    // glyphs
-   static Bool_t      fgHinting;               // use hinting (true by default)
-   static Bool_t      fgInit;                  // true if the Init has been called
-   static Bool_t      fgKerning;               // use kerning (true by default)
-   static FT_Library  fgLibrary;               // FreeType font library
-   static Int_t       fgNumGlyphs;             // number of glyphs in the string
-   static FT_Matrix  *fgRotMatrix;             // rotation matrix
-   static Bool_t      fgSmoothing;             // use anti-aliasing (true when >8 planes, false otherwise)
-   static Int_t       fgTBlankW;               // trailing blanks width
-   static Int_t       fgWidth;                 // string width, used to compute X alignment
+   static Int_t          fgAscent;                // string ascent, used to compute Y alignment
+   static FT_BBox        fgCBox;                  // string control box
+   static FT_CharMap     fgCharMap[kTTMaxFonts];  // font character map
+   static Int_t          fgCurFontIdx;            // current font index
+   static Int_t          fgSymbItaFontIdx;        // Symbol italic font index
+   static Int_t          fgFontCount;             // number of fonts loaded
+   static char          *fgFontName[kTTMaxFonts]; // font name
+   static FT_Face        fgFace[kTTMaxFonts];     // font face
+   static TTF::TTGlyph   fgGlyphs[kMaxGlyphs];    // glyphs
+   static Bool_t         fgHinting;               // use hinting (true by default)
+   static Bool_t         fgInit;                  // true if the Init has been called
+   static Bool_t         fgKerning;               // use kerning (true by default)
+   static FT_Library     fgLibrary;               // FreeType font library
+   static Int_t          fgNumGlyphs;             // number of glyphs in the string
+   static FT_Matrix     *fgRotMatrix;             // rotation matrix
+   static Bool_t         fgSmoothing;             // use anti-aliasing (true when >8 planes, false otherwise)
+   static Int_t          fgTBlankW;               // trailing blanks width
+   static Int_t          fgWidth;                 // string width, used to compute X alignment
 
 public:
    static Short_t CharToUnicode(UInt_t code);
