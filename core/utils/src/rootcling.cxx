@@ -2707,11 +2707,14 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
             if (className.find("<") != std::string::npos) continue;
             if (headersClassesMap.count(className)) {
                auto &headers = headersClassesMap.at(className);
-               auto &header = headers.front();
-               if (treatedHeaders.insert(header).second &&
-                     headersToIgnore.find(header) == headersToIgnore.end() &&
-                     IsHeaderName(header))
-                  rootmapFile << "header " << header << std::endl;
+               if (!headers.empty()){
+                  auto &header = headers.front();
+                  if (treatedHeaders.insert(header).second &&
+                        headersToIgnore.find(header) == headersToIgnore.end() &&
+                        IsHeaderName(header)){
+                        rootmapFile << "header " << header << std::endl;
+                  }
+               }
             }
          }
       }
