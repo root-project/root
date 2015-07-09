@@ -200,7 +200,7 @@ void TBuffer::Expand(Int_t newsize, Bool_t copy)
    // the requested size, we only shrink down to the current length.
 
    Int_t l  = Length();
-   if ( l > newsize ) {
+   if ( (l > newsize) && copy ) {
       newsize = l;
    }
    if ( (fMode&kWrite)!=0 ) {
