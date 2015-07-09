@@ -18,79 +18,70 @@
 
 ClassImp(TGraphQQ)
 
-//______________________________________________________________________________
-//
-// This class allows to draw quantile-quantile plots
-//
-// Plots can be drawn for 2 datasets or for a dataset and a theoretical
-// distribution function
-//
-// 2 datasets:
-//   Quantile-quantile plots are used to determine whether 2 samples come from
-//   the same distribution.
-//   A qq-plot draws the quantiles of one dataset against the quantile of the
-//   the other. The quantiles of the dataset with fewer entries are on Y axis,
-//   with more entries - on X axis.
-//   A straight line, going through 0.25 and 0.75 quantiles is also plotted
-//   for reference. It represents a robust linear fit, not sensitive to the
-//   extremes of the datasets.
-//   If the datasets come from the same distribution, points of the plot should
-//   fall approximately on the 45 degrees line. If they have the same
-//   distribution function, but location or scale different parameters,
-//   they should still fall on the straight line, but not the 45 degrees one.
-//   The greater their departure from the straight line, the more evidence there
-//   is, that the datasets come from different distributions.
-//   The advantage of qq-plot is that it not only shows that the underlying
-//   distributions are different, but, unlike the analytical methods, it also
-//   gives information on the nature of this difference: heavier tails,
-//   different location/scale, different shape, etc.
-//
-//   Some examples of qqplots of 2 datasets:
-//Begin_Html
-/*
-<img src="gif/qqplots.gif">
-*/
-//End_Html
-//
-// 1 dataset:
-//   Quantile-quantile plots are used to determine if the dataset comes from the
-//   specified theoretical distribution, such as normal.
-//   A qq-plot draws quantiles of the dataset against quantiles of the specified
-//   theoretical distribution.
-//   (NOTE, that density, not CDF should be specified)
-//   A straight line, going through 0.25 and 0.75 quantiles can also be plotted
-//   for reference. It represents a robust linear fit, not sensitive to the
-//   extremes of the dataset.
-//   As in the 2 datasets case, departures from straight line indicate departures
-//   from the specified distribution.
-//
-//   " The correlation coefficient associated with the linear fit to the data
-//     in the probability plot (qq plot in our case) is a measure of the
-//     goodness of the fit.
-//     Estimates of the location and scale parameters  of the distribution
-//     are given by the intercept and slope. Probability plots can be generated
-//     for several competing distributions to see which provides the best fit,
-//     and the probability plot generating the highest correlation coefficient
-//     is the best choice since it generates the straightest probability plot."
-//   From "Engineering statistic handbook",
-//   http://www.itl.nist.gov/div898/handbook/eda/section3/probplot.htm
-//
-//   Example of a qq-plot of a dataset from N(3, 2) distribution and
-//           TMath::Gaus(0, 1) theoretical function. Fitting parameters
-//           are estimates of the distribution mean and sigma.
-//
-//Begin_Html
-/*
-<img src="gif/qqnormal.gif">
-*/
-//End_Html//
-//
-//
-// References:
-// http://www.itl.nist.gov/div898/handbook/eda/section3/qqplot.htm
-// http://www.itl.nist.gov/div898/handbook/eda/section3/probplot.htm
-//
-
+////////////////////////////////////////////////////////////////////////////////
+///! @class TGraphQQ
+/// @brief This class allows to draw quantile-quantile plots
+///
+/// Plots can be drawn for 2 datasets or for a dataset and a theoretical
+/// distribution function
+///
+/// ## 2 datasets:
+///   Quantile-quantile plots are used to determine whether 2 samples come from
+///   the same distribution.
+///   A qq-plot draws the quantiles of one dataset against the quantile of the
+///   the other. The quantiles of the dataset with fewer entries are on Y axis,
+///   with more entries - on X axis.
+///   A straight line, going through 0.25 and 0.75 quantiles is also plotted
+///   for reference. It represents a robust linear fit, not sensitive to the
+///   extremes of the datasets.
+///   If the datasets come from the same distribution, points of the plot should
+///   fall approximately on the 45 degrees line. If they have the same
+///   distribution function, but location or scale different parameters,
+///   they should still fall on the straight line, but not the 45 degrees one.
+///   The greater their departure from the straight line, the more evidence there
+///   is, that the datasets come from different distributions.
+///   The advantage of qq-plot is that it not only shows that the underlying
+///   distributions are different, but, unlike the analytical methods, it also
+///   gives information on the nature of this difference: heavier tails,
+///   different location/scale, different shape, etc.
+///
+///   Some examples of qqplots of 2 datasets:
+///   <img src="gif/qqplots.gif">
+///
+/// ## 1 dataset:
+///   Quantile-quantile plots are used to determine if the dataset comes from the
+///   specified theoretical distribution, such as normal.
+///   A qq-plot draws quantiles of the dataset against quantiles of the specified
+///   theoretical distribution.
+///   (NOTE, that density, not CDF should be specified)
+///   A straight line, going through 0.25 and 0.75 quantiles can also be plotted
+///   for reference. It represents a robust linear fit, not sensitive to the
+///   extremes of the dataset.
+///   As in the 2 datasets case, departures from straight line indicate departures
+///   from the specified distribution.
+///
+///   " The correlation coefficient associated with the linear fit to the data
+///     in the probability plot (qq plot in our case) is a measure of the
+///     goodness of the fit.
+///     Estimates of the location and scale parameters  of the distribution
+///     are given by the intercept and slope. Probability plots can be generated
+///     for several competing distributions to see which provides the best fit,
+///     and the probability plot generating the highest correlation coefficient
+///     is the best choice since it generates the straightest probability plot."
+///   From "Engineering statistic handbook",
+///   http://www.itl.nist.gov/div898/handbook/eda/section3/probplot.htm
+///
+///   Example of a qq-plot of a dataset from N(3, 2) distribution and
+///           TMath::Gaus(0, 1) theoretical function. Fitting parameters
+///           are estimates of the distribution mean and sigma.
+///
+///   <img src="gif/qqnormal.gif">
+///
+/// References:
+///
+/// http://www.itl.nist.gov/div898/handbook/eda/section3/qqplot.htm
+///
+/// http://www.itl.nist.gov/div898/handbook/eda/section3/probplot.htm
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,12 +235,13 @@ void TGraphQQ::MakeFunctionQuantiles()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///When sample sizes are not equal, computes quantiles of the bigger sample
+///by linear interpolation
 
 void TGraphQQ::MakeQuantiles()
 {
-   //When sample sizes are not equal, computes quantiles of the bigger sample
-   //by linear interpolation
+
 
    if (!fY0) return;
 
