@@ -823,7 +823,7 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 
       if (gPerfStats) {
          fOffset = pos[0];
-         gPerfStats->FileReadEvent(this, pos[nbuf-1]+len[nbuf-1]-pos[0], start);
+         gPerfStats->FileReadEvent(this, (Int_t)nr, start);
       }
 
       if (gMonitoringWriter)
