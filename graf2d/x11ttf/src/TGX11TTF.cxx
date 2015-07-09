@@ -61,7 +61,7 @@ public:
       SetRefCount(1);
       fGC = gc;
    }
-   
+
    void MapGCFont(GContext_t gc, FontStruct_t font)
    {
       fGC = gc; fXftFont = (XftFont *)font;
@@ -455,7 +455,7 @@ Bool_t TGX11TTF::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 
 void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
 {
-   TTGlyph* glyph = TTF::fgGlyphs;
+   TTF::TTGlyph* glyph = TTF::fgGlyphs;
    GC *gc;
 
    // compute the size and position of the XImage that will contain the text
@@ -678,7 +678,7 @@ FontStruct_t TGX11TTF::GetGCFont(GContext_t gc)
 
 void TGX11TTF::MapGCFont(GContext_t gc, FontStruct_t font)
 {
-   if (!fXftFontHash) 
+   if (!fXftFontHash)
       return;
 
    TXftFontData *gcdata = fXftFontHash->FindByGC(gc);
