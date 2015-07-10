@@ -14,7 +14,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.6 1/07/2015";
+   JSROOT.version = "dev 10/07/2015";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -690,8 +690,8 @@
       if (typename == 'TNamed')
          JSROOT.extend(obj, { fUniqueID: 0, fBits: 0x3000008, fName: "", fTitle: "" });
       else
-      if (typename == 'TList')
-         JSROOT.extend(obj, { name: "TList", arr : [], opt : [] });
+      if ((typename == 'TList') || (typename == 'THashList'))
+         JSROOT.extend(obj, { name: typename, arr : [], opt : [] });
       else
       if (typename == 'TAttAxis') {
          JSROOT.extend(obj, { fNdivisions: 510, fAxisColor: 1,
@@ -736,6 +736,10 @@
       if (typename == 'TPaveStats') {
          JSROOT.Create("TPaveText", obj);
          JSROOT.extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
+      } else
+      if (typename == 'TObjString') {
+         JSROOT.Create("TObject", obj);
+         JSROOT.extend(obj, { fString: ""});
       } else
       if (typename == 'TH1') {
          JSROOT.Create("TNamed", obj);
@@ -895,7 +899,7 @@
          };
       }
 
-      if (obj_typename == "TList") {
+      if ((obj_typename == 'TList') || (obj_typename == 'THashList')) {
          obj['Clear'] = function() {
             this['arr'] = new Array;
             this['opt'] = new Array;
