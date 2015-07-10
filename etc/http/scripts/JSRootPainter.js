@@ -2388,7 +2388,7 @@
          var res = "x = " + pmain.AxisAsText("x", d.x) + "\n" +
                    "y = " + pmain.AxisAsText("y", d.y);
 
-         if (pthis.draw_errors  && !pmain.x_time && ('exlow' in d) && ((d.exlow!=0) || (d.exhigh!=0)))
+         if (pthis.draw_errors  && (pmain.x_kind=='normal') && ('exlow' in d) && ((d.exlow!=0) || (d.exhigh!=0)))
             res += "\nerror x = -" + pmain.AxisAsText("x", d.exlow) +
                               "/+" + pmain.AxisAsText("x", d.exhigh);
 
@@ -3707,6 +3707,8 @@
       this.draw_content = true;
       this.nbinsx = 0;
       this.nbinsy = 0;
+      this.x_kind = 'normal'; // 'normal', 'time', 'labels'
+      this.y_time = false;
    }
 
    JSROOT.THistPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -4347,12 +4349,12 @@
       var w = this.frame_width(), h = this.frame_height();
 
       if (this.histo['fXaxis']['fTimeDisplay']) {
-         this.x_time = true;
+         this.x_kind = 'time';
          this['timeoffsetx'] = JSROOT.Painter.getTimeOffset(this.histo['fXaxis']);
          this['ConvertX'] = function(x) { return new Date(this.timeoffsetx + x*1000); };
          this['RevertX'] = function(grx) { return (this.x.invert(grx) - this.timeoffsetx) / 1000; };
       } else {
-         this.x_time = false;
+         this.x_kind = this.histo['fXaxis'].fLabels== null ? 'normal' : 'labels';
          this['ConvertX'] = function(x) { return x; };
          this['RevertX'] = function(grx) { return this.x.invert(grx); };
       }
@@ -4364,6 +4366,9 @@
          this['scale_xmax'] = this.zoom_xmax;
       }
 
+      if (this.x_kind == 'time') {
+         this['x'] = d3.time.scale();
+      } else
       if (this.options.Logx) {
          if (this.scale_xmax <= 0) this.scale_xmax = 0;
 
@@ -4378,16 +4383,13 @@
          }
 
          this['x'] = d3.scale.log();
-      } else
-      if (this.x_time) {
-         this['x'] = d3.time.scale();
       } else {
          this['x'] = d3.scale.linear();
       }
 
       this.x.domain([this.ConvertX(this.scale_xmin), this.ConvertX(this.scale_xmax)]).range([ 0, w ]);
 
-      if (this.x_time) {
+      if (this.x_kind == 'time') {
          // we emulate scale functionality
          this['grx'] = function(val) { return this.x(this.ConvertX(val)); }
       } else
@@ -4515,11 +4517,20 @@
 
    JSROOT.THistPainter.prototype.AxisAsText = function(axis, value) {
       if (axis == "x") {
-         if (this.x_time) {
+         if (this.x_kind == 'time') {
             value = this.ConvertX(value);
             // this is indication of time format
             if ('formatx' in this) return this.formatx(value);
             return value.toString();
+         }
+
+         if (this.x_kind == 'labels') {
+            var indx = parseInt(value) + 1;
+            if ((indx<1) || (indx>this.histo['fXaxis'].fNbins)) return null;
+            for (var i in this.histo['fXaxis'].fLabels.arr) {
+               var tstr = this.histo['fXaxis'].fLabels.arr[i];
+               if (tstr.fUniqueID == indx) return tstr.fString;
+            }
          }
 
          if (Math.abs(value) < 1e-14)
@@ -4611,7 +4622,7 @@
 
       delete this['formatx'];
 
-      if (this.x_time) {
+      if (this.x_kind == 'time') {
          if (this.x_nticks > 8) this.x_nticks = 8;
 
          var scale_xrange = this.scale_xmax - this.scale_xmin;
@@ -4650,7 +4661,17 @@
             }
          }
       } else {
+         if (this.x_kind=='labels') {
+            if (this.x_nticks > 8) this.x_nticks = 8;
+            var scale_xrange = this.scale_xmax - this.scale_xmin;
+            if (this.x_nticks > scale_xrange)
+               this.x_nticks = parseInt(scale_xrange);
+         }
+
          this['formatx'] = function(d) {
+            // do not show x at all
+            if (this.x_kind=='labels') return this.AxisAsText("x", d);
+
             if ((Math.abs(d) < 1e-14) && (Math.abs(this.xmax - this.xmin) > 1e-5)) d = 0;
             return parseFloat(d.toPrecision(12));
          }
@@ -4722,10 +4743,15 @@
       if ('formaty' in this)
          y_axis.tickFormat(function(d) { return pthis.formaty(d); });
 
-
-      xax_g.append("svg:g").attr("class", "xaxis").call(x_axis);
+      var drawx = xax_g.append("svg:g").attr("class", "xaxis").call(x_axis);
 
       // this is additional ticks, required in d3.v3
+      if (this.x_kind == 'labels') {
+         // shift labels
+         drawx.selectAll(".tick text")
+              .style("text-anchor", "start")
+              .attr("x", 10).attr("y", 6);
+      } else
       if ((n2ax > 0) && !this.options.Logx) {
          var x_axis_sub =
              d3.svg.axis().scale(this.x).orient("bottom")
@@ -5792,9 +5818,13 @@
             point['width'] = grx2 - grx1;
 
             point['tip'] = name + "\n" +
-                           "bin = " + (pmax + 1) + "\n" +
-                           "x = [" + this.AxisAsText("x", x1) + ", " + this.AxisAsText("x", x2) + "]\n" +
-                           "entries = " + cont;
+                           "bin = " + (pmax + 1) + "\n";
+
+            if (pmain.x_kind=='labels')
+               point['tip'] += ("x = " + this.AxisAsText("x", x1) + "\n");
+            else
+               point['tip'] += ("x = [" + this.AxisAsText("x", x1) + ", " + this.AxisAsText("x", x2) + "]\n");
+            point['tip'] += ("entries = " + cont);
          }
 
          draw_bins.push(point);
@@ -8373,7 +8403,7 @@
 
          if (!h_get && (item!=null) && ('_after_request' in item)) {
             var func = JSROOT.findFunction(item['_after_request']);
-            if (typeof func == 'function') req = func(pthis, item, obj);
+            if (typeof func == 'function') func(pthis, item, obj);
          }
 
          JSROOT.CallBack(callback, item, obj);
@@ -8412,18 +8442,18 @@
          }
 
          var scripts = "", modules = "";
-
-         function updateList(lst, newitems) {
-            if (newitems==null) return lst;
-            var arr = newitems.split(";");
-            for (var n in arr)
-               if (lst.indexOf(arr[n])<0) lst+=arr[n]+";";
-            return lst;
-         }
-
          painter.ForEach(function(item) {
-            if ('_prereq' in item) modules = updateList(modules, item['_prereq']);
-            if ('_autoload' in item) scripts = updateList(scripts, item['_autoload']);
+            if ('_autoload' in item) {
+               var arr = item._autoload.split(";");
+               for (var n in arr)
+                  if ((arr[n].length>3) &&
+                      ((arr[n].lastIndexOf(".js")==arr[n].length-3) ||
+                      (arr[n].lastIndexOf(".css")==arr[n].length-4))) {
+                     if (scripts.indexOf(arr[n])<0) scripts+=arr[n]+";";
+                  } else {
+                     if (modules.indexOf(arr[n])<0) modules+=arr[n]+";";
+                  }
+            }
          });
 
          if (scripts.length > 0) scripts = "user:" + scripts;
