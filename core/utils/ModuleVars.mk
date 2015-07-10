@@ -8,7 +8,7 @@ ifneq ($(HOST),)
 UTILSDIRS       := $(BUILDTOOLSDIR)/core/utils/src
 
 ROOTCLINGS      := $(UTILSDIRS)/rootcling.cxx \
-                   $(filter-out %rootclingTCling.cxx,$(filter-out %RStl.cxx,$(filter-out %rlibmap.cxx,$(filter-out %root%.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx)))))
+                   $(filter-out %rootclingTCling.cxx,$(filter-out %RStl.cxx,$(filter-out %rlibmap.cxx,$(filter-out %root%.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx))))))
 ROOTCLINGTMPS   := $(ROOTCLINGS:.cxx=_tmp.cxx)
 ROOTCLINGTMPO   := $(ROOTCLINGS:.cxx=_tmp.o)
 ROOTCLINGTMPEXE := $(UTILSDIRS)/rootcling_tmp$(EXEEXT)
