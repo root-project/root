@@ -32,7 +32,7 @@ UTILSDIRS    := $(UTILSDIR)/src
 UTILSDIRI    := $(UTILSDIR)/inc
 
 ##### rootcling #####
-ROOTCLINGUTILS  := $(filter-out %/rootclingTCling.cxx,$(filter-out %/rootcling.cxx %/RStl.cxx %_tmp.cxx,\
+ROOTCLINGUTILS  := $(filter-out %/rootclingTCling.cxx,$(filter-out %/rootcling.cxx %/RStl.cxx %_tmp.cxx %/rlibmap.cxx,\
                    $(wildcard $(UTILSDIRS)/*.cxx)))
 ROOTCLINGUTILO  := $(call stripsrc,$(ROOTCLINGUTILS:.cxx=.o))
 ROOTCLINGS      := $(wildcard $(UTILSDIRS)/rootcling.cxx)
