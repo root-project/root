@@ -452,7 +452,7 @@ void TFormula::Copy(TObject &obj) const
 
    fnew.fClingInput = fClingInput;
    fnew.fReadyToExecute = fReadyToExecute;
-   fnew.fClingInitialized = fClingInitialized;
+   fnew.fClingInitialized.store(fClingInitialized);
    fnew.fAllParametersSetted = fAllParametersSetted;
    fnew.fClingName = fClingName;
 
@@ -2336,6 +2336,10 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    //*-*    If parameter has default value, and has not been setted, appropriate warning is shown.
    //*-*
 
+   if ( !fClingInitialized.load()) {
+      R__LOCKGUARD2(gROOTMutex);
+      fPrepareFormulaFuture.get();
+   }
 
    if(!fReadyToExecute)
    {
@@ -2457,6 +2461,11 @@ TString TFormula::GetExpFormula(Option_t *option) const
 
 void TFormula::Print(Option_t *option) const
 {
+   if ( !fClingInitialized.load()) {
+      R__LOCKGUARD2(gROOTMutex);
+      fPrepareFormulaFuture.get();
+   }
+
    printf(" %20s : %s Ndim= %d, Npar= %d, Number= %d \n",GetName(),GetTitle(), fNdim,fNpar,fNumber);
    printf(" Formula expression: \n");
    printf("\t%s \n",fFormula.Data() );
@@ -2486,18 +2495,18 @@ void TFormula::Print(Option_t *option) const
       printf("Expression passed to Cling:\n");
       printf("\t%s\n",fClingInput.Data() );
    }
-   if(!fReadyToExecute)
-   {
-      Warning("Print","Formula is not ready to execute. Missing parameters/variables");
-      for(list<TFormulaFunction>::const_iterator it = fFuncs.begin(); it != fFuncs.end(); ++it)
-      {
-         TFormulaFunction fun = *it;
-         if(!fun.fFound)
-         {
-            printf("%s is unknown.\n",fun.GetName());
-         }
-      }
-   }
+//    if(!fReadyToExecute)
+//    {
+//       Warning("Print","Formula is not ready to execute. Missing parameters/variables");
+//       for(list<TFormulaFunction>::const_iterator it = fFuncs.begin(); it != fFuncs.end(); ++it)
+//       {
+//          TFormulaFunction fun = *it;
+//          if(!fun.fFound)
+//          {
+//             printf("%s is unknown.\n",fun.GetName());
+//          }
+//       }
+//    }
    if(!fAllParametersSetted)
    {
       // we can skip this
@@ -2570,7 +2579,7 @@ void TFormula::Streamer(TBuffer &b)
 
          //std::cout << "Streamer::after pre-process the formula " << fFormula << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
 
-         PrepareFormula(fFormula);
+         fPrepareFormulaFuture = std::async(&TFormula::PrepareFormula,this,std::ref(fFormula));
 
          //std::cout << "Streamer::after prepared " << fClingInput << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
 
@@ -2602,10 +2611,10 @@ void TFormula::Streamer(TBuffer &b)
             R__LOCKGUARD2(gROOTMutex);
             gROOT->GetListOfFunctions()->Add(this);
          }
-         if (!fReadyToExecute ) {
-            Error("Streamer","Formula read from file is NOT ready to execute");
-            Print("v");
-         }
+//          if (!fReadyToExecute ) {
+//             Error("Streamer","Formula read from file is NOT ready to execute");
+//             Print("v");
+//          }
          //std::cout << "reading 2 npar = " << GetNpar() << std::endl;
 
          return;
