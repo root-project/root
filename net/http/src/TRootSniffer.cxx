@@ -47,6 +47,7 @@ const char *item_prop_typename = "_typename";
 const char *item_prop_arraydim = "_arraydim";
 const char *item_prop_realname = "_realname"; // real object name
 const char *item_prop_user = "_username";
+const char *item_prop_autoload = "_autoload";
 
 // ============================================================================
 
@@ -325,6 +326,7 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
    fSearchPath = super.fSearchPath;
    fMask = super.fMask & kActions;
    if (fRestriction==0) fRestriction = super.fRestriction; // get restriction from parent
+   Bool_t topelement = kFALSE;
 
    if (fMask & kScan) {
       // if scanning only fields, ignore all childs
@@ -348,6 +350,7 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
       if (*separ == 0) {
          fSearchPath = 0;
          if (fMask & kExpand) {
+            topelement = kTRUE;
             fMask = (fMask & kOnlyFields) | kScan;
             fHasMore = (fMask & kOnlyFields) == 0;
          }
@@ -364,6 +367,9 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
 
    if (full_name != 0)
       SetField("_fullname", full_name);
+
+   if (topelement && sniffer->GetAutoLoad())
+      SetField(item_prop_autoload, sniffer->GetAutoLoad());
 
    return kTRUE;
 }
@@ -396,7 +402,8 @@ TRootSniffer::TRootSniffer(const char *name, const char *objpath) :
    fCurrentArg(0),
    fCurrentRestrict(0),
    fCurrentAllowedMethods(0),
-   fRestrictions()
+   fRestrictions(),
+   fAutoLoad()
 {
    // constructor
 
@@ -430,6 +437,24 @@ void TRootSniffer::SetCurrentCallArg(THttpCallArg* arg)
    fCurrentArg = arg;
    fCurrentRestrict = 0;
    fCurrentAllowedMethods = "";
+}
+
+//______________________________________________________________________________
+void TRootSniffer::SetAutoLoad(const char* scripts)
+{
+   // When specified, _autoload attribute will be always add
+   // to top element of h.json/h.hml requests
+   // Used to instruct browser automatically load special code
+
+   fAutoLoad = scripts!=0 ? scripts : "";
+}
+
+//______________________________________________________________________________
+const char* TRootSniffer::GetAutoLoad() const
+{
+   // return name of configured autoload scripts (or 0)
+
+   return fAutoLoad.Length() > 0 ? fAutoLoad.Data() : 0;
 }
 
 //______________________________________________________________________________
@@ -897,6 +922,8 @@ void TRootSniffer::ScanHierarchy(const char *topname, const char *path,
    rec.fStore = store;
 
    rec.CreateNode(topname);
+   if ((rec.fSearchPath == 0) && (GetAutoLoad() != 0))
+      rec.SetField(item_prop_autoload, GetAutoLoad());
 
    ScanRoot(rec);
 

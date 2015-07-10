@@ -124,6 +124,7 @@ protected:
    Int_t          fCurrentRestrict; //! current restriction for last-found object
    TString        fCurrentAllowedMethods;  //! list of allowed methods, extracted when analyzed object restrictions
    TList          fRestrictions;    //! list of restrictions for different locations
+   TString        fAutoLoad;        //! scripts names, which are add as _autoload parameter to h.json request
 
    void ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char *ptr, unsigned long int cloffset);
 
@@ -189,6 +190,10 @@ public:
 
       fScanGlobalDir = on;
    }
+
+   void SetAutoLoad(const char* scripts = "");
+
+   const char* GetAutoLoad() const;
 
    Bool_t IsScanGlobalDir() const { return fScanGlobalDir; }
 
