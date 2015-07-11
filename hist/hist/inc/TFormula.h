@@ -28,8 +28,6 @@
 #include <vector>
 #include <list>
 #include <map>
-#include <atomic>
-#include <future>
 
 class TFormulaFunction
 {
@@ -50,7 +48,7 @@ public:
    : fName(name),fBody(""),fNargs(0),fFound(false),fFuncCall(false){}
    Bool_t operator<(const TFormulaFunction &rhv) const
    {
-      // order by length - first the longer ones to avoid replacing wrong functions
+      // order by length - first the longer ones to avoid replacing wrong functions 
       if ( fName.Length() > rhv.fName.Length() )
          return true;
       else if ( fName.Length() > rhv.fName.Length() )
@@ -99,7 +97,7 @@ private:
    std::vector<Double_t>  fClingVariables;       //!  cached variables
    std::vector<Double_t>  fClingParameters;      //  parameter values
    Bool_t            fReadyToExecute;       //!
-   std::atomic<Bool_t> fClingInitialized;  //!  transient to force re-initialization
+   Bool_t            fClingInitialized;  //!  transient to force re-initialization
    Bool_t            fAllParametersSetted;    // flag to control if all parameters are setted
    TMethodCall*      fMethod;        //! pointer to methocall
    TString           fClingName;     //! unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
@@ -114,7 +112,6 @@ private:
    void     HandleExponentiation(TString &formula);
    void     HandleLinear(TString &formula);
    static Bool_t   IsDefaultVariableName(const TString &name);
-   mutable std::future<Bool_t> fPrepareFormulaFuture; //!
 protected:
 
    std::list<TFormulaFunction>         fFuncs;    //!
@@ -139,7 +136,7 @@ protected:
    void   ReplaceParamName(TString &formula, const TString & oldname, const TString & name);
    void   DoAddParameter(const TString &name, Double_t value, bool processFormula);
    void   DoSetParameters(const Double_t * p, Int_t size);
-   void   SetPredefinedParamNames();
+   void   SetPredefinedParamNames(); 
 
    Double_t       DoEval(const Double_t * x, const Double_t * p = nullptr) const;
 
