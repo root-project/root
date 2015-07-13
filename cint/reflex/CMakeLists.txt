@@ -27,6 +27,8 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
   install(CODE "file(WRITE \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/python/genreflex/gccxmlpath.py \"gccxmlpath = '${GCCXML_EXECUTABLE}'\n\")")
   install(DIRECTORY python/genreflex DESTINATION ${CMAKE_INSTALL_LIBDIR}/python FILES_MATCHING PATTERN "*.py" PATTERN ".svn" EXCLUDE)
   install(CODE "execute_process(COMMAND python -m compileall  \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/python/genreflex)")
+  #---copy files into build directory----------------------------------------
+  file(COPY python/genreflex DESTINATION ${CMAKE_BINARY_DIR}/lib/python)
   #---genmap executable------------------------------------------------------
   ROOT_EXECUTABLE(genmap genmap/genmap.cxx LIBRARIES Reflex ${CMAKE_DL_LIBS})
   #---install headers--------------------------------------------------------
