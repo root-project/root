@@ -1,5 +1,5 @@
 ROOTTEST_ADD_TEST(roottest-root-meta-rlibmap
-                  COMMAND rlibmap
+                  COMMAND rlibmapLauncher.py
                   PASSRC 1
                   OUTREF  rlibmap.ref)
 
