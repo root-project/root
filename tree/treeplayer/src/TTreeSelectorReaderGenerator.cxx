@@ -345,9 +345,8 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                }
             }
          }
-
          //printf("branchEndName: %s\n", branchEndName.Data());
-
+         printf("EName: %s BName: %s\n", element->GetName(), branch->GetName());
          TString dataType;
          TTreeReaderDescriptor::ReaderType readerType = TTreeReaderDescriptor::ReaderType::kValue;
          Bool_t ispointer = false;
@@ -462,7 +461,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   isBase = true;
                   prefix  = "base";
                   // Ignore TObject
-                  if (cl == TObject::Class()/* && info->GetClass()->CanIgnoreTObjectStreamer()*/)
+                  if (cl == TObject::Class() && info->GetClass()->CanIgnoreTObjectStreamer())
                   {
                      continue;
                   }
@@ -486,7 +485,12 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          if (desc) {
             dataMemberName.Form("%s_%s", desc->fSubBranchPrefix.Data(), element->GetName());
          }
-         AddReader(readerType, dataType, dataMemberName, element->GetName());
+         AddReader(readerType, dataType, dataMemberName, branch->GetName());
+
+         if (usedBranch) {
+            branches.Next();
+            ++lookedAt;
+         }
       }
 
       return lookedAt;
