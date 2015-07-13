@@ -2523,7 +2523,7 @@ void TFormula::Streamer(TBuffer &b)
 
          *this = fnew;
 
-         printf("copying content in a new TFormula \n");
+//          printf("copying content in a new TFormula \n");
          SetParameters(fold->GetParameters() );
          if (!fReadyToExecute ) {
             Error("Streamer","Old formula read from file is NOT valid");
