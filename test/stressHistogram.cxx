@@ -28,30 +28,34 @@
 // >> stressHistogram 2      : ro print each comparison, done for each bin       //
 //                                                                               //
 // An example of output when all the tests run OK is shown below:                //
-// ****************************************************************************  //
-// *  Starting  stress  H I S T O G R A M                                     *  //
-// ****************************************************************************  //
-// Test  1: Testing Projections without weights..............................OK  //
-// Test  2: Testing Projections with weights.................................OK  //
-// Test  3: Projection with Range for Histograms and Profiles................OK  //
-// Test  4: Histogram Rebinning..............................................OK  //
-// Test  5: Add tests for 1D, 2D and 3D Histograms and Profiles..............OK  //
-// Test  6: Multiply tests for 1D, 2D and 3D Histograms......................OK  //
-// Test  7: Divide tests for 1D, 2D and 3D Histograms........................OK  //
-// Test  8: Copy tests for 1D, 2D and 3D Histograms and Profiles.............OK  //
-// Test  9: Read/Write tests for 1D, 2D and 3D Histograms and Profiles.......OK  //
-// Test 10: Merge tests for 1D, 2D and 3D Histograms and Profiles............OK  //
-// Test 11: Label tests for 1D and 2D Histograms  ...........................OK  //
-// Test 12: Interpolation tests for Histograms...............................OK  //
-// Test 13: Scale tests for Profiles.........................................OK  //
-// Test 14: Integral tests for Histograms....................................OK  //
-// Test 15: TH1-THn[Sparse] Conversion tests.................................OK  //
-// Test 16: Filldata tests for Histograms and THn[Sparse]....................OK  //
-// Test 17: Reference File Read for Histograms and Profiles..................OK  //
-// ****************************************************************************  //
-// stressHistogram: Real Time =  64.01 seconds Cpu Time =  63.89 seconds         //
-//  ROOTMARKS = 430.74 ROOT version: 5.25/01 branches/dev/mathDev@29787       //
-// ****************************************************************************  //
+// ****************************************************************************
+// *  Starting  stress  H I S T O G R A M                                     *
+// ****************************************************************************
+// Test  1: Testing Histogram Projections without weights....................OK
+// Test  2: Testing Profile Projections without weights......................OK
+// Test  3: Testing Histogram Projections with weights.......................OK
+// Test  4: Testing Profile   Projections with weights.......................OK
+// Test  5: Projection with Range for Histograms and Profiles................OK
+// Test  6: Histogram Rebinning..............................................OK
+// Test  7: Add tests for 1D, 2D and 3D Histograms and Profiles..............OK
+// Test  8: Multiply tests for 1D, 2D and 3D Histograms......................OK
+// Test  9: Divide tests for 1D, 2D and 3D Histograms........................OK
+// Test 10: Copy tests for 1D, 2D and 3D Histograms and Profiles.............OK
+// Test 11: Read/Write tests for 1D, 2D and 3D Histograms and Profiles.......OK
+// Test 12: Merge tests for 1D, 2D and 3D Histograms and Profiles............OK
+// Test 13: Label tests for 1D and 2D Histograms ............................OK
+// Test 14: Interpolation tests for Histograms...............................OK
+// Test 15: Scale tests for Profiles.........................................OK
+// Test 16: Integral tests for Histograms....................................OK
+// Test 17: Buffer tests for Histograms......................................OK
+// Test 18: Extend axis tests for Histograms.................................OK
+// Test 19: TH1-THn[Sparse] Conversion tests.................................OK
+// Test 20: FillData tests for Histograms and Sparses........................OK
+// Test 21: Reference File Read for Histograms and Profiles..................OK
+// ****************************************************************************
+// stressHistogram: Real Time =  86.22 seconds Cpu Time =  85.64 seconds
+//  ROOTMARKS = 1292.62 ROOT version: 6.05/01      remotes/origin/master@v6-05-01-336-g5c3d5ff
+// ****************************************************************************
 //                                                                               //
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 
@@ -6270,8 +6274,8 @@ bool testH2Integral()
 
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Integral H2:\t" << (iret?"FAILED":"OK") << std::endl;
-   
-   delete h2; 
+
+   delete h2;
    return iret;
 
 }
@@ -6367,7 +6371,7 @@ bool testH3Integral()
    return iret;
 }
 
-// test histogram buffer 
+// test histogram buffer
 bool testH1Buffer() {
 
    int iret = 0;
@@ -6378,7 +6382,7 @@ bool testH1Buffer() {
    // this activate the buffer for the histogram
    h1->SetBuffer(1000);
 
-   // fill the histograms   
+   // fill the histograms
    int nevt = 800;
    double x = 0;
    for (int i = 0; i < nevt ; ++i) {
@@ -6386,15 +6390,15 @@ bool testH1Buffer() {
       h1->Fill(x);
       h2->Fill(x);
    }
-   //h2->BufferEmpty(); // empty buffer for h2                                                                                                              
+   //h2->BufferEmpty(); // empty buffer for h2
 
    int pr = std::cout.precision(15);
    double eps = TMath::Limits<double>::Epsilon();
 
    bool itest = false;
 
-   // now test that functions are consistent                                                                                                              
-   //itest = (h1->GetMean() != h2->GetMean() );                                                                                                           
+   // now test that functions are consistent
+   //itest = (h1->GetMean() != h2->GetMean() );
    itest = equals(h1->GetMean(),h2->GetMean(),eps );
    if (defaultEqualOptions & cmpOptDebug ) {
       std::cout << "Histogram Mean = " << h1->GetMean() << "  " << h2->GetMean() << " -  " << itest << std::endl;
@@ -6414,7 +6418,7 @@ bool testH1Buffer() {
      iret |= itest;
    }
 
-   // another fill will reset the histogram                                                                                                                       
+   // another fill will reset the histogram
    x = gRandom->Uniform(-3,3);
    h1->Fill(x);
    h2->Fill(x); //h2->BufferEmpty();
@@ -6498,8 +6502,8 @@ bool testH1BufferWeights() {
 
    // set the buffer
    h1->SetBuffer(1000);
-   
-   // fill the histograms     
+
+   // fill the histograms
    int nevt = 800;
    double x,w = 0;
    for (int i = 0; i < nevt ; ++i) {
@@ -6527,16 +6531,16 @@ bool testH1BufferWeights() {
      iret |= itest;
    }
 
-   // another fill will reset the histogram                                                                                                                       
+   // another fill will reset the histogram
    x = gRandom->Uniform(-3,3);
-   w = 2; 
+   w = 2;
    h1->Fill(x,w);
-   h2->Fill(x,w); 
+   h2->Fill(x,w);
    itest = (h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights());
    if (defaultEqualOptions & cmpOptDebug ) {
       std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << itest << std::endl;
    }
-   iret |= itest; 
+   iret |= itest;
 
 
    iret |= equals("testh1bufferweight",h1,h2,cmpOptStats,eps);
@@ -6554,7 +6558,7 @@ bool testH1BufferWeights() {
 }
 
 bool testH2Buffer() {
-   
+
    int iret = 0;
 
    TH2D * h1 = new TH2D("h1","h1",10,-5,5,10,-5,5);
@@ -6562,8 +6566,8 @@ bool testH2Buffer() {
 
    // set the buffer
    h1->SetBuffer(1000);
-   
-   // fill the histograms     
+
+   // fill the histograms
    int nevt = 800;
    double x,y = 0;
    for (int i = 0; i < nevt ; ++i) {
@@ -6577,14 +6581,14 @@ bool testH2Buffer() {
    if (defaultEqualOptions & cmpOptDebug ) {
       std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << itest << std::endl;
    }
-   iret |= itest; 
+   iret |= itest;
 
    // test adding an extra fill
    x = gRandom->Uniform(-3,3);
    y = gRandom->Uniform(-3,3);
-   double w = 2; 
+   double w = 2;
    h1->Fill(x,y,w);
-   h2->Fill(x,y,w); 
+   h2->Fill(x,y,w);
 
    iret |= equals("testh2buffer",h1,h2,cmpOptStats,1.E-15);
 
@@ -6592,11 +6596,11 @@ bool testH2Buffer() {
       std::cout << "Buffer H2:\t" << (iret?"FAILED":"OK") << std::endl;
 
    delete h1;
-   
-   return iret; 
+
+   return iret;
 }
 bool testH3Buffer() {
-   
+
    int iret = 0;
 
    TH3D * h1 = new TH3D("h1","h1",4,-5,5,4,-5,5,4,-5,5);
@@ -6604,8 +6608,8 @@ bool testH3Buffer() {
 
    // set the buffer
    h1->SetBuffer(10000);
-   
-   // fill the histograms     
+
+   // fill the histograms
    int nevt = 8000;
    double x,y,z = 0;
    for (int i = 0; i < nevt ; ++i) {
@@ -6620,7 +6624,7 @@ bool testH3Buffer() {
    if (defaultEqualOptions & cmpOptDebug ) {
       std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << itest << std::endl;
    }
-   iret |= itest; 
+   iret |= itest;
 
    // test adding extra fills with weights
    for (int i = 0; i < nevt ; ++i) {
@@ -6630,7 +6634,7 @@ bool testH3Buffer() {
       double w = 2;
       h1->Fill(x,y,z,w);
       h2->Fill(x,y,z,w);
-   }      
+   }
 
    iret |= equals("testh2buffer",h1,h2,cmpOptStats,1.E-15);
 
@@ -6639,7 +6643,7 @@ bool testH3Buffer() {
 
    delete h1;
 
-   return iret; 
+   return iret;
 }
 
 bool testH1Extend() {
@@ -6655,7 +6659,7 @@ bool testH1Extend() {
    }
    bool ret = equals("testh1extend", h1, h0, cmpOptStats, 1E-10);
    delete h1;
-   return ret; 
+   return ret;
 
 }
 
@@ -6674,7 +6678,7 @@ bool testH2Extend() {
    }
    bool ret = equals("testh2extend", h1, h2, cmpOptStats, 1E-10);
    delete h1;
-   return ret; 
+   return ret;
 
 }
 bool testProfileExtend() {
@@ -6685,7 +6689,7 @@ bool testProfileExtend() {
    h1->SetCanExtend(TH1::kXaxis);
    for (int i = 0; i < nEvents; ++i) {
       double x = gRandom->Gaus(10,3);
-      double y = gRandom->Gaus(10+2*x,1); 
+      double y = gRandom->Gaus(10+2*x,1);
       if (x <= 0 || x >= 20) continue; // do not want overflow in h0
       h1->Fill(x,y);
       h0->Fill(x,y);
@@ -6693,7 +6697,7 @@ bool testProfileExtend() {
    bool ret = equals("testProfileextend", h1, h0, cmpOptStats, 1E-10);
    delete h1;
    TProfile::Approximate(false);
-   return ret; 
+   return ret;
 
 }
 
@@ -6707,7 +6711,7 @@ bool testProfile2Extend() {
    for (int i = 0; i < 10*nEvents; ++i) {
       double x = r.Uniform(-1,11);
       double y = r.Gaus(10,3);
-      double z = r.Gaus(10+2*(x+y),1); 
+      double z = r.Gaus(10+2*(x+y),1);
       if (y <= 0 || y >= 20) continue; // do not want overflow in h0
       h1->Fill(x,y,z);
       h2->Fill(x,y,z);
@@ -6715,7 +6719,7 @@ bool testProfile2Extend() {
    bool ret = equals("testprofile2extend", h1, h2, cmpOptStats, 1E-10);
    delete h1;
    TProfile2D::Approximate(false);
-   return ret; 
+   return ret;
 
 }
 
@@ -10525,7 +10529,7 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
 
 int equals(Double_t n1, Double_t n2, double ERRORLIMIT)
 {
-   if (n1 != 0) 
+   if (n1 != 0)
       return fabs( n1 - n2 ) > ERRORLIMIT * fabs(n1);
    else
       return fabs(n2) > ERRORLIMIT;
