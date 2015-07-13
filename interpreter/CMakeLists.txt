@@ -10,6 +10,9 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON)
 # to serialize access to llvm.  We can later review how to make this finer grained by using llvm's own locking
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF)
+if(cxx14)
+  set(LLVM_ENABLE_CXX1Y ON)
+endif()
 
 set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
 
