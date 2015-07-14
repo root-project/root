@@ -4,8 +4,8 @@
 
 ## Introduction
 
-ROOT version 6.04/02 was released on 14 July, 2015. 
-Changes with respect to 6.04/00 are listed [at the end of the document](#changelog). 
+ROOT version 6.04/02 was released on 14 July, 2015.
+Changes with respect to 6.04/00 are listed [at the end of the document](#changelog).
 
 For more information, see:
 
@@ -790,7 +790,20 @@ directory - this behavior is now implement by the default constructor.
 <a name="changelog"/>
 ## Changes added in 6.04/02
 
+### TFormula
+
+- Remove unwanted printout from Streamer method.
+
+### Dictionary Generation
+
+- Uniform style of warnings, use standard ROOT logging facilities rather than cout/cerr.
+- Do not add as autoparse keys stl classes, stl (nested) containers templated with plain old data or integers.
+
+### PyROOT
+
+- Strip down number of libraries linked to libPyROOT in order to reduce to the minimum the time needed to import the ROOT module.
+
 ### Platforms
-- Added supoort for Intel icc 15
+- Added supoort for Intel icc 15.
 
 
