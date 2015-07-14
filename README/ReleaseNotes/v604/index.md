@@ -1,10 +1,11 @@
-% ROOT Version 6.04/00 Release Notes
-% 2 June 2015
+% ROOT Version 6.04/02 Release Notes
+% 14 July 2015
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.04/00 was released on 2 June, 2015.
+ROOT version 6.04/02 was released on 14 July, 2015. 
+Changes with respect to 6.04/00 are listed [at the end of the document](#changelog). 
 
 For more information, see:
 
@@ -785,3 +786,11 @@ directory - this behavior is now implement by the default constructor.
 ### Graphics
 
  - Fix file corruption in `TTeXDump::DrawPolyMarker`.
+
+<a name="changelog"/>
+## Changes added in 6.04/02
+
+### Platforms
+- Added supoort for Intel icc 15
+
+
