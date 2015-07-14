@@ -6400,10 +6400,6 @@ bool testH1Buffer() {
    // saved in memory (in the histogram buffer) and passed as function 
    // arguments (Fill(x,w)).
 
-#ifdef __aarch64__
-   eps*=28.;
-#endif
-
    bool itest = false;
 
    // now test that functions are consistent
@@ -6524,6 +6520,10 @@ bool testH1BufferWeights() {
 
    int pr = std::cout.precision(15);
    double eps = TMath::Limits<double>::Epsilon();
+
+#ifdef __aarch64__
+   eps*=28;
+#endif
 
    bool itest = false;
 
