@@ -5,7 +5,7 @@
 ## Introduction
 
 ROOT version 6.04/02 was released on 14 July, 2015.
-Changes with respect to 6.04/00 are listed [at the end of the document](#changelog).
+Changes with respect to 6.04/00 are listed [at the end of the document](#patchreleases).
 
 For more information, see:
 
@@ -733,27 +733,36 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 \
 \
 
+<a name="patchreleases"/>
 
 # Patch Releases
 
 ## HEAD of the v6-04-00-patches branch
 
-Changes will be part of the future v6.04/02.
+Changes will be part of the future v6.04/04.
 
+## Release v6.04/02
+
+### Platform Support
+ - Added support for Intel icc 15
+
+### Build System
+ - Define ROOT_XXX_FLAGS in ROOTConfig.cmake for use by client packages [ROOT-7401]
+ - Enabled c++14 in CLING when compiling ROOT with c++14 enabled (CMake: -Dcxx14=ON, classic: --enable-cxx14) 
+
+#### Dictionary Generation
+ - Uniform style of warnings, use standard ROOT logging facilities rather than cout/cerr.
+ - Do not add as autoparse keys stl classes, stl (nested) containers templated with plain old data or integers.
 
 ### Core
-
  - Fixed support for dictionary for class with inlined namespace.
  - Do not treat Mac OSX's "cl_kernels" dylinker entry as a library [ROOT-7436]
 
 #### TDirectory::TContext
-
-Fixed a thread safety issue in TMVA by updating TDirectory::TContext.
-
-We added a default constructor to TDirectory::TContext which record the current directory
+- Fixed a thread safety issue in TMVA by updating TDirectory::TContext.
+- We added a default constructor to TDirectory::TContext which record the current directory
 and will restore it at destruction time and does not change the current directory.
-
-The constructor for TDirectory::TContext that takes a single TDirectory pointer as
+- The constructor for TDirectory::TContext that takes a single TDirectory pointer as
 an argument was changed to set gDirectory to zero when being passed a null pointer;
 previously it was interpreting a null pointer as a request to *not* change the current
 directory - this behavior is now implement by the default constructor.
@@ -763,7 +772,6 @@ directory - this behavior is now implement by the default constructor.
  - Fix issue with trees in sub-directories causing stressProof test #29 to fail
 
 ### Interpreter
-
  - Fix unloading of code [ROOT-7290]
  - Fix template instantiations in cling internals [ROOT-7364]
  - Forget erroneous decls in case of errors [ROOT-7295]
@@ -775,35 +783,28 @@ directory - this behavior is now implement by the default constructor.
  - Work around linker assert when building with GCC on OS X (PR #68)
 
 ### PyROOT
-
  - Fix lookup of templated classes in namespace with arguments that have 'std::' in their name [ROOT-7448]
  - Use GetTrueTypeName() instead of GetFullTypeName(), as the latter loses namespaces
+ - Strip down number of libraries linked to libPyROOT in order to reduce to the minimum the time needed to import the ROOT module.
 
-### Tree
+### TFormula, TF1
+ - Allow possibility to automatically normalize itself. If the function `TF1::SetNormalized(true)` is called, when evaluated, the function will return its value divided by its integral computed in the function range.
+ - Added helper classes TF1NormSum, TF1Convolution.
+ - Fix a bug in calling TF1::Update when changing the parameter values. Fix also the TF1Convolution.
+ - Fix the caching of the parameters in TF1NormSum to avoid recomputing integrals for same parameter values.
+ - Remove unwanted printout from Streamer method.
 
- - `TTreeReaderArray` now supports `vector<builtin-type>`.
-
-### Graphics
-
- - Fix file corruption in `TTeXDump::DrawPolyMarker`.
-
-<a name="changelog"/>
-## Changes added in 6.04/02
-
-### TFormula
-
-- Remove unwanted printout from Streamer method.
+### RooFit
+ - Fix for contour computations in RooMinimizer[ROOT-7290]
 
 ### Dictionary Generation
 
-- Uniform style of warnings, use standard ROOT logging facilities rather than cout/cerr.
-- Do not add as autoparse keys stl classes, stl (nested) containers templated with plain old data or integers.
+ - Uniform style of warnings, use standard ROOT logging facilities rather than cout/cerr.
+ - Do not add as autoparse keys stl classes, stl (nested) containers templated with plain old data or integers.
 
-### PyROOT
+### Tree
+ - `TTreeReaderArray` now supports `vector<builtin-type>`.
 
-- Strip down number of libraries linked to libPyROOT in order to reduce to the minimum the time needed to import the ROOT module.
-
-### Platforms
-- Added supoort for Intel icc 15.
-
+### Graphics
+ - Fix file corruption in `TTeXDump::DrawPolyMarker`.
 
