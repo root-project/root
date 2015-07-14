@@ -5,10 +5,11 @@ void shapes() {
    
    TCanvas *c1 = new TCanvas("glc1","Geometry Shapes",200,10,700,500);
 
+   gSystem->Load("libGeom");
    //delete previous geometry objects in case this script is reexecuted
-   if (gGeometry) {
-      gGeometry->GetListOfNodes()->Delete();
-      gGeometry->GetListOfShapes()->Delete();
+   if (gGeoManager) {
+      gGeoManager->GetListOfNodes()->Delete();
+      gGeoManager->GetListOfShapes()->Delete();
    }
 
    //  Define some volumes
