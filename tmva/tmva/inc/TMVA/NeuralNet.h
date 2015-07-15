@@ -445,8 +445,6 @@ public:
     Layer (size_t numNodes, EnumFunction activationFunction, ModeOutputValues eModeOutputValues = ModeOutputValues::DIRECT);
 
     ModeOutputValues modeOutputValues () const { return m_eModeOutputValues; }
-    EnumFunction activationFunction () const { return m_activationFunction; }
-
     void modeOutputValues (ModeOutputValues eModeOutputValues) { m_eModeOutputValues = eModeOutputValues; }
 
     size_t numNodes () const { return m_numNodes; }
@@ -455,6 +453,7 @@ public:
     const std::vector<std::function<double(double)> >& activationFunctions  () const { return m_vecActivationFunctions; }
     const std::vector<std::function<double(double)> >& inverseActivationFunctions  () const { return m_vecInverseActivationFunctions; }
 
+    EnumFunction activationFunction () const { return m_activationFunction; }
 
 private:
 
@@ -815,7 +814,13 @@ public:
 		  const std::vector<Pattern>& testPattern, 
                   Minimizer& minimizer, Settings& settings);
 
+    template <typename Minimizer>
+    void preTrain (std::vector<double>& weights,
+                     std::vector<Pattern>& trainPattern,
+                     const std::vector<Pattern>& testPattern,
+                     Minimizer& minimizer, Settings& settings);
 
+    
     template <typename Iterator, typename Minimizer>
     inline double trainCycle (Minimizer& minimizer, std::vector<double>& weights, 
 			      Iterator itPatternBegin, Iterator itPatternEnd, Settings& settings, DropContainer& dropContainer);
@@ -866,7 +871,8 @@ public:
     const std::vector<Layer>& layers () const { return m_layers; }
     std::vector<Layer>& layers ()  { return m_layers; }
 
-
+    void removeLayer () { m_layers.pop_back (); }
+    
 
     void clear () 
     {
@@ -875,10 +881,8 @@ public:
     }
 
 
-    template <typename ItPat, typename OutIterator>
+    template <typename OutIterator>
     void initializeWeights (WeightInitializationStrategy eInitStrategy, 
-			    ItPat itPatternBegin, 
-			    ItPat itPatternEnd, 
 			    OutIterator itWeight);
 
 protected:
