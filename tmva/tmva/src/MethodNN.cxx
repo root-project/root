@@ -601,8 +601,6 @@ void TMVA::MethodNN::Train()
 
         // initialize weights
         fNet.initializeWeights (fWeightInitializationStrategy, 
-                                trainPattern.begin (),
-                                trainPattern.end (), 
                                 std::back_inserter (fWeights));
     }
 
