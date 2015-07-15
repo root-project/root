@@ -739,6 +739,9 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 
 ## HEAD of the v6-04-00-patches branch
 
+### Build System
+- Fix generation of PCH with CXX flags with spaces [ROOT-7478]
+
 Changes will be part of the future v6.04/04.
 
 ## Release v6.04/02
