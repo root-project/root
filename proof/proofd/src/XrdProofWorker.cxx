@@ -123,8 +123,9 @@ void XrdProofWorker::Reset(const char *str)
    fUser = ui.User;
    char *err;
    char *fullHostName = XrdSysDNS::getHostName((char *)ui.Host.c_str(), &err);
-   if (!fullHostName || !strcmp(fullHostName, "0.0.0.0")) {
+   if (!fullHostName || (fullHostName && !strcmp(fullHostName, "0.0.0.0"))) {
       TRACE(XERR, "DNS could not resolve '" << ui.Host << "'");
+      SafeFree(fullHostName);
       return;
    }
    fHost = fullHostName;

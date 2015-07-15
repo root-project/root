@@ -680,7 +680,10 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
                   Error("GetBranchDataType()", "Could not get collection proxy from STL class");
                   return 0;
                }
+               // Try getting the contained class
                dict = myCollectionProxy->GetValueClass();
+               // If it fails, try to get the contained type as a primitive type
+               if (!dict) dict = TDataType::GetDataType(myCollectionProxy->GetType());
                if (!dict){
                   Error("GetBranchDataType()", "Could not get valueClass from collectionProxy.");
                   return 0;

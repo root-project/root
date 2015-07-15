@@ -351,7 +351,7 @@ class ModuleFacade( types.ModuleType ):
 
          def __setattr__( self, name, value ):
            return setattr( self._gROOT, name, value )
-              
+
       self.__dict__[ 'gROOT' ] = gROOTWrapper( _root.gROOT, self )
       del gROOTWrapper
 
@@ -560,6 +560,14 @@ class ModuleFacade( types.ModuleType ):
 sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade
 
+### Add some infrastructure if we are in a Jupiter Notebook ---------------------
+# We check if the ZMQ shell is in use, which is a sign of usage in the notebook.
+if '__IPYTHON__' in __builtins__ and __IPYTHON__:
+   from IPython import get_ipython
+   pre_execute_callbacks = get_ipython().events.callbacks['pre_execute']
+   zmqIshellName = 'ZMQInteractiveShell'
+   if any(zmqIshellName == callBack.im_class.__name__ for callBack in pre_execute_callbacks):
+      import ROOTaaS.iPyROOT
 
 ### b/c of circular references, the facade needs explicit cleanup ---------------
 import atexit
@@ -607,7 +615,7 @@ def cleanup():
 
  # run part the gROOT shutdown sequence ... running it here ensures that
  # it is done before any ROOT libraries are off-loaded, with unspecified
- # order of static object destruction; 
+ # order of static object destruction;
    gROOT = sys.modules[ 'libPyROOT' ].gROOT
    gROOT.EndOfProcessCleanups()
    del gROOT

@@ -14,7 +14,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "dev 25/06/2015";
+   JSROOT.version = "dev 10/07/2015";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -640,7 +640,12 @@
       var nobrowser = JSROOT.GetUrlOption('nobrowser')!=null;
       var requirements = "io;2d;";
 
-      if (document.getElementById('simpleGUI')) { debugout = 'simpleGUI'; requirements = "io;2d;" } else
+      if (document.getElementById('simpleGUI')) {
+         debugout = 'simpleGUI';
+         if ((JSROOT.GetUrlOption('json')!=null) &&
+             (JSROOT.GetUrlOption('file')==null) &&
+             (JSROOT.GetUrlOption('files')==null)) requirements = "2d;";
+      } else
       if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI'; requirements = "2d;"; } else
       if (document.getElementById('drawGUI')) { debugout = 'drawGUI'; requirements = "2d;"; nobrowser = true; }
       if (!nobrowser) requirements+='jq2d;simple;';
@@ -685,12 +690,12 @@
       if (typename == 'TNamed')
          JSROOT.extend(obj, { fUniqueID: 0, fBits: 0x3000008, fName: "", fTitle: "" });
       else
-      if (typename == 'TList')
-         JSROOT.extend(obj, { name: "TList", arr : [], opt : [] });
+      if ((typename == 'TList') || (typename == 'THashList'))
+         JSROOT.extend(obj, { name: typename, arr : [], opt : [] });
       else
       if (typename == 'TAttAxis') {
          JSROOT.extend(obj, { fNdivisions: 510, fAxisColor: 1,
-            fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.05, fLabelSize: 0.035, fTickLength: 0.03,
+            fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035, fTickLength: 0.03,
             fTitleOffset: 1, fTitleSize: 0.035, fTitleColor: 1, fTitleFont : 42 });
       } else
       if (typename == 'TAxis') {
@@ -731,6 +736,10 @@
       if (typename == 'TPaveStats') {
          JSROOT.Create("TPaveText", obj);
          JSROOT.extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
+      } else
+      if (typename == 'TObjString') {
+         JSROOT.Create("TObject", obj);
+         JSROOT.extend(obj, { fString: ""});
       } else
       if (typename == 'TH1') {
          JSROOT.Create("TNamed", obj);
@@ -890,14 +899,22 @@
          };
       }
 
-      if (obj_typename == "TList") {
+      if ((obj_typename == 'TList') || (obj_typename == 'THashList')) {
          obj['Clear'] = function() {
             this['arr'] = new Array;
             this['opt'] = new Array;
          }
          obj['Add'] = function(obj,opt) {
             this['arr'].push(obj);
-            this['opt'].push((typeof opt=='string') ? opt : "");
+            this['opt'].push((opt && typeof opt=='string') ? opt : "");
+         }
+         obj['AddFirst'] = function(obj,opt) {
+            this['arr'].unshift(obj);
+            this['opt'].unshift((opt && typeof opt=='string') ? opt : "");
+         }
+         obj['RemoveAt'] = function(indx) {
+            this['arr'].splice(indx, 1);
+            this['opt'].splice(indx, 1);
          }
       }
 
@@ -942,6 +959,20 @@
             return ret;
          };
       }
+
+      if (obj_typename=='TF1') {
+         obj['GetParName'] = function(n) {
+            if (('fFormula' in this) && ('fParams' in this.fFormula)) return this.fFormula.fParams[n].first;
+            if ('fNames' in this) return this.fNames[n];
+            return "Par"+n;
+         }
+         obj['GetParValue'] = function(n) {
+            if (('fFormula' in this) && ('fClingParameters' in this.fFormula)) return this.fFormula.fClingParameters[n];
+            if (('fParams' in this) && (this.fParams!=null))  return this.fParams[n];
+            return null;
+         }
+      }
+
       if ((obj_typename.indexOf("TGraph") == 0) || (obj_typename == "TCutG")) {
          obj['ComputeRange'] = function() {
             // Compute the x/y range of the points in this graph
@@ -1802,6 +1833,82 @@
          };
       }
    };
+
+   JSROOT.lastFFormat = "";
+
+   JSROOT.FFormat = function(value, fmt) {
+      // method used to convert numeric value to string according specified format
+      // format can be like 5.4g or 4.2e or 6.4f
+      // function saves actual format in JSROOT.lastFFormat variable
+      if (!fmt) fmt = "6.4g";
+
+      JSROOT.lastFFormat = "";
+
+      if (!fmt) fmt = "6.4g";
+      fmt = fmt.trim();
+      var len = fmt.length;
+      if (len<2) return value.toFixed(4);
+      var last = fmt.charAt(len-1);
+      fmt = fmt.slice(0,len-1);
+      var isexp = null;
+      var prec = fmt.indexOf(".");
+      if (prec<0) prec = 4; else prec = Number(fmt.slice(prec+1));
+      if ((prec==NaN) || (prec<0) || (prec==null)) prec = 4;
+      var significance = false;
+      if ((last=='e') || (last=='E')) { isexp = true; } else
+      if (last=='Q') { isexp = true; significance = true; } else
+      if ((last=='f') || (last=='F')) { isexp = false; } else
+      if (last=='W') { isexp = false; significance = true; } else
+      if ((last=='g') || (last=='G')) {
+         var se = JSROOT.FFormat(value, fmt+'Q');
+         var _fmt = JSROOT.lastFFormat;
+         var sg = JSROOT.FFormat(value, fmt+'W');
+
+         if (se.length < sg.length) {
+            JSROOT.lastFFormat = _fmt;
+            return se;
+         }
+         return sg;
+      } else {
+         isexp = false;
+         prec = 4;
+      }
+
+      if (isexp) {
+         // for exponential representation only one significant digit befor point
+         if (significance) prec--;
+         if (prec<0) prec = 0;
+
+         JSROOT.lastFFormat = '5.'+prec+'e';
+
+         return value.toExponential(prec);
+      }
+
+      var sg = value.toFixed(prec);
+
+      if (significance) {
+
+         // when using fixed representation, one could get 0.0
+         if ((value!=0) && (Number(sg)==0.) && (prec>0)) {
+            prec = 40; sg = value.toFixed(prec);
+         }
+
+         var l = 0;
+         while ((l<sg.length) && (sg.charAt(l) == '0' || sg.charAt(l) == '-' || sg.charAt(l) == '.')) l++;
+
+         var diff = sg.length - l - prec;
+         if (sg.indexOf(".")>l) diff--;
+
+         if (diff != 0) {
+            prec-=diff; if (prec<0) prec = 0;
+            sg = value.toFixed(prec);
+         }
+      }
+
+      JSROOT.lastFFormat = '5.'+prec+'f';
+
+      return sg;
+   }
 
 
    // math methods for Javascript ROOT

@@ -99,6 +99,7 @@ public:
       ~TEfficiency();
 
       void          Add(const TEfficiency& rEff) {*this += rEff;}
+      void          Browse(TBrowser*){Draw();}
       TGraphAsymmErrors*   CreateGraph(Option_t * opt = "") const;
       TH2*          CreateHistogram(Option_t * opt = "") const;
       virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);

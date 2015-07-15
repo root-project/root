@@ -9,13 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTF                                                                  //
-//                                                                      //
-// Interface to the freetype 2 library.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TTF
+\brief Interface to the freetype 2 library.
+*/
+
 
 // RConfigure.h is needed for TTFFONTDIR
 #include "RConfigure.h"
@@ -35,27 +33,28 @@ const Float_t kScale = 0.93376068;
 
 TTF gCleanupTTF; // Allows to call "Cleanup" at the end of the session
 
-Bool_t      TTF::fgInit           = kFALSE;
-Bool_t      TTF::fgSmoothing      = kTRUE;
-Bool_t      TTF::fgKerning        = kTRUE;
-Bool_t      TTF::fgHinting        = kFALSE;
-Int_t       TTF::fgTBlankW        = 0;
-Int_t       TTF::fgWidth          = 0;
-Int_t       TTF::fgAscent         = 0;
-Int_t       TTF::fgCurFontIdx     = -1;
-Int_t       TTF::fgSymbItaFontIdx = -1;
-Int_t       TTF::fgFontCount      = 0;
-Int_t       TTF::fgNumGlyphs      = 0;
-char       *TTF::fgFontName[kTTMaxFonts];
-FT_Matrix  *TTF::fgRotMatrix;
-FT_Library  TTF::fgLibrary;
-FT_BBox     TTF::fgCBox;
-FT_Face     TTF::fgFace[kTTMaxFonts];
-FT_CharMap  TTF::fgCharMap[kTTMaxFonts];
-TTGlyph     TTF::fgGlyphs[kMaxGlyphs];
+Bool_t         TTF::fgInit           = kFALSE;
+Bool_t         TTF::fgSmoothing      = kTRUE;
+Bool_t         TTF::fgKerning        = kTRUE;
+Bool_t         TTF::fgHinting        = kFALSE;
+Int_t          TTF::fgTBlankW        = 0;
+Int_t          TTF::fgWidth          = 0;
+Int_t          TTF::fgAscent         = 0;
+Int_t          TTF::fgCurFontIdx     = -1;
+Int_t          TTF::fgSymbItaFontIdx = -1;
+Int_t          TTF::fgFontCount      = 0;
+Int_t          TTF::fgNumGlyphs      = 0;
+char          *TTF::fgFontName[kTTMaxFonts];
+FT_Matrix     *TTF::fgRotMatrix;
+FT_Library     TTF::fgLibrary;
+FT_BBox        TTF::fgCBox;
+FT_Face        TTF::fgFace[kTTMaxFonts];
+FT_CharMap     TTF::fgCharMap[kTTMaxFonts];
+TTF::TTGlyph   TTF::fgGlyphs[kMaxGlyphs];
 
 
 ClassImp(TTF)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup TTF environment.
@@ -64,6 +63,7 @@ TTF::~TTF()
 {
    Cleanup();
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialise the TrueType fonts interface.
@@ -82,6 +82,7 @@ void TTF::Init()
    SetTextFont(62);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup. Is called by the gCleanupTTF destructor.
 
@@ -98,6 +99,7 @@ void TTF::Cleanup()
 
    fgInit = kFALSE;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Map char to unicode. Returns 0 in case no mapping exists.
@@ -132,6 +134,7 @@ Short_t TTF::CharToUnicode(UInt_t code)
    return FT_Get_Char_Index(fgFace[fgCurFontIdx], (FT_ULong)code);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Get width (w) and height (h) when text is horizontal.
 
@@ -148,6 +151,7 @@ void TTF::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
    h = fgCBox.yMax + Yoff;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Get advance (a) when text is horizontal.
 
@@ -160,6 +164,7 @@ void TTF::GetTextAdvance(UInt_t &a, char *text)
    LayoutGlyphs();
    a = GetWidth()>>6;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get width (w) and height (h) when text is horizontal.
@@ -176,6 +181,7 @@ void TTF::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *text)
    w = fgCBox.xMax + Xoff + fgTBlankW;
    h = fgCBox.yMax + Yoff;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the glyps positions, fgAscent and fgWidth (needed for alignment).
@@ -247,6 +253,7 @@ void TTF::LayoutGlyphs()
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Put the characters in "string" in the "glyphs" array.
 
@@ -284,6 +291,7 @@ void TTF::PrepareString(const char *string)
       fgTBlankW = (Int_t)((fgFace[fgCurFontIdx]->glyph->advance.x)>>6)*NbTBlank;
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Put the characters in "string" in the "glyphs" array.
@@ -323,6 +331,7 @@ void TTF::PrepareString(const wchar_t *string)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set hinting flag.
 
@@ -331,6 +340,7 @@ void TTF::SetHinting(Bool_t state)
    fgHinting = state;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set kerning flag.
 
@@ -338,6 +348,7 @@ void TTF::SetKerning(Bool_t state)
 {
    fgKerning = state;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the rotation matrix used to rotate the font outlines.
@@ -362,6 +373,7 @@ void TTF::SetRotationMatrix(Float_t angle)
    fgRotMatrix->yy =  fgRotMatrix->xx;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set smoothing (anti-aliasing) flag.
 
@@ -369,6 +381,7 @@ void TTF::SetSmoothing(Bool_t state)
 {
    fgSmoothing = state;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set text font to specified name.
@@ -475,26 +488,28 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set specified font.
 /// List of the currently supported fonts (screen and PostScript)
-/// =============================================================
-///   Font ID       X11                        TTF
-///        1 : times-medium-i-normal       timesi.ttf
-///        2 : times-bold-r-normal         timesbd.ttf
-///        3 : times-bold-i-normal         timesi.ttf
-///        4 : helvetica-medium-r-normal   arial.ttf
-///        5 : helvetica-medium-o-normal   ariali.ttf
-///        6 : helvetica-bold-r-normal     arialbd.ttf
-///        7 : helvetica-bold-o-normal     arialbi.ttf
-///        8 : courier-medium-r-normal     cour.ttf
-///        9 : courier-medium-o-normal     couri.ttf
-///       10 : courier-bold-r-normal       courbd.ttf
-///       11 : courier-bold-o-normal       courbi.ttf
-///       12 : symbol-medium-r-normal      symbol.ttf
-///       13 : times-medium-r-normal       times.ttf
-///       14 :                             wingding.ttf
-///       15 : symbol oblique is emulated from symbol.ttf
+///
+/// | Font ID |   X11                     |     TTF          |
+/// |---------|---------------------------|------------------|
+/// |      1  | times-medium-i-normal     | timesi.ttf       |
+/// |      2  | times-bold-r-normal       | timesbd.ttf      |
+/// |      3  | times-bold-i-normal       | timesi.ttf       |
+/// |      4  | helvetica-medium-r-normal | arial.ttf        |
+/// |      5  | helvetica-medium-o-normal | ariali.ttf       |
+/// |      6  | helvetica-bold-r-normal   | arialbd.ttf      |
+/// |      7  | helvetica-bold-o-normal   | arialbi.ttf      |
+/// |      8  | courier-medium-r-normal   | cour.ttf         |
+/// |      9  | courier-medium-o-normal   | couri.ttf        |
+/// |     10  | courier-bold-r-normal     | courbd.ttf       |
+/// |     11  | courier-bold-o-normal     | courbi.ttf       |
+/// |     12  | symbol-medium-r-normal    | symbol.ttf       |
+/// |     13  | times-medium-r-normal     | times.ttf        |
+/// |     14  |                           | wingding.ttf     |
+/// |     15  | symbol oblique is emulated from symbol.ttf | |
 
 void TTF::SetTextFont(Font_t fontnumber)
 {
@@ -569,6 +584,7 @@ void TTF::SetTextFont(Font_t fontnumber)
    if (ret == 0 && fontid != 12) fontset = thisset;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set current text size.
 
@@ -588,12 +604,14 @@ void TTF::SetTextSize(Float_t textsize)
       Error("TTF::SetTextSize", "error in FT_Set_Char_Size");
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void TTF::Version(Int_t &major, Int_t &minor, Int_t &patch)
 {
    FT_Library_Version(fgLibrary, &major, &minor, &patch);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -602,12 +620,14 @@ Bool_t TTF::GetHinting()
     return fgHinting;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TTF::GetKerning()
 {
     return fgKerning;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -616,12 +636,14 @@ Bool_t TTF::GetSmoothing()
     return fgSmoothing;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TTF::IsInitialized()
 {
     return fgInit;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -630,12 +652,14 @@ Int_t  TTF::GetWidth()
     return fgWidth;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t  TTF::GetAscent()
 {
     return fgAscent;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -644,12 +668,14 @@ Int_t  TTF::GetNumGlyphs()
     return fgNumGlyphs;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 FT_Matrix *TTF::GetRotMatrix()
 {
     return fgRotMatrix;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -658,9 +684,10 @@ const FT_BBox &TTF::GetBox()
     return fgCBox;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
-TTGlyph *TTF::GetGlyphs()
+TTF::TTGlyph *TTF::GetGlyphs()
 {
     return fgGlyphs;
 }

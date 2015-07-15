@@ -12,6 +12,7 @@
 #include "Utility.h"
 
 // ROOT
+#include "TClass.h"           // for exception types (to move to Cppyy.cxx)
 #include "TException.h"       // for TRY ... CATCH
 #include "TVirtualMutex.h"    // for R__LOCKGUARD2
 
@@ -21,6 +22,7 @@
 #include <exception>
 #include <sstream>
 #include <string>
+#include <typeinfo>
 
 
 //- data and local helpers ---------------------------------------------------
@@ -59,18 +61,38 @@ inline void PyROOT::TMethodHolder::Destroy_() const
 
 inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, TCallContext* ctxt )
 {
-   PyObject* result = 0;
+   PyObject* result = nullptr;
 
    try {       // C++ try block
       result = fExecutor->Execute( fMethod, (Cppyy::TCppObject_t)((Long_t)self + offset), ctxt );
    } catch ( TPyException& ) {
       result = (PyObject*)TPyExceptionMagic;
    } catch ( std::exception& e ) {
-      PyErr_Format( PyExc_Exception, "%s (C++ exception)", e.what() );
-      result = 0;
+   // map user exceptions .. this needs to move to Cppyy.cxx
+      TClass* cl = TClass::GetClass( typeid(e) );
+
+      PyObject* pyUserExcepts = PyObject_GetAttrString( gRootModule, "UserExceptions" );
+      std::string exception_type = cl->GetName();
+      PyObject* pyexc = PyDict_GetItemString( pyUserExcepts, exception_type.c_str() );
+      if ( !pyexc ) {
+         PyErr_Clear();
+         pyexc = PyDict_GetItemString( pyUserExcepts, ("std::"+exception_type).c_str() );
+      }
+      if ( !pyexc ) {
+         PyErr_Clear();
+         pyexc = PyDict_GetItemString( pyUserExcepts, ("ROOT::"+exception_type).c_str() );
+      }
+      Py_DECREF( pyUserExcepts );
+
+      if ( pyexc ) {
+         PyErr_Format( pyexc, "%s", e.what() );
+      } else {
+         PyErr_Format( PyExc_Exception, "%s (C++ exception of type %s)", e.what(), cl->GetName() );
+      }
+      result = nullptr;
    } catch ( ... ) {
       PyErr_SetString( PyExc_Exception, "unhandled, unknown C++ exception" );
-      result = 0;
+      result = nullptr;
    }
 
    return result;

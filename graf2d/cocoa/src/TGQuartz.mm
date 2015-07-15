@@ -856,7 +856,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
 
    CGContextSetRGBStrokeColor(ctx, 0., 0., 1., 1.);
    // paint the glyphs in the pixmap.
-   TTGlyph *glyph = TTF::GetGlyphs();
+   TTF::TTGlyph *glyph = TTF::GetGlyphs();
    for (int n = 0; n < TTF::GetNumGlyphs(); ++n, ++glyph) {
       if (FT_Glyph_To_Bitmap(&glyph->fImage, TTF::GetSmoothing() ? ft_render_mode_normal : ft_render_mode_mono, 0, 1 ))
          continue;

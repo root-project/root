@@ -1,3 +1,5 @@
+#include <limits>
+
 #include "TMVA/regression_averagedevs.h"
 
 #include "TLatex.h"
@@ -14,22 +16,22 @@ b) truncated average, using best 90%
 void TMVA::regression_averagedevs(TString fin, Int_t Nevt, Bool_t useTMVAStyle )
 {
    bool debug=false;
-   if (Nevt <0)  Nevt=1000000; 
+   if (Nevt <0)  Nevt=1000000;
    TMVAGlob::Initialize( useTMVAStyle );
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   TFile* file = TMVAGlob::OpenFile( fin );
    TList jobDirList;
    TMVAGlob::GetListOfJobs(file,jobDirList);
    if (jobDirList.GetSize()==0) {
      cout << "error could not find jobs" << endl;
      return;
    }
-   
+
    Bool_t __PLOT_LOGO__  = kTRUE;
    Bool_t __SAVE_IMAGE__ = kTRUE;
 
    TDirectory* dir0 = (TDirectory*) (jobDirList.At(0));
-   //TDirectory* dir0 = (TDirectory*) (file->Get("InputVariables_Id"));   
+   //TDirectory* dir0 = (TDirectory*) (file->Get("InputVariables_Id"));
    Int_t nTargets = TMVAGlob::GetNumberOfTargets( dir0);
 
    if (debug) cout << "found targets " << nTargets<<endl;
@@ -37,19 +39,19 @@ void TMVA::regression_averagedevs(TString fin, Int_t Nevt, Bool_t useTMVAStyle )
    for (Int_t itrgt = 0 ; itrgt < nTargets; itrgt++){
      if (debug) cout << "loop targets " << itrgt<<endl;
      TString xtit = "Method";
-     TString ytit = "Average Quadratic Deviation";  
+     TString ytit = "Average Quadratic Deviation";
      TString ftit = ytit + " versus " + xtit + Form(" for target %d",itrgt);
      c = new TCanvas( Form("c%d",itrgt), ftit , 50+20*itrgt, 10*itrgt, 750, 650 );
-     
+
      // global style settings
      c->SetGrid();
      c->SetTickx(1);
      c->SetTicky(0);
      c->SetTopMargin(0.28);
      c->SetBottomMargin(0.1);
-     
+
      TString hNameRef(Form("regression_average_devs_target%d",itrgt));
-     
+
      const Int_t maxMethods = 100;
      //     const Int_t maxTargets = 100;
      Float_t m[4][maxMethods]; // h0 train-all, h1 train-90%, h2 test-all, h3 test-90%
@@ -58,12 +60,12 @@ void TMVA::regression_averagedevs(TString fin, Int_t Nevt, Bool_t useTMVAStyle )
      Float_t ex[4][maxMethods];
 
      TIter next(&jobDirList);
-     Float_t mymax=0., mymin=1.e40;
+     Float_t mymax=0., mymin=std::numeric_limits<float>::max();
      TString mvaNames[maxMethods];
      TDirectory *jobDir;
      Int_t nMethods = 0;
      // loop over all methods
-     while ( (jobDir = (TDirectory*)next()) ) {     
+     while ( (jobDir = (TDirectory*)next()) ) {
        TString methodTitle;
        TMVAGlob::GetMethodTitle(methodTitle,jobDir);
        mvaNames[nMethods]=methodTitle;
@@ -79,7 +81,7 @@ void TMVA::regression_averagedevs(TString fin, Int_t Nevt, Bool_t useTMVAStyle )
 	   if( !s.Contains("best90perc") && s.Contains("train")) ihist=0;
 	   if( s.Contains("best90perc") && s.Contains("train")) ihist=1;
 	   if( !s.Contains("best90perc") && s.Contains("test")) ihist=2;
-	   if( s.Contains("best90perc") && s.Contains("test")) ihist=3; 
+	   if( s.Contains("best90perc") && s.Contains("test")) ihist=3;
 	   if (debug) cout <<"using histogram" << s << ", ihist="<<ihist<<endl;
 	   TH1F* h = (TH1F*) (histKey->ReadObj());
 	   m[ihist][nMethods] = sqrt(h->GetMean());
@@ -100,7 +102,7 @@ void TMVA::regression_averagedevs(TString fin, Int_t Nevt, Bool_t useTMVAStyle )
      TGraphErrors* graphTruncTrainAv= new TGraphErrors(nMethods,x[1],m[1],ex[1],em[1]);
      TGraphErrors* graphTestAv= new TGraphErrors(nMethods,x[2],m[2],ex[2],em[2]);
      TGraphErrors* graphTruncTestAv= new TGraphErrors(nMethods,x[3],m[3],ex[3],em[3]);
-     
+
      Double_t xmax = 1.2 * mymax;
      Double_t xmin = 0.8 * mymin - (mymax - mymin)*0.05;
      Double_t xheader = 0.2;
@@ -151,7 +153,7 @@ void TMVA::regression_averagedevs(TString fin, Int_t Nevt, Bool_t useTMVAStyle )
      graphTrainAv->SetMarkerColor(kBlue);
      graphTrainAv->SetMarkerStyle(25);
      graphTrainAv->Draw("P");
-     
+
      graphTruncTrainAv->SetMarkerSize(1.);
      graphTruncTrainAv->SetMarkerColor(kBlack);
      graphTruncTrainAv->SetMarkerStyle(25);
@@ -161,7 +163,7 @@ void TMVA::regression_averagedevs(TString fin, Int_t Nevt, Bool_t useTMVAStyle )
      graphTestAv->SetMarkerColor(kBlue);
      graphTestAv->SetMarkerStyle(21);
      graphTestAv->Draw("P");
-     
+
      graphTruncTestAv->SetMarkerSize(1.);
      graphTruncTestAv->SetMarkerColor(kBlack);
      graphTruncTestAv->SetMarkerStyle(21);
@@ -176,15 +178,15 @@ void TMVA::regression_averagedevs(TString fin, Int_t Nevt, Bool_t useTMVAStyle )
      legHeader.SetTextSize(0.035);
      legHeader.SetTextAlign(12);
      //legHeader.DrawLatex(x0L, y0H+0.01, "Average Deviation = (#sum (_{ } f_{MVA} - f_{target})^{2} )^{1/2}");
-     legHeader.DrawLatex(xheader, yheader, "Average Deviation = (#sum (_{ } f_{MVA} - f_{target})^{2} )^{1/2}");     
+     legHeader.DrawLatex(xheader, yheader, "Average Deviation = (#sum (_{ } f_{MVA} - f_{target})^{2} )^{1/2}");
      // ============================================================
-     
+
      if (__PLOT_LOGO__) TMVAGlob::plot_logo();
      // ============================================================
-     
+
      c->Update();
      TString fname = "plots/" + hNameRef;
-     if (__SAVE_IMAGE__) TMVAGlob::imgconv( c, fname );   
+     if (__SAVE_IMAGE__) TMVAGlob::imgconv( c, fname );
    } // end loop itrgt
    return;
 }

@@ -5944,7 +5944,7 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
    ftal.x = (ftal.x >> 6);
    ftal.y = (ftal.y >> 6);
 
-   TTGlyph *glyph = TTF::GetGlyphs();
+   TTF::TTGlyph *glyph = TTF::GetGlyphs();
 
    for (int n = 0; n < TTF::GetNumGlyphs(); n++, glyph++) {
       if (FT_Glyph_To_Bitmap(&glyph->fImage, ft_render_mode_normal, 0, 1 )) continue;
@@ -5974,7 +5974,7 @@ void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
    TTF::PrepareString(text);
    TTF::LayoutGlyphs();
 
-   TTGlyph *glyph = TTF::GetGlyphs();
+   TTF::TTGlyph *glyph = TTF::GetGlyphs();
 
    // compute the size and position  that will contain the text
    // Int_t Xoff = 0; if (TTF::GetBox().xMin < 0) Xoff = -TTF::GetBox().xMin;

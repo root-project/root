@@ -227,6 +227,26 @@ Int_t TEventIter::LoadDir()
    return ret;
 }
 
+//______________________________________________________________________________
+Long64_t TEventIter::GetEntryNumber(Long64_t next)
+{
+   // Get the entry number, taking into account event/entry lists
+
+   Long64_t entry = next;
+   // Set entry number; if data iteration we may need to test the entry or event lists
+   if (TestBit(TEventIter::kData)) {
+      if (fEntryList){
+         entry = fEntryList->GetEntry(next);
+      } else if (fEventList) {
+         entry = fEventList->GetEntry(next);
+      }
+   }
+   // Pre-event processing
+   PreProcessEvent(entry);
+   // Done
+   return entry;
+}
+
 //------------------------------------------------------------------------
 
 
@@ -263,8 +283,7 @@ TEventIterUnit::TEventIterUnit(TDSet* dset, TSelector *sel, Long64_t num)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get loop range
 
-Int_t TEventIterUnit::GetNextPacket(Long64_t &fst, Long64_t &num,
-                                   TEntryList **, TEventList **)
+Int_t TEventIterUnit::GetNextPacket(Long64_t &fst, Long64_t &num)
 {
    if (gPerfStats) {
       Long64_t totBytesWritten = TFile::GetFileBytesWritten();
@@ -424,8 +443,7 @@ TEventIterObj::~TEventIterObj()
 ////////////////////////////////////////////////////////////////////////////////
 /// Get loop range
 
-Int_t TEventIterObj::GetNextPacket(Long64_t &first, Long64_t &num,
-                                  TEntryList **, TEventList **)
+Int_t TEventIterObj::GetNextPacket(Long64_t &first, Long64_t &num)
 {
    SafeDelete(fElem);
 
@@ -989,8 +1007,7 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objn
 ////////////////////////////////////////////////////////////////////////////////
 /// Get loop range
 
-Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num,
-                                   TEntryList **enl, TEventList **evl)
+Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num)
 {
    if (first > -1) fEntryListPos = first;
 
@@ -1132,10 +1149,8 @@ Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num,
    num = fElemNum;
    if (fEntryList) {
       first = fEntryListPos;
-      if (enl) *enl = fEntryList;
    } else if (fEventList){
       first = fEventListPos;
-      if (evl) *evl = fEventList;
    } else {
       first = fElemFirst;
    }

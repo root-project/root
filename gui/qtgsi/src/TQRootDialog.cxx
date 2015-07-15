@@ -39,6 +39,7 @@ TQRootDialog::TQRootDialog(QWidget *wparent, const char *wname, WFlags f,
                          TObject* obj, TMethod *method ) :
    QVBox(wparent,wname, f | WType_Modal | WStyle_Dialog   ),
    fLineEdit(0),
+   fCurCanvas(0),
    fParent(wparent)
 {
    fCurObj=obj;

@@ -98,6 +98,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fstream>
+#include <memory>
 #ifdef WIN32
 #include <io.h>
 #endif
@@ -1730,6 +1731,9 @@ Int_t PT_CheckSimple(TQueryResult *qr, Long64_t nevt, Int_t nhist)
          return -1;
       }
    }
+
+   // Clean up
+   delete hist;
 
    // Done
    PutPoint();
@@ -3622,8 +3626,8 @@ Int_t PT_AdminFunc(void *, RunTimes &tt)
       return -1;
    }
    // Reference checksum
-   TMD5 *testMacroMd5 = testMacro.Checksum();
-   if (!testMacroMd5) {
+   std::auto_ptr<TMD5> testMacroMd5(testMacro.Checksum());
+   if (!testMacroMd5.get()) {
       // MD5 sum not calculated
       printf("\n >>> Test failure: could not calculate the md5 sum of the test macro\n");
       return -1;
@@ -3691,8 +3695,8 @@ Int_t PT_AdminFunc(void *, RunTimes &tt)
       macroMore.GetListOfLines()->Remove(macroMore.GetListOfLines()->First());
       os = (TObjString *) macroMore.GetListOfLines()->First();
    }
-   TMD5 *testMoreMd5 = macroMore.Checksum();
-   if (!testMoreMd5) {
+   std::auto_ptr<TMD5> testMoreMd5(macroMore.Checksum());
+   if (!testMoreMd5.get()) {
       // MD5 sum not calculated
       printf("\n >>> Test failure: could not calculate the md5 sum of the 'more' result\n");
       return -1;
@@ -3736,10 +3740,6 @@ Int_t PT_AdminFunc(void *, RunTimes &tt)
       return -1;
    }
    PutPoint();
-
-   // Clean up sums
-   SafeDelete(testMoreMd5);
-   SafeDelete(testMacroMd5);
 
    // Fill times
    PT_GetLastTimes(tt);

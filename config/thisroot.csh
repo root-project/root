@@ -14,7 +14,8 @@ endif
 # $_ should be source .../thisroot.csh
 set ARGS=($_)
 
-set thisfile="`/usr/sbin/lsof +p $$ | grep -oE '/.*thisroot.csh'  `"
+set LSOF=`env PATH=/usr/sbin:${PATH} which lsof`
+set thisfile="`${LSOF} -w +p $$ | grep -oE '/.*thisroot.csh'  `"
 if ( "$thisfile" == "" ) then
 #   set thisfile=/does/not/exist
 endif

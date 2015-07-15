@@ -1177,6 +1177,7 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
       buf = ReadBufferRemote(u.GetUrl().c_str(), file, ofs, lout, grep);
    }
 
+   bool sent = 0;
    if (!buf) {
       if (lout > 0) {
          if (grep > 0) {
@@ -1185,17 +1186,13 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
                TRACEP(p, DBG, emsg);
             }
             response->Send();
-            SafeDelArray(pattern);
-            SafeFree(filen);
-            return 0;
+            sent = 1;
          } else {
             XPDFORM(emsg, "could not read buffer from %s %s",
                     (local) ? "local file " : "remote file ", file);
             TRACEP(p, XERR, emsg);
             response->Send(kXR_InvalidRequest, emsg.c_str());
-            SafeDelArray(pattern);
-            SafeFree(filen);
-            return 0;
+            sent = 1;
          }
       } else {
          // Just got an empty buffer
@@ -1208,7 +1205,8 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
    }
 
    // Send back to user
-   response->Send(buf, lout);
+   if (!sent)
+      response->Send(buf, lout);
 
    // Cleanup
    SafeFree(buf);

@@ -17,10 +17,14 @@
 
 ClassImp(TFrame)
 
-//______________________________________________________________________________
-//
-// a TFrame is a TWbox for drawing histogram frames.
-//
+
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TFrame
+\brief Define a Frame.
+
+A `TFrame` is a `TWbox` for drawing histogram frames.
+*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Frame default constructor.
@@ -28,6 +32,7 @@ ClassImp(TFrame)
 TFrame::TFrame(): TWbox()
 {
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Frame normal constructor.
@@ -37,6 +42,7 @@ TFrame::TFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
 {
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Frame copy constructor.
 
@@ -45,12 +51,14 @@ TFrame::TFrame(const TFrame &frame) : TWbox(frame)
    ((TFrame&)frame).Copy(*this);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Frame default destructor.
 
 TFrame::~TFrame()
 {
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this frame to frame.
@@ -60,6 +68,7 @@ void TFrame::Copy(TObject &frame) const
    TWbox::Copy(frame);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this frame with its current attributes.
 
@@ -67,6 +76,7 @@ void TFrame::Draw(Option_t *option)
 {
    AppendPad(option);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
@@ -121,6 +131,7 @@ void TFrame::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this wbox with its current attributes.
 
@@ -136,6 +147,7 @@ void TFrame::Paint(Option_t *option)
 
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Do not pop frame's, if allowed they would cover the picture they frame.
 
@@ -143,12 +155,14 @@ void TFrame::Pop()
 {
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
 void TFrame::SavePrimitive(std::ostream &, Option_t * /*= ""*/)
 {
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace current frame attributes by current style.

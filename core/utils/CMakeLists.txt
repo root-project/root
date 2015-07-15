@@ -41,6 +41,8 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
 
 add_dependencies(rootcling CLING LLVMRES)
 
+ROOT_EXECUTABLE(rlibmap src/rlibmap.cxx)
+
 if(WIN32)
   add_custom_command(TARGET rootcling POST_BUILD
                      COMMAND copy /y rootcling.exe rootcint.exe
@@ -53,7 +55,7 @@ else()
                      WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 endif()
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
-                         "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint;${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex")
+                         "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint;${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex;${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rlibmap")
 
 if(CMAKE_HOST_UNIX)
   install(CODE "execute_process(COMMAND ln -f rootcling rootcint WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
@@ -61,6 +63,7 @@ if(CMAKE_HOST_UNIX)
 else()
   install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
                     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
+                    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rlibmap
                     DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
 endif()
 
@@ -131,9 +134,9 @@ endforeach()
 # runtime and clang will hit disk, triggering a possible incompatibility
 # of that file in build-time versus run-time (different length etc).
 # Capture their build-time version here, and inject it into runtime.
-foreach(file wchar.h bits/stat.h)
+foreach(file wchar.h bits/stat.h bits/time.h)
   if(EXISTS /usr/include/${file})
-    list(APPEND copy_commands COMMAND cmake -E copy /usr/include/${file} ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include)
+    list(APPEND copy_commands COMMAND cmake -E copy /usr/include/${file} ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/${file})
   endif()
 endforeach()
 
@@ -167,7 +170,6 @@ endforeach()
 set(stamp_file ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LLVMRES.stamp)
 add_custom_command(OUTPUT ${stamp_file}
                    COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
-                   COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/bits
                    COMMAND cmake -E copy_directory
                                   ${CMAKE_BINARY_DIR}/interpreter/llvm/src/${CMAKE_CFG_INTDIR}/lib/clang/${LLVM_VERSION}/include
                                   ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
@@ -180,9 +182,6 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND cmake -E copy
                                   ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/unistd.h
                                   ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/unistd.h
-                   COMMAND cmake -E copy
-                                  ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/bits/time.h
-                                  ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/bits/time.h
                    ${copy_commands}
                    COMMAND cmake -E touch ${stamp_file}
                    DEPENDS ${files_to_copy}

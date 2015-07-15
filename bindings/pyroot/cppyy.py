@@ -74,12 +74,51 @@ if not _builtin_cppyy:
 try:    _backend.gInterpreter.EnableAutoLoading()
 except: pass
 
+### -----------------------------------------------------------------------------
+### -- metaclass helper from six ------------------------------------------------
+### -- https://bitbucket.org/gutworth/six/src/8a545f4e906f6f479a6eb8837f31d03731597687/six.py?at=default#cl-800
+#
+# Copyright (c) 2010-2015 Benjamin Peterson
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+def with_metaclass(meta, *bases):
+    """Create a base class with a metaclass."""
+    # This requires a bit of explanation: the basic idea is to make a dummy
+    # metaclass for one level of class instantiation that replaces itself with
+    # the actual metaclass.
+    class metaclass(meta):
+
+        def __new__(cls, name, this_bases, d):
+            return meta(name, bases, d)
+    return type.__new__(metaclass, 'temporary_class', (), {})
+
+### -----------------------------------------------------------------------------
 
 ### template support ------------------------------------------------------------
 if not _builtin_cppyy:
    class Template:
       def __init__( self, name ):
          self.__name__ = name
+
+      def __repr__(self):
+         return "<cppyy.Template '%s' object at %s>" % (self.__name__, hex(id(self)))
 
       def __call__( self, *args ):
          newargs = [ self.__name__[ 0 <= self.__name__.find( 'std::' ) and 5 or 0:] ]
@@ -132,12 +171,8 @@ if not _builtin_cppyy:
          setattr( cls, name, klass )
          return klass
 
-   class _global_cpp:
-      __metaclass__ = _ns_meta
-
-      class std( object ):
-         __metaclass__ = _stdmeta
-
+   class _global_cpp( with_metaclass( _ns_meta ) ):
+      class std( with_metaclass( _stdmeta, object ) ):
          stlclasses = ( 'complex', 'pair', \
             'deque', 'list', 'queue', 'stack', 'vector', 'map', 'multimap', 'set', 'multiset' )
 
@@ -197,3 +232,9 @@ if _builtin_cppyy:
 #--- Compatibility ------------------------------------------------------
 if not _builtin_cppyy:
    bind_object = _backend.BindObject
+
+#--- Pythonization factories --------------------------------------------
+import _pythonization
+_pythonization._set_backend( _backend )
+from _pythonization import *
+del _pythonization

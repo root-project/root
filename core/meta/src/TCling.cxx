@@ -213,33 +213,59 @@ using namespace clang;
 using namespace ROOT;
 
 namespace {
-   static const std::string gInterpreterClassDef = "#undef ClassDef\n"
-                "#define ClassDef(name, id) \\\n"
-                "_ClassDefInterp_(name,id,virtual,) \\\n"
-                "static int DeclFileLine() { return __LINE__; } \n"
-                "#undef ClassDefNV\n"
-                "#define ClassDefNV(name, id) \\\n"
-                "_ClassDefInterp_(name,id,,) \\\n"
-                "static int DeclFileLine() { return __LINE__; }\n"
-                "#undef ClassDefOverride\n"
-                "#define ClassDefOverride(name, id) \\\n"
-                "_ClassDefInterp_(name,id,,override) \\\n"
-                "static int DeclFileLine() { return __LINE__; }\n";
-   static const std::string gNonInterpreterClassDef = "#define __ROOTCLING__ 1\n"
-               "#undef ClassDef\n"
-               "#define ClassDef(name,id) \\\n"
-               "_ClassDef_(name,id,virtual,) \\\n"
-               "static int DeclFileLine() { return __LINE__; }\n"
-               "#undef ClassDefNV\n"
-               "#define ClassDefNV(name, id)\\\n"
-               "_ClassDef_(name,id,,)\\\n"
-               "static int DeclFileLine() { return __LINE__; }\n"
-               "#undef ClassDefOverride\n"
-               "#define ClassDefOverride(name, id)\\\n"
-               "_ClassDef_(name,id,,override)\\\n"
-               "static int DeclFileLine() { return __LINE__; }\n";
-}
+  static const std::string gInterpreterClassDef = R"ICF(
+#undef ClassDef
+#define ClassDef(name, id) \
+_ClassDefInterp_(name,id,virtual,) \
+static int DeclFileLine() { return __LINE__; }
+#undef ClassDefNV
+#define ClassDefNV(name, id) \
+_ClassDefInterp_(name,id,,) \
+static int DeclFileLine() { return __LINE__; }
+#undef ClassDefOverride
+#define ClassDefOverride(name, id) \
+_ClassDefInterp_(name,id,,override) \
+static int DeclFileLine() { return __LINE__; }
+)ICF";
 
+  static const std::string gNonInterpreterClassDef = R"ICF(
+#define __ROOTCLING__ 1
+#undef ClassDef
+#define ClassDef(name,id) \
+_ClassDef_(name,id,virtual,) \
+static int DeclFileLine() { return __LINE__; }
+#undef ClassDefNV
+#define ClassDefNV(name, id)\
+_ClassDef_(name,id,,)\
+static int DeclFileLine() { return __LINE__; }
+#undef ClassDefOverride
+#define ClassDefOverride(name, id)\
+_ClassDef_(name,id,,override)\
+static int DeclFileLine() { return __LINE__; }
+)ICF";
+
+// The macros below use ::Error, so let's ensure it is included
+  static const std::string gClassDefInterpMacro = R"ICF(
+#ifndef ROOT_TError
+#include "TError.h"
+#endif
+
+#define _ClassDefInterp_(name,id,virtual_keyword, overrd) \
+private: \
+public: \
+   static TClass *Class() { static TClass* sIsA = 0; if (!sIsA) sIsA = TClass::GetClass(#name); return sIsA; } \
+   static const char *Class_Name() { return #name; } \
+   static Version_t Class_Version() { return id; } \
+   static TClass *Dictionary() { return 0; } \
+   virtual_keyword TClass *IsA() const overrd { return name::Class(); } \
+   virtual_keyword void ShowMembers(TMemberInspector&insp) const overrd { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
+   virtual_keyword void Streamer(TBuffer&) overrd { ::Error("Streamer", "Cannot stream interpreted class."); } \
+   void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
+   static const char *DeclFileName() { return __FILE__; } \
+   static int ImplFileLine() { return 0; } \
+   static const char *ImplFileName() { return __FILE__; }
+)ICF";
+}
 R__EXTERN int optind;
 
 
@@ -1094,7 +1120,8 @@ TCling::TCling(const char *name, const char *title)
                             "using std::string;");
    } else {
       fInterpreter->declare("#include \"Rtypes.h\"\n"
-                            + gInterpreterClassDef
+                            + gClassDefInterpMacro + "\n"
+                            + gInterpreterClassDef + "\n"
                             + "#undef ClassImp\n"
                             "#define ClassImp(X)\n"
                             "#include <string>\n"

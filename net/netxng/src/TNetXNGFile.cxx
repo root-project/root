@@ -395,6 +395,9 @@ Bool_t TNetXNGFile::ReadBuffer(char *buffer, Long64_t position, Int_t length)
       return kFALSE;
    }
 
+   Double_t start = 0;
+   if (gPerfStats) start = TTimeStamp();
+
    // Read the data
    uint32_t bytesRead = 0;
    XRootDStatus st = fFile->Read(fOffset, length, buffer, bytesRead);
@@ -412,6 +415,9 @@ Bool_t TNetXNGFile::ReadBuffer(char *buffer, Long64_t position, Int_t length)
    fgBytesRead += bytesRead;
    fReadCalls  ++;
    fgReadCalls ++;
+
+   if (gPerfStats)
+      gPerfStats->FileReadEvent(this, (Int_t)bytesRead, start);
 
    if (gMonitoringWriter)
       gMonitoringWriter->SendFileReadProgress(this);
@@ -547,8 +553,7 @@ Bool_t TNetXNGFile::ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
 
    if (gPerfStats) {
       fOffset = position[0];
-      gPerfStats->FileReadEvent(this, position[nbuffs - 1] + length[nbuffs - 1]
-                                      - position[0], start);
+      gPerfStats->FileReadEvent(this, totalBytes, start);
    }
 
    if (gMonitoringWriter)

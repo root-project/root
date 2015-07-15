@@ -231,7 +231,8 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-geom-na49view
                        tutorial-tree-ntuple1
                        tutorial-io-hadd
-                       tutorial-io-loopdir)
+                       tutorial-io-loopdir
+                       tutorial-io-copyFiles)
 
 #--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo

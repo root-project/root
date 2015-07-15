@@ -806,6 +806,7 @@ Int_t TApplicationRemote::SendFile(const char *file, Int_t opt, const char *rfil
    snprintf(buf, kMAXBUF, "%s %d %lld", fnam, bin, size);
    if (Broadcast(buf, kMESS_ANY, kRRT_File) == -1) {
       SafeDelete(fSocket);
+      close(fd);
       return -1;
    }
 

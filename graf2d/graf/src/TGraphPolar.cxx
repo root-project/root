@@ -9,16 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
 
-/* Begin_Html
-<center><h2>TGraphPolar : to draw a polar graph</h2></center>
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TGraphPolar
+\brief To draw a polar graph.
+
 TGraphPolar creates a polar graph (including error bars). A TGraphPolar is
 a TGraphErrors represented in polar coordinates.
 It uses the class TGraphPolargram to draw the polar axis.
-<p>
+
 Example:
-End_Html
+
 Begin_Macro(source)
 {
    TCanvas * CPol = new TCanvas("CPol","TGraphPolar Example",500,500);
@@ -74,11 +75,11 @@ TGraphPolar::TGraphPolar() : TGraphErrors(),
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphPolar constructor.
 ///
-/// n      : number of points.
-/// theta  : angular values.
-/// r      : radial values.
-/// etheta : errors on angular values.
-/// er     : errors on radial values.
+/// \param[in] n         number of points.
+/// \param[in] theta     angular values.
+/// \param[in] r         radial values.
+/// \param[in] etheta    errors on angular values.
+/// \param[in] er        errors on radial values.
 
 TGraphPolar::TGraphPolar(Int_t n, const Double_t* theta, const Double_t* r,
                                   const Double_t *etheta, const Double_t* er)

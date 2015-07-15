@@ -835,7 +835,7 @@ VOID CALLBACK MyTimerProc(HWND hwnd, UINT message, UINT idTimer, DWORD dwTime)
 {
    gSystem->ProcessEvents();
    //gVirtualX->UpdateWindow(1); // cause problems with OpenGL in pad...
-} 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Message processing function for the GUI thread.
@@ -996,7 +996,7 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    fore.red = fore.green = fore.blue = 0;
    back.red = back.green = back.blue = 0;
    color.red = color.green = color.blue = 0;
-      
+
    fScreenNumber = 0;           //DefaultScreen(fDisplay);
    fVisual = gdk_visual_get_best();
    fColormap = gdk_colormap_get_system();
@@ -1432,7 +1432,7 @@ Bool_t TGWin32::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 
 void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
 {
-   TTGlyph* glyph = TTF::GetGlyphs();
+   TTF::TTGlyph* glyph = TTF::GetGlyphs();
    GdkGCValues gcvals;
 
    // compute the size and position of the XImage that will contain the text
@@ -2241,7 +2241,7 @@ Int_t TGWin32::InitWindow(ULong_t win)
       ::SetClassLong(window, GCL_HCURSOR,
                     (LONG)GDK_CURSOR_XID(fCursors[kPointer]));
    }
-   
+
    // Initialise the window structure
 
    gCws->drawing = gCws->window;
@@ -3663,15 +3663,15 @@ void TGWin32::UpdateMarkerStyle()
       shape[1].x =  im;  shape[1].y = -im;
       shape[2].x = -im;  shape[2].y = -im;
       shape[3].x =   0;  shape[3].y = im;
-      SetMarkerType(2,4,shape);   
+      SetMarkerType(2,4,shape);
    } else if (fMarkerStyle == 33) {
       // full losange
       Int_t imx = Int_t(2.66*fMarkerSize + 0.5);
-      shape[0].x =-imx;  shape[0].y = 0;  
+      shape[0].x =-imx;  shape[0].y = 0;
       shape[1].x =   0;  shape[1].y = -im;
-      shape[2].x = imx;  shape[2].y = 0;  
-      shape[3].x =   0;  shape[3].y = im; 
-      shape[4].x =-imx;  shape[4].y = 0;  
+      shape[2].x = imx;  shape[2].y = 0;
+      shape[3].x =   0;  shape[3].y = im;
+      shape[4].x =-imx;  shape[4].y = 0;
       SetMarkerType(3,5,shape);
    } else if (fMarkerStyle == 34) {
       // full cross
@@ -4418,7 +4418,7 @@ void TGWin32::DestroyWindow(Window_t id)
 {
    if (!id) return;
 
-   // we need to unmap the window before to destroy it, in order to properly 
+   // we need to unmap the window before to destroy it, in order to properly
    // receive kUnmapNotify needed by gClient->WaitForUnmap()...
    gdk_window_hide((GdkWindow *) id);
    gdk_window_destroy((GdkDrawable *) id, kTRUE);
@@ -4646,7 +4646,7 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
       }
    }
    if (!fUseSysPointers) {
-      ::SetClassLong((HWND)GDK_DRAWABLE_XID(newWin), GCL_HCURSOR, 
+      ::SetClassLong((HWND)GDK_DRAWABLE_XID(newWin), GCL_HCURSOR,
                      (LONG)GDK_CURSOR_XID(fCursors[kPointer]));
    }
    return (Window_t) newWin;
@@ -5140,7 +5140,7 @@ FontStruct_t TGWin32::LoadQueryFont(const char *font_name)
       sprintf(slant,"r");
       if (strstr(font_name, "italic"))
          sprintf(slant,"i");
-      sprintf(fontname, "-*-%s-%s-%s-*-*-%d-*-*-*-*-*-iso8859-1", 
+      sprintf(fontname, "-*-%s-%s-%s-*-*-%d-*-*-*-*-*-iso8859-1",
               family, weight, slant, pixel);
    }
    else
@@ -7408,7 +7408,7 @@ void TGWin32::ConvertSelection(Window_t win, Atom_t &sel, Atom_t &target,
 {
    HGLOBAL hdata;
 
-   static UINT gdk_selection_notify_msg = 
+   static UINT gdk_selection_notify_msg =
       RegisterWindowMessage("gdk-selection-notify");
    HWND hWnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)win);
    if (!OpenClipboard((HWND)GDK_DRAWABLE_XID((GdkWindow *)win))) {
@@ -7429,7 +7429,7 @@ void TGWin32::ConvertSelection(Window_t win, Atom_t &sel, Atom_t &target,
 
 Bool_t TGWin32::SetSelectionOwner(Window_t owner, Atom_t &sel)
 {
-   static UINT gdk_selection_request_msg = 
+   static UINT gdk_selection_request_msg =
       RegisterWindowMessage("gdk-selection-request");
    HWND hWnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)owner);
    OpenClipboard(hWnd);
@@ -7477,11 +7477,11 @@ void TGWin32::SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Recursively search in the children of Window for a Window which is at 
+/// Recursively search in the children of Window for a Window which is at
 /// location x, y and is DND aware, with a maximum depth of maxd.
 /// Possibility to exclude dragwin and input.
 
-Window_t TGWin32::FindRWindow(Window_t root, Window_t dragwin, Window_t input, 
+Window_t TGWin32::FindRWindow(Window_t root, Window_t dragwin, Window_t input,
                               int x, int y, int maxd)
 {
    POINT point;
@@ -7554,7 +7554,7 @@ Bool_t TGWin32::IsDNDAware(Window_t win, Atom_t *typelist)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add XdndAware property and the list of drag and drop types to the 
+/// Add XdndAware property and the list of drag and drop types to the
 /// Window win.
 
 void TGWin32::SetDNDAware(Window_t id, Atom_t *typelist)
@@ -7562,9 +7562,9 @@ void TGWin32::SetDNDAware(Window_t id, Atom_t *typelist)
    int n;
    if (!id) return;
 
-   DWORD dwStyle = GetWindowLong((HWND)GDK_DRAWABLE_XID((GdkWindow *)id), 
+   DWORD dwStyle = GetWindowLong((HWND)GDK_DRAWABLE_XID((GdkWindow *)id),
                                  GWL_EXSTYLE);
-   SetWindowLong((HWND)GDK_DRAWABLE_XID((GdkWindow *)id), GWL_EXSTYLE, 
+   SetWindowLong((HWND)GDK_DRAWABLE_XID((GdkWindow *)id), GWL_EXSTYLE,
                  dwStyle | WS_EX_ACCEPTFILES);
    Atom_t dndaware = InternAtom("XdndAware", kFALSE);
    SetProp((HWND)GDK_DRAWABLE_XID((GdkWindow *)id),

@@ -2438,7 +2438,7 @@ int CreateCapabilitiesFile(const std::string &capaFileName,
    std::list<std::string> new_lines;
 
    std::string keyNameWithStd;
-   for (auto const keyName : keysNames){
+   for (auto const & keyName : keysNames){
       keyNameWithStd = TClassEdit::InsertStd(keyName.c_str());
       new_lines.push_back(" \"" + capaPre + "/" + keyNameWithStd + "\",\n");
       if (keyName!=keyNameWithStd) {
@@ -2707,11 +2707,14 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
             if (className.find("<") != std::string::npos) continue;
             if (headersClassesMap.count(className)) {
                auto &headers = headersClassesMap.at(className);
-               auto &header = headers.front();
-               if (treatedHeaders.insert(header).second &&
-                     headersToIgnore.find(header) == headersToIgnore.end() &&
-                     IsHeaderName(header))
-                  rootmapFile << "header " << header << std::endl;
+               if (!headers.empty()){
+                  auto &header = headers.front();
+                  if (treatedHeaders.insert(header).second &&
+                        headersToIgnore.find(header) == headersToIgnore.end() &&
+                        IsHeaderName(header)){
+                        rootmapFile << "header " << header << std::endl;
+                  }
+               }
             }
          }
       }
@@ -3479,6 +3482,58 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl &rcd,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check if the class good for being an autoparse key.
+/// We exclude from this set stl containers of pods/strings
+/// TODO: we may use also __gnu_cxx::
+bool IsGoodForAutoParseMap(const clang::RecordDecl& rcd){
+
+   // If it's not an std class, we just pick it up.
+   if (auto dclCtxt= rcd.getDeclContext()){
+      if (! dclCtxt->isStdNamespace()){
+         return true;
+      }
+   } else {
+      return true;
+   }
+
+   // Now, we have a stl class. We now check if it's a template. If not, we
+   // do not take it: bitset, string and so on.
+   auto clAsTmplSpecDecl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&rcd);
+   if (!clAsTmplSpecDecl) return false;
+
+   // Now we have a template in the stl. Let's see what the arguments are.
+   // If they are not a POD or something which is good for autoparsing, we keep
+   // them.
+   auto& astCtxt = rcd.getASTContext();
+   auto& templInstArgs = clAsTmplSpecDecl->getTemplateInstantiationArgs();
+   for (auto&& arg : templInstArgs.asArray()){
+
+      auto argKind = arg.getKind();
+      if (argKind != clang::TemplateArgument::Type){
+         if (argKind == clang::TemplateArgument::Integral) continue;
+         else return true;
+      }
+
+      auto argQualType = arg.getAsType();
+      auto isPOD = argQualType.isPODType(astCtxt);
+      // This is a POD, we can inspect the next arg
+      if (isPOD) continue;
+
+      auto argType = argQualType.getTypePtr();
+      if (auto recType = llvm::dyn_cast<clang::RecordType>(argType)){
+         auto isArgGoodForAutoParseMap = IsGoodForAutoParseMap(*recType->getDecl());
+         // The arg is a class but good for the map
+         if (isArgGoodForAutoParseMap) continue;
+      } else {
+         // The class is not a POD nor a class we can skip
+         return true;
+      }
+   }
+
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void ExtractHeadersForDecls(const RScanner::ClassColl_t &annotatedRcds,
                             const RScanner::TypedefColl_t tDefDecls,
@@ -3507,8 +3562,12 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t &annotatedRcds,
          });
          GetMostExternalEnclosingClassName(*cxxRcd, autoParseKey, interp);
          if (autoParseKey.empty()) autoParseKey = annotatedRcd.GetNormalizedName();
-         headersDeclsMap[autoParseKey] = headers;
-         headersDeclsMap[annotatedRcd.GetRequestedName()] = headers;
+         if (IsGoodForAutoParseMap(*cxxRcd)){
+            headersDeclsMap[autoParseKey] = headers;
+            headersDeclsMap[annotatedRcd.GetRequestedName()] = headers;
+         } else {
+            ROOT::TMetaUtils::Info(0, "Class %s is not included in the set of autoparse keys.\n", autoParseKey.c_str());
+         }
 
          // Propagate to the classes map only if this is not a template.
          // The header is then used as autoload key and we want to avoid duplicates.
@@ -5775,12 +5834,18 @@ int GenReflex(int argc, char **argv)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __ICC
+#pragma warning disable 69
+#endif
+
 int main(int argc, char **argv)
 {
    // Force the emission of the symbol - the compiler cannot know that argv
    // is always set.
    if (!argv) {
-      return (int)(long)&usedToIdentifyRootClingByDlSym;
+
+      auto dummyVal =  (int)(long)&usedToIdentifyRootClingByDlSym;
+      return dummyVal;
    }
 
    const std::string exePath(GetExePath());

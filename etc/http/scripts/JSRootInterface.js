@@ -56,7 +56,11 @@ function ReadFile() {
    if (filename.length == 0) return;
 
    if (hpainter==null) alert("Hierarchy painter not initialized");
-                  else hpainter.OpenRootFile(filename);
+   if ((filename.lastIndexOf(".json") == filename.length-5) ||
+       (filename.lastIndexOf(".JSON") == filename.length-5))
+         hpainter.OpenJsonFile(filename);
+      else
+         hpainter.OpenRootFile(filename);
 }
 
 

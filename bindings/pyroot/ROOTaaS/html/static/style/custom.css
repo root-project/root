@@ -1,0 +1,59 @@
+/* ROOTaaS CSS */
+
+div#header-container {
+height: 64px;
+}
+
+div#ipython_notebook img {
+display:block;
+background: url(root-banner_99x33.jpg) no-repeat;
+width: 99px;
+height: 33px;
+padding-left: 99px;
+-moz-box-sizing: border-box;
+box-sizing: border-box;
+}
+
+div#ipython_notebook::after {
+content:"Notebook Beta";
+color: red;
+font-weight: bold;
+font-family: Arial;
+padding-top: 5px;
+font-size: 18px;
+}
+
+span#login_widget {
+padding-left: 2px;
+}
+
+span#kernel_logo_widget img {
+display: block;
+background: url(root-logo-darkblue_33x33.png) no-repeat;
+width: 33px;
+height: 33px;
+padding-left: 33px;
+-moz-box-sizing: border-box;
+box-sizing: border-box;
+}
+
+div#root_banner {
+padding-top: 15px;
+padding-bottom: 10px;
+}
+
+div#root_banner img {
+display: block;
+margin: 0 auto;
+}
+
+div#notebook_beta_message {
+padding-bottom: 20px;
+}
+
+div#notebook_beta_message h2 {
+font-family: Arial;
+font-weight: bold;
+color: red;
+text-align: center;
+}
