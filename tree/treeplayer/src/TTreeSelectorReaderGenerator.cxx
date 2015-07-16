@@ -247,17 +247,18 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                                                                   branchName.Data());
    }
 
-   UInt_t TTreeSelectorReaderGenerator::AnalyzeBranches(UInt_t level, TBranchDescriptor *desc, TBranchElement *branch, TVirtualStreamerInfo *info) {
+   UInt_t TTreeSelectorReaderGenerator::AnalyzeBranches(TBranchDescriptor *desc, TBranchElement *branch, TVirtualStreamerInfo *info)
+   {
       if (info==0) info = branch->GetInfo();
 
-      TIter branches( branch->GetListOfBranches() );
+      TIter branches(branch->GetListOfBranches());
 
-      return AnalyzeBranches( level, desc, branches, info );
+      return AnalyzeBranches(desc, branches, info);
    }
 
-   UInt_t TTreeSelectorReaderGenerator::AnalyzeBranches(UInt_t level, TBranchDescriptor *desc, TIter &branches, TVirtualStreamerInfo *info) {
+   UInt_t TTreeSelectorReaderGenerator::AnalyzeBranches(TBranchDescriptor *desc, TIter &branches, TVirtualStreamerInfo *info)
+   {
       UInt_t lookedAt = 0;
-      ELocation container = kOut;
       TString proxyTypeName;
       ELocation outer_isclones = kOut;
       TString containerName;
@@ -269,20 +270,16 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          TIter peek = branches;
          TBranchElement *branch = (TBranchElement*)peek();
          if (desc && desc->IsClones()) {
-            container = kClones;
             outer_isclones = kClones;
             containerName = "TClonesArray";
          } else if (desc && desc->IsSTL()) {
-            container = kSTL;
             outer_isclones = kSTL;
             containerName = desc->fContainerName;
          } else if (!desc && branch && branch->GetBranchCount() == branch->GetMother()) {
             if ( ((TBranchElement*)(branch->GetMother()))->GetType()==3)  {
-               container = kClones;
                outer_isclones = kClones;
                containerName = "TClonesArray";
             } else {
-               container = kSTL;
                outer_isclones = kSTL;
                containerName = branch->GetMother()->GetClassName();
             }
@@ -492,8 +489,8 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                         }
                         TString local_prefix = desc ? desc->fSubBranchPrefix : TString(parent->GetName());
                         bdesc = new TBranchDescriptor(cl->GetName(), objInfo, local_prefix.Data(),
-                                                      isclones, branch->GetSplitLevel(), containerName);
-                        lookedAt += AnalyzeBranches( level+1, bdesc, branch, objInfo);
+                                                      isclones, containerName);
+                        lookedAt += AnalyzeBranches(bdesc, branch, objInfo);
 
                      }
                   } else {
@@ -511,9 +508,9 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                      }
                      cl = objInfo->GetClass();
                      bdesc = new TBranchDescriptor(cl->GetName(), objInfo, local_prefix.Data(),
-                                                    isclones, branch->GetSplitLevel(), containerName);
+                                                    isclones, containerName);
                      usedBranch = kFALSE;
-                     lookedAt += AnalyzeBranches(level, bdesc, branches, objInfo);
+                     lookedAt += AnalyzeBranches(bdesc, branches, objInfo);
                   }
                } else {
                   printf("\tNot IsBase\n");
@@ -532,8 +529,8 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                            objInfo = GetStreamerInfo(branch, branch->GetListOfBranches(), cl);
                         }
                         bdesc = new TBranchDescriptor(cl->GetName(), objInfo, branch->GetName(),
-                                                      isclones, branch->GetSplitLevel(), containerName);
-                        lookedAt += AnalyzeBranches( level+1, bdesc, branch, objInfo);
+                                                      isclones, containerName);
+                        lookedAt += AnalyzeBranches(bdesc, branch, objInfo);
                      }
                   } else {
                      // We do not have a proper node for the base class,
@@ -553,10 +550,10 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                         objInfo = GetStreamerInfo(branch, branches, cl);
                      }
                      bdesc = new TBranchDescriptor(cl->GetName(), objInfo, local_prefix.Data(),
-                                                   isclones, branch->GetSplitLevel(), containerName);
+                                                   isclones, containerName);
                      usedBranch = kFALSE;
                      skipped = kTRUE;
-                     lookedAt += AnalyzeBranches( level, bdesc, branches, objInfo );
+                     lookedAt += AnalyzeBranches(bdesc, branches, objInfo);
                   }
                }
 
@@ -566,7 +563,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                Error("AnalyzeBranch", "Unsupported type for %s (%d).", branch->GetName(), element->GetType());
          }
 
-         if (!isBase) {
+         if (!isBase && !skipped) {
             TString dataMemberName = element->GetName();
             if (desc) {
                dataMemberName.Form("%s_%s", desc->fSubBranchPrefix.Data(), element->GetName());
@@ -583,7 +580,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       return lookedAt;
    }
 
-   UInt_t TTreeSelectorReaderGenerator::AnalyzeOldBranch(TBranch *branch, UInt_t level)
+   UInt_t TTreeSelectorReaderGenerator::AnalyzeOldBranch(TBranch *branch)
    {
       // Analyze branch and add the variables found.
       // The number of analyzed sub-branches is returned.
@@ -779,11 +776,9 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   cl = cl->GetCollectionProxy()->GetValueClass();
                } else { // RAW type (or missing class) inside container
                   // TODO: CheckForMissingClass?
-                  // TODO: AddHeader(cl); (if using TRV)
                   AddReader(TTreeReaderDescriptor::ReaderType::kArray,
                             TDataType::GetDataType(cl->GetCollectionProxy()->GetType())->GetName(),
-                            branch->GetName(),
-                            branch->GetName());
+                            branch->GetName(), branch->GetName());
                   continue; // Nothing else to with this branch in these cases
                }
             }
@@ -794,7 +789,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   TVirtualStreamerInfo *beinfo = (be && isclones == kOut)
                      ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
                   desc = new TBranchDescriptor(cl->GetName(), beinfo, branchName,
-                     isclones, branch->GetSplitLevel(),containerName);
+                     isclones, containerName);
                   info = beinfo;
                } else {
                   // Generate a value or an array for non-split classes
@@ -808,18 +803,16 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          }
          
          if (branch->GetListOfBranches()->GetEntries() == 0) { // Branch is non-splitted
-            
             if (cl) { // Non-split object
                // TODO: implement this
                printf("TODO: non-split object\n");
             } else { // Top-level RAW type
-               AnalyzeOldBranch(branch, 0);
+               AnalyzeOldBranch(branch);
             }
-         
          } else { // Branch is splitted
             TIter subnext( branch->GetListOfBranches() );
             if (desc) {
-               AnalyzeBranches(1, desc, dynamic_cast<TBranchElement*>(branch), info);
+               AnalyzeBranches(desc, dynamic_cast<TBranchElement*>(branch), info);
                AddReader(isclones == kOut ?
                               TTreeReaderDescriptor::ReaderType::kValue
                             : TTreeReaderDescriptor::ReaderType::kArray,
@@ -827,8 +820,6 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             }
          }
       }
-      
-      
    }
    
    void TTreeSelectorReaderGenerator::WriteSelector()
