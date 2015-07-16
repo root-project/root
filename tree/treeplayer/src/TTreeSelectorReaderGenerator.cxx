@@ -291,7 +291,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             containerName = branch->GetMother()->GetSubBranch(branch)->GetClassName();
          }
          if (desc) {
-            subBranchPrefix = desc->fSubBranchPrefix;
+            subBranchPrefix = desc->fBranchName;
          } else {
             TBranchElement *mom = (TBranchElement*)branch->GetMother();
             subBranchPrefix = mom->GetName();
@@ -487,9 +487,9 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                         if (pos != -1) {
                            branchname.Remove(pos);
                         }
-                        TString local_prefix = desc ? desc->fSubBranchPrefix : TString(parent->GetName());
+                        TString local_prefix = desc ? desc->fBranchName : TString(parent->GetName());
                         bdesc = new TBranchDescriptor(cl->GetName(), objInfo, local_prefix.Data(),
-                                                      isclones, containerName);
+                                                      isclones, containerName, desc ? desc->fFullBranchName.Data() : 0);
                         lookedAt += AnalyzeBranches(bdesc, branch, objInfo);
 
                      }
@@ -501,14 +501,14 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                      if (pos != -1) {
                         branchname.Remove(pos);
                      }
-                     TString local_prefix = desc ? desc->fSubBranchPrefix : TString(parent->GetName());
+                     TString local_prefix = desc ? desc->fBranchName : TString(parent->GetName());
                      objInfo = GetBaseClass(element);
                      if (objInfo == 0) {
                         continue; // There is no data in this base class
                      }
                      cl = objInfo->GetClass();
                      bdesc = new TBranchDescriptor(cl->GetName(), objInfo, local_prefix.Data(),
-                                                    isclones, containerName);
+                                                    isclones, containerName, desc ? desc->fFullBranchName.Data() : 0);
                      usedBranch = kFALSE;
                      lookedAt += AnalyzeBranches(bdesc, branches, objInfo);
                   }
@@ -529,14 +529,14 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                            objInfo = GetStreamerInfo(branch, branch->GetListOfBranches(), cl);
                         }
                         bdesc = new TBranchDescriptor(cl->GetName(), objInfo, branch->GetName(),
-                                                      isclones, containerName);
+                                                      isclones, containerName, desc ? desc->fFullBranchName.Data() : 0);
                         lookedAt += AnalyzeBranches(bdesc, branch, objInfo);
                      }
                   } else {
                      // We do not have a proper node for the base class,
                      // we need to loop over the next branches
                      printf("\t\tbranchEndname != element->GetName()\n");
-                     TString local_prefix = desc ? desc->fSubBranchPrefix : TString(parent->GetName());
+                     TString local_prefix = desc ? desc->fBranchName : TString(parent->GetName());
                      if (local_prefix.Length()) local_prefix += ".";
                      local_prefix += element->GetName();
                      objInfo = branch->GetInfo();
@@ -550,7 +550,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                         objInfo = GetStreamerInfo(branch, branches, cl);
                      }
                      bdesc = new TBranchDescriptor(cl->GetName(), objInfo, local_prefix.Data(),
-                                                   isclones, containerName);
+                                                   isclones, containerName, desc ? desc->fFullBranchName.Data() : 0);
                      usedBranch = kFALSE;
                      skipped = kTRUE;
                      lookedAt += AnalyzeBranches(bdesc, branches, objInfo);
@@ -566,7 +566,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          if (!isBase && !skipped) {
             TString dataMemberName = element->GetName();
             if (desc) {
-               dataMemberName.Form("%s_%s", desc->fSubBranchPrefix.Data(), element->GetName());
+               dataMemberName.Form("%s_%s", desc->fFullBranchName.Data(), element->GetName());
             }
             AddReader(readerType, dataType, dataMemberName, branch->GetName());
          }

@@ -62,18 +62,23 @@ namespace ROOT {
       ELocation             fIsClones;
       TString               fContainerName;
       TString               fBranchName;
-      TString               fSubBranchPrefix;
+      TString               fFullBranchName;
       TVirtualStreamerInfo *fInfo;
 
       TBranchDescriptor(const char *type, TVirtualStreamerInfo *info,
                         const char *branchname, ELocation isclones,
-                        const TString &containerName) :
+                        const TString &containerName, const char *prefix = 0) :
          TNamed(type,type),
          fIsClones(isclones),
          fContainerName(containerName),
          fBranchName(branchname),
-         fSubBranchPrefix(branchname),
-         fInfo(info) { }
+         fFullBranchName(branchname),
+         fInfo(info)
+         {
+            if (prefix) {
+               fFullBranchName.Form("%s_%s", prefix, branchname);
+            }
+         }
 
       Bool_t IsClones() const { return fIsClones==kClones || fIsClones==kInsideClones; }
 
