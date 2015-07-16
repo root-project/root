@@ -3743,7 +3743,7 @@ int ShouldIgnoreClingArgument(const std::string& argument)
 
 bool IsCorrectClingArgument(const std::string& argument)
 {
-   if (ROOT::TMetaUtils::BeginsWith(argument,"--") and !ROOT::TMetaUtils::BeginsWith(argument,"--param")) return false;
+   if (ROOT::TMetaUtils::BeginsWith(argument,"--") && !ROOT::TMetaUtils::BeginsWith(argument,"--param")) return false;
    return true;
 }
 
