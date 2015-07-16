@@ -3737,8 +3737,8 @@ int ShouldIgnoreClingArgument(const std::string& argument)
 bool IsCorrectClingArgument(const std::string& argument)
 {
    // Check if the argument is a sane cling argument. Performing the following checks:
-   // 1) It does not start with "--".
-   if (ROOT::TMetaUtils::BeginsWith(argument,"--")) return false;
+   // 1) It does not start with "--" and not with --param option.
+   if (ROOT::TMetaUtils::BeginsWith(argument,"--") && !ROOT::TMetaUtils::BeginsWith(argument,"--param")) return false;
    return true;
 }
 
