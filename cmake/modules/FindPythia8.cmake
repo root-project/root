@@ -13,7 +13,7 @@ set(_pythia8dirs ${PYTHIA8_DIR} $ENV{PYTHIA8_DIR} /usr /opt/pythia8)
 find_path(PYTHIA8_INCLUDE_DIR
           NAMES Pythia.h Pythia8/Pythia.h
           HINTS ${_pythia8dirs}
-          PATH_SUFFIXES include
+          PATH_SUFFIXES include include/Pythia8 include/pythia8
           DOC "Specify the directory containing Pythia.h.")
 
 find_library(PYTHIA8_LIBRARY

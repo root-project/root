@@ -4342,7 +4342,7 @@ if test ! "x$enable_pythia8" = "xno" ; then
     # Check for PYTHIA8 include and library
     check_header "Pythia8/Pythia.h" "$pythia8incdir" \
         $PYTHIA8 ${PYTHIA8:+$PYTHIA8/include} \
-        /opt/pythia8/include /usr/local/include /usr/include /usr/include/pythia
+        /opt/pythia8/include /usr/local/include /usr/include /usr/include/pythia /usr/include/Pythia8 /usr/include/pythia8
     pythia8incdir=$found_dir
 
     check_library "libpythia8" "$enable_shared" "$pythia8libdir" \
