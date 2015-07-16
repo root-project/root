@@ -8,7 +8,9 @@
 # Author: Fons Rademakers, 18/8/2006
 
 if ($?ROOTSYS) then
-   set old_rootsys="$ROOTSYS"
+   if ($ROOTSYS != "") then
+     set old_rootsys="$ROOTSYS"
+   endif
 endif
 
 # $_ should be source .../thisroot.csh
