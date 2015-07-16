@@ -1901,11 +1901,11 @@ Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
 
 
 //______________________________________________________________________________
-Int_t TTreePlayer::MakeSelectorReader(const char *classname, Int_t maxUnrolling)
+Int_t TTreePlayer::MakeSelectorReader(const char *classname)
 {
    if (!classname) classname = fTree->GetName();   
 
-   TTreeSelectorReaderGenerator gsr(fTree, classname, maxUnrolling);
+   TTreeSelectorReaderGenerator gsr(fTree, classname);
 
    return 0;
 }

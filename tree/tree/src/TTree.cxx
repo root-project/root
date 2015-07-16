@@ -6047,7 +6047,7 @@ Int_t TTree::MakeSelectorReader(const char* selector)
       
    GetPlayer();
    if (!fPlayer) return 0;
-   return fPlayer->MakeSelectorReader(selector, 3);
+   return fPlayer->MakeSelectorReader(selector);
 }
 
 
