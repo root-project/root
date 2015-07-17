@@ -805,8 +805,12 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          
          if (branch->GetListOfBranches()->GetEntries() == 0) { // Branch is non-splitted
             if (cl) { // Non-split object
-               // TODO: implement this
-               printf("TODO: non-split object\n");
+               if (desc) {
+                  AddReader(isclones == kOut ?
+                              TTreeReaderDescriptor::ReaderType::kValue
+                            : TTreeReaderDescriptor::ReaderType::kArray,
+                            desc->GetName(), desc->fBranchName, desc->fBranchName);
+               }
             } else { // Top-level RAW type
                AnalyzeOldBranch(branch);
             }
