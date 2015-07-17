@@ -4813,7 +4813,7 @@ if test ! "x$enable_geocad" = "xno"; then
     # Check for OpenCascade include and library
     check_header "XCAFApp_Application.hxx" "$occincdir" \
         $CASROOT ${CASROOT:+$CASROOT/inc} /usr/include/opencascade \
-        /usr/include
+        /usr/include /usr/include/oce
     occinc=$found_hdr
     occincdir=$found_dir
 
