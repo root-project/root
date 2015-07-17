@@ -741,6 +741,7 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 
 ### Build System
 - Fix generation of PCH with CXX flags with spaces [ROOT-7478]
+- Implemented option 'geocad' with CMake making use of the OpenCASCADE software package.
 
 Changes will be part of the future v6.04/04.
 
