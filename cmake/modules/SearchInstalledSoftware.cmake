@@ -920,8 +920,24 @@ if(tbb)
   endif()
 endif()
 
+#---Check for OCC--------------------------------------------------------------------
+if(geocad)
+  find_package(OCC COMPONENTS TKPrim TKBRep TKOffset TKGeomBase TKShHealing TKTopAlgo
+                              TKSTEP TKG2d TKBool TKBO TKXCAF TKXDESTEP TKLCAF TKernel TKXSBase TKG3d TKMath)
+  if(NOT OCC_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "OpenCascade libraries not found and is required (geocad option enabled)")
+    else()
+      message(STATUS "OpenCascade libraries not found. Set variable CASROOT to point to your OpenCascade installation")
+      message(STATUS "For the time being switching OFF 'geocad' option")
+      set(geocad OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs glite sapdb srp geocad)
+foreach(opt afs glite sapdb srp)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)
