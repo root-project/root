@@ -15,7 +15,11 @@ int execSaxParserSimple()
    }
 
    auto realTime = timer.RealTime();
-   if (realTime > 15)
+   float threshold = 15;
+#ifdef __aarch64__
+   threshold = 30;
+#endif
+   if (realTime > threshold)
       std::cout << "WARNING: The parsing took " << realTime << " seconds. This may be too much\n";
 
    return 0;
