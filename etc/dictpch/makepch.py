@@ -17,6 +17,7 @@
 
 import sys
 import os
+import subprocess
 import shutil
 
 #-------------------------------------------------------------------------------
@@ -102,12 +103,12 @@ def makepch():
                                                                          extraHeaders,
                                                                          alllinkdefsFilename)
 
-   ret = os.system(command)
+   ret = subprocess.call(command,shell=True)
    if ret == 0:
       shutil.move("allDict_rdict.pch",pchFileName)
       os.unlink("allDict.cxx")
 
-   sys.exit(ret)
+   return ret
 
 if __name__ == "__main__":
    ret = makepch()
