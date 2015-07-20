@@ -851,11 +851,7 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
       if ( klass->InheritsFrom( "ios_base" ) )
          return BindRootObjectNoCast( (void*)gbl->GetAddress(), klass );
 
-   // pointer type globals
-      if ( Utility::Compound( gbl->GetFullTypeName() ) != "" )
-         return BindRootObject( (void*)gbl->GetAddress(), klass, kTRUE );
-
-   // for by-value globals, to ensure setability
+   // for by-value and pointer type globals, to ensure setability
       return (PyObject*)PropertyProxy_New< TGlobal* >( gbl );
    }
 

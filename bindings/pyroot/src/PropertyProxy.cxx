@@ -8,6 +8,7 @@
 #include "ObjectProxy.h"
 #include "PyBufferFactory.h"
 #include "RootWrapper.h"
+#include "Utility.h"
 
 // ROOT
 #include "TROOT.h"
@@ -218,9 +219,12 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
    std::string fullType = gbl->GetFullTypeName();
    if ( fullType == "void*" ) // actually treated as address to void*
       fullType = "void**";
-   if ( (int)gbl->GetArrayDim() != 0 ) {
+   else if ( TClass::GetClass( gbl->GetTypeName() ) &&
+             Utility::Compound( gbl->GetFullTypeName() ) != "" )
+      fullType.append( "*" );                   // extra dereferencing
+   else if ( (int)gbl->GetArrayDim() != 0 )
       fullType.append( "*" );
-   }
+
    fConverter = CreateConverter( fullType, gbl->GetMaxIndex( 0 ) );
    fName      = gbl->GetName();
 
