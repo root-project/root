@@ -272,7 +272,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    UInt_t TTreeSelectorReaderGenerator::AnalyzeBranches(TBranchDescriptor *desc, TIter &branches, TVirtualStreamerInfo *info)
    {
       UInt_t lookedAt = 0;     // Number of sub-branches analyzed
-      ELocation outer_isclones = kOut; // Container type
+      ELocation outer_isclones = kOut; // Is the parent branch a container
       TString containerName;   // Container name
       TString subBranchPrefix; // Prefix of sub-branch (if the elements and sub-branches do not align).
       Bool_t skipped = false;  // Should the branch be skipped
@@ -295,13 +295,13 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                outer_isclones = kSTL;
                containerName = branch->GetMother()->GetClassName();
             }
-         } else if (branch->GetType() == 3) {
+         }/* else if (branch->GetType() == 3) {
             outer_isclones = kClones;
             containerName = "TClonesArray";
          } else if (branch->GetType() == 4) {
             outer_isclones = kSTL;
             containerName = branch->GetMother()->GetSubBranch(branch)->GetClassName();
-         }
+         }*/
          if (desc) {
             subBranchPrefix = desc->fBranchName;
          } else {
@@ -371,6 +371,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          TString dataType; // Data type of reader
          TTreeReaderDescriptor::ReaderType readerType = TTreeReaderDescriptor::ReaderType::kValue;
          Bool_t ispointer = false;
+         ELocation isclones = outer_isclones; // Is the actual sub-branch a container (inherit from parent branch)
          // Get data type
          switch(element->GetType()) {
             // Built-in types
@@ -452,24 +453,31 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                dataType = cl->GetName();
                readerType = TTreeReaderDescriptor::ReaderType::kValue;
                // Check for containers
-               ELocation isclones = outer_isclones;
                if (cl == TClonesArray::Class()) { // TClonesArray
                   isclones = kClones;
-                  dataType = GetContainedClassName(branch, element, ispointer);
+                     readerType = TTreeReaderDescriptor::ReaderType::kArray;
                   containerName = "TClonesArray";
-                  readerType = TTreeReaderDescriptor::ReaderType::kArray;
+                  if (outer_isclones) {
+                     dataType = "TClonesArray";
+                  } else {
+                     dataType = GetContainedClassName(branch, element, ispointer);
+                  }
                } else if (cl->GetCollectionProxy()) { // STL collection
                   isclones = kSTL;
                   containerName = cl->GetName();
                   readerType = TTreeReaderDescriptor::ReaderType::kArray;
-                  TClass *valueClass = cl->GetCollectionProxy()->GetValueClass();
-                  if (valueClass) { // Get class inside container
-                     dataType = valueClass->GetName();
-                  }
-                  else { // Get built-in type inside container
-                     TDataType *valueClassBuiltIn = TDataType::GetDataType(cl->GetCollectionProxy()->GetType());
-                     if (valueClassBuiltIn) dataType = valueClassBuiltIn->GetName();
-                     else printf("Could not get type from collection\n");
+                  if (outer_isclones) {
+                     dataType = cl->GetName();
+                  } else {
+                     TClass *valueClass = cl->GetCollectionProxy()->GetValueClass();
+                     if (valueClass) { // Get class inside container
+                        dataType = valueClass->GetName();
+                     }
+                     else { // Get built-in type inside container
+                        TDataType *valueClassBuiltIn = TDataType::GetDataType(cl->GetCollectionProxy()->GetType());
+                        if (valueClassBuiltIn) dataType = valueClassBuiltIn->GetName();
+                        else printf("Could not get type from collection\n");
+                     }
                   }
                }
 
@@ -571,6 +579,9 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             TString dataMemberName = element->GetName();
             if (desc) {
                dataMemberName.Form("%s_%s", desc->fFullBranchName.Data(), element->GetName());
+            }
+            if (outer_isclones != kOut || isclones != kOut) {
+               readerType = TTreeReaderDescriptor::ReaderType::kArray;
             }
             AddReader(readerType, dataType, dataMemberName, branch->GetName());
          }
