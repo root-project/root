@@ -35,6 +35,7 @@
 
 #include <typeinfo>
 #include <string>
+#include <string.h>
 #include <locale.h>
 
 #include "Compression.h"
@@ -298,7 +299,7 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
 
       if (ptr == 0) {
          fValue = "null";
-      } else if ((member->GetArrayDim() == 0) &&  (arraylen<0)) {
+      } else if ((member->GetArrayDim() == 0) && (arraylen<0)) {
          switch (tid) {
             case kChar_t:
                JsonWriteBasic(*((Char_t *)ptr));

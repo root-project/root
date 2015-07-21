@@ -39,6 +39,7 @@
 
 #include <stdlib.h>
 #include <vector>
+#include <string.h>
 
 const char *item_prop_kind = "_kind";
 const char *item_prop_more = "_more";
@@ -231,7 +232,17 @@ Bool_t TRootSnifferScanRec::IsReadyForResult() const
 Bool_t TRootSnifferScanRec::SetResult(void *obj, TClass *cl, TDataMember *member)
 {
    // set results of scanning
+   // when member should be specified, use SetFoundResult instead
 
+   if (member==0) return SetFoundResult(obj, cl);
+
+   fStore->Error("SetResult", "When member specified, pointer on object (not member) should be provided; use SetFoundResult");
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TRootSnifferScanRec::SetFoundResult(void *obj, TClass *cl, TDataMember *member)
+{
    if (Done()) return kTRUE;
 
    if (!IsReadyForResult()) return kFALSE;
@@ -615,7 +626,7 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char
             chld.fHasMore = kTRUE;
          }
 
-         if (chld.SetResult(member_ptr, mcl, member)) break;
+         if (chld.SetFoundResult(ptr, cl, member)) break;
 
          const char *title = member->GetTitle();
          if ((title != 0) && (strlen(title) != 0))
@@ -644,7 +655,7 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char
             }
          }
 
-         if (chld.SetResult(member_ptr, mcl, member)) break;
+         if (chld.SetFoundResult(ptr, cl, member)) break;
       }
    }
 }
@@ -947,14 +958,30 @@ void *TRootSniffer::FindInHierarchy(const char *path, TClass **cl,
 
    ScanRoot(rec);
 
-   if (cl) *cl = store.GetResClass();
-   if (member) *member = store.GetResMember();
+   TDataMember *res_member = store.GetResMember();
+   TClass *res_cl = store.GetResClass();
+   void *res = store.GetResPtr();
+
+   if ((res_member!=0) && (res_cl!=0) && (member==0)) {
+      res_cl = (res_member->IsBasic() || res_member->IsSTLContainer()) ? 0 :
+                gROOT->GetClass(res_member->GetTypeName());
+      TRealData *rdata = res_cl->GetRealData(res_member->GetName());
+      if (rdata) {
+         res = (char *) res + rdata->GetThisOffset();
+         if (res_member->IsaPointer()) res = *((char **) res);
+      } else {
+         res = 0; // should never happen
+      }
+   }
+
+   if (cl) *cl = res_cl;
+   if (member) *member = res_member;
    if (chld) *chld = store.GetResNumChilds();
 
    // remember current restriction
    fCurrentRestrict = store.GetResRestrict();
 
-   return store.GetResPtr();
+   return res;
 }
 
 //______________________________________________________________________________
@@ -1085,10 +1112,7 @@ Bool_t TRootSniffer::ProduceJson(const char *path, const char *options,
    void *obj_ptr = FindInHierarchy(path, &obj_cl, &member);
    if ((obj_ptr == 0) || ((obj_cl == 0) && (member == 0))) return kFALSE;
 
-   if (member == 0)
-      res = TBufferJSON::ConvertToJSON(obj_ptr, obj_cl, compact >= 0 ? compact : 0);
-   else
-      res = TBufferJSON::ConvertToJSON(obj_ptr, member, compact >= 0 ? compact : 1);
+   res = TBufferJSON::ConvertToJSON(obj_ptr, obj_cl, compact >= 0 ? compact : 0, member ? member->GetName() : 0);
 
    return res.Length() > 0;
 }
