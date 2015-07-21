@@ -26,6 +26,7 @@
 #include "TFunction.h"
 #include "TMethodArg.h"
 #include "TMethodCall.h"
+#include "TRealData.h"
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TBaseClass.h"
@@ -575,8 +576,7 @@ Int_t TRootSniffer::CheckRestriction(const char* full_item_name)
 }
 
 //______________________________________________________________________________
-void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
-                                      char *ptr, unsigned long int cloffset)
+void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char *ptr)
 {
    // scan object data members
    // some members like enum or static members will be excluded
@@ -586,28 +586,17 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
    // ensure that real class data (including parents) exists
    if (!(cl->Property() & kIsAbstract)) cl->BuildRealData();
 
-   // first of all expand base classes
-   TIter cliter(cl->GetListOfBases());
+   // scan only real data
    TObject *obj = 0;
-   while ((obj = cliter()) != 0) {
-      TBaseClass *baseclass = dynamic_cast<TBaseClass *>(obj);
-      if (baseclass == 0) continue;
-      TClass *bclass = baseclass->GetClassPointer();
-      if (bclass == 0) continue;
-
-      // all parent classes scanned within same hierarchy level
-      // this is how normal object streaming works
-      ScanObjectMemebers(rec, bclass, ptr, cloffset + baseclass->GetDelta());
-      if (rec.Done()) break;
-   }
-
-   // than expand data members
-   TIter iter(cl->GetListOfDataMembers());
+   TIter iter(cl->GetListOfRealData());
    while ((obj = iter()) != 0) {
-      TDataMember *member = dynamic_cast<TDataMember *>(obj);
+      TRealData *rdata = dynamic_cast<TRealData *>(obj);
+      if (rdata == 0) continue;
+
+      TDataMember *member = rdata->GetDataMember();
       // exclude enum or static variables
       if ((member == 0) || (member->Property() & (kIsStatic | kIsEnum | kIsUnion))) continue;
-      char *member_ptr = ptr + cloffset + member->GetOffset();
+      char *member_ptr = ptr + rdata->GetThisOffset();
 
       if (member->IsaPointer()) member_ptr = *((char **) member_ptr);
 
@@ -717,7 +706,7 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
    } else if (obj->InheritsFrom(TBranch::Class())) {
       ScanCollection(rec, ((TBranch *) obj)->GetListOfLeaves());
    } else if (rec.CanExpandItem()) {
-      ScanObjectMemebers(rec, obj->IsA(), (char *) obj, 0);
+      ScanObjectMemebers(rec, obj->IsA(), (char *)obj);
    }
 }
 
