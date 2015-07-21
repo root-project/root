@@ -140,8 +140,6 @@ End_Html
 
 // prefix used for function name passed to Cling
 static const TString gNamePrefix = "TFormula__";
-// function index number used to append in cling name to avoid a clash
-static std::atomic<unsigned int> gFormulaAtomicIndex(0);
 
 // static map of function pointers and expressions
 //static std::unordered_map<std::string,  TInterpreter::CallFuncIFacePtr_t::Generic_t> gClingFunctions = std::unordered_map<TString,  TInterpreter::CallFuncIFacePtr_t::Generic_t>();
