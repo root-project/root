@@ -420,7 +420,7 @@ Int_t TFormula::Compile(const char *expression)
    fFormula = formula;
    if (fVars.empty() ) FillDefaults();
    // prepare the formula for Cling
-   printf("compile: processing formula %s\n",fFormula.Data() );
+   //printf("compile: processing formula %s\n",fFormula.Data() );
    PreProcessFormula(fFormula);
    // pass formula in CLing
    bool ret = PrepareFormula(fFormula);
