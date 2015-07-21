@@ -39,6 +39,7 @@
 
 #include <stdlib.h>
 #include <vector>
+#include <string.h>
 
 const char *item_prop_kind = "_kind";
 const char *item_prop_more = "_more";
@@ -591,7 +592,7 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char
    TIter iter(cl->GetListOfRealData());
    while ((obj = iter()) != 0) {
       TRealData *rdata = dynamic_cast<TRealData *>(obj);
-      if (rdata == 0) continue;
+      if ((rdata == 0) || strchr(rdata->GetName(),'.')) continue;
 
       TDataMember *member = rdata->GetDataMember();
       // exclude enum or static variables
