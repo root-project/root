@@ -2,7 +2,7 @@
 // Author: Akos Hajdu 22/06/2015
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers and al.        *
+ * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers and al.        *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -35,7 +35,7 @@ namespace ROOT {
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor. Analyzes the tree and writes selector.
 
-   TTreeSelectorReaderGenerator::TTreeSelectorReaderGenerator(TTree* tree, const char *classname) : 
+   TTreeSelectorReaderGenerator::TTreeSelectorReaderGenerator(TTree* tree, const char *classname) :
       fTree(tree),
       fClassname(classname)
    {
@@ -57,7 +57,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get class inside a container.
+/// Get name of class inside a container.
 
 static TString GetContainedClassName(TBranchElement *branch, TStreamerElement *element, Bool_t ispointer)
 {
@@ -68,7 +68,6 @@ static TString GetContainedClassName(TBranchElement *branch, TStreamerElement *e
       if (i<0) i = 0;
       branch->GetEntry(i);
       char *obj = branch->GetObject();
-
 
       TBranchElement *parent = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
       const char *pclname = parent->GetClassName();
@@ -94,7 +93,6 @@ static TString GetContainedClassName(TBranchElement *branch, TStreamerElement *e
          arr = (TClonesArray*)(obj+lOffset);
       }
       cname = arr->GetClass()->GetName();
-
    }
    if (cname.Length()==0) {
       Error("AnalyzeBranch",
@@ -104,7 +102,7 @@ static TString GetContainedClassName(TBranchElement *branch, TStreamerElement *e
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the correct TStreamerInfo of class 'cl' in the list of branch
+/// Return the correct TStreamerInfo of class 'cl' in the list of branches
 /// (current) [Assuming these branches correspond to a flattened version of
 /// the class.]
 
@@ -136,9 +134,10 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    }
    return objInfo;
 }
+
    ////////////////////////////////////////////////////////////////////////////////
    /// Add a header inclusion request. If the header is already included it will
-   /// not include it again.
+   /// not be included again.
 
    void TTreeSelectorReaderGenerator::AddHeader(TClass *cl)
    {
@@ -274,7 +273,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       UInt_t lookedAt = 0;     // Number of sub-branches analyzed
       ELocation outer_isclones = kOut; // Is the parent branch a container
       TString containerName;   // Container name
-      TString subBranchPrefix; // Prefix of sub-branch (if the elements and sub-branches do not align).
+      TString subBranchPrefix; // Prefix of sub-branch (if the elements and sub-branches do not match).
       Bool_t skipped = false;  // Should the branch be skipped
 
       // Check for containers (TClonesArray or STL)
@@ -295,7 +294,11 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                outer_isclones = kSTL;
                containerName = branch->GetMother()->GetClassName();
             }
-         }/* else if (branch->GetType() == 3) {
+         }
+         // FIXME: this is wrong because 'branch' is the first sub-branch and even though
+         // it can be a collection, it does not mean that the other sub-branches are
+         // collections as well.
+         /* else if (branch->GetType() == 3) {
             outer_isclones = kClones;
             containerName = "TClonesArray";
          } else if (branch->GetType() == 4) {
@@ -347,7 +350,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             continue; // Skip the artifical streamer element.
          }
 
-         if (element->GetType()==-1) {
+         if (element->GetType() == -1) {
             continue; // This is an ignored TObject base class.
          }
 
@@ -371,7 +374,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          TString dataType; // Data type of reader
          TTreeReaderDescriptor::ReaderType readerType = TTreeReaderDescriptor::ReaderType::kValue;
          Bool_t ispointer = false;
-         ELocation isclones = outer_isclones; // Is the actual sub-branch a container (inherit from parent branch)
+         ELocation isclones = outer_isclones; // Is the actual sub-branch a collection (inherit from parent branch)
          // Get data type
          switch(element->GetType()) {
             // Built-in types
@@ -455,9 +458,9 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                // Check for containers
                if (cl == TClonesArray::Class()) { // TClonesArray
                   isclones = kClones;
-                     readerType = TTreeReaderDescriptor::ReaderType::kArray;
+                  readerType = TTreeReaderDescriptor::ReaderType::kArray;
                   containerName = "TClonesArray";
-                  if (outer_isclones) {
+                  if (outer_isclones) { // If the parent is already a collection
                      dataType = "TClonesArray";
                   } else {
                      dataType = GetContainedClassName(branch, element, ispointer);
@@ -466,7 +469,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   isclones = kSTL;
                   containerName = cl->GetName();
                   readerType = TTreeReaderDescriptor::ReaderType::kArray;
-                  if (outer_isclones) {
+                  if (outer_isclones) { // If the parent is already a collection
                      dataType = cl->GetName();
                   } else {
                      TClass *valueClass = cl->GetCollectionProxy()->GetValueClass();
@@ -476,12 +479,23 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                      else { // Get built-in type inside container
                         TDataType *valueClassBuiltIn = TDataType::GetDataType(cl->GetCollectionProxy()->GetType());
                         if (valueClassBuiltIn) dataType = valueClassBuiltIn->GetName();
-                        else printf("Could not get type from collection\n");
+                        else Error("AnalyzeBranches", "Could not get type from collection %s in branch %s", cl->GetName(), branch->GetName());
                      }
                   }
                }
 
                // Analyze the actual element
+               // Possible cases:
+               // - Base class
+               //   - Element and branch matches
+               //     - Non-split: do nothing
+               //     - Split: recurse with sub-sub-branches
+               //   - Element and branch does not match: recurse with same branches
+               // - Not base class
+               //   - Element and branch matches
+               //     - Non-split: do nothing
+               //     - Split: recurse with sub-sub-branches
+               //   - Element and branch does not match: recurse with same branches
                TBranch *parent = branch->GetMother()->GetSubBranch(branch);
                TVirtualStreamerInfo *objInfo = 0;
                if (branch->GetListOfBranches()->GetEntries()) {
@@ -500,7 +514,8 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
 
                   if (branchEndName == element->GetName()) { // The element and the branch matches
                      if (branch->GetListOfBranches()->GetEntries() == 0) { // The branch contains a non-split base class
-                        // FIXME: nothing to do in such cases, because readers cannot access non-split members
+                        // FIXME: nothing to do in such cases, because readers cannot access
+                        // non-split members and a reader for the whole branch will be added
                      } else { // The branch contains a split base class
                         Int_t pos = branchname.Last('.');
                         if (pos != -1) {
@@ -534,7 +549,8 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   TBranchDescriptor *bdesc = 0;
                   if (branchEndName == element->GetName()) { // The element and the branch matches
                      if (branch->GetListOfBranches()->GetEntries() == 0) { // The branch contains a non-split class
-                        // FIXME: nothing to do in such cases, because readers cannot access non-split members
+                        // FIXME: nothing to do in such cases, because readers cannot access
+                        // non-split members and a reader for the whole branch will be added
                      } else { // The branch contains a split class
                         if (isclones != kOut) {
                            // We have to guess the version number!
@@ -575,7 +591,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                Error("AnalyzeBranch", "Unsupported type for %s (%d).", branch->GetName(), element->GetType());
          }
 
-         if (!isBase && !skipped) { // Add readers for the whole branch
+         if (!isBase && !skipped) { // Add reader for the whole branch
             TString dataMemberName = element->GetName();
             if (desc) {
                dataMemberName.Form("%s_%s", desc->fFullBranchName.Data(), element->GetName());
@@ -586,7 +602,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             AddReader(readerType, dataType, dataMemberName, branch->GetName());
          }
 
-         // If the branch was used, get the next available one
+         // If the branch was used, jump to the next
          if (usedBranch) {
             branches.Next();
             ++lookedAt;
@@ -618,7 +634,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
 
       return extraLookedAt;
    }
-   
+
    ////////////////////////////////////////////////////////////////////////////////
    /// Analyze the leaf and add the variables found.
 
@@ -721,7 +737,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          branchName.Form("%s.%s", leaf->GetBranch()->GetName(), leaf->GetName());
       }
 
-      AddReader(type, dataType, leaf->GetName(), branchName);         
+      AddReader(type, dataType, leaf->GetName(), branchName);
 
       return 0;
    }

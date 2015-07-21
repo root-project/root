@@ -1900,7 +1900,36 @@ Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate skeleton selector class for this tree using the TTreeReader
+/// interface (TTreeReaderValue and TTreeReaderArray).
+///
+/// The following files are produced: classname.h and classname.C.
+/// If classname is 0, the selector will be called "nameoftree".
+///
+/// The generated code in classname.h includes the following:
+///    - Identification of the original Tree and Input file name
+///    - Definition of selector class (data and functions)
+///    - The following class functions:
+///       - constructor and destructor
+///       - void    Begin(TTree *tree)
+///       - void    SlaveBegin(TTree *tree)
+///       - void    Init(TTree *tree)
+///       - Bool_t  Notify()
+///       - Bool_t  Process(Long64_t entry)
+///       - void    Terminate()
+///       - void    SlaveTerminate()
+///
+/// The class selector derives from TSelector.
+/// The generated code in classname.C includes empty functions defined above.
+///
+/// To use this function:
+///    - connect your Tree file (eg: TFile f("myfile.root");)
+///    - T->MakeSelectorReader("myselect");
+/// where T is the name of the Tree in file myfile.root
+/// and myselect.h, myselect.C the name of the files created by this function.
+/// In a ROOT session, you can do:
+///    root > T->Process("myselect.C")
 Int_t TTreePlayer::MakeSelectorReader(const char *classname)
 {
    if (!classname) classname = fTree->GetName();   
