@@ -1177,7 +1177,10 @@ void TFormula::PreProcessFormula(TString &formula)
    HandlePolN(formula);
    HandleParametrizedFunctions(formula);
    HandleExponentiation(formula);
+   // "++" wil be dealt with Handle Linear 
    HandleLinear(formula);
+   // special case for "--"
+   formula.ReplaceAll("--","- -");
 }
 Bool_t TFormula::PrepareFormula(TString &formula)
 {
@@ -1268,6 +1271,7 @@ void TFormula::ExtractFunctors(TString &formula)
          } 
          continue;
       }
+
 
       //std::cout << "investigating character : " << i << " " << formula[i] << " of formula " << formula << std::endl;
       // look for variable and function names. They  start in C++ with alphanumeric characters
