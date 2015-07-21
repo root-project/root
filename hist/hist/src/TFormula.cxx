@@ -190,6 +190,27 @@ Bool_t TFormula::IsScientificNotation(const TString & formula, int i)
    return false;
 }
 
+Bool_t TFormula::IsHexadecimal(const TString & formula, int i)
+{
+   // check if the character at position i  is part of a scientific notation
+   if ( (formula[i] == 'x' || formula[i] == 'X')  &&  (i > 0 && i <  formula.Length()-1) && formula[i-1] == '0')  {
+      if (isdigit(formula[i+1]) )
+         return true;
+      static char hex_values[12] = { 'a','A', 'b','B','c','C','d','D','e','E','f','F'};
+      for (int jjj = 0; jjj < 12; ++jjj) {
+         if (formula[i+1] == hex_values[jjj])
+            return true;
+      }
+   }
+   // else
+   //    return false; 
+   //    // handle cases:  2e+3 2e-3 2e3 and 2.e+3
+   //    if ( (isdigit(formula[i-1]) || formula[i-1] == '.') && ( isdigit(formula[i+1]) || formula[i+1] == '+' || formula[i+1] == '-' ) )
+   //       return true;
+   // }
+   return false;
+}
+
 bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
    // implement comparison used to set parameter orders in TFormula
    // want p2 to be before p10
@@ -1238,6 +1259,15 @@ void TFormula::ExtractFunctors(TString &formula)
       // case of e or E for numbers in exponential notaton (e.g. 2.2e-3)
       if (IsScientificNotation(formula, i) )
          continue;
+      // case of x for hexadecimal numbers
+      if (IsHexadecimal(formula, i) ) {
+         // find position of operator
+         // do not check cases if character is not only a to f, but accept anything
+         while ( !IsOperator(formula[i]) && i < formula.Length() )  {
+            i++;
+         } 
+         continue;
+      }
 
       //std::cout << "investigating character : " << i << " " << formula[i] << " of formula " << formula << std::endl;
       // look for variable and function names. They  start in C++ with alphanumeric characters
