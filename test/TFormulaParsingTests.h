@@ -477,8 +477,8 @@ bool test28() {
 }
 
 bool test29() {
-   bool ok = true; 
    // test hexadecimal numbers 
+   bool ok = true; 
    TF1 f1("f1","x+[0]*0xaf");
    f1.SetParameter(0,2);
    ok &= (f1.Eval(3) == (3.+2*175.) );
@@ -492,7 +492,18 @@ bool test29() {
    return ok; 
 
 }
-   
+
+bool test30() {
+// handle -- (++ is in linear expressions)
+   bool ok = true;    
+   TF1 f1("f1","x--[0]");
+   f1.SetParameter(0,2);
+   ok &= (f1.Eval(3) == 5. );
+
+   return ok; 
+
+}
+
 
    
 void PrintError(int itest)  { 
@@ -540,6 +551,8 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test26() ) { PrintError(itest); }
    IncrTest(itest); if (!test27() ) { PrintError(itest); }
    IncrTest(itest); if (!test28() ) { PrintError(itest); }
+   IncrTest(itest); if (!test29() ) { PrintError(itest); }
+   IncrTest(itest); if (!test30() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
