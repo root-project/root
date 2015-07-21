@@ -226,6 +226,10 @@ void *TFastCgi::run_func(void *args)
       }
       arg.SetRequestHeader(header);
 
+      TString username = arg.GetRequestHeader("REMOTE_USER");
+      if ((username.Length()>0) && (arg.GetRequestHeader("AUTH_TYPE").Length()>0))
+         arg.SetUserName(username);
+
       if (engine->fDebugMode) {
          FCGX_FPrintF(request.out,
                       "Status: 200 OK\r\n"
