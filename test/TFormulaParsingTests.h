@@ -504,6 +504,21 @@ bool test30() {
 
 }
 
+bool test31() {
+// test whitespaces in par name and cloning
+   bool ok = true;    
+   TF1 f1("f1","x*[0]");
+   f1.SetParameter(0,2);
+   f1.SetParName(0,"First Param");
+   auto f2 = (TF1*) f1.Clone();
+   
+   ok &= (f1.Eval(3) == f2->Eval(3) );
+   ok &= (TString(f1.GetParName(0) ) == TString(f2->GetParName(0) ) );
+
+   return ok; 
+
+}
+
 
    
 void PrintError(int itest)  { 
@@ -553,6 +568,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test28() ) { PrintError(itest); }
    IncrTest(itest); if (!test29() ) { PrintError(itest); }
    IncrTest(itest); if (!test30() ) { PrintError(itest); }
+   IncrTest(itest); if (!test31() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
