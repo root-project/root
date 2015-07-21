@@ -126,7 +126,7 @@ protected:
    TList          fRestrictions;    //! list of restrictions for different locations
    TString        fAutoLoad;        //! scripts names, which are add as _autoload parameter to h.json request
 
-   void ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char *ptr, unsigned long int cloffset);
+   void ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char *ptr);
 
    virtual void ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj);
 
