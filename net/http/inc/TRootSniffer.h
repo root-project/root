@@ -85,8 +85,11 @@ public:
    /** Checks if result will be accepted. Used to verify if sniffer should read object from the file */
    Bool_t IsReadyForResult() const;
 
-   /** Set result pointer and return true if result is found */
+      /** Obsolete, use SetFoundResult instead */
    Bool_t SetResult(void *obj, TClass *cl, TDataMember *member = 0);
+
+   /** Set found element with class and datamember (optional) */
+   Bool_t SetFoundResult(void *obj, TClass *cl, TDataMember *member = 0);
 
    /** Returns depth of hierarchy */
    Int_t Depth() const;
