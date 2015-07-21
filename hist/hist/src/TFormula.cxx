@@ -1243,6 +1243,8 @@ void TFormula::ExtractFunctors(TString &formula)
          i++;
          //rename parameter name XX to pXX
          if (param.IsDigit() ) param.Insert(0,'p');
+         // handle whitespace characters in parname
+         param.ReplaceAll("\\s"," ");
          DoAddParameter(param,0,false);
          TString replacement = TString::Format("{[%s]}",param.Data());
          formula.Replace(tmp,i - tmp, replacement,replacement.Length());
@@ -2061,12 +2063,29 @@ void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t proces
             --previous;
             pos = previous->second + 1;
          }
-         fClingParameters.insert(fClingParameters.begin()+pos,value);
+         
+         
+         if (pos < (int)fClingParameters.size() ) 
+            fClingParameters.insert(fClingParameters.begin()+pos,value);
+         else { 
+            // this should not happen
+            if (pos > (int)fClingParameters.size() )
+               Warning("inserting parameter %s at pos %d when vector size is  %d \n",name.Data(),pos,(int)fClingParameters.size() ); 
+
+            if(pos >= (int)fClingParameters.capacity())
+               fClingParameters.reserve( TMath::Max(int(fParams.size()), pos+1));
+            fClingParameters.insert(fClingParameters.end(),pos+1-fClingParameters.size(),0.0);
+            fClingParameters[pos] = value;
+         }
+
          // need to adjust all other positions
          for ( auto it = ret.first; it != fParams.end(); ++it ) {
             it->second = pos;
             pos++;
          }
+         // for (auto & p : fParams)
+         //     std::cout << "Parameter " << p.first << " position " << p.second << std::endl;
+         // printf("inserted parameters size params %d size cling %d \n",fParams.size(), fClingParameters.size() ); 
       }
       if (processFormula) {
          // replace first in input parameter name with [name]
@@ -2324,8 +2343,11 @@ void TFormula::ReplaceParamName(TString & formula, const TString & oldName, cons
          Error("SetParName","Parameter %s is not defined.",oldName.Data());
          return;
       }
+      // change whitespace to \\s avoid problems in parsing
+      TString newName = name; 
+      newName.ReplaceAll(" ","\\s");
       TString pattern = TString::Format("[%s]",oldName.Data());
-      TString replacement = TString::Format("[%s]",name.Data());
+      TString replacement = TString::Format("[%s]",newName.Data());
       formula.ReplaceAll(pattern,replacement);
    }
 
@@ -2602,11 +2624,15 @@ void TFormula::Streamer(TBuffer &b)
          std::vector<double> parValues = fClingParameters;
          auto paramMap = fParams;
          fNpar = fParams.size();
+
+         //std::cout << "Streamer::Reading preprocess the formula " << fFormula << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
+         // for ( auto &p : fParams) 
+         //    std::cout << "parameter " << p.first << " index " << p.second << std::endl;
+         
          fClingParameters.clear();  // need to be reset before re-initializing it
 
          FillDefaults();
 
-         //std::cout << "Streamer::Reading preprocess the formula " << fFormula << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
 
          PreProcessFormula(fFormula);
 
