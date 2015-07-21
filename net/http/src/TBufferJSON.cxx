@@ -46,6 +46,7 @@
 #include "TClassTable.h"
 #include "TClassEdit.h"
 #include "TDataType.h"
+#include "TRealData.h"
 #include "TDataMember.h"
 #include "TMath.h"
 #include "TExMap.h"
@@ -180,11 +181,11 @@ TBufferJSON::~TBufferJSON()
 }
 
 //______________________________________________________________________________
-TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact)
+TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char *member_name)
 {
    // converts object, inherited from TObject class, to JSON string
 
-   return ConvertToJSON(obj, (obj ? obj->IsA() : 0), compact);
+   return ConvertToJSON(obj, (obj ? obj->IsA() : 0), compact, member_name);
 }
 
 //______________________________________________________________________________
@@ -204,14 +205,29 @@ void TBufferJSON::SetCompact(int level)
 
 //______________________________________________________________________________
 TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl,
-                                   Int_t compact)
+                                   Int_t compact, const char *member_name)
 {
-   // converts any type of object to JSON string
-   // following values of compact
+   // Converts any type of object to JSON string
+   //
+   // One should provide pointer on object and its class name
+   // Following values of compact parameter can be used
    //   0 - no any compression
    //   1 - exclude spaces in the begin
    //   2 - remove newlines
    //   3 - exclude spaces as much as possible
+   // When member_name specified, converts only this data member
+
+   if (member_name!=0) {
+      TRealData *rdata = cl->GetRealData(member_name);
+      if (rdata==0) return TString();
+      TDataMember *member = rdata->GetDataMember();
+      if (member==0) return TString();
+
+      void *ptr = (char *) obj + rdata->GetThisOffset();
+      if (member->IsaPointer()) ptr = *((char **) ptr);
+
+      return TBufferJSON::ConvertToJSON(ptr, member, compact);
+   }
 
    TBufferJSON buf;
 
@@ -227,6 +243,9 @@ TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member,
                                    Int_t compact)
 {
    // converts selected data member into json
+   //
+   // Parameter ptr specifies address in memory, where data member is located
+   // compact parameter defines compactness of produced JSON (from 0 to 3)
 
    if ((ptr == 0) || (member == 0)) return TString("null");
 
