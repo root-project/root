@@ -243,6 +243,9 @@ Bool_t TRootSnifferScanRec::SetResult(void *obj, TClass *cl, TDataMember *member
 //______________________________________________________________________________
 Bool_t TRootSnifferScanRec::SetFoundResult(void *obj, TClass *cl, TDataMember *member)
 {
+   // set results of scanning
+   // when member specified, obj is pointer on object to which member belongs
+
    if (Done()) return kTRUE;
 
    if (!IsReadyForResult()) return kFALSE;
@@ -619,9 +622,7 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char
                        gROOT->GetClass(member->GetTypeName());
 
          Int_t coll_offset = mcl ? mcl->GetBaseClassOffset(TCollection::Class()) : -1;
-
-         Bool_t iscollection = (coll_offset >= 0);
-         if (iscollection) {
+         if (coll_offset >= 0) {
             chld.SetField(item_prop_more, "true", kFALSE);
             chld.fHasMore = kTRUE;
          }
@@ -644,12 +645,20 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char
             }
             dim.Append("]");
             chld.SetField(item_prop_arraydim, dim, kFALSE);
+         } else
+         if (member->GetArrayIndex()!=0) {
+            TRealData *idata = cl->GetRealData(member->GetArrayIndex());
+            TDataMember *imember = (idata!=0) ? idata->GetDataMember() : 0;
+            if ((imember!=0) && (strcmp(imember->GetTrueTypeName(),"int")==0)) {
+               Int_t arraylen = *((int *) (ptr + idata->GetThisOffset()));
+               chld.SetField(item_prop_arraydim, TString::Format("[%d]", arraylen), kFALSE);
+            }
          }
 
          chld.SetRootClass(mcl);
 
          if (chld.CanExpandItem()) {
-            if (iscollection) {
+            if (coll_offset >= 0) {
                // chld.SetField("#members", "true", kFALSE);
                ScanCollection(chld, (TCollection *)(member_ptr + coll_offset));
             }
