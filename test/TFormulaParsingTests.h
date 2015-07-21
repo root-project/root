@@ -475,6 +475,25 @@ bool test28() {
    return ok;
 
 }
+
+bool test29() {
+   bool ok = true; 
+   // test hexadecimal numbers 
+   TF1 f1("f1","x+[0]*0xaf");
+   f1.SetParameter(0,2);
+   ok &= (f1.Eval(3) == (3.+2*175.) );
+
+   TF1 f2("f2","0x64^2+x");
+   ok &= (f2.Eval(1) == 10001 );
+
+   TF1 f3("f3","x^0x000c+1");
+   ok &= (f3.Eval(2) == 4097 );
+
+   return ok; 
+
+}
+   
+
    
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
