@@ -469,7 +469,8 @@ bool test28() {
 
    TF1 fsincos("fsc", "fsin+fcos");
 
-   TF1 f0("f0",[](double *x, double *p){ return p[0]*cos(x[0])+p[1]*sin(x[0]);},0.,10.,2);
+   // keep same order in evaluation
+   TF1 f0("f0",[](double *x, double *p){ return p[1]*sin(x[0]) + p[0]*cos(x[0]);},0.,10.,2);
    f0.SetParameters(1.1,2.1);
    ok &= (fsincos.Eval(2) == f0.Eval(2) );
    return ok;
