@@ -168,6 +168,8 @@
          }
       }
 
+      if ('_player' in hitem) can_click = true;
+
       if (img2.length==0) img2 = img1;
       if (img1.length==0) img1 = has_childs ? "img_folder" : "img_page";
       if (img2.length==0) img2 = has_childs ? "img_folderopen" : "img_page";
@@ -752,11 +754,12 @@
 
    // ========== performs tree drawing on server ==================
 
-   JSROOT.TTreePlayer = function(itemname, url) {
+   JSROOT.TTreePlayer = function(itemname, url, askey) {
       JSROOT.TBasePainter.call(this);
       this.SetItemName(itemname);
       this.url = url;
       this.hist_painter = null;
+      this.askey = askey;
       return this;
    }
 
@@ -838,12 +841,18 @@
       url += '&_ret_object_=' + hname;
 
       var player = this;
-
-      JSROOT.NewHttpRequest(url, 'object', function(res) {
-         if (res==null) return;
-         $("#"+player.drawid).empty();
-         player.hist_painter = JSROOT.draw(player.drawid, res)
-      }).send();
+      function SubmitDrawRequest() {
+         JSROOT.NewHttpRequest(url, 'object', function(res) {
+            if (res==null) return;
+            $("#"+player.drawid).empty();
+            player.hist_painter = JSROOT.draw(player.drawid, res)
+         }).send();
+      }
+      if (this.askey) {
+         // first let read tree from the file
+         this.askey = false;
+         JSROOT.NewHttpRequest(this.url + "/root.json", 'text', SubmitDrawRequest).send();
+      } else SubmitDrawRequest();
    }
 
    JSROOT.TTreePlayer.prototype.CheckResize = function(force) {
@@ -857,7 +866,7 @@
       }
    }
 
-   JSROOT.drawTreePlayer = function(hpainter, itemname) {
+   JSROOT.drawTreePlayer = function(hpainter, itemname, askey) {
 
       var url = hpainter.GetOnlineItemUrl(itemname);
       if (url == null) return null;
@@ -870,9 +879,14 @@
 
       var divid = d3.select(frame).attr('id');
 
-      var player = new JSROOT.TTreePlayer(itemname, url);
+      var player = new JSROOT.TTreePlayer(itemname, url, askey);
       player.Show(divid);
       return player;
+   }
+
+   JSROOT.drawTreePlayerKey = function(hpainter, itemname) {
+      // function used when tree is not yet loaded on the server
+      return JSROOT.drawTreePlayer(hpainter, itemname, true);
    }
 
    // =======================================================================

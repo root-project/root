@@ -845,6 +845,17 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
                   }
                } else {
                   obj_class = TClass::GetClass(key->GetClassName());
+                  if (obj_class && obj_class->InheritsFrom(TTree::Class())) {
+                     if (rec.CanExpandItem()) {
+                        // it is requested to expand tree element - read it
+                        obj = key->ReadObj();
+                        if (obj) obj_class = obj->IsA();
+                     } else {
+                        rec.SetField("_player", "JSROOT.drawTreePlayerKey");
+                        rec.SetField("_prereq", "jq2d");
+                        // rec.SetField("_more", "true"); // one could allow to extend
+                     }
+                  }
                }
             }
 
