@@ -22,7 +22,7 @@ MINICERNO    := $(MINICERNO1) $(MINICERNO2)
 MINICERNDEP  := $(MINICERNS1:.c=.d)
 
 ifneq ($(PLATFORM),win32)
-MINICERNLIB  := $(LPATH)/libminicern.$(SOEXT)
+MINICERNLIB  := $(LPATH)/libminicern.a
 else
 MINICERNLIB  := $(LPATH)/libminicern.lib
 LNKFLAGS      = -nologo -ignore:4049,4075,4217,4221
@@ -45,9 +45,10 @@ include/%.h:    $(MINICERNDIRI)/%.h
 
 ifneq ($(PLATFORM),win32)
 $(MINICERNLIB): $(MINICERNO) $(ORDER_) $(MINICERNLIBDEP)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libminicern.$(SOEXT) $@ "$(MINICERNO1)" \
-		   "$(MINICERNO2) $(MINICERNLIBEXTRA) $(F77LIBS)"
+		$(AR) cru $@ $(MINICERNO)
+		@(if [ $(PLATFORM) = "macosx" ]; then \
+		  ranlib $@; \
+		fi)
 else
 $(MINICERNLIB): $(MINICERNO) $(ORDER_) $(MINICERNLIBDEP)
 		$(LD) -LIB $(LNKFLAGS) -o $@ "$(MINICERNO1) $(MINICERNO2)"
