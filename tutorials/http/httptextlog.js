@@ -2,19 +2,22 @@
 
    if (typeof JSROOT != "object") {
       var e1 = new Error("httptextlog.js requires JSROOT to be already loaded");
-      e1.source = "go4.js";
+      e1.source = "httptextlog.js";
       throw e1;
    }
    
-   console.log("here 1");
-   
-   MakeMsgListRequest = function(hitem, item) {
+   function MakeMsgListRequest(hitem, item) {
+      // this function produces url for http request
+      // here one provides id of last string received with previous request 
+      
       var arg = "&max=1000";
       if ('last-id' in item) arg+= "&id="+item['last-id'];
       return 'exe.json.gz?method=Select' + arg;      
    }
    
-   AfterMsgListRequest = function(hitem, item, obj) {
+   function AfterMsgListRequest(hitem, item, obj) {
+      // after data received, one replaces typename for produced object  
+      
       if (item==null) return;
       
       if (obj==null) {
@@ -36,60 +39,47 @@
       }
    }
    
-   
-   TMsgListPainter = function(lst) {
-      JSROOT.TBasePainter.call(this);
-      
-      this.lst = lst;
-         
-      return this;
-   }
 
-   TMsgListPainter.prototype = Object.create( JSROOT.TBasePainter.prototype );
-
-   TMsgListPainter.prototype.RedrawObject = function(obj) {
-      this.lst = obj;
-      this.Draw();
-      return true;
-   }
-
-   TMsgListPainter.prototype.Draw = function() {
+   function DrawMsgList(divid, lst, opt) {
       
-      if (this.lst == null) return;
-      
-      var frame = d3.select("#" + this.divid);
-      
-      var main = frame.select("div");
-      if (main.empty()) 
-         main = frame.append("div")
-                     .style('max-width','100%')
-                     .style('max-height','100%')
-                     .style('overflow','auto');
-      
-      var old = main.selectAll("pre");
-      var newsize = old.size() + this.lst.arr.length - 1; 
-
-      // in the browser keep maximum 1000 entries
-      if (newsize > 1000) 
-         old.select(function(d,i) { return i < newsize - 1000 ? this : null; }).remove();
-      
-      for (var i = this.lst.arr.length-1;i>0;i--)
-         main.append("pre").html(this.lst.arr[i].fString);
-      
-      // (re) set painter to first child element
-      this.SetDivId(this.divid);
-   }
-   
-   var DrawTMsgList = function(divid, lst, opt) {
-      var painter = new TMsgListPainter(lst);
+      var painter = new JSROOT.TBasePainter();
       painter.SetDivId(divid);
-      painter.Draw();
+      
+      painter.Draw = function(lst) {
+         if (lst == null) return;
+         
+         var frame = d3.select("#" + this.divid);
+         
+         var main = frame.select("div");
+         if (main.empty()) 
+            main = frame.append("div")
+                        .style('max-width','100%')
+                        .style('max-height','100%')
+                        .style('overflow','auto');
+         
+         var old = main.selectAll("pre");
+         var newsize = old.size() + lst.arr.length - 1; 
+
+         // in the browser keep maximum 1000 entries
+         if (newsize > 1000) 
+            old.select(function(d,i) { return i < newsize - 1000 ? this : null; }).remove();
+         
+         for (var i=lst.arr.length-1;i>0;i--)
+            main.append("pre").html(lst.arr[i].fString);
+         
+         // (re) set painter to first child element
+         this.SetDivId(this.divid);
+      }
+
+      painter.RedrawObject = function(obj) {
+         this.Draw(obj);
+         return true;
+      }
+      
+      painter.Draw(lst);
       return painter.DrawingReady();
    }
    
-   JSROOT.addDrawFunc("TMsgList", DrawTMsgList, "");
-   
-   console.log("here 10");
-
+   JSROOT.addDrawFunc({name:"TMsgList", icon:"img_text", make_request:MakeMsgListRequest, after_request:AfterMsgListRequest, func:DrawMsgList, opt:"list"});
 
 })();
