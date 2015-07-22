@@ -590,7 +590,7 @@ Int_t TRootSniffer::CheckRestriction(const char* full_item_name)
 }
 
 //______________________________________________________________________________
-void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char *ptr)
+void TRootSniffer::ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char *ptr)
 {
    // scan object data members
    // some members like enum or static members will be excluded
@@ -726,7 +726,7 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
    } else if (obj->InheritsFrom(TBranch::Class())) {
       ScanCollection(rec, ((TBranch *) obj)->GetListOfLeaves());
    } else if (rec.CanExpandItem()) {
-      ScanObjectMemebers(rec, obj->IsA(), (char *)obj);
+      ScanObjectMembers(rec, obj->IsA(), (char *)obj);
    }
 }
 
