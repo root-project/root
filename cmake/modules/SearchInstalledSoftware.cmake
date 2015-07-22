@@ -1,6 +1,7 @@
 #---Check for installed packages depending on the build options/components eamnbled -
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
+set(repository_tarfiles http://service-spi.web.cern.ch/service-spi/external/tarFiles)
 
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
@@ -88,7 +89,7 @@ if(builtin_lzma)
     ExternalProject_Add(
      LZMA
      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
-#      URL_MD5  65693dc257802b6778c28ed53ecca678
+     #URL_MD5  65693dc257802b6778c28ed53ecca678
      PREFIX LZMA
      INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
@@ -219,7 +220,8 @@ if(mathmore OR builtin_gsl)
     message(STATUS "Downloading and building GSL version ${gsl_version}")
     ExternalProject_Add(
       GSL
-      URL http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
+      # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
+      URL ${repository_tarfiles}/gsl-${gsl_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no CFLAGS=${CMAKE_C_FLAGS}
     )
@@ -530,7 +532,7 @@ if(builtin_fftw3)
   message(STATUS "Downloading and building FFTW version ${FFTW_VERSION}")
   ExternalProject_Add(
     FFTW3
-    URL http://service-spi.web.cern.ch/service-spi/external/tarFiles/fftw-${FFTW_VERSION}.tar.gz
+    URL ${repository_tarfiles}/fftw-${FFTW_VERSION}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
     BUILD_COMMAND make CFLAGS=-fPIC
@@ -548,7 +550,8 @@ if(fitsio OR builtin_cfitsio)
     message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}")
     ExternalProject_Add(
       CFITSIO
-      URL ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
+      # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
+      URL ${repository_tarfiles}/cfitsio${cfitsio_version_no_dots}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
       BUILD_IN_SOURCE 1
@@ -627,7 +630,8 @@ if(builtin_xrootd)
   ROOT_ADD_CXX_FLAG(__cxxflags -Wno-format-security)
   ExternalProject_Add(
     XROOTD
-    URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
+    # http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
+    URL ${repository_tarfiles}/xrootd-${xrootd_version}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CMAKE_ARGS -DENABLE_PERL=FALSE
                -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
@@ -839,7 +843,8 @@ if(davix OR builtin_davix)
     ExternalProject_Add(
       DAVIX
       PREFIX DAVIX
-      URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
+      # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
+      URL ${repository_tarfiles}/davix-embedded-${DAVIX_VERSION}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}/DAVIX-install
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -925,7 +930,7 @@ if(tbb)
     set(tbb_version 42_20140122)
     ExternalProject_Add(
       TBB
-      URL http://service-spi.web.cern.ch/service-spi/external/tarFiles/tbb${tbb_version}oss_src.tgz
+      URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ""
       BUILD_COMMAND make CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
