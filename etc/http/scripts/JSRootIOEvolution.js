@@ -1,19 +1,26 @@
 /// @file JSRootIOEvolution.js
 /// I/O methods of JavaScript ROOT
 
-(function(){
+(function( factory ) {
+   if ( typeof define === "function" && define.amd ) {
+      // AMD. Register as an anonymous module.
+      define( ['JSRootCore', 'rawinflate'], factory );
+   } else {
+      if (typeof JSROOT == 'undefined') {
+         var e1 = new Error("This extension requires JSRootCore.js");
+         e1.source = "JSRootIOEvolution.js";
+         throw e1;
+      }
 
-   if (typeof JSROOT != "object") {
-      var e1 = new Error("This extension requires JSRootCore.js");
-      e1.source = "JSRootIOEvolution.js";
-      throw e1;
-   }
+      if (typeof JSROOT.IO == "object") {
+         var e1 = new Error("This JSROOT IO already loaded");
+         e1.source = "JSRootIOEvolution.js";
+         throw e1;
+      }
 
-   if (typeof JSROOT.IO == "object") {
-      var e1 = new Error("This JSROOT IO already loaded");
-      e1.source = "JSRootIOEvolution.js";
-      throw e1;
+      factory(JSROOT);
    }
+} (function(JSROOT) {
 
    JSROOT.IO = {
          kBase : 0, kOffsetL : 20, kOffsetP : 40, kCounter : 6, kCharStar : 7,
@@ -91,7 +98,7 @@
       if (str.charAt(off) == 'Z' && str.charAt(off+1) == 'L') {
          /* New zlib format */
          var data = str.substr(off + JSROOT.IO.Z_HDRSIZE + 2, srcsize);
-         return RawInflate.inflate(data);
+         return window.RawInflate.inflate(data);
       }
       /* Old zlib format */
       else {
@@ -1818,7 +1825,10 @@
       this.fTagOffset = 0;
    }
 
-})();
+   return JSROOT;
+
+}));
+
 
 // JSRootIOEvolution.js ends
 
