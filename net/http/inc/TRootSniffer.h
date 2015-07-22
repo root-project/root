@@ -129,7 +129,7 @@ protected:
    TList          fRestrictions;    //! list of restrictions for different locations
    TString        fAutoLoad;        //! scripts names, which are add as _autoload parameter to h.json request
 
-   void ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char *ptr);
+   void ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char *ptr);
 
    virtual void ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj);
 
@@ -193,7 +193,7 @@ public:
 
       fScanGlobalDir = on;
    }
-   
+
    void SetAutoLoad(const char* scripts = "");
 
    const char* GetAutoLoad() const;

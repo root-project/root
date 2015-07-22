@@ -386,7 +386,7 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
 
    if (topelement && sniffer->GetAutoLoad())
       SetField(item_prop_autoload, sniffer->GetAutoLoad());
-   
+
    return kTRUE;
 }
 
@@ -594,7 +594,7 @@ Int_t TRootSniffer::CheckRestriction(const char* full_item_name)
 /// scan object data members
 /// some members like enum or static members will be excluded
 
-void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char *ptr)
+void TRootSniffer::ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char *ptr)
 {
    if ((cl == 0) || (ptr == 0) || rec.Done()) return;
 
@@ -647,7 +647,7 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char
             dim.Append("]");
             chld.SetField(item_prop_arraydim, dim, kFALSE);
          } else
-	 if (member->GetArrayIndex()!=0) {
+         if (member->GetArrayIndex()!=0) {
             TRealData *idata = cl->GetRealData(member->GetArrayIndex());
             TDataMember *imember = (idata!=0) ? idata->GetDataMember() : 0;
             if ((imember!=0) && (strcmp(imember->GetTrueTypeName(),"int")==0)) {
@@ -727,7 +727,7 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
    } else if (obj->InheritsFrom(TBranch::Class())) {
       ScanCollection(rec, ((TBranch *) obj)->GetListOfLeaves());
    } else if (rec.CanExpandItem()) {
-      ScanObjectMemebers(rec, obj->IsA(), (char *) obj);
+      ScanObjectMembers(rec, obj->IsA(), (char *) obj);
    }
 }
 
