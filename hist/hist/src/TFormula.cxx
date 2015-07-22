@@ -1115,7 +1115,7 @@ void TFormula::HandleExponentiation(TString &formula)
 // handle linear functions defined with the operator ++
 void TFormula::HandleLinear(TString &formula)
 {
-   formula.ReplaceAll("++","@");
+   // Handle Linear functions identified with "@" operator 
    Int_t linPos = formula.Index("@");
    if (linPos == kNPOS ) return;  // function is not linear
    Int_t NofLinParts = formula.CountChar((int)'@');
@@ -1171,14 +1171,17 @@ void TFormula::PreProcessFormula(TString &formula)
    //*-*    Similar functionality should be added here.
    //*-*
    formula.ReplaceAll("**","^");
+   formula.ReplaceAll("++","@");  // for linear functions
    formula.ReplaceAll(" ","");
    HandlePolN(formula);
    HandleParametrizedFunctions(formula);
    HandleExponentiation(formula);
    // "++" wil be dealt with Handle Linear 
    HandleLinear(formula);
-   // special case for "--"
+   // special case for "--" and "++"
+   // ("++" needs to be written with whitespace that is removed before but then we re-add it again
    formula.ReplaceAll("--","- -");
+   formula.ReplaceAll("++","+ +");
 }
 Bool_t TFormula::PrepareFormula(TString &formula)
 {
