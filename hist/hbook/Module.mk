@@ -44,7 +44,7 @@ include/%.h:    $(HBOOKDIRI)/%.h
 $(HBOOKLIB):    $(HBOOKO) $(HBOOKDO) $(ORDER_) $(MAINLIBS) $(HBOOKLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libHbook.$(SOEXT) $@ "$(HBOOKO) $(HBOOKDO)" \
-		   "$(HBOOKLIBEXTRA)"
+		   "$(HBOOKLIBEXTRA) $(F77LIBS)"
 
 $(call pcmrule,HBOOK)
 	$(noop)
