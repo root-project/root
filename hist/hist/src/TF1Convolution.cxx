@@ -60,7 +60,7 @@ public:
    }
    Double_t operator()(Double_t x) const
    {
-      return fFunction1->Eval(x) * fFunction2->Eval(x-fT0);
+      return fFunction1->Eval(x) * fFunction2->Eval(fT0-x);
    }
 };
 
@@ -256,8 +256,9 @@ void TF1Convolution::MakeFFTConv()
    {
       // we need this since we have applied a shift in the middle of f2
       int j = i + fNofPoints/2;
-      if (j >= fNofPoints) j -= fNofPoints; 
-      fGraphConv->SetPoint(i, x[i], fftinverse->GetPointReal(j)/fNofPoints);//because it is not normalized
+      if (j >= fNofPoints) j -= fNofPoints;
+      // need to normalize by dividing by the number of points and multiply by the bin width = Range/Number of points
+      fGraphConv->SetPoint(i, x[i], fftinverse->GetPointReal(j)*(fXmax-fXmin)/(fNofPoints*fNofPoints) );  
    }
    fFlagGraph = true; // we can use the graph
 }
@@ -276,38 +277,23 @@ Double_t TF1Convolution::EvalFFTConv(Double_t t)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// perform numerical convolution
-/// could in principle cache the integral  in a Grap[h as it is done for the FFTW
+/// could in principle cache the integral  in a Graph as it is done for the FFTW
 
 Double_t TF1Convolution::EvalNumConv(Double_t t)
 {
    TF1Convolution_EvalWrapper fconv( fFunction1, fFunction2, t);
    Double_t result = 0;
    
-   if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS )
-   {
-      ROOT::Math::GaussIntegrator integrator(1e-9, 1e-9);
-      integrator.SetFunction(ROOT::Math::Functor1D(fconv));
-      if      (fXmin != - TMath::Infinity() && fXmax != TMath::Infinity())
-         result =  integrator.Integral(fXmin, fXmax);
-      else if (fXmin == - TMath::Infinity() && fXmax != TMath::Infinity())
-         result = integrator.IntegralLow(fXmax);
-      else if (fXmin != - TMath::Infinity() && fXmax == TMath::Infinity())
-         result = integrator.IntegralUp(fXmin);
-      else if (fXmin == - TMath::Infinity() && fXmax == TMath::Infinity())
-         result = integrator.Integral();
-   }
-   else
-   {
-      ROOT::Math::IntegratorOneDim integrator(fconv, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), 1e-9, 1e-9);
-      if      (fXmin != - TMath::Infinity() && fXmax != TMath::Infinity() )
-         result =  integrator.Integral(fXmin, fXmax);
-      else if (fXmin == - TMath::Infinity() && fXmax != TMath::Infinity() )
-         result = integrator.IntegralLow(fXmax);
-      else if (fXmin != - TMath::Infinity() && fXmax == TMath::Infinity() )
-         result = integrator.IntegralUp(fXmin);
-      else if (fXmin == - TMath::Infinity() && fXmax == TMath::Infinity() )
-         result = integrator.Integral();
-   }
+   ROOT::Math::IntegratorOneDim integrator(fconv, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), 1e-9, 1e-9);
+   if      (fXmin != - TMath::Infinity() && fXmax != TMath::Infinity() )
+      result =  integrator.Integral(fXmin, fXmax);
+   else if (fXmin == - TMath::Infinity() && fXmax != TMath::Infinity() )
+      result = integrator.IntegralLow(fXmax);
+   else if (fXmin != - TMath::Infinity() && fXmax == TMath::Infinity() )
+      result = integrator.IntegralUp(fXmin);
+   else if (fXmin == - TMath::Infinity() && fXmax == TMath::Infinity() )
+      result = integrator.Integral();
+
    return result;
 }
 
