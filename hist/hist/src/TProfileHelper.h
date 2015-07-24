@@ -688,7 +688,7 @@ Double_t TProfileHelper::GetBinError(T* p, Int_t bin)
    Double_t test = 1;
    if (err2 != 0 && neff < 5) test = eprim2*sum/err2;
    //Int_t cellLimit = (p->GetDimension() == 3)?1000404:10404;
-   if (p->fgApproximate && (test < 1.e-4 || eprim2 < 1e-6)) { //3.04
+   if (p->fgApproximate && (test < 1.e-4 || eprim2 <= 0)) { 
       Double_t stats[TH1::kNstat];
       p->GetStats(stats);
       Double_t ssum = stats[0];
