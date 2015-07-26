@@ -78,9 +78,20 @@ void Functions(TString type = "Import")
       ROOT::R::TRFunctionImport read("read.csv");
       ROOT::R::TRFunctionImport head("head");
       
+      ROOT::R::TRFunctionImport options("options");
+      options(ROOT::R::Label["device"]="x11");
       
       
-//      options("device='x11'");
+      r<<"test <- function() x11";
+      ROOT::R::TRFunctionImport test("test");
+      
+      
+      ROOT::R::TRFunctionImport dev=test();
+
+//       dev();      
+      
+      
+     options("device='x11'");
 //      
       ROOT::R::TRObject vector=c(1,2,3,4);
       TVectorF v=vector;

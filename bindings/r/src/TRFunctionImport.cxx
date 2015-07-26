@@ -6,6 +6,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #include<TRFunctionImport.h>
+#include <TRObject.h>
 
 #ifndef Rcpp_Function_h
 #include<Rcpp/Function.h>
@@ -43,4 +44,10 @@ TRFunctionImport::TRFunctionImport(const TString& name)
 TRFunctionImport::TRFunctionImport(const TString& name, const TString& ns)
 {
     f=new Rcpp::Function(name.Data(),ns.Data());
+}
+
+//______________________________________________________________________________
+TRFunctionImport::TRFunctionImport(SEXP obj)
+{
+    f=new Rcpp::Function(obj);  
 }

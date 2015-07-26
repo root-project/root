@@ -52,6 +52,7 @@ namespace ROOT {
         TRFunctionImport(const TString& name);
         TRFunctionImport(const TString& name, const TString& ns);
         TRFunctionImport(const TRFunctionImport &fun);
+        TRFunctionImport(SEXP obj);
         
         ~TRFunctionImport(){if(f) delete f;}
         SEXP operator()(){return (*f)();}
