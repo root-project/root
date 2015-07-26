@@ -168,7 +168,9 @@ TPad::TPad()
    fXtoPixelk    = 0.;
    fYtoAbsPixelk = 0.;
    fYtoPixel     = 0.;
-   fYtoPixelk   = 0.;
+   fYtoPixelk    = 0.;
+   fXUpNDC       = 0.;
+   fYUpNDC       = 0.;
 
    fFixedAspectRatio = kFALSE;
    fAspectRatio      = 0.;
@@ -2274,8 +2276,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             zoombox = new TBox(zbx1, zby1, zbx2, zby2);
             Int_t ci = TColor::GetColor("#7d7dff");
             TColor *zoomcolor = gROOT->GetColor(ci);
-            if (!TCanvas::SupportAlpha()) zoombox->SetFillStyle(3002);
-            else                          zoomcolor->SetAlpha(0.5);
+            if (!TCanvas::SupportAlpha() || !zoomcolor) zoombox->SetFillStyle(3002);
+            else                                        zoomcolor->SetAlpha(0.5);
             zoombox->SetFillColor(ci);
             zoombox->Draw();
             gPad->Modified();
@@ -3418,81 +3420,9 @@ void TPad::CopyBackgroundPixmap(Int_t x, Int_t y)
 
 
 //______________________________________________________________________________
-void TPad::PaintFillArea(Int_t nn, Float_t *xx, Float_t *yy, Option_t *)
+void TPad::PaintFillArea(Int_t, Float_t *, Float_t *, Option_t *)
 {
-   // Paint fill area in CurrentPad World coordinates.
-
-   Warning("TPad::PaintFillArea", "Float_t signature is obsolete");
-
-   if (nn <3) return;
-   Int_t i,iclip,n=0;
-   Double_t xmin,xmax,ymin,ymax;
-   Double_t u1, v1, u[2],v[2];
-   if (TestBit(TGraph::kClipFrame)) {
-      xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
-   } else {
-      xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
-   }
-   Double_t *x = new Double_t[2*nn+1];
-   Double_t *y = new Double_t[2*nn+1];
-
-   for (i=0;i<nn;i++) {
-      u[0] = xx[i];
-      v[0] = yy[i];
-      if (i == nn-1) {
-         u[1] = xx[0];
-         v[1] = yy[0];
-      } else {
-         u[1] = xx[i+1];
-         v[1] = yy[i+1];
-      }
-      u1 = u[1];
-      v1 = v[1];
-      iclip = Clip(u,v,xmin,ymin,xmax,ymax);
-      if (iclip == 2) continue;
-      if (iclip == 1) {
-         if (u[0] == u[1] && v[0] == v[1]) continue;
-      }
-      x[n] = u[0];
-      y[n] = v[0];
-      n++;
-      if (iclip) {
-         if (u[1] != u1 || v[1] != v1) {
-            x[n] = u[1];
-            y[n] = v[1];
-            n++;
-         }
-      }
-   }
-   x[n] = x[0];
-   y[n] = y[0];
-
-   if (n < 3) {
-      delete [] x;
-      delete [] y;
-      return;
-   }
-
-   // Paint the fill area with hatches
-   Int_t fillstyle = GetPainter()->GetFillStyle();
-   if (gPad->IsBatch() && gVirtualPS) fillstyle = gVirtualPS->GetFillStyle();
-   if (fillstyle >= 3100 && fillstyle < 4000) {
-      PaintFillAreaHatches(nn, x, y, fillstyle);
-      delete [] x;
-      delete [] y;
-      return;
-   }
-
-   if (!gPad->IsBatch())
-      // invoke the graphics subsystem
-      GetPainter()->DrawFillArea(n, x, y);
-
-   if (gVirtualPS) {
-      gVirtualPS->DrawPS(-n, x, y);
-   }
-   delete [] x;
-   delete [] y;
-   Modified();
+   Warning("TPad::PaintFillArea", "Float_t signature is obsolete. Use Double_t signature.");
 }
 
 
@@ -4589,7 +4519,6 @@ void TPad::Print(const char *filenam, Option_t *option)
 
       TPad *padsav = (TPad*)gPad;
       cd();
-      TVirtualPS *psave = gVirtualPS;
 
       if (!gVirtualPS) {
          // Plugin Postscript/SVG driver
@@ -4612,7 +4541,6 @@ void TPad::Print(const char *filenam, Option_t *option)
       if (!gSystem->AccessPathName(psname)) Info("Print", "SVG file %s has been created", psname.Data());
 
       delete gVirtualPS;
-      gVirtualPS = psave;
       gVirtualPS = 0;
       padsav->cd();
 
@@ -4631,7 +4559,6 @@ void TPad::Print(const char *filenam, Option_t *option)
 
       TPad *padsav = (TPad*)gPad;
       cd();
-      TVirtualPS *psave = gVirtualPS;
 
       if (!gVirtualPS) {
          // Plugin Postscript/SVG driver
@@ -4655,7 +4582,6 @@ void TPad::Print(const char *filenam, Option_t *option)
       if (!gSystem->AccessPathName(psname)) Info("Print", "TeX file %s has been created", psname.Data());
 
       delete gVirtualPS;
-      gVirtualPS = psave;
       gVirtualPS = 0;
       padsav->cd();
 
@@ -4722,16 +4648,18 @@ void TPad::Print(const char *filenam, Option_t *option)
       }
 
       // Create a new Postscript, PDF or image file
-      gVirtualPS->SetName(psname);
+      if (gVirtualPS) gVirtualPS->SetName(psname);
       const Ssiz_t titlePos = opt.Index("Title:");
       if (titlePos != kNPOS) {
-         gVirtualPS->SetTitle(opt.Data()+titlePos+6);
+         if (gVirtualPS) gVirtualPS->SetTitle(opt.Data()+titlePos+6);
          opt.Replace(titlePos,opt.Length(),"pdf");
       }
-      gVirtualPS->Open(psname,pstype);
-      gVirtualPS->SetBit(kPrintingPS);
+      if (gVirtualPS) gVirtualPS->Open(psname,pstype);
+      if (gVirtualPS) gVirtualPS->SetBit(kPrintingPS);
       if (!copenb) {
-         if (!strstr(opt,"pdf") || image) gVirtualPS->NewPage();
+         if (!strstr(opt,"pdf") || image) {
+            if (gVirtualPS) gVirtualPS->NewPage();
+         }
          Paint();
       }
       if (noScreen) GetCanvas()->SetBatch(kFALSE);

@@ -129,9 +129,8 @@ void TTUBE::MakeTableOfCoSin() const // Internal cache - const so other const fn
 
    Int_t j;
    Int_t n = GetNumberOfDivisions ();
-   if (fCoTab)
-      delete [] fCoTab; // Delete the old tab if any
-      fCoTab = new Double_t [n];
+   if (fCoTab) delete [] fCoTab; // Delete the old tab if any
+   fCoTab = new Double_t [n];
    if (!fCoTab ) {
       Error("MakeTableOfCoSin()","No cos table done");
       return;

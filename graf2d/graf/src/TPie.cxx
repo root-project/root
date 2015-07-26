@@ -755,6 +755,7 @@ void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
    fLegend        = 0;
    fHeight        = 0.08;
    fAngle3D       = 30;
+   fIs3D          = kFALSE;
 
    fLabelsOffset = gStyle->GetLabelOffset();
 

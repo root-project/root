@@ -45,6 +45,12 @@ TRotMatrix::TRotMatrix(const char *name, const char *title, Double_t *matrix)
 
    if (!matrix) { Error("ctor","No rotation is supplied"); return; }
 
+   fNumber = 0;
+   fPhi    = 0;
+   fPsi    = 0;
+   fTheta  = 0;
+   fType   = 0;
+
    SetMatrix(matrix);
    if (!gGeometry) gGeometry = new TGeometry();
    fNumber = gGeometry->GetListOfMatrices()->GetSize();

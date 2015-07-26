@@ -551,7 +551,7 @@ BinData::ErrorType GetDataType(const TGraph2D * gr, const DataOptions & fitOpt) 
    // default case for graphs (when they have errors)
    BinData::ErrorType type = BinData::kValueError;
    // if all errors are zero set option of using errors to 1
-   if (ez == 0 ) {
+   if (fitOpt.fErrors1 || ez == 0 ) {
       type =  BinData::kNoError;
    }
    else if ( ex != 0 && ey!=0 && fitOpt.fCoordErrors)  {
@@ -773,9 +773,10 @@ void FillData(BinData & dv, const THnBase * s1, TF1 * func)
    // data.
    ROOT::Fit::DataOptions& dopt = dv.Opt();
    dopt.fUseEmpty = true;
-   // when using sparse data need to set option bin volume
+   // when using sparse data need to set option to use normalized bin volume, because sparse bins are merged together
    //if (!dopt.fIntegral) dopt.fBinVolume = true;
-   dopt.fBinVolume = true;
+   dopt.fBinVolume = true; 
+   dopt.fNormBinVolume = true;
 
    // Get the sparse data
    ROOT::Fit::SparseData d(ndim, &xmin[0], &xmax[0]);
@@ -938,7 +939,6 @@ void FillData ( BinData  & dv, const TGraph2D * gr, TF1 * func ) {
          (*func)( x ); // evaluate using stored function parameters
          if (TF1::RejectedPoint() ) continue;
       }
-
 
       if (type == BinData::kNoError) {
          dv.Add( x, gz[i] );

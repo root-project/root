@@ -195,7 +195,7 @@ namespace ROOT {
 
    static UInt_t ClassTableHash(const char *name, UInt_t size)
    {
-      const char *p = name;
+      auto p = reinterpret_cast<const unsigned char*>( name );
       UInt_t slot = 0;
 
       while (*p) slot = slot<<1 ^ *p++;

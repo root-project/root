@@ -26,6 +26,8 @@
 #include "TCollection.h"
 #include "TDirectory.h"
 #include "TError.h"
+#include "TFile.h"
+#include "TKey.h"
 #include "TObject.h"
 #include "TObjArray.h"
 #include "TSeqCollection.h"
@@ -47,6 +49,7 @@
 
 #include <stdio.h>
 #include <string.h>     // only needed for Cling TMinuit workaround
+
 
 // temp (?)
 static inline TClass* OP2TCLASS( PyROOT::ObjectProxy* pyobj ) {
@@ -479,7 +482,8 @@ namespace {
          return 0;
       }
 
-      PyObject* nseq = BindCppObject( Cppyy::Allocate( self->ObjectIsA() ), self->ObjectIsA() );
+      PyObject* nseq = BindCppObject(
+         Cppyy::Construct( self->ObjectIsA() ), self->ObjectIsA() );
 
       for ( Long_t i = 0; i < imul; ++i ) {
          PyObject* result = CallPyObjMethod( nseq, "extend", (PyObject*)self );
@@ -1382,7 +1386,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          if ( branch->IsA() == TBranchElement::Class() || branch->IsA() == TBranchObject::Class() ) {
             TClass* klass = TClass::GetClass( branch->GetClassName() );
             if ( klass && branch->GetAddress() )
-               return BindCppObjectNoCast( *(char**)branch->GetAddress(), Cppyy::GetScope( branch->GetClassName() ) );
+               return BindCppObjectNoCast( *(void**)branch->GetAddress(), Cppyy::GetScope( branch->GetClassName() ) );
 
          // try leaf, otherwise indicate failure by returning a typed null-object
             TObjArray* leaves = branch->GetListOfLeaves();
@@ -1420,12 +1424,12 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             delete pcnv;
 
             return value;
-         } else {
+         } else if ( leaf->GetValuePointer() ) {
          // value types
             TConverter* pcnv = CreateConverter( leaf->GetTypeName() );
             PyObject* value = 0;
             if ( leaf->IsA() == TLeafElement::Class() || leaf->IsA() == TLeafObject::Class() )
-               value = pcnv->FromMemory( (void*)*(char**)leaf->GetValuePointer() );
+               value = pcnv->FromMemory( (void*)*(void**)leaf->GetValuePointer() );
             else
                value = pcnv->FromMemory( (void*)leaf->GetValuePointer() );
             delete pcnv;
@@ -1489,7 +1493,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       virtual PyCallable* Clone() { return new TTreeBranch( *this ); }
 
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ )
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ )
       {
       // acceptable signatures:
       //   ( const char*, void*, const char*, Int_t = 32000 )
@@ -1615,7 +1619,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       virtual PyCallable* Clone() { return new TTreeSetBranchAddress( *this ); }
 
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ )
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ )
       {
       // acceptable signature:
       //   ( const char*, void* )
@@ -1836,7 +1840,7 @@ namespace {
       virtual PyCallable* Clone() { return new TF1InitWithPyFunc( *this ); }
 
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ )
+         ObjectProxy*& self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ )
       {
       // expected signature: ( char* name, pyfunc, double xmin, double xmax, int npar = 0 )
          int argc = PyTuple_GET_SIZE( args );
@@ -1933,7 +1937,7 @@ namespace {
    };
 
 //- TFunction behavior ---------------------------------------------------------
-   PyObject* TFunctionCall( ObjectProxy* self, PyObject* args ) {
+   PyObject* TFunctionCall( ObjectProxy*& self, PyObject* args ) {
       return TFunctionHolder( Cppyy::gGlobalScope, (Cppyy::TCppMethod_t)self->GetObject() ).Call( self, args, 0 );
    }
 
@@ -1954,7 +1958,7 @@ namespace {
       virtual PyCallable* Clone() { return new TMinuitSetFCN( *this ); }
 
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
       {
       // expected signature: ( pyfunc )
          int argc = PyTuple_GET_SIZE( args );
@@ -2037,7 +2041,7 @@ namespace {
       virtual PyCallable* Clone() { return new TMinuitFitterSetFCN( *this ); }
 
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
       {
       // expected signature: ( pyfunc )
          int argc = PyTuple_GET_SIZE( args );
@@ -2104,7 +2108,7 @@ namespace {
       virtual PyCallable* Clone() { return new TFitterFitFCN( *this ); }
 
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ )
+         ObjectProxy*& self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ )
       {
       // expected signature: ( self, pyfunc, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false )
          int argc = PyTuple_GET_SIZE( args );
@@ -2165,6 +2169,25 @@ namespace {
          return 0;
       }
       return result;
+   }
+
+// This is done for TFile, but Get() is really defined in TDirectoryFile and its base
+// TDirectory suffers from a similar problem. Nevertheless, the TFile case is by far
+// the most common, so we'll leave it at this until someone asks for one of the bases
+// to be pythonized.
+   PyObject* TFileGet( PyObject* self, PyObject* namecycle )
+   {
+   // Pythonization of TFile::Get that raises AttributeError on failure.
+      ObjectProxy* key = (ObjectProxy*)CallPyObjMethod( self, "GetKey", namecycle );
+      if ( !key )
+         return nullptr;
+
+      void* addr = ((TFile*)((ObjectProxy*)self)->GetObject())->GetObjectChecked(
+         PyROOT_PyUnicode_AsString( namecycle ), ((TKey*)key->GetObject())->GetClassName() );
+
+      Cppyy::TCppType_t klass =
+         (Cppyy::TCppType_t)Cppyy::GetScope( ((TKey*)key->GetObject())->GetClassName() );
+      return BindCppObjectNoCast( addr, klass, kFALSE );
    }
 
 //- simplistic len() functions -------------------------------------------------
@@ -2535,7 +2558,10 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Py_XDECREF( attr );
 
    // allow member-style access to entries in file
-      return Utility::AddToClass( pyclass, "__getattr__", TFileGetAttr, METH_O );
+      Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TFileGetAttr, METH_O );
+      Utility::AddToClass( pyclass, "Get",         (PyCFunction) TFileGet,     METH_O );
+
+      return kTRUE;
    }
 
    if ( name.substr(0,8) == "TVector3" ) {

@@ -181,7 +181,9 @@ TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &p) :
 {
    // 3-D polymarker copy ctor.
 
+   fN = 0;
    fP = 0;
+   fLastPoint = -1;
    p.Copy(*this);
 }
 

@@ -113,7 +113,7 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* na
   _model("!model",this,other._model),
   _convVar("!convVar",this,other._convVar),
   _convSet("!convSet",this,other._convSet),
-  _basisList(other._basisList),
+  // _basisList(other._basisList),
   _convNormSet(other._convNormSet? new RooArgSet(*other._convNormSet) : new RooArgSet() ),
   _convSetIter(_convSet.createIterator()),
   _coefNormMgr(other._coefNormMgr,this),
@@ -123,6 +123,7 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* na
   if (_model.absArg()) {
     _model.absArg()->setAttribute("NOCacheAndTrack") ;
   }
+  other._basisList.snapshot(_basisList);
 }
 
 

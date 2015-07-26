@@ -11,6 +11,11 @@ if(NOT MSVC)
 else()
   set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS "-DNOMINMAX -D_XKEYCHECK_H")
 endif()
+CHECK_CXX_COMPILER_FLAG("-fno-rtti" CXX_HAS_fno_rtti)
+if(CXX_HAS_fno_rtti)
+  set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS "-fno-rtti")
+endif()
+
 ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           src/TModuleGenerator.cxx src/rootcling.cxx src/rootclingTCling.cxx
                           ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
@@ -65,8 +70,13 @@ add_custom_command(OUTPUT rootcling_tmp.cxx
 if(WIN32)
   set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX -DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling")
 else()
-  set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling")
+  if(CXX_HAS_fno_rtti)
+    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling -fno-rtti")
+  else()
+    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling")
+  endif()
 endif()
+
 ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
                               src/TModuleGenerator.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
                               ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
@@ -116,6 +126,16 @@ foreach(file  multimap  multiset)
   install(FILES ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/cint)
 endforeach()
 
+# These headers do not have complete include guards on all platforms we
+# support. This means that the PCH cannot provide their representation at
+# runtime and clang will hit disk, triggering a possible incompatibility
+# of that file in build-time versus run-time (different length etc).
+# Capture their build-time version here, and inject it into runtime.
+foreach(file wchar.h bits/stat.h)
+  if(EXISTS /usr/include/${file})
+    list(APPEND copy_commands COMMAND cmake -E copy /usr/include/${file} ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include)
+  endif()
+endforeach()
 
 foreach( file llvm/ADT/IntrusiveRefCntPtr.h
               llvm/ADT/StringRef.h
@@ -153,6 +173,12 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND cmake -E copy
                                   ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/assert.h
                                   ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/assert.h
+                   COMMAND cmake -E copy
+                                  ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/stdlib.h
+                                  ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/stdlib.h
+                   COMMAND cmake -E copy
+                                  ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/unistd.h
+                                  ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/unistd.h
                    ${copy_commands}
                    COMMAND cmake -E touch ${stamp_file}
                    DEPENDS ${files_to_copy}

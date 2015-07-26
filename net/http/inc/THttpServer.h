@@ -61,6 +61,8 @@ public:
 
    Bool_t CreateEngine(const char *engine);
 
+   Bool_t IsAnyEngine() const { return fEngines.GetSize() > 0; }
+
    TRootSniffer *GetSniffer() const
    {
       // returns pointer on objects sniffer

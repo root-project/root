@@ -343,7 +343,7 @@ namespace cling {
       ParseResult = kSuccessWithWarnings;
     }
 
-    // Empty transaction send it back to the pool.
+    // Empty transaction, send it back to the pool.
     if (T->empty()) {
       assert((!m_Consumer->getTransaction()
               || (m_Consumer->getTransaction() == T))
@@ -447,8 +447,8 @@ namespace cling {
       Transaction* nestedT = beginTransaction(CompilationOptions());
       // Pull all template instantiations in that came from the consumers.
       getCI()->getSema().PerformPendingInstantiations();
-      ParseResultTransaction PRT = endTransaction(nestedT);
-      commitTransaction(PRT);
+      ParseResultTransaction nestedPRT = endTransaction(nestedT);
+      commitTransaction(nestedPRT);
       m_Consumer->setTransaction(prevConsumerT);
     }
     m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
@@ -601,17 +601,21 @@ namespace cling {
 
     TransactionUnloader U(&getCI()->getSema(), m_CodeGen.get());
 
+    if (!T->getParent()) {
+      // Remove from the queue
+      assert(T == m_Transactions.back() && "Out of order transaction removal");
+      m_Transactions.pop_back();
+      if (!m_Transactions.empty())
+        m_Transactions.back()->setNext(0);
+    }
+
     if (U.RevertTransaction(T))
       T->setState(Transaction::kRolledBack);
     else
       T->setState(Transaction::kRolledBackWithErrors);
 
-    if (!T->getParent()) {
-      // Remove from the queue
-      m_Transactions.pop_back();
-      if (!m_Transactions.empty())
-        m_Transactions.back()->setNext(0);
-    }
+    // Keep T alive: someone else might have grabbed that T and needs to detect
+    // that it's bad.
     //m_TransactionPool->releaseTransaction(T);
   }
 

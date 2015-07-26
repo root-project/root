@@ -62,6 +62,13 @@ else()
   add_subdirectory(llvm/src EXCLUDE_FROM_ALL)
 endif()
 
+#---Avoid to dependencies to system (e.g. atomic) libraries without modifying the LLVM code----------
+if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
+  get_target_property(__libs LLVMSupport INTERFACE_LINK_LIBRARIES)
+  list(REMOVE_ITEM __libs atomic)
+  set_target_properties(LLVMSupport PROPERTIES INTERFACE_LINK_LIBRARIES "${__libs}")
+endif()
+
 #---Mark the LLVM/CLANG variables as advanced--------------------------------------------------------
 get_cmake_property(variables CACHE_VARIABLES)
 foreach(var ${variables})

@@ -28,6 +28,10 @@ add_library(rsa STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/rsaaux.cxx
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/rsafun.cxx)
 add_dependencies(rsa move_headers)
 
+if(ssl)
+  include_directories(${OPENSSL_INCLUDE_DIR})
+endif()
+
 ROOT_GENERATE_DICTIONARY(G__RootAuth ${headers} MODULE RootAuth LINKDEF LinkDefRoot.h)
 ROOT_LINKER_LIBRARY(RootAuth ${sources} G__RootAuth.cxx LIBRARIES ${CRYPTLIBS} DEPENDENCIES Net RIO )
 

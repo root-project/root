@@ -30,7 +30,7 @@ namespace PyROOT {
 
 // extra call information
    struct TCallContext {
-      TCallContext( std::vector< TParameter >::size_type sz = 0 ) : fFlags( 0 ),  fArgs( sz ) {}
+      TCallContext( std::vector< TParameter >::size_type sz = 0 ) : fArgs( sz ), fFlags( 0 ) {}
 
       enum ECallFlags {
          kNone           =    0,
@@ -53,8 +53,8 @@ namespace PyROOT {
       static Bool_t SetSignalPolicy( ECallFlags e );
 
    // payload
-      UInt_t fFlags;
       std::vector< TParameter > fArgs;
+      UInt_t fFlags;
    };
 
    inline Bool_t IsSorted( UInt_t flags ) {

@@ -207,7 +207,7 @@ TFile *TFriendElement::GetFile()
 
 
    if (strlen(GetTitle())) {
-      TDirectory::TContext ctxt(gDirectory, 0);
+      TDirectory::TContext ctxt;
       fFile = TFile::Open(GetTitle());
       fOwnFile = kTRUE;
    } else {

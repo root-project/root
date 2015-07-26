@@ -222,7 +222,7 @@ void ProofStdVect::SlaveTerminate()
          return;
       }
       Bool_t cleanup = kFALSE;
-      TDirectory::TContext ctx(0);
+      TDirectory::TContext ctxt;
       if (fTree->GetEntries() > 0) {
          fFile->cd();
          fTree->Write();

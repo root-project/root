@@ -116,6 +116,28 @@ Bool_t RooHashTable::remove(TObject* arg, TObject* hashArg)
       return kTRUE ;
     }
   }
+
+  if (_hashMethod != Name) return kFALSE;
+
+  // If we didn't find it by name, see if it might have been renamed
+  RooAbsArg* p = dynamic_cast<RooAbsArg*>(arg);
+  //cout << "RooHashTable::remove possibly renamed '" << arg->GetName() << "', kRenamedArg=" << (p&&p->namePtr()->TestBit(RooNameReg::kRenamedArg)) << endl;
+  if (p && !p->namePtr()->TestBit(RooNameReg::kRenamedArg)) return kFALSE;
+
+  // If so, check the whole list
+  Int_t i;
+  for (i=0 ; i<_size ; i++) {
+    if (i != slot && _arr[i] && _arr[i]->Remove(arg)) {
+      _entries-- ;
+      if (_arr[i]->GetSize()==0) {
+        delete _arr[i] ;
+        _arr[i] = 0 ;
+        _usedSlots-- ;
+      }
+      return kTRUE ;
+    }
+  }
+
   return kFALSE ;
 }
 
@@ -155,7 +177,16 @@ Bool_t RooHashTable::replace(const TObject* oldArg, const TObject* newArg, const
 
   Int_t slot = hash(oldHashArg?oldHashArg:oldArg) % _size ;
   if (_arr[slot]) {
-    return _arr[slot]->Replace(oldArg,newArg) ;
+    Int_t newSlot = hash(newArg) % _size ;
+    if (newSlot == slot) {
+      return _arr[slot]->Replace(oldArg,newArg) ;
+    }
+  }
+
+  // We didn't find the oldArg or they have different slots.
+  if (remove((TObject*)oldArg,(TObject*)oldHashArg)) {
+    add((TObject*)newArg);
+    return kTRUE;
   }
   return kFALSE ;
 }
@@ -193,11 +224,8 @@ TObject* RooHashTable::find(const TObject* hashArg) const
 {
   // Return object with the given pointer from the table
 
-  if (_hashMethod != Pointer) assert(0) ;
-
-  Int_t slot = hash(hashArg) % _size ;
-  if (_arr[slot]) return _arr[slot]->FindObject(hashArg) ;
-  return 0;  
+  RooLinkedListElem* elem = findLinkTo(hashArg) ;
+  return elem ? elem->_arg : 0 ;
 }
 
 
@@ -210,10 +238,12 @@ RooLinkedListElem* RooHashTable::findLinkTo(const TObject* hashArg) const
   if (_hashMethod != Pointer) assert(0) ;
 
   Int_t slot = hash(hashArg) % _size ;
-  if (_arr[slot]) {
-    Int_t i ; 
-    for (i=0 ; i<_arr[slot]->GetSize() ; i++) {
-      RooLinkedListElem* elem = (RooLinkedListElem*)_arr[slot]->At(i) ;
+  RooLinkedList* lst = _arr[slot];
+  if (lst) {
+    RooFIter it = lst->fwdIterator() ;
+    TObject* obj;
+    while ((obj=it.next())) {
+      RooLinkedListElem* elem = (RooLinkedListElem*)obj ;
       if (elem->_arg == hashArg) return elem ;
     }
   }

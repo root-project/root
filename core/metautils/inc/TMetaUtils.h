@@ -443,6 +443,9 @@ std::string GetQualifiedName(const clang::RecordDecl &recordDecl);
 int WriteNamespaceHeader(std::ostream&, const clang::RecordDecl *);
 
 //______________________________________________________________________________
+int WriteNamespaceHeader(std::ostream&, const clang::DeclContext *);
+
+//______________________________________________________________________________
 void WritePointersSTL(const AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________

@@ -52,7 +52,8 @@ ClassImp(TDictionary)
 TDictionary::TDictionary(const TDictionary& dict):
    TNamed(dict),
    fAttributeMap(dict.fAttributeMap ?
-                 ((TDictAttributeMap*)dict.fAttributeMap->Clone()) : 0 )
+                 ((TDictAttributeMap*)dict.fAttributeMap->Clone()) : 0 ),
+   fUpdatingTransactionCount(0)
 {
    // Copy constructor, cloning fAttributeMap.
 }

@@ -50,7 +50,7 @@
 #include "TClassTable.h"
 #include "TDataMember.h"
 #include "TDataType.h"
-#include "TEnum.h" 
+#include "TEnum.h"
 #include "TError.h"
 #include "TExMap.h"
 #include "TFunctionTemplate.h"
@@ -857,6 +857,7 @@ public:
    virtual ~TAutoInspector() { }
    using TMemberInspector::Inspect;
    virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
+   virtual Bool_t IsTreatingNonAccessibleTypes() {return kFALSE;}
 };
 
 //______________________________________________________________________________

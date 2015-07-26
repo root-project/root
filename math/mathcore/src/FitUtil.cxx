@@ -374,7 +374,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
    double wrefVolume = 1.0;
    std::vector<double> xc;
    if (useBinVolume) {
-      wrefVolume /= data.RefVolume();
+      if (fitOpt.fNormBinVolume) wrefVolume /= data.RefVolume();
       xc.resize(data.NDim() );
    }
 
@@ -727,7 +727,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
    double wrefVolume = 1.0;
    std::vector<double> xc;
    if (useBinVolume) {
-      wrefVolume /= data.RefVolume();
+      if (fitOpt.fNormBinVolume) wrefVolume /= data.RefVolume();
       xc.resize(data.NDim() );
    }
 
@@ -1178,11 +1178,6 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
 
 
    unsigned int n = data.Size();
-#ifdef DEBUG
-   std::cout << "Evaluate PoissonLogL for params = [ ";
-   for (unsigned int j=0; j < func.NPar(); ++j) std::cout << p[j] << " , ";
-   std::cout << "]  - data size = " << n << std::endl;
-#endif
 
 #ifdef USE_PARAMCACHE
    (const_cast<IModelFunction &>(func)).SetParameters(p);
@@ -1197,13 +1192,21 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
    bool useW2 = (iWeight == 2);
-
+   
+   // normalize if needed by a reference volume value
    double wrefVolume = 1.0;
    std::vector<double> xc;
    if (useBinVolume) {
-      wrefVolume /= data.RefVolume();
+      if (fitOpt.fNormBinVolume) wrefVolume /= data.RefVolume();
       xc.resize(data.NDim() );
    }
+
+#ifdef DEBUG
+   std::cout << "Evaluate PoissonLogL for params = [ ";
+   for (unsigned int j=0; j < func.NPar(); ++j) std::cout << p[j] << " , ";
+   std::cout << "]  - data size = " << n << " useBinIntegral " << useBinIntegral << " useBinVolume "
+             << useBinVolume << " useW2 " << useW2 << " wrefVolume = " << wrefVolume << std::endl;
+#endif
 
 #ifdef USE_PARAMCACHE
    IntegralEvaluator<> igEval( func, 0, useBinIntegral); 
@@ -1229,7 +1232,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
             binVolume *= std::abs( x2[j]-x1[j] );
             xc[j] = 0.5*(x2[j]+ x1[j]);
          }
-         // normalize the bin volume using a reefrence value
+         // normalize the bin volume using a reference value
          binVolume *= wrefVolume;
       }
 
@@ -1352,7 +1355,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinDat
    double wrefVolume = 1.0;
    std::vector<double> xc;
    if (useBinVolume) {
-      wrefVolume /= data.RefVolume();
+      if (fitOpt.fNormBinVolume) wrefVolume /= data.RefVolume();
       xc.resize(data.NDim() );
    }
 

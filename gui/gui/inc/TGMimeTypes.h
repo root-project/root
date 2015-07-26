@@ -46,6 +46,7 @@ private:
    TRegexp  *fReg;        // pattern regular expression
 
 public:
+   TGMime() : fReg(0) {}
    ~TGMime();
 };
 

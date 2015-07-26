@@ -14,13 +14,18 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
+#ifndef ROOT_CocoaUtils
+#include "CocoaUtils.h"
+#endif
+
 namespace ROOT {
 namespace Quartz {
 
 //Scope guard class for CGContextRef.
 class CGStateGuard {
 public:
-   CGStateGuard(CGContextRef ctx);
+   explicit CGStateGuard(MacOSX::Util::CFScopeGuard<CGContextRef> &ctx);
+   explicit CGStateGuard(CGContextRef ctx);
    ~CGStateGuard();
 
 private:

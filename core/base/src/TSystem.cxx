@@ -1161,8 +1161,10 @@ again:
                strlcpy(x, p, kBufSize);
                x += kBufSize;
                break;
-            } else
-               strcpy(x,p); x += lp; c = (b==c+1) ? e-1 : e;
+            }
+            strcpy(x,p);
+            x += lp;
+            c = (b==c+1) ? e-1 : e;
          }
       }
    }
@@ -1840,6 +1842,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
                     deplib, ((TObjString*)tokens->At(0))->GetName());
             if ((ret = Load(deplib, "", system)) < 0) {
                delete tokens;
+               delete [] path;
                return ret;
             }
          }

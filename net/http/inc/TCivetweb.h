@@ -14,6 +14,7 @@ protected:
    void     *fCallbacks;     //! call-back table for civetweb webserver
    TString   fTopName;       //! name of top item
    Bool_t    fDebug;         //! debug mode
+
 public:
    TCivetweb();
    virtual ~TCivetweb();
@@ -31,6 +32,8 @@ public:
 
       return fDebug;
    }
+
+   Int_t ProcessLog(const char* message);
 
    ClassDef(TCivetweb, 0) // http server implementation, based on civetweb embedded server
 };

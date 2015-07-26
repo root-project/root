@@ -334,7 +334,7 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    }
 
    {
-      TDirectory::TContext ctxt(gDirectory, this);
+      TDirectory::TContext ctxt(this);
       Init(kTRUE);
 
       // And now we need re-initilize the directories ...

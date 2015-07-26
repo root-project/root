@@ -605,8 +605,12 @@ void DoCcode(TCanvas *C)
 
    sprintf(gCfile,"sg%2.2d.C",gTestNum);
 
-   C->SaveAs(gCfile);
-   if (C) {delete C; C = 0;}
+   if (C) {
+      C->SaveAs(gCfile);
+      delete C;
+      C = 0;
+   }
+
    gErrorIgnoreLevel = 0;
    return;
 }

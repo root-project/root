@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <string.h>
+#include <cctype>
 
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"

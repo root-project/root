@@ -38,6 +38,7 @@ ClassImp(RooNameReg)
 RooNameReg* RooNameReg::_instance = 0 ;
 
 
+RooNameReg::RooNameReg(Int_t hashSize) : TNamed("RooNameReg","RooFit Name Registry"), _htable(hashSize) {} 
 
 //_____________________________________________________________________________
 RooNameReg::~RooNameReg()
@@ -61,7 +62,7 @@ RooNameReg& RooNameReg::instance()
   // Return reference to singleton instance
 
   if (_instance==0) {
-    _instance = new RooNameReg ;
+    _instance = new RooNameReg(100000) ;  // there's only one of these, so we can afford to make it large
     RooSentinel::activate() ;
   }
   return *_instance ;
@@ -130,4 +131,16 @@ const char* RooNameReg::str(const TNamed* ptr)
   // Return C++ string corresponding to given TNamed pointer
   if (ptr==0) return 0 ;
   return instance().constStr(ptr) ; 
+}
+
+
+//_____________________________________________________________________________
+const TNamed* RooNameReg::known(const char* inStr)
+{
+  // If the name is already known, return its TNamed pointer. Otherwise return 0 (don't register the name).
+
+  // Handle null pointer case explicitly
+  if (inStr==0) return 0 ;
+  if (_instance==0) return 0;
+  return (const TNamed*) _instance->_htable.find(inStr) ;
 }

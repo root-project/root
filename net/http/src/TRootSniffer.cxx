@@ -23,6 +23,7 @@
 #include "TLeaf.h"
 #include "TClass.h"
 #include "TMethod.h"
+#include "TFunction.h"
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TDataMember.h"
@@ -36,6 +37,7 @@
 #include "THttpCallArg.h"
 
 #include <stdlib.h>
+#include <vector>
 
 const char *item_prop_kind = "_kind";
 const char *item_prop_more = "_more";
@@ -381,6 +383,8 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+ClassImp(TRootSniffer)
+
 //______________________________________________________________________________
 TRootSniffer::TRootSniffer(const char *name, const char *objpath) :
    TNamed(name, "sniffer of root objects"),
@@ -632,10 +636,40 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
 }
 
 //_____________________________________________________________________
-void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec & /*rec*/, TObject * /*obj*/)
+void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
 {
    // scans object properties
    // here such fields as _autoload or _icon properties depending on class or object name could be assigned
+   // By default properties, coded in the Class title are scanned. Example:
+   //   ClassDef(UserClassName, 1) //  class comments *SNIFF*  _field1=value _field2="string value"
+   // Here *SNIFF* mark is important. After it all expressions like field=value are parsed
+   // One could use double quotes to code string values with spaces.
+   // Fields separated from each other with spaces
+
+   TClass* cl = obj ? obj->IsA() : 0;
+
+   const char* pos = strstr(cl ? cl->GetTitle() : "", "*SNIFF*");
+   if (pos==0) return;
+
+   pos += 7;
+   while (*pos != 0) {
+     if (*pos == ' ') { pos++; continue; }
+     // first locate identifier
+     const char* pos0 = pos;
+     while ((*pos != 0) && (*pos != '=')) pos++;
+     if (*pos == 0) return;
+     TString name(pos0, pos-pos0);
+     pos++;
+     Bool_t quotes = (*pos == '\"');
+     if (quotes) pos++;
+     pos0 = pos;
+     // then value with or without quotes
+     while ((*pos != 0) && (*pos != (quotes ? '\"' : ' '))) pos++;
+     TString value(pos0, pos-pos0);
+     rec.SetField(name, value);
+     if (quotes) pos++;
+     pos++;
+   }
 }
 
 //_____________________________________________________________________
@@ -817,6 +851,7 @@ void TRootSniffer::ScanRoot(TRootSnifferScanRec &rec)
          chld.SetField(item_prop_kind, "ROOT.TStreamerInfoList");
          chld.SetField(item_prop_title, "List of streamer infos for binary I/O");
          chld.SetField(item_prop_hidden, "true");
+         chld.SetField("_after_request", "JSROOT.MarkAsStreamerInfo");
       }
    }
 
@@ -1215,7 +1250,9 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
 
    const char *method_name = url.GetValueFromOptions("method");
    TString prototype = DecodeUrlOptionValue(url.GetValueFromOptions("prototype"), kTRUE);
+   TString funcname = DecodeUrlOptionValue(url.GetValueFromOptions("func"), kTRUE);
    TMethod *method = 0;
+   TFunction *func = 0;
    if (method_name != 0) {
       if (prototype.Length() == 0) {
          if (debug) debug->Append(TString::Format("Search for any method with name \'%s\'\n", method_name));
@@ -1226,23 +1263,43 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
       }
    }
 
-   if (method == 0) {
+   if (method != 0) {
+      if (debug) debug->Append(TString::Format("Method: %s\n", method->GetPrototype()));
+   } else {
+      if (funcname.Length() > 0) {
+         if (prototype.Length() == 0) {
+            if (debug) debug->Append(TString::Format("Search for any function with name \'%s\'\n", funcname.Data()));
+            func = gROOT->GetGlobalFunction(funcname);
+         } else {
+            if (debug) debug->Append(TString::Format("Search for function \'%s\' with prototype \'%s\'\n", funcname.Data(), prototype.Data()));
+            func = gROOT->GetGlobalFunctionWithPrototype(funcname, prototype);
+         }
+      }
+
+      if (func != 0) {
+         if (debug) debug->Append(TString::Format("Function: %s\n", func->GetPrototype()));
+      }
+   }
+
+   if ((method == 0) && (func==0)) {
       if (debug) debug->Append("Method not found\n");
       return debug != 0;
    }
 
-   if (debug) debug->Append(TString::Format("Method: %s\n", method->GetPrototype()));
-
    if ((fReadOnly && (fCurrentRestrict == 0)) || (fCurrentRestrict == 1)) {
-      if (fCurrentAllowedMethods.Index(method_name) == kNPOS) {
+      if ((method!=0) && (fCurrentAllowedMethods.Index(method_name) == kNPOS)) {
          if (debug) debug->Append("Server runs in read-only mode, method cannot be executed\n");
+         return debug != 0;
+      } else
+      if ((func!=0) && (fCurrentAllowedMethods.Index(funcname) == kNPOS)) {
+         if (debug) debug->Append("Server runs in read-only mode, function cannot be executed\n");
          return debug != 0;
       } else {
          if (debug) debug->Append("For that special method server allows access even read-only mode is specified\n");
       }
    }
 
-   TList *args = method->GetListOfMethodArgs();
+   TList *args = method ? method->GetListOfMethodArgs() : func->GetListOfMethodArgs();
 
    TList garbage;
    garbage.SetOwner(kTRUE); // use as garbage collection
@@ -1270,8 +1327,13 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
          val = sval.Data();
       }
 
-      // process several arguments which are specific for post requests
+      if ((val!=0) && (strcmp(val,"_this_")==0)) {
+         // special case - object itself is used as argument
+         sval.Form("(%s*)0x%lx", obj_cl->GetName(), (long unsigned) obj_ptr);
+         val = sval.Data();
+      } else
       if ((val!=0) && (fCurrentArg!=0) && (fCurrentArg->GetPostData()!=0)) {
+         // process several arguments which are specific for post requests
          if (strcmp(val,"_post_object_xml_")==0) {
             // post data has extra 0 at the end and can be used as null-terminated string
             post_obj = TBufferXML::ConvertFromXML((const char*) fCurrentArg->GetPostData());
@@ -1329,11 +1391,20 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
       }
    }
 
-   if (debug) debug->Append(TString::Format("Calling obj->%s(%s);\n", method_name, call_args.Data()));
+   TMethodCall *call = 0;
 
-   TMethodCall call(obj_cl, method_name, call_args.Data());
+   if (method!=0) {
+      call = new TMethodCall(obj_cl, method_name, call_args.Data());
+      if (debug) debug->Append(TString::Format("Calling obj->%s(%s);\n", method_name, call_args.Data()));
 
-   if (!call.IsValid()) {
+   } else {
+      call = new TMethodCall(funcname.Data(), call_args.Data());
+      if (debug) debug->Append(TString::Format("Calling %s(%s);\n", funcname.Data(), call_args.Data()));
+   }
+
+   garbage.Add(call);
+
+   if (!call->IsValid()) {
       if (debug) debug->Append("Fail: invalid TMethodCall\n");
       return debug != 0;
    }
@@ -1351,24 +1422,33 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
       garbage.Add(resbuf);
    }
 
-   switch (call.ReturnType()) {
+   switch (call->ReturnType()) {
       case TMethodCall::kLong: {
             Long_t l(0);
-            call.Execute(obj_ptr, l);
+            if (method)
+               call->Execute(obj_ptr, l);
+            else
+               call->Execute(l);
             if (resbuf) resbuf->WriteLong(l);
                    else res.Form("%ld", l);
             break;
          }
       case TMethodCall::kDouble : {
             Double_t d(0.);
-            call.Execute(obj_ptr, d);
+            if (method)
+               call->Execute(obj_ptr, d);
+            else
+               call->Execute(d);
             if (resbuf) resbuf->WriteDouble(d);
                    else res.Form(TBufferJSON::GetFloatFormat(), d);
             break;
          }
       case TMethodCall::kString : {
             char *txt(0);
-            call.Execute(obj_ptr, &txt);
+            if (method)
+               call->Execute(obj_ptr, &txt);
+            else
+               call->Execute(0, &txt); // here 0 is artificial, there is no proper signature
             if (txt != 0) {
                if (resbuf) resbuf->WriteString(txt);
                       else res.Form("\"%s\"", txt);
@@ -1376,7 +1456,7 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
             break;
          }
       case TMethodCall::kOther : {
-            std::string ret_kind = method->GetReturnTypeNormalizedName();
+            std::string ret_kind = func ? func->GetReturnTypeNormalizedName() : method->GetReturnTypeNormalizedName();
             if ((ret_kind.length() > 0) && (ret_kind[ret_kind.length() - 1] == '*')) {
                ret_kind.resize(ret_kind.length() - 1);
                ret_cl = gROOT->GetClass(ret_kind.c_str(), kTRUE, kTRUE);
@@ -1384,16 +1464,25 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
 
             if (ret_cl != 0) {
                Long_t l(0);
-               call.Execute(obj_ptr, l);
+               if (method)
+                  call->Execute(obj_ptr, l);
+               else
+                  call->Execute(l);
                if (l != 0) ret_obj = (void *) l;
             } else {
-               call.Execute(obj_ptr);
+               if (method)
+                  call->Execute(obj_ptr);
+               else
+                  call->Execute();
             }
 
             break;
          }
       case TMethodCall::kNone : {
-            call.Execute(obj_ptr);
+            if (method)
+               call->Execute(obj_ptr);
+            else
+               call->Execute();
             break;
          }
    }
@@ -1417,6 +1506,7 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
          TObject *obj = (TObject *) ret_obj;
          resbuf->MapObject(obj);
          obj->Streamer(*resbuf);
+         if (fCurrentArg) fCurrentArg->SetExtraHeader("RootClassName", ret_cl->GetName());
       } else {
          res = TBufferJSON::ConvertToJSON(ret_obj, ret_cl, compact);
       }
@@ -1442,6 +1532,117 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
 
    return kTRUE;
 }
+
+//______________________________________________________________________________
+Bool_t TRootSniffer::ProduceMulti(const char *path, const char *options, void *&ptr, Long_t &length, TString &str, Bool_t asjson)
+{
+   // Process several requests, packing all results into binary or JSON buffer
+   // Input parameters should be coded in the POST block and has
+   // individual request relative to current path, separated with '\n' symbol like
+   // item1/root.bin\n
+   // item2/exe.bin?method=GetList\n
+   // item3/exe.bin?method=GetTitle\n
+   // Request requires 'number' URL option which contains number of requested items
+   //
+   // In case of binary request output buffer looks like:
+   // 4bytes length + payload, 4bytes length + payload, ...
+   // In case of JSON request output is array with results for each item
+   // multi.json request do not support binary requests for the items
+
+   if ((fCurrentArg==0) || (fCurrentArg->GetPostDataLength()<=0) || (fCurrentArg->GetPostData()==0)) return kFALSE;
+
+   const char* args = (const char*) fCurrentArg->GetPostData();
+   const char* ends = args + fCurrentArg->GetPostDataLength();
+
+   TUrl url;
+   url.SetOptions(options);
+
+   Int_t number = 0;
+   if (url.GetValueFromOptions("number"))
+      number = url.GetIntValueFromOptions("number");
+
+   // binary buffers required only for binary requests, json output can be produced as is
+   std::vector<void*> mem;
+   std::vector<Long_t> memlen;
+
+   if (asjson) str = "[";
+
+   for (Int_t n=0;n<number;n++) {
+      const char* next = args;
+      while ((next < ends) && (*next != '\n')) next++;
+      if (next==ends) {
+         Error("ProduceMulti", "Not enough arguments in POST block");
+         break;
+      }
+
+      TString file1(args, next - args);
+      args = next + 1;
+
+      TString path1, opt1;
+
+      // extract options
+      Int_t pos = file1.First('?');
+      if (pos != kNPOS) {
+         opt1 = file1(pos+1, file1.Length() - pos);
+         file1.Resize(pos);
+      }
+
+      // extract extra path
+      pos = file1.Last('/');
+      if (pos != kNPOS) {
+         path1 = file1(0, pos);
+         file1.Remove(0, pos+1);
+      }
+
+      if ((path!=0) && (*path!=0)) path1 = TString(path) + "/" + path1;
+
+      void* ptr1 = 0;
+      Long_t len1 = 0;
+      TString str1;
+
+      // produce next item request
+      Produce(path1, file1, opt1, ptr1, len1, str1);
+
+      if (asjson) {
+         if (n>0) str.Append(", ");
+         if (ptr1!=0) { str.Append("\"<non-supported binary>\""); free(ptr1); } else
+         if (str1.Length()>0) str.Append(str1); else str.Append("null");
+      } else {
+         if ((str1.Length()>0) && (ptr1==0)) {
+            len1 = str1.Length();
+            ptr1 = malloc(len1);
+            memcpy(ptr1, str1.Data(), len1);
+         }
+         mem.push_back(ptr1);
+         memlen.push_back(len1);
+      }
+   }
+
+   if (asjson) {
+      str.Append("]");
+   } else {
+      length = 0;
+      for (unsigned n=0;n<mem.size();n++) {
+         length += 4 + memlen[n];
+      }
+      ptr = malloc(length);
+      char* curr = (char*) ptr;
+      for (unsigned n=0;n<mem.size();n++) {
+         Long_t l = memlen[n];
+         *curr++ = (char) (l & 0xff); l = l >> 8;
+         *curr++ = (char) (l & 0xff); l = l >> 8;
+         *curr++ = (char) (l & 0xff); l = l >> 8;
+         *curr++ = (char) (l & 0xff);
+         if ((mem[n]!=0) && (memlen[n]>0)) memcpy(curr, mem[n], memlen[n]);
+         curr+=memlen[n];
+      }
+   }
+
+   for (unsigned n=0;n<mem.size();n++) free(mem[n]);
+
+   return kTRUE;
+}
+
 
 //______________________________________________________________________________
 Bool_t TRootSniffer::IsStreamerInfoItem(const char *itemname)
@@ -1487,6 +1688,7 @@ Bool_t TRootSniffer::ProduceBinary(const char *path, const char * /*query*/, voi
    sbuf->SetParent(fMemFile);
    sbuf->MapObject(obj);
    obj->Streamer(*sbuf);
+   if (fCurrentArg) fCurrentArg->SetExtraHeader("RootClassName", obj_cl->GetName());
 
    // produce actual version of streamer info
    delete fSinfo;
@@ -1669,6 +1871,12 @@ Bool_t TRootSniffer::Produce(const char *path, const char *file,
 
    if (strcmp(file, "item.xml") == 0)
       return ProduceItem(path, options, str, kFALSE);
+
+   if (strcmp(file, "multi.bin") == 0)
+      return ProduceMulti(path, options, ptr, length, str, kFALSE);
+
+   if (strcmp(file, "multi.json") == 0)
+      return ProduceMulti(path, options, ptr, length, str, kTRUE);
 
    return kFALSE;
 }

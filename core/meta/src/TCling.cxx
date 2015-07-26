@@ -1236,7 +1236,7 @@ bool TCling::LoadPCM(TString pcmFileName,
          gDebug = 0;
       }
 
-      TDirectory::TContext ctxt(0);
+      TDirectory::TContext ctxt;
 
       TFile *pcmFile = new TFile(pcmFileName+"?filetype=pcm","READ");
 
@@ -1473,7 +1473,7 @@ void TCling::RegisterModule(const char* modulename,
    // FIXME: Remove #define __ROOTCLING__ once PCMs are there.
    // This is used to give Sema the same view on ACLiC'ed files (which
    // are then #included through the dictionary) as rootcling had.
-   TString code = fromRootCling ? "" : gNonInterpreterClassDef ;
+   TString code = gNonInterpreterClassDef;
    code += payloadCode;
 
    // We need to open the dictionary shared library, to resolve sylbols
@@ -1484,20 +1484,22 @@ void TCling::RegisterModule(const char* modulename,
    if (dyLibName) {
       // We were able to determine the library name.
       void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
-#ifdef R__WIN32
       if (!dyLibHandle) {
+#ifdef R__WIN32
          char dyLibError[1000];
          FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), dyLibError,
                        sizeof(dyLibError), NULL);
+         {
 #else
-      const char* dyLibError = dlerror();
-      if (dyLibError) {
+         const char* dyLibError = dlerror();
+         if (dyLibError) {
 #endif
-         if (gDebug > 0) {
-            ::Info("TCling::RegisterModule",
-                   "Cannot open shared library %s for dictionary %s:\n  %s",
-                   dyLibName, modulename, dyLibError);
+            if (gDebug > 0) {
+               ::Info("TCling::RegisterModule",
+                      "Cannot open shared library %s for dictionary %s:\n  %s",
+                      dyLibName, modulename, dyLibError);
+            }
          }
          dyLibName = 0;
       } else {
@@ -1717,7 +1719,7 @@ void TCling::RegisterModule(const char* modulename,
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 
-   if (!fromRootCling && !hasHeaderParsingOnDemand) {
+   if (!hasHeaderParsingOnDemand) {
       // __ROOTCLING__ might be pulled in through PCH
       fInterpreter->declare("#ifdef __ROOTCLING__\n"
                             "#undef __ROOTCLING__\n"
@@ -2193,6 +2195,19 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "fName", &fName);
       // R__insp.InspectMember(fName, "fName.");
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "*fClass", &fClass);
+
+      // If the class has a custom streamer and the type of the filed is a
+      // private enum, struct or class, skip it.
+      if (!insp.IsTreatingNonAccessibleTypes()){
+         auto iFiledQtype = iField->getType();
+         if (auto tagDecl = iFiledQtype->getAsTagDecl()){
+            auto declAccess = tagDecl->getAccess();
+            if (declAccess == AS_private || declAccess == AS_protected) {
+               continue;
+            }
+         }
+      }
+
       insp.Inspect(const_cast<TClass*>(cl), insp.GetParent(), fieldName.c_str(), cobj + fieldOffset, isTransient);
 
       if (!ispointer) {
@@ -2581,6 +2596,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        || !strncmp(filename, "/System/Library/Frameworks/", 27)
        || !strncmp(filename, "/System/Library/PrivateFrameworks/", 34)
        || !strncmp(filename, "/System/Library/CoreServices/", 29)
+       || !strcmp(filename, "cl_kernels") // yepp, no directory
        || strstr(filename, "/usr/lib/libSystem")
        || strstr(filename, "/usr/lib/libstdc++")
        || strstr(filename, "/usr/lib/libicucore")
@@ -3023,6 +3039,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
             cl->fState = TClass::kForwardDeclared;
          }
       }
+      delete info;
       return;
    }
    cl->fClassInfo = (ClassInfo_t*)info; // Note: We are transfering ownership here.

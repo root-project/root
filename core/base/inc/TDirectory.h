@@ -62,6 +62,13 @@ public:
          // later and cd to the new directory.
          if ( fDirectory ) fDirectory->RegisterContext(this);
          if ( newCurrent ) newCurrent->cd();
+         else CdNull();
+      }
+      TContext() : fDirectory(TDirectory::CurrentDirectory()),fPrevious(0),fNext(0)
+      {
+         // Store the current directory so we can restore it
+         // later and cd to the new directory.
+         if ( fDirectory ) fDirectory->RegisterContext(this);
       }
       TContext(TDirectory* newCurrent) : fDirectory(TDirectory::CurrentDirectory()),fPrevious(0),fNext(0)
       {
@@ -69,6 +76,7 @@ public:
          // later and cd to the new directory.
          if ( fDirectory ) fDirectory->RegisterContext(this);
          if ( newCurrent ) newCurrent->cd();
+         else CdNull();
       }
       ~TContext()
       {

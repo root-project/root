@@ -35,10 +35,49 @@ namespace {
 const CGSize shadowOffset = CGSizeMake(10., 10.);
 const CGFloat shadowBlur = 5.;
 
-
 //ROOT has TColorGradient, TLinearGradient and TRadialGradient -
 //they all specify parameters in NDC. But for rendering with
 //Quartz I need more specific parameters, I calculate them here.
+
+// GradientFactory deals with CGFloat being either float or double.
+template<class SRC, class DST>
+struct GradientFactory {
+   static CGGradientRef CreateGradient(CGColorSpaceRef colorSpace,
+                                       const TColorGradient *extendedColor)
+   {
+      assert(colorSpace != nullptr &&
+             "GradientFactory::CreateGradient, parameter 'colorSpace' is null");
+      assert(extendedColor != nullptr &&
+             "GradientFactory::CreateGradient, parameter 'extendedColor' is null");
+      const SRC *compStart = extendedColor->GetColors();
+      const SRC *compEnd = compStart + extendedColor->GetNumberOfSteps() * 4;//TODO: this assumes RGBA.
+      const std::vector<DST> convertedComponents(compStart, compEnd);
+      const SRC *posStart = extendedColor->GetColorPositions();
+      const SRC *posEnd = posStart + extendedColor->GetNumberOfSteps();
+      const std::vector<DST> convertedPositions(posStart, posEnd);
+
+      return CGGradientCreateWithColorComponents(colorSpace,
+                                                 &convertedComponents[0],
+                                                 &convertedPositions[0],
+                                                 extendedColor->GetNumberOfSteps());
+   }
+};
+
+template<class DST>
+struct GradientFactory<DST, DST> {
+   static CGGradientRef CreateGradient(CGColorSpaceRef colorSpace,
+                                       const TColorGradient *extendedColor)
+   {
+      assert(colorSpace != nullptr &&
+             "GradientFactory::CreateGradient, parameter 'colorSpace' is null");
+      assert(extendedColor != nullptr &&
+             "GradientFactory::CreateGradient, parameter 'extendedColor' is null");
+      const DST *comps = extendedColor->GetColors();
+      const DST *pos = extendedColor->GetColorPositions();
+      return CGGradientCreateWithColorComponents(colorSpace, comps, pos,
+                                                 extendedColor->GetNumberOfSteps());
+   }
+};
 
 struct GradientParameters {
    //
@@ -468,11 +507,8 @@ void DrawPolygonWithGradientFill(CGContextRef ctx, const TColorGradient *extende
       return;
    }
 
-   const CFScopeGuard<CGGradientRef> gradient(CGGradientCreateWithColorComponents(baseSpace.Get(),
-                                              extendedColor->GetColors(),
-                                              extendedColor->GetColorPositions(),
-                                              extendedColor->GetNumberOfSteps()));
-
+   typedef GradientFactory<Double_t, CGFloat> Factory;
+   const CFScopeGuard<CGGradientRef> gradient(Factory::CreateGradient(baseSpace.Get(), extendedColor));
    if (!gradient.Get()) {
       ::Error("DrawPolygonWithGradientFill", "CGGradientCreateWithColorComponents failed");
       return;

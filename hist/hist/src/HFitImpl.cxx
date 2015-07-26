@@ -178,7 +178,10 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    if (fitOption.W1 ) opt.fErrors1 = true;
    if (fitOption.W1 > 1) opt.fUseEmpty = true; // use empty bins with weight=1
 
-   //opt.fBinVolume = 1; // for testing
+   if (fitOption.BinVolume) {
+      opt.fBinVolume = true; // scale by bin volume
+      if (fitOption.BinVolume == 2) opt.fNormBinVolume = true; // scale by normalized bin volume
+   }
 
    if (opt.fUseRange) {
 #ifdef DEBUG
@@ -679,6 +682,19 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
 
    // parse firt the specific options
    if (type == kHistogram) {
+
+      if (opt.Contains("WIDTH")) {
+         fitOption.BinVolume = 1;  // scale content by the bin width
+         if (opt.Contains("NORMWIDTH")) {
+            // for variable bins: scale content by the bin width normalized by a reference value (typically the minimum bin)
+            // this option is for variable bin widths
+            fitOption.BinVolume = 2;
+            opt.ReplaceAll("NORMWIDTH","");
+         }
+         else
+            opt.ReplaceAll("WIDTH","");
+      }            
+
       if (opt.Contains("I"))  fitOption.Integral= 1;   // integral of function in the bin (no sense for graph)
       if (opt.Contains("WW")) fitOption.W1      = 2; //all bins have weight=1, even empty bins
    }
@@ -709,16 +725,15 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
    }
 
    if (opt.Contains("U")) fitOption.User    = 1;
-   if (opt.Contains("W")) fitOption.W1     = 1; // all non-empty bins have weight =1
    if (opt.Contains("Q")) fitOption.Quiet   = 1;
-   if (opt.Contains("V")){fitOption.Verbose = 1; fitOption.Quiet   = 0;}
+   if (opt.Contains("V")) {fitOption.Verbose = 1; fitOption.Quiet   = 0;}
    if (opt.Contains("L")) fitOption.Like    = 1;
    if (opt.Contains("X")) fitOption.Chi2    = 1;
    if (opt.Contains("P")) fitOption.PChi2    = 1;
 
+
    // likelihood fit options
-   if (opt.Contains("L")) {
-      fitOption.Like    = 1;
+   if (fitOption.Like == 1) {
       //if (opt.Contains("LL")) fitOption.Like    = 2;
       if (opt.Contains("W")){ fitOption.Like    = 2;  fitOption.W1=0;}//  (weighted likelihood)
       if (opt.Contains("MULTI")) {
@@ -726,7 +741,17 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
          else fitOption.Like    = 4; // multinomial likelihood fit instead of Poisson
          opt.ReplaceAll("MULTI","");
       }
+      // in case of histogram give precedence for likelihood options
+      if (type == kHistogram) {
+         if (fitOption.Chi2 == 1 || fitOption.PChi2 == 1)
+            Warning("Fit","Cannot use P or X option in combination of L. Ignore the chi2 option and perform a likelihood fit");
+      }
+
+   } else {
+      if (opt.Contains("W")) fitOption.W1     = 1; // all non-empty bins have weight =1 (for chi2 fit)
    }
+   
+   
    if (opt.Contains("E")) fitOption.Errors  = 1;
    if (opt.Contains("R")) fitOption.Range   = 1;
    if (opt.Contains("G")) fitOption.Gradient= 1;

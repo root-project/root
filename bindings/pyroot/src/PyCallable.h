@@ -33,7 +33,7 @@ namespace PyROOT {
 
    public:
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 ) = 0;
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 ) = 0;
    };
 
 } // namespace PyROOT

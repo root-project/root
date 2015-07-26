@@ -636,7 +636,7 @@ bool InheritsFromTSelector(const clang::RecordDecl *cl,
                            const cling::Interpreter &interp)
 {
    static const clang::CXXRecordDecl *TObject_decl
-      = ROOT::TMetaUtils::ScopeSearch("TSelector", interp, true /*diag*/, 0);
+      = ROOT::TMetaUtils::ScopeSearch("TSelector", interp, false /*diag*/, 0);
 
    return ROOT::TMetaUtils::IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl, nullptr, interp);
 }
@@ -1474,22 +1474,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
    int nesting = 0;
    // We should probably unwind the namespace to properly nest it.
    if (classname != "ROOT") {
-      string right = classname;
-      int pos = right.find(":");
-      if (pos == 0) {
-         right = right.substr(2);
-         pos = right.find(":");
-      }
-      while (pos >= 0) {
-         string left = right.substr(0, pos);
-         right = right.substr(pos + 2);
-         pos = right.find(":");
-         ++nesting;
-         dictStream << "namespace " << left << " {" << std::endl;
-      }
-
-      ++nesting;
-      dictStream << "namespace " << right << " {" << std::endl;
+      nesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream,cl);
    }
 
    dictStream << "   namespace ROOT {" << std::endl;
@@ -3630,6 +3615,21 @@ bool IsImplementationName(const std::string &filename)
 }
 
 //______________________________________________________________________________
+int ShouldIgnoreClingArgument(const std::string& argument)
+{
+   // Returns >0 if argument is to be ignored.
+   // If 1, just skip that argument. If 2, that argument takes a parameter
+   // "-arg param" thus skip both.
+   if (argument == "-pipe") return 1;
+   if (argument == "-fPIC") return 1;
+   if (argument == "-fpic") return 1;
+   if (ROOT::TMetaUtils::BeginsWith(argument, "--gcc-toolchain="))
+      return 1;
+
+   return 0;
+}
+
+//______________________________________________________________________________
 bool IsCorrectClingArgument(const std::string& argument)
 {
    // Check if the argument is a sane cling argument. Performing the following checks:
@@ -3991,10 +3991,12 @@ int RootCling(int argc,
             continue;
          }
 
-         if (strcmp("-pipe", argv[ic]) != 0 && strcmp("-pthread", argv[ic]) != 0) {
-            // filter out undesirable options
-            if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
-                  && strcmp("-p", argv[ic])) {
+         if (int skip = ShouldIgnoreClingArgument(argv[ic])) {
+            ic += skip;
+            continue;
+         } else {
+            // filter out even more undesirable options
+            if (strcmp("-p", argv[ic])) {
                CheckForMinusW(argv[ic], diagnosticPragmas);
                clingArgs.push_back(argv[ic]);
             }
@@ -4150,7 +4152,10 @@ int RootCling(int argc,
          // ROOT::TMetaUtils::Error(0, "%s: option -c must come directly after the output file\n", argv[0]);
          // return 1;
       }
-      if (strcmp("-pipe", argv[ic]) != 0) {
+      if (int skip = ShouldIgnoreClingArgument(argv[ic])) {
+         i += (skip - 1); // for-loop takes care of the extra 1.
+         continue;
+      } else {
          // filter out undesirable options
 
          if (*argv[i] != '-' && *argv[i] != '+') {
@@ -4237,6 +4242,25 @@ int RootCling(int argc,
    if (!definesUndefinesStr.str().empty())
       interp.declare(definesUndefinesStr.str());
 #endif
+
+   class IgnoringPragmaHandler: public clang::PragmaNamespace {
+   public:
+      IgnoringPragmaHandler(const char* pragma):
+         clang::PragmaNamespace(pragma) {}
+      void HandlePragma(clang::Preprocessor &PP,
+                        clang::PragmaIntroducerKind Introducer,
+                        clang::Token &tok) {
+         PP.DiscardUntilEndOfDirective();
+      }
+   };
+
+   // Ignore these #pragmas to suppress "unknown pragma" warnings.
+   // See LinkdefReader.cxx.
+   clang::Preprocessor& PP = interp.getCI()->getPreprocessor();
+   PP.AddPragmaHandler(new IgnoringPragmaHandler("link"));
+   PP.AddPragmaHandler(new IgnoringPragmaHandler("extra_include"));
+   PP.AddPragmaHandler(new IgnoringPragmaHandler("read"));
+   PP.AddPragmaHandler(new IgnoringPragmaHandler("create"));
 
    if (!interpreterDeclarations.empty() &&
        interp.declare(interpreterDeclarations) != cling::Interpreter::kSuccess) {
@@ -4727,7 +4751,7 @@ namespace genreflex {
             numberOfHeaders++;
          } else {
             ROOT::TMetaUtils::Warning(0,
-                                      "*** genreflex: %s is not a vaild header name (.h and .hpp extensions expected)!\n",
+                                      "*** genreflex: %s is not a valid header name (.h and .hpp extensions expected)!\n",
                                       headername.c_str());
          }
       }

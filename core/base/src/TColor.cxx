@@ -380,13 +380,10 @@ void TColor::InitializeColors()
    initializes the GUI colors).
    End_html */
 
-   if (fgInitDone)
-      return;
+   if (fgInitDone) return;
    fgInitDone = kTRUE;
+
    if (gROOT->GetListOfColors()->First() == 0) {
-      TColor *s0;
-      Float_t r, g, b, h, l, s;
-      Int_t   i;
 
       new TColor(kWhite,1,1,1,"background");
       new TColor(kBlack,0,0,0,"black");
@@ -401,10 +398,9 @@ void TColor::InitializeColors()
 
       // The color white above is defined as being nearly white.
       // Sets the associated dark color also to white.
-      //TColor *c110 = gROOT->GetColor(110);
       TColor::GetColorDark(10);
       TColor *c110 = gROOT->GetColor(110);
-      c110->SetRGB(0.999,0.999,.999);
+      if (c110) c110->SetRGB(0.999,0.999,.999);
 
       // Initialize Custom colors
       new TColor(20,0.8,0.78,0.67);
@@ -457,12 +453,14 @@ void TColor::InitializeColors()
       //   Fixing the saturation and lightness we can scan through the
       //   spectrum of visible light by using "hue" alone.
       //   In Root hue takes values from 0 to 360.
+      Int_t   i;
       Float_t  saturation = 1;
       Float_t  lightness = 0.5;
       Float_t  maxHue = 280;
       Float_t  minHue = 0;
       Int_t    maxPretty = 50;
       Float_t  hue;
+      Float_t r=0., g=0., b=0., h, l, s;
 
       for (i=0 ; i<maxPretty ; i++) {
          hue = maxHue-(i+1)*((maxHue-minHue)/maxPretty);
@@ -471,9 +469,10 @@ void TColor::InitializeColors()
       }
 
       // Initialize special colors for x3d
+      TColor *s0;
       for (i = 1; i < 8; i++) {
          s0 = gROOT->GetColor(i);
-         s0->GetRGB(r,g,b);
+         if (s0) s0->GetRGB(r,g,b);
          if (i == 1) { r = 0.6; g = 0.6; b = 0.6; }
          if (r == 1) r = 0.9; if (r == 0) r = 0.1;
          if (g == 1) g = 0.9; if (g == 0) g = 0.1;
@@ -1298,11 +1297,16 @@ Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
    if (n < 0) return -1;
 
    TColor *color = gROOT->GetColor(n);
-   TColor *colort = new TColor(gROOT->GetListOfColors()->GetLast()+1,
-                               color->GetRed(), color->GetGreen(), color->GetBlue());
-   colort->SetAlpha(a);
-   colort->SetName(Form("%s_transparent",color->GetName()));
-   return colort->GetNumber();
+   if (color) {
+      TColor *colort = new TColor(gROOT->GetListOfColors()->GetLast()+1,
+                                  color->GetRed(), color->GetGreen(), color->GetBlue());
+      colort->SetAlpha(a);
+      colort->SetName(Form("%s_transparent",color->GetName()));
+      return colort->GetNumber();
+   } else {
+      ::Error("TColor::GetColorTransparent", "color with index %d not defined", n);
+      return -1;
+   }
 }
 
 
@@ -1610,6 +1614,7 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
    // Now create the colors and add them to the default palette:
 
    // For each defined gradient...
+   TColor *hi;
    for (g = 1; g < Number; g++) {
       // create the colors...
       nColorsGradient = (Int_t) (floor(NColors*Stops[g]) - floor(NColors*Stops[g-1]));
@@ -1619,7 +1624,8 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
                     Green[g-1] + c * (Green[g] - Green[g-1])/ nColorsGradient,
                     Blue[g-1] + c * (Blue[g] - Blue[g-1])/ nColorsGradient,
                     "  ");
-         gROOT->GetColor(highestIndex)->SetAlpha(alpha);
+         hi = gROOT->GetColor(highestIndex);
+         if (hi) hi->SetAlpha(alpha);
          palette[nPalette] = highestIndex;
          nPalette++;
          highestIndex++;

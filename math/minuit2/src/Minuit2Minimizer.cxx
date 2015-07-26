@@ -424,7 +424,7 @@ bool Minuit2Minimizer::Minimize() {
    ROOT::Minuit2::MnStrategy strategy(strategyLevel);
    ROOT::Math::IOptions * minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
    if (minuit2Opt) {
-      // set extra strategy options
+      // set extra  options
       int nGradCycles = strategy.GradientNCycles();
       int nHessCycles = strategy.HessianNCycles();
       int nHessGradCycles = strategy.HessianGradientNCycles();
@@ -452,14 +452,15 @@ bool Minuit2Minimizer::Minimize() {
       strategy.SetHessianStepTolerance(hessStepTol);
       strategy.SetHessianG2Tolerance(hessStepTol);
 
-      if (printLevel > 0) {
-         std::cout << "Minuit2Minimizer::Minuit  - Changing default strategy options" << std::endl;
-         minuit2Opt->Print();
-      }
-
       int storageLevel = 1;
       bool ret = minuit2Opt->GetValue("StorageLevel",storageLevel);
       if (ret) SetStorageLevel(storageLevel);
+
+      if (printLevel > 0) {
+         std::cout << "Minuit2Minimizer::Minuit  - Changing default options" << std::endl;
+         minuit2Opt->Print();
+      }
+
 
    }
 
@@ -539,11 +540,14 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
          int pr = std::cout.precision(12);
          std::cout << "            FVAL = " << st.Fval() << " Edm = " << st.Edm() << " Nfcn = " << st.NFcn() << std::endl;
          std::cout.precision(pr);
-         std::cout << "            Error matrix change = " << st.Error().Dcovar() << std::endl;
-         std::cout << "            Parameters : ";
-         // need to transform from internal to external
-         for (int j = 0; j < st.size() ; ++j) std::cout << " p" << j << " = " << fState.Int2ext( j, st.Vec()(j) );
-         std::cout << std::endl;
+         if (st.HasCovariance() )
+             std::cout << "            Error matrix change = " << st.Error().Dcovar() << std::endl;
+         if (st.HasParameters() ) {
+            std::cout << "            Parameters : ";
+            // need to transform from internal to external
+            for (int j = 0; j < st.size() ; ++j) std::cout << " p" << j << " = " << fState.Int2ext( j, st.Vec()(j) );
+            std::cout << std::endl;
+         }
       }
    }
 
@@ -970,13 +974,18 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
 
    fMinuitFCN->SetErrorDef(ErrorDef() );
    // if error def has been changed update it in FunctionMinimum
-   if (ErrorDef() != fMinimum->Up() )
+   if (ErrorDef() != fMinimum->Up() ) {
       fMinimum->SetErrorDef(ErrorDef() );
+   }
+
+   if ( PrintLevel() >= 1 )
+      MN_INFO_VAL2("Minuit2Minimizer::Contour - computing contours - ",ErrorDef());
 
    // switch off Minuit2 printing (for level of  0,1)
    int prev_level = (PrintLevel() <= 1 ) ?   TurnOffPrintInfoLevel() : -2;
 
-   MnPrint::SetLevel( PrintLevel() );
+   // decrease print-level to have too many messages 
+   MnPrint::SetLevel( PrintLevel() -1 );
 
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
@@ -986,6 +995,7 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
 
    if (prev_level > -2) RestoreGlobalPrintLevel(prev_level);
 
+   // compute the contour
    std::vector<std::pair<double,double> >  result = contour(ipar,jpar, npoints);
    if (result.size() != npoints) {
       MN_ERROR_MSG2("Minuit2Minimizer::Contour"," Invalid result from MnContours");
@@ -995,6 +1005,9 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
       x[i] = result[i].first;
       y[i] = result[i].second;
    }
+
+   // restore print level
+   MnPrint::SetLevel( PrintLevel() );
 
 
    return true;

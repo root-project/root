@@ -418,8 +418,9 @@ PyObject* PyROOT::TMethodHolder::PreProcessArgs( ObjectProxy*& self, PyObject* a
            ( pyobj->ObjectIsA() == 0 )     ||               // null pointer or ctor call
            ( Cppyy::IsSubtype( pyobj->ObjectIsA(), fScope ) ) ) // matching types
          ) {
-      // reset self (will live for the life time of args; i.e. call of function)
+      // reset self
          self = pyobj;
+         Py_INCREF( self );        // corresponding Py_DECREF is in MethodProxy
 
       // offset args by 1 (new ref)
          return PyTuple_GetSlice( args, 1, PyTuple_GET_SIZE( args ) );
@@ -492,7 +493,7 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self, ptrdiff_t offset, TCallCon
 
 //____________________________________________________________________________
 PyObject* PyROOT::TMethodHolder::Call(
-      ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
+      ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
 {
 // preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {
@@ -529,7 +530,7 @@ PyObject* PyROOT::TMethodHolder::Call(
 
 // calculate offset (the method expects 'this' to be an object of fScope)
    ptrdiff_t offset = 0;
-   if ( derived && derived != fScope ) // 
+   if ( derived && derived != fScope )
       offset = Cppyy::GetBaseOffset( derived, fScope, object, 1 /* up-cast */ );
 
 // actual call; recycle self instead of returning new object for same address objects

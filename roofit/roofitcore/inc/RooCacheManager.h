@@ -36,8 +36,8 @@ class RooCacheManager : public RooAbsCache {
 
 public:
 
-  RooCacheManager(Int_t maxSize=10) ;
-  RooCacheManager(RooAbsArg* owner, Int_t maxSize=10) ;
+  RooCacheManager(Int_t maxSize=2) ;
+  RooCacheManager(RooAbsArg* owner, Int_t maxSize=2) ;
   RooCacheManager(const RooCacheManager& other, RooAbsArg* owner=0) ;
   virtual ~RooCacheManager() ;
   
@@ -104,15 +104,15 @@ public:
  
 protected:
 
-  Int_t _maxSize ;    // Maximum size
-  Int_t _size ;       // Actual use
-  Int_t _lastIndex ;  // Last slot accessed
+  Int_t _maxSize ;    //! Maximum size
+  Int_t _size ;       //! Actual use
+  Int_t _lastIndex ;  //! Last slot accessed
 
   std::vector<RooNormSetCache> _nsetCache ; //! Normalization/Integration set manager
   std::vector<T*> _object ;                 //! Payload
   Bool_t _wired ;               //! In wired mode, there is a single payload which is returned always
 
-  ClassDef(RooCacheManager,1) // Cache Manager class generic objects
+  ClassDef(RooCacheManager,2) // Cache Manager class generic objects
 } ;
 
 
@@ -167,7 +167,7 @@ RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* own
   _wired = kFALSE ;
   _lastIndex = -1 ;
 
-//   std::cout << "RooCacheManager:cctor(" << this << ")" << std::endl ;
+  //std::cout << "RooCacheManager:cctor(" << this << ") other = " << &other << " _size=" << _size << " _maxSize = " << _maxSize << std::endl ;
 
   Int_t i ;
   for (i=0 ; i<other._size ; i++) {    
@@ -241,6 +241,15 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
 
   if (sterileIdx>=0) {
     // Found sterile slot that can should be recycled [ sterileIndex only set if isetRangeName matches ]
+
+    if (sterileIdx>=_maxSize) {
+      //cout << "RooCacheManager<T>::setObj()/SI increasing object cache size from " << _maxSize << " to " << sterileIdx+4 << endl ;
+      _maxSize = sterileIdx+4;
+      _object.resize(_maxSize,0) ;
+      _nsetCache.resize(_maxSize) ;
+    }
+
+
     _object[sterileIdx] = obj ;
 
     // Allow optional post-processing of object inserted in cache
@@ -249,12 +258,14 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
     return lastIndex() ;
   }
 
-  if (_size==_maxSize) {
+  if (_size>=_maxSize-1) {
+    //cout << "RooCacheManager<T>::setObj() increasing object cache size from " << _maxSize << " to " << _maxSize*2 << endl ;
     _maxSize *=2 ;
     _object.resize(_maxSize,0) ;
     _nsetCache.resize(_maxSize) ;
   }
 
+  //cout << "RooCacheManager::setObj<T>(" << this << ") _size = " << _size << " _maxSize = " << _maxSize << endl ;
   _nsetCache[_size].autoCache(_owner,nset,iset,isetRangeName,kTRUE) ;
   if (_object[_size]) {
     delete _object[_size] ;

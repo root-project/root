@@ -141,32 +141,6 @@ static bool CheckDefinition(const clang::CXXRecordDecl *cl, const clang::CXXReco
 }
 
 //______________________________________________________________________________
-static int WriteNamespaceHeader(std::ostream &out, const clang::DeclContext *ctxt)
-{
-   // Write all the necessary opening part of the namespace and
-   // return the number of closing brackets needed
-   // For example for Space1::Space2
-   // we write: namespace Space1 { namespace Space2 {
-      // and return 2.
-
-      int closing_brackets = 0;
-
-      //fprintf(stderr,"DEBUG: in WriteNamespaceHeader for %s with %s\n",
-      //    cl.Fullname(),namespace_obj.Fullname());
-      if (ctxt && ctxt->isNamespace()) {
-         closing_brackets = WriteNamespaceHeader(out,ctxt->getParent());
-         for (int indent = 0; indent < closing_brackets; ++indent) {
-            out << "   ";
-         }
-         const clang::NamespaceDecl *ns = llvm::dyn_cast<clang::NamespaceDecl>(ctxt);
-         out << "namespace " << ns->getNameAsString() << " {" << std::endl;
-         closing_brackets++;
-         }
-
-         return closing_brackets;
-      }
-
-//______________________________________________________________________________
 static clang::NestedNameSpecifier* ReSubstTemplateArgNNS(const clang::ASTContext &Ctxt,
                                                          clang::NestedNameSpecifier *scope,
                                                          const clang::Type *instance)
@@ -711,24 +685,22 @@ const clang::FunctionDecl* ROOT::TMetaUtils::ClassInfo__HasMethod(const clang::D
 //______________________________________________________________________________
 const clang::CXXRecordDecl *
 ROOT::TMetaUtils::ScopeSearch(const char *name, const cling::Interpreter &interp,
-                              bool diagnose, const clang::Type** resultType)
+                              bool /*diagnose*/, const clang::Type** resultType)
 {
    // Return the scope corresponding to 'name' or std::'name'
    const cling::LookupHelper& lh = interp.getLookupHelper();
+   // We have many bogus diagnostics if we allow diagnostics here. Suppress.
+   // FIXME: silence them in the callers.
    const clang::CXXRecordDecl *result
       = llvm::dyn_cast_or_null<clang::CXXRecordDecl>
-      (lh.findScope(name,
-                    diagnose ? cling::LookupHelper::NoDiagnostics
-                    : cling::LookupHelper::NoDiagnostics,
-                    resultType));
+      (lh.findScope(name, cling::LookupHelper::NoDiagnostics, resultType));
    if (!result) {
       std::string std_name("std::");
       std_name += name;
+      // We have many bogus diagnostics if we allow diagnostics here. Suppress.
+      // FIXME: silence them in the callers.
       result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>
-         (lh.findScope(std_name,
-                       diagnose ? cling::LookupHelper::NoDiagnostics
-                       : cling::LookupHelper::NoDiagnostics,
-                       resultType));
+         (lh.findScope(std_name, cling::LookupHelper::NoDiagnostics, resultType));
    }
    return result;
 }
@@ -1080,42 +1052,41 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
    // return true if we can find an constructor calleable without any arguments
    // or with one the IOCtor special types.
 
-   bool result = false;
-
    if (cl->isAbstract()) return false;
 
-   for(RConstructorTypes::const_iterator ctorTypeIt=ctorTypes.begin();
-       ctorTypeIt!=ctorTypes.end();++ctorTypeIt){
+   for (RConstructorTypes::const_iterator ctorTypeIt = ctorTypes.begin();
+        ctorTypeIt!=ctorTypes.end(); ++ctorTypeIt) {
       std::string proto( ctorTypeIt->GetName() );
-      int extra = (proto.size()==0) ? 0 : 1;
-      if (extra==0) {
-         // Looking for default constructor
-         result = true;
-      } else {
+      bool defaultCtor = proto.empty();
+      if (!defaultCtor) {
+         // I/O constructors take pointers to ctorTypes
          proto += " *";
       }
 
-      result = ROOT::TMetaUtils::CheckConstructor(cl,*ctorTypeIt);
-      if (result && extra) {
+      if (!ROOT::TMetaUtils::CheckConstructor(cl, *ctorTypeIt))
+         continue;
+
+      if (defaultCtor) {
+         arg.clear();
+      } else {
          arg = "( (";
          arg += proto;
          arg += ")0 )";
       }
 
       // Check for private operator new
-      if (result) {
-         const char *name = "operator new";
-         proto = "size_t";
-         const clang::CXXMethodDecl *method
-            = GetMethodWithProto(cl,name,proto.c_str(), interp,
-                                 cling::LookupHelper::NoDiagnostics);
-         if (method && method->getAccess() != clang::AS_public) {
-            result = false;
-         }
-         if (result) return true;
+      const clang::CXXMethodDecl *method
+         = GetMethodWithProto(cl, "operator new", "size_t", interp,
+                              cling::LookupHelper::NoDiagnostics);
+      if (method && method->getAccess() != clang::AS_public) {
+         // The non-public op new is not going to improve for other c'tors.
+         return false;
       }
+
+      // This one looks good!
+      return true;
    }
-   return result;
+   return false;
 }
 
 //______________________________________________________________________________
@@ -2073,13 +2044,21 @@ bool ROOT::TMetaUtils::GetNameWithinNamespace(std::string &fullname,
    ROOT::TMetaUtils::GetQualifiedName(fullname,*cl);
    clsname = fullname;
 
-   const clang::NamedDecl *ctxt = llvm::dyn_cast<clang::NamedDecl>(cl->getEnclosingNamespaceContext());
-   if (ctxt && ctxt!=cl) {
-      const clang::NamespaceDecl *nsdecl = llvm::dyn_cast<clang::NamespaceDecl>(ctxt);
-      if (nsdecl == 0 || !nsdecl->isAnonymousNamespace()) {
-         ROOT::TMetaUtils::GetQualifiedName(nsname,*nsdecl);
-         clsname.erase (0, nsname.size() + 2);
-         return true;
+   // Inline namespace are stripped from the normalized name, we need to
+   // strip it from the prefix we want to remove.
+   auto ctxt = cl->getEnclosingNamespaceContext();
+   while(ctxt && ctxt!=cl && ctxt->isInlineNamespace()) {
+      ctxt = ctxt->getParent();
+   }
+   if (ctxt) {
+      const clang::NamedDecl *namedCtxt = llvm::dyn_cast<clang::NamedDecl>(ctxt);
+      if (namedCtxt && namedCtxt!=cl) {
+         const clang::NamespaceDecl *nsdecl = llvm::dyn_cast<clang::NamespaceDecl>(namedCtxt);
+         if (nsdecl != 0 && !nsdecl->isAnonymousNamespace()) {
+            ROOT::TMetaUtils::GetQualifiedName(nsname,*nsdecl);
+            clsname.erase (0, nsname.size() + 2);
+            return true;
+         }
       }
    }
    return false;
@@ -2096,9 +2075,37 @@ const clang::DeclContext *GetEnclosingSpace(const clang::RecordDecl &cl)
 }
 
 //______________________________________________________________________________
+int ROOT::TMetaUtils::WriteNamespaceHeader(std::ostream &out, const clang::DeclContext *ctxt)
+{
+   // Write all the necessary opening part of the namespace and
+   // return the number of closing brackets needed
+   // For example for Space1::Space2
+   // we write: namespace Space1 { namespace Space2 {
+   // and return 2.
+
+   int closing_brackets = 0;
+
+   //fprintf(stderr,"DEBUG: in WriteNamespaceHeader for %s with %s\n",
+   //    cl.Fullname(),namespace_obj.Fullname());
+   if (ctxt && ctxt->isNamespace()) {
+      closing_brackets = WriteNamespaceHeader(out,ctxt->getParent());
+      for (int indent = 0; indent < closing_brackets; ++indent) {
+         out << "   ";
+      }
+      const clang::NamespaceDecl *ns = llvm::dyn_cast<clang::NamespaceDecl>(ctxt);
+      if (ns->isInline())
+         out << "inline ";
+      out << "namespace " << ns->getNameAsString() << " {" << std::endl;
+      closing_brackets++;
+   }
+
+   return closing_brackets;
+}
+
+//______________________________________________________________________________
 int ROOT::TMetaUtils::WriteNamespaceHeader(std::ostream &out, const clang::RecordDecl *cl)
 {
-   return ::WriteNamespaceHeader(out, GetEnclosingSpace(*cl));
+   return WriteNamespaceHeader(out, GetEnclosingSpace(*cl));
 }
 
 //______________________________________________________________________________
@@ -3027,7 +3034,9 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
          // first let's see if it is a data member:
          int found = 0;
          const clang::CXXRecordDecl *parent_clxx = llvm::dyn_cast<clang::CXXRecordDecl>(m.getDeclContext());
-         const clang::FieldDecl *index1 = GetDataMemberFromAll(*parent_clxx, current );
+         const clang::FieldDecl *index1 = 0;
+         if (parent_clxx)
+            index1 = GetDataMemberFromAll(*parent_clxx, current );
          if ( index1 ) {
             if ( IsFieldDeclInt(index1) ) {
                found = 1;

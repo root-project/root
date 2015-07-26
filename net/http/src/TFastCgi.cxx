@@ -89,6 +89,8 @@ void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 //////////////////////////////////////////////////////////////////////////
 
 
+ClassImp(TFastCgi)
+
 //______________________________________________________________________________
 TFastCgi::TFastCgi() :
    THttpEngine("fastcgi", "fastcgi interface to webserver"),

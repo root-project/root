@@ -897,12 +897,12 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       }
       const UInt_t na = fSamples[0].size();
       const UInt_t nb = fSamples[1].size();
-      Double_t* a = new Double_t[na];
-      Double_t* b = new Double_t[nb];
-      std::copy(fSamples[0].begin(), fSamples[0].end(), a);
-      std::copy(fSamples[1].begin(), fSamples[1].end(), b);
-      pvalue = TMath::KolmogorovTest(na, a, nb, b, 0);
-      testStat = TMath::KolmogorovTest(na, a, nb, b, "M");
+      std::vector<Double_t> a(na);
+      std::vector<Double_t> b(nb);
+      std::copy(fSamples[0].begin(), fSamples[0].end(), a.begin());
+      std::copy(fSamples[1].begin(), fSamples[1].end(), b.begin());
+      pvalue = TMath::KolmogorovTest(na, a.data(), nb, b.data(), 0);
+      testStat = TMath::KolmogorovTest(na, a.data(), nb, b.data(), "M");
    }
 
    Double_t GoFTest::KolmogorovSmirnov2SamplesTest(const Char_t* option) const {

@@ -12,7 +12,7 @@ if(NOT WIN32)
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore)
   ROOT_EXECUTABLE(ssh2rpd ssh2rpd.cxx ${CMAKE_SOURCE_DIR}/core/clib/src/strlcpy.c )
 endif()
-ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core MathCore Rint)
+ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
 ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
 ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread)
 
