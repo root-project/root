@@ -20,7 +20,7 @@ if(WIN32)
 endif()
 ROOT_LINKER_LIBRARY(PyROOT *.cxx G__PyROOT.cxx LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES})
 
-if(WIN32)
+if(MSVC)
   add_custom_command(TARGET PyROOT POST_BUILD
                      COMMAND link -dll -nologo -IGNORE:4001 -machine:ix86 -export:initlibPyROOT
                     $<TARGET_LINKER_FILE:PyROOT> -nodefaultlib kernel32.lib msvcrt.lib
