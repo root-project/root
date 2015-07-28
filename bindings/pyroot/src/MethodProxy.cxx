@@ -141,33 +141,41 @@ namespace {
    }
 
 // helper to factor out return logic of mp_call
-   inline PyObject* HandleReturn( MethodProxy* pymeth, PyObject* result ) {
+   inline PyObject* HandleReturn( MethodProxy* pymeth, ObjectProxy* oldSelf, PyObject* result ) {
 
    // special case for python exceptions, propagated through C++ layer
-      if ( result == (PyObject*)TPyExceptionMagic )
-         return 0;              // exception info was already set
+      if ( result != (PyObject*)TPyExceptionMagic ) {
 
-   // if this method creates new objects, always take ownership
-      if ( IsCreator( pymeth->fMethodInfo->fFlags ) ) {
+      // if this method creates new objects, always take ownership
+         if ( IsCreator( pymeth->fMethodInfo->fFlags ) ) {
 
-      // either be a constructor with a fresh object proxy self ...
-         if ( IsConstructor( pymeth->fMethodInfo->fFlags ) ) {
-            if ( pymeth->fSelf )
-               pymeth->fSelf->HoldOn();
+         // either be a constructor with a fresh object proxy self ...
+            if ( IsConstructor( pymeth->fMethodInfo->fFlags ) ) {
+               if ( pymeth->fSelf )
+                  pymeth->fSelf->HoldOn();
+            }
+
+         // ... or be a method with an object proxy return value
+            else if ( ObjectProxy_Check( result ) )
+               ((ObjectProxy*)result)->HoldOn();
          }
 
-      // ... or be a method with an object proxy return value
-         else if ( ObjectProxy_Check( result ) )
-            ((ObjectProxy*)result)->HoldOn();
+      // if this new object falls inside self, make sure its lifetime is proper
+         if ( ObjectProxy_Check( pymeth->fSelf ) && ObjectProxy_Check( result ) ) {
+            Long_t ptrdiff = (Long_t)((ObjectProxy*)result)->GetObject() - (Long_t)pymeth->fSelf->GetObject();
+            if ( 0 <= ptrdiff && ptrdiff < (Long_t)Cppyy::SizeOf( pymeth->fSelf->ObjectIsA() ) ) {
+               if ( PyObject_SetAttr( result, PyStrings::gLifeLine, (PyObject*)pymeth->fSelf ) == -1 )
+                  PyErr_Clear();     // ignored
+            }
+         }
+      } else { // result is TPyExceptionMagic
+         result = nullptr;         // exception info was already set
       }
 
-   // if this new object falls inside self, make sure its lifetime is proper
-      if ( ObjectProxy_Check( pymeth->fSelf ) && ObjectProxy_Check( result ) ) {
-         Long_t ptrdiff = (Long_t)((ObjectProxy*)result)->GetObject() - (Long_t)pymeth->fSelf->GetObject();
-         if ( 0 <= ptrdiff && ptrdiff < (Long_t)Cppyy::SizeOf( pymeth->fSelf->ObjectIsA() ) ) {
-            if ( PyObject_SetAttr( result, PyStrings::gLifeLine, (PyObject*)pymeth->fSelf ) == -1 )
-               PyErr_Clear();     // ignored
-         }
+   // reset self as necessary to allow re-use of the MethodProxy
+      if ( pymeth->fSelf != oldSelf ) {
+         Py_XDECREF( pymeth->fSelf );
+         pymeth->fSelf = oldSelf;
       }
 
       return result;
@@ -525,6 +533,8 @@ namespace {
       if ( IsPseudoFunc( pymeth ) )
          pymeth->fSelf = NULL;
 
+      ObjectProxy* oldSelf = pymeth->fSelf;
+
    // get local handles to proxy internals
       auto& methods     = pymeth->fMethodInfo->fMethods;
       auto& dispatchMap = pymeth->fMethodInfo->fDispatchMap;
@@ -541,7 +551,7 @@ namespace {
    // simple case
       if ( nMethods == 1 ) {
          PyObject* result = methods[0]->Call( pymeth->fSelf, args, kwds, &ctxt );
-         return HandleReturn( pymeth, result );
+         return HandleReturn( pymeth, oldSelf, result );
       }
 
    // otherwise, handle overloading
@@ -552,7 +562,7 @@ namespace {
       if ( m != dispatchMap.end() ) {
          Int_t index = m->second;
          PyObject* result = methods[ index ]->Call( pymeth->fSelf, args, kwds, &ctxt );
-         result = HandleReturn( pymeth, result );
+         result = HandleReturn( pymeth, oldSelf, result );
 
          if ( result != 0 )
             return result;
@@ -580,7 +590,7 @@ namespace {
          // success: update the dispatch map for subsequent calls
             dispatchMap[ sighash ] = i;
             std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
-            return HandleReturn( pymeth, result );
+            return HandleReturn( pymeth, oldSelf, result );
          }
 
       // failure: collect error message/trace (automatically clears exception, too)
