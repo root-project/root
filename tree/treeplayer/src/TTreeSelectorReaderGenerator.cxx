@@ -545,6 +545,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                      // Recurse: analyze the sub-elements with the same branches
                      lookedAt += AnalyzeBranches(bdesc, branches, objInfo);
                   }
+                  delete bdesc;
                } else { // Not base class
                   TBranchDescriptor *bdesc = 0;
                   if (branchEndName == element->GetName()) { // The element and the branch matches
@@ -583,6 +584,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                      // Recurse: analyze the sub-elements with the same branches
                      lookedAt += AnalyzeBranches(bdesc, branches, objInfo);
                   }
+                  delete bdesc;
                }
 
                break;
@@ -766,7 +768,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          TString type = "unknown";   // Type of branch
          ELocation isclones = kOut;  // Type of container
          TString containerName = ""; // Name of container
-         TBranchDescriptor *desc = 0; // TODO: delete after usage
+         TBranchDescriptor *desc = 0;
          // Check whether the branch is a container
          if (cl) {
             // Check if it is a TClonesArray
@@ -862,6 +864,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                             desc->GetName(), desc->fBranchName, desc->fBranchName);
             }
          }
+         delete desc;
       }
    }
 
