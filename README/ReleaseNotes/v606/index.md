@@ -114,6 +114,10 @@ introduce forced newline. The third option is less intrusive and just adds addit
 spaces to provide clues for the proper line wrapping (this is the one implemented in
 this change).
 
+### TLatex
+
+Make sure the line width used to draw `#sqrt` is always >= 1.
+
 ## 3D Graphics Libraries
 
 
