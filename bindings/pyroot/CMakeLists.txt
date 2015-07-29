@@ -5,6 +5,14 @@ ROOT_USE_PACKAGE(math/mathcore)
 ROOT_USE_PACKAGE(tree/tree)
 include_directories(${PYTHON_INCLUDE_DIRS})
 
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils import sysconfig; print(sysconfig.get_python_lib(prefix='${CMAKE_INSTALL_PREFIX}'))"
+                OUTPUT_VARIABLE pythondir
+                RESULT_VARIABLE _PYTHON_pythonlib_result
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+get_filename_component(pythondir ${pythondir} ABSOLUTE)
+file (RELATIVE_PATH pythondir ${CMAKE_INSTALL_PREFIX} ${pythondir})
+
 ROOT_GENERATE_DICTIONARY(G__PyROOT *.h MODULE PyROOT LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 if(GCC_MAJOR EQUAL 4)
@@ -19,6 +27,8 @@ if(WIN32)
                 -include:_G__cpp_setupG__MathCore)
 endif()
 ROOT_LINKER_LIBRARY(PyROOT *.cxx G__PyROOT.cxx LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES})
+
+install(TARGETS PyROOT DESTINATION ${pythondir})
 
 if(WIN32)
   add_custom_command(TARGET PyROOT POST_BUILD
@@ -36,14 +46,14 @@ endif()
 #---Install python modules--------------------------------------------------
 file(GLOB pyfiles RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
 foreach(pyfile ${pyfiles})
-  install(FILES ${pyfile} DESTINATION ${runtimedir})
-  install(CODE "execute_process(COMMAND python -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
-  install(CODE "execute_process(COMMAND python -O -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
+  install(FILES ${pyfile} DESTINATION ${pythondir})
+  install(CODE "execute_process(COMMAND python -m py_compile \$ENV{DESTDIR}\${pythondir}/${pyfile} )")
+  install(CODE "execute_process(COMMAND python -O -m py_compile \$ENV{DESTDIR}\${pythondir}/${pyfile} )")
   file(COPY ${pyfile} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
 endforeach()
 
 set( ROOTaaSDirName "ROOTaaS")
-install (DIRECTORY ${ROOTaaSDirName} DESTINATION ${runtimedir})
+install (DIRECTORY ${ROOTaaSDirName} DESTINATION ${pythondir})
 file(COPY ${ROOTaaSDirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
 
 #---Install headers----------------------------------------------------------
