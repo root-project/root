@@ -811,4 +811,4 @@ directory - this behavior is now implement by the default constructor.
 
 ### Graphics
  - Fix file corruption in `TTeXDump::DrawPolyMarker`.
-
+ - Make sure the line width used to draw `#sqrt` is always >=1.
