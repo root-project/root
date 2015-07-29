@@ -771,6 +771,9 @@ an argument was changed to set gDirectory to zero when being passed a null point
 previously it was interpreting a null pointer as a request to *not* change the current
 directory - this behavior is now implement by the default constructor.
 
+### I/O
+ - Fix the issue described at [ROOT-7500]: crash due to change in base class which versioned derived class.
+
 ### Proof
  - Add support for aliases [ROOT-7392]
  - Fix issue with trees in sub-directories causing stressProof test #29 to fail
