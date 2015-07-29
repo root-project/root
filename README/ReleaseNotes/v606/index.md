@@ -118,6 +118,18 @@ this change).
 
 Make sure the line width used to draw `#sqrt` is always >= 1.
 
+When a global text alignment was set the `TLatex`characters `#minus`, `#plus`,
+`#mp`, `#hbar`, and `#backslash` were mis-aligned. The following macro demonstrate
+the problem:
+
+``` {.cpp}
+{
+   gStyle->SetTextAlign(22);
+   TLatex t(.5,.5,"#minus100 #mp100 #plus100 #hbar #backslash");
+   t.Draw();
+}
+```
+
 ## 3D Graphics Libraries
 
 

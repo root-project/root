@@ -1162,6 +1162,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
          hbar.SetTextColor(spec.fColor);
          hbar.SetTextSize(spec.fSize);
          hbar.SetTextAngle(fTextAngle);
+         hbar.SetTextAlign(11);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
          Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
@@ -1183,6 +1184,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
          minus.SetTextColor(spec.fColor);
          minus.SetTextSize(spec.fSize);
          minus.SetTextAngle(fTextAngle);
+         minus.SetTextAlign(11);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
          Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
@@ -1203,6 +1205,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
          plus.SetTextColor(spec.fColor);
          plus.SetTextSize(spec.fSize);
          plus.SetTextAngle(fTextAngle);
+         plus.SetTextAlign(11);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
          Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
@@ -1223,6 +1226,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
          mp.SetTextColor(spec.fColor);
          mp.SetTextSize(spec.fSize);
          mp.SetTextAngle(fTextAngle+180);
+         mp.SetTextAlign(11);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
          Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
@@ -1259,6 +1263,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
          bs.SetTextColor(spec.fColor);
          bs.SetTextSize(spec.fSize);
          bs.SetTextAngle(fTextAngle);
+         bs.SetTextAlign(11);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
          Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
