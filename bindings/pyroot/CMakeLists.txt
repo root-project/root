@@ -27,7 +27,7 @@ if(WIN32)
                 -include:_G__cpp_setupG__Matrix)
 endif()
 ROOT_LINKER_LIBRARY(PyROOT *.cxx G__PyROOT.cxx LIBRARIES ${ROOTULIBS} RIO Net Hist Graf Graf3d Gpad Tree Matrix Thread ${Reflexlib} ${PYTHON_LIBRARIES})
-if(WIN32)
+if(MSVC)
   add_custom_command(TARGET PyROOT POST_BUILD
                      COMMAND link -dll -nologo -IGNORE:4001 -machine:ix86 -export:initlibPyROOT
                     $<TARGET_LINKER_FILE:PyROOT> -nodefaultlib kernel32.lib msvcrt.lib
