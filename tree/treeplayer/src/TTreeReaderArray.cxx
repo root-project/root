@@ -109,10 +109,8 @@ namespace {
    class TCollectionLessSTLReader : public ROOT::TVirtualCollectionReader {
    private:
       TVirtualCollectionProxy *localCollection;
-      Bool_t proxySet;
-      void *lastWhere;
    public:
-      TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : localCollection(proxy), proxySet(false), lastWhere(0) {}
+      TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : localCollection(proxy) {}
 
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
          if (!proxy->Read()){
@@ -125,40 +123,27 @@ namespace {
       }
 
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
-         if (!CheckProxy(proxy)) return -1;
          if (!proxy->ReadEntries()) return -1;
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
+         if (!proxy->GetWhere()) return 0;
+         TVirtualCollectionProxy::TPushPop ppRaii(myCollectionProxy, proxy->GetWhere());
          return myCollectionProxy->Size();
       }
 
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
-         if (!CheckProxy(proxy)) return 0;
          if (!proxy->Read()) return 0;
          if (!proxy->GetWhere()) return 0;
 
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
+         TVirtualCollectionProxy::TPushPop ppRaii(myCollectionProxy, proxy->GetWhere());
          if (myCollectionProxy->HasPointers()){
             return *(void**)myCollectionProxy->At(idx);
          }
          else {
             return myCollectionProxy->At(idx);
          }
-      }
-
-      Bool_t CheckProxy(ROOT::TBranchProxy *proxy) {
-         if (!proxy->Read()) return false;
-         if (!proxySet || lastWhere != proxy->GetWhere()) {
-            TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
-            if (proxy->GetWhere() && myCollectionProxy){
-               myCollectionProxy->PushProxy(proxy->GetWhere());
-               proxySet = true;
-               lastWhere = proxy->GetWhere();
-            }
-            else return false;
-         }
-         return true;
       }
    };
 
