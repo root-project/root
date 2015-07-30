@@ -2768,7 +2768,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
                // class in the TFile's list of StreamerInfo, so it has not yet been loaded,
                // let's see if it is there.
                const TList *list = file->GetStreamerInfoCache();
-               localBaseInfo = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : 0;
+               localBaseInfo = list ? (TStreamerInfo*)list->FindObject(localBase->GetName()) : 0;
             }
             if (!localBaseInfo) {
                TString msg;
