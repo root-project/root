@@ -74,7 +74,8 @@ void fill_container<TMap>(TMap* _container, Int_t _count)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void stressIterators() throw(exception)
 {
    const Int_t size = 15;

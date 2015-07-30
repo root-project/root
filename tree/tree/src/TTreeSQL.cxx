@@ -40,7 +40,9 @@
 
 ClassImp(TTreeSQL)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with an explicit TSQLServer
+
 TTreeSQL::TTreeSQL(TSQLServer *server, TString DB, const TString& table) :
    TTree(table.Data(), "Database read from table: " + table, 0), fDB(DB),
    fTable(table.Data()),
@@ -48,8 +50,6 @@ TTreeSQL::TTreeSQL(TSQLServer *server, TString DB, const TString& table) :
    fServer(server),
    fBranchChecked(kFALSE)
 {
-   // Constructor with an explicit TSQLServer
-
    fCurrentEntry = -1;
    fQuery = TString("Select * from " + fTable);
    fEntries = 0;
@@ -63,92 +63,92 @@ TTreeSQL::TTreeSQL(TSQLServer *server, TString DB, const TString& table) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented yet
+
 TBranch* TTreeSQL::BranchImp(const char *, const char *,
                              TClass *, void *, Int_t ,
                              Int_t )
 {
-   // Not implemented yet
-
    Fatal("BranchImp","Not implemented yet");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented yet
+
 TBranch* TTreeSQL::BranchImp(const char *, TClass *,
                              void *, Int_t , Int_t )
 {
-   // Not implemented yet
-
    Fatal("BranchImp","Not implemented yet");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented yet
+
 Int_t TTreeSQL::Branch(TCollection *, Int_t,
                        Int_t, const char *)
 {
-   // Not implemented yet
-
    Fatal("Branch","Not implemented yet");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented yet
+
 Int_t TTreeSQL::Branch(TList *, Int_t, Int_t)
 {
-   // Not implemented yet
-
    Fatal("Branch","Not implemented yet");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented yet
+
 Int_t TTreeSQL::Branch(const char *, Int_t ,
                        Int_t)
 {
-   // Not implemented yet
-
    Fatal("Branch","Not implemented yet");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented yet
+
 TBranch* TTreeSQL::Bronch(const char *, const char *, void *,
                           Int_t, Int_t)
 {
-   // Not implemented yet
-
    Fatal("Bronc","Not implemented yet");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented yet
+
 TBranch* TTreeSQL::BranchOld(const char *, const char *,
                              void *, Int_t, Int_t)
 {
-   // Not implemented yet
-
    Fatal("BranchOld","Not implemented yet");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented yet
+
 TBranch *TTreeSQL::Branch(const char *, const char *, void *,
                           Int_t, Int_t)
 {
-   // Not implemented yet
-
    Fatal("Branch","Not implemented yet");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a branch
+
 TBranch * TTreeSQL::Branch(const char *name, void *address,
                            const char *leaflist, Int_t bufsize)
 {
-   // Create a branch
-
    Int_t nb = fBranches.GetEntriesFast();
    TBranch *branch;
    TString brName;
@@ -174,11 +174,11 @@ TBranch * TTreeSQL::Branch(const char *name, void *address,
    return TTree::Branch(name, address, leaflist, bufsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the basket is properly setup
+
 void TTreeSQL::CheckBasket(TBranch *branch)
 {
-   // Check if the basket is properly setup
-
    TBasketSQL* basket = (TBasketSQL *)branch->GetBasket(0);
 
    if (basket==0) {
@@ -201,12 +201,12 @@ void TTreeSQL::CheckBasket(TBranch *branch)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the table has a column corresponding the branch
+/// and that the resultset are properly setup
+
 Bool_t TTreeSQL::CheckBranch(TBranch * tb)
 {
-   // Check if the table has a column corresponding the branch
-   // and that the resultset are properly setup
-
    if (fServer==0) {
       return kFALSE;
    }
@@ -250,11 +250,11 @@ Bool_t TTreeSQL::CheckBranch(TBranch * tb)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the table exist in the database
+
 Bool_t TTreeSQL::CheckTable(const TString &table) const
 {
-   // Check the table exist in the database
-
    if (fServer==0) return kFALSE;
    TSQLResult * tables = fServer->GetTables(fDB.Data(),table);
    if (!tables) return kFALSE;
@@ -277,11 +277,11 @@ Bool_t TTreeSQL::CheckTable(const TString &table) const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert from ROOT typename to SQL typename
+
 TString TTreeSQL::ConvertTypeName(const TString& typeName )
 {
-   // Convert from ROOT typename to SQL typename
-
    TString tn = "";
 
    if(typeName == "Char_t"){
@@ -334,11 +334,11 @@ TString TTreeSQL::ConvertTypeName(const TString& typeName )
    return tn;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TBasketSQL
+
 TBasket * TTreeSQL::CreateBasket(TBranch * tb)
 {
-   // Create a TBasketSQL
-
    if (fServer==0) {
       Error("CreateBasket","No TSQLServer specified");
       return 0;
@@ -352,11 +352,11 @@ TBasket * TTreeSQL::CreateBasket(TBranch * tb)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the column(s) in the database that correspond to the branch/
+
 void TTreeSQL::CreateBranch(const TString &branchName, const TString &typeName)
 {
-   // Create the column(s) in the database that correspond to the branch/
-
    if (fServer==0) {
       Error("CreateBranch","No TSQLServer specified");
       return;
@@ -374,11 +374,11 @@ void TTreeSQL::CreateBranch(const TString &branchName, const TString &typeName)
    fServer->Query(alterSQL);
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// determine leaf description string
+
 TString TTreeSQL::CreateBranches(TSQLResult * rs)
 {
-   // determine leaf description string
-
    if(!rs) return "";
 
    Int_t rows;
@@ -481,11 +481,11 @@ TString TTreeSQL::CreateBranches(TSQLResult * rs)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the database table corresponding to this TTree.
+
 Bool_t TTreeSQL::CreateTable(const TString &table)
 {
-   // Create the database table corresponding to this TTree.
-
    if (fServer==0) {
       Error("CreateTable","No TSQLServer specified");
       return false;
@@ -543,11 +543,11 @@ Bool_t TTreeSQL::CreateTable(const TString &table)
    return (fResult!=0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initializeation routine
+
 void TTreeSQL::Init()
 {
-   // Initializeation routine
-
    fCurrentEntry = -1;
 
    GetEntries();
@@ -559,11 +559,11 @@ void TTreeSQL::Init()
    CreateBranches(fServer->GetColumns(fDB,fTable));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the information from the user object to the TTree
+
 Int_t TTreeSQL::Fill()
 {
-   // Copy the information from the user object to the TTree
-
    Int_t nb = fBranches.GetEntriesFast();
    TString typeName;
    TBranch *branch;
@@ -608,14 +608,14 @@ Int_t TTreeSQL::Fill()
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a vector of columns index corresponding to the
+/// current SQL table and the branch given as argument
+/// Returns 0 if no columns indices is found
+/// Otherwise returns a pointer to a vector to be deleted by the caller
+
 std::vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
 {
-   // Return a vector of columns index corresponding to the
-   // current SQL table and the branch given as argument
-   // Returns 0 if no columns indices is found
-   // Otherwise returns a pointer to a vector to be deleted by the caller
-
    if (!CheckTable(fTable)) return 0;
 
    std::vector<Int_t> *columns = new std::vector<Int_t>;
@@ -673,11 +673,11 @@ std::vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
       return columns;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the number of rows in the database
+
 Long64_t  TTreeSQL::GetEntries() const
 {
-   // Get the number of rows in the database
-
    if (fServer==0) return GetEntriesFast();
    if (!CheckTable(fTable.Data())) return 0;
 
@@ -705,38 +705,38 @@ Long64_t  TTreeSQL::GetEntries() const
    return fEntries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of entries as of the last check.
+/// Use GetEntries for a more accurate count.
+
 Long64_t  TTreeSQL::GetEntriesFast()    const
 {
-   // Return the number of entries as of the last check.
-   // Use GetEntries for a more accurate count.
-
    return fEntries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load the data for the entry from the database.
+
 Int_t TTreeSQL::GetEntry(Long64_t entry, Int_t getall)
 {
-   // Load the data for the entry from the database.
-
    if (PrepEntry(entry)>=0) return TTree::GetEntry(entry,getall);
    else return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the tree to the load the specified entry.
+
 Long64_t TTreeSQL::LoadTree(Long64_t entry)
 {
-   // Setup the tree to the load the specified entry.
-
    fReadEntry = entry;
    return PrepEntry(entry);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure the server and result set are setup for the requested entry
+
 Long64_t TTreeSQL::PrepEntry(Long64_t entry)
 {
-   // Make sure the server and result set are setup for the requested entry
-
    if (entry < 0 || entry >= fEntries || fServer==0) return 0;
    fReadEntry = entry;
 
@@ -778,14 +778,14 @@ Long64_t TTreeSQL::PrepEntry(Long64_t entry)
 //    fResult =    fServer->Query(fQuery.Data());
 // }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Refresh contents of this Tree and its branches from the current
+///  Tree status in the database
+///  One can call this function in case the Tree on its file is being
+///  updated by another process
+
 void TTreeSQL::Refresh()
 {
-   //  Refresh contents of this Tree and its branches from the current
-   //  Tree status in the database
-   //  One can call this function in case the Tree on its file is being
-   //  updated by another process
-
    // Note : something to be done?
    GetEntries(); // Re-load the number of entries
    fCurrentEntry = -1;
@@ -793,11 +793,11 @@ void TTreeSQL::Refresh()
    delete fRow; fRow = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the internal query
+
 void TTreeSQL::ResetQuery()
 {
-   // Reset the internal query
-
    fInsertQuery = "INSERT INTO " + fTable + " VALUES (";
 }
 

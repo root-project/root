@@ -12,6 +12,7 @@
 #include "Utility.h"
 
 // ROOT
+#include "TClass.h"           // for exception types (to move to Cppyy.cxx)
 #include "TException.h"       // for TRY ... CATCH
 #include "TVirtualMutex.h"    // for R__LOCKGUARD2
 
@@ -21,6 +22,7 @@
 #include <exception>
 #include <sstream>
 #include <string>
+#include <typeinfo>
 
 
 //- data and local helpers ---------------------------------------------------
@@ -42,45 +44,66 @@ inline void PyROOT::TMethodHolder::Copy_( const TMethodHolder& /* other */ )
    fIsInitialized  = kFALSE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destroy executor and argument converters
+
 inline void PyROOT::TMethodHolder::Destroy_() const
 {
-// destroy executor and argument converters
    delete fExecutor;
 
    for ( int i = 0; i < (int)fConverters.size(); ++i )
       delete fConverters[ i ];
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper code to prevent some duplication; this is called from CallSafe() as well
+/// as directly from TMethodHolder::Execute in fast mode.
+
 inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, TCallContext* ctxt )
 {
-// Helper code to prevent some duplication; this is called from CallSafe() as well
-// as directly from TMethodHolder::Execute in fast mode.
-
-   PyObject* result = 0;
+   PyObject* result = nullptr;
 
    try {       // C++ try block
       result = fExecutor->Execute( fMethod, (Cppyy::TCppObject_t)((Long_t)self + offset), ctxt );
    } catch ( TPyException& ) {
       result = (PyObject*)TPyExceptionMagic;
    } catch ( std::exception& e ) {
-      PyErr_Format( PyExc_Exception, "%s (C++ exception)", e.what() );
-      result = 0;
+   // map user exceptions .. this needs to move to Cppyy.cxx
+      TClass* cl = TClass::GetClass( typeid(e) );
+
+      PyObject* pyUserExcepts = PyObject_GetAttrString( gRootModule, "UserExceptions" );
+      std::string exception_type = cl->GetName();
+      PyObject* pyexc = PyDict_GetItemString( pyUserExcepts, exception_type.c_str() );
+      if ( !pyexc ) {
+         PyErr_Clear();
+         pyexc = PyDict_GetItemString( pyUserExcepts, ("std::"+exception_type).c_str() );
+      }
+      if ( !pyexc ) {
+         PyErr_Clear();
+         pyexc = PyDict_GetItemString( pyUserExcepts, ("ROOT::"+exception_type).c_str() );
+      }
+      Py_DECREF( pyUserExcepts );
+
+      if ( pyexc ) {
+         PyErr_Format( pyexc, "%s", e.what() );
+      } else {
+         PyErr_Format( PyExc_Exception, "%s (C++ exception of type %s)", e.what(), cl->GetName() );
+      }
+      result = nullptr;
    } catch ( ... ) {
       PyErr_SetString( PyExc_Exception, "unhandled, unknown C++ exception" );
-      result = 0;
+      result = nullptr;
    }
 
    return result;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper code to prevent some code duplication; this code embeds a ROOT "try/catch"
+/// block that saves the stack for restoration in case of an otherwise fatal signal.
+
 inline PyObject* PyROOT::TMethodHolder::CallSafe( void* self, ptrdiff_t offset, TCallContext* ctxt )
 {
-// Helper code to prevent some code duplication; this code embeds a ROOT "try/catch"
-// block that saves the stack for restoration in case of an otherwise fatal signal.
-
    PyObject* result = 0;
 
    TRY {       // ROOT "try block"
@@ -94,10 +117,11 @@ inline PyObject* PyROOT::TMethodHolder::CallSafe( void* self, ptrdiff_t offset, 
    return result;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// build buffers for argument dispatching
+
 Bool_t PyROOT::TMethodHolder::InitConverters_()
 {
-// build buffers for argument dispatching
    const size_t nArgs = Cppyy::GetMethodNumArgs( fMethod );
    fConverters.resize( nArgs );
 
@@ -129,10 +153,11 @@ Bool_t PyROOT::TMethodHolder::InitConverters_()
    return kTRUE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// install executor conform to the return type
+
 Bool_t PyROOT::TMethodHolder::InitExecutor_( TExecutor*& executor )
 {
-// install executor conform to the return type
    executor = CreateExecutor( (Bool_t)fMethod == true ?
       Cppyy::ResolveName( Cppyy::GetMethodResultType( fMethod ) )
       : Cppyy::GetScopedFinalName( fScope ) );
@@ -142,10 +167,11 @@ Bool_t PyROOT::TMethodHolder::InitExecutor_( TExecutor*& executor )
    return kTRUE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// built a signature representation (used for doc strings)
+
 std::string PyROOT::TMethodHolder::GetSignatureString()
 {
-// built a signature representation (used for doc strings)
    std::stringstream sig; sig << "(";
    Int_t ifirst = 0;
    const size_t nArgs = Cppyy::GetMethodNumArgs( fMethod );
@@ -167,10 +193,11 @@ std::string PyROOT::TMethodHolder::GetSignatureString()
    return sig.str();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// helper to report errors in a consistent format (derefs msg)
+
 void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
 {
-// helper to report errors in a consistent format (derefs msg)
    PyObject *etype, *evalue, *etrace;
    PyErr_Fetch( &etype, &evalue, &etrace );
 
@@ -219,10 +246,11 @@ PyROOT::TMethodHolder::TMethodHolder( const TMethodHolder& other ) :
    Copy_( other );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assignment operator
+
 PyROOT::TMethodHolder& PyROOT::TMethodHolder::operator=( const TMethodHolder& other )
 {
-// assignment operator
    if ( this != &other ) {
       Destroy_();
       Copy_( other );
@@ -233,10 +261,11 @@ PyROOT::TMethodHolder& PyROOT::TMethodHolder::operator=( const TMethodHolder& ot
    return *this;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 PyROOT::TMethodHolder::~TMethodHolder()
 {
-// destructor
    Destroy_();
 }
 
@@ -252,13 +281,13 @@ PyObject* PyROOT::TMethodHolder::GetPrototype()
       GetSignatureString().c_str() );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method priorities exist (in lieu of true overloading) there to prevent
+/// void* or <unknown>* from usurping otherwise valid calls. TODO: extend this
+/// to favour classes that are not bases.
+
 Int_t PyROOT::TMethodHolder::GetPriority()
 {
-// Method priorities exist (in lieu of true overloading) there to prevent
-// void* or <unknown>* from usurping otherwise valid calls. TODO: extend this
-// to favour classes that are not bases.
-
    Int_t priority = 0;
 
    const size_t nArgs = Cppyy::GetMethodNumArgs( fMethod );
@@ -314,16 +343,18 @@ Int_t PyROOT::TMethodHolder::GetPriority()
    return priority;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t PyROOT::TMethodHolder::GetMaxArgs()
 {
    return Cppyy::GetMethodNumArgs( fMethod );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build a tuple of the argument types/names.
+
 PyObject* PyROOT::TMethodHolder::GetCoVarNames()
 {
-// Build a tuple of the argument types/names.
    int co_argcount = (int)GetMaxArgs() /* +1 for self */;
 
 // TODO: static methods need no 'self' (but is harmless otherwise)
@@ -346,10 +377,11 @@ PyObject* PyROOT::TMethodHolder::GetCoVarNames()
    return co_varnames;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the default value (if any) of argument iarg of this method
+
 PyObject* PyROOT::TMethodHolder::GetArgDefault( Int_t iarg )
 {
-// get the default value (if any) of argument iarg of this method
    if ( iarg >= (int)GetMaxArgs() )
       return 0;
 
@@ -370,17 +402,19 @@ PyObject* PyROOT::TMethodHolder::GetArgDefault( Int_t iarg )
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get or build the scope of this method.
+
 PyObject* PyROOT::TMethodHolder::GetScopeProxy()
 {
-// Get or build the scope of this method.
    return CreateScopeProxy( fScope );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// done if cache is already setup
+
 Bool_t PyROOT::TMethodHolder::Initialize()
 {
-// done if cache is already setup
    if ( fIsInitialized == kTRUE )
       return kTRUE;
 
@@ -399,10 +433,11 @@ Bool_t PyROOT::TMethodHolder::Initialize()
    return kTRUE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// verify existence of self, return if ok
+
 PyObject* PyROOT::TMethodHolder::PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* )
 {
-// verify existence of self, return if ok
    if ( self != 0 ) {
       Py_INCREF( args );
       return args;
@@ -435,7 +470,8 @@ PyObject* PyROOT::TMethodHolder::PreProcessArgs( ObjectProxy*& self, PyObject* a
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t PyROOT::TMethodHolder::ConvertAndSetArgs( PyObject* args, TCallContext* ctxt )
 {
    int argc = PyTuple_GET_SIZE( args );
@@ -465,11 +501,11 @@ Bool_t PyROOT::TMethodHolder::ConvertAndSetArgs( PyObject* args, TCallContext* c
    return kTRUE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// call the interface method
+
 PyObject* PyROOT::TMethodHolder::Execute( void* self, ptrdiff_t offset, TCallContext* ctxt )
 {
-// call the interface method
-
    PyObject* result = 0;
 
    if ( TCallContext::sSignalPolicy == TCallContext::kFast ) {
@@ -491,11 +527,12 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self, ptrdiff_t offset, TCallCon
    return result;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// preliminary check in case keywords are accidently used (they are ignored otherwise)
+
 PyObject* PyROOT::TMethodHolder::Call(
       ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
 {
-// preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {
       PyErr_SetString( PyExc_TypeError, "keyword arguments are not yet supported" );
       return 0;
@@ -554,7 +591,8 @@ PyObject* PyROOT::TMethodHolder::GetSignature()
    return PyROOT_PyUnicode_FromString( GetSignatureString().c_str() );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::string PyROOT::TMethodHolder::GetReturnTypeName()
 {
    return Cppyy::GetMethodResultType( fMethod );

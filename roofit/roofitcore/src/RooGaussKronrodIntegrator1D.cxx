@@ -81,41 +81,44 @@ int gsl_integration_qng (const gsl_function * f,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register RooGaussKronrodIntegrator1D, its parameters and capabilities with RooNumIntConfig
+
 void RooGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
-  // Register RooGaussKronrodIntegrator1D, its parameters and capabilities with RooNumIntConfig
-
   fact.storeProtoIntegrator(new RooGaussKronrodIntegrator1D(),RooArgSet()) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// coverity[UNINIT_CTOR]
+/// Default constructor
+
 RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D() : _x(0)
 {
-  // coverity[UNINIT_CTOR]
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct integral on 'function' using given configuration object. The integration
+/// range is taken from the definition in the function binding
+
 RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
   _epsAbs(config.epsRel()),
   _epsRel(config.epsAbs())
 {
-  // Construct integral on 'function' using given configuration object. The integration
-  // range is taken from the definition in the function binding
-
   _useIntegrandLimits= kTRUE;
   _valid= initialize();
 } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct integral on 'function' using given configuration object in the given range
+
 RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc& function, 
 							 Double_t xmin, Double_t xmax, const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
@@ -124,29 +127,27 @@ RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc& funct
   _xmin(xmin),
   _xmax(xmax)
 {
-  // Construct integral on 'function' using given configuration object in the given range
-
   _useIntegrandLimits= kFALSE;
   _valid= initialize();
 } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clone integrator with given function and configuration. Needed for RooNumIntFactory
+
 RooAbsIntegrator* RooGaussKronrodIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
-  // Clone integrator with given function and configuration. Needed for RooNumIntFactory
-
   return new RooGaussKronrodIntegrator1D(function,config) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform one-time initialization of integrator
+
 Bool_t RooGaussKronrodIntegrator1D::initialize()
 {
-  // Perform one-time initialization of integrator
-
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
 
@@ -155,11 +156,11 @@ Bool_t RooGaussKronrodIntegrator1D::initialize()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooGaussKronrodIntegrator1D::~RooGaussKronrodIntegrator1D()
 {
-  // Destructor
-
   if (_x) {
     delete[] _x ;
   }
@@ -167,13 +168,13 @@ RooGaussKronrodIntegrator1D::~RooGaussKronrodIntegrator1D()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change our integration limits. Return kTRUE if the new limits are
+/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// if this object was constructed to always use our integrand's limits.
+
 Bool_t RooGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax) 
 {
-  // Change our integration limits. Return kTRUE if the new limits are
-  // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
-  // if this object was constructed to always use our integrand's limits.
-
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Eval) << "RooGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
@@ -185,12 +186,12 @@ Bool_t RooGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that our integration range is finite and otherwise return kFALSE.
+/// Update the limits from the integrand if requested.
+
 Bool_t RooGaussKronrodIntegrator1D::checkLimits() const 
 {
-  // Check that our integration range is finite and otherwise return kFALSE.
-  // Update the limits from the integrand if requested.
-
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
     _xmin= integrand()->getMinLimit(0);
@@ -209,11 +210,11 @@ double RooGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return integral
+
 Double_t RooGaussKronrodIntegrator1D::integral(const Double_t *yvec) 
 {
-  // Calculate and return integral
-
   assert(isValid());
 
   // Copy yvec to xvec if provided

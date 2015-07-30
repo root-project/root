@@ -50,10 +50,11 @@ TIterator* RooRealConstant::_constDBIter = 0;
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup function register with RooSentinel for cleanup in atexit()
+
 void RooRealConstant::cleanup() 
 {
-  // Cleanup function register with RooSentinel for cleanup in atexit()
   if (_constDB) {
     delete _constDB ;
     delete _constDBIter ;
@@ -63,13 +64,13 @@ void RooRealConstant::cleanup()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a constant value object with given value.
+/// Return previously created object if available,
+/// otherwise create a new one on the fly.
+
 RooConstVar& RooRealConstant::value(Double_t value) 
 {
-  // Return a constant value object with given value.
-  // Return previously created object if available,
-  // otherwise create a new one on the fly.
-  
   // Lookup existing constant
   init() ;
   RooConstVar* var ;
@@ -89,11 +90,11 @@ RooConstVar& RooRealConstant::value(Double_t value)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a dummy node used in node-removal operations
+
 RooConstVar& RooRealConstant::removalDummy() 
 {
-  // Create a dummy node used in node-removal operations
-  
   RooConstVar* var = new RooConstVar("REMOVAL_DUMMY","REMOVAL_DUMMY",1) ;
   var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
   var->setAttribute("REMOVAL_DUMMY") ;
@@ -104,11 +105,11 @@ RooConstVar& RooRealConstant::removalDummy()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One-time initialization of constants database
+
 void RooRealConstant::init() 
 {
-  // One-time initialization of constants database
-
   if (!_constDB) {
     _constDB = new RooArgList("RooRealVar Constants Database") ;
     _constDBIter = _constDB->createIterator() ;

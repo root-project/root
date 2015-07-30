@@ -67,7 +67,9 @@ enum EGLEditorIdent {
       kNEat
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of TGLPhysicalShape editor GUI.
+
 TGLPShapeObjEditor::TGLPShapeObjEditor(const TGWindow *p,  Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p,  width, height, options | kVerticalFrame, back),
      fLb(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 2, 3, 3), //button
@@ -81,8 +83,6 @@ TGLPShapeObjEditor::TGLPShapeObjEditor(const TGWindow *p,  Int_t width, Int_t he
      fRGBA(),
      fPShapeObj(0)
 {
-   // Constructor of TGLPhysicalShape editor GUI.
-
    fRGBA[12] = fRGBA[13] = fRGBA[14] = 0.0f;
    fRGBA[15] = 1.0f;
    fRGBA[16] = 60.0f;
@@ -91,41 +91,42 @@ TGLPShapeObjEditor::TGLPShapeObjEditor(const TGWindow *p,  Int_t width, Int_t he
    CreateGeoControls();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy color editor GUI component.
+/// Done automatically.
+
 TGLPShapeObjEditor::~TGLPShapeObjEditor()
 {
-   // Destroy color editor GUI component.
-   // Done automatically.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shape has changed.
+/// Check if set to zero and make sure we're no longer in editor.
+
 void TGLPShapeObjEditor::SetPShape(TGLPhysicalShape * shape)
 {
-   // Shape has changed.
-   // Check if set to zero and make sure we're no longer in editor.
-
    TGLPShapeRef::SetPShape(shape);
    if (shape == 0 && fGedEditor->GetModel() == fPShapeObj)
       fGedEditor->SetModel(fGedEditor->GetPad(), fPShapeObj->fViewer, kButton1Down);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shape has been modified.
+/// Update editor if we're still shown. Otherwise unref.
+
 void TGLPShapeObjEditor::PShapeModified()
 {
-   // Shape has been modified.
-   // Update editor if we're still shown. Otherwise unref.
-
    if (fGedEditor->GetModel() == fPShapeObj)
       fGedEditor->SetModel(fGedEditor->GetPad(), fPShapeObj, kButton1Down);
    else
       SetPShape(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets model or disables/hides viewer.
+
 void TGLPShapeObjEditor::SetModel(TObject* obj)
 {
-   // Sets model or disables/hides viewer.
-
    fPShapeObj = 0;
 
    fPShapeObj = static_cast<TGLPShapeObj *>(obj);
@@ -137,31 +138,31 @@ void TGLPShapeObjEditor::SetModel(TObject* obj)
    fGeoApplyButton->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set internal center data from 3 component 'c'.
+
 void TGLPShapeObjEditor::SetCenter(const Double_t *c)
 {
-   // Set internal center data from 3 component 'c'.
-
    fGeomData[kCenterX]->SetNumber(c[0]);
    fGeomData[kCenterY]->SetNumber(c[1]);
    fGeomData[kCenterZ]->SetNumber(c[2]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set internal scale data from 3 component 'c'.
+
 void TGLPShapeObjEditor::SetScale(const Double_t *s)
 {
-   // Set internal scale data from 3 component 'c'.
-
    fGeomData[kScaleX]->SetNumber(s[0]);
    fGeomData[kScaleY]->SetNumber(s[1]);
    fGeomData[kScaleZ]->SetNumber(s[2]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'Apply' - update the viewer object from GUI.
+
 void TGLPShapeObjEditor::DoGeoButton()
 {
-   // Process 'Apply' - update the viewer object from GUI.
-
    TGLVertex3 trans;
    TGLVector3 scale;
    GetObjectData(trans.Arr(), scale.Arr());
@@ -173,12 +174,12 @@ void TGLPShapeObjEditor::DoGeoButton()
    fGeoApplyButton->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract the GUI object data, return center in 3 component 'center'
+/// scale in 3 component 'scale'.
+
 void TGLPShapeObjEditor::GetObjectData(Double_t *center, Double_t *scale)
 {
-   // Extract the GUI object data, return center in 3 component 'center'
-   // scale in 3 component 'scale'.
-
    center[0] = fGeomData[kCenterX]->GetNumber();
    center[1] = fGeomData[kCenterY]->GetNumber();
    center[2] = fGeomData[kCenterZ]->GetNumber();
@@ -187,20 +188,20 @@ void TGLPShapeObjEditor::GetObjectData(Double_t *center, Double_t *scale)
    scale[2] = fGeomData[kScaleZ]->GetNumber();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process setting of value in edit box - activate 'Apply' button.
+
 void TGLPShapeObjEditor::GeoValueSet(Long_t)
 {
-   // Process setting of value in edit box - activate 'Apply' button.
-
    if (fGeoApplyButton->GetState() != kButtonUp)
        fGeoApplyButton->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GUI for setting scale and position.
+
 void TGLPShapeObjEditor::CreateGeoControls()
 {
-   // Create GUI for setting scale and position.
-
    fGeoFrame = CreateEditorTabSubFrame("Geometry");
 
    TGLabel *label=0;
@@ -281,11 +282,11 @@ void TGLPShapeObjEditor::CreateGeoControls()
    fGeoApplyButton->Connect("Pressed()", "TGLPShapeObjEditor", this, "DoGeoButton()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color sliders from 17 component 'rgba'.
+
 void TGLPShapeObjEditor::SetRGBA(const Float_t *rgba)
 {
-   // Set color sliders from 17 component 'rgba'.
-
    fColorApplyButton->SetState(kButtonDisabled);
    fColorApplyFamily->SetState(kButtonDisabled);
 
@@ -299,11 +300,11 @@ void TGLPShapeObjEditor::SetRGBA(const Float_t *rgba)
    DrawSphere();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process slider movement.
+
 void TGLPShapeObjEditor::DoColorSlider(Int_t val)
 {
-   // Process slider movement.
-
    TGSlider *frm = (TGSlider *)gTQSender;
 
    if (frm) {
@@ -333,11 +334,11 @@ void TGLPShapeObjEditor::DoColorSlider(Int_t val)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process button action.
+
 void TGLPShapeObjEditor::DoColorButton()
 {
-   // Process button action.
-
    TGButton *btn = (TGButton *) gTQSender;
    Int_t id = btn->WidgetId();
 
@@ -381,11 +382,11 @@ void TGLPShapeObjEditor::DoColorButton()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create Diffuse/Ambient/Specular/Emissive radio buttons and sub-frames.
+
 void TGLPShapeObjEditor::CreateColorRadioButtons()
 {
-   // Create Diffuse/Ambient/Specular/Emissive radio buttons and sub-frames.
-
    TGGroupFrame *partFrame = new TGGroupFrame(fColorFrame, "Color components:", kLHintsTop | kLHintsCenterX);
    fColorFrame->AddFrame(partFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 2, 0, 2, 2));
 
@@ -418,11 +419,11 @@ void TGLPShapeObjEditor::CreateColorRadioButtons()
    fLightTypes[fLMode]->SetState(kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GUI for setting light color.
+
 void TGLPShapeObjEditor::CreateColorSliders()
 {
-   // Create GUI for setting light color.
-
    UInt_t sw = 120; //fColorFrame->GetDefalutWidth();,
 
    // Create Red/Green/BlueAlpha/Shine sliders
@@ -456,11 +457,11 @@ void TGLPShapeObjEditor::CreateColorSliders()
    fColorFrame->AddFrame(fShineSlider, new TGLayoutHints(fLs));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update GUI sliders from internal data.
+
 void TGLPShapeObjEditor::SetColorSlidersPos()
 {
-   // Update GUI sliders from internal data.
-
    fRedSlider->SetPosition(Int_t(fRGBA[fLMode * 4] * 100));
    fGreenSlider->SetPosition(Int_t(fRGBA[fLMode * 4 + 1] * 100));
    fBlueSlider->SetPosition(Int_t(fRGBA[fLMode * 4 + 2] * 100));
@@ -470,18 +471,18 @@ void TGLPShapeObjEditor::SetColorSlidersPos()
       fShineSlider->SetPosition(Int_t(fRGBA[16]));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw widget. Render sphere and pass to base-class.
+
 void TGLPShapeObjEditor::DoRedraw()
 {
-   // Redraw widget. Render sphere and pass to base-class.
-
    DrawSphere();
    TGedFrame::DoRedraw();
 }
 
-//______________________________________________________________________________
-namespace {
+////////////////////////////////////////////////////////////////////////////////
 
+namespace {
    GLUquadric *GetQuadric()
    {
       // GLU quadric.
@@ -511,11 +512,11 @@ namespace {
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw local sphere reflecting current color options.
+
 void TGLPShapeObjEditor::DrawSphere()const
 {
-   // Draw local sphere reflecting current color options.
-
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", (ULong_t)this));
       return;
@@ -576,12 +577,12 @@ void TGLPShapeObjEditor::DrawSphere()const
    fMatView->SwapBuffers();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create widgets to chhos colors componnet and its RGBA values on fGedEditor
+/// model or family it belongs to.
+
 void TGLPShapeObjEditor::CreateColorControls()
 {
-   // Create widgets to chhos colors componnet and its RGBA values on fGedEditor
-   // model or family it belongs to.
-
    fColorFrame = this;
 
    fMatView = TGLWidget::Create(fColorFrame, kFALSE, kTRUE, 0, 120, 120);

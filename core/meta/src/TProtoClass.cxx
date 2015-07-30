@@ -29,15 +29,15 @@
 #include "TError.h"
 
 #include <cassert>
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a TProtoClass from a TClass.
+
 TProtoClass::TProtoClass(TClass* cl):
    TNamed(*cl), fBase(cl->GetListOfBases()), 
    fEnums(cl->GetListOfEnums()), fSizeof(cl->Size()), fCanSplit(cl->fCanSplit),
    fStreamerType(cl->fStreamerType), fProperty(cl->fProperty),
    fClassProperty(cl->fClassProperty)
 {
-   // Initialize a TProtoClass from a TClass.
-
    if (cl->Property() & kIsNamespace){
       //fData=new TListOfDataMembers();
       fEnums=nullptr;
@@ -172,19 +172,20 @@ TProtoClass::TProtoClass(TClass* cl):
 //    }
 // }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TProtoClass::~TProtoClass()
 {
-   // Destructor.
    Delete();
 }
 
-//______________________________________________________________________________
-void TProtoClass::Delete(Option_t* opt /*= ""*/) {
-   // Delete the containers that are usually owned by their TClass.
-   // if (fPRealData) fPRealData->Delete(opt);
-   // delete fPRealData; fPRealData = 0;
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the containers that are usually owned by their TClass.
+/// if (fPRealData) fPRealData->Delete(opt);
+/// delete fPRealData; fPRealData = 0;
 
+void TProtoClass::Delete(Option_t* opt /*= ""*/) {
    if (fBase) fBase->Delete(opt);
    delete fBase; fBase = 0;
 
@@ -194,10 +195,10 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
    if (gErrorIgnoreLevel==-2) printf("Delete the protoClass %s \n",GetName());
 }
 
-//______________________________________________________________________________
-Bool_t TProtoClass::FillTClass(TClass* cl) {
-   // Move data from this TProtoClass into cl.
+////////////////////////////////////////////////////////////////////////////////
+/// Move data from this TProtoClass into cl.
 
+Bool_t TProtoClass::FillTClass(TClass* cl) {
    if (cl->fRealData || cl->fBase || cl->fData || cl->fEnums.load()
        || cl->fSizeof != -1 || cl->fCanSplit >= 0
        || cl->fProperty != (-1) ) {
@@ -369,7 +370,8 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TProtoClass::TProtoRealData::TProtoRealData(const TRealData* rd):
    //TNamed(rd->GetDataMember()->GetName(), rd->GetName()),
    //TNamed(),
@@ -396,20 +398,21 @@ TProtoClass::TProtoRealData::TProtoRealData(const TRealData* rd):
    SetFlag(kIsTransient, rd->TestBit(TRealData::kTransient) );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor to pin vtable.
+///if (gErrorIgnoreLevel==-2) printf("destroy real data %s - ",GetName());
+
 TProtoClass::TProtoRealData::~TProtoRealData()
 {
-   // Destructor to pin vtable.
-   //if (gErrorIgnoreLevel==-2) printf("destroy real data %s - ",GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TRealData from this, with its data member coming from dmClass.
+/// find data member from protoclass
+
 TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
                                                          TClass* parent, TRealData *prevData, int prevLevel) const
 {
-   // Create a TRealData from this, with its data member coming from dmClass.
-   // find data member from protoclass
-   
 
       //TDataMember* dm = (TDataMember*)dmClass->GetListOfDataMembers()->FindObject(fName);
    TDataMember* dm = TProtoClass::FindDataMember(dmClass, fDMIndex);
@@ -462,7 +465,8 @@ TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
    return rd;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TProtoClass::DataMemberIndex(TClass * cl, const char * name)
 {
    TList * dmList = cl->GetListOfDataMembers(); 
@@ -481,10 +485,10 @@ Int_t TProtoClass::DataMemberIndex(TClass * cl, const char * name)
    dmList->ls();
    return -1; 
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDataMember * TProtoClass::FindDataMember(TClass * cl, Int_t index)
 {
-
    TList * dmList = cl->GetListOfDataMembers(false); 
 
    // we cannot use IndexOf because order is guranteed only for non-static data member 

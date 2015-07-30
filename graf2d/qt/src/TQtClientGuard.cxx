@@ -16,27 +16,30 @@
 #include <QPixmap>
 #include <QBitmap>
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add the widget to list of the "guarded" widget
+
 void TQtClientGuard::Add(QWidget *w)
 {
-   // add the widget to list of the "guarded" widget
    fQClientGuard.prepend(w);
    // fprintf(stderr," TQtClientGuard::Add %d %lp %p \n", TGQt::rootwid(w), TGQt::rootwid(w),w );
    connect(w,SIGNAL(destroyed()),this,SLOT(Disconnect()));
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TQtClientWidget object factory
+
 TQtClientWidget *TQtClientGuard::Create(QWidget* mother, const char* name, Qt::WFlags f)
 {
-   // TQtClientWidget object factory
    TQtClientWidget *w =  new TQtClientWidget(this,mother,name,f);
    // w->setBackgroundMode(Qt::NoBackground);
    Add(w);
    return  w;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete and unregister the object
+
 void TQtClientGuard::Delete(QWidget *w)
 {
-   // Delete and unregister the object
    int found = -1;
 #if QT_VERSION < 0x40000
    if (w && ( (found = fQClientGuard.find(w))>=0))
@@ -52,11 +55,12 @@ void TQtClientGuard::Delete(QWidget *w)
       assert( w != QWidget::mouseGrabber() );
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnect and unregister the object
+/// fprintf(stderr, "TQtClientGuard::Disconnecting widget %p\n", w);
+
 void TQtClientGuard::Disconnect(QWidget *w, int found)
 {
-   // Disconnect and unregister the object
-   // fprintf(stderr, "TQtClientGuard::Disconnecting widget %p\n", w);
    if ( (found>=0) ||
 #if QT_VERSION < 0x40000
       ( w && ( (found = fQClientGuard.find(w)) >=0 ) )  ) {
@@ -80,10 +84,11 @@ void TQtClientGuard::Disconnect(QWidget *w, int found)
 #endif
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnect all children of the registered widget
+
 void TQtClientGuard::DisconnectChildren(TQtClientWidget *w)
 {
-   // Disconnect all children of the registered widget
    if (w) {
 #if QT_VERSION < 0x40000
       const QObjectList *childList = w->children();
@@ -121,11 +126,11 @@ void TQtClientGuard::DisconnectChildren(TQtClientWidget *w)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the object by ROOT id
+
 QWidget *TQtClientGuard::Find(Window_t id)
 {
-   // Find the object by ROOT id
-
    // fprintf(stderr," TQtClientGuard::Find %d %lp %p\n", id, id, TGQt::wid(id));
    int found = -1;
 #if QT_VERSION < 0x40000
@@ -136,10 +141,11 @@ QWidget *TQtClientGuard::Find(Window_t id)
    return  found >=0 ? fQClientGuard.at(found) : 0;
 }
 // protected slots:
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnect object Qt slot
+
 void TQtClientGuard::Disconnect()
 {
-   // Disconnect object Qt slot
    QWidget *w = (QWidget *)sender();
    // fprintf(stderr, "Disconnecting  SLOT widget %p\n", w);
    int found = -1;
@@ -163,15 +169,17 @@ void TQtClientGuard::Disconnect()
 //______________________________________________________________________________
 //
 //      TQtPixmapGuard
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add the widget to list of the "guarded" widget
+
 void TQtPixmapGuard::Add(QPixmap *w)
 {
-   // add the widget to list of the "guarded" widget
    fQClientGuard.prepend(w);
    SetCurrent(0);
    // fprintf(stderr," TQtPixmapGuard::Add %d %lp %p \n", TGQt::iwid(w), TGQt::iwid(w),w );
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 QPixmap* TQtPixmapGuard::Create(int w, int h, const uchar *bits, bool isXbitmap)
 {
    QPixmap *p = new QBitmap(
@@ -179,7 +187,8 @@ QPixmap* TQtPixmapGuard::Create(int w, int h, const uchar *bits, bool isXbitmap)
    Add(p);
    return p;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 QPixmap* TQtPixmapGuard::Create(int width, int height, int depth)
                                 // , Optimization optimization)
 {
@@ -188,7 +197,8 @@ QPixmap* TQtPixmapGuard::Create(int width, int height, int depth)
    Add(w);
    return  w;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 QPixmap* TQtPixmapGuard::Create(const QString &fileName, const char *format)
 //, ColorMode mode)
 {
@@ -199,49 +209,52 @@ QPixmap* TQtPixmapGuard::Create(const QString &fileName, const char *format)
    Add(w);
    return  w;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// QPixmap object factory
+/// Constructs a pixmap that is a copy of pixmap.
+
 QPixmap* TQtPixmapGuard::Create(const QPixmap &src)
 {
-   // QPixmap object factory
-   // Constructs a pixmap that is a copy of pixmap.
    QPixmap *w =  new QPixmap(src);
    Add(w);
    return  w;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// QBitmap object factory
+
 QBitmap* TQtPixmapGuard::Create(const QBitmap &src)
 {
-  // QBitmap object factory
-
    QBitmap *w =  new QBitmap(src);
    Add(w);
    return  w;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// QPixmap object factory
+/// Constructs a pixmap from xpm
+
 QPixmap* TQtPixmapGuard::Create (const char* xpm[])
 {
-   // QPixmap object factory
-   // Constructs a pixmap from xpm
    QPixmap *w =  new QPixmap(xpm);
    Add(w);
    return  w;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete and unregister QPixmap
+
 void TQtPixmapGuard::Delete(QPixmap *w)
 {
-   // Delete and unregister QPixmap
    if (w)
    {
       Disconnect(w);
       delete w;
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnect QPixmap
+
 void TQtPixmapGuard::Disconnect(QPixmap *w, int found)
 {
-   // Disconnect QPixmap
-
    if (found <0) found =
 #if QT_VERSION < 0x40000
                    fQClientGuard.find(w);
@@ -262,10 +275,11 @@ void TQtPixmapGuard::Disconnect(QPixmap *w, int found)
    }
    SetCurrent(found);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find QPixmap by ROOT pixmap id
+
 QPixmap *TQtPixmapGuard::Pixmap(Pixmap_t id, bool needBitmap)
 {
-   // Find QPixmap by ROOT pixmap id
    (void)needBitmap;
    QPixmap *thisPix = 0;
    int found = -1;
@@ -283,11 +297,11 @@ QPixmap *TQtPixmapGuard::Pixmap(Pixmap_t id, bool needBitmap)
    SetCurrent(found);
    return thisPix;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the current QPixmap object
+
 QPixmap *TQtPixmapGuard::Find(Window_t /*id*/ )
 {
-   // return the current QPixmap object
-
    // fprintf(stderr," TQtPixmapGuard::Find %d %lp %p index=%d\n", id, id, TGQt::wid(id),
    // fQClientGuard.find(TGQt::wid(id));
 #if QT_VERSION < 0x40000
@@ -297,10 +311,11 @@ QPixmap *TQtPixmapGuard::Find(Window_t /*id*/ )
 #endif
 }
 // protected slots:
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnect Qt slot
+
 void TQtPixmapGuard::Disconnect()
 {
-   // Disconnect Qt slot
    QPixmap *w = (QPixmap *)sender();
    int found = -1;
 #if QT_VERSION < 0x40000

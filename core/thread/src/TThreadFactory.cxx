@@ -24,9 +24,10 @@ TThreadFactory *gThreadFactory = 0;
 
 ClassImp(TThreadFactory)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TThreadFactory ctor only called by derived classes.
+
 TThreadFactory::TThreadFactory(const char *name, const char *title)
                : TNamed(name, title)
 {
-   // TThreadFactory ctor only called by derived classes.
 }

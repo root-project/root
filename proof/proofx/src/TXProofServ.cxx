@@ -61,7 +61,8 @@
 static volatile Int_t gProofServDebug = 1;
 
 //----- SigPipe signal handler -------------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TXProofServSigPipeHandler : public TSignalHandler {
    TXProofServ  *fServ;
 public:
@@ -70,7 +71,8 @@ public:
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TXProofServSigPipeHandler::Notify()
 {
    fServ->HandleSigPipe();
@@ -78,7 +80,8 @@ Bool_t TXProofServSigPipeHandler::Notify()
 }
 
 //----- Termination signal handler ---------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TXProofServTerminationHandler : public TSignalHandler {
    TXProofServ  *fServ;
 public:
@@ -87,7 +90,8 @@ public:
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TXProofServTerminationHandler::Notify()
 {
    Printf("Received SIGTERM: terminating");
@@ -97,7 +101,8 @@ Bool_t TXProofServTerminationHandler::Notify()
 }
 
 //----- Seg violation signal handler ---------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TXProofServSegViolationHandler : public TSignalHandler {
    TXProofServ  *fServ;
 public:
@@ -106,7 +111,8 @@ public:
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TXProofServSegViolationHandler::Notify()
 {
    Printf("**** ");
@@ -117,7 +123,8 @@ Bool_t TXProofServSegViolationHandler::Notify()
 }
 
 //----- Input handler for messages from parent or master -----------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TXProofServInputHandler : public TFileHandler {
    TXProofServ  *fServ;
 public:
@@ -127,7 +134,8 @@ public:
    Bool_t ReadNotify() { return Notify(); }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TXProofServInputHandler::Notify()
 {
    fServ->HandleSocketInput();
@@ -145,12 +153,12 @@ extern "C" {
    { return new TXProofServ(argc, argv, flog); }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor
+
 TXProofServ::TXProofServ(Int_t *argc, char **argv, FILE *flog)
             : TProofServ(argc, argv, flog)
 {
-   // Main constructor
-
    fInterruptHandler = 0;
    fInputHandler = 0;
    fTerminated = kFALSE;
@@ -166,13 +174,13 @@ TXProofServ::TXProofServ(Int_t *argc, char **argv, FILE *flog)
 */
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize the server setup. If master, create the TProof instance to talk
+/// the worker or submaster nodes.
+/// Return 0 on success, -1 on error
+
 Int_t TXProofServ::CreateServer()
 {
-   // Finalize the server setup. If master, create the TProof instance to talk
-   // the worker or submaster nodes.
-   // Return 0 on success, -1 on error
-
    Bool_t xtest = (Argc() > 3 && !strcmp(Argv(3), "test")) ? kTRUE : kFALSE;
 
    if (gProofDebugLevel > 0)
@@ -477,20 +485,20 @@ Int_t TXProofServ::CreateServer()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup. Not really necessary since after this dtor there is no
+/// live anyway.
+
 TXProofServ::~TXProofServ()
 {
-   // Cleanup. Not really necessary since after this dtor there is no
-   // live anyway.
-
    delete fSocket;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle high priority data sent by the master or client.
+
 void TXProofServ::HandleUrgentData()
 {
-   // Handle high priority data sent by the master or client.
-
    // Real-time notification of messages
    TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
@@ -599,21 +607,21 @@ void TXProofServ::HandleUrgentData()
    if (fProof) fProof->SetActive(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when the client is not alive anymore; terminate the session.
+
 void TXProofServ::HandleSigPipe()
 {
-   // Called when the client is not alive anymore; terminate the session.
-
    // Real-time notification of messages
 
    Info("HandleSigPipe","got sigpipe ... do nothing");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when the client is not alive anymore; terminate the session.
+
 void TXProofServ::HandleTermination()
 {
-   // Called when the client is not alive anymore; terminate the session.
-
    // If master server, propagate interrupt to slaves
    // (shutdown interrupt send internally).
    if (IsMaster()) {
@@ -643,12 +651,12 @@ void TXProofServ::HandleTermination()
    Terminate(0);  // will not return from here....
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the ProofServ logo on standard output.
+/// Return 0 on success, -1 on error
+
 Int_t TXProofServ::Setup()
 {
-   // Print the ProofServ logo on standard output.
-   // Return 0 on success, -1 on error
-
    char str[512];
 
    if (IsMaster()) {
@@ -773,14 +781,14 @@ Int_t TXProofServ::Setup()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of workers to be used from now on.
+/// The list must be provided by the caller.
+
 TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
                                                  Int_t & /* prioritychange */,
                                                  Bool_t resume)
 {
-   // Get list of workers to be used from now on.
-   // The list must be provided by the caller.
-
    TProofServ::EQueryAction rc = kQueryStop;
 
    // User config files, when enabled, override cluster-wide configuration
@@ -920,11 +928,11 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
    return rc;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle error on the input socket
+
 Bool_t TXProofServ::HandleError(const void *)
 {
-   // Handle error on the input socket
-
    // Try reconnection
    if (fSocket && !fSocket->IsValid()) {
 
@@ -955,11 +963,11 @@ Bool_t TXProofServ::HandleError(const void *)
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle asynchronous input on the input socket
+
 Bool_t TXProofServ::HandleInput(const void *in)
 {
-   // Handle asynchronous input on the input socket
-
    if (gDebug > 2)
       Printf("TXProofServ::HandleInput %p, in: %p", this, in);
 
@@ -1034,29 +1042,29 @@ Bool_t TXProofServ::HandleInput(const void *in)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disable read timeout on the underlying socket
+
 void TXProofServ::DisableTimeout()
 {
-   // Disable read timeout on the underlying socket
-
    if (fSocket)
      ((TXSocket *)fSocket)->DisableTimeout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable read timeout on the underlying socket
+
 void TXProofServ::EnableTimeout()
 {
-   // Enable read timeout on the underlying socket
-
    if (fSocket)
      ((TXSocket *)fSocket)->EnableTimeout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate the proof server.
+
 void TXProofServ::Terminate(Int_t status)
 {
-   // Terminate the proof server.
-
    if (fTerminated)
       // Avoid doubling the exit operations
       exit(1);
@@ -1136,13 +1144,13 @@ void TXProofServ::Terminate(Int_t status)
    Printf("Terminate: termination operations ended: quitting!");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try locking query area of session tagged sessiontag.
+/// The id of the locking file is returned in fid and must be
+/// unlocked via UnlockQueryFile(fid).
+
 Int_t TXProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
 {
-   // Try locking query area of session tagged sessiontag.
-   // The id of the locking file is returned in fid and must be
-   // unlocked via UnlockQueryFile(fid).
-
    // We do not need to lock our own session
    if (strstr(sessiontag, fTopSessionTag))
       return 0;
@@ -1194,12 +1202,12 @@ Int_t TXProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send message to intermediate coordinator to release worker of last ordinal
+/// ord.
+
 void TXProofServ::ReleaseWorker(const char *ord)
 {
-   // Send message to intermediate coordinator to release worker of last ordinal
-   // ord.
-
    if (gDebug > 2) Info("ReleaseWorker","releasing: %s", ord);
 
    ((TXSocket *)fSocket)->SendCoordinator(kReleaseWorker, ord);

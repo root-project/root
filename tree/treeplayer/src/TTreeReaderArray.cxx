@@ -63,80 +63,33 @@ namespace {
    public:
       ~TSTLReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
-         if (!proxy->Read()){
+         if (!proxy->Read()) {
             fReadStatus = ROOT::TTreeReaderValueBase::kReadError;
             Error("GetCP()", "Read error in TBranchProxy.");
             return 0;
+         }
+         if (!proxy->GetWhere()) {
+            Error("GetCP()", "Logic error, proxy object not set in TBranchProxy.");
+            return 0;
+         }
+         if (proxy->IsaPointer()) {
+            if (proxy->GetWhere() && *(void**)proxy->GetWhere()){
+               ((TGenCollectionProxy*)proxy->GetCollection())->PopProxy();
+               ((TGenCollectionProxy*)proxy->GetCollection())->PushProxy(*(void**)proxy->GetWhere());
+            }
+            else return 0;
          }
          fReadStatus = ROOT::TTreeReaderValueBase::kReadSuccess;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
 
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
-         if (!CheckProxy(proxy)) return -1;
-         if (!proxy->ReadEntries()) return -1;
-         TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
-         if (!myCollectionProxy) return 0;
-         return myCollectionProxy->Size();
-      }
-
-      Bool_t CheckProxy(ROOT::TBranchProxy *proxy) {
-         if (!proxy->Read()) return false;
-         if (proxy->IsaPointer()) {
-            if (proxy->GetWhere() && *(void**)proxy->GetWhere()){
-               ((TGenCollectionProxy*)proxy->GetCollection())->PopProxy();
-               ((TGenCollectionProxy*)proxy->GetCollection())->PushProxy(*(void**)proxy->GetWhere());
-            }
-            else return false;
-         }
-         return true;
-      }
-
-      virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
-         if (!CheckProxy(proxy)) return 0;
-         if (!proxy->Read()) return 0;
-         if (!proxy->GetWhere()) return 0;
-
-         if (proxy->GetCollection()->HasPointers()){
-            return *(void**)proxy->GetCollection()->At(idx);
-         }
-         else {
-            return proxy->GetCollection()->At(idx);
-         }
-      }
-   };
-
-   class TCollectionLessSTLReader : public ROOT::TVirtualCollectionReader {
-   private:
-      TVirtualCollectionProxy *localCollection;
-      Bool_t proxySet;
-      void *lastWhere;
-   public:
-      TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : localCollection(proxy), proxySet(false), lastWhere(0) {}
-
-      TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
-         if (!proxy->Read()){
-            fReadStatus = ROOT::TTreeReaderValueBase::kReadError;
-            Error("GetCP()", "Read error in TBranchProxy.");
-            return 0;
-         }
-         fReadStatus = ROOT::TTreeReaderValueBase::kReadSuccess;
-         return localCollection;
-      }
-
-      virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
-         if (!CheckProxy(proxy)) return -1;
-         if (!proxy->ReadEntries()) return -1;
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          return myCollectionProxy->Size();
       }
 
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
-         if (!CheckProxy(proxy)) return 0;
-         if (!proxy->Read()) return 0;
-         if (!proxy->GetWhere()) return 0;
-
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          if (myCollectionProxy->HasPointers()){
@@ -146,19 +99,44 @@ namespace {
             return myCollectionProxy->At(idx);
          }
       }
+   };
 
-      Bool_t CheckProxy(ROOT::TBranchProxy *proxy) {
-         if (!proxy->Read()) return false;
-         if (!proxySet || lastWhere != proxy->GetWhere()) {
-            TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
-            if (proxy->GetWhere() && myCollectionProxy){
-               myCollectionProxy->PushProxy(proxy->GetWhere());
-               proxySet = true;
-               lastWhere = proxy->GetWhere();
-            }
-            else return false;
+   class TCollectionLessSTLReader : public ROOT::TVirtualCollectionReader {
+   private:
+      TVirtualCollectionProxy *localCollection;
+   public:
+      TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : localCollection(proxy) {}
+
+      TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
+         if (!proxy->Read()) {
+            fReadStatus = ROOT::TTreeReaderValueBase::kReadError;
+            Error("GetCP()", "Read error in TBranchProxy.");
+            return 0;
          }
-         return true;
+         if (!proxy->GetWhere()) {
+            Error("GetCP()", "Logic error, proxy object not set in TBranchProxy.");
+            return 0;
+         }
+         fReadStatus = ROOT::TTreeReaderValueBase::kReadSuccess;
+         return localCollection;
+      }
+
+      virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
+         TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
+         if (!myCollectionProxy) return 0;
+         TVirtualCollectionProxy::TPushPop ppRaii(myCollectionProxy, proxy->GetWhere());
+         return myCollectionProxy->Size();
+      }
+
+      virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
+         TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
+         if (!myCollectionProxy) return 0;
+         TVirtualCollectionProxy::TPushPop ppRaii(myCollectionProxy, proxy->GetWhere());
+         if (myCollectionProxy->HasPointers()){
+            return *(void**)myCollectionProxy->At(idx);
+         } else {
+            return myCollectionProxy->At(idx);
+         }
       }
    };
 
@@ -330,10 +308,11 @@ namespace {
 
 ClassImp(TTreeReaderArrayBase)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the proxy object for our branch.
+
 void ROOT::TTreeReaderArrayBase::CreateProxy()
 {
-   // Create the proxy object for our branch.
    if (fProxy) {
       return;
    }
@@ -566,20 +545,20 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Access a branch's collection content (not the collection itself)
+/// through a proxy.
+/// Retrieve the type of data contained in the collection stored by branch;
+/// put its dictionary into dict, If there is no dictionary, put its type
+/// name into contentTypeName.
+/// The contentTypeName is set to NULL if the branch does not
+/// contain a collection; in that case, the type of the branch is returned.
+/// In all other cases, NULL is returned.
+
 const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch,
                                                                  TString& contentTypeName,
                                                                  TDictionary* &dict) const
 {
-   // Access a branch's collection content (not the collection itself)
-   // through a proxy.
-   // Retrieve the type of data contained in the collection stored by branch;
-   // put its dictionary into dict, If there is no dictionary, put its type
-   // name into contentTypeName.
-   // The contentTypeName is set to NULL if the branch does not
-   // contain a collection; in that case, the type of the branch is returned.
-   // In all other cases, NULL is returned.
-
    dict = 0;
    contentTypeName = "";
    if (branch->IsA() == TBranchElement::Class()) {
@@ -679,7 +658,10 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
                   Error("GetBranchDataType()", "Could not get collection proxy from STL class");
                   return 0;
                }
+               // Try getting the contained class
                dict = myCollectionProxy->GetValueClass();
+               // If it fails, try to get the contained type as a primitive type
+               if (!dict) dict = TDataType::GetDataType(myCollectionProxy->GetType());
                if (!dict){
                   Error("GetBranchDataType()", "Could not get valueClass from collectionProxy.");
                   return 0;
@@ -711,7 +693,10 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
             dict = fDict;
          }
          else if (!dict && (branch->GetSplitLevel() == 0 || brElement->GetClass()->GetCollectionProxy())){
+            // Try getting the contained class
             dict = brElement->GetClass()->GetCollectionProxy()->GetValueClass();
+            // If it fails, try to get the contained type as a primitive type
+            if (!dict) dict = TDataType::GetDataType(brElement->GetClass()->GetCollectionProxy()->GetType());
             if (dict) contentTypeName = dict->GetName();
             return 0;
          }

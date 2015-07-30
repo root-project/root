@@ -47,12 +47,13 @@ enum ETGeoHypeWid {
    kHYPE_STOUT, kHYPE_APPLY, kHYPE_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for Hype editor
+
 TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for Hype editor
    fShape   = 0;
    fRini = fRouti = fStIni = fStOuti = 0.0;
    fNamei = "";
@@ -146,10 +147,11 @@ TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t width,
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoHypeEditor::~TGeoHypeEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
@@ -159,10 +161,11 @@ TGeoHypeEditor::~TGeoHypeEditor()
    Cleanup();   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoHypeEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoHypeEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoHypeEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoHypeEditor", this, "DoModified()");
@@ -180,10 +183,11 @@ void TGeoHypeEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoHypeEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoHype::Class())) {
       SetActive(kFALSE);
       return;                 
@@ -212,24 +216,27 @@ void TGeoHypeEditor::SetModel(TObject* obj)
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoHypeEditor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for name.
+
 void TGeoHypeEditor::DoName()
 {
-// Slot for name.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying current settings.
+
 void TGeoHypeEditor::DoApply()
 {
-// Slot for applying current settings.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t rin = fERin->GetNumber();
@@ -270,17 +277,19 @@ void TGeoHypeEditor::DoApply()
    }   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for notifying modifications.
+
 void TGeoHypeEditor::DoModified()
 {
-// Slot for notifying modifications.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoHypeEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fERin->SetNumber(fRini);
    fERout->SetNumber(fRouti);
    fEDz->SetNumber(fDzi);
@@ -291,10 +300,11 @@ void TGeoHypeEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
    
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Rin.
+
 void TGeoHypeEditor::DoRin()
 {
-// Slot for Rin.
    Double_t rin = fERin->GetNumber();
    Double_t rout = fERout->GetNumber(); 
    Double_t dz = fEDz->GetNumber();
@@ -316,10 +326,11 @@ void TGeoHypeEditor::DoRin()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Rout.
+
 void TGeoHypeEditor::DoRout()
 {
-// Slot for Rout.
    Double_t rin = fERin->GetNumber();
    Double_t rout = fERout->GetNumber(); 
    Double_t dz = fEDz->GetNumber();
@@ -337,10 +348,11 @@ void TGeoHypeEditor::DoRout()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Z.
+
 void TGeoHypeEditor::DoDz()
 {
-// Slot for Z.
    Double_t rin = fERin->GetNumber();
    Double_t rout = fERout->GetNumber(); 
    Double_t dz = fEDz->GetNumber();
@@ -365,10 +377,11 @@ void TGeoHypeEditor::DoDz()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for StIn.
+
 void TGeoHypeEditor::DoStIn()
 {
-// Slot for StIn.
    Double_t rin = fERin->GetNumber();
    Double_t rout = fERout->GetNumber(); 
    Double_t dz = fEDz->GetNumber();
@@ -390,10 +403,11 @@ void TGeoHypeEditor::DoStIn()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for StOut.
+
 void TGeoHypeEditor::DoStOut()
 {
-// Slot for StOut.
    Double_t rin = fERin->GetNumber();
    Double_t rout = fERout->GetNumber(); 
    Double_t dz = fEDz->GetNumber();

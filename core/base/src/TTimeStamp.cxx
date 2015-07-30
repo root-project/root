@@ -54,11 +54,11 @@ ClassImp(TTimeStamp);
 
 TVirtualMutex *gTimeMutex = 0; // local mutex
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write time stamp to std::ostream.
+
 std::ostream& operator<<(std::ostream& os, const TTimeStamp& ts)
 {
-   // Write time stamp to std::ostream.
-
    if (os.good()) {
       if (os.tie()) os.tie()->flush(); // instead of opfx
       os << ts.AsString("c");
@@ -68,92 +68,92 @@ std::ostream& operator<<(std::ostream& os, const TTimeStamp& ts)
    return os;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read time stamp from TBuffer.
+
 TBuffer &operator>>(TBuffer &buf, TTimeStamp &ts)
 {
-   // Read time stamp from TBuffer.
-
    ts.Streamer(buf);
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write time stamp to TBuffer.
+
 TBuffer &operator<<(TBuffer &buf, const TTimeStamp &ts)
 {
-   // Write time stamp to TBuffer.
-
    ((TTimeStamp&)ts).Streamer(buf);
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor. Create a TTimeStamp and set it to the current time
+/// (as best possible). The nanosecond part is faked so that subsequenct
+/// calls simply add 1 to ensure that sequential calls are distinct
+/// (and sortable).
+
 TTimeStamp::TTimeStamp()
 {
-   // Default ctor. Create a TTimeStamp and set it to the current time
-   // (as best possible). The nanosecond part is faked so that subsequenct
-   // calls simply add 1 to ensure that sequential calls are distinct
-   // (and sortable).
-
    Set();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TTimeStamp and set it to the specified year, month,
+/// day, time, hour, minute, second and nanosec.
+/// If !isUTC then it is assumed to be the standard local time zone.
+///
+/// If local time is PST then one can use
+///    TTimeStamp(year,month,day,hour,min,sec,nsec,kFALSE,0);
+/// or
+///    Int_t secOffset = 8*60*60;
+///    TTimeStamp(year,month,day,hour,min,sec,nsec,kTRUE,8*60*60);
+
 TTimeStamp::TTimeStamp(UInt_t year, UInt_t month,
                        UInt_t day,  UInt_t hour,
                        UInt_t min,  UInt_t sec,
                        UInt_t nsec,
                        Bool_t isUTC, Int_t secOffset)
 {
-   // Create a TTimeStamp and set it to the specified year, month,
-   // day, time, hour, minute, second and nanosec.
-   // If !isUTC then it is assumed to be the standard local time zone.
-   //
-   // If local time is PST then one can use
-   //    TTimeStamp(year,month,day,hour,min,sec,nsec,kFALSE,0);
-   // or
-   //    Int_t secOffset = 8*60*60;
-   //    TTimeStamp(year,month,day,hour,min,sec,nsec,kTRUE,8*60*60);
-
    Set(year, month, day, hour, min, sec, nsec, isUTC, secOffset);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TTimeStamp and set it to the specified date, time, nanosec.
+/// If !isUTC then it is assumed to be the standard local time zone.
+
 TTimeStamp::TTimeStamp(UInt_t date, UInt_t time,
                        UInt_t nsec,
                        Bool_t isUTC, Int_t secOffset)
 {
-   // Create a TTimeStamp and set it to the specified date, time, nanosec.
-   // If !isUTC then it is assumed to be the standard local time zone.
-
    Set(date, time, nsec, isUTC, secOffset);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TTimeStamp and set it to tloc which must be a time_t value
+/// returned by time(). This value is the number of seconds since the EPOCH
+/// (i.e. 00:00:00 on Jan 1m 1970). If dosDate is true then the input
+/// is a dosDate value.
+
 TTimeStamp::TTimeStamp(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate)
 {
-   // Create a TTimeStamp and set it to tloc which must be a time_t value
-   // returned by time(). This value is the number of seconds since the EPOCH
-   // (i.e. 00:00:00 on Jan 1m 1970). If dosDate is true then the input
-   // is a dosDate value.
-
    Set(tloc, isUTC, secOffset, dosDate);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return Greenwich mean sidereal time (GMST) in hour-angle. Return value
+/// will always be between 0 and 24 (hours). Sidereal time is most accurately
+/// calculated from UT1. If fSec and fNanoSec are in UTC (which they are by
+/// default), the optional argument UT1Offset can be supplied (in
+/// milliseconds). If UT1Offset is not supplied, conversion has maximum error
+/// of 1s. If offset is supplied error can be reduced to us level. Values for
+/// UT1Offset can be found in IERS Bulletin B:
+/// ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
+/// The conversion to sidereal time used here is given by
+/// Aoki et. al. Astron. Astrophys. 105, 359-362 (1982)
+/// http://adsabs.harvard.edu/abs/1982A%26A...105..359A
+
 Double_t TTimeStamp::AsGMST(Double_t UT1Offset) const
 {
-   // Return Greenwich mean sidereal time (GMST) in hour-angle. Return value
-   // will always be between 0 and 24 (hours). Sidereal time is most accurately
-   // calculated from UT1. If fSec and fNanoSec are in UTC (which they are by
-   // default), the optional argument UT1Offset can be supplied (in
-   // milliseconds). If UT1Offset is not supplied, conversion has maximum error
-   // of 1s. If offset is supplied error can be reduced to us level. Values for
-   // UT1Offset can be found in IERS Bulletin B:
-   // ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
-   // The conversion to sidereal time used here is given by
-   // Aoki et. al. Astron. Astrophys. 105, 359-362 (1982)
-   // http://adsabs.harvard.edu/abs/1982A%26A...105..359A
-
    Double_t D = (AsJulianDate() + UT1Offset/86400000.0) - 2451545.0;
    Double_t D_r = D - fmod(2.0*D+1.0, 2.0)/2.0;
    Double_t T = D_r/36525.0;
@@ -163,20 +163,20 @@ Double_t TTimeStamp::AsGMST(Double_t UT1Offset) const
    return rval < 0 ? rval + 24.0 : rval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return Greenwich apparant sidereal time (GAST) in hour-angle. Return
+/// value will always be between 0 and 24 (hours). Sidereal time is most
+/// accurately calculated from UT1. If fSec and fNanoSec are in UTC (which
+/// they are by default), the optional argument UT1Offset can be supplied (in
+/// milliseconds). If UT1Offset is not supplied, conversion has maximum error
+/// of 1s. If offset is supplied error can be reduced to us level. Values for
+/// UT1Offset can be found in IERS Bulletin B:
+/// ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
+/// Equation of the equinoxes is given by USNO:
+/// http://aa.usno.navy.mil/faq/docs/GAST.php
+
 Double_t TTimeStamp::AsGAST(Double_t UT1Offset) const
 {
-   // Return Greenwich apparant sidereal time (GAST) in hour-angle. Return
-   // value will always be between 0 and 24 (hours). Sidereal time is most
-   // accurately calculated from UT1. If fSec and fNanoSec are in UTC (which
-   // they are by default), the optional argument UT1Offset can be supplied (in
-   // milliseconds). If UT1Offset is not supplied, conversion has maximum error
-   // of 1s. If offset is supplied error can be reduced to us level. Values for
-   // UT1Offset can be found in IERS Bulletin B:
-   // ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
-   // Equation of the equinoxes is given by USNO:
-   // http://aa.usno.navy.mil/faq/docs/GAST.php
-
    Double_t D = (AsJulianDate() + UT1Offset/86400000.0) - 2451545.0;
    Double_t epsilon = (23.4393 - 0.0000004*D)*TMath::Pi()/180.0;
    Double_t L = (280.47 + 0.98565*D)*TMath::Pi()/180.0;
@@ -187,72 +187,72 @@ Double_t TTimeStamp::AsGAST(Double_t UT1Offset) const
    return rval < 0 ? rval + 24.0 : rval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return local mean sidereal time (LMST) in hour-angle, given a longitude
+/// in degrees. Return value will always be between 0 and 24 (hours).
+/// Sidereal time is most accurately calculated from UT1. If fSec and
+/// fNanoSec are in UTC (which they are by default), the optional argument
+/// UT1Offset can be supplied (in milliseconds). If UT1Offset is not
+/// supplied, conversion has maximum error of 1s. If offset is supplied error
+/// can be reduced to us level. Values for UT1Offset can be found in IERS
+/// Bulletin B: ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
+
 Double_t TTimeStamp::AsLMST(Double_t Longitude, Double_t UT1Offset) const
 {
-   // Return local mean sidereal time (LMST) in hour-angle, given a longitude
-   // in degrees. Return value will always be between 0 and 24 (hours).
-   // Sidereal time is most accurately calculated from UT1. If fSec and
-   // fNanoSec are in UTC (which they are by default), the optional argument
-   // UT1Offset can be supplied (in milliseconds). If UT1Offset is not
-   // supplied, conversion has maximum error of 1s. If offset is supplied error
-   // can be reduced to us level. Values for UT1Offset can be found in IERS
-   // Bulletin B: ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
-
    Double_t rval = fmod(AsGMST(UT1Offset) + Longitude/15.0, 24.0);
    return rval < 0 ? rval + 24.0 : rval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return local apparant sidereal time (LAST) in hour-angle, given a
+/// longitude in degrees. Return value will always be between 0 and 24
+/// (hours). Sidereal time is most accurately calculated from UT1. If fSec
+/// and fNanoSec are in UTC (which they are by default), the optional
+/// argument UT1Offset can be supplied (in milliseconds). If UT1Offset is not
+/// supplied, conversion has maximum error of 1s. If offset is supplied error
+/// can be reduced to us level. Values for UT1Offset can be found in IERS
+/// Bulletin B: ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
+
 Double_t TTimeStamp::AsLAST(Double_t Longitude, Double_t UT1Offset) const
 {
-   // Return local apparant sidereal time (LAST) in hour-angle, given a
-   // longitude in degrees. Return value will always be between 0 and 24
-   // (hours). Sidereal time is most accurately calculated from UT1. If fSec
-   // and fNanoSec are in UTC (which they are by default), the optional
-   // argument UT1Offset can be supplied (in milliseconds). If UT1Offset is not
-   // supplied, conversion has maximum error of 1s. If offset is supplied error
-   // can be reduced to us level. Values for UT1Offset can be found in IERS
-   // Bulletin B: ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
-
    Double_t rval = fmod(AsGAST(UT1Offset) + Longitude/15.0, 24.0);
    return rval < 0 ? rval + 24.0 : rval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the date & time as a string.
+///
+/// Result is pointer to a statically allocated string.
+/// User should copy this into their own buffer before calling
+/// this method again.
+///
+/// Option "l" returns it in local zone format
+/// (can be applied to default or compact format).
+///
+/// Default format is RFC822 compliant:
+///   "Mon, 02 Jan 2001 18:11:12 +0000 (GMT) +999999999 nsec"
+///   "Mon, 02 Jan 2001 10:11:12 -0800 (PST) +999999999 nsec"
+///
+/// Option "c" compact is (almost) ISO 8601 compliant:
+///   "2001-01-02 18:11:12.9999999999Z"
+///   "2001-01-02 10:11:12.9999999999-0800"  if PST
+///      * uses "-" as date separator as specified in ISO 8601
+///      * uses "." rather than preferred "," for decimal separator
+///      * -HHMM is the difference between local and UTC (if behind, + if ahead).
+///   The "-HHMM" is replaced with "Z" if given as UTC.
+///   To be strictly conforming it should use "T" instead of the
+///   blank separating the date and time.
+///
+/// Option "2" returns as {sec,nsec} integers.
+///
+/// Option "s" returns "2001-01-02 18:11:12" with an implied UTC,
+/// overrides "l" option.
+///
+/// Internally uses a circular list of buffers to avoid problems
+/// using AsString multiple times in a single statement.
+
 const Char_t *TTimeStamp::AsString(Option_t *option) const
 {
-   // Return the date & time as a string.
-   //
-   // Result is pointer to a statically allocated string.
-   // User should copy this into their own buffer before calling
-   // this method again.
-   //
-   // Option "l" returns it in local zone format
-   // (can be applied to default or compact format).
-   //
-   // Default format is RFC822 compliant:
-   //   "Mon, 02 Jan 2001 18:11:12 +0000 (GMT) +999999999 nsec"
-   //   "Mon, 02 Jan 2001 10:11:12 -0800 (PST) +999999999 nsec"
-   //
-   // Option "c" compact is (almost) ISO 8601 compliant:
-   //   "2001-01-02 18:11:12.9999999999Z"
-   //   "2001-01-02 10:11:12.9999999999-0800"  if PST
-   //      * uses "-" as date separator as specified in ISO 8601
-   //      * uses "." rather than preferred "," for decimal separator
-   //      * -HHMM is the difference between local and UTC (if behind, + if ahead).
-   //   The "-HHMM" is replaced with "Z" if given as UTC.
-   //   To be strictly conforming it should use "T" instead of the
-   //   blank separating the date and time.
-   //
-   // Option "2" returns as {sec,nsec} integers.
-   //
-   // Option "s" returns "2001-01-02 18:11:12" with an implied UTC,
-   // overrides "l" option.
-   //
-   // Internally uses a circular list of buffers to avoid problems
-   // using AsString multiple times in a single statement.
-
    const Int_t nbuffers = 8;     // # of buffers
 
    static Char_t formatted[nbuffers][64];  // strftime fields substituted
@@ -320,22 +320,22 @@ const Char_t *TTimeStamp::AsString(Option_t *option) const
    return formatted2[ibuffer];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this to ts.
+
 void TTimeStamp::Copy(TTimeStamp &ts) const
 {
-   // Copy this to ts.
-
    ts.fSec     = fSec;
    ts.fNanoSec = fNanoSec;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return date in form of 19971224 (i.e. 24/12/1997),
+/// if non-zero pointers supplied for year, month, day fill those as well.
+
 UInt_t TTimeStamp::GetDate(Bool_t inUTC, Int_t secOffset,
                            UInt_t *year, UInt_t *month, UInt_t *day) const
 {
-   // Return date in form of 19971224 (i.e. 24/12/1997),
-   // if non-zero pointers supplied for year, month, day fill those as well.
-
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
@@ -351,13 +351,13 @@ UInt_t TTimeStamp::GetDate(Bool_t inUTC, Int_t secOffset,
    return (1900+ptm->tm_year)*10000 + (1+ptm->tm_mon)*100 + ptm->tm_mday;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return time in form of 123623 (i.e. 12:36:23),
+/// if non-zero pointers supplied for hour, min, sec fill those as well.
+
 UInt_t TTimeStamp::GetTime(Bool_t inUTC, Int_t secOffset,
                            UInt_t *hour, UInt_t *min, UInt_t *sec) const
 {
-   // Return time in form of 123623 (i.e. 12:36:23),
-   // if non-zero pointers supplied for hour, min, sec fill those as well.
-
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
@@ -373,12 +373,12 @@ UInt_t TTimeStamp::GetTime(Bool_t inUTC, Int_t secOffset,
    return ptm->tm_hour*10000 + ptm->tm_min*100 + ptm->tm_sec;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the day of the year represented by this time stamp value.
+/// Valid return values range between 1 and 366, where January 1 = 1.
+
 Int_t TTimeStamp::GetDayOfYear(Bool_t inUTC, Int_t secOffset) const
 {
-   // Get the day of the year represented by this time stamp value.
-   // Valid return values range between 1 and 366, where January 1 = 1.
-
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
@@ -394,12 +394,12 @@ Int_t TTimeStamp::GetDayOfYear(Bool_t inUTC, Int_t secOffset) const
    return GetDayOfYear(day, month, year);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method is using Zeller's formula for calculating the day number.
+/// Valid return values range between 1 and 7, where Monday = 1.
+
 Int_t TTimeStamp::GetDayOfWeek(Bool_t inUTC, Int_t secOffset) const
 {
-   // Method is using Zeller's formula for calculating the day number.
-   // Valid return values range between 1 and 7, where Monday = 1.
-
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
@@ -415,11 +415,11 @@ Int_t TTimeStamp::GetDayOfWeek(Bool_t inUTC, Int_t secOffset) const
    return GetDayOfWeek(day, month, year);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the month of the year. Valid return values are between 1 and 12.
+
 Int_t TTimeStamp::GetMonth(Bool_t inUTC, Int_t secOffset) const
 {
-   // Get the month of the year. Valid return values are between 1 and 12.
-
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
@@ -431,13 +431,13 @@ Int_t TTimeStamp::GetMonth(Bool_t inUTC, Int_t secOffset) const
    return ptm->tm_mon + 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the week of the year. Valid week values are between 1 and 53.
+/// The return value is the year*100+week (1 Jan may be in the last
+/// week of the previous year so the year must be returned too).
+
 Int_t TTimeStamp::GetWeek(Bool_t inUTC, Int_t secOffset) const
 {
-   // Get the week of the year. Valid week values are between 1 and 53.
-   // The return value is the year*100+week (1 Jan may be in the last
-   // week of the previous year so the year must be returned too).
-
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
@@ -453,19 +453,19 @@ Int_t TTimeStamp::GetWeek(Bool_t inUTC, Int_t secOffset) const
    return GetWeek(day, month, year);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is the year a leap year.
+/// The calendar year is 365 days long, unless the year is exactly divisible
+/// by 4, in which case an extra day is added to February to make the year
+/// 366 days long. If the year is the last year of a century, eg. 1700, 1800,
+/// 1900, 2000, then it is only a leap year if it is exactly divisible by
+/// 400. Therefore, 1900 wasn't a leap year but 2000 was. The reason for
+/// these rules is to bring the average length of the calendar year into
+/// line with the length of the Earth's orbit around the Sun, so that the
+/// seasons always occur during the same months each year.
+
 Bool_t TTimeStamp::IsLeapYear(Bool_t inUTC, Int_t secOffset) const
 {
-   // Is the year a leap year.
-   // The calendar year is 365 days long, unless the year is exactly divisible
-   // by 4, in which case an extra day is added to February to make the year
-   // 366 days long. If the year is the last year of a century, eg. 1700, 1800,
-   // 1900, 2000, then it is only a leap year if it is exactly divisible by
-   // 400. Therefore, 1900 wasn't a leap year but 2000 was. The reason for
-   // these rules is to bring the average length of the calendar year into
-   // line with the length of the Earth's orbit around the Sun, so that the
-   // seasons always occur during the same months each year.
-
    time_t atime = fSec + secOffset;
 #ifdef _REENTRANT
    struct tm buf;
@@ -479,13 +479,13 @@ Bool_t TTimeStamp::IsLeapYear(Bool_t inUTC, Int_t secOffset) const
    return IsLeapYear(year);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning local (current) time zone offset from UTC.
+/// This is the value in seconds one must add to the local time to arrive at
+/// Coordinated Universal Time, so it is negative east of the Prime Meridian.
+
 Int_t TTimeStamp::GetZoneOffset()
 {
-   // Static method returning local (current) time zone offset from UTC.
-   // This is the value in seconds one must add to the local time to arrive at
-   // Coordinated Universal Time, so it is negative east of the Prime Meridian.
-
    // ?? should tzset (_tzset) be called?
 #ifndef R__WIN32
    tzset();
@@ -511,33 +511,33 @@ Int_t TTimeStamp::GetZoneOffset()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add "offset" as a delta time.
+
 void TTimeStamp::Add(const TTimeStamp &offset)
 {
-   // Add "offset" as a delta time.
-
    fSec     += offset.fSec;
    fNanoSec += offset.fNanoSec;
    NormalizeNanoSec();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print date and time.
+
 void TTimeStamp::Print(Option_t *option) const
 {
-   // Print date and time.
-
    printf("Date/Time = %s\n", AsString(option));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Date/Time to current time as reported by the system.
+/// No accounting for nanoseconds with std ANSI functions,
+/// ns part faked so that subsequent calls simply add 1 to it
+/// this ensures that calls within the same second come back
+/// distinct (and sortable). Time is since Jan 1, 1970.
+
 void TTimeStamp::Set()
 {
-   // Set Date/Time to current time as reported by the system.
-   // No accounting for nanoseconds with std ANSI functions,
-   // ns part faked so that subsequent calls simply add 1 to it
-   // this ensures that calls within the same second come back
-   // distinct (and sortable). Time is since Jan 1, 1970.
-
 #ifdef R__WIN32
    ULARGE_INTEGER time;
    GetSystemTimeAsFileTime((FILETIME *)&time);
@@ -572,24 +572,24 @@ void TTimeStamp::Set()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Date/Time from components.
+///
+/// Month & day both use normal 1..12 and 1..31 counting,
+/// hours, min, sec run from 0 to 23, 59, 59 respectively,
+/// secOffset provides method for adjusting for alternative timezones
+///
+/// "year"  |    0    1 ... 37 | 38...69   |   70 .. 100  101 ..  137
+/// true    | 2000 2001   2037 | undefined | 1970   2000 2001 .. 2037
+///
+/// "year"  | 138...1969 | 1970 .. 2037 | ...
+/// true    | undefined  | 1970 .. 2037 | undefined
+///
+
 void TTimeStamp::Set(Int_t year, Int_t month, Int_t day,
                      Int_t hour, Int_t min, Int_t sec,
                      Int_t nsec, Bool_t isUTC, Int_t secOffset)
 {
-   // Set Date/Time from components.
-   //
-   // Month & day both use normal 1..12 and 1..31 counting,
-   // hours, min, sec run from 0 to 23, 59, 59 respectively,
-   // secOffset provides method for adjusting for alternative timezones
-   //
-   // "year"  |    0    1 ... 37 | 38...69   |   70 .. 100  101 ..  137
-   // true    | 2000 2001   2037 | undefined | 1970   2000 2001 .. 2037
-   //
-   // "year"  | 138...1969 | 1970 .. 2037 | ...
-   // true    | undefined  | 1970 .. 2037 | undefined
-   //
-
    // deal with special formats of year
    if (year <= 37)                year += 2000;
    if (year >= 70 && year <= 137) year += 1900;
@@ -621,25 +621,25 @@ void TTimeStamp::Set(Int_t year, Int_t month, Int_t day,
    NormalizeNanoSec();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set date/time from integers of the form [yy]YYMMDD and HHMMSS,
+/// assume UTC (UTC) components:
+///
+///  MM: 01=January .. 12=December
+///  DD: 01 .. 31
+///
+///  HH: 00=midnight .. 23
+///  MM: 00 .. 59
+///  SS: 00 .. 69
+///
+/// Date must be in format 980418 or 19980418
+///                       1001127 or 20001127  (i.e. year 100 = 2000),
+/// time must be in format 224512 (second precision),
+/// date must be >= 700101.
+
 void TTimeStamp::Set(Int_t date, Int_t time, Int_t nsec,
                      Bool_t isUTC, Int_t secOffset)
 {
-   // Set date/time from integers of the form [yy]YYMMDD and HHMMSS,
-   // assume UTC (UTC) components:
-   //
-   //  MM: 01=January .. 12=December
-   //  DD: 01 .. 31
-   //
-   //  HH: 00=midnight .. 23
-   //  MM: 00 .. 59
-   //  SS: 00 .. 69
-   //
-   // Date must be in format 980418 or 19980418
-   //                       1001127 or 20001127  (i.e. year 100 = 2000),
-   // time must be in format 224512 (second precision),
-   // date must be >= 700101.
-
    Int_t year  = date/10000;
    Int_t month = (date-year*10000)/100;
    Int_t day   = date%100;
@@ -661,14 +661,14 @@ void TTimeStamp::Set(Int_t date, Int_t time, Int_t nsec,
    Set(year, month, day, hour, min, sec, nsec, isUTC, secOffset);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The input arg is a time_t value returned by time() or a value
+/// returned by Convert(). This value is the number of seconds since
+/// the EPOCH (i.e. 00:00:00 on Jan 1m 1970). If dosDate is true then
+/// the input is a dosDate value.
+
 void TTimeStamp::Set(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate)
 {
-   // The input arg is a time_t value returned by time() or a value
-   // returned by Convert(). This value is the number of seconds since
-   // the EPOCH (i.e. 00:00:00 on Jan 1m 1970). If dosDate is true then
-   // the input is a dosDate value.
-
    struct tm localtm;
    memset (&localtm, 0, sizeof (localtm));
 
@@ -713,11 +713,11 @@ void TTimeStamp::Set(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate)
    NormalizeNanoSec();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ensure that the fNanoSec field is in range [0,999999999].
+
 void TTimeStamp::NormalizeNanoSec()
 {
-   // Ensure that the fNanoSec field is in range [0,999999999].
-
    const Int_t kNsPerSec = 1000000000;
    // deal with negative values
    while (fNanoSec < 0) {
@@ -732,20 +732,20 @@ void TTimeStamp::NormalizeNanoSec()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Equivalent of standard routine "mktime" but
+/// using the assumption that tm struct is filled with UTC, not local, time.
+///
+/// This version *ISN'T* configured to handle every possible
+/// weirdness of out-of-range values in the case of normalizing
+/// the tm struct.
+///
+/// This version *DOESN'T* correctly handle values that can't be
+/// fit into a time_t (i.e. beyond year 2038-01-18 19:14:07, or
+/// before the start of Epoch).
+
 time_t TTimeStamp::MktimeFromUTC(tm_t *tmstruct)
 {
-   // Equivalent of standard routine "mktime" but
-   // using the assumption that tm struct is filled with UTC, not local, time.
-   //
-   // This version *ISN'T* configured to handle every possible
-   // weirdness of out-of-range values in the case of normalizing
-   // the tm struct.
-   //
-   // This version *DOESN'T* correctly handle values that can't be
-   // fit into a time_t (i.e. beyond year 2038-01-18 19:14:07, or
-   // before the start of Epoch).
-
    Int_t daysInMonth[] = { 31, 0, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
    Int_t year = tmstruct->tm_year + 1900;
    daysInMonth[1] = IsLeapYear(year) ? 29 : 28;
@@ -785,12 +785,12 @@ time_t TTimeStamp::MktimeFromUTC(tm_t *tmstruct)
    return utc_sec;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the day of the year represented by day, month and year.
+/// Valid return values range between 1 and 366, where January 1 = 1.
+
 Int_t TTimeStamp::GetDayOfYear(Int_t day, Int_t month, Int_t year)
 {
-   // Get the day of the year represented by day, month and year.
-   // Valid return values range between 1 and 366, where January 1 = 1.
-
    Int_t dayOfYear = 0;
    Int_t daysInMonth[] = { 31, 0, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
    daysInMonth[1] = IsLeapYear(year) ? 29 : 28;
@@ -802,12 +802,12 @@ Int_t TTimeStamp::GetDayOfYear(Int_t day, Int_t month, Int_t year)
    return dayOfYear;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method is using Zeller's formula for calculating the day number.
+/// Valid return values range between 1 and 7, where Monday = 1.
+
 Int_t TTimeStamp::GetDayOfWeek(Int_t day, Int_t month, Int_t year)
 {
-   // Method is using Zeller's formula for calculating the day number.
-   // Valid return values range between 1 and 7, where Monday = 1.
-
    Int_t dayno;
 
    if (month < 3) {
@@ -822,13 +822,13 @@ Int_t TTimeStamp::GetDayOfWeek(Int_t day, Int_t month, Int_t year)
    return ((dayno == 0) ? 7 : dayno);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the week of the year. Valid week values are between 1 and 53.
+/// The return value is the year*100+week (1 Jan may be in the last
+/// week of the previous year so the year must be returned too).
+
 Int_t TTimeStamp::GetWeek(Int_t day, Int_t month, Int_t year)
 {
-   // Get the week of the year. Valid week values are between 1 and 53.
-   // The return value is the year*100+week (1 Jan may be in the last
-   // week of the previous year so the year must be returned too).
-
    Int_t dayOfYear = GetDayOfYear(day, month, year);
    Int_t dayJan1st = GetDayOfWeek(1, 1, year);
    Int_t week = (dayOfYear + dayJan1st - 2) / 7 + 1;
@@ -850,36 +850,36 @@ Int_t TTimeStamp::GetWeek(Int_t day, Int_t month, Int_t year)
    return year * 100 + week;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is the given year a leap year.
+/// The calendar year is 365 days long, unless the year is exactly divisible
+/// by 4, in which case an extra day is added to February to make the year
+/// 366 days long. If the year is the last year of a century, eg. 1700, 1800,
+/// 1900, 2000, then it is only a leap year if it is exactly divisible by
+/// 400. Therefore, 1900 wasn't a leap year but 2000 was. The reason for
+/// these rules is to bring the average length of the calendar year into
+/// line with the length of the Earth's orbit around the Sun, so that the
+/// seasons always occur during the same months each year.
+
 Bool_t TTimeStamp::IsLeapYear(Int_t year)
 {
-   // Is the given year a leap year.
-   // The calendar year is 365 days long, unless the year is exactly divisible
-   // by 4, in which case an extra day is added to February to make the year
-   // 366 days long. If the year is the last year of a century, eg. 1700, 1800,
-   // 1900, 2000, then it is only a leap year if it is exactly divisible by
-   // 400. Therefore, 1900 wasn't a leap year but 2000 was. The reason for
-   // these rules is to bring the average length of the calendar year into
-   // line with the length of the Earth's orbit around the Sun, so that the
-   // seasons always occur during the same months each year.
-
    return (year % 4 == 0) && !((year % 100 == 0) && (year % 400 > 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print out the "tm" structure:
+/// tmstruct.tm_year = year;    // years since 1900
+/// tmstruct.tm_mon  = month-1; // months since Jan [0,11]
+/// tmstruct.tm_mday = day;     // day of the month [1,31]
+/// tmstruct.tm_hour = hour;    // hours since midnight [0,23]
+/// tmstruct.tm_min  = min;     // minutes after the hour [0,59]
+/// tmstruct.tm_sec  = sec;     // seconds after the minute [0,59]
+/// tmstruct.tm_wday            // day of week [0,6]
+/// tmstruct.tm_yday            // days in year [0,365]
+/// tmstruct.tm_isdst           // DST [-1/0/1]  (unknown,false,true)
+
 void TTimeStamp::DumpTMStruct(const tm_t &tmstruct)
 {
-   // Print out the "tm" structure:
-   // tmstruct.tm_year = year;    // years since 1900
-   // tmstruct.tm_mon  = month-1; // months since Jan [0,11]
-   // tmstruct.tm_mday = day;     // day of the month [1,31]
-   // tmstruct.tm_hour = hour;    // hours since midnight [0,23]
-   // tmstruct.tm_min  = min;     // minutes after the hour [0,59]
-   // tmstruct.tm_sec  = sec;     // seconds after the minute [0,59]
-   // tmstruct.tm_wday            // day of week [0,6]
-   // tmstruct.tm_yday            // days in year [0,365]
-   // tmstruct.tm_isdst           // DST [-1/0/1]  (unknown,false,true)
-
    printf(" tm { year %4d, mon   %2d, day   %2d,\n",
           tmstruct.tm_year,
           tmstruct.tm_mon,

@@ -77,7 +77,9 @@ ClassImp(RooAddPdf)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor used for persistence
+
 RooAddPdf::RooAddPdf() :
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
   _refCoefRangeName(0),
@@ -85,8 +87,6 @@ RooAddPdf::RooAddPdf() :
   _snormList(0),
   _recursive(kFALSE)
 {
-  // Default constructor used for persistence
-
   _pdfIter   = _pdfList.createIterator() ;
   _coefIter  = _coefList.createIterator() ;
 
@@ -97,7 +97,9 @@ RooAddPdf::RooAddPdf() :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy constructor 
+
 RooAddPdf::RooAddPdf(const char *name, const char *title) :
   RooAbsPdf(name,title), 
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
@@ -112,7 +114,6 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   _allExtendable(kFALSE),
   _recursive(kFALSE)
 {
-  // Dummy constructor 
   _pdfIter   = _pdfList.createIterator() ;
   _coefIter  = _coefList.createIterator() ;
 
@@ -123,7 +124,9 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with two PDFs and one coefficient
+
 RooAddPdf::RooAddPdf(const char *name, const char *title,
 		     RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) : 
   RooAbsPdf(name,title),
@@ -138,8 +141,6 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
   _allExtendable(kFALSE),
   _recursive(kFALSE)
 {
-  // Constructor with two PDFs and one coefficient
-
   _pdfIter  = _pdfList.createIterator() ;
   _coefIter = _coefList.createIterator() ;
 
@@ -154,7 +155,17 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generic constructor from list of PDFs and list of coefficients.
+/// Each pdf list element (i) is paired with coefficient list element (i).
+/// The number of coefficients must be either equal to the number of PDFs,
+/// in which case extended MLL fitting is enabled, or be one less.
+///
+/// All PDFs must inherit from RooAbsPdf. All coefficients must inherit from RooAbsReal
+///
+/// If the recursiveFraction flag is true, the coefficients are interpreted as recursive
+/// coefficients as explained in the class description.
+
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPdfList, const RooArgList& inCoefList, Bool_t recursiveFractions) :
   RooAbsPdf(name,title),
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
@@ -168,16 +179,6 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   _allExtendable(kFALSE),
   _recursive(kFALSE)
 { 
-  // Generic constructor from list of PDFs and list of coefficients.
-  // Each pdf list element (i) is paired with coefficient list element (i).
-  // The number of coefficients must be either equal to the number of PDFs,
-  // in which case extended MLL fitting is enabled, or be one less.
-  //
-  // All PDFs must inherit from RooAbsPdf. All coefficients must inherit from RooAbsReal
-  //
-  // If the recursiveFraction flag is true, the coefficients are interpreted as recursive
-  // coefficients as explained in the class description.
-
   if (inPdfList.getSize()>inCoefList.getSize()+1 || inPdfList.getSize()<inCoefList.getSize()) {
     coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() 
 			  << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
@@ -280,7 +281,12 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generic constructor from list of extended PDFs. There are no coefficients as the expected
+/// number of events from each components determine the relative weight of the PDFs.
+/// 
+/// All PDFs must inherit from RooAbsPdf. 
+
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPdfList) :
   RooAbsPdf(name,title),
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
@@ -293,11 +299,6 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   _allExtendable(kTRUE),
   _recursive(kFALSE)
 { 
-  // Generic constructor from list of extended PDFs. There are no coefficients as the expected
-  // number of events from each components determine the relative weight of the PDFs.
-  // 
-  // All PDFs must inherit from RooAbsPdf. 
-
   _pdfIter  = _pdfList.createIterator() ;
   _coefIter = _coefList.createIterator() ;
  
@@ -327,7 +328,9 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   RooAbsPdf(other,name),
   _refCoefNorm("!refCoefNorm",this,other._refCoefNorm),
@@ -341,8 +344,6 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   _allExtendable(other._allExtendable),
   _recursive(other._recursive)
 {
-  // Copy constructor
-
   _pdfIter  = _pdfList.createIterator() ;
   _coefIter = _coefList.createIterator() ;
   _coefCache = new Double_t[_pdfList.getSize()] ;
@@ -352,11 +353,11 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAddPdf::~RooAddPdf()
 {
-  // Destructor
-
   delete _pdfIter ;
   delete _coefIter ;
 
@@ -366,18 +367,18 @@ RooAddPdf::~RooAddPdf()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// By default the interpretation of the fraction coefficients is
+/// performed in the contextual choice of observables. This makes the
+/// shape of the p.d.f explicitly dependent on the choice of
+/// observables. This method instructs RooAddPdf to freeze the
+/// interpretation of the coefficients to be done in the given set of
+/// observables. If frozen, fractions are automatically transformed
+/// from the reference normalization set to the contextual normalization
+/// set by ratios of integrals
+
 void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm) 
 {
-  // By default the interpretation of the fraction coefficients is
-  // performed in the contextual choice of observables. This makes the
-  // shape of the p.d.f explicitly dependent on the choice of
-  // observables. This method instructs RooAddPdf to freeze the
-  // interpretation of the coefficients to be done in the given set of
-  // observables. If frozen, fractions are automatically transformed
-  // from the reference normalization set to the contextual normalization
-  // set by ratios of integrals
-
   if (refCoefNorm.getSize()==0) {
     _projectCoefs = kFALSE ;
     return ;
@@ -392,34 +393,34 @@ void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// By default the interpretation of the fraction coefficients is
+/// performed in the default range. This make the shape of a RooAddPdf
+/// explicitly dependent on the range of the observables. To allow
+/// a range independent definition of the fraction this function
+/// instructs RooAddPdf to freeze its interpretation in the given
+/// named range. If the current normalization range is different
+/// from the reference range, the appropriate fraction coefficients
+/// are automically calculation from the reference fractions using
+/// ratios if integrals
+
 void RooAddPdf::fixCoefRange(const char* rangeName)
 {
-  // By default the interpretation of the fraction coefficients is
-  // performed in the default range. This make the shape of a RooAddPdf
-  // explicitly dependent on the range of the observables. To allow
-  // a range independent definition of the fraction this function
-  // instructs RooAddPdf to freeze its interpretation in the given
-  // named range. If the current normalization range is different
-  // from the reference range, the appropriate fraction coefficients
-  // are automically calculation from the reference fractions using
-  // ratios if integrals
-
   _refCoefRangeName = (TNamed*)RooNameReg::ptr(rangeName) ;
   if (_refCoefRangeName) _projectCoefs = kTRUE ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve cache element with for calculation of p.d.f value with normalization set nset and integrated over iset
+/// in range 'rangeName'. If cache element does not exist, create and fill it on the fly. The cache contains
+/// suplemental normalization terms (in case not all added p.d.f.s have the same observables), projection
+/// integrals to calculated transformed fraction coefficients when a frozen reference frame is provided
+/// and projection integrals for similar transformations when a frozen reference range is provided.
+
 RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
 {
-  // Retrieve cache element with for calculation of p.d.f value with normalization set nset and integrated over iset
-  // in range 'rangeName'. If cache element does not exist, create and fill it on the fly. The cache contains
-  // suplemental normalization terms (in case not all added p.d.f.s have the same observables), projection
-  // integrals to calculated transformed fraction coefficients when a frozen reference frame is provided
-  // and projection integrals for similar transformations when a frozen reference range is provided.
-
 
   // Check if cache already exists 
   CacheElem* cache = (CacheElem*) _projCacheMgr.getObj(nset,iset,0,rangeName) ;
@@ -660,14 +661,14 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the coefficient values in the given cache element: calculate new remainder
+/// fraction, normalize fractions obtained from extended ML terms to unity and
+/// multiply these the various range and dimensional corrections needed in the
+/// current use context
+
 void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) const 
 {
-  // Update the coefficient values in the given cache element: calculate new remainder
-  // fraction, normalize fractions obtained from extended ML terms to unity and
-  // multiply these the various range and dimensional corrections needed in the
-  // current use context
-
   // cxcoutD(ChangeTracking) << "RooAddPdf::updateCoefficients(" << GetName() << ") update coefficients" << endl ;
   
   Int_t i ;
@@ -799,11 +800,11 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return the current value
+
 Double_t RooAddPdf::evaluate() const 
 {
-  // Calculate and return the current value
-
   const RooArgSet* nset = _normSet ; 
   //cxcoutD(Caching) << "RooAddPdf::evaluate(" << GetName() << ") calling getProjCache with nset = " << nset << " = " << (nset?*nset:RooArgSet()) << endl ;
 
@@ -850,25 +851,25 @@ Double_t RooAddPdf::evaluate() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset error counter to given value, limiting the number
+/// of future error messages for this pdf to 'resetValue'
+
 void RooAddPdf::resetErrorCounters(Int_t resetValue)
 {
-  // Reset error counter to given value, limiting the number
-  // of future error messages for this pdf to 'resetValue'
-
   RooAbsPdf::resetErrorCounters(resetValue) ;
   _coefErrCount = resetValue ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if PDF is valid for given normalization set.
+/// Coeffient and PDF must be non-overlapping, but pdf-coefficient 
+/// pairs may overlap each other
+
 Bool_t RooAddPdf::checkObservables(const RooArgSet* nset) const 
 {
-  // Check if PDF is valid for given normalization set.
-  // Coeffient and PDF must be non-overlapping, but pdf-coefficient 
-  // pairs may overlap each other
-
   Bool_t ret(kFALSE) ;
 
   _pdfIter->Reset() ;
@@ -888,19 +889,19 @@ Bool_t RooAddPdf::checkObservables(const RooArgSet* nset) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine which part (if any) of given integral can be performed analytically.
+/// If any analytical integration is possible, return integration scenario code
+///
+/// RooAddPdf queries each component PDF for its analytical integration capability of the requested
+/// set ('allVars'). It finds the largest common set of variables that can be integrated
+/// by all components. If such a set exists, it reconfirms that each component is capable of
+/// analytically integrating the common set, and combines the components individual integration
+/// codes into a single integration code valid for RooAddPdf.
+
 Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
 					 const RooArgSet* normSet, const char* rangeName) const 
 {
-  // Determine which part (if any) of given integral can be performed analytically.
-  // If any analytical integration is possible, return integration scenario code
-  //
-  // RooAddPdf queries each component PDF for its analytical integration capability of the requested
-  // set ('allVars'). It finds the largest common set of variables that can be integrated
-  // by all components. If such a set exists, it reconfirms that each component is capable of
-  // analytically integrating the common set, and combines the components individual integration
-  // codes into a single integration code valid for RooAddPdf.
-
 
   RooArgSet* allDepVars = getObservables(allVars) ;
   RooArgSet allAnalVars(*allDepVars) ;
@@ -972,11 +973,11 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return analytical integral defined by given scenario code
+
 Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const 
 {
-  // Return analytical integral defined by given scenario code
-
   // WVE needs adaptation to handle new rangeName feature
   if (code==0) {
     return getVal(normSet) ;
@@ -1031,13 +1032,13 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of expected events, which is either the sum of all coefficients
+/// or the sum of the components extended terms, multiplied with the fraction that
+/// is in the current range w.r.t the reference range
+
 Double_t RooAddPdf::expectedEvents(const RooArgSet* nset) const 
 {  
-  // Return the number of expected events, which is either the sum of all coefficients
-  // or the sum of the components extended terms, multiplied with the fraction that
-  // is in the current range w.r.t the reference range
-
   Double_t expectedTotal(0.0);
 
   cxcoutD(Caching) << "RooAddPdf::expectedEvents(" << GetName() << ") calling getProjCache with nset = " << (nset?*nset:RooArgSet()) << endl ;
@@ -1101,12 +1102,12 @@ Double_t RooAddPdf::expectedEvents(const RooArgSet* nset) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface function used by test statistics to freeze choice of observables
+/// for interpretation of fraction coefficients
+
 void RooAddPdf::selectNormalization(const RooArgSet* depSet, Bool_t force) 
 {
-  // Interface function used by test statistics to freeze choice of observables
-  // for interpretation of fraction coefficients
-
 
   if (!force && _refCoefNorm.getSize()!=0) {
     return ;
@@ -1124,12 +1125,12 @@ void RooAddPdf::selectNormalization(const RooArgSet* depSet, Bool_t force)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface function used by test statistics to freeze choice of range
+/// for interpretation of fraction coefficients
+
 void RooAddPdf::selectNormalizationRange(const char* rangeName, Bool_t force) 
 {
-  // Interface function used by test statistics to freeze choice of range
-  // for interpretation of fraction coefficients
-
   if (!force && _refCoefRangeName) {
     return ;
   }
@@ -1139,22 +1140,23 @@ void RooAddPdf::selectNormalizationRange(const char* rangeName, Bool_t force)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return specialized context to efficiently generate toy events from RooAddPdfs
+/// return RooAbsPdf::genContext(vars,prototype,auxProto,verbose) ; // WVE DEBUG
+
 RooAbsGenContext* RooAddPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					const RooArgSet* auxProto, Bool_t verbose) const 
 {
-  // Return specialized context to efficiently generate toy events from RooAddPdfs
-  // return RooAbsPdf::genContext(vars,prototype,auxProto,verbose) ; // WVE DEBUG
   return new RooAddGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all RooAbsArg derived contents in this cache element
+
 RooArgList RooAddPdf::CacheElem::containedArgs(Action) 
 {
-  // List all RooAbsArg derived contents in this cache element
-
   RooArgList allNodes;
   allNodes.add(_projList) ;
   allNodes.add(_suppProjList) ;
@@ -1166,11 +1168,11 @@ RooArgList RooAddPdf::CacheElem::containedArgs(Action)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop over components for plot sampling hints and merge them if there are multiple
+
 std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
 {
-  // Loop over components for plot sampling hints and merge them if there are multiple
-
   list<Double_t>* sumHint = 0 ;
 
   _pdfIter->Reset() ;
@@ -1213,11 +1215,11 @@ std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop over components for plot sampling hints and merge them if there are multiple
+
 std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
 {
-  // Loop over components for plot sampling hints and merge them if there are multiple
-
   list<Double_t>* sumBinB = 0 ;
   Bool_t needClean(kFALSE) ;
   
@@ -1261,11 +1263,11 @@ std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xl
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If all components that depend on obs are binned that so is the product
+
 Bool_t RooAddPdf::isBinnedDistribution(const RooArgSet& obs) const 
 {
-  // If all components that depend on obs are binned that so is the product
-  
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
   while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
@@ -1278,10 +1280,11 @@ Bool_t RooAddPdf::isBinnedDistribution(const RooArgSet& obs) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Label OK'ed components of a RooAddPdf with cache-and-track
+
 void RooAddPdf::setCacheAndTrackHints(RooArgSet& trackNodes) 
 {
-  // Label OK'ed components of a RooAddPdf with cache-and-track
   RooFIter aiter = pdfList().fwdIterator() ;
   RooAbsArg* aarg ;
   while ((aarg=aiter.next())) {
@@ -1294,12 +1297,12 @@ void RooAddPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Customized printing of arguments of a RooAddPdf to more intuitively reflect the contents of the
+/// product operator construction
+
 void RooAddPdf::printMetaArgs(ostream& os) const 
 {
-  // Customized printing of arguments of a RooAddPdf to more intuitively reflect the contents of the
-  // product operator construction
-
   _pdfIter->Reset() ;
   _coefIter->Reset() ;
 

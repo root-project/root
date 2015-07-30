@@ -21,20 +21,21 @@
 
 ClassImp(TObjString)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// string compare the argument with this object.
+
 Int_t TObjString::Compare(const TObject *obj) const
 {
-   // string compare the argument with this object.
    if (this == obj) return 0;
    if (TObjString::Class() != obj->IsA()) return -1;
    return fString.CompareTo(((TObjString*)obj)->fString);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return kTRUE if the argument has the same content as this object.
+
 Bool_t TObjString::IsEqual(const TObject *obj) const
 {
-   // return kTRUE if the argument has the same content as this object.
-
    if (this == obj) return kTRUE;
    if (TObjString::Class() != obj->IsA()) return kFALSE;
    return fString == ((TObjString*)obj)->fString;

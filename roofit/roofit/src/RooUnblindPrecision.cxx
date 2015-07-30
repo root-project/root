@@ -44,15 +44,18 @@ ClassImp(RooUnblindPrecision)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooUnblindPrecision::RooUnblindPrecision() 
 {
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
+
 RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 					 const char *blindString, Double_t centralValue, 
 					 Double_t scale, RooAbsReal& value,
@@ -61,12 +64,13 @@ RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
   _value("value","Precision blinded value",this,value),
   _blindEngine(blindString,RooBlindTools::full,centralValue,scale,sin2betaMode)
 {  
-  // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
+
 RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 					 const char *blindString, Double_t centralValue, 
 					 Double_t scale, RooAbsReal& value, RooAbsCategory& blindState,
@@ -75,35 +79,36 @@ RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
   _value("value","Precision blinded value",this,value),
   _blindEngine(blindString,RooBlindTools::full,centralValue,scale,sin2betaMode) 
 {  
-  // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooUnblindPrecision::RooUnblindPrecision(const RooUnblindPrecision& other, const char* name) : 
   RooAbsHiddenReal(other, name), 
   _value("asym",this,other._value),
   _blindEngine(other._blindEngine) 
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooUnblindPrecision::~RooUnblindPrecision() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate RooBlindTools unhide-precision method on blind value
+
 Double_t RooUnblindPrecision::evaluate() const
 {
-  // Evaluate RooBlindTools unhide-precision method on blind value
-
   if (isHidden()) {
     // Blinding active for this event
     return _blindEngine.UnHidePrecision(_value);

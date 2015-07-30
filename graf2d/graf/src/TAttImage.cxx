@@ -9,78 +9,79 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAttImage                                                           //
-//                                                                      //
-//  Image attributes are:                                               //
-//    Image Quality (see EImageQuality for the list of qualities)       //
-//    Compression defines the compression rate of the color data in the //
-//                internal image structure. Speed and memory depends    //
-//                on this rate, but not the image display itself        //
-//                0: no compression;  100: max compression              //
-//    Radio Flag: kTRUE  the x/y radio of the displayed image is always //
-//                       identical to the original image                //
-//                kFALSE the x and y size of the displayed image depends//
-//                       on the size of the pad                         //
-//    Palette:    Defines the conversion from a pixel value to the      //
-//                screen color                                          //
-//                                                                      //
-//  This class is used (in general by secondary inheritance)            //
-//  by some other classes (image display).                              //
-//                                                                      //
-//                                                                      //
-//  TImagePalette                                                       //
-//                                                                      //
-//  A class to define a conversion from pixel values to pixel color.    //
-//  A Palette is defined by some anchor points. Each anchor point has   //
-//  a value between 0 and 1 and a color. An image has to be normalized  //
-//  and the values between the anchor points are interpolated.          //
-//  All member variables are public and can be directly manipulated.    //
-//  In most cases the default operator will be used to create a         //
-//  TImagePalette. In this case the member arrays have to be allocated  //
-//  by an application and will be deleted in the destructor of this     //
-//  class.                                                              //
-//                                                                      //
-//  We provide few predifined palettes:                                 //
-//                                                                      //
-//    o gHistImagePalette - palette used in TH2::Draw("col")            //
-//                                                                      //
-//    o gWebImagePalette                                                //
-//       The web palette is a set of 216 colors that will not dither or //
-//       shift on PCs or Macs. Browsers use this built-in palette when  //
-//       they need to render colors on monitors with only 256 colors    //
-//       (also called 8-bit color monitors).                            //
-//       The 6x6x6 web palette provides very quick color index lookup   //
-//       and can be used for good quality convertion of images into     //
-//       2-D histograms.                                                //
-//                                                                      //
-//    o  TImagePalette(Int_t ncolors, Int_t *colors)                    //
-//        if ncolors <= 0 a default palette (see below) of 50 colors    //
-//        is defined.                                                   //
-//                                                                      //
-//        if ncolors == 1 && colors == 0, then                          //
-//        a Pretty Palette with a Spectrum Violet->Red is created.      //
-//                                                                      //
-//        if ncolors > 50 and colors=0, the DeepSea palette is used.    //
-//         (see TStyle::CreateGradientColorTable for more details)      //
-//                                                                      //
-//        if ncolors > 0 and colors = 0, the default palette is used    //
-//        with a maximum of ncolors.                                    //
-//                                                                      //
-// The default palette defines:                                         //
-//   index 0->9   : grey colors from light to dark grey                 //
-//   index 10->19 : "brown" colors                                      //
-//   index 20->29 : "blueish" colors                                    //
-//   index 30->39 : "redish" colors                                     //
-//   index 40->49 : basic colors                                        //
-//                                                                      //
-//                                                                      //
-//  TPaletteEditor                                                      //
-//                                                                      //
-//  This class provides a way to edit the palette via a GUI.            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TAttImage
+\brief TImage attributes.
+
+Image attributes are:
+
+- Image Quality (see EImageQuality for the list of qualities)
+- Compression defines the compression rate of the color data in the
+  internal image structure. Speed and memory depends
+  on this rate, but not the image display itself
+  0: no compression;  100: max compression
+- Radio Flag: kTRUE  the x/y radio of the displayed image is always
+  identical to the original image kFALSE the x and y size of the displayed
+  image depends on the size of the pad
+- Palette: Defines the conversion from a pixel value to the
+  screen color
+
+This class is used (in general by secondary inheritance)
+by some other classes (image display).
+*/
+
+
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TImagePalette
+\brief A class to define a conversion from pixel values to pixel color.
+
+A Palette is defined by some anchor points. Each anchor point has
+a value between 0 and 1 and a color. An image has to be normalized
+and the values between the anchor points are interpolated.
+All member variables are public and can be directly manipulated.
+In most cases the default operator will be used to create a
+TImagePalette. In this case the member arrays have to be allocated
+by an application and will be deleted in the destructor of this
+class.
+
+We provide few predifined palettes:
+
+- gHistImagePalette - palette used in TH2::Draw("col")
+- gWebImagePalette
+  The web palette is a set of 216 colors that will not dither or
+  shift on PCs or Macs. Browsers use this built-in palette when
+  they need to render colors on monitors with only 256 colors
+  (also called 8-bit color monitors).
+  The 6x6x6 web palette provides very quick color index lookup
+  and can be used for good quality convertion of images into
+  2-D histograms.
+- TImagePalette(Int_t ncolors, Int_t *colors)
+  if ncolors <= 0 a default palette (see below) of 50 colors
+  is defined.
+
+if ncolors == 1 && colors == 0, then a Rainbow Palette is created.
+
+if ncolors > 50 and colors=0, the DeepSea palette is used.
+(see TStyle::CreateGradientColorTable for more details)
+
+if ncolors > 0 and colors = 0, the default palette is used with a maximum of ncolors.
+
+The default palette defines:
+- index 0->9   : grey colors from light to dark grey
+- index 10->19 : "brown" colors
+- index 20->29 : "blueish" colors
+- index 30->39 : "redish" colors
+- index 40->49 : basic colors
+*/
+
+
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TPaletteEditor
+\brief Edit the palette via a GUI.
+
+This class provides a way to edit the palette via a GUI.
+*/
+
 
 #include "TAttImage.h"
 #include "TROOT.h"
@@ -245,28 +246,28 @@ TImagePalette *gHistImagePalette = new TDefHistImagePalette();
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+/// Constructor.
+
 TPaletteEditor::TPaletteEditor(TAttImage *attImage, UInt_t, UInt_t)
 {
-   // Constructor.
-
    fAttImage = attImage;
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Closes the window and deletes itself.
+
 void TPaletteEditor::CloseWindow()
 {
-   // Closes the window and deletes itself.
-
    fAttImage->EditorClosed();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor, sets all pointers to 0.
+
 TImagePalette::TImagePalette()
 {
-   // Default constructor, sets all pointers to 0.
-
    fNumPoints     = 0;
    fPoints        = 0;
    fColorRed      = 0;
@@ -275,12 +276,13 @@ TImagePalette::TImagePalette()
    fColorAlpha    = 0;
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for a palette with numPoints anchor points.
+/// It allocates the memory but does not set any colors.
+
 TImagePalette::TImagePalette(UInt_t numPoints)
 {
-   // Constructor for a palette with numPoints anchor points.
-   // It allocates the memory but does not set any colors.
-
    fNumPoints  = numPoints;
    fPoints     = new Double_t[fNumPoints];
    fColorRed   = new UShort_t[fNumPoints];
@@ -289,11 +291,12 @@ TImagePalette::TImagePalette(UInt_t numPoints)
    fColorAlpha = new UShort_t[fNumPoints];
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TImagePalette::TImagePalette(const TImagePalette &palette) : TObject(palette)
 {
-   // Copy constructor.
-
    fNumPoints = palette.fNumPoints;
 
    fPoints = new Double_t[fNumPoints];
@@ -309,11 +312,12 @@ TImagePalette::TImagePalette(const TImagePalette &palette) : TObject(palette)
    memcpy(fColorAlpha, palette.fColorAlpha, fNumPoints * sizeof(UShort_t));
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Creates palette in the same way as TStyle::SetPalette
+
 TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
 {
-   // Creates palette in the same way as TStyle::SetPalette
-
    fNumPoints  = 0;
    fPoints     = 0;
    fColorRed   = 0;
@@ -433,11 +437,12 @@ TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
    }
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TImagePalette::~TImagePalette()
 {
-   // Destructor.
-
    delete [] fPoints;
    delete [] fColorRed;
    delete [] fColorGreen;
@@ -445,11 +450,12 @@ TImagePalette::~TImagePalette()
    delete [] fColorAlpha;
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TImagePalette &TImagePalette::operator=(const TImagePalette &palette)
 {
-   // Assignment operator.
-
    if (this != &palette) {
       fNumPoints = palette.fNumPoints;
 
@@ -477,11 +483,12 @@ TImagePalette &TImagePalette::operator=(const TImagePalette &palette)
    return *this;
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns an index of the closest color
+
 Int_t TImagePalette::FindColor(UShort_t r, UShort_t g, UShort_t b)
 {
-   // returns an index of the closest color
-
    Int_t ret = 0;
    UInt_t d = 10000;
    UInt_t min = 10000;
@@ -498,12 +505,13 @@ Int_t TImagePalette::FindColor(UShort_t r, UShort_t g, UShort_t b)
    return ret;
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a list of ROOT colors. Could be used to set histogram palette.
+/// See also http://root.cern.ch/root/htmldoc/TStyle.html#TStyle:SetPalette
+
 Int_t *TImagePalette::GetRootColors()
 {
-   // Returns a list of ROOT colors. Could be used to set histogram palette.
-   // See also http://root.cern.ch/root/htmldoc/TStyle.html#TStyle:SetPalette
-
    static Int_t *gRootColors = 0;
    if (gRootColors) return gRootColors;
 
@@ -516,32 +524,34 @@ Int_t *TImagePalette::GetRootColors()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TAttImage default constructor.
+/// Calls ResetAttImage to set the attributes to a default state.
+
 TAttImage::TAttImage()
 {
-   // TAttImage default constructor.
-   // Calls ResetAttImage to set the attributes to a default state.
-
    ResetAttImage();
    fPaletteEditor = 0;
    fPaletteEnabled = kTRUE;
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// TAttImage normal constructor.
+/// Image attributes are taken from the argument list
+///
+/// \param[in] qualtity   must be one of EImageQuality (kImgDefault is same as
+///                   kImgGood in the current implementation)
+/// \param[in] lcompression   defines the compression rate of the color data in the
+///                   image. Speed and memory depends on this rate, but not
+///                   the image display itself
+///                   0: no compression;  100: max compression
+/// \param[in] constRatio  keeps the aspect ratio of the image constant on the
+///                   screen (in pixel units)
+
 TAttImage::TAttImage(EImageQuality lquality, UInt_t lcompression,
                      Bool_t constRatio)
 {
-   // TAttImage normal constructor.
-   // Image attributes are taken from the argument list
-   //    qualtity     : must be one of EImageQuality (kImgDefault is same as
-   //                   kImgGood in the current implementation)
-   //    lcompression : defines the compression rate of the color data in the
-   //                   image. Speed and memory depends on this rate, but not
-   //                   the image display itself
-   //                   0: no compression;  100: max compression
-   //    constRatio   : keeps the aspect ratio of the image constant on the
-   //                   screen (in pixel units)
-
    ResetAttImage();
 
    fImageQuality = lquality;
@@ -551,35 +561,39 @@ TAttImage::TAttImage(EImageQuality lquality, UInt_t lcompression,
    fPaletteEnabled = kTRUE;
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// TAttImage destructor.
+
 TAttImage::~TAttImage()
 {
-   // TAttImage destructor.
-
    delete fPaletteEditor;
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this image attributes to a new attimage.
+
 void TAttImage::Copy(TAttImage &attimage) const
 {
-   // Copy this image attributes to a new attimage.
-
    attimage.fImageQuality     = fImageQuality;
    attimage.fImageCompression = fImageCompression;
    attimage.fConstRatio       = fConstRatio;
    attimage.fPalette          = fPalette;
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this image attributes to default values.
+/// Default values are:
+///
+/// - quality:     kImgPoor, (no smoothing while the image is zoomed)
+/// - compression: 0 (no compression)
+/// - constRatio:  kTRUE
+/// - palette:     a default rainbow palette
+
 void TAttImage::ResetAttImage(Option_t *)
 {
-   // Reset this image attributes to default values.
-   // Default values are:
-   //    quality:     kImgPoor, (no smoothing while the image is zoomed)
-   //    compression: 0 (no compression)
-   //    constRatio:  kTRUE
-   //    palette:     a default rainbow palette
-
    fImageQuality      = kImgPoor;
    fImageCompression  = 0;
    fConstRatio        = kTRUE;
@@ -610,14 +624,15 @@ void TAttImage::ResetAttImage(Option_t *)
    fPalette.fPoints[kNUM_DEFAULT_COLORS - 1] = 1;
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save image attributes as C++ statement(s) on output stream, but
+/// not the palette.
+
 void TAttImage::SaveImageAttributes(std::ostream &out, const char *name,
                                     EImageQuality qualdef,
                                     UInt_t comprdef, Bool_t constRatiodef)
 {
-   // Save image attributes as C++ statement(s) on output stream, but
-   // not the palette.
-
    if (fImageQuality != qualdef) {
       out<<"   "<<name<<"->SetImageQuality("<<fImageQuality<<");"<<std::endl;
    }
@@ -629,23 +644,25 @@ void TAttImage::SaveImageAttributes(std::ostream &out, const char *name,
    }
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set (constRatio = kTRUE) or unset (constRadio = kFALSE) the ratio flag.
+/// The aspect ratio of the image on the screen is constant if the ratio
+/// flag is set. That means one image pixel is allways a square on the screen
+/// independent of the pad size and of the size of the zoomed area.
+
 void TAttImage::SetConstRatio(Bool_t constRatio)
 {
-   // Set (constRatio = kTRUE) or unset (constRadio = kFALSE) the ratio flag.
-   // The aspect ratio of the image on the screen is constant if the ratio
-   // flag is set. That means one image pixel is allways a square on the screen
-   // independent of the pad size and of the size of the zoomed area.
-
    fConstRatio = constRatio;
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set a new palette for the image. If palette == 0 a default
+/// rainbow color palette is used.
+
 void TAttImage::SetPalette(const TImagePalette *palette)
 {
-   // Set a new palette for the image. If palette == 0 a default
-   // rainbow color palette is used.
-
    if (palette)
       fPalette = *palette;
    else {
@@ -677,11 +694,12 @@ void TAttImage::SetPalette(const TImagePalette *palette)
    }
 }
 
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Opens a GUI to edit the color palette.
+
 void TAttImage::StartPaletteEditor()
 {
-   // Opens a GUI to edit the color palette.
-
    if (fPaletteEditor == 0) {
       TPluginHandler *h;
 

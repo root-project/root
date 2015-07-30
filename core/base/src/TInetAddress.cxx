@@ -22,24 +22,24 @@
 
 ClassImp(TInetAddress)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor. Used in case of unknown host. Not a valid address.
+
 TInetAddress::TInetAddress()
 {
-   // Default ctor. Used in case of unknown host. Not a valid address.
-
    fHostname  = "UnknownHost";
    AddAddress(0);
    fFamily    = -1;
    fPort      = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TInetAddress. Private ctor. TInetAddress objects can only
+/// be created via the friend classes TSystem, TServerSocket and TSocket.
+/// Use the IsValid() method to check the validity of a TInetAddress.
+
 TInetAddress::TInetAddress(const char *host, UInt_t addr, Int_t family, Int_t port)
 {
-   // Create TInetAddress. Private ctor. TInetAddress objects can only
-   // be created via the friend classes TSystem, TServerSocket and TSocket.
-   // Use the IsValid() method to check the validity of a TInetAddress.
-
    AddAddress(addr);
    if (!strcmp(host, "????") || !strcmp(host, "UnNamedHost"))
       fHostname = GetHostAddress();
@@ -49,11 +49,11 @@ TInetAddress::TInetAddress(const char *host, UInt_t addr, Int_t family, Int_t po
    fPort      = port;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TInetAddress copy ctor.
+
 TInetAddress::TInetAddress(const TInetAddress &adr) : TObject(adr)
 {
-   // TInetAddress copy ctor.
-
    fHostname  = adr.fHostname;
    fFamily    = adr.fFamily;
    fPort      = adr.fPort;
@@ -61,11 +61,11 @@ TInetAddress::TInetAddress(const TInetAddress &adr) : TObject(adr)
    fAliases   = adr.fAliases;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TInetAddress assignment operator.
+
 TInetAddress& TInetAddress::operator=(const TInetAddress &rhs)
 {
-   // TInetAddress assignment operator.
-
    if (this != &rhs) {
       TObject::operator=(rhs);
       fHostname  = rhs.fHostname;
@@ -77,14 +77,14 @@ TInetAddress& TInetAddress::operator=(const TInetAddress &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the raw IP address in host byte order. The highest
+/// order byte position is in addr[0]. To be prepared for 64-bit
+/// IP addresses an array of bytes is returned.
+/// User must delete allocated memory.
+
 UChar_t *TInetAddress::GetAddressBytes() const
 {
-   // Returns the raw IP address in host byte order. The highest
-   // order byte position is in addr[0]. To be prepared for 64-bit
-   // IP addresses an array of bytes is returned.
-   // User must delete allocated memory.
-
    UChar_t *addr = new UChar_t[4];
 
    addr[0] = (UChar_t) ((fAddresses[0] >> 24) & 0xFF);
@@ -95,33 +95,33 @@ UChar_t *TInetAddress::GetAddressBytes() const
    return addr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the IP address string "%d.%d.%d.%d", use it to convert
+/// alternative addresses obtained via GetAddresses().
+/// Copy string immediately, it will be reused. Static function.
+
 const char *TInetAddress::GetHostAddress(UInt_t addr)
 {
-   // Returns the IP address string "%d.%d.%d.%d", use it to convert
-   // alternative addresses obtained via GetAddresses().
-   // Copy string immediately, it will be reused. Static function.
-
    return Form("%d.%d.%d.%d", (addr >> 24) & 0xFF,
                               (addr >> 16) & 0xFF,
                               (addr >>  8) & 0xFF,
                                addr & 0xFF);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the IP address string "%d.%d.%d.%d".
+/// Copy string immediately, it will be reused.
+
 const char *TInetAddress::GetHostAddress() const
 {
-   // Returns the IP address string "%d.%d.%d.%d".
-   // Copy string immediately, it will be reused.
-
    return GetHostAddress(fAddresses[0]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print internet address as string.
+
 void TInetAddress::Print(Option_t *) const
 {
-   // Print internet address as string.
-
    if (fPort == -1)
       Printf("%s/%s (not connected)", GetHostName(), GetHostAddress());
    else
@@ -146,27 +146,27 @@ void TInetAddress::Print(Option_t *) const
    if (i) printf("\n");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add alternative address to list of addresses.
+
 void TInetAddress::AddAddress(UInt_t addr)
 {
-   // Add alternative address to list of addresses.
-
    fAddresses.push_back(addr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add alias to list of aliases.
+
 void TInetAddress::AddAlias(const char *alias)
 {
-   // Add alias to list of aliases.
-
    fAliases.push_back(TString(alias));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TInetAddress.
+
 void TInetAddress::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TInetAddress.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }

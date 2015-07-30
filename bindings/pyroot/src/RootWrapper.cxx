@@ -46,6 +46,10 @@
 //- data _______________________________________________________________________
 namespace PyROOT {
    R__EXTERN PyObject* gRootModule;
+
+// TODO: move this to Cppyy.cxx (if possible) (and gPinnedTypes should be a hashmap)
+   R__EXTERN std::vector<std::pair<Cppyy::TCppType_t, Cppyy::TCppType_t> > gPinnedTypes;
+   R__EXTERN std::vector<Cppyy::TCppType_t> gIgnorePinnings;
 }
 
 namespace {
@@ -230,11 +234,11 @@ void PyROOT::InitRoot()
    AddToGlobalScope( "gInterpreter", "TInterpreter.h", gInterpreter, Cppyy::GetScope( gInterpreter->IsA()->GetName() ) );
 }
 
-//____________________________________________________________________________
-static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
-// Collect methods and data for the given scope, and add them to the given python
-// proxy object.
+////////////////////////////////////////////////////////////////////////////////
+/// Collect methods and data for the given scope, and add them to the given python
+/// proxy object.
 
+static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
 // some properties that'll affect building the dictionary
    Bool_t isNamespace = Cppyy::IsNamespace( scope );
    Bool_t hasConstructor = kFALSE;
@@ -435,10 +439,11 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build a tuple of python shadow classes of all the bases of the given 'klass'.
+
 static PyObject* BuildCppClassBases( Cppyy::TCppType_t klass )
 {
-// Build a tuple of python shadow classes of all the bases of the given 'klass'.
    size_t nbases = Cppyy::GetNumBases( klass );
 
 // collect bases while removing duplicates
@@ -493,10 +498,11 @@ static PyObject* BuildCppClassBases( Cppyy::TCppType_t klass )
    return pybases;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve scope proxy from the known ones.
+
 PyObject* PyROOT::GetScopeProxy( Cppyy::TCppScope_t scope )
 {
-// Retrieve scope proxy from the known ones.
    PyClassMap_t::iterator pci = gPyClasses.find( scope );
    if ( pci != gPyClasses.end() ) {
       PyObject* pyclass = PyWeakref_GetObject( pci->second );
@@ -509,10 +515,11 @@ PyObject* PyROOT::GetScopeProxy( Cppyy::TCppScope_t scope )
    return nullptr;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convenience function with a lookup first through the known existing proxies.
+
 PyObject* PyROOT::CreateScopeProxy( Cppyy::TCppScope_t scope )
 {
-// Convenience function with a lookup first through the known existing proxies.
    PyObject* pyclass = GetScopeProxy( scope );
    if ( pyclass )
       return pyclass;
@@ -520,10 +527,11 @@ PyObject* PyROOT::CreateScopeProxy( Cppyy::TCppScope_t scope )
    return CreateScopeProxy( Cppyy::GetScopedFinalName( scope ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build a python shadow class for the named C++ class.
+
 PyObject* PyROOT::CreateScopeProxy( PyObject*, PyObject* args )
 {
-// Build a python shadow class for the named C++ class.
    std::string cname = PyROOT_PyUnicode_AsString( PyTuple_GetItem( args, 0 ) );
    if ( PyErr_Occurred() )
       return nullptr;
@@ -531,10 +539,11 @@ PyObject* PyROOT::CreateScopeProxy( PyObject*, PyObject* args )
    return CreateScopeProxy( cname );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build a python shadow class for the named C++ class.
+
 PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* parent )
 {
-// Build a python shadow class for the named C++ class.
    if ( scope_name.empty() || scope_name == "std" ) {
    // special cases, as gbl and gbl.std are defined in cppyy.py
       PyObject* mods = PyImport_GetModuleDict();
@@ -668,13 +677,11 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
 
       }
 
-      if ( parent ) {   // possibly freshly created above
+      if ( parent && !PyRootType_Check( parent ) ) {
+      // Special case: parent found is not one of ours (it's e.g. a pure Python module), so
+      // continuing would fail badly. One final lookup, then out of here ...
          std::string unscoped = scope_name.substr( last, std::string::npos );
-         PyObject* pyklass = PyObject_GetAttrString( parent, unscoped.c_str() );
-         if ( pyklass )
-            return pyklass;
-         PyErr_Clear();
-         return CreateScopeProxy( unscoped.c_str(), parent );
+         return PyObject_GetAttrString( parent, unscoped.c_str() );
       }
    }
 
@@ -724,6 +731,14 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
    Py_DECREF( pyactual );
    Py_DECREF( parent );
 
+   if ( pyclass && ! bClassFound ) {
+   // store a ref from ROOT TClass to new python class
+      gPyClasses[ klass ] = PyWeakref_NewRef( pyclass, NULL );
+
+   // add a ref in the class to its scope
+      PyObject_SetAttrString( pyclass, "__scope__", PyROOT_PyUnicode_FromString( scName.c_str() ) );
+   }
+
    if ( ! bClassFound ) {               // add python-style features to newly minted classes
       if ( ! Pythonize( pyclass, actual ) ) {
          Py_XDECREF( pyclass );
@@ -731,8 +746,6 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
       }
    }
 
-   if ( pyclass && ! bClassFound )      // store a ref from ROOT TClass to new python class
-      gPyClasses[ klass ] = PyWeakref_NewRef( pyclass, NULL );
 
    if ( pyclass && Cppyy::IsNamespace( klass ) && actual != "ROOT" ) {
    // add to sys.modules to allow importing from this module
@@ -753,10 +766,11 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
    return pyclass;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the requested name
+
 PyObject* PyROOT::GetCppGlobal( PyObject*, PyObject* args )
 {
-// get the requested name
    std::string ename = PyROOT_PyUnicode_AsString( PyTuple_GetItem( args, 0 ) );
 
    if ( PyErr_Occurred() )
@@ -765,10 +779,11 @@ PyObject* PyROOT::GetCppGlobal( PyObject*, PyObject* args )
    return GetCppGlobal( ename );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// try named global variable/enum (first ROOT, then Cling: sync is too slow)
+
 PyObject* PyROOT::GetCppGlobal( const std::string& name )
 {
-// try named global variable/enum (first ROOT, then Cling: sync is too slow)
    Cppyy::TCppIndex_t idata = Cppyy::GetDatamemberIndex( Cppyy::gGlobalScope, name );
    if ( 0 <= idata )
       return (PyObject*)PropertyProxy_New( Cppyy::gGlobalScope, idata );
@@ -786,7 +801,7 @@ PyObject* PyROOT::GetCppGlobal( const std::string& name )
 // allow lookup into std as if global (historic)
    TDataMember* dm = TClass::GetClass( "std" )->GetDataMember( name.c_str() );
    if ( dm ) {
-      Cppyy::TCppType_t klass = Cppyy::GetScope( dm->GetFullTypeName() );
+      Cppyy::TCppType_t klass = Cppyy::GetScope( dm->GetTrueTypeName() );
       return BindCppObjectNoCast( (void*)dm->GetOffset(), klass, kFALSE );
    }
 
@@ -795,10 +810,11 @@ PyObject* PyROOT::GetCppGlobal( const std::string& name )
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// only known or knowable objects will be bound (null object is ok)
+
 PyObject* PyROOT::BindCppObjectNoCast(
       Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, Bool_t isRef, Bool_t isValue ) {
-// only known or knowable objects will be bound (null object is ok)
    if ( ! klass ) {
       PyErr_SetString( PyExc_TypeError, "attempt to bind ROOT object w/o class" );
       return 0;
@@ -827,10 +843,11 @@ PyObject* PyROOT::BindCppObjectNoCast(
    return (PyObject*)pyobj;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// if the object is a null pointer, return a typed one (as needed for overloading)
+
 PyObject* PyROOT::BindCppObject( Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, Bool_t isRef )
 {
-// if the object is a null pointer, return a typed one (as needed for overloading)
    if ( ! address )
       return BindCppObjectNoCast( address, klass, kFALSE );
 
@@ -874,6 +891,18 @@ PyObject* PyROOT::BindCppObject( Cppyy::TCppObject_t address, Cppyy::TCppType_t 
       }
    }
 
+
+// check if type is pinned
+   Bool_t ignore_pin = std::find(
+     gIgnorePinnings.begin(), gIgnorePinnings.end(), klass ) != gIgnorePinnings.end();
+
+   if ( ! ignore_pin ) {
+      for ( auto it = gPinnedTypes.cbegin(); it != gPinnedTypes.cend(); ++it ) {
+         if ( klass == std::get<0>(*it) || Cppyy::IsSubtype( klass, std::get<0>(*it) ) )
+            klass = std::get<1>(*it);
+     }
+   }
+
 // actual binding
    ObjectProxy* pyobj = (ObjectProxy*)BindCppObjectNoCast( address, klass, isRef );
 
@@ -888,18 +917,20 @@ PyObject* PyROOT::BindCppObject( Cppyy::TCppObject_t address, Cppyy::TCppType_t 
    return (PyObject*)pyobj;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TODO: this function exists for symmetry; need to figure out if it's useful
+
 PyObject* PyROOT::BindCppObjectArray(
       Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, Int_t size ) {
-// TODO: this function exists for symmetry; need to figure out if it's useful
    return TTupleOfInstances_New( address, klass, size );
 }
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// gbl == 0 means global does not exist (rather than gbl is NULL pointer)
+
 PyObject* PyROOT::BindCppGlobal( TGlobal* gbl )
 {
-// gbl == 0 means global does not exist (rather than gbl is NULL pointer)
    if ( ! gbl || strcmp(gbl->GetName(), "") == 0 ) {
       Py_INCREF( Py_None );
       return Py_None;

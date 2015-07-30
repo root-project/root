@@ -37,7 +37,8 @@
 
 ClassImp(TEveCaloViz);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveCaloViz::TEveCaloViz(TEveCaloData* data, const char* n, const char* t) :
    TEveElement(),
    TNamed(n, t),
@@ -74,81 +75,81 @@ TEveCaloViz::TEveCaloViz(TEveCaloData* data, const char* n, const char* t) :
    SetData(data);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveCaloViz::~TEveCaloViz()
 {
-   // Destructor.
-
    if (fPalette) fPalette->DecRefCount();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get threshold for given slice.
+
 Float_t TEveCaloViz::GetDataSliceThreshold(Int_t slice) const
 {
-   // Get threshold for given slice.
-
    return fData->RefSliceInfo(slice).fThreshold;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Management of selection state and ownership of selected cell list
+/// is done in TEveCaloData. This is a reason selection is forwared to it.
+
 TEveElement* TEveCaloViz::ForwardSelection()
 {
-   // Management of selection state and ownership of selected cell list
-   // is done in TEveCaloData. This is a reason selection is forwared to it.
-
    return fData;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Management of selection state and ownership of selected cell list
+/// is done in TEveCaloData. We still want GUI editor to disply
+/// concrete calo-viz object.
+
 TEveElement* TEveCaloViz::ForwardEdit()
 {
-   // Management of selection state and ownership of selected cell list
-   // is done in TEveCaloData. We still want GUI editor to disply
-   // concrete calo-viz object.
-
    return this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set threshold for given slice.
+
 void TEveCaloViz::SetDataSliceThreshold(Int_t slice, Float_t val)
 {
-   // Set threshold for given slice.
-
    fData->SetSliceThreshold(slice, val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get slice color from data.
+
 Color_t TEveCaloViz::GetDataSliceColor(Int_t slice) const
 {
-   // Get slice color from data.
-
    return fData->RefSliceInfo(slice).fColor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set slice color in data.
+
 void TEveCaloViz::SetDataSliceColor(Int_t slice, Color_t col)
 {
-   // Set slice color in data.
-
    fData->SetSliceColor(slice, col);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set eta range.
+
 void TEveCaloViz::SetEta(Float_t l, Float_t u)
 {
-   // Set eta range.
-
    fEtaMin=l;
    fEtaMax=u;
 
    InvalidateCellIdCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set E/Et plot.
+
 void TEveCaloViz::SetPlotEt(Bool_t isEt)
 {
-   // Set E/Et plot.
-
    fPlotEt=isEt;
    if (fPalette)
       fPalette->SetLimits(0, TMath::CeilNint(GetMaxVal()));
@@ -156,21 +157,21 @@ void TEveCaloViz::SetPlotEt(Bool_t isEt)
    InvalidateCellIdCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Float_t TEveCaloViz::GetMaxVal() const
 {
-
    // Get maximum plotted value.
 
    return fData->GetMaxVal(fPlotEt);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set phi range.
+
 void TEveCaloViz::SetPhiWithRng(Float_t phi, Float_t rng)
 {
-   // Set phi range.
-
    using namespace TMath;
 
    fPhi = phi;
@@ -179,55 +180,55 @@ void TEveCaloViz::SetPhiWithRng(Float_t phi, Float_t rng)
    InvalidateCellIdCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get transition angle between barrel and end-cap cells, assuming fEndCapPosF = -fEndCapPosB.
+
 Float_t TEveCaloViz::GetTransitionTheta() const
 {
-   // Get transition angle between barrel and end-cap cells, assuming fEndCapPosF = -fEndCapPosB.
-
    return TMath::ATan(fBarrelRadius/fEndCapPosF);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get transition eta between barrel and end-cap cells, assuming fEndCapPosF = -fEndCapPosB.
+
 Float_t TEveCaloViz::GetTransitionEta() const
 {
-   // Get transition eta between barrel and end-cap cells, assuming fEndCapPosF = -fEndCapPosB.
-
    using namespace TMath;
    Float_t t = GetTransitionTheta()*0.5f;
    return -Log(Tan(t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get transition angle between barrel and forward end-cap cells.
+
 Float_t TEveCaloViz::GetTransitionThetaForward() const
 {
-   // Get transition angle between barrel and forward end-cap cells.
-
    return TMath::ATan(fBarrelRadius/fEndCapPosF);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get transition eta between barrel and forward end-cap cells.
+
 Float_t TEveCaloViz::GetTransitionEtaForward() const
 {
-   // Get transition eta between barrel and forward end-cap cells.
-
    using namespace TMath;
    Float_t t = GetTransitionThetaForward()*0.5f;
    return -Log(Tan(t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get transition angle between barrel and backward end-cap cells.
+
 Float_t TEveCaloViz::GetTransitionThetaBackward() const
 {
-   // Get transition angle between barrel and backward end-cap cells.
-
    return TMath::ATan(fBarrelRadius/fEndCapPosB);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get transition eta between barrel and backward end-cap cells.
+
 Float_t TEveCaloViz::GetTransitionEtaBackward() const
 {
-   // Get transition eta between barrel and backward end-cap cells.
-
    using namespace TMath;
    Float_t t = GetTransitionThetaBackward()*0.5f;
    //negative theta means negative eta
@@ -235,11 +236,11 @@ Float_t TEveCaloViz::GetTransitionEtaBackward() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set calorimeter event data.
+
 void TEveCaloViz::SetData(TEveCaloData* data)
 {
-   // Set calorimeter event data.
-
 
    if (data == fData) return;
    if (fData) fData->RemoveElement(this);
@@ -251,12 +252,12 @@ void TEveCaloViz::SetData(TEveCaloData* data)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update setting and cache on data changed.
+/// Called from TEvecaloData::BroadcastDataChange()
+
 void TEveCaloViz::DataChanged()
 {
-   // Update setting and cache on data changed.
-   // Called from TEvecaloData::BroadcastDataChange()
-
    Double_t min, max, delta;
 
    fData->GetEtaLimits(min, max);
@@ -288,12 +289,12 @@ void TEveCaloViz::DataChanged()
    InvalidateCellIdCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assert cell id cache is ok.
+/// Returns true if the cache has been updated.
+
 Bool_t TEveCaloViz::AssertCellIdCache() const
 {
-   // Assert cell id cache is ok.
-   // Returns true if the cache has been updated.
-
    TEveCaloViz* cv = const_cast<TEveCaloViz*>(this);
    if (!fCellIdCacheOK) {
       cv->BuildCellIdCache();
@@ -303,11 +304,11 @@ Bool_t TEveCaloViz::AssertCellIdCache() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if given cell is in the ceta phi range.
+
 Bool_t TEveCaloViz::CellInEtaPhiRng(TEveCaloData::CellData_t& cellData) const
 {
-   // Returns true if given cell is in the ceta phi range.
-
    if (cellData.EtaMin() >= fEtaMin && cellData.EtaMax() <= fEtaMax)
    {
       if (TEveUtil::IsU1IntervalContainedByMinMax
@@ -317,11 +318,11 @@ Bool_t TEveCaloViz::CellInEtaPhiRng(TEveCaloData::CellData_t& cellData) const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign paramteres from given model.
+
 void TEveCaloViz::AssignCaloVizParameters(TEveCaloViz* m)
 {
-   // Assign paramteres from given model.
-
    SetData(m->fData);
 
    fEtaMin    = m->fEtaMin;
@@ -343,22 +344,22 @@ void TEveCaloViz::AssignCaloVizParameters(TEveCaloViz* m)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set TEveRGBAPalette object pointer.
+
 void TEveCaloViz::SetPalette(TEveRGBAPalette* p)
 {
-   // Set TEveRGBAPalette object pointer.
-
    if ( fPalette == p) return;
    if (fPalette) fPalette->DecRefCount();
    fPalette = p;
    if (fPalette) fPalette->IncRefCount();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get transformation factor from E/Et to height
+
 Float_t TEveCaloViz::GetValToHeight() const
 {
-   // Get transformation factor from E/Et to height
-
    if (fScaleAbs)
    {
       return fMaxTowerH/fMaxValAbs;
@@ -372,13 +373,13 @@ Float_t TEveCaloViz::GetValToHeight() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure the TEveRGBAPalette pointer is not null.
+/// If it is not set, a new one is instantiated and the range is set
+/// to current min/max signal values.
+
 TEveRGBAPalette* TEveCaloViz::AssertPalette()
 {
-   // Make sure the TEveRGBAPalette pointer is not null.
-   // If it is not set, a new one is instantiated and the range is set
-   // to current min/max signal values.
-
    if (fPalette == 0) {
       fPalette = new TEveRGBAPalette;
       fPalette->SetDefaultColor((Color_t)4);
@@ -392,30 +393,30 @@ TEveRGBAPalette* TEveCaloViz::AssertPalette()
    return fPalette;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this object. Only direct rendering is supported.
+
 void TEveCaloViz::Paint(Option_t* /*option*/)
 {
-   // Paint this object. Only direct rendering is supported.
-
    if (fData)
    {
       PaintStandard(this);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveProjectable, returns TEveCalo2D class.
+
 TClass* TEveCaloViz::ProjectedClass(const TEveProjection*) const
 {
-   // Virtual from TEveProjectable, returns TEveCalo2D class.
-
    return TEveCalo2D::Class();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color and height for a given value and slice using slice color or TEveRGBAPalette.
+
 void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice, Float_t& outH) const
 {
-   // Set color and height for a given value and slice using slice color or TEveRGBAPalette.
-
    if (fValueIsColor)
    {
       outH = GetValToHeight()*fData->GetMaxVal(fPlotEt);
@@ -460,23 +461,23 @@ TEveCalo3D::TEveCalo3D(TEveCaloData* d, const char* n, const char* t):
    fMainColorPtr = &fFrameColor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build list of drawn cell IDs. See TEveCalo3DGL::DirectDraw().
+
 void TEveCalo3D::BuildCellIdCache()
 {
-   // Build list of drawn cell IDs. See TEveCalo3DGL::DirectDraw().
-
    fCellList.clear();
 
    fData->GetCellList(GetEta(), GetEtaRng(), GetPhi(), GetPhiRng(), fCellList);
    fCellIdCacheOK = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill bounding-box information of the base-class TAttBBox (virtual method).
+/// If member 'TEveFrameBox* fFrame' is set, frame's corners are used as bbox.
+
 void TEveCalo3D::ComputeBBox()
 {
-   // Fill bounding-box information of the base-class TAttBBox (virtual method).
-   // If member 'TEveFrameBox* fFrame' is set, frame's corners are used as bbox.
-
    BBoxInit();
 
    Float_t th = (fData) ? GetValToHeight() * fData->GetMaxVal(fPlotEt) : 0;
@@ -500,7 +501,9 @@ void TEveCalo3D::ComputeBBox()
 
 ClassImp(TEveCalo2D);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveCalo2D::TEveCalo2D(const char* n, const char* t):
    TEveCaloViz(0, n, t),
    TEveProjected(),
@@ -508,14 +511,13 @@ TEveCalo2D::TEveCalo2D(const char* n, const char* t):
    fMaxESumBin( 0),
    fMaxEtSumBin(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveCalo2D::~TEveCalo2D()
 {
-   // Destructor.
-
    TEveCaloData::vCellId_t* cids;
    UInt_t n;
 
@@ -540,11 +542,11 @@ TEveCalo2D::~TEveCalo2D()
    fCellLists.clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is virtual method from base-class TEveProjected.
+
 void TEveCalo2D::UpdateProjection()
 {
-   // This is virtual method from base-class TEveProjected.
-
    if (fManager->GetProjection()->GetType() != fOldProjectionType)
    {
       fCellIdCacheOK=kFALSE;
@@ -553,21 +555,21 @@ void TEveCalo2D::UpdateProjection()
    ComputeBBox();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set projection manager and model object.
+
 void TEveCalo2D::SetProjection(TEveProjectionManager* mng, TEveProjectable* model)
 {
-   // Set projection manager and model object.
-
    TEveProjected::SetProjection(mng, model);
    TEveCaloViz* viz = dynamic_cast<TEveCaloViz*>(model);
    AssignCaloVizParameters(viz);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build lists of drawn cell IDs. See TEveCalo2DGL::DirecDraw().
+
 void TEveCalo2D::BuildCellIdCache()
 {
-   // Build lists of drawn cell IDs. See TEveCalo2DGL::DirecDraw().
-
    // clear old cache
    for (vBinCells_i it = fCellLists.begin(); it != fCellLists.end(); it++)
    {
@@ -656,20 +658,20 @@ void TEveCalo2D::BuildCellIdCache()
    fCellIdCacheOK= kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort slected cells in eta or phi bins for selection and highlight.
+
 void TEveCalo2D::CellSelectionChanged()
 {
-   // Sort slected cells in eta or phi bins for selection and highlight.
-
    CellSelectionChangedInternal(fData->GetCellsSelected(), fCellListsSelected);
    CellSelectionChangedInternal(fData->GetCellsHighlighted(), fCellListsHighlighted);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort slected cells in eta or phi bins.
+
 void TEveCalo2D::CellSelectionChangedInternal(TEveCaloData::vCellId_t& inputCells, std::vector<TEveCaloData::vCellId_t*>& outputCellLists)
 {
-   // Sort slected cells in eta or phi bins.
-
    Bool_t isRPhi = (fManager->GetProjection()->GetType() == TEveProjection::kPT_RPhi);
    const TAxis* axis = isRPhi ? fData->GetPhiBins() :  fData->GetEtaBins();
 
@@ -710,21 +712,21 @@ void TEveCalo2D::CellSelectionChangedInternal(TEveCaloData::vCellId_t& inputCell
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set absolute scale in projected calorimeter.
+
 void TEveCalo2D::SetScaleAbs(Bool_t sa)
 {
-   // Set absolute scale in projected calorimeter.
-
    TEveCaloViz::SetScaleAbs(sa);
    BuildCellIdCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual function of TEveCaloViz.
+/// Get transformation factor from E/Et to height.
+
 Float_t TEveCalo2D::GetValToHeight() const
 {
-   // Virtual function of TEveCaloViz.
-   // Get transformation factor from E/Et to height.
-
    AssertCellIdCache();
 
    if (fScaleAbs)
@@ -743,12 +745,12 @@ Float_t TEveCalo2D::GetValToHeight() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill bounding-box information of the base-class TAttBBox (virtual method).
+/// If member 'TEveFrameBox* fFrame' is set, frame's corners are used as bbox.
+
 void TEveCalo2D::ComputeBBox()
 {
-   // Fill bounding-box information of the base-class TAttBBox (virtual method).
-   // If member 'TEveFrameBox* fFrame' is set, frame's corners are used as bbox.
-
    BBoxZero();
 
    Float_t x, y, z;
@@ -788,7 +790,8 @@ void TEveCalo2D::ComputeBBox()
 
 ClassImp(TEveCaloLego);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveCaloLego::TEveCaloLego(TEveCaloData* d, const char* n, const char* t):
    TEveCaloViz(d, n, t),
 
@@ -824,29 +827,30 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* d, const char* n, const char* t):
    SetElementNameTitle("TEveCaloLego", "TEveCaloLego");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TEveCaloLego::SetData(TEveCaloData* data)
 {
    TEveCaloViz::SetData(data);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build list of drawn cell IDs. For more information see TEveCaloLegoGL:DirectDraw().
+
 void TEveCaloLego::BuildCellIdCache()
 {
-   // Build list of drawn cell IDs. For more information see TEveCaloLegoGL:DirectDraw().
-
    fCellList.clear();
 
    fData->GetCellList(GetEta(), GetEtaRng(), GetPhi(), GetPhiRng(), fCellList);
    fCellIdCacheOK = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill bounding-box information of the base-class TAttBBox (virtual method).
+/// If member 'TEveFrameBox* fFrame' is set, frame's corners are used as bbox.
+
 void TEveCaloLego::ComputeBBox()
 {
-   // Fill bounding-box information of the base-class TAttBBox (virtual method).
-   // If member 'TEveFrameBox* fFrame' is set, frame's corners are used as bbox.
-
 
    // fBBox = Float_t[6] X(min,max), Y(min,max), Z(min,max)
 

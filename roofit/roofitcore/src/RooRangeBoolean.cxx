@@ -41,14 +41,16 @@ ClassImp(RooRangeBoolean)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooRangeBoolean::RooRangeBoolean()
 {
-  // Default constructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooRangeBoolean::RooRangeBoolean(const char* name, const char* title, RooAbsRealLValue& x, const char* rangeName) :
   RooAbsReal(name, title),
   _x("x", "Dependent", this, x),
@@ -58,31 +60,34 @@ RooRangeBoolean::RooRangeBoolean(const char* name, const char* title, RooAbsReal
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooRangeBoolean::RooRangeBoolean(const RooRangeBoolean& other, const char* name) :
   RooAbsReal(other, name), 
   _x("x", this, other._x),
   _rangeName(other._rangeName)
 {
-  // Copy constructor
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooRangeBoolean::~RooRangeBoolean() 
 {
-  // Destructor
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return 1 if x is in range, zero otherwis
+
 Double_t RooRangeBoolean::evaluate() const 
 {
-  // Return 1 if x is in range, zero otherwis
   Double_t xmin = ((RooAbsRealLValue&)_x.arg()).getMin(_rangeName.Data()) ;
   Double_t xmax = ((RooAbsRealLValue&)_x.arg()).getMax(_rangeName.Data()) ;
   
@@ -92,7 +97,8 @@ Double_t RooRangeBoolean::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::list<Double_t>* RooRangeBoolean::plotSamplingHint(RooAbsRealLValue& obs, Double_t /*xlo*/, Double_t /*xhi*/) const 
 {
   if (string(obs.GetName())!=_x.arg().GetName()) {

@@ -27,7 +27,9 @@
 
 using namespace TMVA;
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor of the CCTreeNode
+
 TMVA::CCTreeWrapper::CCTreeNode::CCTreeNode( DecisionTreeNode* n ) :
    Node(),
    fNLeafDaughters(0),
@@ -37,7 +39,6 @@ TMVA::CCTreeWrapper::CCTreeNode::CCTreeNode( DecisionTreeNode* n ) :
    fMinAlphaC(-1.0),
    fDTNode(n)
 {
-   //constructor of the CCTreeNode
    if ( n != NULL && n->GetRight() != NULL && n->GetLeft() != NULL ) {
       SetRight( new CCTreeNode( ((DecisionTreeNode*) n->GetRight()) ) );
       GetRight()->SetParent(this);
@@ -46,18 +47,18 @@ TMVA::CCTreeWrapper::CCTreeNode::CCTreeNode( DecisionTreeNode* n ) :
    }
 }
 
-//_______________________________________________________________________
-TMVA::CCTreeWrapper::CCTreeNode::~CCTreeNode() {
-   // destructor of a CCTreeNode
+////////////////////////////////////////////////////////////////////////////////
+/// destructor of a CCTreeNode
 
+TMVA::CCTreeWrapper::CCTreeNode::~CCTreeNode() {
    if(GetLeft() != NULL) delete GetLeftDaughter();
    if(GetRight() != NULL) delete GetRightDaughter();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialize a node from a data record
+
 Bool_t TMVA::CCTreeWrapper::CCTreeNode::ReadDataRecord( std::istream& in, UInt_t /* tmva_Version_Code */ ) {
-   // initialize a node from a data record
-   
    std::string header, title;
    in >> header;
    in >> title; in >> fNLeafDaughters;
@@ -68,10 +69,10 @@ Bool_t TMVA::CCTreeWrapper::CCTreeNode::ReadDataRecord( std::istream& in, UInt_t
    return true;
 }
 
-//_______________________________________________________________________
-void TMVA::CCTreeWrapper::CCTreeNode::Print( std::ostream& os ) const {
-   // printout of the node (can be read in with ReadDataRecord)
+////////////////////////////////////////////////////////////////////////////////
+/// printout of the node (can be read in with ReadDataRecord)
 
+void TMVA::CCTreeWrapper::CCTreeNode::Print( std::ostream& os ) const {
    os << "----------------------" << std::endl 
       << "|~T_t| " << fNLeafDaughters << std::endl 
       << "R(t): " << fNodeResubstitutionEstimate << std::endl 
@@ -80,10 +81,10 @@ void TMVA::CCTreeWrapper::CCTreeNode::Print( std::ostream& os ) const {
       << "G(t): " << fMinAlphaC << std::endl;
 }
 
-//_______________________________________________________________________
-void TMVA::CCTreeWrapper::CCTreeNode::PrintRec( std::ostream& os ) const {
-   // recursive printout of the node and its daughters 
+////////////////////////////////////////////////////////////////////////////////
+/// recursive printout of the node and its daughters 
 
+void TMVA::CCTreeWrapper::CCTreeNode::PrintRec( std::ostream& os ) const {
    this->Print(os);
    if(this->GetLeft() != NULL && this->GetRight() != NULL) {
       this->GetLeft()->PrintRec(os);
@@ -91,29 +92,30 @@ void TMVA::CCTreeWrapper::CCTreeNode::PrintRec( std::ostream& os ) const {
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::CCTreeWrapper::CCTreeWrapper( DecisionTree* T, SeparationBase* qualityIndex ) :
    fRoot(NULL)
 {
-   // constructor
-
    fDTParent = T;
    fRoot = new CCTreeNode( dynamic_cast<DecisionTreeNode*>(T->GetRoot()) );
    fQualityIndex = qualityIndex;
    InitTree(fRoot);
 }
   
-//_______________________________________________________________________
-TMVA::CCTreeWrapper::~CCTreeWrapper( ) {
-   // destructor
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
 
+TMVA::CCTreeWrapper::~CCTreeWrapper( ) {
    delete fRoot; 
 }  
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialize the node t and all its descendants
+
 void TMVA::CCTreeWrapper::InitTree( CCTreeNode* t )
 {
-    // initialize the node t and all its descendants
    Double_t s = t->GetDTNode()->GetNSigEvents();
    Double_t b = t->GetDTNode()->GetNBkgEvents();
    //   Double_t s = t->GetDTNode()->GetNSigEvents_unweighted();
@@ -146,11 +148,11 @@ void TMVA::CCTreeWrapper::InitTree( CCTreeNode* t )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// remove the branch rooted at node t
+
 void TMVA::CCTreeWrapper::PruneNode( CCTreeNode* t )
 {
-   // remove the branch rooted at node t
-
    if( t->GetLeft() != NULL &&
        t->GetRight() != NULL ) {
       CCTreeNode* l = t->GetLeftDaughter();
@@ -168,12 +170,12 @@ void TMVA::CCTreeWrapper::PruneNode( CCTreeNode* t )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the misclassification rate of a pruned tree for a validation event sample
+/// using an EventList
+
 Double_t TMVA::CCTreeWrapper::TestTreeQuality( const EventList* validationSample )
 {
-   // return the misclassification rate of a pruned tree for a validation event sample
-   // using an EventList
-
    Double_t ncorrect=0, nfalse=0;
    for (UInt_t ievt=0; ievt < validationSample->size(); ievt++) {
       Bool_t isSignalType = (CheckEvent(*(*validationSample)[ievt]) > fDTParent->GetNodePurityLimit() ) ? 1 : 0;
@@ -188,12 +190,12 @@ Double_t TMVA::CCTreeWrapper::TestTreeQuality( const EventList* validationSample
    return  ncorrect / (ncorrect + nfalse);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the misclassification rate of a pruned tree for a validation event sample
+/// using the DataSet
+
 Double_t TMVA::CCTreeWrapper::TestTreeQuality( const DataSet* validationSample )
 {
-   // return the misclassification rate of a pruned tree for a validation event sample
-   // using the DataSet
-
    validationSample->SetCurrentType(Types::kValidation);
    // test the tree quality.. in terms of Miscalssification
    Double_t ncorrect=0, nfalse=0;
@@ -212,11 +214,11 @@ Double_t TMVA::CCTreeWrapper::TestTreeQuality( const DataSet* validationSample )
    return  ncorrect / (ncorrect + nfalse);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the decision tree output for an event 
+
 Double_t TMVA::CCTreeWrapper::CheckEvent( const TMVA::Event & e, Bool_t useYesNoLeaf )
 {
-   // return the decision tree output for an event 
-
    const DecisionTreeNode* current = fRoot->GetDTNode();
    CCTreeNode* t = fRoot;
 
@@ -239,18 +241,22 @@ Double_t TMVA::CCTreeWrapper::CheckEvent( const TMVA::Event & e, Bool_t useYesNo
    else return current->GetPurity();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::CCTreeWrapper::CCTreeNode::AddAttributesToNode( void* /*node*/ ) const
 {}
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::CCTreeWrapper::CCTreeNode::AddContentToNode( std::stringstream& /*s*/ ) const
 {}
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::CCTreeWrapper::CCTreeNode::ReadAttributes( void* /*node*/, UInt_t /* tmva_Version_Code */  )
 {}
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::CCTreeWrapper::CCTreeNode::ReadContent( std::stringstream& /*s*/ )
 {}

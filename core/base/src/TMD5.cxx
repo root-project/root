@@ -42,25 +42,25 @@
 
 ClassImp(TMD5)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TMD5 object. Set bit count to 0 and buffer to mysterious
+/// initialization constants.
+
 TMD5::TMD5():
 fBits(), fIn(), fString(), fDigest(), fFinalized(kFALSE)
 {
-   // Create TMD5 object. Set bit count to 0 and buffer to mysterious
-   // initialization constants.
-
    fBuf[0] = 0x67452301;
    fBuf[1] = 0xefcdab89;
    fBuf[2] = 0x98badcfe;
    fBuf[3] = 0x10325476;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create finalized TMD5 object containing passed in 16 byte digest.
+
 TMD5::TMD5(const UChar_t *digest):
 fBuf(), fBits(), fIn(), fString(), fFinalized(kTRUE)
 {
-   // Create finalized TMD5 object containing passed in 16 byte digest.
-
    if (digest)
       memcpy(fDigest, digest, 16);
    else {
@@ -69,13 +69,13 @@ fBuf(), fBits(), fIn(), fString(), fFinalized(kTRUE)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MD5 copy ctor. Special copy ctor avoids copying unnecessary
+/// temp arrays when finalized.
+
 TMD5::TMD5(const TMD5 &md5):
 fString()
 {
-   // MD5 copy ctor. Special copy ctor avoids copying unnecessary
-   // temp arrays when finalized.
-
    memcpy(fBuf,  md5.fBuf,  4*sizeof(UInt_t));
    memcpy(fBits, md5.fBits, 2*sizeof(UInt_t));
    memcpy(fIn,   md5.fIn,   64);
@@ -84,12 +84,12 @@ fString()
    fFinalized = md5.fFinalized;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MD5 assignment operator. Special assignment operator avoids
+/// copying unnecessary temp arrays when finalized.
+
 TMD5 &TMD5::operator=(const TMD5 &rhs)
 {
-   // MD5 assignment operator. Special assignment operator avoids
-   // copying unnecessary temp arrays when finalized.
-
    if (this != &rhs) {
       memcpy(fBuf,  rhs.fBuf,  4*sizeof(UInt_t));
       memcpy(fBits, rhs.fBits, 2*sizeof(UInt_t));
@@ -102,12 +102,12 @@ TMD5 &TMD5::operator=(const TMD5 &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update TMD5 object to reflect the concatenation of another buffer full
+/// of bytes.
+
 void TMD5::Update(const UChar_t *buf, UInt_t len)
 {
-   // Update TMD5 object to reflect the concatenation of another buffer full
-   // of bytes.
-
    if (fFinalized) {
       Error("TMD5::Update", "Final() has already been called");
       return;
@@ -150,23 +150,23 @@ void TMD5::Update(const UChar_t *buf, UInt_t len)
    memcpy(fIn, buf, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MD5 finalization, ends an MD5 message-digest operation, writing the
+/// the message digest and zeroizing the context.
+/// Returns digest.
+
 void TMD5::Final(UChar_t digest[16])
 {
-   // MD5 finalization, ends an MD5 message-digest operation, writing the
-   // the message digest and zeroizing the context.
-   // Returns digest.
-
    Final();
    memcpy(digest, fDigest, 16);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MD5 finalization, ends an MD5 message-digest operation, writing the
+/// the message digest and zeroizing the context.
+
 void TMD5::Final()
 {
-   // MD5 finalization, ends an MD5 message-digest operation, writing the
-   // the message digest and zeroizing the context.
-
    if (fFinalized)
       return;
 
@@ -201,11 +201,11 @@ void TMD5::Final()
    fFinalized = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print digest in ascii hex form.
+
 void TMD5::Print() const
 {
-   // Print digest in ascii hex form.
-
    if (!fFinalized) {
       Error("TMD5::Print", "Final() has not yet been called");
       return;
@@ -214,12 +214,12 @@ void TMD5::Print() const
    printf("%s\n", AsString());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return message digest as string. Returns "" in case Final() has
+/// not yet been called.
+
 const char *TMD5::AsString() const
 {
-   // Return message digest as string. Returns "" in case Final() has
-   // not yet been called.
-
    if (!fFinalized) {
       Error("TMD5::AsString", "Final() has not yet been called");
       return "";
@@ -235,11 +235,11 @@ const char *TMD5::AsString() const
    return fString;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Encodes input into output. Assumes len is a multiple of 4.
+
 void TMD5::Encode(UChar_t *out, const UInt_t *in, UInt_t len)
 {
-   // Encodes input into output. Assumes len is a multiple of 4.
-
    UInt_t i, j;
 
    for (i = 0, j = 0; j < len; i++, j += 4) {
@@ -250,11 +250,11 @@ void TMD5::Encode(UChar_t *out, const UInt_t *in, UInt_t len)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decodes input into output. Assumes len is a multiple of 4.
+
 void TMD5::Decode(UInt_t *out, const UChar_t *in, UInt_t len)
 {
-   // Decodes input into output. Assumes len is a multiple of 4.
-
    UInt_t i, j;
 
    for (i = 0, j = 0; j < len; i++, j += 4)
@@ -274,13 +274,13 @@ void TMD5::Decode(UInt_t *out, const UChar_t *in, UInt_t len)
 #define MD5STEP(f, w, x, y, z, data, s) \
         ( w += f(x, y, z) + data,  w = w<<s | w>>(32-s),  w += x )
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The core of the MD5 algorithm, this alters an existing MD5 hash to
+/// reflect the addition of 16 longwords of new data. Update() blocks
+/// the data and converts bytes into longwords for this routine.
+
 void TMD5::Transform(UInt_t buf[4], const UChar_t in[64])
 {
-   // The core of the MD5 algorithm, this alters an existing MD5 hash to
-   // reflect the addition of 16 longwords of new data. Update() blocks
-   // the data and converts bytes into longwords for this routine.
-
    UInt_t a, b, c, d, x[16];
 
    a = buf[0];
@@ -367,11 +367,11 @@ void TMD5::Transform(UInt_t buf[4], const UChar_t in[64])
    memset(x, 0, sizeof(x));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare two message digests for equality.
+
 Bool_t operator==(const TMD5 &m1, const TMD5 &m2)
 {
-   // Compare two message digests for equality.
-
    // Make sure both are finalized.
    if (!m1.fFinalized || !m2.fFinalized) {
       if (!m1.fFinalized)
@@ -388,13 +388,13 @@ Bool_t operator==(const TMD5 &m1, const TMD5 &m2)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the digest from the ASCII representation 'md5ascii'. The caller
+/// is responsible to make sure that the 32 chars md5ascii are valid.
+/// Returns -1 if md5ascii is malformed, returns 0 otherwise.
+
 Int_t TMD5::SetDigest(const char *md5ascii)
 {
-   // Set the digest from the ASCII representation 'md5ascii'. The caller
-   // is responsible to make sure that the 32 chars md5ascii are valid.
-   // Returns -1 if md5ascii is malformed, returns 0 otherwise.
-
    if (!md5ascii || strlen(md5ascii) < 32) {
       // Invalid input or ASCII representation
       return -1;
@@ -414,14 +414,14 @@ Int_t TMD5::SetDigest(const char *md5ascii)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns checksum stored in ASCII in specified file. Use to read files
+/// created via WriteChecksum(). The returned TMD5 object must be deleted
+/// by the user. Returns 0 in case the file cannot be opened or in case of
+/// error. Static utlity function.
+
 TMD5 *TMD5::ReadChecksum(const char *file)
 {
-   // Returns checksum stored in ASCII in specified file. Use to read files
-   // created via WriteChecksum(). The returned TMD5 object must be deleted
-   // by the user. Returns 0 in case the file cannot be opened or in case of
-   // error. Static utlity function.
-
    FILE *fid = fopen(file, "r");
    if (!fid) {
       // file cannot be opened
@@ -444,14 +444,14 @@ TMD5 *TMD5::ReadChecksum(const char *file)
    return md5;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Writes checksum in ASCII format to specified file. This file can
+/// directly be read by ReadChecksum(). The md5 must have been finalized.
+/// Returns -1 in case file cannot be opened or in case of error,
+/// 0 otherwise. Static utility function.
+
 Int_t TMD5::WriteChecksum(const char *file, const TMD5 *md5)
 {
-   // Writes checksum in ASCII format to specified file. This file can
-   // directly be read by ReadChecksum(). The md5 must have been finalized.
-   // Returns -1 in case file cannot be opened or in case of error,
-   // 0 otherwise. Static utility function.
-
    FILE *fid = fopen(file, "w");
    if (!fid) {
       // file cannot be opened
@@ -465,15 +465,15 @@ Int_t TMD5::WriteChecksum(const char *file, const TMD5 *md5)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns checksum of specified file. The returned TMD5 object must
+/// be deleted by the user. Returns 0 in case the file does not exists
+/// or in case of error. This function preserves the modtime of the file
+/// so it can be safely used in conjunction with methods that keep track
+/// of the file's modtime. Static utility function.
+
 TMD5 *TMD5::FileChecksum(const char *file)
 {
-   // Returns checksum of specified file. The returned TMD5 object must
-   // be deleted by the user. Returns 0 in case the file does not exists
-   // or in case of error. This function preserves the modtime of the file
-   // so it can be safely used in conjunction with methods that keep track
-   // of the file's modtime. Static utility function.
-
    Long64_t size;
    Long_t id, flags, modtime;
    if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 0) {
@@ -530,14 +530,14 @@ TMD5 *TMD5::FileChecksum(const char *file)
    return md5;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns checksum of specified file in digest argument. Returns -1 in
+/// case of error, 0 otherwise. This method preserves the modtime of the
+/// file so it can be safely used in conjunction with methods that keep
+/// track of the file's modtime. Static utility function.
+
 Int_t TMD5::FileChecksum(const char *file, UChar_t digest[16])
 {
-   // Returns checksum of specified file in digest argument. Returns -1 in
-   // case of error, 0 otherwise. This method preserves the modtime of the
-   // file so it can be safely used in conjunction with methods that keep
-   // track of the file's modtime. Static utility function.
-
    TMD5 *md5 = FileChecksum(file);
    if (md5) {
       memcpy(digest, md5->fDigest, 16);
@@ -549,11 +549,11 @@ Int_t TMD5::FileChecksum(const char *file, UChar_t digest[16])
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Input operator.  Delegate to Streamer.
+
 TBuffer &operator<<(TBuffer &buf, const TMD5 &uuid)
 {
-   // Input operator.  Delegate to Streamer.
-
    R__ASSERT( buf.IsWriting() );
 
    const_cast<TMD5&>(uuid).Streamer(buf);

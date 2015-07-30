@@ -30,7 +30,9 @@
 #include "TMath.h"
 #include <vector>
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::SVKernelFunction::SVKernelFunction()
    : fGamma(0.),
      fKernel(kRBF),  // kernel, order, theta, and kappa are for backward compatibility
@@ -38,10 +40,11 @@ TMVA::SVKernelFunction::SVKernelFunction()
      fTheta(0),
      fKappa(0)
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::SVKernelFunction::SVKernelFunction( Float_t gamma )
    : fGamma(gamma),
      fKernel(kRBF),  // kernel, order, theta, and kappa are for backward compatibility
@@ -49,28 +52,29 @@ TMVA::SVKernelFunction::SVKernelFunction( Float_t gamma )
      fTheta(0),
      fKappa(0)
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::SVKernelFunction::~SVKernelFunction() 
 {
-   // destructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set old options for compatibility mode
+
 void TMVA::SVKernelFunction::setCompatibilityParams(EKernelType k, UInt_t order, Float_t theta, Float_t kappa) {
-   // set old options for compatibility mode
    fKernel = k;
    fOrder = order;
    fTheta = theta;
    fKappa = kappa;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Float_t TMVA::SVKernelFunction::Evaluate( SVEvent* ev1, SVEvent* ev2 )
 {
-
    switch(fKernel) {
    case kRBF:
       {

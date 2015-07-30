@@ -39,7 +39,8 @@
 
 ClassImp(TParallelCoordEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>The TParallelCoord editor class</h2></center>
 This is the TParallelCoord editor. It brings tools to explore datas
@@ -98,13 +99,13 @@ enum EParallelWid {
    kHistPatternSelect
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+
 TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
                                            Int_t/*width*/, Int_t /*height*/,
                                            UInt_t /*options*/, Pixel_t /*back*/)
 {
-   // Normal constructor.
-
    fPriority = 1;
    fDelay = kTRUE;
 
@@ -252,11 +253,11 @@ TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make the "variable" tab.
+
 void TParallelCoordEditor::MakeVariablesTab()
 {
-   // Make the "variable" tab.
-
    fVarTab = CreateEditorTabSubFrame("Variables");
    //**Variable**_________________________________
 
@@ -321,21 +322,21 @@ void TParallelCoordEditor::MakeVariablesTab()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TParallelCoordEditor::~TParallelCoordEditor()
 {
-   // Destructor.
-
    delete fLineTypePoly;
    delete fLineTypeCurves;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up the selection combo box.
+
 void TParallelCoordEditor::CleanUpSelections()
 {
-   // Clean up the selection combo box.
-
    TList *list = fParallel->GetSelectList();
    fSelectionSelect->RemoveAll();
    Bool_t enable = list->GetSize() > 0;
@@ -372,11 +373,11 @@ void TParallelCoordEditor::CleanUpSelections()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up the variables combo box.
+
 void TParallelCoordEditor::CleanUpVariables()
 {
-   // Clean up the variables combo box.
-
    TList *list = fParallel->GetVarList();
    fVariables->RemoveAll();
    Bool_t enable = list->GetSize() > 0;
@@ -402,11 +403,11 @@ void TParallelCoordEditor::CleanUpVariables()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TParallelCoordEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fGlobalLineColor->Connect("ColorSelected(Pixel_t)","TParallelCoordEditor",
                              this, "DoGlobalLineColor(Pixel_t)");
    fGlobalLineWidth->Connect("Selected(Int_t)","TParallelCoordEditor",
@@ -490,11 +491,11 @@ void TParallelCoordEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to activate or not a selection.
+
 void TParallelCoordEditor::DoActivateSelection(Bool_t on)
 {
-   // Slot to activate or not a selection.
-
    if (fAvoidSignal) return;
 
    TParallelCoordSelect* sel = fParallel->GetCurrentSelection();
@@ -505,11 +506,11 @@ void TParallelCoordEditor::DoActivateSelection(Bool_t on)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to add a selection.
+
 void TParallelCoordEditor::DoAddSelection()
 {
-   // Slot to add a selection.
-
    TString title = fAddSelectionField->GetText();
    if (title == "") title = "Selection";
    TString titlebis = title;
@@ -530,11 +531,11 @@ void TParallelCoordEditor::DoAddSelection()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to add a variable.
+
 void TParallelCoordEditor::DoAddVariable()
 {
-   // Slot to add a variable.
-
    if (fAvoidSignal) return;
 
    fParallel->AddVariable(fAddVariable->GetText());
@@ -543,11 +544,11 @@ void TParallelCoordEditor::DoAddVariable()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to apply a selection to the tree.
+
 void TParallelCoordEditor::DoApplySelect()
 {
-   // Slot to apply a selection to the tree.
-
    //FIXME I forgot to update the slider over the entries
    //      (nentries and firstentry might have changed after applying the selection)
 
@@ -559,11 +560,11 @@ void TParallelCoordEditor::DoApplySelect()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to delay the drawing.
+
 void TParallelCoordEditor::DoDelayDrawing(Bool_t on)
 {
-   // Slot to delay the drawing.
-
    if (fAvoidSignal) return;
 
    fDelay = on;
@@ -571,11 +572,11 @@ void TParallelCoordEditor::DoDelayDrawing(Bool_t on)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to delete a selection.
+
 void TParallelCoordEditor::DoDeleteSelection()
 {
-   // Slot to delete a selection.
-
    if (fAvoidSignal) return;
 
    fParallel->DeleteSelection(fParallel->GetCurrentSelection());
@@ -585,11 +586,11 @@ void TParallelCoordEditor::DoDeleteSelection()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to delete a variable().
+
 void TParallelCoordEditor::DoDeleteVar()
 {
-   // Slot to delete a variable().
-
    if (fAvoidSignal) return;
 
    TParallelCoordVar* var = fParallel->RemoveVariable(((TGTextLBEntry*)fVariables->GetSelectedEntry())->GetTitle());
@@ -598,11 +599,11 @@ void TParallelCoordEditor::DoDeleteVar()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the line dotspacing.
+
 void TParallelCoordEditor::DoDotsSpacing()
 {
-   // Slot to set the line dotspacing.
-
    if (fAvoidSignal) return;
 
    fParallel->SetDotsSpacing(fDotsSpacing->GetPosition());
@@ -611,11 +612,11 @@ void TParallelCoordEditor::DoDotsSpacing()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the line dotspacing from the entry field.
+
 void TParallelCoordEditor::DoDotsSpacingField()
 {
-   // Slot to set the line dotspacing from the entry field.
-
    if (fAvoidSignal) return;
 
    fParallel->SetDotsSpacing((Int_t)fDotsSpacingField->GetNumber());
@@ -623,11 +624,11 @@ void TParallelCoordEditor::DoDotsSpacingField()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the alpha value from the entry field.
+
 void TParallelCoordEditor::DoAlphaField()
 {
-   // Slot to set the alpha value from the entry field.
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) {
@@ -637,11 +638,11 @@ void TParallelCoordEditor::DoAlphaField()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the alpha value
+
 void TParallelCoordEditor::DoAlpha()
 {
-   // Slot to set the alpha value
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) {
@@ -651,11 +652,11 @@ void TParallelCoordEditor::DoAlpha()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to select the entries to be drawn.
+
 void TParallelCoordEditor::DoEntriesToDraw()
 {
-   // Slot to select the entries to be drawn.
-
    if (fAvoidSignal) return;
 
    Long64_t nentries,firstentry;
@@ -668,11 +669,11 @@ void TParallelCoordEditor::DoEntriesToDraw()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the first entry.
+
 void TParallelCoordEditor::DoFirstEntry()
 {
-   // Slot to set the first entry.
-
    if (fAvoidSignal) return;
 
    fParallel->SetCurrentFirst((Long64_t)fFirstEntry->GetNumber());
@@ -681,11 +682,11 @@ void TParallelCoordEditor::DoFirstEntry()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the global line color.
+
 void TParallelCoordEditor::DoGlobalLineColor(Pixel_t a)
 {
-   // Slot to set the global line color.
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) {
@@ -698,11 +699,11 @@ void TParallelCoordEditor::DoGlobalLineColor(Pixel_t a)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the global line width.
+
 void TParallelCoordEditor::DoGlobalLineWidth(Int_t wid)
 {
-   // Slot to set the global line width.
-
    if (fAvoidSignal) return;
 
    fParallel->SetLineWidth(wid);
@@ -710,11 +711,11 @@ void TParallelCoordEditor::DoGlobalLineWidth(Int_t wid)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to hide all the ranges.
+
 void TParallelCoordEditor::DoHideAllRanges(Bool_t on)
 {
-   // Slot to hide all the ranges.
-
    if (fAvoidSignal) return;
 
    TIter next(fParallel->GetSelectList());
@@ -727,11 +728,11 @@ void TParallelCoordEditor::DoHideAllRanges(Bool_t on)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the axes histogram binning.
+
 void TParallelCoordEditor::DoHistBinning()
 {
-   // Slot to set the axes histogram binning.
-
    if (fAvoidSignal) return;
 
    fParallel->SetAxisHistogramBinning((Int_t)fHistBinning->GetNumber());
@@ -739,11 +740,11 @@ void TParallelCoordEditor::DoHistBinning()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the histograms color.
+
 void TParallelCoordEditor::DoHistColorSelect(Pixel_t p)
 {
-   // Slot to set the histograms color.
-
    if (fAvoidSignal) return;
 
    Color_t col = TColor::GetColor(p);
@@ -754,11 +755,11 @@ void TParallelCoordEditor::DoHistColorSelect(Pixel_t p)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set histogram height.
+
 void TParallelCoordEditor::DoHistShowBoxes(Bool_t s)
 {
-   // Slot to set histogram height.
-
    if (fAvoidSignal) return;
 
    TIter next(fParallel->GetVarList());
@@ -768,11 +769,11 @@ void TParallelCoordEditor::DoHistShowBoxes(Bool_t s)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the histograms fill style.
+
 void TParallelCoordEditor::DoHistPatternSelect(Style_t sty)
 {
-   // Slot to set the histograms fill style.
-
    if (fAvoidSignal) return;
 
    TIter next(fParallel->GetVarList());
@@ -782,11 +783,11 @@ void TParallelCoordEditor::DoHistPatternSelect(Style_t sty)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set histogram width.
+
 void TParallelCoordEditor::DoHistWidth()
 {
-   // Slot to set histogram width.
-
    if (fAvoidSignal) return;
 
    fParallel->SetAxisHistogramLineWidth((Int_t)fHistWidth->GetNumber());
@@ -794,11 +795,11 @@ void TParallelCoordEditor::DoHistWidth()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the line type.
+
 void TParallelCoordEditor::DoLineType()
 {
-   // Slot to set the line type.
-
    if (fAvoidSignal) return;
 
    if (fLineTypePoly->GetState() == kButtonDown) fParallel->SetCurveDisplay(kFALSE);
@@ -807,11 +808,11 @@ void TParallelCoordEditor::DoLineType()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the dots spacing online.
+
 void TParallelCoordEditor::DoLiveDotsSpacing(Int_t a)
 {
-   // Slot to set the dots spacing online.
-
    if (fAvoidSignal) return;
    fDotsSpacingField->SetNumber(a);
    fParallel->SetDotsSpacing(a);
@@ -819,11 +820,11 @@ void TParallelCoordEditor::DoLiveDotsSpacing(Int_t a)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set alpha value online.
+
 void TParallelCoordEditor::DoLiveAlpha(Int_t a)
 {
-   // Slot to set alpha value online.
-
    if (fAvoidSignal) return;
    fAlphaField->SetNumber((Float_t)a/1000);
 
@@ -831,11 +832,11 @@ void TParallelCoordEditor::DoLiveAlpha(Int_t a)
    if (!fDelay) Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to update the entries fields from the slider position.
+
 void TParallelCoordEditor::DoLiveEntriesToDraw()
 {
-   // Slot to update the entries fields from the slider position.
-
    if (fAvoidSignal) return;
 
    Long64_t nentries,firstentry;
@@ -853,11 +854,11 @@ void TParallelCoordEditor::DoLiveEntriesToDraw()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to update the wieght cut entry field from the slider position.
+
 void TParallelCoordEditor::DoLiveWeightCut(Int_t n)
 {
-   // Slot to update the wieght cut entry field from the slider position.
-
    if (fAvoidSignal) return;
 
    fWeightCutField->SetNumber(n);
@@ -868,11 +869,11 @@ void TParallelCoordEditor::DoLiveWeightCut(Int_t n)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the number of entries to display.
+
 void TParallelCoordEditor::DoNentries()
 {
-   // Slot to set the number of entries to display.
-
    if (fAvoidSignal) return;
 
    fParallel->SetCurrentN((Long64_t)fNentries->GetNumber());
@@ -881,11 +882,11 @@ void TParallelCoordEditor::DoNentries()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to postpone the entries drawing.
+
 void TParallelCoordEditor::DoPaintEntries(Bool_t on)
 {
-   // Slot to postpone the entries drawing.
-
    if (fAvoidSignal) return;
 
    fParallel->SetBit(TParallelCoord::kPaintEntries,on);
@@ -893,11 +894,11 @@ void TParallelCoordEditor::DoPaintEntries(Bool_t on)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the line color of selection.
+
 void TParallelCoordEditor::DoSelectLineColor(Pixel_t a)
 {
-   // Slot to set the line color of selection.
-
    if (fAvoidSignal) return;
 
    TParallelCoordSelect* sel = fParallel->GetCurrentSelection();
@@ -907,11 +908,11 @@ void TParallelCoordEditor::DoSelectLineColor(Pixel_t a)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the line width of selection.
+
 void TParallelCoordEditor::DoSelectLineWidth(Int_t wid)
 {
-   // Slot to set the line width of selection.
-
    if (fAvoidSignal) return;
 
    TParallelCoordSelect* sel = fParallel->GetCurrentSelection();
@@ -922,11 +923,11 @@ void TParallelCoordEditor::DoSelectLineWidth(Int_t wid)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the selection beeing edited.
+
 void TParallelCoordEditor::DoSelectionSelect(const char* title)
 {
-   // Slot to set the selection beeing edited.
-
    if (fAvoidSignal) return;
 
    if (!fParallel->SetCurrentSelection(title)) return;
@@ -942,11 +943,11 @@ void TParallelCoordEditor::DoSelectionSelect(const char* title)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to show or not the ranges on the pad.
+
 void TParallelCoordEditor::DoShowRanges(Bool_t s)
 {
-   // Slot to show or not the ranges on the pad.
-
    if (fAvoidSignal) return;
 
    TParallelCoordSelect *select = fParallel->GetCurrentSelection();
@@ -957,11 +958,11 @@ void TParallelCoordEditor::DoShowRanges(Bool_t s)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to reset the tree entry list to the original one.
+
 void TParallelCoordEditor::DoUnApply()
 {
-   // Slot to reset the tree entry list to the original one.
-
    if (fAvoidSignal) return;
 
    fParallel->ResetTree();
@@ -970,18 +971,19 @@ void TParallelCoordEditor::DoUnApply()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to select a variable.
+
 void TParallelCoordEditor::DoVariableSelect(const char* /*var*/)
 {
-   // Slot to select a variable.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to update the weight cut.
+
 void TParallelCoordEditor::DoWeightCut()
 {
-   // Slot to update the weight cut.
-
    if (fAvoidSignal) return;
 
    Int_t n = (Int_t)fWeightCutField->GetNumber();
@@ -990,11 +992,11 @@ void TParallelCoordEditor::DoWeightCut()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the used parallel coordinates plot attributes.
+
 void TParallelCoordEditor::SetModel(TObject* obj)
 {
-   // Pick up the used parallel coordinates plot attributes.
-
    if (!obj) return;
    fParallel = dynamic_cast<TParallelCoord*>(obj);
    if (!fParallel) return;

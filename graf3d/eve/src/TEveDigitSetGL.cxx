@@ -22,18 +22,19 @@
 
 ClassImp(TEveDigitSetGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveDigitSetGL::TEveDigitSetGL() :
    TGLObject(), fHighlightSet(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color for rendering of the specified digit.
+
 Bool_t TEveDigitSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) const
 {
-   // Set color for rendering of the specified digit.
-
    TEveDigitSet &DS = * (TEveDigitSet*) fExternalObj;
 
    if (DS.fSingleColor)
@@ -60,13 +61,13 @@ Bool_t TEveDigitSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a decision if the frame should be drawn.
+/// This depends on the render state (selection / highligt) and
+/// on values of members fSelectViaFrame and fHighlightFrame.
+
 void TEveDigitSetGL::DrawFrameIfNeeded(TGLRnrCtx& rnrCtx) const
 {
-   // Make a decision if the frame should be drawn.
-   // This depends on the render state (selection / highligt) and
-   // on values of members fSelectViaFrame and fHighlightFrame.
-
    TEveDigitSet &DS = * (TEveDigitSet*)fExternalObj;
 
    if (DS.fFrame != 0 && ! rnrCtx.SecSelection() &&
@@ -77,20 +78,20 @@ void TEveDigitSetGL::DrawFrameIfNeeded(TGLRnrCtx& rnrCtx) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box.
+
 void TEveDigitSetGL::SetBBox()
 {
-   // Set bounding box.
-
    SetAxisAlignedBBox(((TEveDigitSet*)fExternalObj)->AssertBBox());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the quad-set in highlight mode.
+/// Incoming lvl is ignored -- physical shape always calls it with -1.
+
 void TEveDigitSetGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t /*lvl*/) const
 {
-   // Draw the quad-set in highlight mode.
-   // Incoming lvl is ignored -- physical shape always calls it with -1.
-
    TEveDigitSet &DS = * (TEveDigitSet*)fExternalObj;
 
    if (AlwaysSecondarySelect())
@@ -113,13 +114,13 @@ void TEveDigitSetGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Processes secondary selection from TGLViewer.
+/// Calls DigitSelected(Int_t) in the model object with index of
+/// selected point as the argument.
+
 void TEveDigitSetGL::ProcessSelection(TGLRnrCtx& /*rnrCtx*/, TGLSelectRecord& rec)
 {
-   // Processes secondary selection from TGLViewer.
-   // Calls DigitSelected(Int_t) in the model object with index of
-   // selected point as the argument.
-
    TEveDigitSet &DS = * (TEveDigitSet*)fExternalObj;
 
    if (AlwaysSecondarySelect())

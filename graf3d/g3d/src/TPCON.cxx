@@ -40,11 +40,11 @@ ClassImp(TPCON)
 //     - z          array of dimension nz with z position of given plane
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PCON shape default constructor
+
 TPCON::TPCON()
 {
-   // PCON shape default constructor
-
    fRmin  = 0;
    fRmax  = 0;
    fDz    = 0;
@@ -57,14 +57,14 @@ TPCON::TPCON()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PCON shape normal constructor
+///
+/// Parameters of the nz positions must be entered via TPCON::DefineSection.
+
 TPCON::TPCON(const char *name, const char *title, const char *material, Float_t phi1, Float_t dphi1, Int_t nz)
       : TShape(name, title,material)
 {
-   // PCON shape normal constructor
-   //
-   // Parameters of the nz positions must be entered via TPCON::DefineSection.
-
    if (nz < 2 ) {
       Error(name, "number of z planes for %s must be at least two !", name);
       return;
@@ -85,7 +85,9 @@ TPCON::TPCON(const char *name, const char *title, const char *material, Float_t 
    MakeTableOfCoSin();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TPCON::TPCON(const TPCON& pc) :
   TShape(pc),
   fSiTab(pc.fSiTab),
@@ -98,13 +100,13 @@ TPCON::TPCON(const TPCON& pc) :
   fRmax(pc.fRmax),
   fDz(pc.fDz)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignement operator
+
 TPCON& TPCON::operator=(const TPCON& pc)
 {
-   //assignement operator
    if(this!=&pc) {
       TShape::operator=(pc);
       fSiTab=pc.fSiTab;
@@ -120,11 +122,11 @@ TPCON& TPCON::operator=(const TPCON& pc)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make table of cosine and sine
+
 void TPCON::MakeTableOfCoSin() const
 {
-   // Make table of cosine and sine
-
    const Double_t pi  = TMath::ATan(1) * 4.0;
    const Double_t ragrad  = pi/180.0;
 
@@ -145,11 +147,11 @@ void TPCON::MakeTableOfCoSin() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PCON shape default destructor
+
 TPCON::~TPCON()
 {
-   // PCON shape default destructor
-
    if (fRmin) delete [] fRmin;
    if (fRmax) delete [] fRmax;
    if (fDz)   delete [] fDz;
@@ -164,17 +166,17 @@ TPCON::~TPCON()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines section secNum of the polycone
+///
+///     - rmin  radius of the inner circle in the cross-section
+///
+///     - rmax  radius of the outer circle in the cross-section
+///
+///     - z     z coordinate of the section
+
 void TPCON::DefineSection(Int_t secNum, Float_t z, Float_t rmin, Float_t rmax)
 {
-   // Defines section secNum of the polycone
-   //
-   //     - rmin  radius of the inner circle in the cross-section
-   //
-   //     - rmax  radius of the outer circle in the cross-section
-   //
-   //     - z     z coordinate of the section
-
    if ((secNum < 0) || (secNum >= fNz)) return;
 
    fRmin[secNum] = rmin;
@@ -183,25 +185,25 @@ void TPCON::DefineSection(Int_t secNum, Float_t z, Float_t rmin, Float_t rmax)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a PCON
+///
+/// Compute the closest distance of approach from point px,py to each
+/// computed outline point of the PCON.
+
 Int_t TPCON::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a PCON
-   //
-   // Compute the closest distance of approach from point px,py to each
-   // computed outline point of the PCON.
-
    Int_t n = GetNumberOfDivisions()+1;
    Int_t numPoints = fNz*2*n;
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the table of cos and sin to prepare drawing
+
 void  TPCON::FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const
 {
-   // Fill the table of cos and sin to prepare drawing
-
    Double_t ph = phi-angstep;
    for (Int_t j = 0; j < n; j++) {
       ph += angstep;
@@ -211,22 +213,22 @@ void  TPCON::FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set number of divisions.
+
 void TPCON::SetNumberOfDivisions (Int_t p)
 {
-   // Set number of divisions.
-
    if (GetNumberOfDivisions () == p) return;
    fNdiv=p;
    MakeTableOfCoSin();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create PCON points
+
 void TPCON::SetPoints(Double_t *points) const
 {
-   // Create PCON points
-
    Int_t i, j;
    Int_t indx = 0;
 
@@ -250,11 +252,11 @@ void TPCON::SetPoints(Double_t *points) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return total X3D needed by TNode::ls (when called with option "x")
+
 void TPCON::Sizeof3D() const
 {
-   // Return total X3D needed by TNode::ls (when called with option "x")
-
    Int_t n;
 
    n = GetNumberOfDivisions()+1;
@@ -265,11 +267,11 @@ void TPCON::Sizeof3D() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object
+
 void TPCON::Streamer(TBuffer &b)
 {
-   // Stream a class object
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
@@ -298,11 +300,11 @@ void TPCON::Streamer(TBuffer &b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get buffer 3d.
+
 const TBuffer3D & TPCON::GetBuffer3D(Int_t reqSections) const
 {
-   // Get buffer 3d.
-
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);
@@ -339,11 +341,11 @@ const TBuffer3D & TPCON::GetBuffer3D(Int_t reqSections) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set segments and polygons.
+
 Bool_t TPCON::SetSegsAndPols(TBuffer3D & buffer) const
 {
-   // Set segments and polygons.
-
    if (fNz < 2) return kFALSE;
    const Int_t n = GetNumberOfDivisions()+1;
    Bool_t specialCase = (fDphi1 == 360);

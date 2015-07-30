@@ -56,7 +56,8 @@ using namespace std;
 TDirectory* RooUnitTest::gMemDir = 0 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooUnitTest::RooUnitTest(const char* name, TFile* refFile, Bool_t writeRef, Int_t verbose) : TNamed(name,name), 
   			                         _refFile(refFile), _debug(kFALSE), _write(writeRef), _verb(verbose)
 {
@@ -64,13 +65,15 @@ RooUnitTest::RooUnitTest(const char* name, TFile* refFile, Bool_t writeRef, Int_
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooUnitTest::~RooUnitTest() 
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooUnitTest::regPlot(RooPlot* frame, const char* refName) 
 {
   if (_refFile) {
@@ -83,7 +86,8 @@ void RooUnitTest::regPlot(RooPlot* frame, const char* refName)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooUnitTest::regResult(RooFitResult* r, const char* refName) 
 {
   if (_refFile) {
@@ -95,7 +99,8 @@ void RooUnitTest::regResult(RooFitResult* r, const char* refName)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooUnitTest::regValue(Double_t d, const char* refName) 
 {
   if (_refFile) {
@@ -105,7 +110,8 @@ void RooUnitTest::regValue(Double_t d, const char* refName)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooUnitTest::regTable(RooTable* t, const char* refName) 
 {
   if (_refFile) {
@@ -117,7 +123,8 @@ void RooUnitTest::regTable(RooTable* t, const char* refName)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooUnitTest::regWS(RooWorkspace* ws, const char* refName) 
 {
   if (_refFile) {
@@ -129,7 +136,8 @@ void RooUnitTest::regWS(RooWorkspace* ws, const char* refName)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooUnitTest::regTH(TH1* th, const char* refName) 
 {
   if (_refFile) {
@@ -141,7 +149,8 @@ void RooUnitTest::regTH(TH1* th, const char* refName)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooWorkspace* RooUnitTest::getWS(const char* refName) 
 {
   RooWorkspace* ws = dynamic_cast<RooWorkspace*>(_refFile->Get(refName)) ;
@@ -155,7 +164,8 @@ RooWorkspace* RooUnitTest::getWS(const char* refName)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t RooUnitTest::areTHidentical(TH1* htest, TH1* href) 
 {
   if (htest->GetDimension() != href->GetDimension()) {
@@ -200,7 +210,8 @@ Bool_t RooUnitTest::areTHidentical(TH1* htest, TH1* href)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t RooUnitTest::runCompTests() 
 {
   Bool_t ret = kTRUE ;
@@ -529,7 +540,8 @@ Bool_t RooUnitTest::runCompTests()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooUnitTest::setSilentMode() 
 {
   RooMsgService::instance().setSilentMode(kTRUE) ;
@@ -541,7 +553,8 @@ void RooUnitTest::setSilentMode()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooUnitTest::clearSilentMode() 
 {
   RooMsgService::instance().setSilentMode(kFALSE) ;
@@ -552,7 +565,8 @@ void RooUnitTest::clearSilentMode()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t RooUnitTest::runTest()
 {
   gMemDir->cd() ;
@@ -588,8 +602,9 @@ Bool_t RooUnitTest::runTest()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set gMemDir to memDir
+
 void RooUnitTest::setMemDir(TDirectory* memDir) {
-   // Set gMemDir to memDir
    gMemDir = memDir ;
 }

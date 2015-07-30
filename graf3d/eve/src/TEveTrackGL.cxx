@@ -27,33 +27,33 @@
 
 ClassImp(TEveTrackGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TEveTrackGL::TEveTrackGL() : TEveLineGL()
 {
-   // Default constructor.
-
    // fDLCache = false; // Disable display list.
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveTrackGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    TEveLineGL::SetModel(obj);
    fTrack = DynCast<TEveTrack>(obj);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Processes secondary selection from TGLViewer.
+/// Just calls SecSelected(track) in model object which emits a signal.
+/// This is used in user code for alternate selection of good / bad tracks.
+
 void TEveTrackGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec)
 {
-   // Processes secondary selection from TGLViewer.
-   // Just calls SecSelected(track) in model object which emits a signal.
-   // This is used in user code for alternate selection of good / bad tracks.
-
    if (gDebug > 0)
    {
       printf("TEveTrackGL::ProcessSelection %d names on the stack (z1=%g, z2=%g).\n",
@@ -66,22 +66,22 @@ void TEveTrackGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec
    fTrack->SecSelected(fTrack);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GL rendering code.
+/// Virtual from TGLLogicalShape.
+
 void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // GL rendering code.
-   // Virtual from TGLLogicalShape.
-
    TEveLineGL::DirectDraw(rnrCtx);
 
    RenderPathMarksAndFirstVertex(rnrCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render path-marks and the first vertex, if required.
+
 void TEveTrackGL::RenderPathMarksAndFirstVertex(TGLRnrCtx& rnrCtx) const
 {
-   // Render path-marks and the first vertex, if required.
-
    TEveTrackPropagator          &rTP = *fTrack->GetPropagator();
    const TEveTrack::vPathMark_t &pms =  fTrack->RefPathMarks();
    if ( ! pms.empty())

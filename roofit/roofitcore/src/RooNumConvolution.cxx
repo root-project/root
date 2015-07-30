@@ -81,7 +81,8 @@ ClassImp(RooNumConvolution)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNumConvolution::RooNumConvolution() :
   _init(kFALSE),
   _integrand(0),
@@ -99,7 +100,16 @@ RooNumConvolution::RooNumConvolution() :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of convolution operator PDF
+/// 
+/// convVar  :  convolution variable (on which both pdf and resmodel should depend)
+/// pdf      :  input 'physics' pdf
+/// resmodel :  input 'resultion' pdf
+///
+/// output is pdf(x) (X) resmodel(x) = Int [ pdf(x') resmodel (x-x') ] dx'
+///
+
 RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRealVar& convVar, RooAbsReal& inPdf, RooAbsReal& resmodel, const RooNumConvolution* proto) : 
   RooAbsReal(name,title), 
   _init(kFALSE),
@@ -121,15 +131,6 @@ RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRea
   _doProf(kFALSE),
   _callHist(0)
 {
-  // Constructor of convolution operator PDF
-  // 
-  // convVar  :  convolution variable (on which both pdf and resmodel should depend)
-  // pdf      :  input 'physics' pdf
-  // resmodel :  input 'resultion' pdf
-  //
-  // output is pdf(x) (X) resmodel(x) = Int [ pdf(x') resmodel (x-x') ] dx'
-  //
-
   // Use Adaptive Gauss-Kronrod integration by default for the convolution integral
   _convIntConfig.method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D") ;
   _convIntConfig.method1DOpen().setLabel("RooAdaptiveGaussKronrodIntegrator1D") ;
@@ -144,7 +145,9 @@ RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRea
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooNumConvolution::RooNumConvolution(const RooNumConvolution& other, const char* name) :
   RooAbsReal(other,name),
   _init(kFALSE),
@@ -166,16 +169,15 @@ RooNumConvolution::RooNumConvolution(const RooNumConvolution& other, const char*
   _doProf(other._doProf),
   _callHist(other._callHist)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One-time initialization of object
+
 void RooNumConvolution::initialize() const
 {
-  // One-time initialization of object
-
   // Initialization function -- create clone of convVar (x') and deep-copy clones of pdf and
   // model that are connected to x' rather than x (convVar)
 
@@ -215,19 +217,20 @@ void RooNumConvolution::initialize() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNumConvolution::~RooNumConvolution() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate convolution integral
+
 Double_t RooNumConvolution::evaluate() const 
 {
-  // Calculate convolution integral
-
   // Check if deferred initialization has occurred
   if (!_init) initialize() ;
 
@@ -262,36 +265,36 @@ Double_t RooNumConvolution::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Intercept server redirects. Throw away cache, as figuring out redirections on the cache is an unsolvable problem.   
+
 Bool_t RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
 					      Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
-  // Intercept server redirects. Throw away cache, as figuring out redirections on the cache is an unsolvable problem.   
-  
   _init = kFALSE ;
   return kFALSE ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Removes previously defined convolution window, reverting to convolution from -inf to +inf
+
 void RooNumConvolution::clearConvolutionWindow() 
 {
-  // Removes previously defined convolution window, reverting to convolution from -inf to +inf
-
   _useWindow = kFALSE ;
   _windowParam.removeAll() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restrict convolution integral to finite range [ x - C - S*W, x - C + S*W ] 
+/// where x is current value of convolution variablem, C = centerParam, W=widthParam and S = widthScaleFactor
+/// Inputs centerParam and withParam can be function expressions (RooAbsReal, RooFormulaVar) etc.
+
 void RooNumConvolution::setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, Double_t widthScaleFactor) 
 {
-  // Restrict convolution integral to finite range [ x - C - S*W, x - C + S*W ] 
-  // where x is current value of convolution variablem, C = centerParam, W=widthParam and S = widthScaleFactor
-  // Inputs centerParam and withParam can be function expressions (RooAbsReal, RooFormulaVar) etc.
-
   _useWindow = kTRUE ;
   _windowParam.removeAll() ;
   _windowParam.add(centerParam) ;
@@ -301,12 +304,12 @@ void RooNumConvolution::setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate warning messages if number of function calls needed for evaluation of convolution integral 
+/// exceeds given threshold
+
 void RooNumConvolution::setCallWarning(Int_t threshold) 
 {
-  // Activate warning messages if number of function calls needed for evaluation of convolution integral 
-  // exceeds given threshold
-
   if (threshold<0) {
     coutE(InputArguments) << "RooNumConvolution::setCallWarning(" << GetName() << ") ERROR: threshold must be positive, value unchanged" << endl ;
     return ;
@@ -315,20 +318,20 @@ void RooNumConvolution::setCallWarning(Int_t threshold)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate call profile if flag is set to true. A 2-D histogram is kept that stores the required number
+/// of function calls versus the value of x, the convolution variable
+///
+/// All clones of RooNumConvolution objects will keep logging to the histogram of the original class
+/// so that performance of temporary object clones, such as used in e.g. fitting, plotting and generating
+/// are all logged in a single place.
+/// 
+/// Function caller should take ownership of profiling histogram as it is not deleted at the RooNumConvolution dtor
+///
+/// Calling this function with flag set to false will deactivate call profiling and delete the profiling histogram
+
 void RooNumConvolution::setCallProfiling(Bool_t flag, Int_t nbinX, Int_t nbinCall, Int_t nCallHigh) 
 {
-  // Activate call profile if flag is set to true. A 2-D histogram is kept that stores the required number
-  // of function calls versus the value of x, the convolution variable
-  //
-  // All clones of RooNumConvolution objects will keep logging to the histogram of the original class
-  // so that performance of temporary object clones, such as used in e.g. fitting, plotting and generating
-  // are all logged in a single place.
-  // 
-  // Function caller should take ownership of profiling histogram as it is not deleted at the RooNumConvolution dtor
-  //
-  // Calling this function with flag set to false will deactivate call profiling and delete the profiling histogram
-
   if (flag) {
     if (_doProf) {
       delete _callHist ;
@@ -349,12 +352,12 @@ void RooNumConvolution::setCallProfiling(Bool_t flag, Int_t nbinX, Int_t nbinCal
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hook function to intercept printCompactTree() calls so that it can print out
+/// the content of its private cache in the print sequence
+
 void RooNumConvolution::printCompactTreeHook(ostream& os, const char* indent) 
 {
-  // Hook function to intercept printCompactTree() calls so that it can print out
-  // the content of its private cache in the print sequence
-
   os << indent << "RooNumConvolution begin cache" << endl ;
 
   if (_init) {

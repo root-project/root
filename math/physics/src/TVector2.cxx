@@ -19,59 +19,67 @@ Double_t const  kTWOPI     = 2.*kPI;
 
 ClassImp(TVector2)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TVector2::TVector2()
 {
-   //constructor
    fX = 0.;
    fY = 0.;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TVector2::TVector2(Double_t *v)
 {
-   //constructor
    fX = v[0];
    fY = v[1];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TVector2::TVector2(Double_t x0, Double_t y0)
 {
-   //constructor
    fX = x0;
    fY = y0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TVector2::~TVector2()
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return modulo of this vector
+
 Double_t TVector2::Mod() const
 {
-   // return modulo of this vector
    return TMath::Sqrt(fX*fX+fY*fY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return module normalized to 1
+
 TVector2 TVector2::Unit() const
 {
-   // return module normalized to 1
    return (Mod2()) ? *this/Mod() : TVector2();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return vector phi
+
 Double_t TVector2::Phi() const
 {
-   // return vector phi
    return TMath::Pi()+TMath::ATan2(-fY,-fX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// (static function) returns phi angle in the interval [0,2*PI)
+
 Double_t TVector2::Phi_0_2pi(Double_t x) {
-   // (static function) returns phi angle in the interval [0,2*PI)
    if(TMath::IsNaN(x)){
       gROOT->Error("TVector2::Phi_0_2pi","function called with NaN");
       return x;
@@ -81,9 +89,10 @@ Double_t TVector2::Phi_0_2pi(Double_t x) {
    return x;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// (static function) returns phi angle in the interval [-PI,PI)
+
 Double_t TVector2::Phi_mpi_pi(Double_t x) {
-   // (static function) returns phi angle in the interval [-PI,PI)
    if(TMath::IsNaN(x)){
       gROOT->Error("TVector2::Phi_mpi_pi","function called with NaN");
       return x;
@@ -93,26 +102,28 @@ Double_t TVector2::Phi_mpi_pi(Double_t x) {
    return x;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///rotation by phi
+
 TVector2 TVector2::Rotate (Double_t phi) const
 {
-   //rotation by phi
    return TVector2( fX*TMath::Cos(phi)-fY*TMath::Sin(phi), fX*TMath::Sin(phi)+fY*TMath::Cos(phi) );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set vector using mag and phi
+
 void TVector2::SetMagPhi(Double_t mag, Double_t phi)
 {
-   //set vector using mag and phi
    Double_t amag = TMath::Abs(mag);
    fX = amag * TMath::Cos(phi);
    fY = amag * TMath::Sin(phi);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TVector2.
+
 void TVector2::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TVector2.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

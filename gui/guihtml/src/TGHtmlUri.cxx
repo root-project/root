@@ -48,11 +48,11 @@ static char *Trim(char *z);
 #endif
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse a text URI into an HtmlUri structure.
+
 TGHtmlUri::TGHtmlUri(const char *zUri)
 {
-   // Parse a text URI into an HtmlUri structure.
-
    int n;
 
    fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = (char *) 0;
@@ -86,11 +86,11 @@ TGHtmlUri::TGHtmlUri(const char *zUri)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Html uri copy constructor.
+
 TGHtmlUri::TGHtmlUri(const TGHtmlUri *uri)
 {
-   // Html uri copy constructor.
-
    fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = (char *) 0;
 
    if (uri) {
@@ -102,11 +102,11 @@ TGHtmlUri::TGHtmlUri(const TGHtmlUri *uri)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Html uri destructor.
+
 TGHtmlUri::~TGHtmlUri()
 {
-   // Html uri destructor.
-
    if (fZScheme) delete[] fZScheme;
    if (fZAuthority) delete[] fZAuthority;
    if (fZPath) delete[] fZPath;
@@ -114,11 +114,11 @@ TGHtmlUri::~TGHtmlUri()
    if (fZFragment) delete[] fZFragment;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare another uri with given field mask.
+
 int TGHtmlUri::EqualsUri(const TGHtmlUri *uri, int field_mask)
 {
-   // Compare another uri with given field mask.
-
    if (!uri) return 0;
 
    if (field_mask & URI_SCHEME_MASK) {
@@ -164,23 +164,24 @@ int TGHtmlUri::EqualsUri(const TGHtmlUri *uri, int field_mask)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the length of the next component of the URL in z[] given
+/// that the component starts at z[0].  The initial sequence of the
+/// component must be zInit[].  The component is terminated by any
+/// character in zTerm[].  The length returned is 0 if the component
+/// doesn't exist.  The length includes the zInit[] string, but not
+/// the termination character.
+///
+///        Component        zInit      zTerm
+///        ----------       -------    -------
+///        scheme           ""         ":/?#"
+///        authority        "//"       "/?#"
+///        path             "/"        "?#"
+///        query            "?"        "#"
+///        fragment         "#"        ""
+
 int TGHtmlUri::ComponentLength(const char *z, const char *zInit, const char *zTerm)
 {
-   // Return the length of the next component of the URL in z[] given
-   // that the component starts at z[0].  The initial sequence of the
-   // component must be zInit[].  The component is terminated by any
-   // character in zTerm[].  The length returned is 0 if the component
-   // doesn't exist.  The length includes the zInit[] string, but not
-   // the termination character.
-   //
-   //        Component        zInit      zTerm
-   //        ----------       -------    -------
-   //        scheme           ""         ":/?#"
-   //        authority        "//"       "/?#"
-   //        path             "/"        "?#"
-   //        query            "?"        "#"
-   //        fragment         "#"        ""
    int i, n;
 
    for (n = 0; zInit[n]; ++n) {
@@ -196,12 +197,12 @@ int TGHtmlUri::ComponentLength(const char *z, const char *zInit, const char *zTe
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a string to hold the given URI. Memory to hold the string is
+/// allocated with new[] and must be freed by the calling function.
+
 char *TGHtmlUri::BuildUri()
 {
-   // Create a string to hold the given URI. Memory to hold the string is
-   // allocated with new[] and must be freed by the calling function.
-
    int n = 1;
    char *z;
 
@@ -250,11 +251,11 @@ char *TGHtmlUri::BuildUri()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Duplicate a string of length n.
+
 static char *StrNDup(const char *z, int n)
 {
-   // Duplicate a string of length n.
-
    char *zResult;
 
    if (n <= 0) n = strlen(z);
@@ -266,11 +267,11 @@ static char *StrNDup(const char *z, int n)
    return zResult;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace the string in *pzDest with the string in zSrc
+
 static void ReplaceStr(char **pzDest, const char *zSrc)
 {
-   // Replace the string in *pzDest with the string in zSrc
-
    if (*pzDest != 0) delete[] *pzDest;
    if (zSrc == 0) {
       *pzDest = 0;
@@ -298,13 +299,13 @@ static char *Trim(char *z)
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function resolves the specified URI and returns the result in
+/// a newly allocated string. The resolver algorithm specified in section
+/// 5.2 of RFC 2396 is used.
+
 char *TGHtml::ResolveUri(const char *zUri)
 {
-   // This function resolves the specified URI and returns the result in
-   // a newly allocated string. The resolver algorithm specified in section
-   // 5.2 of RFC 2396 is used.
-
    char *result = 0;
    TGHtmlUri *base, *term;
 

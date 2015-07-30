@@ -49,7 +49,8 @@ ClassImp(RooStudyManager)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStudyManager::RooStudyManager(RooWorkspace& w)
 {  
   _pkg = new RooStudyPackage(w) ;
@@ -57,7 +58,8 @@ RooStudyManager::RooStudyManager(RooWorkspace& w)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStudyManager::RooStudyManager(RooWorkspace& w, RooAbsStudy& study)
 {  
   _pkg = new RooStudyPackage(w) ;
@@ -65,7 +67,8 @@ RooStudyManager::RooStudyManager(RooWorkspace& w, RooAbsStudy& study)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStudyManager::RooStudyManager(const char* studyPackFileName) 
 {
   string pwd = gDirectory->GetName() ;
@@ -76,7 +79,8 @@ RooStudyManager::RooStudyManager(const char* studyPackFileName)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooStudyManager::addStudy(RooAbsStudy& study) 
 {
   _pkg->addStudy(study) ;
@@ -85,7 +89,8 @@ void RooStudyManager::addStudy(RooAbsStudy& study)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooStudyManager::run(Int_t nExperiments) 
 {
   _pkg->driver(nExperiments) ;
@@ -93,10 +98,11 @@ void RooStudyManager::run(Int_t nExperiments)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open PROOF-Lite session
+
 void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t showGui) 
 {
-  // Open PROOF-Lite session
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") opening PROOF session" << endl ;
   void* p = (void*) gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)) ;
 
@@ -132,15 +138,15 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// "Option_t *option" takes the parameters forwarded to gProof->Close(option).
+///
+/// This function is intended for scripts that run in loops
+/// where it is essential to properly close all connections and delete
+/// the TProof instance (frees ports).
+
 void RooStudyManager::closeProof(Option_t *option)
 {
-  // "Option_t *option" takes the parameters forwarded to gProof->Close(option).
-  //
-  // This function is intended for scripts that run in loops
-  // where it is essential to properly close all connections and delete
-  // the TProof instance (frees ports).
-
   if (gROOT->GetListOfProofs()->LastIndex() != -1  &&  gROOT->ProcessLineFast("gProof;"))
   {
     gROOT->ProcessLineFast(Form("gProof->Close(\"%s\") ;",option)) ;
@@ -158,7 +164,8 @@ void RooStudyManager::closeProof(Option_t *option)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob, Bool_t unifiedInput=kFALSE) 
 {
   TFile f(Form("study_data_%s.root",studyName),"RECREATE") ;
@@ -209,7 +216,8 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooStudyManager::processBatchOutput(const char* filePat) 
 {
   list<string> flist ;
@@ -238,7 +246,8 @@ void RooStudyManager::processBatchOutput(const char* filePat)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooStudyManager::aggregateData(TList* olist) 
 {
   for (list<RooAbsStudy*>::iterator iter=_pkg->studies().begin() ; iter!=_pkg->studies().end() ; iter++) {
@@ -249,10 +258,11 @@ void RooStudyManager::aggregateData(TList* olist)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// case with one single file
+
 void RooStudyManager::expandWildCardSpec(const char* name, list<string>& result)
 {
-  // case with one single file
   if (!TString(name).MaybeWildcard()) {
     result.push_back(name) ;
     return ;

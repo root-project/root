@@ -68,11 +68,11 @@ TMemStatMng::TMemStatMng():
    // Default constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize MemStat manager - used only by instance method
+
 void TMemStatMng::Init()
 {
-   //Initialize MemStat manager - used only by instance method
-
    fBeginTime = fTimeStamp.AsDouble();
 
    fDumpFile = new TFile(Form("memstat_%d.root", gSystem->GetPid()), "recreate");
@@ -112,12 +112,12 @@ void TMemStatMng::Init()
    fDumpTree->SetAutoSave(10000000);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GetInstance - a static function
+/// Initialize a singleton of MemStat manager
+
 TMemStatMng* TMemStatMng::GetInstance()
 {
-   // GetInstance - a static function
-   // Initialize a singleton of MemStat manager
-
    if(!fgInstance) {
       fgInstance = new TMemStatMng;
       fgInstance->Init();
@@ -125,13 +125,13 @@ TMemStatMng* TMemStatMng::GetInstance()
    return fgInstance;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close - a static function
+/// This method stops the manager,
+/// flashes all the buffered data and closes the output tree.
+
 void TMemStatMng::Close()
 {
-   // Close - a static function
-   // This method stops the manager,
-   // flashes all the buffered data and closes the output tree.
-
    // TODO: This is a temporary solution until we find a properalgorithm for SaveData
    //fgInstance->fDumpFile->WriteObject(fgInstance->fFAddrsList, "FAddrsList");
 
@@ -186,11 +186,11 @@ void TMemStatMng::Close()
    fgInstance = NULL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// if an instance is destructed - the hooks are reseted to old hooks
+
 TMemStatMng::~TMemStatMng()
 {
-   // if an instance is destructed - the hooks are reseted to old hooks
-
    if(this != TMemStatMng::GetInstance())
       return;
 
@@ -200,13 +200,13 @@ TMemStatMng::~TMemStatMng()
    Disable();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the maximum number of alloc/free calls to be buffered.
+///if the alloc and free are in the buffer, the corresponding entries
+///are not saved tio the Tree, reducing considerably the Tree output size
+
 void TMemStatMng::SetBufferSize(Int_t buffersize)
 {
-   // Set the maximum number of alloc/free calls to be buffered.
-   //if the alloc and free are in the buffer, the corresponding entries
-   //are not saved tio the Tree, reducing considerably the Tree output size
-
    fBufferSize = buffersize;
    if (fBufferSize < 1) fBufferSize = 1;
    fBufN = 0;
@@ -218,19 +218,19 @@ void TMemStatMng::SetBufferSize(Int_t buffersize)
    fMustWrite = new Bool_t[fBufferSize];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the maximum number of new/delete registered in the output Tree.
+
 void TMemStatMng::SetMaxCalls(Int_t maxcalls)
 {
-   // Set the maximum number of new/delete registered in the output Tree.
-
    fMaxCalls = maxcalls;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable memory hooks
+
 void TMemStatMng::Enable()
 {
-   // Enable memory hooks
-
    if(this != GetInstance())
       return;
 #if defined(__APPLE__)
@@ -242,11 +242,11 @@ void TMemStatMng::Enable()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disble memory hooks
+
 void TMemStatMng::Disable()
 {
-   // Disble memory hooks
-
    //FillTree();
    if(this != GetInstance())
       return;
@@ -259,13 +259,13 @@ void TMemStatMng::Disable()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// AllocHook - a static function
+/// a special memory hook for Mac OS X memory zones.
+/// Triggered when memory is allocated.
+
 void TMemStatMng::MacAllocHook(void *ptr, size_t size)
 {
-   // AllocHook - a static function
-   // a special memory hook for Mac OS X memory zones.
-   // Triggered when memory is allocated.
-
    TMemStatMng* instance = TMemStatMng::GetInstance();
    // Restore all old hooks
    instance->Disable();
@@ -277,13 +277,13 @@ void TMemStatMng::MacAllocHook(void *ptr, size_t size)
    instance->Enable();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// AllocHook - a static function
+/// a special memory hook for Mac OS X memory zones.
+/// Triggered when memory is deallocated.
+
 void TMemStatMng::MacFreeHook(void *ptr)
 {
-   // AllocHook - a static function
-   // a special memory hook for Mac OS X memory zones.
-   // Triggered when memory is deallocated.
-
    TMemStatMng* instance = TMemStatMng::GetInstance();
    // Restore all old hooks
    instance->Disable();
@@ -295,12 +295,12 @@ void TMemStatMng::MacFreeHook(void *ptr)
    instance->Enable();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// AllocHook - a static function
+/// A glibc memory allocation hook.
+
 void *TMemStatMng::AllocHook(size_t size, const void* /*caller*/)
 {
-   // AllocHook - a static function
-   // A glibc memory allocation hook.
-
    TMemStatMng* instance = TMemStatMng::GetInstance();
    // Restore all old hooks
    instance->Disable();
@@ -317,12 +317,12 @@ void *TMemStatMng::AllocHook(size_t size, const void* /*caller*/)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// FreeHook - a static function
+/// A glibc memory deallocation hook.
+
 void TMemStatMng::FreeHook(void* ptr, const void* /*caller*/)
 {
-   // FreeHook - a static function
-   // A glibc memory deallocation hook.
-
    TMemStatMng* instance = TMemStatMng::GetInstance();
    // Restore all old hooks
    instance->Disable();
@@ -337,12 +337,13 @@ void TMemStatMng::FreeHook(void* ptr, const void* /*caller*/)
    instance->Enable();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// An internal function, which returns a bitid for a corresponding CRC digest
+/// cache variables
+
 Int_t TMemStatMng::generateBTID(UChar_t *CRCdigest, Int_t stackEntries,
                                 void **stackPointers)
 {
-   // An internal function, which returns a bitid for a corresponding CRC digest
-   // cache variables
    static Int_t old_btid = -1;
    static SCustomDigest old_digest;
 
@@ -422,13 +423,13 @@ Int_t TMemStatMng::generateBTID(UChar_t *CRCdigest, Int_t stackEntries,
    return ret_val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add pointer to table.
+/// This method is called every time when any of the hooks are triggered.
+/// The memory de-/allocation information will is recorded.
+
 void TMemStatMng::AddPointer(void *ptr, Int_t size)
 {
-   // Add pointer to table.
-   // This method is called every time when any of the hooks are triggered.
-   // The memory de-/allocation information will is recorded.
-
    void *stptr[g_BTStackLevel + 1];
    const int stackentries = getBacktrace(stptr, g_BTStackLevel, fUseGNUBuiltinBacktrace);
 
@@ -459,12 +460,12 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///loop on all entries in the buffer and fill the output Tree
+///entries with alloc and free in the buffer are eliminated
+
 void TMemStatMng::FillTree()
 {
-   //loop on all entries in the buffer and fill the output Tree
-   //entries with alloc and free in the buffer are eliminated
-
 
    //eliminate alloc/free pointing to the same location in the current buffer
    TMath::Sort(fBufN,fBufPos,fIndex,kFALSE);

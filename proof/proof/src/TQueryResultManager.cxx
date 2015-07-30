@@ -37,13 +37,13 @@
 #include "TSystem.h"
 #include "TVirtualProofPlayer.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQueryResultManager::TQueryResultManager(const char *qdir, const char *stag,
                                          const char *sdir,
                                          TProofLockPath *lck, FILE *logfile)
 {
-   // Constructor
-
    fQueryDir        = qdir;
    fSessionTag      = stag;
    fSessionDir      = sdir;
@@ -56,22 +56,22 @@ TQueryResultManager::TQueryResultManager(const char *qdir, const char *stag,
    fLogFile         = (logfile) ? logfile : stdout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup. Not really necessary since after this dtor there is no
+/// live anyway.
+
 TQueryResultManager::~TQueryResultManager()
 {
-   // Cleanup. Not really necessary since after this dtor there is no
-   // live anyway.
-
    SafeDelete(fQueries);
    SafeDelete(fPreviousQueries);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add part of log file concerning TQueryResult pq to its macro
+/// container.
+
 void TQueryResultManager::AddLogFile(TProofQueryResult *pq)
 {
-   // Add part of log file concerning TQueryResult pq to its macro
-   // container.
-
    if (!pq)
       return;
 
@@ -102,11 +102,11 @@ void TQueryResultManager::AddLogFile(TProofQueryResult *pq)
    // Restore initial position if partial send
    if (lnow >= 0) lseek(fileno(fLogFile), lnow, SEEK_SET);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all queries results referring to previous sessions
+
 Int_t TQueryResultManager::CleanupQueriesDir()
 {
-   // Remove all queries results referring to previous sessions
-
    Int_t nd = 0;
 
    // Cleanup previous stuff
@@ -150,13 +150,13 @@ Int_t TQueryResultManager::CleanupQueriesDir()
    return nd;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan the queries directory for the results of previous queries.
+/// The headers of the query results found are loaded in fPreviousQueries.
+/// The full query result can be retrieved via TProof::Retrieve.
+
 void TQueryResultManager::ScanPreviousQueries(const char *dir)
 {
-   // Scan the queries directory for the results of previous queries.
-   // The headers of the query results found are loaded in fPreviousQueries.
-   // The full query result can be retrieved via TProof::Retrieve.
-
    // Cleanup previous stuff
    if (fPreviousQueries) {
       fPreviousQueries->Delete();
@@ -229,13 +229,13 @@ void TQueryResultManager::ScanPreviousQueries(const char *dir)
    gSystem->FreeDirectory(dirs);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan the queries directory and remove the oldest ones (and relative dirs,
+/// if empty) in such a way only 'mxq' queries are kept.
+/// Return 0 on success, -1 in case of problems
+
 Int_t TQueryResultManager::ApplyMaxQueries(Int_t mxq)
 {
-   // Scan the queries directory and remove the oldest ones (and relative dirs,
-   // if empty) in such a way only 'mxq' queries are kept.
-   // Return 0 on success, -1 in case of problems
-
    // Nothing to do if mxq is -1.
    if (mxq < 0)
       return 0;
@@ -341,13 +341,13 @@ Int_t TQueryResultManager::ApplyMaxQueries(Int_t mxq)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try locking query area of session tagged sessiontag.
+/// The id of the locking file is returned in fid and must be
+/// unlocked via UnlockQueryFile(fid).
+
 Int_t TQueryResultManager::LockSession(const char *sessiontag, TProofLockPath **lck)
 {
-   // Try locking query area of session tagged sessiontag.
-   // The id of the locking file is returned in fid and must be
-   // unlocked via UnlockQueryFile(fid).
-
    // We do not need to lock our own session
    if (strstr(sessiontag, fSessionTag))
       return 0;
@@ -402,11 +402,11 @@ Int_t TQueryResultManager::LockSession(const char *sessiontag, TProofLockPath **
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup query dir qdir.
+
 Int_t TQueryResultManager::CleanupSession(const char *sessiontag)
 {
-   // Cleanup query dir qdir.
-
    if (!sessiontag) {
       Error("CleanupSession","session tag undefined");
       return -1;
@@ -444,12 +444,12 @@ Int_t TQueryResultManager::CleanupSession(const char *sessiontag)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save current status of query 'qr' to file name fout.
+/// If fout == 0 (default) use the default name.
+
 void TQueryResultManager::SaveQuery(TProofQueryResult *qr, const char *fout)
 {
-   // Save current status of query 'qr' to file name fout.
-   // If fout == 0 (default) use the default name.
-
    if (!qr || qr->IsDraw())
       return;
 
@@ -473,12 +473,12 @@ void TQueryResultManager::SaveQuery(TProofQueryResult *qr, const char *fout)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove everything about query queryref; if defined 'otherlist' will containe
+/// the list of removed pointers (already deleted)
+
 void TQueryResultManager::RemoveQuery(const char *queryref, TList *otherlist)
 {
-   // Remove everything about query queryref; if defined 'otherlist' will containe
-   // the list of removed pointers (already deleted)
-
    PDB(kGlobal, 1)
       Info("RemoveQuery", "Enter");
 
@@ -506,12 +506,12 @@ void TQueryResultManager::RemoveQuery(const char *queryref, TList *otherlist)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove everything about query qr. If soft = TRUE leave a track
+/// in memory with the relevant info
+
 void TQueryResultManager::RemoveQuery(TQueryResult *qr, Bool_t soft)
 {
-   // Remove everything about query qr. If soft = TRUE leave a track
-   // in memory with the relevant info
-
    PDB(kGlobal, 1)
       Info("RemoveQuery", "Enter");
 
@@ -542,13 +542,13 @@ void TQueryResultManager::RemoveQuery(TQueryResult *qr, Bool_t soft)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Locate query referenced by queryref. Return pointer to instance
+/// in memory, if any, or 0. Fills qdir with the query specific directory
+/// and qry with the query number for queries processed by this session.
+
 TProofQueryResult *TQueryResultManager::LocateQuery(TString queryref, Int_t &qry, TString &qdir)
 {
-   // Locate query referenced by queryref. Return pointer to instance
-   // in memory, if any, or 0. Fills qdir with the query specific directory
-   // and qry with the query number for queries processed by this session.
-
    TProofQueryResult *pqr = 0;
 
    // Find out if the request is a for a local query or for a
@@ -607,12 +607,12 @@ TProofQueryResult *TQueryResultManager::LocateQuery(TString queryref, Int_t &qry
    return pqr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Final steps after Process() to complete the TQueryResult instance.
+
 Bool_t TQueryResultManager::FinalizeQuery(TProofQueryResult *pq,
                                           TProof *proof, TVirtualProofPlayer *player)
 {
-   // Final steps after Process() to complete the TQueryResult instance.
-
    if (!pq || !proof || !player) {
       Warning("FinalizeQuery", "bad inputs: query = %p, proof = %p, player: %p ",
               pq ? pq : 0, proof ? proof : 0, player ? player : 0);
@@ -678,11 +678,11 @@ Bool_t TQueryResultManager::FinalizeQuery(TProofQueryResult *pq,
    return save;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save current query honouring the max number of queries allowed
+
 void TQueryResultManager::SaveQuery(TProofQueryResult *pq, Int_t mxq)
 {
-   // Save current query honouring the max number of queries allowed
-
    // We may need some cleanup
    if (mxq > -1) {
       if (fQueries && fKeptQueries >= mxq) {

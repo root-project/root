@@ -21,61 +21,58 @@ TString TArrow::fgDefaultOption     = ">";
 
 ClassImp(TArrow)
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>TArrow : to draw all kinds of arrows</h2></center>
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TArrow
+\brief Draw all kinds of Arrows.
+
 The different arrow's formats are explained in TArrow::TArrow.
 The picture below gives some examples.
-<P>
+
 Once an arrow is drawn on the screen:
-<ul>
-<li> One can click on one of the edges and move this edge.</li>
-<li> One can click on any other arrow part to move the entire arrow.</li>
-</ul>
-End_Html
+
+- One can click on one of the edges and move this edge.
+- One can click on any other arrow part to move the entire arrow.
+
 Begin_Macro(source)
 ../../../tutorials/graphics/arrow.C
-End_Macro */
+End_Macro
+*/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Arrow default constructor.
+
 TArrow::TArrow(): TLine(),TAttFill()
 {
-   // Arrow default constructor.
-
    fAngle     = fgDefaultAngle;
    fArrowSize = 0.;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   Arrow normal constructor.
+///
+/// Define an arrow between points x1,y1 and x2,y2
+/// the arrowsize is in percentage of the pad height
+/// Opening angle between the two sides of the arrow is fAngle (60 degrees)
+///
+///     option = ">"      -------->
+///     option = "|->"    |------->
+///     option = "<"      <--------
+///     option = "<-|"    <-------|
+///     option = "->-"    ---->----
+///     option = "-<-"    ----<----
+///     option = "-|>-"   ---|>----
+///     option = "<>"     <------->
+///     option = "<|>"    <|-----|>  arrow defined by a triangle
+///
+/// Note:
+///
+/// - If FillColor == 0 an open triangle is drawn, otherwise a full triangle is drawn with the fill color. The default is filled with LineColor
+/// -  The "Begin" and "end" bars options can be combined with any other options.
+
 TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
              Float_t arrowsize ,Option_t *option)
        :TLine(x1,y1,x2,y2), TAttFill(0,1001)
 {
-   /* Begin_Html
-   Arrow normal constructor.
-   <p>
-   Define an arrow between points x1,y1 and x2,y2
-   the arrowsize is in percentage of the pad height
-   Opening angle between the two sides of the arrow is fAngle (60 degrees)
-   <ul><tt>
-   <li> option = ">"      -------->
-   <li> option = "|->"    |------->
-   <li> option = "<"      <--------
-   <li> option = "<-|"    <-------|
-   <li> option = "->-"    ---->----
-   <li> option = "-<-"    ----<----
-   <li> option = "-|>-"   ---|>----
-   <li> option = "<>"     <------->
-   <li> option = "<|>"    <|-----|>  arrow defined by a triangle
-   </tt></ul>
-   Note:
-   <p>
-   <ul>
-   <li> If FillColor == 0 an open triangle is drawn, otherwise a full triangle
-   is drawn with the fill color. The default is filled with LineColor
-   <li> The "Begin" and "end" bars options can be combined with any other options.
-   </ul>
-   End_Html */
 
    fAngle       = fgDefaultAngle;
    fArrowSize   = arrowsize;
@@ -83,32 +80,29 @@ TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    SetFillColor(this->GetLineColor());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Arrow default destructor.
+
 TArrow::~TArrow()
 {
-   /* Begin_Html
-   Arrow default destructor.
-   End_Html */
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TArrow::TArrow(const TArrow &arrow) : TLine(), TAttFill()
 {
-   /* Begin_Html
-   Copy constructor.
-   End_Html */
 
    fAngle     = fgDefaultAngle;
    fArrowSize = 0.;
    ((TArrow&)arrow).Copy(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this arrow to arro
+
 void TArrow::Copy(TObject &obj) const
 {
-   /* Begin_Html
-   Copy this arrow to arrow.
-   End_Html */
 
    TLine::Copy(obj);
    TAttFill::Copy(((TArrow&)obj));
@@ -117,12 +111,11 @@ void TArrow::Copy(TObject &obj) const
    ((TArrow&)obj).fOption     = fOption;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this arrow with its current attributes.
+
 void TArrow::Draw(Option_t *option)
 {
-   /* Begin_Html
-   Draw this arrow with its current attributes.
-   End_Html */
 
    Option_t *opt;
    if (option && strlen(option)) opt = option;
@@ -132,16 +125,15 @@ void TArrow::Draw(Option_t *option)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this arrow with new coordinates.
+///
+/// if `arrowsize` is <= 0, `arrowsize` will be the current arrow size
+/// if `option=""`, `option` will be the current arrow option
+
 void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                      Float_t arrowsize ,Option_t *option)
 {
-   /* Begin_Html
-   Draw this arrow with new coordinates.
-
-   if arrowsize is <= 0, arrowsize will be the current arrow size
-   if option="", option will be the current arrow option
-   End_Html */
 
    Float_t size = arrowsize;
    if (size <= 0) size = fArrowSize;
@@ -157,12 +149,11 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    newarrow->AppendPad(opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this arrow with its current attributes.
+
 void TArrow::Paint(Option_t *option)
 {
-   /* Begin_Html
-   Paint this arrow with its current attributes.
-   End_Html */
 
    Option_t *opt;
    if (option && strlen(option)) opt = option;
@@ -171,13 +162,12 @@ void TArrow::Paint(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this arrow
+
 void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                         Float_t arrowsize, Option_t *option)
 {
-   /* Begin_Html
-   Draw this arrow
-   End_Html */
 
    Int_t i;
 
@@ -352,12 +342,11 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   /* Begin_Html
-    // Save primitive as a C++ statement(s) on output stream out
-    End_Html */
 
    char quote = '"';
    if (gROOT->ClassSaved(TArrow::Class())) {
@@ -379,67 +368,61 @@ void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default angle.
+
 void TArrow::SetDefaultAngle(Float_t Angle)
 {
-   /* Begin_Html
-   Set default angle.
-   End_Html */
 
    fgDefaultAngle = Angle;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default arrow sive.
+
 void TArrow::SetDefaultArrowSize (Float_t ArrowSize)
 {
-   /* Begin_Html
-   Set default arrow sive.
-   End_Html */
 
    fgDefaultArrowSize = ArrowSize;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default option.
+
 void TArrow::SetDefaultOption(Option_t *Option)
 {
-   /* Begin_Html
-   Set default option.
-   End_Html */
 
    fgDefaultOption = Option;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default angle.
+
 Float_t TArrow::GetDefaultAngle()
 {
-   /* Begin_Html
-   Get default angle.
-   End_Html */
 
    return fgDefaultAngle;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default arrow size.
+
 Float_t TArrow::GetDefaultArrowSize()
 {
-   /* Begin_Html
-   Get default arrow size.
-   End_Html */
 
    return fgDefaultArrowSize;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default option.
+
 Option_t *TArrow::GetDefaultOption()
 {
-   /* Begin_Html
-   Get default option.
-   End_Html */
 
    return fgDefaultOption.Data();
 }

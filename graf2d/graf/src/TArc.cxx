@@ -16,69 +16,73 @@
 
 ClassImp(TArc)
 
-//______________________________________________________________________________
-//
-//  An arc is specified with the position of its centre, its radius
-//  a minimum and maximum angle.
-//  The attributes of the outline line are given via TAttLine
-//  The attributes of the fill area are given via TAttFill
-//
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TArc
+\brief Create an Arc.
+
+An arc is specified with the position of its centre, its radius a minimum and
+maximum angle. The attributes of the outline line are given via TAttLine. The
+attributes of the fill area are given via TAttFill
+*/
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Arc  default constructor.
+
 TArc::TArc(): TEllipse()
 {
-  // Arc  default constructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Arc  normal constructor.
+///
+/// \param[in] x1,y1    coordinates of centre of arc
+/// \param[in] r1       arc radius
+/// \param[in] phimin   min angle in degrees (default is 0-->360)
+/// \param[in] phimax   max angle in degrees (default is 0-->360)
+///
+///  When a circle sector only is drawn, the lines connecting the center
+///  of the arc to the edges are drawn by default. One can specify
+///  the drawing option "only" to not draw these lines.
+
 TArc::TArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t phimax)
       :TEllipse(x1,y1,r1,r1,phimin,phimax,0)
 {
-   // Arc  normal constructor.
-   //
-   //  x1,y1  : coordinates of centre of arc
-   //  r1     : arc radius
-   //  phimin : min and max angle in degrees (default is 0-->360)
-   //  phimax :
-   //
-   //  When a circle sector only is drawn, the lines connecting the center
-   //  of the arc to the edges are drawn by default. One can specify
-   //  the drawing option "only" to not draw these lines.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TArc::TArc(const TArc &arc) : TEllipse(arc)
 {
-   // Copy constructor.
-
    ((TArc&)arc).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Arc default destructor.
+
 TArc::~TArc()
 {
-   // Arc default destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this arc to arc.
+
 void TArc::Copy(TObject &arc) const
 {
-   // Copy this arc to arc.
-
    TEllipse::Copy(arc);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this arc with new coordinates.
+
 void TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t phimax,Option_t *option)
 {
-   // Draw this arc with new coordinates.
-
    TArc *newarc = new TArc(x1, y1, r1, phimin, phimax);
    TAttLine::Copy(*newarc);
    TAttFill::Copy(*newarc);
@@ -87,11 +91,11 @@ void TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TArc::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TArc::Class())) {
       out<<"   ";

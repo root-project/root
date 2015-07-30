@@ -99,6 +99,37 @@ New options:
 Improve the algorithm to compute the lower limit of an axis in log scale when its
 real lower limit is 0. The problem was reported in ROOT-7414.
 
+### TTeXDump
+
+From Dmitry Kalinkin (via github): Fix file corruption in TTeXDump::DrawPolyMarker`
+The current implementation of `TTeXDump` uses `TVirtualPS::PrintFast` based methods
+to output TeX markup with automatic linewraps. Yet these methods are optimized for
+PostScript format where there are a lot of space characters that are used for newline
+placement. Current `TTeXDump::DrawPolyMarker` would often produce a long contiguous lines
+that trigger a forceful linewrap that can happen in the middle of real number constant
+(ignored by latex) or even in the middle of latex command (producing incorrect file).
+One solution would be to rewrite TTeXDump using only `PrintRaw` (that you can't mix
+with `PrintStr/PrintFast/WriteReal`). The other would be to fix `PrintFast` to not
+introduce forced newline. The third option is less intrusive and just adds additional
+spaces to provide clues for the proper line wrapping (this is the one implemented in
+this change).
+
+### TLatex
+
+Make sure the line width used to draw `#sqrt` is always >= 1.
+
+When a global text alignment was set the `TLatex`characters `#minus`, `#plus`,
+`#mp`, `#hbar`, and `#backslash` were mis-aligned. The following macro demonstrate
+the problem:
+
+``` {.cpp}
+{
+   gStyle->SetTextAlign(22);
+   TLatex t(.5,.5,"#minus100 #mp100 #plus100 #hbar #backslash");
+   t.Draw();
+}
+```
+
 ## 3D Graphics Libraries
 
 

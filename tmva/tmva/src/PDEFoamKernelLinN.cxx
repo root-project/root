@@ -39,65 +39,67 @@
 
 ClassImp(TMVA::PDEFoamKernelLinN)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer
+
 TMVA::PDEFoamKernelLinN::PDEFoamKernelLinN()
    : PDEFoamKernelBase()
 {
-   // Default constructor for streamer
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMVA::PDEFoamKernelLinN::PDEFoamKernelLinN(const PDEFoamKernelLinN &other)
    : PDEFoamKernelBase(other)
 {
-   // Copy constructor
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Linear neighbors kernel estimator.  It returns the cell value
+/// 'cv', corresponding to the event vector 'txvec' (in foam
+/// coordinates) linear weighted by the cell values of the neighbor
+/// cells.
+///
+/// Parameters:
+///
+/// - foam - the pdefoam to search in
+///
+/// - txvec - event vector in foam coordinates [0,1]
+///
+/// - cv - cell value to estimate
+
 Float_t TMVA::PDEFoamKernelLinN::Estimate(PDEFoam *foam, std::vector<Float_t> &txvec, ECellValue cv)
 {
-   // Linear neighbors kernel estimator.  It returns the cell value
-   // 'cv', corresponding to the event vector 'txvec' (in foam
-   // coordinates) linear weighted by the cell values of the neighbor
-   // cells.
-   //
-   // Parameters:
-   //
-   // - foam - the pdefoam to search in
-   //
-   // - txvec - event vector in foam coordinates [0,1]
-   //
-   // - cv - cell value to estimate
-
    if (foam == NULL)
       Log() << kFATAL << "<PDEFoamKernelLinN::Estimate>: PDEFoam not set!" << Endl;
 
    return WeightLinNeighbors(foam, txvec, cv, kTRUE);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the cell value, corresponding to 'txvec' (foam
+/// coordinates [0,1]), weighted by the neighbor cells via a linear
+/// function.
+///
+/// Parameters:
+///  - foam - the foam to search in
+///
+///  - txvec - event vector, transformed into foam coordinates [0,1]
+///
+///  - cv - cell value to be weighted
+///
+///  - treatEmptyCells - if this option is set to false (default),
+///    it is not checked, wether the cell value or neighbor cell
+///    values are undefined (using foam->CellValueIsUndefined()).
+///    If this option is set to true, than only non-empty neighbor
+///    cells are taken into account for weighting.  If the cell
+///    value of the cell, which contains txvec, is empty, than its
+///    value is estimated by the average value of the non-empty
+///    neighbor cells (using GetAverageNeighborsValue()).
+
 Float_t TMVA::PDEFoamKernelLinN::WeightLinNeighbors(PDEFoam *foam, std::vector<Float_t> &txvec, ECellValue cv, Bool_t treatEmptyCells)
 {
-   // Returns the cell value, corresponding to 'txvec' (foam
-   // coordinates [0,1]), weighted by the neighbor cells via a linear
-   // function.
-   //
-   // Parameters:
-   //  - foam - the foam to search in
-   //
-   //  - txvec - event vector, transformed into foam coordinates [0,1]
-   //
-   //  - cv - cell value to be weighted
-   //
-   //  - treatEmptyCells - if this option is set to false (default),
-   //    it is not checked, wether the cell value or neighbor cell
-   //    values are undefined (using foam->CellValueIsUndefined()).
-   //    If this option is set to true, than only non-empty neighbor
-   //    cells are taken into account for weighting.  If the cell
-   //    value of the cell, which contains txvec, is empty, than its
-   //    value is estimated by the average value of the non-empty
-   //    neighbor cells (using GetAverageNeighborsValue()).
-
    Float_t result = 0.;
    UInt_t norm     = 0;
    const Float_t xoffset = 1.e-6;
@@ -149,21 +151,21 @@ Float_t TMVA::PDEFoamKernelLinN::WeightLinNeighbors(PDEFoam *foam, std::vector<F
    else         return result / norm; // normalisation
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function returns the average value 'cv' of only nearest
+/// neighbor cells.  It is used in cases when a cell value is
+/// undefined and the cell value shall be estimated by the
+/// (well-defined) cell values of the neighbor cells.
+///
+/// Parameters:
+/// - foam - the foam to search in
+/// - txvec - event vector, transformed into foam coordinates [0, 1]
+/// - cv - cell value, see definition of ECellValue
+
 Float_t TMVA::PDEFoamKernelLinN::GetAverageNeighborsValue(PDEFoam *foam,
                                                           std::vector<Float_t> &txvec,
                                                           ECellValue cv)
 {
-   // This function returns the average value 'cv' of only nearest
-   // neighbor cells.  It is used in cases when a cell value is
-   // undefined and the cell value shall be estimated by the
-   // (well-defined) cell values of the neighbor cells.
-   //
-   // Parameters:
-   // - foam - the foam to search in
-   // - txvec - event vector, transformed into foam coordinates [0, 1]
-   // - cv - cell value, see definition of ECellValue
-
    const Float_t xoffset = 1.e-6;
    Float_t norm   = 0; // normalisation
    Float_t result = 0; // return value

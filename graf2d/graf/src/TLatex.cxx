@@ -23,129 +23,168 @@ const Double_t kPI = TMath::Pi();
 ClassImp(TLatex)
 
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>TLatex : to draw Mathematical Formula</h2></center>
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TLatex
+\brief To draw Mathematical Formula.
 
-TLatex's purpose is to write mathematical equations.
-The syntax is very similar to Latex's.
-It provides several functionalities:
-<ul>
-<li><a href="#L1">  Subscripts and Superscripts</a></li>
-<li><a href="#L2">  Fractions</a></li>
-<li><a href="#L3">  Splitting Lines</a></li>
-<li><a href="#L4">  Roots</a></li>
-<li><a href="#L5">  Mathematical Symbols</a></li>
-<li><a href="#L6">  Delimiters</a></li>
-<li><a href="#L7">  Greek Letters</a></li>
-<li><a href="#L8">  Accents</a></li>
-<li><a href="#L9">  Changing Style</a></li>
-<li><a href="#L10"> Alignment Rules</a></li>
-<li><a href="#L11"> Character Adjustement</a></li>
-<li><a href="#L12"> Italic and Boldface</a></li>
-<li><a href="#L13"> Examples</a></li>
-<li><a href="#L14"> Interface to TMathText</a></li>
-</ul>
+TLatex's purpose is to write mathematical equations. The syntax is very similar
+to the Latex's one. It provides several functionalities:
 
-When the font precision (see <tt>TAttText</tt>) is low (0 or 1), TLatex is
+- [Subscripts and Superscripts](#L1)
+- [Fractions](#L2)
+- [Splitting Lines](#L3)
+- [Roots](#L4)
+- [Mathematical Symbols](#L5)
+- [Delimiters](#L6)
+- [Greek Letters](#L7)
+- [Accents](#L8)
+- [Changing Style](#L9)
+- [Alignment Rules](#L10)
+- [Character Adjustment](#L11)
+- [Italic and Boldface](#L12)
+- [Examples](#L13)
+- [Interface to TMathText](#L14)
+
+When the font precision (see `TAttText`) is low (0 or 1), TLatex is
 painted as a normal TText, the control characters are not interpreted.
 
-<a name="L1"></a><h3>Subscripts and Superscripts</h3>
-Subscripts and superscripts are made with the <tt>_</tt> and <tt>^</tt>
+## <a name="L1"></a> Subscripts and Superscripts
+Subscripts and superscripts are made with the `_` and `^`
 commands. These commands can be combined to make complicated subscript and
 superscript expressions. You may adjust the display of subscripts and
-superscripts by using the two functions <tt>SetIndiceSize(Double_t)</tt>,
+superscripts by using the two functions `SetIndiceSize(Double_t)`,
 which set relative size of subscripts and superscripts, and
-<tt>SetLimitIndiceSize(Int_t)</tt>, which set limits for text resizing of
+`SetLimitIndiceSize(Int_t)`, which set limits for text resizing of
 subscipts and superscripts.
-<p>Examples:
-End_Html
-   x^{2y} :    Begin_Latex x^{2y}    End_Latex x_{2y} :    Begin_Latex x_{2y}    End_Latex
-   x^{y^{2}} : Begin_Latex x^{y^{2}} End_Latex x^{y_{1}} : Begin_Latex x^{y_{1}} End_Latex
-   x^{y}_{1} : Begin_Latex x^{y}_{1} End_Latex x_{1}^{y} : Begin_Latex x_{1}^{y} End_Latex
 
-Begin_Html
+Examples:
+
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,700,500);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Double_t dy = 1./7.;
+   Tl.DrawText(.1, dy,   "x^{2y} :");    Tl.DrawLatex(.5, dy,   "x^{2y}");
+   Tl.DrawText(.1, 2*dy, "x_{2y} :");    Tl.DrawLatex(.5, 2*dy, "x_{2y}");
+   Tl.DrawText(.1, 3*dy, "x^{y^{2}} :"); Tl.DrawLatex(.5, 3*dy, "x^{y^{2}}");
+   Tl.DrawText(.1, 4*dy, "x^{y_{1}} :"); Tl.DrawLatex(.5, 4*dy, "x^{y_{1}}");
+   Tl.DrawText(.1, 5*dy, "x^{y}_{1} :"); Tl.DrawLatex(.5, 5*dy, "x^{y}_{1}");
+   Tl.DrawText(.1, 6*dy, "x_{1}^{y} :"); Tl.DrawLatex(.5, 6*dy, "x_{1}^{y}");
+}
+End_Macro
+
 The best way to put the subscipts and superscripts before the character and not
 after, is to use an empty character:
-End_Html
-   {}^{40}_{20}Ca : Begin_Latex {}^{40}_{20}Ca End_Latex
 
-Begin_Html
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Tl.DrawText(.1, .5,   "{}^{40}_{20}Ca :"); Tl.DrawLatex(.5, .5, "{}^{40}_{20}Ca");
+}
+End_Macro
+
 The subscripts and superscripts operators apply not only on one character but
 on all the "normal text" preceding them. In the following example the second
-<tt>E</tt> is lower than the first one because the operator <tt>_</tt> is
-applied on <tt>/f</tt> which has a descending part, and not only on <tt>f</tt>
+`E` is lower than the first one because the operator `_` is
+applied on `/f` which has a descending part, and not only on `f`
 which as no descending part.
-End_Html
-   f_{E}/f_{E} : Begin_Latex f_{E}/f_{E} End_Latex
 
-Begin_Html
-   To make sure the second operator <tt>_</tt> applies only on <tt>f</tt>
-   a dummy operator <tt>^{}</tt> should be introduced to separate the <tt>f</tt>
-   from the <tt>/</tt>.
-End_Html
-   f_{E}/^{}f_{E} : Begin_Latex f_{E}/^{}f_{E} End_Latex
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Tl.DrawText(.1, .5,   "f_{E}/f_{E} :"); Tl.DrawLatex(.5, .5, "f_{E}/f_{E}");
+}
+End_Macro
 
-Begin_Html
-<a name="L2"></a><h3>Fractions</h3>
-Fractions denoted by the <tt>/</tt> symbol are made in the obvious way.
-The <tt>#frac</tt> command is used for large fractions in displayed formula;
+To make sure the second operator `_` applies only on `f` a dummy operator `^{}`
+should be introduced to separate the `f` from the `/`.
+
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Tl.DrawText(.1, .5,   "f_{E}/^{}f_{E} :"); Tl.DrawLatex(.5, .5, "f_{E}/^{}f_{E}");
+}
+End_Macro
+
+## <a name="L2"></a> Fractions
+Fractions denoted by the `/` symbol are made in the obvious way.
+The `#frac` command is used for large fractions in displayed formula;
 it has two arguments: the numerator and the denominator.
-<p>Examples:
-End_Html
-   x = #frac{y+z/2}{y^{2}+1} : Begin_Latex x = #frac{y+z/2}{y^{2}+1} End_Latex
 
-Begin_Html
-<a name="L3"></a><h3>Splitting Lines</h3>
-Text can be split in two lines via the command <tt>#splitline</tt>.
-<p>Examples:
-End_Html
-   #splitline{21 April 2003}{14:02:30} : Begin_Latex #splitline{21 April 2003}{14:02:30} End_Latex
+Examples:
 
-Begin_Html
-<a name="L4"></a><h3>Roots</h3>
-The <tt>#sqrt</tt> command produces the square root of its argument; it has
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Tl.DrawText(.1, .5,   "x = #frac{y+z/2}{y^{2}+1} :"); Tl.DrawLatex(.5, .5, "x = #frac{y+z/2}{y^{2}+1}");
+}
+End_Macro
+
+## <a name="L3"></a> Splitting Lines
+Text can be split in two lines via the command `#splitline`.
+
+Examples:
+
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Tl.DrawText(.1, .5,   "#splitline{21 April 2003}{14:02:30} :"); Tl.DrawLatex(.6, .5, "#splitline{21 April 2003}{14:02:30}");
+}
+End_Macro
+
+## <a name="L4"></a> Roots
+The `#sqrt` command produces the square root of its argument; it has
 an optional first argument for other roots.
-<p>Examples:
-End_Html
-   #sqrt{10} : Begin_Latex #sqrt{10} End_Latex #sqrt[3]{10} : Begin_Latex #sqrt[3]{10} End_Latex
 
-Begin_Html
-<a name="L5"></a><h3>Mathematical Symbols</h3>
+Examples:
+
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Tl.DrawText(.1, .5,   "#sqrt{10} #sqrt[3]{10} :"); Tl.DrawLatex(.5, .5, "#sqrt{10} #sqrt[3]{10}");
+}
+End_Macro
+
+## <a name="L5"></a> Mathematical Symbols
 TLatex can display dozens of special mathematical symbols. A few of them, such
-as <tt>+</tt> and <tt>></tt> , are produced by typing the corresponding
+as `+` and `>` , are produced by typing the corresponding
 keyboard character. Others are obtained with the commands in the following
 table:
-End_Html
+
 Begin_Macro(source)
 mathsymbols.C
 End_Macro
 
-Begin_Html
-<a name="L6"></a><h3>Delimiters</h3>
-TLatex provides 4 kinds of proportional delimiters:
-<pre>
-   #[]{....} or "a la" Latex #left[.....#right] : big square brackets
-   #{}{....} or              #left{.....#right} : big curly brackets
-   #||{....} or              #left|.....#right| : big absolute value symbols
-   #(){....} or              #left(.....#right) : big parentheses
-</pre>
 
-<a name="L7"></a><h3>Greek Letters</h3>
+## <a name="L6"></a> Delimiters
+TLatex provides 4 kinds of proportional delimiters:
+
+    #[]{....} or "a la" Latex #left[.....#right] : big square brackets
+    #{}{....} or              #left{.....#right} : big curly brackets
+    #||{....} or              #left|.....#right| : big absolute value symbols
+    #(){....} or              #left(.....#right) : big parentheses
+
+## <a name="L7"></a> Greek Letters
 The command to produce a lowercase Greek letter is obtained by adding a
-<tt>#</tt> to the name of the letter. For an uppercase Greek letter, just
+`#` to the name of the letter. For an uppercase Greek letter, just
 capitalize the first letter of the command name. Some letters have two
 representations. The name of the second one (the "variation") starts with "var".
 The following table gives the complete list:
-End_Html
+
 Begin_Macro(source)
 greekletters.C
 End_Macro
 
-Begin_Html
-<a name="L8"></a><h3>Accents</h3>
+
+## <a name="L8"></a> Accents
 Several kind of accents are available:
-End_Html
+
    #hat    = Begin_Latex #hat{a} End_Latex
    #check  = Begin_Latex #check{a} End_Latex
    #acute  = Begin_Latex #acute{a} End_Latex
@@ -154,39 +193,55 @@ End_Html
    #ddot   = Begin_Latex #ddot{a} End_Latex
    #tilde  = Begin_Latex #tilde{a} End_Latex
 
-Begin_Html
-The special sign: <tt>#slash</tt> draws a slash on top of the text between brackets:
-End_Html
-   #slash{E}_{T} : Begin_Latex #slash{E}_{T} End_Latex
 
-Begin_Html
+The special sign: `#slash` draws a slash on top of the text between brackets:
+
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Tl.DrawText(.1, .5,   "#slash{E}_{T} :"); Tl.DrawLatex(.5, .5, "#slash{E}_{T}");
+}
+End_Macro
+
 Bar and vectors sign are done the following way:
-End_Html
-   #bar{a}: Begin_Latex #bar{a} End_Latex
-   #vec{a}: Begin_Latex #vec{a} End_Latex
 
-Begin_Html
-<a name="L9"></a><h3>Changing Style</h3>
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,700,100);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Tl.DrawText(.1, .5,   "#bar{a} and #vec{a} :"); Tl.DrawLatex(.5, .5, "#bar{a} and #vec{a}");
+}
+End_Macro
+
+## <a name="L9"></a> Changing Style
 One can change the font, the text color, or the text size at any time using :
-<tt>#font[font-number]{...}</tt>, <tt>#color[color-number]{...}</tt>
-and <tt>#scale[scale-factor]{...}</tt>
-<p>Examples:
-End_Html
-   #font[12]{Times Italic} and #font[22]{Times bold} : Begin_Latex #font[12]{Times Italic} and #font[22]{Times bold} End_Latex
-   #color[2]{Red} and #color[4]{Blue} : Begin_Latex #color[2]{Red} and #color[4]{Blue} End_Latex
-   #scale[1.2]{Bigger} and #scale[0.8]{Smaller} : Begin_Latex #scale[1.2]{Bigger} and #scale[0.8]{Smaller} End_Latex
+`#font[font-number]{...}`, `#color[color-number]{...}`
+and `#scale[scale-factor]{...}`
 
-Begin_Html
-<a name="L10"></a><h3>Alignment Rules</h3>
-The <tt>TText</tt> alignment rules apply to the <tt>TLatex</tt> objects with one exception
+Examples:
+
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,900,300);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Double_t dy = 1./4.;
+   Tl.DrawText(.01, dy,   "#font[12]{Times Italic} and #font[22]{Times bold} :");    Tl.DrawLatex(.7, dy,   "#font[12]{Times Italic} and #font[22]{Times bold}");
+   Tl.DrawText(.01, 2*dy, "#color[2]{Red} and #color[4]{Blue} :");    Tl.DrawLatex(.7, 2*dy, "#color[2]{Red} and #color[4]{Blue}");
+   Tl.DrawText(.01, 3*dy, "#scale[1.2]{Bigger} and #scale[0.8]{Smaller} :"); Tl.DrawLatex(.7, 3*dy, "#scale[1.2]{Bigger} and #scale[0.8]{Smaller}");
+}
+End_Macro
+
+## <a name="L10"></a> Alignment Rules
+The `TText` alignment rules apply to the `TLatex` objects with one exception
 concerning the vertical alignment:
-<ul>
-<li> if the vertical alignment = 1 , subscripts are not taken into account </li>
-<li> if the vertical alignment = 0 , the text is aligned to the box surrounding
-                                     the full text with sub and superscripts</li>
-</ul>
+
+- if the vertical alignment = 1 , subscripts are not taken into account </li>
+- if the vertical alignment = 0 , the text is aligned to the box surrounding
+                                  the full text with sub and superscripts</li>
+
 This is illustrated by the following example:
-End_Html
+
 Begin_Macro(source)
 {
    TCanvas Tlva("Tlva","Tlva",500,500);
@@ -226,39 +281,50 @@ Begin_Macro(source)
 }
 End_Macro
 
-Begin_Html
-<a name="L11"></a><h3>Character Adjustement</h3>
-The two commands <tt>#kern</tt> and <tt>#lower</tt> enable a better control
-over character placement. The command <tt>#kern[(Float_t)dx]{text}</tt> moves
-the output string horizontally by the fraction <tt>dx</tt> of its length.
-Similarly, <tt>#lower[(Float_t)dy]{text}</tt> shifts the text up or down by
-the fraction <tt>dy</tt> of its height.
-<p>Examples:
-End_Html
-Positive k#kern[0.3]{e}#kern[0.3]{r}#kern[0.3]{n}#kern[0.3]{i}#kern[0.3]{n}#kern[0.3]{g}:
-Begin_Latex Positive k#kern[0.3]{e}#kern[0.3]{r}#kern[0.3]{n}#kern[0.3]{i}#kern[0.3]{n}#kern[0.3]{g} End_Latex
 
-Negative k#kern[-0.3]{e}#kern[-0.3]{r}#kern[-0.3]{n}#kern[-0.3]{i}#kern[-0.3]{n}#kern[-0.3]{g}:
-Begin_Latex Negative k#kern[-0.3]{e}#kern[-0.3]{r}#kern[-0.3]{n}#kern[-0.3]{i}#kern[-0.3]{n}#kern[-0.3]{g} End_Latex
+## <a name="L11"></a> Character Adjustment
+The two commands `#kern` and `#lower` enable a better control
+over character placement. The command `#kern[(Float_t)dx]{text}` moves
+the output string horizontally by the fraction `dx` of its length.
+Similarly, `#lower[(Float_t)dy]{text}` shifts the text up or down by
+the fraction `dy` of its height.
 
-Vertical a#lower[0.2]{d}#lower[0.4]{j}#lower[0.1]{u}#lower[-0.1]{s}#lower[-0.3]{t}#lower[-0.4]{m}#lower[-0.2]{e}#lower[0.1]{n}t:
-Begin_Latex Vertical a#lower[0.2]{d}#lower[0.4]{j}#lower[0.1]{u}#lower[-0.1]{s}#lower[-0.3]{t}#lower[-0.4]{m}#lower[-0.2]{e}#lower[0.1]{n}t End_Latex
+Examples:
 
-Begin_Html
-<a name="L12"></a><h3>Italic and Boldface</h3>
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,900,300);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   TLatex Tt; Tt.SetTextFont(43); Tt.SetTextSize(12);
+   Double_t dy = 1./7.;
+   Tl.DrawLatex(.5,   dy, "Positive k#kern[0.3]{e}#kern[0.3]{r}#kern[0.3]{n}#kern[0.3]{i}#kern[0.3]{n}#kern[0.3]{g}");
+   Tt.DrawText(.01, 2*dy, "Positive k#kern[0.3]{e}#kern[0.3]{r}#kern[0.3]{n}#kern[0.3]{i}#kern[0.3]{n}#kern[0.3]{g} :");
+   Tl.DrawLatex(.5, 3*dy, "Negative k#kern[-0.3]{e}#kern[-0.3]{r}#kern[-0.3]{n}#kern[-0.3]{i}#kern[-0.3]{n}#kern[-0.3]{g}");
+   Tt.DrawText(.01, 4*dy, "Negative k#kern[-0.3]{e}#kern[-0.3]{r}#kern[-0.3]{n}#kern[-0.3]{i}#kern[-0.3]{n}#kern[-0.3]{g} :");
+   Tl.DrawLatex(.5, 5*dy, "Vertical a#lower[0.2]{d}#lower[0.4]{j}#lower[0.1]{u}#lower[-0.1]{s}#lower[-0.3]{t}#lower[-0.4]{m}#lower[-0.2]{e}#lower[0.1]{n}t");
+   Tt.DrawText(.01, 6*dy, "Vertical a#lower[0.2]{d}#lower[0.4]{j}#lower[0.1]{u}#lower[-0.1]{s}#lower[-0.3]{t}#lower[-0.4]{m}#lower[-0.2]{e}#lower[0.1]{n}t :");
+
+}
+End_Macro
+
+## <a name="L12"></a> Italic and Boldface
 Text can be turned italic or boldface using the commands
-<tt>#it</tt> and <tt>#bf</tt>.
-<p>Examples:
-End_Html
-#bf{bold}, #it{italic}, #bf{#it{bold italic}}, #bf{#bf{unbold}}}:
-Begin_Latex #bf{bold}, #it{italic}, #bf{#it{bold italic}}, #bf{#bf{unbold}} End_Latex
+`#it` and `#bf`.
 
-abc#alpha#beta#gamma, #it{abc#alpha#beta#gamma}:
-Begin_Latex abc#alpha#beta#gamma, #it{abc#alpha#beta#gamma} End_Latex
+Examples:
 
-Begin_Html
-<a name="L13"></a><h3>Examples</h3>
-End_Html
+Begin_Macro(source)
+{
+   TCanvas *cl = new TCanvas("cl","cl",10,10,900,300);
+   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
+   Double_t dy = 1./3.;
+   Tl.DrawText(.01, dy,   "abc#alpha#beta#gamma, #it{abc#alpha#beta#gamma} :");    Tl.DrawLatex(.7, dy,   "abc#alpha#beta#gamma, #it{abc#alpha#beta#gamma}");
+   Tl.DrawText(.01, 2*dy, "#bf{bold}, #it{italic}, #bf{#it{bold italic}}, #bf{#bf{unbold}}} :");    Tl.DrawLatex(.7, 2*dy, "#bf{bold}, #it{italic}, #bf{#it{bold italic}}, #bf{#bf{unbold}}}");
+}
+End_Macro
+
+## <a name="L13"></a> Examples
+
 Begin_Macro(source)
 {
    TCanvas ex1("ex1","Latex",500,600);
@@ -298,22 +364,22 @@ Begin_Macro(source)
 }
 End_Macro
 
-Begin_Html
-<a name="L14"></a><h3>Interface to TMathText</h3>
-The class <tt>TMathText</tt> is a TeX math formulae interpreter. It uses plain
+
+## <a name="L14"></a> Interface to TMathText
+The class `TMathText` is a TeX math formulae interpreter. It uses plain
 TeX syntax and uses "\" as control instead of "#". If a piece of text containing
-"\" is given to <tt>TLatex</tt> then <tt>TMathText</tt> is automatically invoked.
+"\" is given to `TLatex` then `TMathText` is automatically invoked.
 Therefore, as histograms' titles, axis titles, labels etc ... are drawn using
-<tt>TLatex</tt>, the <tt>TMathText</tt> syntax can be used for them also.
-End_Html
+`TLatex`, the `TMathText` syntax can be used for them also.
+
 */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TLatex::TLatex()
 {
-   // Default constructor.
-
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
    fError       = 0;
@@ -328,12 +394,12 @@ TLatex::TLatex()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+
 TLatex::TLatex(Double_t x, Double_t y, const char *text)
        :TText(x,y,text)
 {
-   // Normal constructor.
-
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
    fError       = 0;
@@ -348,18 +414,19 @@ TLatex::TLatex(Double_t x, Double_t y, const char *text)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TLatex::~TLatex()
 {
-   // Destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 {
-   // Copy constructor.
-
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
    fError       = 0;
@@ -373,10 +440,11 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
    ((TLatex&)text).Copy(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TLatex& TLatex::operator=(const TLatex& lt)
 {
-   //assignment operator
    if(this!=&lt) {
       TText::operator=(lt);
       TAttLine::operator=(lt);
@@ -394,11 +462,11 @@ TLatex& TLatex::operator=(const TLatex& lt)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this TLatex object to another TLatex.
+
 void TLatex::Copy(TObject &obj) const
 {
-   // Copy this TLatex object to another TLatex.
-
    ((TLatex&)obj).fFactorSize  = fFactorSize;
    ((TLatex&)obj).fFactorPos   = fFactorPos;
    ((TLatex&)obj).fLimitFactorSize  = fLimitFactorSize;
@@ -414,40 +482,40 @@ void TLatex::Copy(TObject &obj) const
 }
 
 
-//______________________________________________________________________________
-TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t length)
-{
-   // Analyse function.
+////////////////////////////////////////////////////////////////////////////////
+/// Analyse function.
 
+TLatex::TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t length)
+{
    return Analyse(0,0,spec,t,length);
 }
 
 
-//______________________________________________________________________________
-TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t, Int_t length)
-{
-   //  Analyse and paint the TLatex formula
-   //
-   //  It is called twice : first for calculating the size of
-   //  each portion of the formula, then to paint the formula.
-   //  When analyse finds an operator or separator, it calls
-   //  itself recursively to analyse the arguments of the operator.
-   //  when the argument is an atom (normal text), it calculates
-   //  the size of it and return it as the result.
-   //  for example : if the operator #frac{arg1}{arg2} is found :
-   //  Analyse(arg1) return the size of arg1 (width, up, down)
-   //  Analyse(arg2) return the size of arg2
-   //  now, we know the size of #frac{arg1}{arg2}  :
-   //  width = max(width_arg1, width_arg2)
-   //  up = up_arg1 + down_arg1
-   //  down = up_arg2 + down_arg2
-   //  so, when the user wants to paint a fraction at position (x,y),
-   //  the rect used for the formula is : (x,y-up,x+width,y+down)
-   //
-   // return size of zone occupied by the text/formula
-   // t : chain to be analyzed
-   // length : number of chars in t.
+////////////////////////////////////////////////////////////////////////////////
+///  Analyse and paint the TLatex formula
+///
+///  It is called twice : first for calculating the size of
+///  each portion of the formula, then to paint the formula.
+///  When analyse finds an operator or separator, it calls
+///  itself recursively to analyse the arguments of the operator.
+///  when the argument is an atom (normal text), it calculates
+///  the size of it and return it as the result.
+///  for example : if the operator #frac{arg1}{arg2} is found :
+///  Analyse(arg1) return the size of arg1 (width, up, down)
+///  Analyse(arg2) return the size of arg2
+///  now, we know the size of #frac{arg1}{arg2}  :
+///  width = max(width_arg1, width_arg2)
+///  up = up_arg1 + down_arg1
+///  down = up_arg2 + down_arg2
+///  so, when the user wants to paint a fraction at position (x,y),
+///  the rect used for the formula is : (x,y-up,x+width,y+down)
+///
+/// return size of zone occupied by the text/formula
+/// t : chain to be analyzed
+/// length : number of chars in t.
 
+TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t, Int_t length)
+{
    const char *tab[] = { "alpha","beta","chi","delta","varepsilon","phi","gamma","eta","iota","varphi","kappa","lambda",
                 "mu","nu","omicron","pi","theta","rho","sigma","tau","upsilon","varomega","omega","xi","psi","zeta",
                 "Alpha","Beta","Chi","Delta","Epsilon","Phi","Gamma","Eta","Iota","vartheta",
@@ -1094,6 +1162,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          hbar.SetTextColor(spec.fColor);
          hbar.SetTextSize(spec.fSize);
          hbar.SetTextAngle(fTextAngle);
+         hbar.SetTextAlign(11);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
          Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
@@ -1115,6 +1184,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          minus.SetTextColor(spec.fColor);
          minus.SetTextSize(spec.fSize);
          minus.SetTextAngle(fTextAngle);
+         minus.SetTextAlign(11);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
          Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
@@ -1135,6 +1205,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          plus.SetTextColor(spec.fColor);
          plus.SetTextSize(spec.fSize);
          plus.SetTextAngle(fTextAngle);
+         plus.SetTextAlign(11);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
          Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
@@ -1155,6 +1226,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          mp.SetTextColor(spec.fColor);
          mp.SetTextSize(spec.fSize);
          mp.SetTextAngle(fTextAngle+180);
+         mp.SetTextAlign(11);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
          Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
@@ -1191,6 +1263,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          bs.SetTextColor(spec.fColor);
          bs.SetTextSize(spec.fSize);
          bs.SetTextAngle(fTextAngle);
+         bs.SetTextAlign(11);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
          Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
@@ -1591,7 +1664,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             GetTextAscentDescent(a, d, text);
             if (a>12) SetLineWidth(TMath::Max(2,(Int_t)(dx/2)));
             DrawLine(x1-2*dx,y1,x1-dx,y2,spec);
-            if (a>12) SetLineWidth((Int_t)(dx/4));
+            if (a>12) SetLineWidth(TMath::Max(1,(Int_t)(dx/4)));
             DrawLine(x1-dx,y2,x1,y3,spec);
             DrawLine(x1,y3,x2,y3,spec);
             SetLineWidth(lineW);
@@ -1823,12 +1896,12 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a copy of this object with the new parameters
+/// And copy object attributes
+
 TLatex *TLatex::DrawLatex(Double_t x, Double_t y, const char *text)
 {
-   // Make a copy of this object with the new parameters
-   // And copy object attributes
-
    TLatex *newtext = new TLatex(x, y, text);
    TAttText::Copy(*newtext);
    newtext->SetBit(kCanDelete);
@@ -1838,22 +1911,22 @@ TLatex *TLatex::DrawLatex(Double_t x, Double_t y, const char *text)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this TLatex with new coordinates in NDC.
+
 TLatex *TLatex::DrawLatexNDC(Double_t x, Double_t y, const char *text)
 {
-   // Draw this TLatex with new coordinates in NDC.
-
    TLatex *newtext = DrawLatex(x, y, text);
    newtext->SetNDC();
    return newtext;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line in a Latex formula
+
 void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSpec_t spec)
 {
-   // Draw a line in a Latex formula
-
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
    Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
@@ -1870,11 +1943,11 @@ void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSp
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
+
 void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
 {
-   // Draw an arc of ellipse in a Latex formula (right or left parenthesis)
-
    if (r < 1) r = 1;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
@@ -1900,12 +1973,12 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
+
 void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
                      Double_t  phimin, Double_t  phimax, TextSpec_t spec )
 {
-   // Draw an arc of ellipse in a Latex formula (right or left parenthesis)
-
    if (r1 < 1) r1 = 1;
    if (r2 < 1) r2 = 1;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
@@ -1932,11 +2005,11 @@ void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint.
+
 void TLatex::Paint(Option_t *)
 {
-   // Paint.
-
    Double_t xsave = fX;
    Double_t ysave = fY;
    if (TestBit(kTextNDC)) {
@@ -1951,14 +2024,14 @@ void TLatex::Paint(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main drawing function
+///
+/// Warning: Unlike most others "XYZ::PaintXYZ" methods, PaintLatex modifies
+///          the TLatex data members.
+
 void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
 {
-   // Main drawing function
-   //
-   // Warning: Unlike most others "XYZ::PaintXYZ" methods, PaintLatex modifies
-   //          the TLatex data members.
-
    TAttText::Modify();  // Change text attributes only if necessary.
 
    TVirtualPS *saveps = gVirtualPS;
@@ -2045,11 +2118,11 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drawing function
+
 Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
 {
-   // Drawing function
-
    TString newText = text1;
    if( newText.Length() == 0) return 0;
    newText.ReplaceAll("#hbox","#mbox");
@@ -2151,11 +2224,11 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the Latex syntax is correct
+
 Int_t TLatex::CheckLatexSyntax(TString &text)
 {
-   // Check if the Latex syntax is correct
-
    const Char_t *kWord1[] = {"{}^{","{}_{","^{","_{","#scale{","#color{","#font{","#sqrt{","#[]{","#{}{","#||{",
                        "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{","#tilde{","#slash{","#bf{","#it{","#mbox{",
                        "\\scale{","\\color{","\\font{","\\sqrt{","\\[]{","\\{}{","\\||{","#(){","\\(){",
@@ -2356,11 +2429,11 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
 }
 
 
-//______________________________________________________________________________
-TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *text)
-{
-   // First parsing of the analyse sequence
+////////////////////////////////////////////////////////////////////////////////
+/// First parsing of the analyse sequence
 
+TLatex::TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *text)
+{
    fError   = 0;
    fTabMax  = 100;
    fTabSize = new FormSize_t[fTabMax];
@@ -2401,11 +2474,11 @@ TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *t
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return height of current pad in pixels
+
 Double_t TLatex::GetHeight() const
 {
-   // Return height of current pad in pixels
-
    Double_t w = gPad->GetAbsWNDC()*Double_t(gPad->GetWw());
    Double_t h = gPad->GetAbsHNDC()*Double_t(gPad->GetWh());
    if (w < h)
@@ -2415,11 +2488,11 @@ Double_t TLatex::GetHeight() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return size of the formula along X in pad coordinates
+
 Double_t TLatex::GetXsize()
 {
-   // Return size of the formula along X in pad coordinates
-
    if (!gPad) return 0;
    TString newText = GetTitle();
    if( newText.Length() == 0) return 0;
@@ -2447,11 +2520,11 @@ Double_t TLatex::GetXsize()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return text size in pixels
+
 void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 {
-   // Return text size in pixels
-
    if (!gPad) return;
    TString newText = GetTitle();
    if( newText.Length() == 0) return;
@@ -2504,11 +2577,11 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return size of the formula along Y in pad coordinates
+
 Double_t TLatex::GetYsize()
 {
-   // Return size of the formula along Y in pad coordinates
-
    if (!gPad) return 0;
    TString newText = GetTitle();
    if( newText.Length() == 0) return 0;
@@ -2534,22 +2607,22 @@ Double_t TLatex::GetYsize()
 }
 
 
-//______________________________________________________________________________
-TLatexFormSize TLatex::Readfs()
-{
-   // Read fs in fTabSize
+////////////////////////////////////////////////////////////////////////////////
+/// Read fs in fTabSize
 
+TLatex::TLatexFormSize TLatex::Readfs()
+{
    fPos--;
    TLatexFormSize result(fTabSize[fPos].fWidth,fTabSize[fPos].fOver,fTabSize[fPos].fUnder);
    return result;
 }
 
 
-//______________________________________________________________________________
-void TLatex::Savefs(TLatexFormSize *fs)
-{
-   // Save fs values in array fTabSize
+////////////////////////////////////////////////////////////////////////////////
+/// Save fs values in array fTabSize
 
+void TLatex::Savefs(TLatex::TLatexFormSize *fs)
+{
    fTabSize[fPos].fWidth  = fs->Width();
    fTabSize[fPos].fOver   = fs->Over();
    fTabSize[fPos].fUnder  = fs->Under();
@@ -2568,11 +2641,11 @@ void TLatex::Savefs(TLatexFormSize *fs)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    char quote = '"';
 
    if (gROOT->ClassSaved(TLatex::Class())) {
@@ -2595,19 +2668,19 @@ void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set relative size of subscripts and superscripts
+
 void TLatex::SetIndiceSize(Double_t factorSize)
 {
-   // Set relative size of subscripts and superscripts
-
    fFactorSize = factorSize;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set limit for text resizing of subscipts and superscripts
+
 void TLatex::SetLimitIndiceSize(Int_t limitFactorSize)
 {
-   // Set limit for text resizing of subscipts and superscripts
-
    fLimitFactorSize = limitFactorSize;
 }

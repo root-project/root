@@ -73,31 +73,32 @@ static TMemHashTable gMemHashTable;
 //                                 Storage of Stack information
 //****************************************************************************//
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize the stack
+
 void TStackInfo::Init(int stacksize, void **stackptrs)
 {
-   //Initialize the stack
    fSize = stacksize;
    memcpy(&(this[1]), stackptrs, stacksize * sizeof(void *));
    fTotalAllocCount = fTotalAllocSize = fAllocCount = fAllocSize = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hash stack information.
+
 ULong_t TStackInfo::HashStack(unsigned int size, void **ptr)
 {
-   // Hash stack information.
-
    ULong_t hash = 0;
    for (unsigned int i = 0; i < size; i++)
       hash ^= TString::Hash(&ptr[i], sizeof(void*));
    return hash;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return 0 if stack information not equal otherwise return 1.
+
 int TStackInfo::IsEqual(unsigned int size, void **ptr)
 {
-   // Return 0 if stack information not equal otherwise return 1.
-
    if (size != fSize)
       return 0;
    void **stptr = (void **) &(this[1]);
@@ -112,11 +113,11 @@ int TStackInfo::IsEqual(unsigned int size, void **ptr)
 //                                   Global Stack Table
 //****************************************************************************//
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize table.
+
 void TStackTable::Init()
 {
-   //Initialize table.
-
    fSize = 65536;
    fCount = 0;
    fTable = (char *) malloc(fSize);
@@ -130,11 +131,11 @@ void TStackTable::Init()
    memset(fHashTable, 0, sizeof(TStackInfo *) * fHashSize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand stack buffer to the new size.
+
 void TStackTable::Expand(int newsize)
 {
-   // Expand stack buffer to the new size.
-
    char *tableold = fTable;
    fTable = (char *) realloc(fTable, newsize);
    fSize = newsize;
@@ -159,11 +160,11 @@ void TStackTable::Expand(int newsize)
    //  printf("new table %p\n",fTable);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add stack information to table.
+
 TStackInfo *TStackTable::AddInfo(int size, void **stackptrs)
 {
-   // Add stack information to table.
-
    // add next stack to table
    TStackInfo *info = (TStackInfo *) fNext;
    if (((char *) info + size * sizeof(void *)
@@ -190,11 +191,11 @@ TStackInfo *TStackTable::AddInfo(int size, void **stackptrs)
    return info;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to find stack info in hash table if doesn't find it will add it.
+
 TStackInfo *TStackTable::FindInfo(int size, void **stackptrs)
 {
-   // Try to find stack info in hash table if doesn't find it will add it.
-
    int hash = int(TStackInfo::HashStack(size, (void **) stackptrs) % fHashSize);
    TStackInfo *info = fHashTable[hash];
    if (info == 0) {
@@ -214,17 +215,19 @@ TStackInfo *TStackTable::FindInfo(int size, void **stackptrs)
    return info;
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return index of info
+
 int TStackTable::GetIndex(TStackInfo * info)
 {
-   //return index of info
    return (char *) info - fTable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return TStackInfo class corresponding to index
+
 TStackInfo *TStackTable::GetInfo(int index)
 {
-   //return TStackInfo class corresponding to index
    return (TStackInfo *) & fTable[index];
 }
 
@@ -238,10 +241,11 @@ TStackTable  TMemHashTable::fgStackTable;
 
 static void *get_stack_pointer(int level);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize the hash table
+
 void TMemHashTable::Init()
 {
-   //Initialize the hash table
    fgStackTable.Init();
    fgSize = 65536;
    fgAllocCount = 0;
@@ -260,11 +264,11 @@ void TMemHashTable::Init()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rehash leak pointers.
+
 void TMemHashTable::RehashLeak(int newSize)
 {
-   // Rehash leak pointers.
-
    if (newSize <= fgSize)
       return;
    TMemTable **newLeak = (TMemTable **) malloc(sizeof(void *) * newSize);
@@ -312,11 +316,11 @@ void TMemHashTable::RehashLeak(int newSize)
    fgSize = newSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add pointer to table.
+
 void *TMemHashTable::AddPointer(size_t size, void *ptr)
 {
-   // Add pointer to table.
-
    void *p = 0;
 
    if (ptr == 0) {
@@ -379,11 +383,11 @@ void *TMemHashTable::AddPointer(size_t size, void *ptr)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free pointer.
+
 void TMemHashTable::FreePointer(void *p)
 {
-   // Free pointer.
-
    if (p == 0)
       return;
    int hash = int(TString::Hash(&p, sizeof(void*)) % fgSize);
@@ -435,11 +439,11 @@ void TMemHashTable::FreePointer(void *p)
    fgMultDeleteTable.fTableSize++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print memory check information.
+
 void TMemHashTable::Dump()
 {
-   // Print memory check information.
-
    const char *filename;
    if (gEnv)
       filename = gEnv->GetValue("Root.MemCheckFile", "memcheck.out");
@@ -480,12 +484,12 @@ void TMemHashTable::Dump()
    delete [] fn;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// These special __builtin calls are supported by gcc "only".
+/// For other compiler one will need to implement this again !
+
 static void *get_stack_pointer(int level)
 {
-   // These special __builtin calls are supported by gcc "only".
-   // For other compiler one will need to implement this again !
-
    void *p = 0;
 #if defined(R__GNU) && (defined(R__LINUX) || defined(R__HURD))
    switch (level) {

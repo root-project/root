@@ -37,11 +37,11 @@
 
 ClassImp(TQCanvasMenu)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ctor, create the popup menu
+
 TQCanvasMenu::TQCanvasMenu(QWidget* parent, TCanvas *canvas)
 {
-   // ctor, create the popup menu
-
    fc       = canvas;
    fPopup   = new QPopupMenu;
    fCurrObj = 0;
@@ -51,11 +51,11 @@ TQCanvasMenu::TQCanvasMenu(QWidget* parent, TCanvas *canvas)
    fMousePosX = fMousePosY = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ctor, create the popup menu
+
 TQCanvasMenu::TQCanvasMenu(QWidget* parent, QWidget *tabWin, TCanvas *canvas)
 {
-   // ctor, create the popup menu
-
    fc       = canvas;
    fPopup   = new QPopupMenu;
    fParent  = parent;
@@ -65,19 +65,19 @@ TQCanvasMenu::TQCanvasMenu(QWidget* parent, QWidget *tabWin, TCanvas *canvas)
    fMousePosX = fMousePosY = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dtor
+
 TQCanvasMenu::~TQCanvasMenu()
 {
-   // dtor
-
    if (fPopup) delete fPopup;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create title for dialog box retrieving argument values.
+
 char *TQCanvasMenu::CreateDialogTitle( TObject *object, TMethod *method )
 {
-   // Create title for dialog box retrieving argument values.
-
    static char methodTitle[128];
 
    if (object && method)
@@ -88,11 +88,11 @@ char *TQCanvasMenu::CreateDialogTitle( TObject *object, TMethod *method )
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create string describing argument (for use in dialog box).
+
 char *TQCanvasMenu::CreateArgumentTitle(TMethodArg *argument)
 {
-   // Create string describing argument (for use in dialog box).
-
    static Char_t argTitle[128];
    if (argument) {
       snprintf(argTitle, 127, "(%s)  %s", argument->GetTitle(), argument->GetName());
@@ -109,15 +109,15 @@ char *TQCanvasMenu::CreateArgumentTitle(TMethodArg *argument)
    return argTitle;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the corresponding selected TObject  popup
+/// in the position defined
+/// by x, y coordinates (in user coordinate system).
+/// @param obj (TObject*)
+/// @param p (QPoint&)
+
 void TQCanvasMenu::Popup(TObject *obj, double x, double y, QMouseEvent *e)
 {
-   // Perform the corresponding selected TObject  popup
-   // in the position defined
-   // by x, y coordinates (in user coordinate system).
-   // @param obj (TObject*)
-   // @param p (QPoint&)
-
    TClass *klass=obj->IsA();
    Int_t curId=-1;
 
@@ -148,12 +148,12 @@ void TQCanvasMenu::Popup(TObject *obj, double x, double y, QMouseEvent *e)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot defined to execute a method from a selected TObject
+/// using TObject::Execute() function.
+
 void TQCanvasMenu::Execute(int id)
 {
-   // Slot defined to execute a method from a selected TObject
-   // using TObject::Execute() function.
-
    if (id < 0) return;
    QString text="";
 
@@ -177,12 +177,12 @@ void TQCanvasMenu::Execute(int id)
    gROOT->SetFromPopUp( kFALSE );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create dialog object with OK and Cancel buttons. This dialog
+/// prompts for the arguments of "method".
+
 void TQCanvasMenu::Dialog(TObject* object, TMethod* method)
 {
-   // Create dialog object with OK and Cancel buttons. This dialog
-   // prompts for the arguments of "method".
-
    if (!(object && method)) return;
    fDialog = new TQRootDialog(fParent,CreateDialogTitle(object, method),0,object ,method);
    fDialog->SetTCanvas(fc);

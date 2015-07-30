@@ -21,7 +21,8 @@
 ClassImp(TAttMarker)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>Marker Attributes class</h2></center>
 
@@ -157,13 +158,13 @@ style used is 1. That's the most common one to draw scatter plots.
 End_Html */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TAttMarker default constructor.
+///
+/// Default text attributes are taking from the current style.
+
 TAttMarker::TAttMarker()
 {
-   // TAttMarker default constructor.
-   //
-   // Default text attributes are taking from the current style.
-
    if (!gStyle) {fMarkerColor=1; fMarkerStyle=1; fMarkerSize=1; return;}
    fMarkerColor = gStyle->GetMarkerColor();
    fMarkerStyle = gStyle->GetMarkerStyle();
@@ -171,45 +172,46 @@ TAttMarker::TAttMarker()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TAttMarker normal constructor.
+///
+/// Text attributes are taking from the argument list
+///    color : Marker Color Index
+///    style : Marker style (from 1 to 30)
+///    size  : marker size (float)
+
 TAttMarker::TAttMarker(Color_t color, Style_t style, Size_t msize)
 {
-   // TAttMarker normal constructor.
-   //
-   // Text attributes are taking from the argument list
-   //    color : Marker Color Index
-   //    style : Marker style (from 1 to 30)
-   //    size  : marker size (float)
-
    fMarkerColor = color;
    fMarkerSize  = msize;
    fMarkerStyle = style;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TAttMarker destructor.
+
 TAttMarker::~TAttMarker()
 {
-   // TAttMarker destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this marker attributes to a new TAttMarker.
+
 void TAttMarker::Copy(TAttMarker &attmarker) const
 {
-   // Copy this marker attributes to a new TAttMarker.
-
    attmarker.fMarkerColor  = fMarkerColor;
    attmarker.fMarkerStyle  = fMarkerStyle;
    attmarker.fMarkerSize   = fMarkerSize;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change current marker attributes if necessary.
+
 void TAttMarker::Modify()
 {
-   // Change current marker attributes if necessary.
-
    if (!gPad) return;
    if (!gPad->IsBatch()) {
       gVirtualX->SetMarkerColor(fMarkerColor);
@@ -221,22 +223,22 @@ void TAttMarker::Modify()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this marker attributes to the default values.
+
 void TAttMarker::ResetAttMarker(Option_t *)
 {
-   // Reset this marker attributes to the default values.
-
    fMarkerColor  = 1;
    fMarkerStyle  = 1;
    fMarkerSize   = 1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save line attributes as C++ statement(s) on output stream out.
+
 void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t sizdef)
 {
-   // Save line attributes as C++ statement(s) on output stream out.
-
    if (fMarkerColor != coldef) {
       if (fMarkerColor > 228) {
          TColor::SaveColor(out, fMarkerColor);
@@ -253,20 +255,20 @@ void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the DialogCanvas Marker attributes.
+
 void TAttMarker::SetMarkerAttributes()
 {
-   // Invoke the DialogCanvas Marker attributes.
-
    TVirtualPadEditor::UpdateMarkerAttributes(fMarkerColor,fMarkerStyle,fMarkerSize);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a transparent marker color. malpha defines the percentage of
+/// the color opacity from 0. (fully transparent) to 1. (fully opaque).
+
 void TAttMarker::SetMarkerColorAlpha(Color_t mcolor, Float_t malpha)
 {
-   // Set a transparent marker color. malpha defines the percentage of
-   // the color opacity from 0. (fully transparent) to 1. (fully opaque).
-
    fMarkerColor = TColor::GetColorTransparent(mcolor, malpha);
 }

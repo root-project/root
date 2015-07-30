@@ -30,14 +30,14 @@
 
 ClassImp(TEveTriangleSet);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTriangleSet::TEveTriangleSet(Int_t nv, Int_t nt, Bool_t norms, Bool_t cols) :
    TEveElementList("TEveTriangleSet", "", kTRUE),
    fNVerts  (nv), fVerts(0),
    fNTrings (nt), fTrings(0), fTringNorms(0), fTringCols(0)
 {
-   // Constructor.
-
    InitMainTrans();
 
    fVerts  = new Float_t[3*fNVerts];
@@ -46,11 +46,11 @@ TEveTriangleSet::TEveTriangleSet(Int_t nv, Int_t nt, Bool_t norms, Bool_t cols) 
    fTringCols  = (cols)  ? new UChar_t[3*fNTrings] : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveTriangleSet::~TEveTriangleSet()
 {
-   // Destructor.
-
    delete [] fVerts;
    delete [] fTrings;
    delete [] fTringNorms;
@@ -59,11 +59,11 @@ TEveTriangleSet::~TEveTriangleSet()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate triangle normals via cross product of triangle edges.
+
 void TEveTriangleSet::GenerateTriangleNormals()
 {
-   // Generate triangle normals via cross product of triangle edges.
-
    if (fTringNorms == 0)  fTringNorms = new Float_t[3*fNTrings];
 
    TVector3 e1, e2, n;
@@ -82,11 +82,11 @@ void TEveTriangleSet::GenerateTriangleNormals()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign random colors to all triangles.
+
 void TEveTriangleSet::GenerateRandomColors()
 {
-   // Assign random colors to all triangles.
-
    if (fTringCols == 0)  fTringCols = new UChar_t[3*fNTrings];
 
    TRandom r;
@@ -100,13 +100,13 @@ void TEveTriangleSet::GenerateRandomColors()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate triangle colors by the z-component of the normal.
+/// Current palette is taken from gStyle.
+
 void TEveTriangleSet::GenerateZNormalColors(Float_t fac, Int_t min, Int_t max,
                                             Bool_t interp, Bool_t wrap)
 {
-   // Generate triangle colors by the z-component of the normal.
-   // Current palette is taken from gStyle.
-
    if (fTringCols  == 0)  fTringCols = new UChar_t[3*fNTrings];
    if (fTringNorms == 0)  GenerateTriangleNormals();
 
@@ -123,12 +123,12 @@ void TEveTriangleSet::GenerateZNormalColors(Float_t fac, Int_t min, Int_t max,
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding box.
+/// Virtual from TAttBBox.
+
 void TEveTriangleSet::ComputeBBox()
 {
-   // Compute bounding box.
-   // Virtual from TAttBBox.
-
    if (fNVerts <= 0) {
       BBoxZero();
       return;
@@ -140,21 +140,21 @@ void TEveTriangleSet::ComputeBBox()
       BBoxCheckPoint(v);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this object. Only direct rendering is supported.
+
 void TEveTriangleSet::Paint(Option_t*)
 {
-   // Paint this object. Only direct rendering is supported.
-
    PaintStandard(this);
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a simple ascii input file describing vertices and triangles.
+
 TEveTriangleSet* TEveTriangleSet::ReadTrivialFile(const char* file)
 {
-   // Read a simple ascii input file describing vertices and triangles.
-
    static const TEveException kEH("TEveTriangleSet::ReadTrivialFile ");
 
    FILE* f = fopen(file, "r");

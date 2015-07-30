@@ -22,11 +22,11 @@
 #include "TString.h"
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace string with the contents of strm, stopping at an EOF.
+
 std::istream& TString::ReadFile(std::istream& strm)
 {
-   // Replace string with the contents of strm, stopping at an EOF.
-
    // get file size
    Ssiz_t end, cur = strm.tellg();
    strm.seekg(0, std::ios::end);
@@ -59,35 +59,35 @@ std::istream& TString::ReadFile(std::istream& strm)
    return strm;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a line from stream upto newline skipping any whitespace.
+
 std::istream& TString::ReadLine(std::istream& strm, Bool_t skipWhite)
 {
-   // Read a line from stream upto newline skipping any whitespace.
-
    if (skipWhite)
       strm >> std::ws;
 
    return ReadToDelim(strm, '\n');
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a line from stream upto \0, including any newline.
+
 std::istream& TString::ReadString(std::istream& strm)
 {
-   // Read a line from stream upto \0, including any newline.
-
    return ReadToDelim(strm, '\0');
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read up to an EOF, or a delimiting character, whichever comes
+/// first.  The delimiter is not stored in the string,
+/// but is removed from the input stream.
+/// Because we don't know how big a string to expect, we first read
+/// as much as we can and then, if the EOF or null hasn't been
+/// encountered, do a resize and keep reading.
+
 std::istream& TString::ReadToDelim(std::istream& strm, char delim)
 {
-   // Read up to an EOF, or a delimiting character, whichever comes
-   // first.  The delimiter is not stored in the string,
-   // but is removed from the input stream.
-   // Because we don't know how big a string to expect, we first read
-   // as much as we can and then, if the EOF or null hasn't been
-   // encountered, do a resize and keep reading.
-
    // any positive number of reasonable size for a string
    const Ssiz_t incr = 32;
 
@@ -121,11 +121,11 @@ std::istream& TString::ReadToDelim(std::istream& strm, char delim)
    return strm;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a token, delimited by whitespace, from the input stream.
+
 std::istream& TString::ReadToken(std::istream& strm)
 {
-   // Read a token, delimited by whitespace, from the input stream.
-
    // any positive number of reasonable size for a token
    const Ssiz_t incr = 16;
 
@@ -157,19 +157,19 @@ std::istream& TString::ReadToken(std::istream& strm)
    return strm;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read string from stream.
+
 std::istream& operator>>(std::istream& strm, TString& s)
 {
-   // Read string from stream.
-
    return s.ReadToken(strm);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write string to stream.
+
 std::ostream& operator<<(std::ostream& os, const TString& s)
 {
-   // Write string to stream.
-
    if (os.good()) {
       if (os.tie()) os.tie()->flush(); // instead of opfx
       UInt_t len = s.Length();
@@ -191,12 +191,12 @@ std::ostream& operator<<(std::ostream& os, const TString& s)
 
 // ------------------- C I/O ------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read one line from the stream, including the \n, or until EOF.
+/// Remove the trailing \n if chop is true. Returns kTRUE if data was read.
+
 Bool_t TString::Gets(FILE *fp, Bool_t chop)
 {
-   // Read one line from the stream, including the \n, or until EOF.
-   // Remove the trailing \n if chop is true. Returns kTRUE if data was read.
-
    char buf[256];
    Bool_t r = kFALSE;
 
@@ -213,10 +213,10 @@ Bool_t TString::Gets(FILE *fp, Bool_t chop)
    return r;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write string to the stream.
+
 void TString::Puts(FILE *fp)
 {
-   // Write string to the stream.
-
    fputs(GetPointer(), fp);
 }

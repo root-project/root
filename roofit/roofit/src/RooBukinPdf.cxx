@@ -52,7 +52,8 @@ ClassImp(RooBukinPdf)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooBukinPdf::RooBukinPdf(const char *name, const char *title,
 			 RooAbsReal& _x,    RooAbsReal& _Xp,
 			 RooAbsReal& _sigp, RooAbsReal& _xi,
@@ -73,7 +74,8 @@ RooBukinPdf::RooBukinPdf(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooBukinPdf::RooBukinPdf(const RooBukinPdf& other, const char *name):
   RooAbsPdf(other,name),
   x("x",this,other.x),
@@ -90,11 +92,11 @@ RooBukinPdf::RooBukinPdf(const RooBukinPdf& other, const char *name):
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implementation 
+
 Double_t RooBukinPdf::evaluate() const 
 {
-  // Implementation 
-
   double r1=0,r2=0,r3=0,r4=0,r5=0,hp=0;
   double x1 = 0,x2 = 0;
   double fit_result = 0;

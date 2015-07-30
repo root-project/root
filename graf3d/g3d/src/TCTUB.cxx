@@ -39,11 +39,11 @@ ClassImp(TCTUB)
 //     - coshz      z dir cosinus at high z face
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CTUB shape default constructor
+
 TCTUB::TCTUB()
 {
-   // CTUB shape default constructor
-
    fCosLow[0]  = 0.;
    fCosLow[1]  = 0.;
    fCosLow[2]  = 0.;
@@ -53,15 +53,15 @@ TCTUB::TCTUB()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CTUB shape normal constructor
+
 TCTUB::TCTUB(const char *name, const char *title, const char *material, Float_t rmin,
              Float_t rmax, Float_t dz, Float_t phi1, Float_t phi2,
              Float_t coslx, Float_t cosly, Float_t coslz,
              Float_t coshx, Float_t coshy, Float_t coshz)
       : TTUBS(name,title,material,rmin,rmax,dz,phi1,phi2)
 {
-   // CTUB shape normal constructor
-
    fCosLow[0]  = coslx;
    fCosLow[1]  = cosly;
    fCosLow[2]  = coslz;
@@ -73,14 +73,14 @@ TCTUB::TCTUB(const char *name, const char *title, const char *material, Float_t 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CTUB shape normal constructor
+
 TCTUB::TCTUB(const char *name, const char *title, const char *material, Float_t rmin,
              Float_t rmax, Float_t dz, Float_t phi1, Float_t phi2,
              Float_t *lowNormal, Float_t *highNormal)
       : TTUBS(name,title,material,rmin,rmax,dz,phi1,phi2)
 {
-   // CTUB shape normal constructor
-
    memcpy(fCosLow, lowNormal, sizeof(fCosLow) );
    memcpy(fCosHigh,highNormal,sizeof(fCosHigh));
    TMath::Normalize(fCosLow);
@@ -88,29 +88,30 @@ TCTUB::TCTUB(const char *name, const char *title, const char *material, Float_t 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CTUB shape default destructor
+
 TCTUB::~TCTUB()
 {
-   // CTUB shape default destructor
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Product.
+
 static Double_t Product(const Double_t *x, const Float_t *y)
 {
-   // Product.
-
    Double_t s = 0;
    for (int i= 0 ; i <2 ; i++ ) s += x[i]*y[i];
    return s;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TUBS points
+
 void TCTUB::SetPoints(Double_t *points) const
 {
-   // Create TUBS points
-
    Float_t dz;
    Int_t j, n;
 
@@ -149,11 +150,11 @@ void TCTUB::SetPoints(Double_t *points) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TCTUB.
+
 void TCTUB::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TCTUB.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

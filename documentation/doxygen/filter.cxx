@@ -82,11 +82,11 @@ Int_t   gImageID;
 Int_t   gMacroID;
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Filter ROOT files for Doxygen.
+
 int main(int argc, char *argv[])
 {
-   // Filter ROOT files for Doxygen.
-
    // Initialisation
 
    gFileName   = argv[1];
@@ -137,6 +137,8 @@ int main(int argc, char *argv[])
       while (fgets(gLine,255,f)) {
          gLineString = gLine;
          StandardizeKeywords();
+
+         if (gLineString.Index("/*! \\class") >= 0) gClass = kTRUE;
 
          if (gLineString.Index("begin_html") >= 0) {
             if (!gClass) {
@@ -220,11 +222,11 @@ int main(int argc, char *argv[])
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the class name.
+
 void GetClassName()
 {
-   // Retrieve the class name.
-
    Int_t i1 = 0;
    Int_t i2 = 0;
 
@@ -264,11 +266,11 @@ void GetClassName()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Standardize the THTML keywords to ease the parsing.
+
 void StandardizeKeywords()
 {
-   // Standardize the THTML keywords to ease the parsing.
-
    gLineString.ReplaceAll("End_Html","end_html");
    gLineString.ReplaceAll("End_html","end_html");
    gLineString.ReplaceAll("end_html ","end_html");
@@ -279,11 +281,11 @@ void StandardizeKeywords()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the macro in gLineString and produce the corresponding picture
+
 void ExecuteMacro()
 {
-   // Execute the macro in gLineString and produce the corresponding picture
-
    // Name of the next Image to be generated
    gImageName = TString::Format("%s_%3.3d.png", gClassName.Data()
                                               , gImageID);
@@ -312,11 +314,11 @@ void ExecuteMacro()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute a command making sure stdout will not go in the doxygen file.
+
 void ExecuteCommand(TString command)
 {
-   // Execute a command making sure stdout will not go in the doxygen file.
-
    int o = dup(fileno(stdout));
    freopen("stdout.dat","a",stdout);
    gSystem->Exec(command.Data());

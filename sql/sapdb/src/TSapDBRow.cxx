@@ -15,31 +15,31 @@
 
 ClassImp(TSapDBRow)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Single row of query result.
+
 TSapDBRow::TSapDBRow(SQLHSTMT result, Int_t nfields)
 {
-   // Single row of query result.
-
    fResult      = result;
    fFieldCount  = nfields;
    fFieldLength = 0;
    fFieldValue  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy row object.
+
 TSapDBRow::~TSapDBRow()
 {
-   // Destroy row object.
-
    if (fResult)
       Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close row.
+
 void TSapDBRow::Close(Option_t *)
 {
-   // Close row.
-
    delete [] fFieldLength;
    delete [] fFieldValue;
    fResult      = 0;
@@ -48,11 +48,11 @@ void TSapDBRow::Close(Option_t *)
    fFieldValue  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if row is open and field index within range.
+
 Bool_t TSapDBRow::IsValid(Int_t field)
 {
-   // Check if row is open and field index within range.
-
    if (field < 0 || field >= fFieldCount) {
       Error("IsValid", "field index out of bounds");
       return kFALSE;
@@ -61,11 +61,11 @@ Bool_t TSapDBRow::IsValid(Int_t field)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get length in bytes of specified field.
+
 ULong_t TSapDBRow::GetFieldLength(Int_t field)
 {
-   // Get length in bytes of specified field.
-
    if (!IsValid(field))
       return 0;
 
@@ -99,11 +99,11 @@ ULong_t TSapDBRow::GetFieldLength(Int_t field)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get specified field from row (0 <= field < GetFieldCount()).
+
 const char *TSapDBRow::GetField(Int_t field)
 {
-   // Get specified field from row (0 <= field < GetFieldCount()).
-
    if (!IsValid(field))
       return 0;
 

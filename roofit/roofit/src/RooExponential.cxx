@@ -35,7 +35,8 @@ using namespace std;
 ClassImp(RooExponential)
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooExponential::RooExponential(const char *name, const char *title,
 			       RooAbsReal& _x, RooAbsReal& _c) :
   RooAbsPdf(name, title), 
@@ -45,21 +46,24 @@ RooExponential::RooExponential(const char *name, const char *title,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooExponential::RooExponential(const RooExponential& other, const char* name) :
   RooAbsPdf(other, name), x("x",this,other.x), c("c",this,other.c)
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///cout << "exp(x=" << x << ",c=" << c << ")=" << exp(c*x) << endl ;
+
 Double_t RooExponential::evaluate() const{
-  //cout << "exp(x=" << x << ",c=" << c << ")=" << exp(c*x) << endl ;
   return exp(c*x);
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
@@ -67,7 +71,8 @@ Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analV
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooExponential::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   switch(code) {

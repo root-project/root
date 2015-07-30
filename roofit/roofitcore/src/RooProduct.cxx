@@ -59,22 +59,23 @@ namespace {
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooProduct::RooProduct() :
   _compRIter( _compRSet.createIterator() ),
   _compCIter( _compCSet.createIterator() )
 {
-  // Default constructor
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooProduct::~RooProduct()
 {
-  // Destructor
-
   if (_compRIter) {
     delete _compRIter ;
   }
@@ -87,7 +88,9 @@ RooProduct::~RooProduct()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct function representing the product of functions in prodSet
+
 RooProduct::RooProduct(const char* name, const char* title, const RooArgList& prodSet) :
   RooAbsReal(name, title),
   _compRSet("!compRSet","Set of real product components",this),
@@ -96,8 +99,6 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
   _compCIter( _compCSet.createIterator() ),
   _cacheMgr(this,10)
 {
-  // Construct function representing the product of functions in prodSet
-
   TIterator* compIter = prodSet.createIterator() ;
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*)compIter->Next())) {
@@ -117,7 +118,9 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooProduct::RooProduct(const RooProduct& other, const char* name) :
   RooAbsReal(other, name), 
   _compRSet("!compRSet",this,other._compRSet),
@@ -126,18 +129,17 @@ RooProduct::RooProduct(const RooProduct& other, const char* name) :
   _compCIter(_compCSet.createIterator()),
   _cacheMgr(other._cacheMgr,this)
 {
-  // Copy constructor
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Force internal handling of integration of given observable if any
+/// of the product terms depend on it.
+
 Bool_t RooProduct::forceAnalyticalInt(const RooAbsArg& dep) const
 {
-  // Force internal handling of integration of given observable if any
-  // of the product terms depend on it.
-
   _compRIter->Reset() ;
   RooAbsReal* rcomp ;
   Bool_t depends(kFALSE);
@@ -149,12 +151,12 @@ Bool_t RooProduct::forceAnalyticalInt(const RooAbsArg& dep) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Group observables into subsets in which the product factorizes
+/// and that can thus be integrated separately
+
 RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) const 
 {
-  // Group observables into subsets in which the product factorizes
-  // and that can thus be integrated separately
-
   ProdMap* map = new ProdMap ;
 
   // Do we have any terms which do not depend on the
@@ -222,13 +224,13 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of (partial) integrals whose product defines the integral of this
+/// RooProduct over the observables in iset in range isetRange. If no such list
+/// exists, create it now and store it in the cache for future use.
+
 Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) const
 {
-  // Return list of (partial) integrals whose product defines the integral of this
-  // RooProduct over the observables in iset in range isetRange. If no such list
-  // exists, create it now and store it in the cache for future use.
-
 
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
@@ -297,13 +299,13 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Declare that we handle all integrations internally
+
 Int_t RooProduct::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
 					  const RooArgSet* /*normSet*/,
 					  const char* rangeName) const
 {
-  // Declare that we handle all integrations internally
-
   if (_forceNumInt) return 0 ;
 
   // Declare that we can analytically integrate all requested observables
@@ -316,11 +318,11 @@ Int_t RooProduct::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate integral internally from appropriate partial integral cache
+
 Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-  // Calculate integral internally from appropriate partial integral cache
-
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
   if (cache==0) { 
@@ -337,11 +339,11 @@ Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return product of partial terms in partIntList
+
 Double_t RooProduct::calculate(const RooArgList& partIntList) const
 {
-  // Calculate and return product of partial terms in partIntList
-
   RooAbsReal *term(0);
   Double_t val=1;
   RooFIter i = partIntList.fwdIterator() ;
@@ -353,11 +355,11 @@ Double_t RooProduct::calculate(const RooArgList& partIntList) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct automatic name for internal product terms
+
 const char* RooProduct::makeFPName(const char *pfx,const RooArgSet& terms) const
 {
-  // Construct automatic name for internal product terms
-
   static TString pname;
   pname = pfx;
   std::auto_ptr<TIterator> i( terms.createIterator() );
@@ -373,11 +375,11 @@ const char* RooProduct::makeFPName(const char *pfx,const RooArgSet& terms) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate product of input functions
+
 Double_t RooProduct::evaluate() const 
 {
-  // Evaluate product of input functions
-
   Double_t prod(1) ;
 
   RooFIter compRIter = _compRSet.fwdIterator() ;
@@ -398,10 +400,11 @@ Double_t RooProduct::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forward the plot sampling hint from the p.d.f. that defines the observable obs  
+
 std::list<Double_t>* RooProduct::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  // Forward the plot sampling hint from the p.d.f. that defines the observable obs  
   RooFIter iter = _compRSet.fwdIterator() ;
   RooAbsReal* func ;
   while((func=(RooAbsReal*)iter.next())) {
@@ -433,10 +436,11 @@ Bool_t RooProduct::isBinnedDistribution(const RooArgSet& obs) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forward the plot sampling hint from the p.d.f. that defines the observable obs  
+
 std::list<Double_t>* RooProduct::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  // Forward the plot sampling hint from the p.d.f. that defines the observable obs  
   RooFIter iter = _compRSet.fwdIterator() ;
   RooAbsReal* func ;
   while((func=(RooAbsReal*)iter.next())) {
@@ -451,17 +455,19 @@ std::list<Double_t>* RooProduct::plotSamplingHint(RooAbsRealLValue& obs, Double_
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooProduct::CacheElem::~CacheElem() 
 {
-  // Destructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of all RooAbsArgs in cache element
+
 RooArgList RooProduct::CacheElem::containedArgs(Action) 
 {
-  // Return list of all RooAbsArgs in cache element
   RooArgList ret(_ownedList) ;
   return ret ;
 }
@@ -469,11 +475,11 @@ RooArgList RooProduct::CacheElem::containedArgs(Action)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Label OK'ed components of a RooProduct with cache-and-track
+
 void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes) 
 {
-  // Label OK'ed components of a RooProduct with cache-and-track
-
   RooArgSet comp(components()) ;
   RooFIter piter = comp.fwdIterator() ;
   RooAbsArg* parg ;
@@ -491,12 +497,12 @@ void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Customized printing of arguments of a RooProduct to more intuitively reflect the contents of the
+/// product operator construction
+
 void RooProduct::printMetaArgs(ostream& os) const 
 {
-  // Customized printing of arguments of a RooProduct to more intuitively reflect the contents of the
-  // product operator construction
-
   Bool_t first(kTRUE) ;
 
   _compRIter->Reset() ;

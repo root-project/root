@@ -75,6 +75,7 @@ protected:
    TList         *fPackets;      // list of packets processed packets
 
    Int_t          LoadDir();     // Load the directory pointed to by fElem
+   virtual void      PreProcessEvent(Long64_t) { }
 
 public:
    TEventIter();
@@ -84,10 +85,9 @@ public:
    virtual Long64_t  GetCacheSize() = 0;
    virtual Int_t     GetLearnEntries() = 0;
    virtual Long64_t  GetNextEvent() = 0;
-   virtual Int_t     GetNextPacket(Long64_t &first, Long64_t &num,
-                                   TEntryList **enl = 0, TEventList **evl = 0) = 0;
+   virtual Int_t     GetNextPacket(Long64_t &first, Long64_t &num) = 0;
    virtual void      InvalidatePacket();
-   virtual void      PreProcessEvent(Long64_t) = 0;
+   virtual Long64_t  GetEntryNumber(Long64_t);
    virtual void      StopProcess(Bool_t abort);
 
    TList            *GetPackets() { return fPackets; }
@@ -115,9 +115,7 @@ public:
    Long64_t GetCacheSize() {return -1;}
    Int_t    GetLearnEntries() {return -1;}
    Long64_t GetNextEvent();
-   Int_t    GetNextPacket(Long64_t &first, Long64_t &num,
-                          TEntryList **enl = 0, TEventList **evl = 0);
-   inline void PreProcessEvent(Long64_t) { };
+   Int_t    GetNextPacket(Long64_t &first, Long64_t &num);
 
    ClassDef(TEventIterUnit,0)  // Event iterator for objects
 };
@@ -133,6 +131,9 @@ private:
    TIter   *fNextKey;      // next key in directory
    TObject *fObj;          // object found
 
+protected:
+   void PreProcessEvent(Long64_t);
+
 public:
    TEventIterObj();
    TEventIterObj(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
@@ -141,9 +142,7 @@ public:
    Long64_t GetCacheSize() {return -1;}
    Int_t    GetLearnEntries() {return -1;}
    Long64_t GetNextEvent();
-   Int_t    GetNextPacket(Long64_t &first, Long64_t &num,
-                          TEntryList **enl = 0, TEventList **evl = 0);
-   void PreProcessEvent(Long64_t);
+   Int_t    GetNextPacket(Long64_t &first, Long64_t &num);
 
    ClassDef(TEventIterObj,0)  // Event iterator for objects
 };
@@ -176,6 +175,10 @@ private:
 
    TTree* Load(TDSetElement *elem, Bool_t &localfile, const char *objname = 0);
    TTree* GetTrees(TDSetElement *elem);
+
+protected:
+   void PreProcessEvent(Long64_t ent);
+
 public:
    TEventIterTree();
    TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
@@ -184,9 +187,7 @@ public:
    Long64_t GetCacheSize();
    Int_t    GetLearnEntries();
    Long64_t GetNextEvent();
-   Int_t    GetNextPacket(Long64_t &first, Long64_t &num,
-                          TEntryList **enl = 0, TEventList **evl = 0);
-   void PreProcessEvent(Long64_t ent);
+   Int_t    GetNextPacket(Long64_t &first, Long64_t &num);
 
    ClassDef(TEventIterTree,0)  // Event iterator for Trees
 };

@@ -285,14 +285,14 @@ protected:
    TDNDData     fDNDData;
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an icon box item.
+
 TRootObjItem::TRootObjItem(const TGWindow *p, const TGPicture *bpic,
                            const TGPicture *spic, TGString *name,
                            TObject *obj, TClass *, EListViewMode viewMode) :
    TGFileItem(p, bpic, 0, spic, 0, name, 0, 0, 0, 0, 0, viewMode)
 {
-   // Create an icon box item.
-
    fObj = obj;
    fDNDData.fData = 0;
    fDNDData.fDataLength = 0;
@@ -342,29 +342,29 @@ public:
    const TGPicture  *GetPicture() const { return fPic; }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TRootIconList::TRootIconList(TRootIconBox* box)
 {
-   // constructor
-
    fPic = gClient->GetPicture("listview.xpm");
    fIconBox = box;
    fName = "empty";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TRootIconList::~TRootIconList()
 {
-   // destructor
-
    gClient->FreePicture(fPic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// composite name
+
 void TRootIconList::UpdateName()
 {
-   // composite name
-
    if (!First()) return;
 
    if (fSize==1) {
@@ -427,12 +427,12 @@ public:
    Bool_t WasGrouped() const { return fWasGrouped; }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create iconbox containing ROOT objects in browser.
+
 TRootIconBox::TRootIconBox(TRootBrowserLite *browser, TGListView *lv, UInt_t options,
                            ULong_t back) : TGFileContainer(lv, options, back)
 {
-   // Create iconbox containing ROOT objects in browser.
-
    fListView = lv;
    fBrowser = browser;
 
@@ -457,24 +457,24 @@ TRootIconBox::TRootIconBox(TRootBrowserLite *browser, TGListView *lv, UInt_t opt
    fAutoThumbnail = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TRootIconBox::~TRootIconBox()
 {
-   // destructor
-
    RemoveAll();
    RemoveGarbage();
    delete fGarbage;
    delete fThumbnails;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve icons associated with class "name". Association is made
+/// via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
+
 void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
                                   TObject *obj, const char *name)
 {
-   // Retrieve icons associated with class "name". Association is made
-   // via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
-
    static TImage *im = 0;
    if (!im) {
       im = TImage::Create();
@@ -530,11 +530,11 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
    fCachedPicName = iconname;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// delete all TRootIconLists from garbage
+
 void TRootIconBox::RemoveGarbage()
 {
-   // delete all TRootIconLists from garbage
-
    TIter next(fGarbage);
    TList *li;
 
@@ -544,12 +544,12 @@ void TRootIconBox::RemoveGarbage()
    fGarbage->Delete();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object to iconbox. Class is used to get the associated icons
+/// via the mime file (see GetObjPictures()).
+
 void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
 {
-   // Add object to iconbox. Class is used to get the associated icons
-   // via the mime file (see GetObjPictures()).
-
    if (!cl) return;
 
    Bool_t isSystemFile = kFALSE;
@@ -707,11 +707,11 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// browse icon list
+
 void TRootIconList::Browse(TBrowser *)
 {
-   // browse icon list
-
    if (!fIconBox) return;
 
    TObject *obj;
@@ -773,12 +773,12 @@ void TRootIconList::Browse(TBrowser *)
    fIconBox->fWasGrouped = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find a frame which assosiated object has a name containing a "name" string.
+
 void *TRootIconBox::FindItem(const TString& name, Bool_t direction,
                              Bool_t caseSensitive,Bool_t beginWith)
 {
-   // Find a frame which assosiated object has a name containing a "name" string.
-
    if (!fGrouped) {
       return TGContainer::FindItem(name, direction, caseSensitive, beginWith);
    }
@@ -843,23 +843,23 @@ void *TRootIconBox::FindItem(const TString& name, Bool_t direction,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set list box headers used to display detailed object iformation.
+/// Currently this is only "Name" and "Title".
+
 void TRootIconBox::SetObjHeaders()
 {
-   // Set list box headers used to display detailed object iformation.
-   // Currently this is only "Name" and "Title".
-
    fListView->SetHeaders(2);
    fListView->SetHeader("Name",  kTextLeft, kTextLeft, 0);
    fListView->SetHeader("Title", kTextLeft, kTextLeft, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort icons, and send message to browser with number of objects
+/// in box.
+
 void TRootIconBox::Refresh()
 {
-   // Sort icons, and send message to browser with number of objects
-   // in box.
-
    // This automatically calls layout
    Sort(fSortType);
 
@@ -870,11 +870,11 @@ void TRootIconBox::Refresh()
    fListView->AdjustHeaders();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all items from icon box
+
 void TRootIconBox::RemoveAll()
 {
-   // Remove all items from icon box
-
    if (fIsEmpty) return;
 
    fCheckHeaders = kTRUE;
@@ -895,25 +895,25 @@ void TRootIconBox::RemoveAll()
 
 ClassImp(TRootBrowserLite)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create browser with a specified width and height.
+
 TRootBrowserLite::TRootBrowserLite(TBrowser *b, const char *name, UInt_t width, UInt_t height)
    : TGMainFrame(gClient->GetDefaultRoot(), width, height), TBrowserImp(b)
 {
-   // Create browser with a specified width and height.
-
    CreateBrowser(name);
 
    Resize(width, height);
    if (b) Show();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create browser with a specified width and height and at position x, y.
+
 TRootBrowserLite::TRootBrowserLite(TBrowser *b, const char *name, Int_t x, Int_t y,
                            UInt_t width, UInt_t height)
    : TGMainFrame(gClient->GetDefaultRoot(), width, height), TBrowserImp(b)
 {
-   // Create browser with a specified width and height and at position x, y.
-
    CreateBrowser(name);
 
    MoveResize(x, y, width, height);
@@ -921,11 +921,11 @@ TRootBrowserLite::TRootBrowserLite(TBrowser *b, const char *name, Int_t x, Int_t
    if (b) Show();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browser destructor.
+
 TRootBrowserLite::~TRootBrowserLite()
 {
-   // Browser destructor.
-
    if (fIconPic) gClient->FreePicture(fIconPic);
 
    delete fToolBarSep;
@@ -966,11 +966,11 @@ TRootBrowserLite::~TRootBrowserLite()
    delete fHistory;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the actual browser.
+
 void TRootBrowserLite::CreateBrowser(const char *name)
 {
-   // Create the actual browser.
-
    fWidgets = new TList;
    fHistory = new TRootBrowserHistory;
    fHistoryCursor = 0;
@@ -1241,11 +1241,11 @@ void TRootBrowserLite::CreateBrowser(const char *name)
            this, "Checked(TObject *,Bool_t)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// handle keys
+
 Bool_t TRootBrowserLite::HandleKey(Event_t *event)
 {
-   // handle keys
-
    if (event->fType == kGKeyPress) {
       UInt_t keysym;
       char input[10];
@@ -1275,14 +1275,14 @@ Bool_t TRootBrowserLite::HandleKey(Event_t *event)
    return TGMainFrame::HandleKey(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add items to the browser. This function has to be called
+/// by the Browse() member function of objects when they are
+/// called by a browser. If check < 0 (default) no check box is drawn,
+/// if 0 then unchecked checkbox is added, if 1 checked checkbox is added.
+
 void TRootBrowserLite::Add(TObject *obj, const char *name, Int_t check)
 {
-   // Add items to the browser. This function has to be called
-   // by the Browse() member function of objects when they are
-   // called by a browser. If check < 0 (default) no check box is drawn,
-   // if 0 then unchecked checkbox is added, if 1 checked checkbox is added.
-
    if (!obj)
       return;
    if (obj->InheritsFrom("TObjectSpy"))
@@ -1311,12 +1311,12 @@ void TRootBrowserLite::Add(TObject *obj, const char *name, Int_t check)
       AddToTree(obj, name, check);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a checkbox in the TGListTreeItem corresponding to obj
+/// and a checkmark on TGLVEntry if check = kTRUE.
+
 void TRootBrowserLite::AddCheckBox(TObject *obj, Bool_t check)
 {
-   // Add a checkbox in the TGListTreeItem corresponding to obj
-   // and a checkmark on TGLVEntry if check = kTRUE.
-
    if (obj) {
       TGListTreeItem *item = fLt->FindItemByObj(fLt->GetFirstItem(), obj);
       while (item) {
@@ -1335,12 +1335,12 @@ void TRootBrowserLite::AddCheckBox(TObject *obj, Bool_t check)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check / uncheck the TGListTreeItem corresponding to this
+/// object and add a checkmark on TGLVEntry if check = kTRUE.
+
 void TRootBrowserLite::CheckObjectItem(TObject *obj, Bool_t check)
 {
-   // Check / uncheck the TGListTreeItem corresponding to this
-   // object and add a checkmark on TGLVEntry if check = kTRUE.
-
    if (obj) {
       TGListTreeItem *item = fLt->FindItemByObj(fLt->GetFirstItem(), obj);
       while (item) {
@@ -1360,11 +1360,11 @@ void TRootBrowserLite::CheckObjectItem(TObject *obj, Bool_t check)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove checkbox from TGListTree and checkmark from TGListView.
+
 void TRootBrowserLite::RemoveCheckBox(TObject *obj)
 {
-   // Remove checkbox from TGListTree and checkmark from TGListView.
-
    if (obj) {
       TGListTreeItem *item = fLt->FindItemByObj(fLt->GetFirstItem(), obj);
       while (item) {
@@ -1384,11 +1384,11 @@ void TRootBrowserLite::RemoveCheckBox(TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add items to the iconbox of the browser.
+
 void TRootBrowserLite::AddToBox(TObject *obj, const char *name)
 {
-   // Add items to the iconbox of the browser.
-
    if (obj) {
       if (!name) name = obj->GetName() ? obj->GetName() : "NoName";
       //const char *titlePtr = obj->GetTitle() ? obj->GetTitle() : " ";
@@ -1414,11 +1414,11 @@ void TRootBrowserLite::AddToBox(TObject *obj, const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add items to the current TGListTree of the browser.
+
 void TRootBrowserLite::AddToTree(TObject *obj, const char *name, Int_t check)
 {
-   // Add items to the current TGListTree of the browser.
-
    if (!obj)
       return;
    if (obj->InheritsFrom("TApplication"))
@@ -1488,13 +1488,13 @@ void TRootBrowserLite::AddToTree(TObject *obj, const char *name, Int_t check)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse object. This, in turn, will trigger the calling of
+/// TRootBrowserLite::Add() which will fill the IconBox and the tree.
+/// Emits signal "BrowseObj(TObject*)".
+
 void TRootBrowserLite::BrowseObj(TObject *obj)
 {
-   // Browse object. This, in turn, will trigger the calling of
-   // TRootBrowserLite::Add() which will fill the IconBox and the tree.
-   // Emits signal "BrowseObj(TObject*)".
-
    TGPosition pos = fIconBox->GetPagePosition();
    Emit("BrowseObj(TObject*)", (Long_t)obj);
 
@@ -1526,11 +1526,11 @@ void TRootBrowserLite::BrowseObj(TObject *obj)
    fIconBox->SetVsbPosition(pos.fY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add new draw option to the "history"
+
 void TRootBrowserLite::UpdateDrawOption()
 {
-   // add new draw option to the "history"
-
    TString opt = GetDrawOption();
    TGListBox *lb = fDrawOption->GetListBox();
    TGLBContainer *lbc = (TGLBContainer *)lb->GetContainer();
@@ -1550,19 +1550,19 @@ void TRootBrowserLite::UpdateDrawOption()
    fDrawOption->Select(nn);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns pointer to fIconBox object
+
 TGFileContainer *TRootBrowserLite::GetIconBox() const
 {
-   // returns pointer to fIconBox object
-
    return (TGFileContainer*)fIconBox;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Really delete the browser and the this GUI.
+
 void TRootBrowserLite::ReallyDelete()
 {
-   // Really delete the browser and the this GUI.
-
    gInterpreter->DeleteGlobal(fBrowser);
    if (fBrowser->IsOnHeap())
       delete fBrowser; // will in turn delete this object
@@ -1570,20 +1570,20 @@ void TRootBrowserLite::ReallyDelete()
       fBrowser->Destructor(); // will in turn delete this object
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// In case window is closed via WM we get here.
+
 void TRootBrowserLite::CloseWindow()
 {
-   // In case window is closed via WM we get here.
-
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display in statusbar total number of objects and number of
+/// selected objects in IconBox.
+
 void TRootBrowserLite::DisplayTotal(Int_t total, Int_t selected)
 {
-   // Display in statusbar total number of objects and number of
-   // selected objects in IconBox.
-
    char tmp[64];
    const char *fmt;
 
@@ -1596,11 +1596,11 @@ void TRootBrowserLite::DisplayTotal(Int_t total, Int_t selected)
    fStatusBar->SetText(tmp, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display current directory in second label, fLbl2.
+
 void TRootBrowserLite::DisplayDirectory()
 {
-   // Display current directory in second label, fLbl2.
-
    char *p, path[1024];
 
    fLt->GetPathnameFromItem(fListLevel, path, 12);
@@ -1636,13 +1636,13 @@ void TRootBrowserLite::DisplayDirectory()
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute default action for selected object (action is specified
+/// in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
+/// Emits signal "ExecuteDefaultAction(TObject*)".
+
 void TRootBrowserLite::ExecuteDefaultAction(TObject *obj)
 {
-   // Execute default action for selected object (action is specified
-   // in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
-   // Emits signal "ExecuteDefaultAction(TObject*)".
-
    TRootBrowserCursorSwitcher cursorSwitcher(fIconBox, fLt);
    char action[512];
    fBrowser->SetDrawOption(GetDrawOption());
@@ -1758,11 +1758,11 @@ void TRootBrowserLite::ExecuteDefaultAction(TObject *obj)
    // their Browse() member function.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle menu and other command generated by the user.
+
 Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Handle menu and other command generated by the user.
-
    TRootHelpDialog *hd;
    TRootBrowserCursorSwitcher *cursorSwitcher = 0;
    TDirectory *tdir = 0;
@@ -2230,11 +2230,11 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make object associated with item the current directory.
+
 void TRootBrowserLite::Chdir(TGListTreeItem *item)
 {
-   // Make object associated with item the current directory.
-
    if (item) {
       TGListTreeItem *i = item;
       TString dir;
@@ -2263,22 +2263,22 @@ void TRootBrowserLite::Chdir(TGListTreeItem *item)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// helper method  to track history
+
 void TRootBrowserLite::HighlightListLevel()
 {
-   // helper method  to track history
-
    if (!fListLevel) return;
 
    fLt->ClearHighlighted();
    fLt->HighlightItem(fListLevel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// helper method to track history
+
 void TRootBrowserLite::AddToHistory(TGListTreeItem *item)
 {
-   // helper method to track history
-
    TGButton *btn = fToolBar->GetButton(kHistoryBack);
 
    if (!item || (fHistoryCursor &&
@@ -2297,11 +2297,11 @@ void TRootBrowserLite::AddToHistory(TGListTreeItem *item)
    btn->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// clear navigation history
+
 void TRootBrowserLite::ClearHistory()
 {
-   // clear navigation history
-
    fHistory->Delete();
    TGButton *btn = fToolBar->GetButton(kHistoryBack);
    TGButton *btn2 = fToolBar->GetButton(kHistoryForw);
@@ -2309,11 +2309,11 @@ void TRootBrowserLite::ClearHistory()
    btn2->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// go to the past
+
 Bool_t TRootBrowserLite::HistoryBackward()
 {
-   // go to the past
-
    if (fBrowseTextFile) {
       HideTextEdit();
       return kFALSE;
@@ -2344,11 +2344,11 @@ Bool_t TRootBrowserLite::HistoryBackward()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  go to the future
+
 Bool_t TRootBrowserLite::HistoryForward()
 {
-   //  go to the future
-
    if (fBrowseTextFile) {
       HideTextEdit();
       return kFALSE;
@@ -2381,20 +2381,20 @@ Bool_t TRootBrowserLite::HistoryForward()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// delete list tree item, remove it from history
+
 void TRootBrowserLite::DeleteListTreeItem(TGListTreeItem *item)
 {
-   // delete list tree item, remove it from history
-
    ((TRootBrowserHistory*)fHistory)->DeleteItem(item);
    fLt->DeleteItem(item);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open tree item and list in iconbox its contents.
+
 void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
 {
-   // Open tree item and list in iconbox its contents.
-
    if (item) {
       TObject *obj = (TObject *) item->GetUserData();
 
@@ -2498,11 +2498,11 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// display  directory
+
 void TRootBrowserLite::ToSystemDirectory(const char *dirname)
 {
-   // display  directory
-
    TString dir = dirname;
 
    if (fListLevel) {
@@ -2535,33 +2535,34 @@ void TRootBrowserLite::ToSystemDirectory(const char *dirname)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// sets drawing option
+
 void TRootBrowserLite::SetDrawOption(Option_t *option)
 {
-   // sets drawing option
-
    fDrawOption->GetTextEntry()->SetText(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns drawing option
+
 Option_t *TRootBrowserLite::GetDrawOption() const
 {
-   // returns drawing option
-
    return fDrawOption->GetTextEntry()->GetText();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emits signal when double clicking on icon.
+
 void TRootBrowserLite::DoubleClicked(TObject *obj)
 {
-   // Emits signal when double clicking on icon.
-
    Emit("DoubleClicked(TObject*)", (Long_t)obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emits signal when double clicking on icon.
+
 void TRootBrowserLite::Checked(TObject *obj, Bool_t checked)
 {
-   // Emits signal when double clicking on icon.
    Long_t args[2];
 
    args[0] = (Long_t)obj;
@@ -2570,11 +2571,11 @@ void TRootBrowserLite::Checked(TObject *obj, Bool_t checked)
    Emit("Checked(TObject*,Bool_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default action when double clicking on icon.
+
 void TRootBrowserLite::IconBoxAction(TObject *obj)
 {
-   // Default action when double clicking on icon.
-
    Bool_t browsable = kFALSE;
    const char *dirname = 0;
    if (obj) {
@@ -2733,11 +2734,11 @@ out:
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove object from browser.
+
 void TRootBrowserLite::RecursiveRemove(TObject *obj)
 {
-   // Recursively remove object from browser.
-
    // don't delete fIconBox items here (it's status will be updated
    // via TBrowser::Refresh() which should be called once all objects have
    // been removed.
@@ -2759,11 +2760,11 @@ void TRootBrowserLite::RecursiveRemove(TObject *obj)
    DeleteListTreeItem(item);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh the browser contents.
+
 void TRootBrowserLite::Refresh(Bool_t force)
 {
-   // Refresh the browser contents.
-
    Bool_t refresh = fBrowser && fBrowser->GetRefreshFlag();
 
    if (fTextEdit && !gROOT->IsExecutingMacro() && force) {
@@ -2801,11 +2802,11 @@ void TRootBrowserLite::Refresh(Bool_t force)
    fClient->NeedRedraw(fLt, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show or hide toolbar.
+
 void TRootBrowserLite::ShowToolBar(Bool_t show)
 {
-   // Show or hide toolbar.
-
    if (show) {
       ShowFrame(fToolBar);
       ShowFrame(fToolBarSep);
@@ -2817,11 +2818,11 @@ void TRootBrowserLite::ShowToolBar(Bool_t show)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show or hide statusbar.
+
 void TRootBrowserLite::ShowStatusBar(Bool_t show)
 {
-   // Show or hide statusbar.
-
    if (show) {
       ShowFrame(fStatusBar);
       fViewMenu->CheckEntry(kViewStatusBar);
@@ -2831,11 +2832,11 @@ void TRootBrowserLite::ShowStatusBar(Bool_t show)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set defaults depending on settings in the user's .rootrc.
+
 void TRootBrowserLite::SetDefaults(const char *iconStyle, const char *sortBy)
 {
-   // Set defaults depending on settings in the user's .rootrc.
-
    const char *opt;
 
    // IconStyle: big, small, list, details
@@ -2873,11 +2874,11 @@ void TRootBrowserLite::SetDefaults(const char *iconStyle, const char *sortBy)
    fIconBox->Refresh();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set iconbox's view mode and update menu and toolbar buttons accordingly.
+
 void TRootBrowserLite::SetViewMode(Int_t new_mode, Bool_t force)
 {
-   // Set iconbox's view mode and update menu and toolbar buttons accordingly.
-
    int i, bnum;
    EListViewMode lv;
 
@@ -2932,11 +2933,11 @@ void TRootBrowserLite::SetViewMode(Int_t new_mode, Bool_t force)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set iconbox's sort mode and update menu radio buttons accordingly.
+
 void TRootBrowserLite::SetSortMode(Int_t new_mode)
 {
-   // Set iconbox's sort mode and update menu radio buttons accordingly.
-
    EFSSortMode smode;
 
    switch (new_mode) {
@@ -2963,11 +2964,11 @@ void TRootBrowserLite::SetSortMode(Int_t new_mode)
    fIconBox->Sort(smode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// starts serach dialog
+
 void TRootBrowserLite::Search()
 {
-   // starts serach dialog
-
    if (!fTextEdit) {
       fIconBox->Search(kFALSE);
    } else {
@@ -2975,11 +2976,11 @@ void TRootBrowserLite::Search()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test
+
 static Bool_t isBinary(const char *str, int len)
 {
-   // test
-
    for (int i = 0; i < len; i++) {
       char c = str[i];
       if (((c < 32) || (c > 126)) && (c != '\t') && (c != '\r') && (c != '\n')) {
@@ -2989,11 +2990,11 @@ static Bool_t isBinary(const char *str, int len)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// hide text edit
+
 void TRootBrowserLite::HideTextEdit()
 {
-   // hide text edit
-
    if (!fTextEdit) return;
 
    ShowMacroButtons(kFALSE);
@@ -3012,11 +3013,11 @@ void TRootBrowserLite::HideTextEdit()
    fTextFileName = "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// browse text file
+
 void TRootBrowserLite::BrowseTextFile(const char *file)
 {
-   // browse text file
-
    Bool_t loaded = (fTextEdit != 0);
    if (gSystem->AccessPathName(file, kReadPermission)) {
       if (loaded) {
@@ -3090,11 +3091,11 @@ void TRootBrowserLite::BrowseTextFile(const char *file)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// executed browsed text macro
+
 void TRootBrowserLite::ExecMacro()
 {
-   // executed browsed text macro
-
    char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(),
                                            fTextFileName.Data());
 
@@ -3106,19 +3107,19 @@ void TRootBrowserLite::ExecMacro()
    gROOT->SetExecutingMacro(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// interrupt browsed macro execution
+
 void TRootBrowserLite::InterruptMacro()
 {
-   // interrupt browsed macro execution
-
    gROOT->SetInterrupt(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// show/hide macro buttons
+
 void TRootBrowserLite::ShowMacroButtons(Bool_t show)
 {
-   // show/hide macro buttons
-
    TGButton *bt1 = fToolBar->GetButton(kViewExec);
    TGButton *bt2 = fToolBar->GetButton(kViewInterrupt);
    TGButton *bt3 = fToolBar->GetButton(kViewSave);
@@ -3142,11 +3143,11 @@ void TRootBrowserLite::ShowMacroButtons(Bool_t show)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text in column col in status bar.
+
 void TRootBrowserLite::SetStatusText(const char *txt, Int_t col)
 {
-   // Set text in column col in status bar.
-
    ShowStatusBar(kTRUE);
    TGStatusBar* status = GetStatusBar();
    if (status!=0) {
@@ -3154,24 +3155,24 @@ void TRootBrowserLite::SetStatusText(const char *txt, Int_t col)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface method to the old browser.
+
 TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title,
                                       UInt_t width, UInt_t height,
                                       Option_t * /*opt*/)
 {
-   // Interface method to the old browser.
-
    TRootBrowserLite *browser = new TRootBrowserLite(b, title, width, height);
    return (TBrowserImp *)browser;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface method to the old browser.
+
 TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title, Int_t x,
                                       Int_t y, UInt_t width, UInt_t height,
                                       Option_t * /*opt*/)
 {
-   // Interface method to the old browser.
-
    TRootBrowserLite *browser = new TRootBrowserLite(b, title, x, y, width, height);
    return (TBrowserImp *)browser;
 }

@@ -10,4 +10,7 @@ if(gdml)
             PATTERN "src" EXCLUDE)
   endif()
 endif()
+if(geocad)
+  add_subdirectory(geocad)
+endif()
 

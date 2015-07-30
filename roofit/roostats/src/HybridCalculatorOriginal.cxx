@@ -14,7 +14,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /**
 HybridCalculatorOriginal class: this class is a fresh rewrite in RooStats of
 	RooStatsCms/LimitCalculator developped by D. Piparo and G. Schott

@@ -90,27 +90,27 @@ const UInt_t kHashShift = 5;
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TString default ctor.
+
 TString::TString()
 {
-   // TString default ctor.
-
    Zero();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TString able to contain ic characters.
+
 TString::TString(Ssiz_t ic)
 {
-   // Create TString able to contain ic characters.
-
    Init(ic, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TString and initialize it with string cs.
+
 TString::TString(const char *cs)
 {
-   // Create TString and initialize it with string cs.
-
    if (cs) {
       Ssiz_t n = strlen(cs);
       char *data = Init(n, n);
@@ -119,56 +119,56 @@ TString::TString(const char *cs)
       Init(0, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TString and initialize it with string cs.
+
 TString::TString(const std::string &s)
 {
-   // Create TString and initialize it with string cs.
-
    Ssiz_t n = s.length();
    char *data = Init(n, n);
    memcpy(data, s.c_str(), n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TString and initialize it with the first n characters of cs.
+
 TString::TString(const char *cs, Ssiz_t n)
 {
-   // Create TString and initialize it with the first n characters of cs.
-
    char *data = Init(n, n);
    memcpy(data, cs, n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a string with a single character.
+
 void TString::InitChar(char c)
 {
-   // Initialize a string with a single character.
-
    char *data = Init(1, 1);
    data[0] = c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a string with a single character.
+
 TString::TString(char c)
 {
-   // Initialize a string with a single character.
-
    InitChar(c);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the first n locations of a TString with character c.
+
 TString::TString(char c, Ssiz_t n)
 {
-   // Initialize the first n locations of a TString with character c.
-
    char *data = Init(n, n);
    while (n--) data[n] = c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TString::TString(const TString &s)
 {
-   // Copy constructor.
-
    if (!s.IsLong())
       fRep.fRaw = s.fRep.fRaw;
    else {
@@ -178,31 +178,31 @@ TString::TString(const TString &s)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move constructor.
+
 TString::TString(TString &&s)
 {
-   // Move constructor.
-
    // Short or long, all data is in fRaw.
    fRep.fRaw = s.fRep.fRaw;
    s.Init(0,0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a TSubString in a TString.
+
 TString::TString(const TSubString& substr)
 {
-   // Copy a TSubString in a TString.
-
    Ssiz_t len = substr.IsNull() ? 0 : substr.Length();
    char *data = Init(len, len);
    memcpy(data, substr.Data(), len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special constructor to initialize with the concatenation of a1 and a2.
+
 TString::TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2)
 {
-   // Special constructor to initialize with the concatenation of a1 and a2.
-
    if (!a1) n1=0;
    if (!a2) n2=0;
    Ssiz_t tot = n1+n2;
@@ -211,20 +211,20 @@ TString::TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2)
    memcpy(data+n1, a2, n2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a TString.
+
 TString::~TString()
 {
-   // Delete a TString.
-
    UnLink();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Private member function returning an empty string representation of
+/// size capacity and containing nchar characters.
+
 char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
 {
-   // Private member function returning an empty string representation of
-   // size capacity and containing nchar characters.
-
    if (capacity > MaxSize()) {
       Error("TString::Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
       capacity = MaxSize();
@@ -248,11 +248,11 @@ char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
    return data;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign character c to TString.
+
 TString& TString::operator=(char c)
 {
-   // Assign character c to TString.
-
    if (!c) {
       UnLink();
       Zero();
@@ -261,11 +261,11 @@ TString& TString::operator=(char c)
    return Replace(0, Length(), &c, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign string cs to TString.
+
 TString& TString::operator=(const char *cs)
 {
-   // Assign string cs to TString.
-
    if (!cs || !*cs) {
       UnLink();
       Zero();
@@ -274,11 +274,11 @@ TString& TString::operator=(const char *cs)
    return Replace(0, Length(), cs, strlen(cs));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign std::string s to TString.
+
 TString& TString::operator=(const std::string &s)
 {
-   // Assign std::string s to TString.
-
    if (s.length()==0) {
       UnLink();
       Zero();
@@ -287,11 +287,11 @@ TString& TString::operator=(const std::string &s)
    return Replace(0, Length(), s.c_str(), s.length());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TString& TString::operator=(const TString &rhs)
 {
-   // Assignment operator.
-
    if (this != &rhs) {
       UnLink();
       if (!rhs.IsLong())
@@ -305,11 +305,11 @@ TString& TString::operator=(const TString &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign a TSubString substr to TString.
+
 TString& TString::operator=(const TSubString &substr)
 {
-   // Assign a TSubString substr to TString.
-
    Ssiz_t len = substr.IsNull() ? 0 : substr.Length();
    if (!len) {
       UnLink();
@@ -319,11 +319,11 @@ TString& TString::operator=(const TSubString &substr)
    return Replace(0, Length(), substr.Data(), len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append character c rep times to string.
+
 TString& TString::Append(char c, Ssiz_t rep)
 {
-   // Append character c rep times to string.
-
    if (!rep) return *this;
 
    Ssiz_t len = Length();
@@ -359,27 +359,27 @@ TString& TString::Append(char c, Ssiz_t rep)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return string capacity. If nc != current capacity Clone() the string
+/// in a string with the desired capacity.
+
 Ssiz_t TString::Capacity(Ssiz_t nc)
 {
-   // Return string capacity. If nc != current capacity Clone() the string
-   // in a string with the desired capacity.
-
    if (nc > Length())
       Clone(nc);
 
    return Capacity();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare a string to char *cs2. Returns returns zero if the two
+/// strings are identical, otherwise returns the difference between
+/// the first two differing bytes (treated as unsigned char values,
+/// so that `\200' is greater than `\0', for example). Zero-length
+/// strings are always identical.
+
 int TString::CompareTo(const char *cs2, ECaseCompare cmp) const
 {
-   // Compare a string to char *cs2. Returns returns zero if the two
-   // strings are identical, otherwise returns the difference between
-   // the first two differing bytes (treated as unsigned char values,
-   // so that `\200' is greater than `\0', for example). Zero-length
-   // strings are always identical.
-
    if (!cs2) return 1;
 
    const char *cs1 = Data();
@@ -401,15 +401,15 @@ int TString::CompareTo(const char *cs2, ECaseCompare cmp) const
    return (i < len) ? 1 : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare a string to another string. Returns returns zero if the two
+/// strings are identical, otherwise returns the difference between
+/// the first two differing bytes (treated as unsigned char values,
+/// so that `\200' is greater than `\0', for example). Zero-length
+/// strings are always identical.
+
 int TString::CompareTo(const TString &str, ECaseCompare cmp) const
 {
-   // Compare a string to another string. Returns returns zero if the two
-   // strings are identical, otherwise returns the difference between
-   // the first two differing bytes (treated as unsigned char values,
-   // so that `\200' is greater than `\0', for example). Zero-length
-   // strings are always identical.
-
    const char *s1 = Data();
    const char *s2 = str.Data();
    Ssiz_t len = Length();
@@ -433,11 +433,11 @@ int TString::CompareTo(const TString &str, ECaseCompare cmp) const
    return (len > slen) ? 1 : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of times character c occurs in the string.
+
 Int_t TString::CountChar(Int_t c) const
 {
-   // Return number of times character c occurs in the string.
-
    Int_t count = 0;
    Int_t len   = Length();
    const char *data  = Data();
@@ -447,35 +447,36 @@ Int_t TString::CountChar(Int_t c) const
    return count;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a string.
+
 TString TString::Copy() const
 {
-   // Copy a string.
-
    TString temp(*this);
    return temp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find first occurrence of a character c.
+
 Ssiz_t TString::First(char c) const
 {
-   // Find first occurrence of a character c.
-
    const char *f = strchr(Data(), c);
    return f ? f - Data() : kNPOS;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find first occurrence of a character in cs.
+
 Ssiz_t TString::First(const char *cs) const
 {
-   // Find first occurrence of a character in cs.
-
    const char *f = strpbrk(Data(), cs);
    return f ? f - Data() : kNPOS;
 }
 
 #ifndef R__BYTESWAP
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline static UInt_t SwapInt(UInt_t x)
 {
    return (((x & 0x000000ffU) << 24) | ((x & 0x0000ff00U) <<  8) |
@@ -483,21 +484,21 @@ inline static UInt_t SwapInt(UInt_t x)
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Utility used by Hash().
+
 inline static void Mash(UInt_t& hash, UInt_t chars)
 {
-   // Utility used by Hash().
-
    hash = (chars ^
            ((hash << kHashShift) |
             (hash >> (kBitsPerByte*sizeof(UInt_t) - kHashShift))));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a case-sensitive hash value (endian independent).
+
 UInt_t Hash(const char *str)
 {
-   // Return a case-sensitive hash value (endian independent).
-
    UInt_t len = str ? strlen(str) : 0;
    UInt_t hv  = len; // Mix in the string length.
    UInt_t i   = hv*sizeof(char)/sizeof(UInt_t);
@@ -550,11 +551,11 @@ UInt_t Hash(const char *str)
    return hv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a case-sensitive hash value (endian independent).
+
 UInt_t TString::HashCase() const
 {
-   // Return a case-sensitive hash value (endian independent).
-
    UInt_t hv       = (UInt_t)Length(); // Mix in the string length.
    UInt_t i        = hv*sizeof(char)/sizeof(UInt_t);
    const UInt_t *p = (const UInt_t*)Data();
@@ -579,11 +580,11 @@ UInt_t TString::HashCase() const
    return hv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a case-insensitive hash value (endian independent).
+
 UInt_t TString::HashFoldCase() const
 {
-   // Return a case-insensitive hash value (endian independent).
-
    UInt_t hv = (UInt_t)Length();    // Mix in the string length.
    UInt_t i  = hv;
    const unsigned char *p = (const unsigned char*)Data();
@@ -594,11 +595,11 @@ UInt_t TString::HashFoldCase() const
    return hv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return hash value.
+
 UInt_t TString::Hash(ECaseCompare cmp) const
 {
-   // Return hash value.
-
    return (cmp == kExact) ? HashCase() : HashFoldCase();
 }
 
@@ -659,18 +660,20 @@ namespace {
 #define BIG_CONSTANT(x) (x##LLU)
 #endif // !defined(_MSC_VER)
 
-   //-----------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Block read - if your platform needs to do endian-swapping or can only
+   /// handle aligned reads, do the conversion here
+
    FORCE_INLINE uint64_t getblock(const uint64_t* p, int i)
    {
-      // Block read - if your platform needs to do endian-swapping or can only
-      // handle aligned reads, do the conversion here
       return p[i];
    }
 
-   //-----------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Finalization mix - force all bits of a hash block to avalanche
+
    FORCE_INLINE uint64_t fmix(uint64_t k)
    {
-      // Finalization mix - force all bits of a hash block to avalanche
       k ^= k >> 33;
       k *= BIG_CONSTANT(0xff51afd7ed558ccd);
       k ^= k >> 33;
@@ -680,14 +683,15 @@ namespace {
       return k;
    }
 
-   //-----------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// "key" is input to be hashed.
+   /// "len" is the number of bytes to hash starting at "key".
+   /// "seed" is a hash seed, "out" is a buffer (128 bytes) that will receive
+   /// the results.
+
    static void MurmurHash3_x64_128(const void * key, const int len,
                                    const uint32_t seed, uint64_t out[2] )
    {
-      // "key" is input to be hashed.
-      // "len" is the number of bytes to hash starting at "key".
-      // "seed" is a hash seed, "out" is a buffer (128 bytes) that will receive
-      // the results.
       const uint8_t * data = (const uint8_t*)key;
       const int nblocks = len / 16;
 
@@ -763,20 +767,22 @@ namespace {
       ((uint64_t*)out)[1] = h2;
    }
 
-   //-----------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates hash index from any char string. (static function)
+/// For string:  i = TString::Hash(string,nstring);
+/// For int:     i = TString::Hash(&intword,sizeof(int));
+/// For pointer: i = TString::Hash(&pointer,sizeof(void*));
+///
+/// This employs two different hash functions, depending on ntxt:
+///   ntxt == sizeof(void*): a simple bitwise xor to get fast pointer hashes
+///   else: MurmurHash3_x64_128 http://code.google.com/p/smhasher/
+
 UInt_t TString::Hash(const void *txt, Int_t ntxt)
 {
-   // Calculates hash index from any char string. (static function)
-   // For string:  i = TString::Hash(string,nstring);
-   // For int:     i = TString::Hash(&intword,sizeof(int));
-   // For pointer: i = TString::Hash(&pointer,sizeof(void*));
-   //
-   // This employs two different hash functions, depending on ntxt:
-   //   ntxt == sizeof(void*): a simple bitwise xor to get fast pointer hashes
-   //   else: MurmurHash3_x64_128 http://code.google.com/p/smhasher/
    if (ntxt != sizeof(void*)) {
       uint64_t buf[2] = {0};
       MurmurHash3_x64_128(txt, ntxt, 0x6384BA69, buf);
@@ -807,11 +813,11 @@ UInt_t TString::Hash(const void *txt, Int_t ntxt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns false if strings are not equal.
+
 static int MemIsEqual(const char *p, const char *q, Ssiz_t n)
 {
-   // Returns false if strings are not equal.
-
    while (n--)
    {
       if (tolower((unsigned char)*p) != tolower((unsigned char)*q))
@@ -821,14 +827,14 @@ static int MemIsEqual(const char *p, const char *q, Ssiz_t n)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for a string in the TString. Plen is the length of pattern,
+/// startIndex is the index from which to start and cmp selects the type
+/// of case-comparison.
+
 Ssiz_t TString::Index(const char *pattern, Ssiz_t plen, Ssiz_t startIndex,
                       ECaseCompare cmp) const
 {
-   // Search for a string in the TString. Plen is the length of pattern,
-   // startIndex is the index from which to start and cmp selects the type
-   // of case-comparison.
-
    Ssiz_t slen = Length();
    if (slen < startIndex + plen) return kNPOS;
    if (plen == 0) return startIndex;
@@ -849,19 +855,20 @@ Ssiz_t TString::Index(const char *pattern, Ssiz_t plen, Ssiz_t startIndex,
    return kNPOS;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find last occurrence of a character c.
+
 Ssiz_t TString::Last(char c) const
 {
-   // Find last occurrence of a character c.
-
    const char *f = strrchr(Data(), (unsigned char) c);
    return f ? f - Data() : kNPOS;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the MD5 digest for this string, in a string representation.
+
 TString TString::MD5() const
 {
-   // Return the MD5 digest for this string, in a string representation.
    TMD5 md5;
    md5.Update((const UChar_t*)Data(), Length());
    UChar_t digest[16];
@@ -869,11 +876,11 @@ TString TString::MD5() const
    return md5.AsString();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if string contains one of the regexp characters "^$.[]*+?".
+
 Bool_t TString::MaybeRegexp() const
 {
-   // Returns true if string contains one of the regexp characters "^$.[]*+?".
-
    const char *specials = "^$.[]*+?";
 
    if (First(specials) == kNPOS)
@@ -881,11 +888,11 @@ Bool_t TString::MaybeRegexp() const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if string contains one of the wildcard characters "[]*?".
+
 Bool_t TString::MaybeWildcard() const
 {
-   // Returns true if string contains one of the wildcard characters "[]*?".
-
    const char *specials = "[]*?";
 
    if (First(specials) == kNPOS)
@@ -893,11 +900,11 @@ Bool_t TString::MaybeWildcard() const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prepend character c rep times to string.
+
 TString& TString::Prepend(char c, Ssiz_t rep)
 {
-   // Prepend character c rep times to string.
-
    if (!rep) return *this;
 
    Ssiz_t len = Length();
@@ -933,12 +940,12 @@ TString& TString::Prepend(char c, Ssiz_t rep)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove at most n1 characters from self beginning at pos,
+/// and replace them with the first n2 characters of cs.
+
 TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
 {
-   // Remove at most n1 characters from self beginning at pos,
-   // and replace them with the first n2 characters of cs.
-
    Ssiz_t len = Length();
    if (pos <= kNPOS || pos > len) {
       Error("TString::Replace",
@@ -997,12 +1004,12 @@ finish:
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find & Replace ls1 symbols of s1 with ls2 symbols of s2 if any.
+
 TString& TString::ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2,
                              Ssiz_t ls2)
 {
-   // Find & Replace ls1 symbols of s1 with ls2 symbols of s2 if any.
-
    if (s1 && ls1 > 0) {
       Ssiz_t index = 0;
       while ((index = Index(s1, ls1, index, kExact)) != kNPOS) {
@@ -1013,12 +1020,12 @@ TString& TString::ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2,
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove char c at begin and/or end of string (like Strip()) but
+/// modifies directly the string.
+
 TString &TString::Remove(EStripType st, char c)
 {
-   // Remove char c at begin and/or end of string (like Strip()) but
-   // modifies directly the string.
-
    Ssiz_t start = 0;             // Index of first character
    Ssiz_t end = Length();        // One beyond last character
    const char *direct = Data();  // Avoid a dereference w dumb compiler
@@ -1042,22 +1049,22 @@ TString &TString::Remove(EStripType st, char c)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the string. Truncate or add blanks as necessary.
+
 void TString::Resize(Ssiz_t n)
 {
-   // Resize the string. Truncate or add blanks as necessary.
-
    if (n < Length())
       Remove(n);                  // Shrank; truncate the string
    else
       Append(' ', n-Length());    // Grew or staid the same
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a substring of self stripped at beginning and/or end.
+
 TSubString TString::Strip(EStripType st, char c) const
 {
-   // Return a substring of self stripped at beginning and/or end.
-
    Ssiz_t start = 0;             // Index of first character
    Ssiz_t end = Length();        // One beyond last character
    const char *direct = Data();  // Avoid a dereference w dumb compiler
@@ -1072,11 +1079,11 @@ TSubString TString::Strip(EStripType st, char c) const
    return TSubString(*this, start, end-start);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change string to lower-case.
+
 void TString::ToLower()
 {
-   // Change string to lower-case.
-
    Ssiz_t n = Length();
    char *p = GetPointer();
    while (n--) {
@@ -1085,11 +1092,11 @@ void TString::ToLower()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change string to upper case.
+
 void TString::ToUpper()
 {
-   // Change string to upper case.
-
    Ssiz_t n = Length();
    char *p = GetPointer();
    while (n--) {
@@ -1098,21 +1105,21 @@ void TString::ToUpper()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check to make sure a string index is in range.
+
 void TString::AssertElement(Ssiz_t i) const
 {
-   // Check to make sure a string index is in range.
-
    if (i == kNPOS || i > Length())
       Error("TString::AssertElement",
             "out of bounds: i = %d, Length = %d", i, Length());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate a nice capacity greater than or equal to newCap.
+
 Ssiz_t TString::AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap)
 {
-   // Calculate a nice capacity greater than or equal to newCap.
-
    Ssiz_t ms = MaxSize();
    if (newCap > ms - 1) {
       Error("TString::AdjustCapacity", "capacity too large (%d, max = %d)",
@@ -1123,19 +1130,19 @@ Ssiz_t TString::AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap)
    return cap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear string without changing its capacity.
+
 void TString::Clear()
 {
-   // Clear string without changing its capacity.
-
    Clobber(Capacity());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear string and make sure it has a capacity of nc.
+
 void TString::Clobber(Ssiz_t nc)
 {
-   // Clear string and make sure it has a capacity of nc.
-
    if (nc > MaxSize()) {
       Error("TString::Clobber", "capacity too large (%d, max = %d)", nc, MaxSize());
       nc = MaxSize();
@@ -1158,12 +1165,12 @@ void TString::Clobber(Ssiz_t nc)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make self a distinct copy with capacity of at least tot, where tot cannot
+/// be smaller than the current length. Preserve previous contents.
+
 void TString::Clone(Ssiz_t tot)
 {
-   // Make self a distinct copy with capacity of at least tot, where tot cannot
-   // be smaller than the current length. Preserve previous contents.
-
    Ssiz_t len = Length();
    if (len >= tot) return;
 
@@ -1189,11 +1196,11 @@ void TString::Clone(Ssiz_t tot)
 
 // ------------------- ROOT I/O ------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy string into I/O buffer.
+
 void TString::FillBuffer(char *&buffer) const
 {
-   // Copy string into I/O buffer.
-
    UChar_t nwh;
    Int_t   nchars = Length();
 
@@ -1210,11 +1217,11 @@ void TString::FillBuffer(char *&buffer) const
    buffer += nchars;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read string from I/O buffer.
+
 void TString::ReadBuffer(char *&buffer)
 {
-   // Read string from I/O buffer.
-
    UnLink();
    Zero();
 
@@ -1237,15 +1244,15 @@ void TString::ReadBuffer(char *&buffer)
    for (int i = 0; i < nchars; i++) frombuf(buffer, &data[i]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read TString object from buffer. Simplified version of
+/// TBuffer::ReadObject (does not keep track of multiple
+/// references to same string).  We need to have it here
+/// because TBuffer::ReadObject can only handle descendant
+/// of TObject.
+
 TString *TString::ReadString(TBuffer &b, const TClass *clReq)
 {
-   // Read TString object from buffer. Simplified version of
-   // TBuffer::ReadObject (does not keep track of multiple
-   // references to same string).  We need to have it here
-   // because TBuffer::ReadObject can only handle descendant
-   // of TObject.
-
    R__ASSERT(b.IsReading());
 
    // Make sure ReadArray is initialized
@@ -1280,22 +1287,22 @@ TString *TString::ReadString(TBuffer &b, const TClass *clReq)
    return a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns size string will occupy on I/O buffer.
+
 Int_t TString::Sizeof() const
 {
-   // Returns size string will occupy on I/O buffer.
-
    if (Length() > 254)
       return Length()+sizeof(UChar_t)+sizeof(Int_t);
    else
       return Length()+sizeof(UChar_t);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a string object.
+
 void TString::Streamer(TBuffer &b)
 {
-   // Stream a string object.
-
    if (b.IsReading()) {
       b.ReadTString(*this);
    } else {
@@ -1303,15 +1310,15 @@ void TString::Streamer(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write TString object to buffer. Simplified version of
+/// TBuffer::WriteObject (does not keep track of multiple
+/// references to the same string).  We need to have it here
+/// because TBuffer::ReadObject can only handle descendant
+/// of TObject
+
 void TString::WriteString(TBuffer &b, const TString *a)
 {
-   // Write TString object to buffer. Simplified version of
-   // TBuffer::WriteObject (does not keep track of multiple
-   // references to the same string).  We need to have it here
-   // because TBuffer::ReadObject can only handle descendant
-   // of TObject
-
    R__ASSERT(b.IsWriting());
 
    // Make sure WriteMap is initialized
@@ -1337,34 +1344,34 @@ void TString::WriteString(TBuffer &b, const TString *a)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read string from TBuffer. Function declared in ClassDef.
+
 #if defined(R__TEMPLATE_OVERLOAD_BUG)
 template <>
 #endif
 TBuffer &operator>>(TBuffer &buf, TString *&s)
 {
-   // Read string from TBuffer. Function declared in ClassDef.
-
    s = (TString *) TString::ReadString(buf, TString::Class());
    return buf;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write TString or derived to TBuffer.
+
 TBuffer &operator<<(TBuffer &buf, const TString *s)
 {
-   // Write TString or derived to TBuffer.
-
    TString::WriteString(buf, s);
    return buf;
 }
 
 // ------------------- Related global functions --------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare TString with a char *.
+
 Bool_t operator==(const TString& s1, const char *s2)
 {
-   // Compare TString with a char *.
-
    if (!s2) return kFALSE;
 
    const char *data = s1.Data();
@@ -1375,11 +1382,11 @@ Bool_t operator==(const TString& s1, const char *s2)
    return (i == len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a lower-case version of str.
+
 TString ToLower(const TString &str)
 {
-   // Return a lower-case version of str.
-
    Ssiz_t n = str.Length();
    TString temp((char)0, n);
    const char *uc = str.Data();
@@ -1389,11 +1396,11 @@ TString ToLower(const TString &str)
    return temp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an upper-case version of str.
+
 TString ToUpper(const TString &str)
 {
-   // Return an upper-case version of str.
-
    Ssiz_t n = str.Length();
    TString temp((char)0, n);
    const char* uc = str.Data();
@@ -1403,121 +1410,121 @@ TString ToUpper(const TString &str)
    return temp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use the special concatenation constructor.
+
 TString operator+(const TString &s, const char *cs)
 {
-   // Use the special concatenation constructor.
-
    return TString(s.Data(), s.Length(), cs, cs ? strlen(cs) : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use the special concatenation constructor.
+
 TString operator+(const char *cs, const TString &s)
 {
-   // Use the special concatenation constructor.
-
    return TString(cs, cs ? strlen(cs) : 0, s.Data(), s.Length());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use the special concatenation constructor.
+
 TString operator+(const TString &s1, const TString &s2)
 {
-   // Use the special concatenation constructor.
-
    return TString(s1.Data(), s1.Length(), s2.Data(), s2.Length());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add char to string.
+
 TString operator+(const TString &s, char c)
 {
-   // Add char to string.
-
    return TString(s.Data(), s.Length(), &c, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add integer to string.
+
 TString operator+(const TString &s, Long_t i)
 {
-   // Add integer to string.
-
    char si[32];
    snprintf(si, sizeof(si), "%ld", i);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add integer to string.
+
 TString operator+(const TString &s, ULong_t i)
 {
-   // Add integer to string.
-
    char si[32];
    snprintf(si, sizeof(si), "%lu", i);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add integer to string.
+
 TString operator+(const TString &s, Long64_t i)
 {
-   // Add integer to string.
-
    char si[32];
    snprintf(si, sizeof(si), "%lld", i);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add integer to string.
+
 TString operator+(const TString &s, ULong64_t i)
 {
-   // Add integer to string.
-
    char si[32];
    snprintf(si, sizeof(si), "%llu", i);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add string to integer.
+
 TString operator+(char c, const TString &s)
 {
-   // Add string to integer.
-
    return TString(&c, 1, s.Data(), s.Length());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add string to integer.
+
 TString operator+(Long_t i, const TString &s)
 {
-   // Add string to integer.
-
    char si[32];
    snprintf(si, sizeof(si), "%ld", i);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add string to integer.
+
 TString operator+(ULong_t i, const TString &s)
 {
-   // Add string to integer.
-
    char si[32];
    snprintf(si, sizeof(si), "%lu", i);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add string to integer.
+
 TString operator+(Long64_t i, const TString &s)
 {
-   // Add string to integer.
-
    char si[32];
    snprintf(si, sizeof(si), "%lld", i);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add string to integer.
+
 TString operator+(ULong64_t i, const TString &s)
 {
-   // Add string to integer.
-
    char si[32];
    snprintf(si, sizeof(si), "%llu", i);
    return TString(si, strlen(si), s.Data(), s.Length());
@@ -1527,51 +1534,54 @@ TString operator+(ULong64_t i, const TString &s)
 
 // ------------------- The static data members access --------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Ssiz_t  TString::GetInitialCapacity()
 {
    ::Obsolete("TString::GetInitialCapacity", "v5-30-00", "v5-32-00");
    return 15;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Ssiz_t  TString::GetResizeIncrement()
 {
    ::Obsolete("TString::GetResizeIncrement", "v5-30-00", "v5-32-00");
    return 16;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Ssiz_t  TString::GetMaxWaste()
 {
    ::Obsolete("TString::GetMaxWaste", "v5-30-00", "v5-32-00");
    return 15;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default initial capacity for all TStrings. Default is 15.
+
 Ssiz_t TString::InitialCapacity(Ssiz_t)
 {
-   // Set default initial capacity for all TStrings. Default is 15.
-
    ::Obsolete("TString::InitialCapacity", "v5-30-00", "v5-32-00");
    return 15;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default resize increment for all TStrings. Default is 16.
+
 Ssiz_t TString::ResizeIncrement(Ssiz_t)
 {
-   // Set default resize increment for all TStrings. Default is 16.
-
    ::Obsolete("TString::ResizeIncrement", "v5-30-00", "v5-32-00");
    return 16;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set maximum space that may be wasted in a string before doing a resize.
+/// Default is 15.
+
 Ssiz_t TString::MaxWaste(Ssiz_t)
 {
-   // Set maximum space that may be wasted in a string before doing a resize.
-   // Default is 15.
-
    ::Obsolete("TString::MaxWaste", "v5-30-00", "v5-32-00");
    return 15;
 }
@@ -1593,18 +1603,19 @@ Ssiz_t TString::MaxWaste(Ssiz_t)
 // be detected with the member function IsNull().
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Private constructor.
+
 TSubString::TSubString(const TString &str, Ssiz_t start, Ssiz_t nextent)
    : fStr((TString&)str), fBegin(start), fExtent(nextent)
 {
-   // Private constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return sub-string of string starting at start with length len.
+
 TSubString TString::operator()(Ssiz_t start, Ssiz_t len) const
 {
-   // Return sub-string of string starting at start with length len.
-
    if (start < Length() && len > 0) {
       if (start+len > Length())
          len = Length() - start;
@@ -1615,64 +1626,64 @@ TSubString TString::operator()(Ssiz_t start, Ssiz_t len) const
    return TSubString(*this, start, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a substring matching "pattern", or the null substring
+/// if there is no such match.  It would be nice if this could be yet another
+/// overloaded version of operator(), but this would result in a type
+/// conversion ambiguity with operator(Ssiz_t, Ssiz_t).
+
 TSubString TString::SubString(const char *pattern, Ssiz_t startIndex,
                               ECaseCompare cmp) const
 {
-   // Returns a substring matching "pattern", or the null substring
-   // if there is no such match.  It would be nice if this could be yet another
-   // overloaded version of operator(), but this would result in a type
-   // conversion ambiguity with operator(Ssiz_t, Ssiz_t).
-
    Ssiz_t len = pattern ? strlen(pattern) : 0;
    Ssiz_t i = Index(pattern, len, startIndex, cmp);
    return TSubString(*this, i, i == kNPOS ? 0 : len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return character at pos i from sub-string. Check validity of i.
+
 char& TSubString::operator[](Ssiz_t i)
 {
-   // Return character at pos i from sub-string. Check validity of i.
-
    AssertElement(i);
    return fStr(fBegin+i);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return character at pos i from sub-string. No check on i.
+
 char& TSubString::operator()(Ssiz_t i)
 {
-   // Return character at pos i from sub-string. No check on i.
-
    return fStr(fBegin+i);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign string to sub-string.
+
 TSubString& TSubString::operator=(const TString &str)
 {
-   // Assign string to sub-string.
-
    if (!IsNull())
       fStr.Replace(fBegin, fExtent, str.Data(), str.Length());
 
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign char* to sub-string.
+
 TSubString& TSubString::operator=(const char *cs)
 {
-   // Assign char* to sub-string.
-
    if (!IsNull())
       fStr.Replace(fBegin, fExtent, cs, cs ? strlen(cs) : 0);
 
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare sub-string to char *.
+
 Bool_t operator==(const TSubString& ss, const char *cs)
 {
-   // Compare sub-string to char *.
-
    if (ss.IsNull()) return *cs =='\0'; // Two null strings compare equal
 
    const char* data = ss.fStr.Data() + ss.fBegin;
@@ -1682,32 +1693,32 @@ Bool_t operator==(const TSubString& ss, const char *cs)
    return (i == ss.fExtent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare sub-string to string.
+
 Bool_t operator==(const TSubString& ss, const TString &s)
 {
-   // Compare sub-string to string.
-
    if (ss.IsNull()) return s.IsNull(); // Two null strings compare equal.
    if (ss.fExtent != s.Length()) return kFALSE;
    return !memcmp(ss.fStr.Data() + ss.fBegin, s.Data(), ss.fExtent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare two sub-strings.
+
 Bool_t operator==(const TSubString &s1, const TSubString &s2)
 {
-   // Compare two sub-strings.
-
    if (s1.IsNull()) return s2.IsNull();
    if (s1.fExtent != s2.fExtent) return kFALSE;
    return !memcmp(s1.fStr.Data()+s1.fBegin, s2.fStr.Data()+s2.fBegin,
                   s1.fExtent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert sub-string to lower-case.
+
 void TSubString::ToLower()
 {
-   // Convert sub-string to lower-case.
-
    if (!IsNull()) {                             // Ignore null substrings
       char *p = fStr.GetPointer() + fBegin;
       Ssiz_t n = fExtent;
@@ -1715,10 +1726,11 @@ void TSubString::ToLower()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert sub-string to upper-case.
+
 void TSubString::ToUpper()
 {
-   // Convert sub-string to upper-case.
    if (!IsNull()) {                             // Ignore null substrings
       char *p = fStr.GetPointer() + fBegin;
       Ssiz_t n = fExtent;
@@ -1726,30 +1738,30 @@ void TSubString::ToUpper()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Output error message.
+
 void TSubString::SubStringError(Ssiz_t sr, Ssiz_t start, Ssiz_t n) const
 {
-   // Output error message.
-
    Error("TSubString::SubStringError",
          "out of bounds: start = %d, n = %d, sr = %d", start, n, sr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check to make sure a sub-string index is in range.
+
 void TSubString::AssertElement(Ssiz_t i) const
 {
-   // Check to make sure a sub-string index is in range.
-
    if (i == kNPOS || i >= Length())
       Error("TSubString::AssertElement",
             "out of bounds: i = %d, Length = %d", i, Length());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if all characters in string are ascii.
+
 Bool_t TString::IsAscii() const
 {
-   // Returns true if all characters in string are ascii.
-
    const char *cp = Data();
    for (Ssiz_t i = 0; i < Length(); ++i)
       if (cp[i] & ~0x7F)
@@ -1757,12 +1769,12 @@ Bool_t TString::IsAscii() const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if all characters in string are alphabetic.
+/// Returns false in case string length is 0.
+
 Bool_t TString::IsAlpha() const
 {
-   // Returns true if all characters in string are alphabetic.
-   // Returns false in case string length is 0.
-
    const char *cp = Data();
    Ssiz_t len = Length();
    if (len == 0) return kFALSE;
@@ -1772,12 +1784,12 @@ Bool_t TString::IsAlpha() const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if all characters in string are alphanumeric.
+/// Returns false in case string length is 0.
+
 Bool_t TString::IsAlnum() const
 {
-   // Returns true if all characters in string are alphanumeric.
-   // Returns false in case string length is 0.
-
    const char *cp = Data();
    Ssiz_t len = Length();
    if (len == 0) return kFALSE;
@@ -1787,14 +1799,14 @@ Bool_t TString::IsAlnum() const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if all characters in string are digits (0-9) or whitespaces,
+/// i.e. "123456" and "123 456" are both valid integer strings.
+/// Returns false in case string length is 0 or string contains other
+/// characters or only whitespace.
+
 Bool_t TString::IsDigit() const
 {
-   // Returns true if all characters in string are digits (0-9) or whitespaces,
-   // i.e. "123456" and "123 456" are both valid integer strings.
-   // Returns false in case string length is 0 or string contains other
-   // characters or only whitespace.
-
    const char *cp = Data();
    Ssiz_t len = Length();
    if (len == 0) return kFALSE;
@@ -1809,18 +1821,18 @@ Bool_t TString::IsDigit() const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if string contains a floating point or integer number.
+/// Examples of valid formats are:
+///    64320
+///    64 320
+///    6 4 3 2 0
+///    6.4320     6,4320
+///    6.43e20   6.43E20    6,43e20
+///    6.43e-20  6.43E-20   6,43e-20, -6.43e+20
+
 Bool_t TString::IsFloat() const
 {
-   // Returns kTRUE if string contains a floating point or integer number.
-   // Examples of valid formats are:
-   //    64320
-   //    64 320
-   //    6 4 3 2 0
-   //    6.4320     6,4320
-   //    6.43e20   6.43E20    6,43e20
-   //    6.43e-20  6.43E-20   6,43e-20, -6.43e+20
-
    //we first check if we have an integer, in this case, IsDigit() will be true straight away
    if (IsDigit()) return kTRUE;
 
@@ -1848,13 +1860,13 @@ Bool_t TString::IsFloat() const
    return tmp.IsDigit();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if all characters in string are hexidecimal digits
+/// (0-9,a-f,A-F). Returns false in case string length is 0 or string
+/// contains other characters.
+
 Bool_t TString::IsHex() const
 {
-   // Returns true if all characters in string are hexidecimal digits
-   // (0-9,a-f,A-F). Returns false in case string length is 0 or string
-   // contains other characters.
-
    const char *cp = Data();
    Ssiz_t len = Length();
    if (len == 0) return kFALSE;
@@ -1864,13 +1876,13 @@ Bool_t TString::IsHex() const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if all characters in string are binary digits (0,1).
+/// Returns false in case string length is 0 or string contains other
+/// characters.
+
 Bool_t TString::IsBin() const
 {
-   // Returns true if all characters in string are binary digits (0,1).
-   // Returns false in case string length is 0 or string contains other
-   // characters.
-
    const char *cp = Data();
    Ssiz_t len = Length();
    if (len == 0) return kFALSE;
@@ -1880,13 +1892,13 @@ Bool_t TString::IsBin() const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if all characters in string are octal digits (0-7).
+/// Returns false in case string length is 0 or string contains other
+/// characters.
+
 Bool_t TString::IsOct() const
 {
-   // Returns true if all characters in string are octal digits (0-7).
-   // Returns false in case string length is 0 or string contains other
-   // characters.
-
    const char *cp = Data();
    Ssiz_t len = Length();
    if (len == 0) return kFALSE;
@@ -1896,13 +1908,13 @@ Bool_t TString::IsOct() const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if all characters in string are decimal digits (0-9).
+/// Returns false in case string length is 0 or string contains other
+/// characters.
+
 Bool_t TString::IsDec() const
 {
-   // Returns true if all characters in string are decimal digits (0-9).
-   // Returns false in case string length is 0 or string contains other
-   // characters.
-
    const char *cp = Data();
    Ssiz_t len = Length();
    if (len == 0) return kFALSE;
@@ -1912,14 +1924,14 @@ Bool_t TString::IsDec() const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if all characters in string are expressed in the base
+/// specified (range=2-36), i.e. {0,1} for base 2, {0-9,a-f,A-F} for base 16,
+/// {0-9,a-z,A-Z} for base 36. Returns false in case string length is 0 or
+/// string contains other characters.
+
 Bool_t TString::IsInBaseN(Int_t base) const
 {
-   // Returns true if all characters in string are expressed in the base
-   // specified (range=2-36), i.e. {0,1} for base 2, {0-9,a-f,A-F} for base 16,
-   // {0-9,a-z,A-Z} for base 36. Returns false in case string length is 0 or
-   // string contains other characters.
-
    if (base < 2 || base > 36) {
       Error("TString::IsInBaseN", "base %d is not supported. Supported bases are {2,3,...,36}.", base);
       return kFALSE;
@@ -1943,14 +1955,14 @@ Bool_t TString::IsInBaseN(Int_t base) const
    return (isInBase);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return integer value of string.
+/// Valid strings include only digits and whitespace (see IsDigit()),
+/// i.e. "123456", "123 456" and "1 2 3 4        56" are all valid
+/// integer strings whose Atoi() value is 123456.
+
 Int_t TString::Atoi() const
 {
-   // Return integer value of string.
-   // Valid strings include only digits and whitespace (see IsDigit()),
-   // i.e. "123456", "123 456" and "1 2 3 4        56" are all valid
-   // integer strings whose Atoi() value is 123456.
-
    //any whitespace ?
    Int_t end = Index(" ");
    //if no whitespaces in string, just use atoi()
@@ -1969,14 +1981,14 @@ Int_t TString::Atoi() const
    return atoi(tmp.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return long long value of string.
+/// Valid strings include only digits and whitespace (see IsDigit()),
+/// i.e. "123456", "123 456" and "1 2 3 4        56" are all valid
+/// integer strings whose Atoll() value is 123456.
+
 Long64_t TString::Atoll() const
 {
-   // Return long long value of string.
-   // Valid strings include only digits and whitespace (see IsDigit()),
-   // i.e. "123456", "123 456" and "1 2 3 4        56" are all valid
-   // integer strings whose Atoll() value is 123456.
-
    //any whitespace ?
    Int_t end = Index(" ");
    //if no whitespaces in string, just use atoi()
@@ -2003,18 +2015,18 @@ Long64_t TString::Atoll() const
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return floating-point value contained in string.
+/// Examples of valid strings are:
+///    64320
+///    64 320
+///    6 4 3 2 0
+///    6.4320     6,4320
+///    6.43e20   6.43E20    6,43e20
+///    6.43e-20  6.43E-20   6,43e-20
+
 Double_t TString::Atof() const
 {
-   // Return floating-point value contained in string.
-   // Examples of valid strings are:
-   //    64320
-   //    64 320
-   //    6 4 3 2 0
-   //    6.4320     6,4320
-   //    6.43e20   6.43E20    6,43e20
-   //    6.43e-20  6.43E-20   6,43e-20
-
    //look for a comma and some whitespace
    Int_t comma = Index(",");
    Int_t end = Index(" ");
@@ -2039,18 +2051,18 @@ Double_t TString::Atof() const
    return atof(tmp2.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Converts an Int_t to a TString with respect to the base specified (2-36).
+/// Thus it is an enhanced version of sprintf (adapted from versions 0.4 of
+/// http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
+/// Usage: the following statement produce the same output, namely "1111"
+///   std::cout << TString::Itoa(15,2) ;
+///   std::cout << TString::Itoa(0xF,2) ; /// 0x prefix to handle hex
+///   std::cout << TString::Itoa(017,2) ; /// 0  prefix to handle oct
+/// In case of error returns the "!" string.
+
 TString TString::Itoa(Int_t value, Int_t base)
 {
-   // Converts an Int_t to a TString with respect to the base specified (2-36).
-   // Thus it is an enhanced version of sprintf (adapted from versions 0.4 of
-   // http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
-   // Usage: the following statement produce the same output, namely "1111"
-   //   std::cout << TString::Itoa(15,2) ;
-   //   std::cout << TString::Itoa(0xF,2) ; /// 0x prefix to handle hex
-   //   std::cout << TString::Itoa(017,2) ; /// 0  prefix to handle oct
-   // In case of error returns the "!" string.
-
    std::string buf;
    // check that the base if valid
    if (base < 2 || base > 36) {
@@ -2070,14 +2082,14 @@ TString TString::Itoa(Int_t value, Int_t base)
    return (TString(buf.data()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Converts a UInt_t (twice the range of an Int_t) to a TString with respect
+/// to the base specified (2-36). Thus it is an enhanced version of sprintf
+/// (adapted from versions 0.4 of http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
+/// In case of error returns the "!" string.
+
 TString TString::UItoa(UInt_t value, Int_t base)
 {
-   // Converts a UInt_t (twice the range of an Int_t) to a TString with respect
-   // to the base specified (2-36). Thus it is an enhanced version of sprintf
-   // (adapted from versions 0.4 of http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
-   // In case of error returns the "!" string.
-
    std::string buf;
    // check that the base if valid
    if (base < 2 || base > 36) {
@@ -2095,14 +2107,14 @@ TString TString::UItoa(UInt_t value, Int_t base)
    return (TString(buf.data()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Converts a Long64_t to a TString with respect to the base specified (2-36).
+/// Thus it is an enhanced version of sprintf (adapted from versions 0.4 of
+/// http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
+/// In case of error returns the "!" string.
+
 TString TString::LLtoa(Long64_t value, Int_t base)
 {
-   // Converts a Long64_t to a TString with respect to the base specified (2-36).
-   // Thus it is an enhanced version of sprintf (adapted from versions 0.4 of
-   // http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
-   // In case of error returns the "!" string.
-
    std::string buf;
    // check that the base if valid
    if (base < 2 || base > 36) {
@@ -2122,14 +2134,14 @@ TString TString::LLtoa(Long64_t value, Int_t base)
    return (TString(buf.data()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Converts a ULong64_t (twice the range of an Long64_t) to a TString with
+/// respect to the base specified (2-36). Thus it is an enhanced version of
+/// sprintf (adapted from versions 0.4 of http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
+/// In case of error returns the "!" string.
+
 TString TString::ULLtoa(ULong64_t value, Int_t base)
 {
-   // Converts a ULong64_t (twice the range of an Long64_t) to a TString with
-   // respect to the base specified (2-36). Thus it is an enhanced version of
-   // sprintf (adapted from versions 0.4 of http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
-   // In case of error returns the "!" string.
-
    std::string buf;
    // check that the base if valid
    if (base < 2 || base > 36) {
@@ -2147,12 +2159,12 @@ TString TString::ULLtoa(ULong64_t value, Int_t base)
    return (TString(buf.data()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Converts string from base base_in to base base_out. Supported bases
+/// are 2-36. At most 64 bit data can be converted.
+
 TString TString::BaseConvert(const TString& s_in, Int_t base_in, Int_t base_out)
 {
-   // Converts string from base base_in to base base_out. Supported bases
-   // are 2-36. At most 64 bit data can be converted.
-
    TString s_out = "!" ;  // return value in case of issue
    // checking base range
    if (base_in < 2 || base_in > 36 || base_out < 2 || base_out > 36) {
@@ -2198,11 +2210,11 @@ TString TString::BaseConvert(const TString& s_in, Int_t base_in, Int_t base_out)
    return (s_out);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if string ends with the specified string.
+
 Bool_t TString::EndsWith(const char *s, ECaseCompare cmp) const
 {
-   // Return true if string ends with the specified string.
-
    if (!s) return kTRUE;
 
    Ssiz_t l = strlen(s);
@@ -2214,15 +2226,15 @@ Bool_t TString::EndsWith(const char *s, ECaseCompare cmp) const
    return strcasecmp(s, s2) == 0;
 }
 
-//__________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is used to isolate sequential tokens in a TString.
+/// These tokens are separated in the string by at least one of the
+/// characters in delim. The returned array contains the tokens
+/// as TObjString's. The returned array is the owner of the objects,
+/// and must be deleted by the user.
+
 TObjArray *TString::Tokenize(const TString &delim) const
 {
-   // This function is used to isolate sequential tokens in a TString.
-   // These tokens are separated in the string by at least one of the
-   // characters in delim. The returned array contains the tokens
-   // as TObjString's. The returned array is the owner of the objects,
-   // and must be deleted by the user.
-
    std::list<Int_t> splitIndex;
 
    Int_t i, start, nrDiff = 0;
@@ -2263,12 +2275,12 @@ TObjArray *TString::Tokenize(const TString &delim) const
    return arr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Formats a string using a printf style format descriptor.
+/// Existing string contents will be overwritten.
+
 void TString::FormImp(const char *fmt, va_list ap)
 {
-   // Formats a string using a printf style format descriptor.
-   // Existing string contents will be overwritten.
-
    Ssiz_t buflen = 20 + 20 * strlen(fmt);    // pick a number, any strictly positive number
    Clobber(buflen);
 
@@ -2298,25 +2310,25 @@ again:
    SetSize(strlen(Data()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Formats a string using a printf style format descriptor.
+/// Existing string contents will be overwritten.
+
 void TString::Form(const char *va_(fmt), ...)
 {
-   // Formats a string using a printf style format descriptor.
-   // Existing string contents will be overwritten.
-
    va_list ap;
    va_start(ap, va_(fmt));
    FormImp(va_(fmt), ap);
    va_end(ap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method which formats a string using a printf style format
+/// descriptor and return a TString. Same as TString::Form() but it is
+/// not needed to first create a TString.
+
 TString TString::Format(const char *va_(fmt), ...)
 {
-   // Static method which formats a string using a printf style format
-   // descriptor and return a TString. Same as TString::Form() but it is
-   // not needed to first create a TString.
-
    va_list ap;
    va_start(ap, va_(fmt));
    TString str;
@@ -2327,12 +2339,12 @@ TString TString::Format(const char *va_(fmt), ...)
 
 //---- Global String Handling Functions ----------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Format a string in a formatting buffer (using a printf style
+/// format descriptor).
+
 static char *SlowFormat(const char *format, va_list ap, int hint)
 {
-   // Format a string in a formatting buffer (using a printf style
-   // format descriptor).
-
    static const int fld_size = 2048;
    TTHREAD_TLS(char*) slowBuffer(0);
    TTHREAD_TLS(int) slowBufferSize(0);
@@ -2375,12 +2387,12 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
    return slowBuffer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Format a string in a circular formatting buffer (using a printf style
+/// format descriptor).
+
 static char *Format(const char *format, va_list ap)
 {
-   // Format a string in a circular formatting buffer (using a printf style
-   // format descriptor).
-
    static const int cb_size  = 4096;
    static const int fld_size = 2048;
 
@@ -2419,15 +2431,15 @@ static char *Format(const char *format, va_list ap)
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Formats a string in a circular formatting buffer. Removes the need to
+/// create and delete short lived strings. Don't pass Form() pointers
+/// from user code down to ROOT functions as the circular buffer may
+/// be overwritten downstream. Use Form() results immediately or use
+/// TString::Format() instead.
+
 char *Form(const char *va_(fmt), ...)
 {
-   // Formats a string in a circular formatting buffer. Removes the need to
-   // create and delete short lived strings. Don't pass Form() pointers
-   // from user code down to ROOT functions as the circular buffer may
-   // be overwritten downstream. Use Form() results immediately or use
-   // TString::Format() instead.
-
    va_list ap;
    va_start(ap,va_(fmt));
    char *b = Format(va_(fmt), ap);
@@ -2435,13 +2447,13 @@ char *Form(const char *va_(fmt), ...)
    return b;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Formats a string in a circular formatting buffer and prints the string.
+/// Appends a newline. If gPrintViaErrorHandler is true it will print via the
+/// currently active ROOT error handler.
+
 void Printf(const char *va_(fmt), ...)
 {
-   // Formats a string in a circular formatting buffer and prints the string.
-   // Appends a newline. If gPrintViaErrorHandler is true it will print via the
-   // currently active ROOT error handler.
-
    va_list ap;
    va_start(ap,va_(fmt));
    if (gPrintViaErrorHandler)
@@ -2454,12 +2466,12 @@ void Printf(const char *va_(fmt), ...)
    va_end(ap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Strip leading and trailing c (blanks by default) from a string.
+/// The returned string has to be deleted by the user.
+
 char *Strip(const char *s, char c)
 {
-   // Strip leading and trailing c (blanks by default) from a string.
-   // The returned string has to be deleted by the user.
-
    if (!s) return 0;
 
    int l = strlen(s);
@@ -2490,12 +2502,12 @@ char *Strip(const char *s, char c)
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Duplicate the string str. The returned string has to be deleted by
+/// the user.
+
 char *StrDup(const char *str)
 {
-   // Duplicate the string str. The returned string has to be deleted by
-   // the user.
-
    if (!str) return 0;
 
    char *s = new char[strlen(str)+1];
@@ -2504,12 +2516,12 @@ char *StrDup(const char *str)
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all blanks from the string str. The returned string has to be
+/// deleted by the user.
+
 char *Compress(const char *str)
 {
-   // Remove all blanks from the string str. The returned string has to be
-   // deleted by the user.
-
    if (!str) return 0;
 
    const char *p = str;
@@ -2526,12 +2538,12 @@ char *Compress(const char *str)
    return s1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Escape specchars in src with escchar and copy to dst.
+
 int EscChar(const char *src, char *dst, int dstlen, char *specchars,
             char escchar)
 {
-   // Escape specchars in src with escchar and copy to dst.
-
    const char *p;
    char *q, *end = dst+dstlen-1;
 
@@ -2550,11 +2562,11 @@ int EscChar(const char *src, char *dst, int dstlen, char *specchars,
    return q-dst;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Un-escape specchars in src from escchar and copy to dst.
+
 int UnEscChar(const char *src, char *dst, int dstlen, char *specchars, char)
 {
-   // Un-escape specchars in src from escchar and copy to dst.
-
    const char *p;
    char *q, *end = dst+dstlen-1;
 
@@ -2572,19 +2584,19 @@ int UnEscChar(const char *src, char *dst, int dstlen, char *specchars, char)
 }
 
 #ifdef NEED_STRCASECMP
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Case insensitive string compare.
+
 int strcasecmp(const char *str1, const char *str2)
 {
-   // Case insensitive string compare.
-
    return strncasecmp(str1, str2, str2 ? strlen(str2)+1 : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Case insensitive string compare of n characters.
+
 int strncasecmp(const char *str1, const char *str2, Ssiz_t n)
 {
-   // Case insensitive string compare of n characters.
-
    while (n > 0) {
       int c1 = *str1;
       int c2 = *str2;
@@ -2606,34 +2618,38 @@ int strncasecmp(const char *str1, const char *str2, Ssiz_t n)
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TString in the cling interpreter:
+
 std::string cling::printValue(const TString* const /*p*/, const TString* const u,
                               const cling::Value& /*VPI*/) {
-   // Print a TString in the cling interpreter:
    TString s = TString::Format("\"%s\"[%d]", u->Data(), (int)u->Length());
    return s.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TString in the cling interpreter:
+
 std::string cling::printValue(const TSubString* const /*p*/, const TSubString* const u,
                               const cling::Value& /*VPI*/) {
-   // Print a TString in the cling interpreter:
    TString s = TString::Format("\"%.*s\"[%d]", (int)u->Length(), u->Data(), (int)u->Length());
    return s.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TString in the cling interpreter:
+
 std::string cling::printValue(const std::string* const /*p*/, const std::string* const u,
                               const cling::Value& /*VPI*/) {
-   // Print a TString in the cling interpreter:
    TString s = TString::Format("\"%s\"[%d]", u->c_str(), (int)u->length());
    return s.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TString in the cling interpreter:
+
 std::string cling::printValue(const std::string_view* const /*p*/, const std::string_view* const u,
                               const cling::Value& /*VPI*/) {
-   // Print a TString in the cling interpreter:
    std::string val(*u);
    TString s = TString::Format("\"%s\"[%d]", val.c_str(), (int)u->length());
    return s.Data();

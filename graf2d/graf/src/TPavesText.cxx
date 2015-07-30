@@ -29,46 +29,47 @@ ClassImp(TPavesText)
 //
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pavestext default constructor.
+
 TPavesText::TPavesText(): TPaveText()
 {
-   // Pavestext default constructor.
-
    fNpaves = 5;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pavestext normal constructor.
+///
+/// The PavesText is by default defined bith bordersize=1 and option ="br".
+///  option = "T" Top frame
+///  option = "B" Bottom frame
+///  option = "R" Right frame
+///  option = "L" Left frame
+///  option = "NDC" x1,y1,x2,y2 are given in NDC
+///  option = "ARC" corners are rounded
+
 TPavesText::TPavesText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Int_t npaves,Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)
 {
-   // Pavestext normal constructor.
-   //
-   // The PavesText is by default defined bith bordersize=1 and option ="br".
-   //  option = "T" Top frame
-   //  option = "B" Bottom frame
-   //  option = "R" Right frame
-   //  option = "L" Left frame
-   //  option = "NDC" x1,y1,x2,y2 are given in NDC
-   //  option = "ARC" corners are rounded
-
    fNpaves = npaves;
    SetBorderSize(1);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pavestext default destructor.
+
 TPavesText::~TPavesText()
 {
-   // Pavestext default destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pavestext copy constructor.
+
 TPavesText::TPavesText(const TPavesText &pavestext) : TPaveText()
 {
-   // Pavestext copy constructor.
-
    TBufferFile b(TBuffer::kWrite);
    TPavesText *p = (TPavesText*)(&pavestext);
    p->Streamer(b);
@@ -78,20 +79,20 @@ TPavesText::TPavesText(const TPavesText &pavestext) : TPaveText()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this pavestext with its current attributes.
+
 void TPavesText::Draw(Option_t *option)
 {
-   // Draw this pavestext with its current attributes.
-
    AppendPad(option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this pavestext with its current attributes.
+
 void TPavesText::Paint(Option_t *option)
 {
-   // Paint this pavestext with its current attributes.
-
    // Draw the fNpaves-1 stacked paves
    // The spacing between paves is set to 3 times the bordersize
    Int_t bordersize = GetBorderSize();
@@ -119,11 +120,11 @@ void TPavesText::Paint(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TPavesText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    if (!strcmp(GetName(),"stats")) return;
    if (!strcmp(GetName(),"title")) return;
    char quote = '"';

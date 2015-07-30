@@ -21,22 +21,22 @@
 
 ClassImp(TEvePad)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TEvePad::TEvePad()
 {
-   // Default constructor.
-
    fPrimitives = new THashList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEvePad::TEvePad(const char *name, const char *title, Double_t xlow,
                  Double_t ylow, Double_t xup, Double_t yup,
                  Color_t color, Short_t bordersize, Short_t bordermode)
    : TPad(name,title,xlow,ylow,xup,yup,color,bordersize,bordermode)
 {
-   // Constructor.
-
    delete fPrimitives;
    fPrimitives = new THashList;
 }

@@ -58,17 +58,19 @@ Bool_t TApplication::fgGraphNeeded = kFALSE;
 Bool_t TApplication::fgGraphInit = kFALSE;
 TList *TApplication::fgApplications = 0;  // List of available applications
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TIdleTimer : public TTimer {
 public:
    TIdleTimer(Long_t ms) : TTimer(ms, kTRUE) { }
    Bool_t Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notify handler.
+
 Bool_t TIdleTimer::Notify()
 {
-   // Notify handler.
    gApplication->HandleIdleTimer();
    Reset();
    return kFALSE;
@@ -84,19 +86,32 @@ static void CallEndOfProcessCleanups()
    gROOT->EndOfProcessCleanups();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor. Can be used by classes deriving from TApplication.
+
 TApplication::TApplication() :
    fArgc(0), fArgv(0), fAppImp(0), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
    fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE), fUseMemstat(kFALSE),
    fFiles(0), fIdleTimer(0), fSigHandler(0), fExitOnException(kDontExit),
    fAppRemote(0)
 {
-   // Default ctor. Can be used by classes deriving from TApplication.
-
    ResetBit(kProcessRemotely);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an application environment. The application environment
+/// provides an interface to the graphics system and eventloop
+/// (be it X, Windoze, MacOS or BeOS). After creating the application
+/// object start the eventloop by calling its Run() method. The command
+/// line options recogized by TApplication are described in the GetOptions()
+/// method. The recognized options are removed from the argument array.
+/// The original list of argument options can be retrieved via the Argc()
+/// and Argv() methods. The appClassName "proofserv" is reserved for the
+/// PROOF system. The "options" and "numOptions" arguments are not used,
+/// except if you want to by-pass the argv processing by GetOptions()
+/// in which case you should specify numOptions<0. All options will
+/// still be available via the Argv() method for later use.
+
 TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
                            void * /*options*/, Int_t numOptions) :
    fArgc(0), fArgv(0), fAppImp(0), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
@@ -104,18 +119,6 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    fFiles(0), fIdleTimer(0), fSigHandler(0), fExitOnException(kDontExit),
    fAppRemote(0)
 {
-   // Create an application environment. The application environment
-   // provides an interface to the graphics system and eventloop
-   // (be it X, Windoze, MacOS or BeOS). After creating the application
-   // object start the eventloop by calling its Run() method. The command
-   // line options recogized by TApplication are described in the GetOptions()
-   // method. The recognized options are removed from the argument array.
-   // The original list of argument options can be retrieved via the Argc()
-   // and Argv() methods. The appClassName "proofserv" is reserved for the
-   // PROOF system. The "options" and "numOptions" arguments are not used,
-   // except if you want to by-pass the argv processing by GetOptions()
-   // in which case you should specify numOptions<0. All options will
-   // still be available via the Argv() method for later use.
    R__LOCKGUARD2(gInterpreterMutex);
    if (gApplication && gApplication->TestBit(kDefaultApplication)) {
       // allow default TApplication to be replaced by a "real" TApplication
@@ -198,11 +201,11 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TApplication dtor.
+
 TApplication::~TApplication()
 {
-   // TApplication dtor.
-
    for (int i = 0; i < fArgc; i++)
       if (fArgv[i]) delete [] fArgv[i];
    delete [] fArgv;
@@ -232,20 +235,20 @@ TApplication::~TApplication()
    SafeDelete(fAppImp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method. This method should be called from static library
+/// initializers if the library needs the low level graphics system.
+
 void TApplication::NeedGraphicsLibs()
 {
-   // Static method. This method should be called from static library
-   // initializers if the library needs the low level graphics system.
-
    fgGraphNeeded = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the graphics environment.
+
 void TApplication::InitializeGraphics()
 {
-   // Initialize the graphics environment.
-
    if (fgGraphInit || !fgGraphNeeded)
       return;
 
@@ -321,24 +324,24 @@ void TApplication::InitializeGraphics()
 #endif  // iOS
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear list containing macro files passed as program arguments.
+/// This method is called from TRint::Run() to ensure that the macro
+/// files are only executed the first time Run() is called.
+
 void TApplication::ClearInputFiles()
 {
-   // Clear list containing macro files passed as program arguments.
-   // This method is called from TRint::Run() to ensure that the macro
-   // files are only executed the first time Run() is called.
-
    if (fFiles) {
       fFiles->Delete();
       SafeDelete(fFiles);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return specified argument.
+
 char *TApplication::Argv(Int_t index) const
 {
-   // Return specified argument.
-
    if (fArgv) {
       if (index >= fArgc) {
          Error("Argv", "index (%d) >= number of arguments (%d)", index, fArgc);
@@ -349,40 +352,40 @@ char *TApplication::Argv(Int_t index) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get and handle command line options. Arguments handled are removed
+/// from the argument array. The following arguments are handled:
+///    -b : run in batch mode without graphics
+///    -x : exit on exception
+///    -e expression: request execution of the given C++ expression.
+///    -n : do not execute logon and logoff macros as specified in .rootrc
+///    -q : exit after processing command line macro files
+///    -l : do not show splash screen
+/// The last three options are only relevant in conjunction with TRint.
+/// The following help and info arguments are supported:
+///    -?       : print usage
+///    -h       : print usage
+///    --help   : print usage
+///    -config  : print ./configure options
+///    -memstat : run with memory usage monitoring
+/// In addition to the above options the arguments that are not options,
+/// i.e. they don't start with - or + are treated as follows (and also removed
+/// from the argument array):
+///   <dir>       is considered the desired working directory and available
+///               via WorkingDirectory(), if more than one dir is specified the
+///               first one will prevail
+///   <file>      if the file exists its added to the InputFiles() list
+///   <file>.root are considered ROOT files and added to the InputFiles() list,
+///               the file may be a remote file url
+///   <macro>.C   are considered ROOT macros and also added to the InputFiles() list
+/// In TRint we set the working directory to the <dir>, the ROOT files are
+/// connected, and the macros are executed. If your main TApplication is not
+/// TRint you have to decide yourself what to do whith these options.
+/// All specified arguments (also the ones removed) can always be retrieved
+/// via the TApplication::Argv() method.
+
 void TApplication::GetOptions(Int_t *argc, char **argv)
 {
-   // Get and handle command line options. Arguments handled are removed
-   // from the argument array. The following arguments are handled:
-   //    -b : run in batch mode without graphics
-   //    -x : exit on exception
-   //    -e expression: request execution of the given C++ expression.
-   //    -n : do not execute logon and logoff macros as specified in .rootrc
-   //    -q : exit after processing command line macro files
-   //    -l : do not show splash screen
-   // The last three options are only relevant in conjunction with TRint.
-   // The following help and info arguments are supported:
-   //    -?       : print usage
-   //    -h       : print usage
-   //    --help   : print usage
-   //    -config  : print ./configure options
-   //    -memstat : run with memory usage monitoring
-   // In addition to the above options the arguments that are not options,
-   // i.e. they don't start with - or + are treated as follows (and also removed
-   // from the argument array):
-   //   <dir>       is considered the desired working directory and available
-   //               via WorkingDirectory(), if more than one dir is specified the
-   //               first one will prevail
-   //   <file>      if the file exists its added to the InputFiles() list
-   //   <file>.root are considered ROOT files and added to the InputFiles() list,
-   //               the file may be a remote file url
-   //   <macro>.C   are considered ROOT macros and also added to the InputFiles() list
-   // In TRint we set the working directory to the <dir>, the ROOT files are
-   // connected, and the macros are executed. If your main TApplication is not
-   // TRint you have to decide yourself what to do whith these options.
-   // All specified arguments (also the ones removed) can always be retrieved
-   // via the TApplication::Argv() method.
-
    static char null[1] = { "" };
 
    fNoLog = kFALSE;
@@ -535,25 +538,25 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    *argc = j;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle idle timeout. When this timer expires the registered idle command
+/// will be executed by this routine and a signal will be emitted.
+
 void TApplication::HandleIdleTimer()
 {
-   // Handle idle timeout. When this timer expires the registered idle command
-   // will be executed by this routine and a signal will be emitted.
-
    if (!fIdleCommand.IsNull())
       ProcessLine(GetIdleCommand());
 
    Emit("HandleIdleTimer()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle exceptions (kSigBus, kSigSegmentationViolation,
+/// kSigIllegalInstruction and kSigFloatingException) trapped in TSystem.
+/// Specific TApplication implementations may want something different here.
+
 void TApplication::HandleException(Int_t sig)
 {
-   // Handle exceptions (kSigBus, kSigSegmentationViolation,
-   // kSigIllegalInstruction and kSigFloatingException) trapped in TSystem.
-   // Specific TApplication implementations may want something different here.
-
    if (TROOT::Initialized()) {
       if (gException) {
          gInterpreter->RewindDictionary();
@@ -569,25 +572,25 @@ void TApplication::HandleException(Int_t sig)
    gSystem->Exit(sig);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the exit on exception option. Setting this option determines what
+/// happens in HandleException() in case an exception (kSigBus,
+/// kSigSegmentationViolation, kSigIllegalInstruction or kSigFloatingException)
+/// is trapped. Choices are: kDontExit (default), kExit or kAbort.
+/// Returns the previous value.
+
 TApplication::EExitOnException TApplication::ExitOnException(TApplication::EExitOnException opt)
 {
-   // Set the exit on exception option. Setting this option determines what
-   // happens in HandleException() in case an exception (kSigBus,
-   // kSigSegmentationViolation, kSigIllegalInstruction or kSigFloatingException)
-   // is trapped. Choices are: kDontExit (default), kExit or kAbort.
-   // Returns the previous value.
-
    EExitOnException old = fExitOnException;
    fExitOnException = opt;
    return old;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print help on interpreter.
+
 void TApplication::Help(const char *line)
 {
-   // Print help on interpreter.
-
    gInterpreter->ProcessLine(line);
 
    Printf("\nROOT special commands.");
@@ -597,12 +600,12 @@ void TApplication::Help(const char *line)
    Printf("             which [file] : shows path of macro file");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load shared libs neccesary for graphics. These libraries are only
+/// loaded when gROOT->IsBatch() is kFALSE.
+
 void TApplication::LoadGraphicsLibs()
 {
-   // Load shared libs neccesary for graphics. These libraries are only
-   // loaded when gROOT->IsBatch() is kFALSE.
-
    if (gROOT->IsBatch()) return;
 
    TPluginHandler *h;
@@ -658,11 +661,11 @@ void TApplication::LoadGraphicsLibs()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switch to batch mode.
+
 void TApplication::MakeBatch()
 {
-   // Switch to batch mode.
-
    gROOT->SetBatch();
    if (gGuiFactory != gBatchGuiFactory) delete gGuiFactory;
    gGuiFactory = gBatchGuiFactory;
@@ -672,21 +675,21 @@ void TApplication::MakeBatch()
    gVirtualX = gGXBatch;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse the content of a line starting with ".R" (already stripped-off)
+/// The format is
+///      [user@]host[:dir] [-l user] [-d dbg] [script]
+/// The variable 'dir' is the remote directory to be used as working dir.
+/// The username can be specified in two ways, "-l" having the priority
+/// (as in ssh).
+/// A 'dbg' value > 0 gives increasing verbosity.
+/// The last argument 'script' allows to specify an alternative script to
+/// be executed remotely to startup the session.
+
 Int_t TApplication::ParseRemoteLine(const char *ln,
                                    TString &hostdir, TString &user,
                                    Int_t &dbg, TString &script)
 {
-   // Parse the content of a line starting with ".R" (already stripped-off)
-   // The format is
-   //      [user@]host[:dir] [-l user] [-d dbg] [script]
-   // The variable 'dir' is the remote directory to be used as working dir.
-   // The username can be specified in two ways, "-l" having the priority
-   // (as in ssh).
-   // A 'dbg' value > 0 gives increasing verbosity.
-   // The last argument 'script' allows to specify an alternative script to
-   // be executed remotely to startup the session.
-
    if (!ln || strlen(ln) <= 0)
       return 0;
 
@@ -736,19 +739,19 @@ Int_t TApplication::ParseRemoteLine(const char *ln,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process the content of a line starting with ".R" (already stripped-off)
+/// The format is
+///      [user@]host[:dir] [-l user] [-d dbg] [script] | [host] -close
+/// The variable 'dir' is the remote directory to be used as working dir.
+/// The username can be specified in two ways, "-l" having the priority
+/// (as in ssh).
+/// A 'dbg' value > 0 gives increasing verbosity.
+/// The last argument 'script' allows to specify an alternative script to
+/// be executed remotely to startup the session.
+
 Long_t TApplication::ProcessRemote(const char *line, Int_t *)
 {
-   // Process the content of a line starting with ".R" (already stripped-off)
-   // The format is
-   //      [user@]host[:dir] [-l user] [-d dbg] [script] | [host] -close
-   // The variable 'dir' is the remote directory to be used as working dir.
-   // The username can be specified in two ways, "-l" having the priority
-   // (as in ssh).
-   // A 'dbg' value > 0 gives increasing verbosity.
-   // The last argument 'script' allows to specify an alternative script to
-   // be executed remotely to startup the session.
-
    if (!line) return 0;
 
    if (!strncmp(line, "-?", 2) || !strncmp(line, "-h", 2) ||
@@ -822,13 +825,13 @@ namespace {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a single command line, either a C++ statement or an interpreter
+/// command starting with a ".".
+/// Return the return value of the command cast to a long.
+
 Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 {
-   // Process a single command line, either a C++ statement or an interpreter
-   // command starting with a ".".
-   // Return the return value of the command cast to a long.
-
    if (!line || !*line) return 0;
 
    // If we are asked to go remote do it
@@ -982,20 +985,20 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       return gInterpreter->ProcessLine(line, (TInterpreter::EErrorCode*)err);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a file containing a C++ macro.
+
 Long_t TApplication::ProcessFile(const char *file, Int_t *error, Bool_t keep)
 {
-   // Process a file containing a C++ macro.
-
    return ExecuteFile(file, error, keep);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute a file containing a C++ macro (static method). Can be used
+/// while TApplication is not yet created.
+
 Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
 {
-   // Execute a file containing a C++ macro (static method). Can be used
-   // while TApplication is not yet created.
-
    static const Int_t kBufSize = 1024;
 
    if (!file || !*file) return 0;
@@ -1118,11 +1121,11 @@ again:
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main application eventloop. Calls system dependent eventloop via gSystem.
+
 void TApplication::Run(Bool_t retrn)
 {
-   // Main application eventloop. Calls system dependent eventloop via gSystem.
-
    SetReturnFromRun(retrn);
 
    fIsRunning = kTRUE;
@@ -1131,64 +1134,65 @@ void TApplication::Run(Bool_t retrn)
    fIsRunning = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the command to be executed after the system has been idle for
+/// idleTimeInSec seconds. Normally called via TROOT::Idle(...).
+
 void TApplication::SetIdleTimer(UInt_t idleTimeInSec, const char *command)
 {
-   // Set the command to be executed after the system has been idle for
-   // idleTimeInSec seconds. Normally called via TROOT::Idle(...).
-
    if (fIdleTimer) RemoveIdleTimer();
    fIdleCommand = command;
    fIdleTimer = new TIdleTimer(idleTimeInSec*1000);
    gSystem->AddTimer(fIdleTimer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove idle timer. Normally called via TROOT::Idle(0).
+
 void TApplication::RemoveIdleTimer()
 {
-   // Remove idle timer. Normally called via TROOT::Idle(0).
-
    if (fIdleTimer) {
       // timers are removed from the gSystem timer list by their dtor
       SafeDelete(fIdleTimer);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when system starts idleing.
+
 void TApplication::StartIdleing()
 {
-   // Called when system starts idleing.
-
    if (fIdleTimer) {
       fIdleTimer->Reset();
       gSystem->AddTimer(fIdleTimer);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when system stops idleing.
+
 void TApplication::StopIdleing()
 {
-   // Called when system stops idleing.
-
    if (fIdleTimer)
       gSystem->RemoveTimer(fIdleTimer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// What to do when tab is pressed. Re-implemented by TRint.
+/// See TTabCom::Hook() for meaning of return values.
+
 Int_t TApplication::TabCompletionHook(char* /*buf*/, int* /*pLoc*/, std::ostream& /*out*/)
 {
-   // What to do when tab is pressed. Re-implemented by TRint.
-   // See TTabCom::Hook() for meaning of return values.
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate the application by call TSystem::Exit() unless application has
+/// been told to return from Run(), by a call to SetReturnFromRun().
+
 void TApplication::Terminate(Int_t status)
 {
-   // Terminate the application by call TSystem::Exit() unless application has
-   // been told to return from Run(), by a call to SetReturnFromRun().
-
    Emit("Terminate(Int_t)", status);
 
    if (fReturnFromRun)
@@ -1204,44 +1208,45 @@ void TApplication::Terminate(Int_t status)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit signal when a line has been processed.
+
 void TApplication::LineProcessed(const char *line)
 {
-   // Emit signal when a line has been processed.
-
    Emit("LineProcessed(const char*)", line);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit signal when console keyboard key was pressed.
+
 void TApplication::KeyPressed(Int_t key)
 {
-   // Emit signal when console keyboard key was pressed.
-
    Emit("KeyPressed(Int_t)", key);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit signal when return key was pressed.
+
 void TApplication::ReturnPressed(char *text )
 {
-   // Emit signal when return key was pressed.
-
    Emit("ReturnPressed(char*)", text);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set console echo mode:
+///
+///  mode = kTRUE  - echo input symbols
+///  mode = kFALSE - noecho input symbols
+
 void TApplication::SetEchoMode(Bool_t)
 {
-   // Set console echo mode:
-   //
-   //  mode = kTRUE  - echo input symbols
-   //  mode = kFALSE - noecho input symbols
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function used to create a default application environment.
+
 void TApplication::CreateApplication()
 {
-   // Static function used to create a default application environment.
-
    if (!gApplication) {
       R__LOCKGUARD2(gROOTMutex);
 
@@ -1263,13 +1268,13 @@ void TApplication::CreateApplication()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function used to attach to an existing remote application
+/// or to start one.
+
 TApplication *TApplication::Open(const char *url,
                                   Int_t debug, const char *script)
 {
-   // Static function used to attach to an existing remote application
-   // or to start one.
-
    TApplication *ap = 0;
    TUrl nu(url);
    Int_t nnew = 0;
@@ -1335,11 +1340,11 @@ TApplication *TApplication::Open(const char *url,
    return ap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function used to close a remote application
+
 void TApplication::Close(TApplication *app)
 {
-   // Static function used to close a remote application
-
    if (app) {
       app->Terminate(0);
       fgApplications->Remove(app);
@@ -1352,11 +1357,11 @@ void TApplication::Close(TApplication *app)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show available sessions
+
 void TApplication::ls(Option_t *opt) const
 {
-   // Show available sessions
-
    if (fgApplications) {
       TIter nxa(fgApplications);
       TApplication *a = 0;
@@ -1368,10 +1373,10 @@ void TApplication::ls(Option_t *opt) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the list of available applications
+
 TList *TApplication::GetApplications()
 {
-   // Static method returning the list of available applications
-
    return fgApplications;
 }

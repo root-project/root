@@ -58,32 +58,32 @@ public:
    void ReOpen();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open web file socket.
+
 TWebSocket::TWebSocket(TWebFile *f)
 {
-   // Open web file socket.
-
    fWebFile = f;
    if (!f->fSocket)
       ReOpen();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close socket in case not HTTP/1.1 protocol or when explicitly requested.
+
 TWebSocket::~TWebSocket()
 {
-   // Close socket in case not HTTP/1.1 protocol or when explicitly requested.
-
    if (!fWebFile->fHTTP11) {
       delete fWebFile->fSocket;
       fWebFile->fSocket = 0;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Re-open web file socket.
+
 void TWebSocket::ReOpen()
 {
-   // Re-open web file socket.
-
    if (fWebFile->fSocket)
       delete fWebFile->fSocket;
 
@@ -122,24 +122,24 @@ void TWebSocket::ReOpen()
 
 ClassImp(TWebFile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a Web file object. A web file is the same as a read-only
+/// TFile except that it is being read via a HTTP server. The url
+/// argument must be of the form: http://host.dom.ain/file.root.
+/// The opt can be "NOPROXY", to bypass any set "http_proxy" shell
+/// variable. The proxy can be specified as (in sh, or equivalent csh):
+///   export http_proxy=http://pcsalo.cern.ch:3128
+/// The proxy can also be specified via the static method TWebFile::SetProxy().
+/// Basic authentication (AuthType Basic) is supported. The user name and
+/// passwd can be specified in the url like this:
+///   http://username:mypasswd@pcsalo.cern.ch/files/aap.root
+/// If the file specified in the URL does not exist or is not accessible
+/// the kZombie bit will be set in the TWebFile object. Use IsZombie()
+/// to see if the file is accessible. The preferred interface to this
+/// constructor is via TFile::Open().
+
 TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB")
 {
-   // Create a Web file object. A web file is the same as a read-only
-   // TFile except that it is being read via a HTTP server. The url
-   // argument must be of the form: http://host.dom.ain/file.root.
-   // The opt can be "NOPROXY", to bypass any set "http_proxy" shell
-   // variable. The proxy can be specified as (in sh, or equivalent csh):
-   //   export http_proxy=http://pcsalo.cern.ch:3128
-   // The proxy can also be specified via the static method TWebFile::SetProxy().
-   // Basic authentication (AuthType Basic) is supported. The user name and
-   // passwd can be specified in the url like this:
-   //   http://username:mypasswd@pcsalo.cern.ch/files/aap.root
-   // If the file specified in the URL does not exist or is not accessible
-   // the kZombie bit will be set in the TWebFile object. Use IsZombie()
-   // to see if the file is accessible. The preferred interface to this
-   // constructor is via TFile::Open().
-
    TString option = opt;
    fNoProxy = kFALSE;
    if (option.Contains("NOPROXY", TString::kIgnoreCase))
@@ -156,23 +156,23 @@ TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB")
    Init(headOnly);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a Web file object. A web file is the same as a read-only
+/// TFile except that it is being read via a HTTP server. Make sure url
+/// is a valid TUrl object.
+/// The opt can be "NOPROXY", to bypass any set "http_proxy" shell
+/// variable. The proxy can be specified as (in sh, or equivalent csh):
+///   export http_proxy=http://pcsalo.cern.ch:3128
+/// The proxy can also be specified via the static method TWebFile::SetProxy().
+/// Basic authentication (AuthType Basic) is supported. The user name and
+/// passwd can be specified in the url like this:
+///   http://username:mypasswd@pcsalo.cern.ch/files/aap.root
+/// If the file specified in the URL does not exist or is not accessible
+/// the kZombie bit will be set in the TWebFile object. Use IsZombie()
+/// to see if the file is accessible.
+
 TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB")
 {
-   // Create a Web file object. A web file is the same as a read-only
-   // TFile except that it is being read via a HTTP server. Make sure url
-   // is a valid TUrl object.
-   // The opt can be "NOPROXY", to bypass any set "http_proxy" shell
-   // variable. The proxy can be specified as (in sh, or equivalent csh):
-   //   export http_proxy=http://pcsalo.cern.ch:3128
-   // The proxy can also be specified via the static method TWebFile::SetProxy().
-   // Basic authentication (AuthType Basic) is supported. The user name and
-   // passwd can be specified in the url like this:
-   //   http://username:mypasswd@pcsalo.cern.ch/files/aap.root
-   // If the file specified in the URL does not exist or is not accessible
-   // the kZombie bit will be set in the TWebFile object. Use IsZombie()
-   // to see if the file is accessible.
-
    TString option = opt;
    fNoProxy = kFALSE;
    if (option.Contains("NOPROXY", TString::kIgnoreCase))
@@ -186,19 +186,19 @@ TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB")
    Init(headOnly);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TWebFile::~TWebFile()
 {
-   // Cleanup.
-
    delete fSocket;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a TWebFile object.
+
 void TWebFile::Init(Bool_t readHeadOnly)
 {
-   // Initialize a TWebFile object.
-
    char buf[4];
    int  err;
 
@@ -248,12 +248,12 @@ void TWebFile::Init(Bool_t readHeadOnly)
    fD = -2;   // so TFile::IsOpen() will return true when in TFile::~TFile
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set GET command for use by ReadBuffer(s)10(), handle redirection if
+/// needed. Give full URL so Apache's virtual hosts solution works.
+
 void TWebFile::SetMsgReadBuffer10(const char *redirectLocation, Bool_t tempRedirect)
 {
-   // Set GET command for use by ReadBuffer(s)10(), handle redirection if
-   // needed. Give full URL so Apache's virtual hosts solution works.
-
    TUrl oldUrl;
    TString oldBasicUrl;
 
@@ -334,11 +334,11 @@ void TWebFile::SetMsgReadBuffer10(const char *redirectLocation, Bool_t tempRedir
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shell var "http_proxy" has been set and should be used.
+
 void TWebFile::CheckProxy()
 {
-   // Check if shell var "http_proxy" has been set and should be used.
-
    if (fNoProxy)
       return;
 
@@ -361,25 +361,25 @@ void TWebFile::CheckProxy()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A TWebFile that has been correctly constructed is always considered open.
+
 Bool_t TWebFile::IsOpen() const
 {
-   // A TWebFile that has been correctly constructed is always considered open.
-
    return IsZombie() ? kFALSE : kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reopen a file with a different access mode, like from READ to
+/// UPDATE or from NEW, CREATE, RECREATE, UPDATE to READ. Thus the
+/// mode argument can be either "READ" or "UPDATE". The method returns
+/// 0 in case the mode was successfully modified, 1 in case the mode
+/// did not change (was already as requested or wrong input arguments)
+/// and -1 in case of failure, in which case the file cannot be used
+/// anymore. A TWebFile cannot be reopened in update mode.
+
 Int_t TWebFile::ReOpen(Option_t *mode)
 {
-   // Reopen a file with a different access mode, like from READ to
-   // UPDATE or from NEW, CREATE, RECREATE, UPDATE to READ. Thus the
-   // mode argument can be either "READ" or "UPDATE". The method returns
-   // 0 in case the mode was successfully modified, 1 in case the mode
-   // did not change (was already as requested or wrong input arguments)
-   // and -1 in case of failure, in which case the file cannot be used
-   // anymore. A TWebFile cannot be reopened in update mode.
-
    TString opt = mode;
    opt.ToUpper();
 
@@ -392,13 +392,13 @@ Int_t TWebFile::ReOpen(Option_t *mode)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified byte range from remote file via HTTP daemon. This
+/// routine connects to the remote host, sends the request and returns
+/// the buffer. Returns kTRUE in case of error.
+
 Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
 {
-   // Read specified byte range from remote file via HTTP daemon. This
-   // routine connects to the remote host, sends the request and returns
-   // the buffer. Returns kTRUE in case of error.
-
    Int_t st;
    if ((st = ReadBufferViaCache(buf, len))) {
       if (st == 2)
@@ -430,24 +430,24 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified byte range from remote file via HTTP daemon. This
+/// routine connects to the remote host, sends the request and returns
+/// the buffer. Returns kTRUE in case of error.
+
 Bool_t TWebFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
-   // Read specified byte range from remote file via HTTP daemon. This
-   // routine connects to the remote host, sends the request and returns
-   // the buffer. Returns kTRUE in case of error.
-
    SetOffset(pos);
    return ReadBuffer(buf, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified byte range from remote file via HTTP 1.0 daemon (without
+/// mod-root installed). This routine connects to the remote host, sends the
+/// request and returns the buffer. Returns kTRUE in case of error.
+
 Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
 {
-   // Read specified byte range from remote file via HTTP 1.0 daemon (without
-   // mod-root installed). This routine connects to the remote host, sends the
-   // request and returns the buffer. Returns kTRUE in case of error.
-
    SetMsgReadBuffer10();
 
    TString msg = fMsgReadBuffer10;
@@ -474,16 +474,16 @@ Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified byte ranges from remote file via HTTP daemon.
+/// Reads the nbuf blocks described in arrays pos and len,
+/// where pos[i] is the seek position of block i of length len[i].
+/// Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer
+/// This function is overloaded by TNetFile, TWebFile, etc.
+/// Returns kTRUE in case of failure.
+
 Bool_t TWebFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 {
-   // Read specified byte ranges from remote file via HTTP daemon.
-   // Reads the nbuf blocks described in arrays pos and len,
-   // where pos[i] is the seek position of block i of length len[i].
-   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer
-   // This function is overloaded by TNetFile, TWebFile, etc.
-   // Returns kTRUE in case of failure.
-
    if (!fHasModRoot)
       return ReadBuffers10(buf, pos, len, nbuf);
 
@@ -521,16 +521,16 @@ Bool_t TWebFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified byte ranges from remote file via HTTP 1.0 daemon (without
+/// mod-root installed). Read the nbuf blocks described in arrays pos and len,
+/// where pos[i] is the seek position of block i of length len[i].
+/// Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer
+/// This function is overloaded by TNetFile, TWebFile, etc.
+/// Returns kTRUE in case of failure.
+
 Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 {
-   // Read specified byte ranges from remote file via HTTP 1.0 daemon (without
-   // mod-root installed). Read the nbuf blocks described in arrays pos and len,
-   // where pos[i] is the seek position of block i of length len[i].
-   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer
-   // This function is overloaded by TNetFile, TWebFile, etc.
-   // Returns kTRUE in case of failure.
-
    SetMsgReadBuffer10();
 
    TString msg = fMsgReadBuffer10;
@@ -562,12 +562,12 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read request from web server. Returns -1 in case of error,
+/// 0 in case of success.
+
 Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
 {
-   // Read request from web server. Returns -1 in case of error,
-   // 0 in case of success.
-
    TSocket *s;
 
    if (!len) return 0;
@@ -627,14 +627,14 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read multiple byte range request from web server.
+/// Uses HTTP 1.0 daemon wihtout mod-root.
+/// Returns -2 in case file does not exist, -1 in case
+/// of error and 0 in case of success.
+
 Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
 {
-   // Read multiple byte range request from web server.
-   // Uses HTTP 1.0 daemon wihtout mod-root.
-   // Returns -2 in case file does not exist, -1 in case
-   // of error and 0 in case of success.
-
    if (!len) return 0;
 
    Double_t start = 0;
@@ -817,11 +817,11 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position from where to start reading.
+
 void TWebFile::Seek(Long64_t offset, ERelativeTo pos)
 {
-   // Set position from where to start reading.
-
    switch (pos) {
    case kBeg:
       fOffset = offset + fArchiveOffset;
@@ -838,11 +838,11 @@ void TWebFile::Seek(Long64_t offset, ERelativeTo pos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return maximum file size.
+
 Long64_t TWebFile::GetSize() const
 {
-   // Return maximum file size.
-
    if (!fHasModRoot || fSize >= 0)
       return fSize;
 
@@ -869,15 +869,15 @@ Long64_t TWebFile::GetSize() const
    return size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the HTTP header. Depending on the return code we can see if
+/// the file exists and if the server uses mod_root.
+/// Returns -1 in case of an error, -2 in case the file does not exists,
+/// -3 in case HEAD is not supported (dCache HTTP door) and
+/// 0 in case of success.
+
 Int_t TWebFile::GetHead()
 {
-   // Get the HTTP header. Depending on the return code we can see if
-   // the file exists and if the server uses mod_root.
-   // Returns -1 in case of an error, -2 in case the file does not exists,
-   // -3 in case HEAD is not supported (dCache HTTP door) and
-   // 0 in case of success.
-
    // Give full URL so Apache's virtual hosts solution works.
    if (fMsgGetHead == "") {
       fMsgGetHead = "HEAD ";
@@ -1029,15 +1029,15 @@ Int_t TWebFile::GetHead()
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a line from the socket. Reads at most one less than the number of
+/// characters specified by maxsize. Reading stops when a newline character
+/// is found, The newline (\n) and cr (\r), if any, are removed.
+/// Returns -1 in case of error, or the number of characters read (>= 0)
+/// otherwise.
+
 Int_t TWebFile::GetLine(TSocket *s, char *line, Int_t maxsize)
 {
-   // Read a line from the socket. Reads at most one less than the number of
-   // characters specified by maxsize. Reading stops when a newline character
-   // is found, The newline (\n) and cr (\r), if any, are removed.
-   // Returns -1 in case of error, or the number of characters read (>= 0)
-   // otherwise.
-
    Int_t n = GetHunk(s, line, maxsize);
    if (n < 0) {
       if (!fHTTP11 || gDebug > 0)
@@ -1054,53 +1054,53 @@ Int_t TWebFile::GetLine(TSocket *s, char *line, Int_t maxsize)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a hunk of data from the socket, up until a terminator. The hunk is
+/// limited by whatever the TERMINATOR callback chooses as its
+/// terminator. For example, if terminator stops at newline, the hunk
+/// will consist of a line of data; if terminator stops at two
+/// newlines, it can be used to read the head of an HTTP response.
+/// Upon determining the boundary, the function returns the data (up to
+/// the terminator) in hunk.
+///
+/// In case of read error, -1 is returned. In case of having read some
+/// data, but encountering EOF before seeing the terminator, the data
+/// that has been read is returned, but it will (obviously) not contain the
+/// terminator.
+///
+/// The TERMINATOR function is called with three arguments: the
+/// beginning of the data read so far, the beginning of the current
+/// block of peeked-at data, and the length of the current block.
+/// Depending on its needs, the function is free to choose whether to
+/// analyze all data or just the newly arrived data. If TERMINATOR
+/// returns 0, it means that the terminator has not been seen.
+/// Otherwise it should return a pointer to the character immediately
+/// following the terminator.
+///
+/// The idea is to be able to read a line of input, or otherwise a hunk
+/// of text, such as the head of an HTTP request, without crossing the
+/// boundary, so that the next call to RecvRaw() etc. reads the data
+/// after the hunk. To achieve that, this function does the following:
+///
+/// 1. Peek at incoming data.
+///
+/// 2. Determine whether the peeked data, along with the previously
+///    read data, includes the terminator.
+///
+/// 3a. If yes, read the data until the end of the terminator, and
+///     exit.
+///
+/// 3b. If no, read the peeked data and goto 1.
+///
+/// The function is careful to assume as little as possible about the
+/// implementation of peeking.  For example, every peek is followed by
+/// a read. If the read returns a different amount of data, the
+/// process is retried until all data arrives safely.
+///
+/// Reads at most one less than the number of characters specified by maxsize.
+
 Int_t TWebFile::GetHunk(TSocket *s, char *hunk, Int_t maxsize)
 {
-   // Read a hunk of data from the socket, up until a terminator. The hunk is
-   // limited by whatever the TERMINATOR callback chooses as its
-   // terminator. For example, if terminator stops at newline, the hunk
-   // will consist of a line of data; if terminator stops at two
-   // newlines, it can be used to read the head of an HTTP response.
-   // Upon determining the boundary, the function returns the data (up to
-   // the terminator) in hunk.
-   //
-   // In case of read error, -1 is returned. In case of having read some
-   // data, but encountering EOF before seeing the terminator, the data
-   // that has been read is returned, but it will (obviously) not contain the
-   // terminator.
-   //
-   // The TERMINATOR function is called with three arguments: the
-   // beginning of the data read so far, the beginning of the current
-   // block of peeked-at data, and the length of the current block.
-   // Depending on its needs, the function is free to choose whether to
-   // analyze all data or just the newly arrived data. If TERMINATOR
-   // returns 0, it means that the terminator has not been seen.
-   // Otherwise it should return a pointer to the character immediately
-   // following the terminator.
-   //
-   // The idea is to be able to read a line of input, or otherwise a hunk
-   // of text, such as the head of an HTTP request, without crossing the
-   // boundary, so that the next call to RecvRaw() etc. reads the data
-   // after the hunk. To achieve that, this function does the following:
-   //
-   // 1. Peek at incoming data.
-   //
-   // 2. Determine whether the peeked data, along with the previously
-   //    read data, includes the terminator.
-   //
-   // 3a. If yes, read the data until the end of the terminator, and
-   //     exit.
-   //
-   // 3b. If no, read the peeked data and goto 1.
-   //
-   // The function is careful to assume as little as possible about the
-   // implementation of peeking.  For example, every peek is followed by
-   // a read. If the read returns a different amount of data, the
-   // process is retried until all data arrives safely.
-   //
-   // Reads at most one less than the number of characters specified by maxsize.
-
    if (maxsize <= 0) return 0;
 
    Int_t bufsize = maxsize;
@@ -1172,15 +1172,16 @@ Int_t TWebFile::GetHunk(TSocket *s, char *hunk, Int_t maxsize)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine whether [START, PEEKED + PEEKLEN) contains an HTTP new
+/// line [\r]\n. If so, return the pointer to the position after the line,
+/// otherwise return 0. This is used as callback to GetHunk(). The data
+/// between START and PEEKED has been read and cannot be "unread"; the
+/// data after PEEKED has only been peeked.
+
 const char *TWebFile::HttpTerminator(const char *start, const char *peeked,
                                      Int_t peeklen)
 {
-   // Determine whether [START, PEEKED + PEEKLEN) contains an HTTP new
-   // line [\r]\n. If so, return the pointer to the position after the line,
-   // otherwise return 0. This is used as callback to GetHunk(). The data
-   // between START and PEEKED has been read and cannot be "unread"; the
-   // data after PEEKED has only been peeked.
 #if 0
    const char *p, *end;
 
@@ -1208,11 +1209,11 @@ const char *TWebFile::HttpTerminator(const char *start, const char *peeked,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return basic authentication scheme, to be added to the request.
+
 TString TWebFile::BasicAuthentication()
 {
-   // Return basic authentication scheme, to be added to the request.
-
    TString msg;
    if (strlen(fUrl.GetUser())) {
       TString auth = fUrl.GetUser();
@@ -1227,11 +1228,11 @@ TString TWebFile::BasicAuthentication()
    return msg;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method setting global proxy URL.
+
 void TWebFile::SetProxy(const char *proxy)
 {
-   // Static method setting global proxy URL.
-
    if (proxy && *proxy) {
       TUrl p(proxy);
       if (strcmp(p.GetProtocol(), "http")) {
@@ -1243,49 +1244,50 @@ void TWebFile::SetProxy(const char *proxy)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the global proxy URL.
+
 const char *TWebFile::GetProxy()
 {
-   // Static method returning the global proxy URL.
-
    if (fgProxy.IsValid())
       return fgProxy.GetUrl();
    return "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process the HTTP header in the argument. This method is intended to be
+/// overwritten by subclasses that exploit the information contained in the
+/// HTTP headers.
+
 void TWebFile::ProcessHttpHeader(const TString&)
 {
-   // Process the HTTP header in the argument. This method is intended to be
-   // overwritten by subclasses that exploit the information contained in the
-   // HTTP headers.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create helper class that allows directory access via httpd.
+/// The name must start with '-' to bypass the TSystem singleton check.
+
 TWebSystem::TWebSystem() : TSystem("-http", "HTTP Helper System")
 {
-   // Create helper class that allows directory access via httpd.
-   // The name must start with '-' to bypass the TSystem singleton check.
-
    SetName("http");
 
    fDirp = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a directory via httpd. Not supported.
+
 Int_t TWebSystem::MakeDirectory(const char *)
 {
-   // Make a directory via httpd. Not supported.
-
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a directory via httpd. Returns an opaque pointer to a dir
+/// structure. Returns 0 in case of error.
+
 void *TWebSystem::OpenDirectory(const char *)
 {
-   // Open a directory via httpd. Returns an opaque pointer to a dir
-   // structure. Returns 0 in case of error.
-
    if (fDirp) {
       Error("OpenDirectory", "invalid directory pointer (should never happen)");
       fDirp = 0;
@@ -1296,11 +1298,11 @@ void *TWebSystem::OpenDirectory(const char *)
    return fDirp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free directory via httpd.
+
 void TWebSystem::FreeDirectory(void *dirp)
 {
-   // Free directory via httpd.
-
    if (dirp != fDirp) {
       Error("FreeDirectory", "invalid directory pointer (should never happen)");
       return;
@@ -1309,11 +1311,11 @@ void TWebSystem::FreeDirectory(void *dirp)
    fDirp = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get directory entry via httpd. Returns 0 in case no more entries.
+
 const char *TWebSystem::GetDirEntry(void *dirp)
 {
-   // Get directory entry via httpd. Returns 0 in case no more entries.
-
    if (dirp != fDirp) {
       Error("GetDirEntry", "invalid directory pointer (should never happen)");
       return 0;
@@ -1322,14 +1324,14 @@ const char *TWebSystem::GetDirEntry(void *dirp)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 Int_t TWebSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    TWebFile *f = new TWebFile(path, "HEADONLY");
 
    if (f->fWritten == 0) {
@@ -1351,13 +1353,13 @@ Int_t TWebSystem::GetPathInfo(const char *path, FileStat_t &buf)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns FALSE if one can access a file using the specified access mode.
+/// Mode is the same as for the Unix access(2) function.
+/// Attention, bizarre convention of return value!!
+
 Bool_t TWebSystem::AccessPathName(const char *path, EAccessMode)
 {
-   // Returns FALSE if one can access a file using the specified access mode.
-   // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
-
    TWebFile *f = new TWebFile(path, "HEADONLY");
    if (f->fWritten == 0) {
       delete f;
@@ -1367,11 +1369,11 @@ Bool_t TWebSystem::AccessPathName(const char *path, EAccessMode)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlink, i.e. remove, a file or directory. Returns 0 when successful,
+/// -1 in case of failure. Not supported for httpd.
+
 Int_t TWebSystem::Unlink(const char *)
 {
-   // Unlink, i.e. remove, a file or directory. Returns 0 when successful,
-   // -1 in case of failure. Not supported for httpd.
-
    return -1;
 }

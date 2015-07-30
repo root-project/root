@@ -4,17 +4,77 @@
 /// @namespace JSROOT
 /// Holder of all JSROOT functions and classes
 
-(function(){
+(function( factory ) {
+   if ( typeof define === "function" && define.amd ) {
 
-   if (typeof JSROOT == "object") {
-      var e1 = new Error("JSROOT is already defined");
-      e1.source = "JSRootCore.js";
-      throw e1;
+      var dir = "scripts";
+      var scripts = document.getElementsByTagName('script');
+      for (var n in scripts) {
+         if (scripts[n]['type'] != 'text/javascript') continue;
+         var src = scripts[n]['src'];
+         if ((src == null) || (src.length == 0)) continue;
+         var pos = src.indexOf("scripts/JSRootCore.");
+         if (pos>=0) {
+            dir = src.substr(0, pos+7);
+            break;
+         }
+      }
+
+      // first configure all dependencies
+      requirejs.config({
+       baseUrl: dir,
+       paths: {
+          'd3'              : 'd3.v3.min',
+          'helvetiker_bold' : 'helvetiker_bold.typeface',
+          'jquery'          : 'jquery.min',
+          'jquery-ui'       : 'jquery-ui.min',
+          'touch-punch'     : 'touch-punch.min',
+          'MathJax'         : 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG&amp;delayStartupUntil=configured',
+          'THREE'           : 'helvetiker_regular.typeface'
+       },
+       shim: {
+          helvetiker_bold: {
+             deps: ['three.min']
+          },
+          THREE: {
+             deps: ['helvetiker_bold']
+          },
+          MathJax: {
+             exports: "MathJax",
+             init: function () {
+                MathJax.Hub.Config({ TeX: { extensions: ["color.js"] }});
+                MathJax.Hub.Register.StartupHook("SVG Jax Ready",function () {
+                   var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;
+                   VARIANT["normal"].fonts.unshift("MathJax_SansSerif");
+                   VARIANT["bold"].fonts.unshift("MathJax_SansSerif-bold");
+                   VARIANT["italic"].fonts.unshift("MathJax_SansSerif");
+                   VARIANT["-tex-mathit"].fonts.unshift("MathJax_SansSerif");
+                });
+                MathJax.Hub.Startup.onload();
+                return MathJax;
+             }
+          }
+       }
+    });
+
+      // AMD. Register as an anonymous module.
+      define( factory );
+   } else {
+
+      if (typeof JSROOT != 'undefined') {
+         var e1 = new Error("JSROOT is already defined");
+         e1.source = "JSRootCore.js";
+         throw e1;
+      }
+
+      JSROOT = {};
+
+      // Browser globals
+      factory(JSROOT);
    }
+} (function(JSROOT) {
 
-   JSROOT = {};
-
-   JSROOT.version = "dev 25/06/2015";
+   JSROOT.version = "3.7.1 22/07/2015";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -68,9 +128,13 @@
    };
 
    // wrapper for console.log, avoids missing console in IE
-   JSROOT.console = function(value) {
-     if ((typeof console != 'undefined') && (typeof console.log == 'function'))
-        console.log(value);
+   // if divid specified, provide output to the HTML element
+   JSROOT.console = function(value, divid) {
+      if ((divid!=null) && (typeof document.getElementById(divid)!='undefined'))
+         document.getElementById(divid).innerHTML = value;
+      else
+      if ((typeof console != 'undefined') && (typeof console.log == 'function'))
+         console.log(value);
    }
 
    // This is part of the JSON-R code, found on
@@ -96,7 +160,7 @@
 
             if (Object.prototype.toString.apply(value) === '[object Array]') {
                for (i = 0; i < value.length; i++) {
-                  value[i] = JSROOT.JSONR_unref(value[i], dy);
+                  value[i] = this.JSONR_unref(value[i], dy);
                }
             } else {
 
@@ -106,13 +170,12 @@
                }
 
                // add methods to all objects, where _typename is specified
-               if (('_typename' in value) && (typeof JSROOT == "object"))
-                  JSROOT.addMethods(value);
+               if ('_typename' in value) this.addMethods(value);
 
                ks = Object.keys(value);
                for (i = 0; i < ks.length; i++) {
                   k = ks[i];
-                  value[k] = JSROOT.JSONR_unref(value[k], dy);
+                  value[k] = this.JSONR_unref(value[k], dy);
                }
             }
          }
@@ -170,7 +233,7 @@
    JSROOT.parse = function(arg) {
       if ((arg==null) || (arg=="")) return null;
       var obj = JSON.parse(arg);
-      if (obj!=null) obj = JSROOT.JSONR_unref(obj);
+      if (obj!=null) obj = this.JSONR_unref(obj);
       return obj;
    }
 
@@ -261,9 +324,13 @@
    JSROOT.findFunction = function(name) {
       var func = window[name];
       if (typeof func == 'function') return func;
-      var separ = name.indexOf(".");
-      if ((separ>0) && window[name.slice(0, separ)])
-         func = window[name.slice(0, separ)][name.slice(separ+1)];
+      var separ = name.lastIndexOf(".");
+      if (separ<0) return null;
+      var namespace = name.slice(0, separ);
+      name = name.slice(separ+1);
+      if (namespace=="JSROOT") func = this[name]; else
+      if (namespace=="JSROOT.Painter") { if ('Painter' in this) func = this['Painter'][name]; } else
+      if (window[namespace]) func = window[namespace][name];
       return (typeof func == 'function') ? func : null;
    }
 
@@ -310,6 +377,8 @@
          if (typeof user_call_back == 'function') user_call_back.call(xhr, res);
       }
 
+      var pthis = this;
+
       if (window.ActiveXObject) {
 
          xhr.onreadystatechange = function() {
@@ -321,11 +390,8 @@
             }
 
             if (kind == "xml") return callback(xhr.responseXML);
-
             if (kind == "text") return callback(xhr.responseText);
-
-            if (kind == "object") return callback(JSROOT.parse(xhr.responseText));
-
+            if (kind == "object") return callback(pthis.parse(xhr.responseText));
             if (kind == "head") return callback(xhr);
 
             var filecontent = new String("");
@@ -351,7 +417,7 @@
 
             if (kind == "xml") return callback(xhr.responseXML);
             if (kind == "text") return callback(xhr.responseText);
-            if (kind == "object") return callback(JSROOT.parse(xhr.responseText));
+            if (kind == "object") return callback(pthis.parse(xhr.responseText));
             if (kind == "head") return callback(xhr);
 
             var HasArrayBuffer = ('ArrayBuffer' in window && 'Uint8Array' in window);
@@ -410,13 +476,6 @@
       // by the position of JSRootCore.js file, which must be loaded by normal methods:
       // <script type="text/javascript" src="scripts/JSRootCore.js"></script>
 
-      function debug(str) {
-         if (debugout)
-            document.getElementById(debugout).innerHTML = str;
-         else
-            JSROOT.console(str);
-      }
-
       function completeLoad() {
          if ((urllist!=null) && (urllist.length>0))
             return JSROOT.loadScript(urllist, callback, debugout);
@@ -443,6 +502,10 @@
       if (filename.indexOf("$$$")==0) {
          isrootjs = true;
          filename = filename.slice(3);
+         if ((filename.indexOf("style/")==0) && JSROOT.source_min &&
+             (filename.lastIndexOf('.css')==filename.length-3) &&
+             (filename.indexOf('.min.css')<0))
+            filename = filename.slice(0, filename.length-4) + '.min.css';
       }
       var isstyle = filename.indexOf('.css') > 0;
 
@@ -477,7 +540,7 @@
 
       var element = null;
 
-      debug("loading " + filename + " ...");
+      JSROOT.console("loading " + filename + " ...", debugout);
 
       if (isstyle) {
          element = document.createElement("link");
@@ -507,9 +570,6 @@
       document.getElementsByTagName("head")[0].appendChild(element);
    }
 
-   JSROOT.doing_assert = null; // array where all requests are collected
-   JSROOT.load_jquery = null;  // variable indicates if jquery was loaded
-
    JSROOT.AssertPrerequisites = function(kind, callback, debugout) {
       // one could specify kind of requirements
       // 'io' for I/O functionality (default)
@@ -520,141 +580,170 @@
       // 'simple' for basic user interface
       // 'load:' list of user-specific scripts at the end of kind string
 
+      var jsroot = this;
+
       if ((typeof kind != 'string') || (kind == ''))
-         return JSROOT.CallBack(callback);
+         return jsroot.CallBack(callback);
 
       if (kind=='shift') {
-         var req = JSROOT.doing_assert.shift();
+         var req = jsroot.doing_assert.shift();
          kind = req._kind;
          callback = req._callback;
          debugout = req._debug;
       } else
-      if (JSROOT.doing_assert != null) {
+      if (jsroot.doing_assert != null) {
          // if function already called, store request
-         return JSROOT.doing_assert.push({_kind:kind, _callback:callback, _debug: debugout});
+         return jsroot.doing_assert.push({_kind:kind, _callback:callback, _debug: debugout});
       } else {
-         JSROOT.doing_assert = [];
+         jsroot.doing_assert = [];
       }
 
       if (kind.charAt(kind.length-1)!=";") kind+=";";
 
-      var ext = JSROOT.source_min ? ".min" : "";
+      var ext = jsroot.source_min ? ".min" : "";
 
       var need_jquery = false;
 
       // file names should be separated with ';'
-      var allfiles = '';
+      var mainfiles = "", extrafiles = ""; // scripts for direct loadin
+      var modules = [];  // modules used for require.js
 
-      if (kind.indexOf('io;')>=0)
-         allfiles += "$$$scripts/rawinflate" + ext + ".js;" +
-                     "$$$scripts/JSRootIOEvolution" + ext + ".js;";
+      if (kind.indexOf('io;')>=0) {
+         mainfiles += "$$$scripts/rawinflate" + ext + ".js;" +
+                      "$$$scripts/JSRootIOEvolution" + ext + ".js;";
+         modules.push('JSRootIOEvolution');
+      }
 
       if (kind.indexOf('2d;')>=0) {
          if (typeof d3 != 'undefined')
-            JSROOT.console('Reuse existing d3.js ' + d3.version + ", required 3.4.10");
+            jsroot.console('Reuse existing d3.js ' + d3.version + ", required 3.4.10", debugout);
          else
-            allfiles += '$$$scripts/d3.v3.min.js;';
-         allfiles += '$$$scripts/JSRootPainter' + ext + ".js;" +
-                     '$$$style/JSRootPainter' + ext + ".css;";
+            mainfiles += '$$$scripts/d3.v3.min.js;';
+         modules.push('JSRootPainter');
+         mainfiles += '$$$scripts/JSRootPainter' + ext + ".js;";
+         extrafiles += '$$$style/JSRootPainter' + ext + '.css;';
       }
 
       if (kind.indexOf('jq;')>=0) need_jquery = true;
 
       if (kind.indexOf('jq2d;')>=0) {
-         allfiles += '$$$scripts/JSRootPainter.jquery' + ext + ".js;";
+         mainfiles += '$$$scripts/JSRootPainter.jquery' + ext + ".js;";
+         modules.push('JSRootPainter.jquery');
          need_jquery = true;
       }
 
       if (kind.indexOf("3d;")>=0) {
          need_jquery = true;
-         allfiles += "$$$scripts/jquery.mousewheel" + ext + ".js;" +
-                     "$$$scripts/three.min.js;" +
-                     "$$$scripts/helvetiker_regular.typeface.js;" +
-                     "$$$scripts/helvetiker_bold.typeface.js;" +
-                     "$$$scripts/JSRoot3DPainter" + ext + ".js;";
+         mainfiles += "$$$scripts/jquery.mousewheel" + ext + ".js;" +
+                      "$$$scripts/three.min.js;" +
+                      "$$$scripts/helvetiker_regular.typeface.js;" +
+                      "$$$scripts/helvetiker_bold.typeface.js;" +
+                      "$$$scripts/JSRoot3DPainter" + ext + ".js;";
+         modules.push('JSRoot3DPainter');
       }
 
       if (kind.indexOf("mathjax;")>=0) {
          if (typeof MathJax == 'undefined') {
-            allfiles += "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG," +
-                         JSROOT.source_dir + "scripts/mathjax_config.js;";
+            mainfiles += "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG," +
+                          jsroot.source_dir + "scripts/mathjax_config.js;";
          }
          if (JSROOT.MathJax == 0) JSROOT.MathJax = 1;
+         modules.push('MathJax');
       }
 
       if (kind.indexOf("simple;")>=0) {
          need_jquery = true;
-         allfiles += '$$$scripts/JSRootInterface' + ext + ".js;" +
-                     '$$$style/JSRootInterface' + ext + ".css;";
+         mainfiles += '$$$scripts/JSRootInterface' + ext + ".js;";
+         extrafiles += '$$$style/JSRootInterface' + ext + '.css;';
+         modules.push('JSRootInterface');
       }
 
       if (need_jquery && (JSROOT.load_jquery==null)) {
          var has_jq = (typeof jQuery != 'undefined'), lst_jq = "";
 
          if (has_jq)
-            JSROOT.console('Reuse existing jQuery ' + jQuery.fn.jquery + ", required 2.1.1");
+            jsroot.console('Reuse existing jQuery ' + jQuery.fn.jquery + ", required 2.1.1", debugout);
          else
             lst_jq += "$$$scripts/jquery.min.js;";
          if (has_jq && typeof $.ui != 'undefined')
-            JSROOT.console('Reuse existing jQuery-ui ' + $.ui.version + ", required 1.11.0");
-         else
-            lst_jq += '$$$style/jquery-ui.css;$$$scripts/jquery-ui.min.js;';
-
-         allfiles = lst_jq + allfiles;
-         if (JSROOT.touches)
-            allfiles += '$$$scripts/touch-punch.min.js;';
-
-         JSROOT.load_jquery = true;
-         if ((typeof define == 'function') && (lst_jq.length>0)) {
-            // special workarond for requirejs - hide define variable when loading jquery
-            JSROOT.load_jquery = { define : define };
-            define = null;
+            jsroot.console('Reuse existing jQuery-ui ' + $.ui.version + ", required 1.11.0", debugout);
+         else {
+            lst_jq += '$$$scripts/jquery-ui.min.js;';
+            extrafiles += '$$$style/jquery-ui' + ext + '.css;';
          }
+
+         if (JSROOT.touches) {
+            lst_jq += '$$$scripts/touch-punch.min.js;';
+            modules.push('touch-punch');
+         }
+
+         modules.splice(0,0, 'jquery', 'jquery-ui');
+         mainfiles = lst_jq + mainfiles;
+
+         jsroot.load_jquery = true;
       }
 
       var pos = kind.indexOf("user:");
       if (pos<0) pos = kind.indexOf("load:");
-      if (pos>=0) allfiles += kind.slice(pos+5);
+      if (pos>=0) extrafiles += kind.slice(pos+5);
 
-      JSROOT.loadScript(allfiles, function() {
-         if ((JSROOT.load_jquery!=null) && (typeof JSROOT.load_jquery == 'object')
-             && ('define' in JSROOT.load_jquery)) {
-            define = JSROOT.load_jquery.define;
-            JSROOT.load_jquery = true;
+      var load_callback = function() {
+         if (jsroot.doing_assert.length==0) jsroot.doing_assert = null;
+         jsroot.CallBack(callback);
+         if (jsroot.doing_assert && (jsroot.doing_assert.length>0)) {
+            jsroot.AssertPrerequisites('shift');
          }
-         if (JSROOT.doing_assert.length==0) JSROOT.doing_assert = null;
-         JSROOT.CallBack(callback);
-         if (JSROOT.doing_assert && (JSROOT.doing_assert.length>0)) {
-            JSROOT.AssertPrerequisites('shift');
-         }
-      }, debugout);
+      }
+
+      if ((typeof define === "function") && define.amd && (modules.length>0)) {
+         jsroot.console("loading " + modules + " with require.js", debugout);
+         require(modules, function() {
+            jsroot.loadScript(extrafiles, load_callback, debugout);
+         });
+      } else {
+         jsroot.loadScript(mainfiles + extrafiles, load_callback, debugout);
+      }
    }
 
    JSROOT.BuildSimpleGUI = function(user_scripts, andThen) {
+
+      var jsroot = this;
+
       if (typeof user_scripts == 'function') {
          andThen = user_scripts;
          user_scripts = null;
       }
 
       var debugout = null;
-      var nobrowser = JSROOT.GetUrlOption('nobrowser')!=null;
+      var nobrowser = jsroot.GetUrlOption('nobrowser')!=null;
       var requirements = "io;2d;";
 
-      if (document.getElementById('simpleGUI')) { debugout = 'simpleGUI'; requirements = "io;2d;" } else
+      if (document.getElementById('simpleGUI')) {
+         debugout = 'simpleGUI';
+         if ((jsroot.GetUrlOption('json')!=null) &&
+             (jsroot.GetUrlOption('file')==null) &&
+             (jsroot.GetUrlOption('files')==null)) requirements = "2d;";
+      } else
       if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI'; requirements = "2d;"; } else
       if (document.getElementById('drawGUI')) { debugout = 'drawGUI'; requirements = "2d;"; nobrowser = true; }
-      if (!nobrowser) requirements+='jq2d;simple;';
 
-      if (user_scripts == null) user_scripts = JSROOT.GetUrlOption("autoload");
-      if (user_scripts == null) user_scripts = JSROOT.GetUrlOption("load");
+      if (user_scripts == 'check_existing_elements') {
+         user_scripts = null;
+         if (debugout == null) return;
+      }
+
+      if (!nobrowser) requirements += 'jq2d;simple;';
+
+      if (user_scripts == null) user_scripts = jsroot.GetUrlOption("autoload");
+      if (user_scripts == null) user_scripts = jsroot.GetUrlOption("load");
 
       if (user_scripts != null)
          requirements += "load:" + user_scripts + ";";
 
-      JSROOT.AssertPrerequisites(requirements, function() {
-         var func = JSROOT.findFunction(nobrowser ? 'JSROOT.BuildNobrowserGUI' : 'BuildSimpleGUI');
-         JSROOT.CallBack(func);
-         JSROOT.CallBack(andThen);
+      this.AssertPrerequisites(requirements, function() {
+         var func = jsroot.findFunction(nobrowser ? 'JSROOT.BuildNobrowserGUI' : 'BuildSimpleGUI');
+         jsroot.CallBack(func);
+         jsroot.CallBack(andThen);
       }, debugout);
    }
 
@@ -685,12 +774,12 @@
       if (typename == 'TNamed')
          JSROOT.extend(obj, { fUniqueID: 0, fBits: 0x3000008, fName: "", fTitle: "" });
       else
-      if (typename == 'TList')
-         JSROOT.extend(obj, { name: "TList", arr : [], opt : [] });
+      if ((typename == 'TList') || (typename == 'THashList'))
+         JSROOT.extend(obj, { name: typename, arr : [], opt : [] });
       else
       if (typename == 'TAttAxis') {
          JSROOT.extend(obj, { fNdivisions: 510, fAxisColor: 1,
-            fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.05, fLabelSize: 0.035, fTickLength: 0.03,
+            fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035, fTickLength: 0.03,
             fTitleOffset: 1, fTitleSize: 0.035, fTitleColor: 1, fTitleFont : 42 });
       } else
       if (typename == 'TAxis') {
@@ -731,6 +820,10 @@
       if (typename == 'TPaveStats') {
          JSROOT.Create("TPaveText", obj);
          JSROOT.extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
+      } else
+      if (typename == 'TObjString') {
+         JSROOT.Create("TObject", obj);
+         JSROOT.extend(obj, { fString: ""});
       } else
       if (typename == 'TH1') {
          JSROOT.Create("TNamed", obj);
@@ -820,7 +913,9 @@
       return graph;
    }
 
-   JSROOT.AdjustTGraphRanges = function(graph) {
+   // adjust histogram ranges with graph content
+   // ygap is value like 0.1 or 0.01 to introduce gaps on Y range
+   JSROOT.AdjustTGraphRanges = function(graph,ygap) {
       if (graph['fNpoints']==0) return;
 
       var minx = graph['fX'][0], maxx = minx;
@@ -835,8 +930,15 @@
 
       if (miny==maxy) maxy = miny + 1;
 
+      if (graph['fHistogram'] == null) graph['fHistogram'] = JSROOT.CreateTH1(graph['fNpoints']);
+
       graph['fHistogram']['fXaxis']['fXmin'] = minx;
       graph['fHistogram']['fXaxis']['fXmax'] = maxx;
+
+      if ((ygap!=null) && (ygap!=0)) {
+         if (miny>0) miny*= (1-2*ygap); else miny*=(1+ygap);
+         if (maxy>0) maxy*= (1+ygap); else maxy*=(1-2*ygap);
+      }
 
       graph['fHistogram']['fYaxis']['fXmin'] = miny;
       graph['fHistogram']['fYaxis']['fXmax'] = maxy;
@@ -890,14 +992,22 @@
          };
       }
 
-      if (obj_typename == "TList") {
+      if ((obj_typename == 'TList') || (obj_typename == 'THashList')) {
          obj['Clear'] = function() {
             this['arr'] = new Array;
             this['opt'] = new Array;
          }
          obj['Add'] = function(obj,opt) {
             this['arr'].push(obj);
-            this['opt'].push((typeof opt=='string') ? opt : "");
+            this['opt'].push((opt && typeof opt=='string') ? opt : "");
+         }
+         obj['AddFirst'] = function(obj,opt) {
+            this['arr'].unshift(obj);
+            this['opt'].unshift((opt && typeof opt=='string') ? opt : "");
+         }
+         obj['RemoveAt'] = function(indx) {
+            this['arr'].splice(indx, 1);
+            this['opt'].splice(indx, 1);
          }
       }
 
@@ -942,6 +1052,20 @@
             return ret;
          };
       }
+
+      if (obj_typename=='TF1') {
+         obj['GetParName'] = function(n) {
+            if (('fFormula' in this) && ('fParams' in this.fFormula)) return this.fFormula.fParams[n].first;
+            if ('fNames' in this) return this.fNames[n];
+            return "Par"+n;
+         }
+         obj['GetParValue'] = function(n) {
+            if (('fFormula' in this) && ('fClingParameters' in this.fFormula)) return this.fFormula.fClingParameters[n];
+            if (('fParams' in this) && (this.fParams!=null))  return this.fParams[n];
+            return null;
+         }
+      }
+
       if ((obj_typename.indexOf("TGraph") == 0) || (obj_typename == "TCutG")) {
          obj['ComputeRange'] = function() {
             // Compute the x/y range of the points in this graph
@@ -1803,6 +1927,82 @@
       }
    };
 
+   JSROOT.lastFFormat = "";
+
+   JSROOT.FFormat = function(value, fmt) {
+      // method used to convert numeric value to string according specified format
+      // format can be like 5.4g or 4.2e or 6.4f
+      // function saves actual format in JSROOT.lastFFormat variable
+      if (!fmt) fmt = "6.4g";
+
+      JSROOT.lastFFormat = "";
+
+      if (!fmt) fmt = "6.4g";
+      fmt = fmt.trim();
+      var len = fmt.length;
+      if (len<2) return value.toFixed(4);
+      var last = fmt.charAt(len-1);
+      fmt = fmt.slice(0,len-1);
+      var isexp = null;
+      var prec = fmt.indexOf(".");
+      if (prec<0) prec = 4; else prec = Number(fmt.slice(prec+1));
+      if ((prec==NaN) || (prec<0) || (prec==null)) prec = 4;
+      var significance = false;
+      if ((last=='e') || (last=='E')) { isexp = true; } else
+      if (last=='Q') { isexp = true; significance = true; } else
+      if ((last=='f') || (last=='F')) { isexp = false; } else
+      if (last=='W') { isexp = false; significance = true; } else
+      if ((last=='g') || (last=='G')) {
+         var se = JSROOT.FFormat(value, fmt+'Q');
+         var _fmt = JSROOT.lastFFormat;
+         var sg = JSROOT.FFormat(value, fmt+'W');
+
+         if (se.length < sg.length) {
+            JSROOT.lastFFormat = _fmt;
+            return se;
+         }
+         return sg;
+      } else {
+         isexp = false;
+         prec = 4;
+      }
+
+      if (isexp) {
+         // for exponential representation only one significant digit befor point
+         if (significance) prec--;
+         if (prec<0) prec = 0;
+
+         JSROOT.lastFFormat = '5.'+prec+'e';
+
+         return value.toExponential(prec);
+      }
+
+      var sg = value.toFixed(prec);
+
+      if (significance) {
+
+         // when using fixed representation, one could get 0.0
+         if ((value!=0) && (Number(sg)==0.) && (prec>0)) {
+            prec = 40; sg = value.toFixed(prec);
+         }
+
+         var l = 0;
+         while ((l<sg.length) && (sg.charAt(l) == '0' || sg.charAt(l) == '-' || sg.charAt(l) == '.')) l++;
+
+         var diff = sg.length - l - prec;
+         if (sg.indexOf(".")>l) diff--;
+
+         if (diff != 0) {
+            prec-=diff; if (prec<0) prec = 0;
+            sg = value.toFixed(prec);
+         }
+      }
+
+      JSROOT.lastFFormat = '5.'+prec+'f';
+
+      return sg;
+   }
+
 
    // math methods for Javascript ROOT
 
@@ -2229,6 +2429,15 @@
    // it is important to run this function at the end when all other
    // functions are available
    (function() {
+      function window_on_load(func) {
+         if (func==null) return;
+         if (document.attachEvent ? document.readyState === 'complete' : document.readyState !== 'loading')
+            func();
+         else
+            window.onload = func;
+      }
+
+
       var scripts = document.getElementsByTagName('script');
 
       for (var n in scripts) {
@@ -2245,10 +2454,11 @@
 
          JSROOT.console("Set JSROOT.source_dir to " + JSROOT.source_dir);
 
-         if (JSROOT.GetUrlOption('gui', src)!=null) {
-            window.onload = function() { JSROOT.BuildSimpleGUI(); }
-            return;
-         }
+         if (JSROOT.GetUrlOption('gui', src)!=null)
+            return window_on_load(function() { JSROOT.BuildSimpleGUI(); });
+
+         if ( typeof define === "function" && define.amd )
+            return window_on_load(function() { JSROOT.BuildSimpleGUI('check_existing_elements'); });
 
          var prereq = "";
          if (JSROOT.GetUrlOption('io', src)!=null) prereq += "io;";
@@ -2261,19 +2471,21 @@
          var onload = JSROOT.GetUrlOption('onload', src);
 
          if ((prereq.length>0) || (onload!=null))
-            window.onload = function() {
+            window_on_load(function() {
               if (prereq.length>0) JSROOT.AssertPrerequisites(prereq, onload); else
               if (onload!=null) {
                  onload = JSROOT.findFunction(onload);
                  if (typeof onload == 'function') onload();
               }
-         }
+            });
 
          return;
       }
    })();
 
-})();
+   return JSROOT;
+
+}));
 
 /// JSRootCore.js ends
 

@@ -29,17 +29,20 @@ using namespace std;
 ClassImp(RooMomentMorph) 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// coverity[UNINIT_CTOR]
+
 RooMomentMorph::RooMomentMorph() : _curNormSet(0), _mref(0), _M(0), _useHorizMorph(true)
 {
-  // coverity[UNINIT_CTOR]
   _varItr    = _varList.createIterator() ;
   _pdfItr    = _pdfList.createIterator() ; 
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CTOR
+
 RooMomentMorph::RooMomentMorph(const char *name, const char *title, 
                            RooAbsReal& _m,
                            const RooArgList& varList,
@@ -54,8 +57,6 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
   _setting(setting),
   _useHorizMorph(true)
 { 
-  // CTOR
-
   // observables
   TIterator* varItr = varList.createIterator() ;
   RooAbsArg* var ;
@@ -90,7 +91,9 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CTOR
+
 RooMomentMorph::RooMomentMorph(const char *name, const char *title, 
                            RooAbsReal& _m,
                            const RooArgList& varList,
@@ -105,8 +108,6 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
   _setting(setting),
   _useHorizMorph(true)
 { 
-  // CTOR
-
   // observables
   TIterator* varItr = varList.createIterator() ;
   RooAbsArg* var ;
@@ -156,7 +157,8 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMomentMorph::RooMomentMorph(const RooMomentMorph& other, const char* name) :  
   RooAbsPdf(other,name), 
   _cacheMgr(other._cacheMgr,this),
@@ -175,7 +177,8 @@ RooMomentMorph::RooMomentMorph(const RooMomentMorph& other, const char* name) :
   initialize();
 } 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMomentMorph::~RooMomentMorph() 
 {
   if (_mref)   delete _mref;
@@ -186,10 +189,10 @@ RooMomentMorph::~RooMomentMorph()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooMomentMorph::initialize() 
 {
-
   Int_t nPdf = _pdfList.getSize();
 
   // other quantities needed
@@ -218,7 +221,8 @@ void RooMomentMorph::initialize()
   delete dm ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) const
 {
   CacheElem* cache = (CacheElem*) _cacheMgr.getObj(0,(RooArgSet*)0) ;
@@ -360,7 +364,8 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooArgList RooMomentMorph::CacheElem::containedArgs(Action) 
 {
   return RooArgList(*_sumPdf,*_tracker) ; 
@@ -368,7 +373,8 @@ RooArgList RooMomentMorph::CacheElem::containedArgs(Action)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMomentMorph::CacheElem::~CacheElem() 
 { 
   delete _sumPdf ; 
@@ -377,17 +383,19 @@ RooMomentMorph::CacheElem::~CacheElem()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
+
 Double_t RooMomentMorph::getVal(const RooArgSet* set) const 
 {
-  // Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
   _curNormSet = set ? (RooArgSet*)set : (RooArgSet*)&_varList ;
   return RooAbsPdf::getVal(set) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAbsPdf* RooMomentMorph::sumPdf(const RooArgSet* nset) 
 {
   CacheElem* cache = getCache(nset ? nset : _curNormSet) ;
@@ -400,7 +408,8 @@ RooAbsPdf* RooMomentMorph::sumPdf(const RooArgSet* nset)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooMomentMorph::evaluate() const 
 { 
   CacheElem* cache = getCache(_curNormSet) ;
@@ -413,7 +422,8 @@ Double_t RooMomentMorph::evaluate() const
   return ret ;
 } 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooRealVar* RooMomentMorph::CacheElem::frac(Int_t i ) 
 { 
   return (RooRealVar*)(_frac.at(i))  ; 
@@ -421,14 +431,16 @@ RooRealVar* RooMomentMorph::CacheElem::frac(Int_t i )
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const RooRealVar* RooMomentMorph::CacheElem::frac(Int_t i ) const 
 { 
   return (RooRealVar*)(_frac.at(i))  ; 
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooMomentMorph::CacheElem::calculateFractions(const RooMomentMorph& self, Bool_t verbose) const
 {
   Int_t nPdf = self._pdfList.getSize();
@@ -495,7 +507,8 @@ void RooMomentMorph::CacheElem::calculateFractions(const RooMomentMorph& self, B
  
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int RooMomentMorph::idxmin(const double& mval) const
 {
   int imin(0);
@@ -507,7 +520,8 @@ int RooMomentMorph::idxmin(const double& mval) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int RooMomentMorph::idxmax(const double& mval) const
 {
   int imax(0);

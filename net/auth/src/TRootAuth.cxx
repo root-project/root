@@ -28,13 +28,14 @@
 #include "TSystem.h"
 #include "TUrl.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Runs authentication on socket s.
+/// Invoked when dynamic loading is needed.
+/// Returns 1 on success, 0 on failure.
+
 TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
                                      const char *user, Option_t *opts)
 {
-   // Runs authentication on socket s.
-   // Invoked when dynamic loading is needed.
-   // Returns 1 on success, 0 on failure.
    TSecContext *ctx = 0;
    Int_t rc = 0;
 
@@ -148,18 +149,18 @@ TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
    return ctx;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return client version;
+
 Int_t TRootAuth::ClientVersion()
 {
-   // Return client version;
-
    return TSocket::GetClientProtocol();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print error string corresponding to ecode, prepending location
+
 void TRootAuth::ErrorMsg(const char *where, Int_t ecode)
 {
-   // Print error string corresponding to ecode, prepending location
-
    TAuthenticate::AuthError(where, ecode);
 }

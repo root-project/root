@@ -25,7 +25,8 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
   MCFitter
   
@@ -42,7 +43,9 @@
 
 ClassImp(TMVA::MCFitter)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::MCFitter::MCFitter( IFitterTarget& target, 
                           const TString& name, 
                           const std::vector<Interval*>& ranges, 
@@ -52,32 +55,34 @@ TMVA::MCFitter::MCFitter( IFitterTarget& target,
      fSigma  ( 1 ),
      fSeed   ( 0 )
 {
-   // constructor
    DeclareOptions();
    ParseOptions();
 }            
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Declare MCFitter options
+
 void TMVA::MCFitter::DeclareOptions() 
 {
-   // Declare MCFitter options
    DeclareOptionRef( fSamples = 100000, "SampleSize", "Number of Monte Carlo events in toy sample" );  
    DeclareOptionRef( fSigma   = -1.0,   "Sigma", 
                     "If > 0: new points are generated according to Gauss around best value and with \"Sigma\" in units of interval length" );  
    DeclareOptionRef( fSeed    = 100,    "Seed",       "Seed for the random generator (0 takes random seeds)" );  
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set MC fitter configuration parameters
+
 void TMVA::MCFitter::SetParameters( Int_t samples )
 {
-   // set MC fitter configuration parameters
    fSamples = samples;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute fitting
+
 Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
 {
-   // Execute fitting
    Log() << kINFO << "<MCFitter> Sampling, please be patient ..." << Endl;
    
    // sanity check

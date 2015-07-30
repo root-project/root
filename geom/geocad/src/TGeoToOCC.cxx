@@ -113,6 +113,7 @@
 #include "TGeoPolygon.h"
 #include "TGeoMatrix.h"
 
+#include <exception>
 
 
 TGeoToOCC::TGeoToOCC():fOccShape()
@@ -202,22 +203,23 @@ TopoDS_Shape TGeoToOCC::OCC_SimpleShape(TGeoShape *TG_Shape)
       TGeoBBox * TG_Ass=(TGeoBBox*)TG_Shape;
       return OCC_Box(TG_Ass->GetDX(),TG_Ass->GetDY(),TG_Ass->GetDZ(),0,0,0);
    } else if (TG_Shape->IsA()==TGeoPara::Class()) {
-      TGeoPara * TG_Para=(TGeoPara*)TG_Shape;
+      //TGeoPara * TG_Para=(TGeoPara*)TG_Shape;
       Double_t vertex[24];
       TG_Shape->SetPoints(vertex);
       return OCC_ParaTrap(vertex);
    }  else if (TG_Shape->IsA()==TGeoTrap::Class()) {
-      TGeoTrap * TG_Trap=(TGeoTrap*)TG_Shape;
+      //TGeoTrap * TG_Trap=(TGeoTrap*)TG_Shape;
       Double_t vertex[24];
       TG_Shape->SetPoints(vertex);
       return OCC_ParaTrap(vertex);
    } else if (TG_Shape->IsA()==TGeoGtra::Class()) {
-      TGeoGtra * TG_Tra=(TGeoGtra*)TG_Shape;
+      //TGeoGtra * TG_Tra=(TGeoGtra*)TG_Shape;
       Double_t vertex[24];
       TG_Shape->SetPoints(vertex);
       return OCC_ParaTrap(vertex);
-   } else
-      cout<<"Error, unknown form"<<endl;
+   } else {
+      throw std::domain_error("Unknown Shape");
+   }
 }
 
 TopoDS_Shape TGeoToOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix m)
@@ -248,8 +250,11 @@ TopoDS_Shape TGeoToOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix
       Transl.SetTranslation(gp_Vec(t[0],t[1],t[2]));
       Transf.SetValues(r[0],r[1],r[2],0,
                        r[3],r[4],r[5],0,
-                       r[6],r[7],r[8],0,
-                       0, 1);
+                       r[6],r[7],r[8],0
+#if OCC_VERSION_MAJOR == 6 && OCC_VERSION_MINOR < 8
+                       ,0,1
+#endif
+                       );
       BRepBuilderAPI_Transform Transformation(Transf);
       BRepBuilderAPI_Transform Translation(Transl);
       Transformation.Perform(OCC_SimpleShape(leftShape),true);
@@ -267,8 +272,11 @@ TopoDS_Shape TGeoToOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix
       Transf.SetValues(
                      r[0],r[1],r[2],0,
                      r[3],r[4],r[5],0,
-                     r[6],r[7],r[8],0,
-                     0, 1);
+                     r[6],r[7],r[8],0
+#if OCC_VERSION_MAJOR == 6 && OCC_VERSION_MINOR < 8
+                       ,0,1
+#endif
+                       );
       BRepBuilderAPI_Transform Transformation(Transf);
       BRepBuilderAPI_Transform Translation(Transl);
       TopoDS_Shape sh=OCC_SimpleShape(rightShape);
@@ -306,6 +314,8 @@ TopoDS_Shape TGeoToOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix
       Result.Build();
       result=Result.Shape();
       return Reverse(result);
+   } else {
+     throw std::domain_error( "Unknown operation" );
    }
 }
 
@@ -479,7 +489,7 @@ TopoDS_Shape TGeoToOCC::OCC_Cones(Double_t rmin1, Double_t rmax1, Double_t rmin2
 }
 
 TopoDS_Shape TGeoToOCC::OCC_Cuttub(Double_t rmin, Double_t rmax, Double_t dz,
-                           Double_t phi1, Double_t Dphi,const Double_t * Nlow,const Double_t * Nhigh)
+                           Double_t, Double_t Dphi,const Double_t * Nlow,const Double_t * Nhigh)
 {
    out.open("/tmp/TGeoCad.log",ios::app);
    out<<"siamo in ctube"<<rmin<<" "<<rmax<<" "<<Dphi<<" "<<dz<<" "<<Nlow[0]<<" "<<Nlow[1]<<" "<<Nlow[2]<<" "<<Nhigh[0]<<" "<<Nhigh[1]<<" "<<Nhigh[2]<<endl;
@@ -662,7 +672,7 @@ TopoDS_Shape TGeoToOCC::OCC_ParaTrap (Double_t *vertex)
    BRepOffsetAPI_ThruSections sect(true,true);
    TopoDS_Wire w;
    TopoDS_Face ff;
-   Int_t punti=0;
+   //Int_t punti=0;
    Int_t f=0;
    TopoDS_Edge e1;
    TopoDS_Edge e2;
@@ -674,16 +684,17 @@ TopoDS_Shape TGeoToOCC::OCC_ParaTrap (Double_t *vertex)
    gp_Pnt p4;
 
    while (f<24) {
-      p1=gp_Pnt(vertex[f++],vertex[f++],vertex[f++]);
-      p2=gp_Pnt(vertex[f++],vertex[f++],vertex[f++]);
-      p3=gp_Pnt(vertex[f++],vertex[f++],vertex[f++]);
-      p4=gp_Pnt(vertex[f++],vertex[f++],vertex[f++]);
+      p1=gp_Pnt(vertex[f],vertex[f+1],vertex[f+2]);
+      p2=gp_Pnt(vertex[f+3],vertex[f+4],vertex[f+5]);
+      p3=gp_Pnt(vertex[f+6],vertex[f+7],vertex[f+8]);
+      p4=gp_Pnt(vertex[f+9],vertex[f+10],vertex[f+11]);
       e1=BRepBuilderAPI_MakeEdge(p1,p2 );
       e2=BRepBuilderAPI_MakeEdge(p2,p3 );
       e3=BRepBuilderAPI_MakeEdge(p3,p4 );
       e4=BRepBuilderAPI_MakeEdge(p4,p1 );
       w = BRepBuilderAPI_MakeWire(e1,e2,e3,e4);
       sect.AddWire(w);
+      f += 12;
    }
    sect.Build();
    fOccShape=sect.Shape();
@@ -691,7 +702,7 @@ TopoDS_Shape TGeoToOCC::OCC_ParaTrap (Double_t *vertex)
 }
 
 
-TopoDS_Shape TGeoToOCC::OCC_Arb8(Double_t dz, Double_t * ivert, Double_t *points)
+TopoDS_Shape TGeoToOCC::OCC_Arb8(Double_t, Double_t* , Double_t *points)
 {
    out.open("/tmp/TGeoCad.log",ios::app);
    TopoDS_Shell newShell;
@@ -905,8 +916,11 @@ TopoDS_Shape TGeoToOCC::OCC_Pcon(Double_t startPhi, Double_t deltaPhi,
       Transl.SetTranslation(gp_Vec(t[0],t[1],t[2]));
       Transf.SetValues(r[0],r[1],r[2],0,
                        r[3],r[4],r[5],0,
-                       r[6],r[7],r[8],0,
-                       0, 1);
+                       r[6],r[7],r[8],0
+#if OCC_VERSION_MAJOR == 6 && OCC_VERSION_MINOR < 8
+                       ,0,1
+#endif
+                       );
       BRepBuilderAPI_Transform Transformation(Transf);
       BRepBuilderAPI_Transform Translation(Transl);
       Transformation.Perform(cone,true);
@@ -923,7 +937,7 @@ TopoDS_Shape TGeoToOCC::OCC_Pcon(Double_t startPhi, Double_t deltaPhi,
 }
 
 
-TopoDS_Shape TGeoToOCC::OCC_Pgon(Int_t np, Int_t nz, Double_t * p, Double_t phi1, Double_t DPhi, Int_t numpoint)
+TopoDS_Shape TGeoToOCC::OCC_Pgon(Int_t, Int_t nz, Double_t * p, Double_t phi1, Double_t DPhi, Int_t numpoint)
 {
    BRepOffsetAPI_ThruSections sectInner(true,true);
    BRepOffsetAPI_ThruSections sectOuter(true,true);
@@ -939,7 +953,7 @@ TopoDS_Shape TGeoToOCC::OCC_Pgon(Int_t np, Int_t nz, Double_t * p, Double_t phi1
    Int_t aa=0,bb=1,cc=2;
    Int_t ind=0;
    Int_t check=0;
-   Int_t k=0;
+   //Int_t k=0;
    gp_Pnt point;
    gp_Trsf TR;
    gp_Trsf TT;

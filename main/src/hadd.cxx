@@ -72,10 +72,10 @@
 
 #include "TFileMerger.h"
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int main( int argc, char **argv )
 {
-
    if ( argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1]) ) {
       std::cout << "Usage: " << argv[0] << " [-f[fk][0-9]] [-k] [-T] [-O] [-a] [-n maxopenedfiles] [-v [verbosity]] targetfile source1 [source2 source3 ...]" << std::endl;
       std::cout << "This program will add histograms from a list of root files and write them" << std::endl;

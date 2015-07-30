@@ -47,7 +47,8 @@
 
 ClassImp(TGToolTip)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TTipDelayTimer : public TTimer {
 private:
    TGToolTip   *fTip;  // tooltip
@@ -56,27 +57,27 @@ public:
    Bool_t Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notify when timer times out and reset the timer.
+
 Bool_t TTipDelayTimer::Notify()
 {
-   // Notify when timer times out and reset the timer.
-
    fTip->HandleTimer(0);
    Reset();
    return kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a tool tip. P is the tool tips parent window (normally
+/// fClient->GetRoot(), f is the frame to which the tool tip is associated,
+/// text is the tool tip one-liner and delayms is the delay in ms before
+/// the tool tip is shown.
+
 TGToolTip::TGToolTip(const TGWindow *p, const TGFrame *f, const char *text,
                      Long_t delayms)
    : TGCompositeFrame(p, 10, 10, kTempFrame | kHorizontalFrame | kRaisedFrame)
 {
-   // Create a tool tip. P is the tool tips parent window (normally
-   // fClient->GetRoot(), f is the frame to which the tool tip is associated,
-   // text is the tool tip one-liner and delayms is the delay in ms before
-   // the tool tip is shown.
-
    SetWindowAttributes_t attr;
    attr.fMask             = kWAOverrideRedirect | kWASaveUnder;
    attr.fOverrideRedirect = kTRUE;
@@ -101,17 +102,17 @@ TGToolTip::TGToolTip(const TGWindow *p, const TGFrame *f, const char *text,
    fDelay = new TTipDelayTimer(this, delayms);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a tool tip. P is the tool tips parent window (normally
+/// fClient->GetRoot(), box is the area to which the tool tip is associated,
+/// text is the tool tip one-liner and delayms is the delay in ms before
+/// the tool tip is shown. When using this ctor with the box argument
+/// you have to use Reset(const TVirtualPad *parent).
+
 TGToolTip::TGToolTip(const TGWindow *p, const TBox *box, const char *text,
                      Long_t delayms)
    : TGCompositeFrame(p, 10, 10, kTempFrame | kHorizontalFrame | kRaisedFrame)
 {
-   // Create a tool tip. P is the tool tips parent window (normally
-   // fClient->GetRoot(), box is the area to which the tool tip is associated,
-   // text is the tool tip one-liner and delayms is the delay in ms before
-   // the tool tip is shown. When using this ctor with the box argument
-   // you have to use Reset(const TVirtualPad *parent).
-
    SetWindowAttributes_t attr;
    attr.fMask             = kWAOverrideRedirect | kWASaveUnder;
    attr.fOverrideRedirect = kTRUE;
@@ -135,16 +136,16 @@ TGToolTip::TGToolTip(const TGWindow *p, const TBox *box, const char *text,
    fDelay = new TTipDelayTimer(this, delayms);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a tool tip in the parent window gClient->GetRoot(),
+/// box is the area to which the tool tip is associated,
+/// text is the tool tip one-liner and delayms is the delay in ms before
+/// the tool tip is shown. When using this ctor with the box argument
+/// you have to use Reset(const TVirtualPad *parent).
+
 TGToolTip::TGToolTip(const TBox *box, const char *text,Long_t delayms)
    : TGCompositeFrame(gClient->GetRoot(), 10, 10, kTempFrame | kHorizontalFrame | kRaisedFrame)
 {
-   // Create a tool tip in the parent window gClient->GetRoot(),
-   // box is the area to which the tool tip is associated,
-   // text is the tool tip one-liner and delayms is the delay in ms before
-   // the tool tip is shown. When using this ctor with the box argument
-   // you have to use Reset(const TVirtualPad *parent).
-
    SetWindowAttributes_t attr;
    attr.fMask             = kWAOverrideRedirect | kWASaveUnder;
    attr.fOverrideRedirect = kTRUE;
@@ -168,14 +169,14 @@ TGToolTip::TGToolTip(const TBox *box, const char *text,Long_t delayms)
    fDelay = new TTipDelayTimer(this, delayms);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a tool tip on global coordinates x, y.
+/// text is the tool tip one-liner and delayms is the delay in ms before
+/// the tool tip is shown.
+
 TGToolTip::TGToolTip(Int_t x, Int_t y, const char *text, Long_t delayms)
    : TGCompositeFrame(gClient->GetDefaultRoot(), 10, 10, kTempFrame | kHorizontalFrame | kRaisedFrame)
 {
-   // Create a tool tip on global coordinates x, y.
-   // text is the tool tip one-liner and delayms is the delay in ms before
-   // the tool tip is shown.
-
    SetWindowAttributes_t attr;
    attr.fMask             = kWAOverrideRedirect | kWASaveUnder;
    attr.fOverrideRedirect = kTRUE;
@@ -201,32 +202,32 @@ TGToolTip::TGToolTip(Int_t x, Int_t y, const char *text, Long_t delayms)
    fDelay = new TTipDelayTimer(this, delayms);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a tool tip object.
+
 TGToolTip::~TGToolTip()
 {
-   // Delete a tool tip object.
-
    delete fDelay;
    delete fLabel;
    delete fL1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw border of tool tip window.
+
 void TGToolTip::DrawBorder()
 {
-   // Draw border of tool tip window.
-
    gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, fWidth-2, 0);
    gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, 0, fHeight-2);
    gVirtualX->DrawLine(fId, GetBlackGC()(),  0, fHeight-1, fWidth-1, fHeight-1);
    gVirtualX->DrawLine(fId, GetBlackGC()(),  fWidth-1, fHeight-1, fWidth-1, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show tool tip window.
+
 void TGToolTip::Show(Int_t x, Int_t y)
 {
-   // Show tool tip window.
-
    Move(x, y);
    MapWindow();
    RaiseWindow();
@@ -238,12 +239,12 @@ void TGToolTip::Show(Int_t x, Int_t y)
    Emit("Show(Int_t,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide tool tip window. Use this method to hide the tool tip in a client
+/// class.
+
 void TGToolTip::Hide()
 {
-   // Hide tool tip window. Use this method to hide the tool tip in a client
-   // class.
-
    UnmapWindow();
 
    fDelay->Remove();
@@ -251,37 +252,37 @@ void TGToolTip::Hide()
    Emit("Hide()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset tool tip popup delay timer. Use this method to activate tool tip
+/// in a client class.
+
 void TGToolTip::Reset()
 {
-   // Reset tool tip popup delay timer. Use this method to activate tool tip
-   // in a client class.
-
    fDelay->Reset();
    gSystem->AddTimer(fDelay);
 
    Emit("Reset()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset tool tip popup delay timer. Use this method to activate tool tip
+/// in a client class. Use this method for graphics objects drawn in a
+/// TCanvas, also the tool tip must have been created with the ctor
+/// taking the TBox as argument.
+
 void TGToolTip::Reset(const TVirtualPad *parent)
 {
-   // Reset tool tip popup delay timer. Use this method to activate tool tip
-   // in a client class. Use this method for graphics objects drawn in a
-   // TCanvas, also the tool tip must have been created with the ctor
-   // taking the TBox as argument.
-
    fPad = parent;
 
    fDelay->Reset();
    gSystem->AddTimer(fDelay);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If tool tip delay timer times out show tool tip window.
+
 Bool_t TGToolTip::HandleTimer(TTimer *)
 {
-   // If tool tip delay timer times out show tool tip window.
-
    Int_t    x = 0, y = 0, px1 = 0, px2 = 0, py1 = 0;
    Window_t wtarget;
 
@@ -379,30 +380,30 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set new tool tip text.
+
 void TGToolTip::SetText(const char *new_text)
 {
-   // Set new tool tip text.
-
    fLabel->SetText(new TGString(new_text));
    Resize(GetDefaultSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set delay in milliseconds.
+
 void TGToolTip::SetDelay(Long_t delayms)
 {
-   // Set delay in milliseconds.
-
    fDelay->SetTime(delayms);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set popup position within specified frame (as specified in the ctor).
+/// To get back default behaviour (in the middle just below the designated
+/// frame) set position to -1,-1.
+
 void TGToolTip::SetPosition(Int_t x, Int_t y)
 {
-   // Set popup position within specified frame (as specified in the ctor).
-   // To get back default behaviour (in the middle just below the designated
-   // frame) set position to -1,-1.
-
    fX = x;
    fY = y;
 
@@ -419,11 +420,11 @@ void TGToolTip::SetPosition(Int_t x, Int_t y)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the tool tip text.
+
 const TGString *TGToolTip::GetText() const
 {
-   // Get the tool tip text.
-
    return fLabel->GetText();
 
 }

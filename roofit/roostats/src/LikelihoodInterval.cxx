@@ -19,7 +19,8 @@
 
 
 
-//_________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 BEGIN_HTML
 <p>
@@ -89,14 +90,18 @@ using namespace RooStats;
 using namespace std;
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor with name and title
+
 LikelihoodInterval::LikelihoodInterval(const char* name) :
    ConfInterval(name), fBestFitParams(0), fLikelihoodRatio(0), fConfidenceLevel(0.95)
 {
-   // Default constructor with name and title
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Alternate constructor taking a pointer to the profile likelihood ratio, parameter of interest and 
+/// optionally a snaphot of best parameter of interest for interval
+
 LikelihoodInterval::LikelihoodInterval(const char* name, RooAbsReal* lr, const RooArgSet* params,  RooArgSet * bestParams) :
    ConfInterval(name), 
    fParameters(*params), 
@@ -104,26 +109,25 @@ LikelihoodInterval::LikelihoodInterval(const char* name, RooAbsReal* lr, const R
    fLikelihoodRatio(lr),
    fConfidenceLevel(0.95)
 {
-   // Alternate constructor taking a pointer to the profile likelihood ratio, parameter of interest and 
-   // optionally a snaphot of best parameter of interest for interval
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 LikelihoodInterval::~LikelihoodInterval()
 {
-   // Destructor
    if (fBestFitParams) delete fBestFitParams; 
    if (fLikelihoodRatio) delete fLikelihoodRatio;
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is the main method to satisfy the RooStats::ConfInterval interface.  
+/// It returns true if the parameter point is in the interval.
+
 Bool_t LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const 
 {  
-  // This is the main method to satisfy the RooStats::ConfInterval interface.  
-  // It returns true if the parameter point is in the interval.
-
    RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
   // Method to determine if a parameter point is in the interval
@@ -167,18 +171,19 @@ Bool_t LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const
   
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns list of parameters
+
 RooArgSet* LikelihoodInterval::GetParameters() const
 {  
-  // returns list of parameters
    return new RooArgSet(fParameters); 
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check that the parameters are correct
+
 Bool_t LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {  
-  // check that the parameters are correct
-
   if (parameterPoint.getSize() != fParameters.getSize() ) {
     std::cout << "size is wrong, parameters don't match" << std::endl;
     return false;
@@ -192,28 +197,28 @@ Bool_t LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) cons
 
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute lower limit, check first if limit has been computed 
+/// status is a boolean flag which will b set to false in case of error
+/// and is true if calculation is successful
+/// in case of error return also a lower limit value of zero
+
 Double_t LikelihoodInterval::LowerLimit(const RooRealVar& param, bool & status) 
 {  
-   // Compute lower limit, check first if limit has been computed 
-   // status is a boolean flag which will b set to false in case of error
-   // and is true if calculation is successful
-   // in case of error return also a lower limit value of zero
-
    double lower = 0; 
    double upper = 0; 
    status = FindLimits(param, lower, upper); 
    return lower; 
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute upper limit, check first if limit has been computed 
+/// status is a boolean flag which will b set to false in case of error
+/// and is true if calculation is successful
+/// in case of error return also a lower limit value of zero
+
 Double_t LikelihoodInterval::UpperLimit(const RooRealVar& param, bool & status) 
 {  
-   // Compute upper limit, check first if limit has been computed 
-   // status is a boolean flag which will b set to false in case of error
-   // and is true if calculation is successful
-   // in case of error return also a lower limit value of zero
-
    double lower = 0; 
    double upper = 0; 
    status = FindLimits(param, lower, upper); 

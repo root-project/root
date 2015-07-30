@@ -38,9 +38,10 @@ namespace PyROOT {
    R__EXTERN PyObject* gRootModule;    // needed for pickling
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy the held C++ object, if owned; does not deallocate the proxy.
+
 void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
-// Destroy the held C++ object, if owned; does not deallocate the proxy.
    if ( gROOT && !gROOT->TestBit( TObject::kInvalidObject ) ) {
       if ( pyobj->fFlags & ObjectProxy::kIsValue ) {
          Cppyy::CallDestructor( pyobj->ObjectIsA(), pyobj->GetObject() );
@@ -54,9 +55,9 @@ void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
 }
 
 
-//____________________________________________________________________________
-namespace PyROOT {
+////////////////////////////////////////////////////////////////////////////////
 
+namespace PyROOT {
 namespace {
 
 //= PyROOT object proxy null-ness checking ===================================
@@ -159,7 +160,8 @@ namespace {
    }
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    PyMethodDef op_methods[] = {
       { (char*)"__nonzero__",  (PyCFunction)op_nonzero,  METH_NOARGS, NULL },
       { (char*)"__bool__",     (PyCFunction)op_nonzero,  METH_NOARGS, NULL }, // for p3
@@ -181,18 +183,20 @@ namespace {
       return pyobj;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove (Python-side) memory held by the object proxy.
+
    void op_dealloc( ObjectProxy* pyobj )
    {
-   // Remove (Python-side) memory held by the object proxy.
       op_dealloc_nofree( pyobj );
       Py_TYPE(pyobj)->tp_free( (PyObject*)pyobj );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rich set of comparison objects; only equals and not-equals are defined.
+
    PyObject* op_richcompare( ObjectProxy* self, ObjectProxy* other, int op )
    {
-   // Rich set of comparison objects; only equals and not-equals are defined.
       if ( op != Py_EQ && op != Py_NE ) {
          Py_INCREF( Py_NotImplemented );
          return Py_NotImplemented;
@@ -218,11 +222,12 @@ namespace {
       return Py_False;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build a representation string of the object proxy that shows the address
+/// of the C++ object that is held, as well as its type.
+
    PyObject* op_repr( ObjectProxy* pyobj )
    {
-   // Build a representation string of the object proxy that shows the address
-   // of the C++ object that is held, as well as its type.
       Cppyy::TCppType_t klass = pyobj->ObjectIsA();
       std::string clName = klass ? Cppyy::GetFinalName( klass ) : "<unknown>";
       if ( pyobj->fFlags & ObjectProxy::kIsReference )
@@ -279,7 +284,8 @@ PYROOT_STUB( sub, -, PyStrings::gSub )
 PYROOT_STUB( mul, *, PyStrings::gMul )
 PYROOT_STUB( div, /, PyStrings::gDiv )
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    PyNumberMethods op_as_number = {
       (binaryfunc)op_add_stub,        // nb_add
       (binaryfunc)op_sub_stub,        // nb_subtract
@@ -356,7 +362,7 @@ PyTypeObject ObjectProxy_Type = {
    &op_as_number,             // tp_as_number
    0,                         // tp_as_sequence
    0,                         // tp_as_mapping
-   0,                         // tp_hash
+   PyBaseObject_Type.tp_hash, // tp_hash
    0,                         // tp_call
    0,                         // tp_str
    0,                         // tp_getattro

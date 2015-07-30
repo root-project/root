@@ -24,11 +24,11 @@ Size3D* gFuncSize3D(){ return &gVarSize3D; }
 
 Int_t (*gThreadXAR)(const char *xact, Int_t nb, void **ar, Int_t *iret) = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current pad for the current thread.
+
 TVirtualPad *&TVirtualPad::Pad()
 {
-   // Return the current pad for the current thread.
-
    static TVirtualPad *currentPad = 0;
    if (!gThreadTsd)
       return currentPad;
@@ -38,39 +38,39 @@ TVirtualPad *&TVirtualPad::Pad()
 
 ClassImp(TVirtualPad)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// VirtualPad default constructor
+
 TVirtualPad::TVirtualPad() : TAttPad()
 {
-   // VirtualPad default constructor
-
    fResizing = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// VirtualPad constructor
+
 TVirtualPad::TVirtualPad(const char *, const char *, Double_t,
            Double_t, Double_t, Double_t, Color_t color, Short_t , Short_t)
           : TAttPad()
 {
-   // VirtualPad constructor
-
    fResizing = kFALSE;
 
    SetFillColor(color);
    SetFillStyle(1001);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// VirtualPad destructor
+
 TVirtualPad::~TVirtualPad()
 {
-   // VirtualPad destructor
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TVirtualPad.
+
 void TVirtualPad::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TVirtualPad.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -90,58 +90,61 @@ void TVirtualPad::Streamer(TBuffer &R__b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Should always return false unless you have non-standard picking.
+
 Bool_t TVirtualPad::PadInSelectionMode() const
 {
-   // Should always return false unless you have non-standard picking.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Should always return false, unless you can highlight selected object in pad.
+
 Bool_t TVirtualPad::PadInHighlightMode() const
 {
-   // Should always return false, unless you can highlight selected object in pad.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Does nothing, unless you implement your own picking.
+/// When complex object containing sub-objects (which can be picked)
+/// is painted in a pad, this "top-level" object is pushed into
+/// the selectables stack.
+
 void TVirtualPad::PushTopLevelSelectable(TObject * /*object*/)
 {
-   // Does nothing, unless you implement your own picking.
-   // When complex object containing sub-objects (which can be picked)
-   // is painted in a pad, this "top-level" object is pushed into
-   // the selectables stack.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Does nothing, unless you implement your own picking.
+/// "Complete" object, or part of complex object, which
+/// can be picked.
+
 void TVirtualPad::PushSelectableObject(TObject * /*object*/)
 {
-   // Does nothing, unless you implement your own picking.
-   // "Complete" object, or part of complex object, which
-   // can be picked.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Does nothing, unless you implement your own picking.
+/// Remove top level selectable and all its' children.
+
 void TVirtualPad::PopTopLevelSelectable()
 {
-   // Does nothing, unless you implement your own picking.
-   // Remove top level selectable and all its' children.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scope-guards ctor, pushe the object on stack.
+
 TPickerStackGuard::TPickerStackGuard(TObject *obj)
 {
-   // Scope-guards ctor, pushe the object on stack.
-
    gPad->PushTopLevelSelectable(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Guard does out of scope, pop object from stack.
+
 TPickerStackGuard::~TPickerStackGuard()
 {
-   // Guard does out of scope, pop object from stack.
-
    gPad->PopTopLevelSelectable();
 }

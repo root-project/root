@@ -94,7 +94,9 @@ namespace TMVA {
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::DataSetFactory::DataSetFactory() :
    fVerbose(kFALSE),
    fVerboseLevel(TString("Info")),
@@ -104,13 +106,13 @@ TMVA::DataSetFactory::DataSetFactory() :
    fInputFormulas(0),
    fLogger( new MsgLogger("DataSetFactory", kINFO) )
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::DataSetFactory::~DataSetFactory()
 {
-   // destructor
    std::vector<TTreeFormula*>::const_iterator formIt;
 
    for (formIt = fInputFormulas.begin()    ; formIt!=fInputFormulas.end()    ; formIt++) if (*formIt) delete *formIt;
@@ -122,12 +124,12 @@ TMVA::DataSetFactory::~DataSetFactory()
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// steering the creation of a new dataset
+
 TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
                                                     TMVA::DataInputHandler& dataInput )
 {
-   // steering the creation of a new dataset
-
    // build the first dataset from the data input
    DataSet * ds = BuildInitialDataSet( dsi, dataInput );
 
@@ -146,7 +148,8 @@ TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
    return ds;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi )
 {
    Log() << kDEBUG << "Build DataSet consisting of one Event with dynamically changing variables" << Endl;
@@ -189,13 +192,14 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
    return ds;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// if no entries, than create a DataSet with one Event which uses
+/// dynamic variables (pointers to variables)
+
 TMVA::DataSet*
 TMVA::DataSetFactory::BuildInitialDataSet( DataSetInfo& dsi,
                                            DataInputHandler& dataInput )
 {
-   // if no entries, than create a DataSet with one Event which uses
-   // dynamic variables (pointers to variables)
    if (dataInput.GetEntries()==0) return BuildDynamicDataSet( dsi );
    // -------------------------------------------------------------------------
 
@@ -239,12 +243,13 @@ TMVA::DataSetFactory::BuildInitialDataSet( DataSetInfo& dsi,
    return ds;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// checks a TTreeFormula for problems
+
 Bool_t TMVA::DataSetFactory::CheckTTreeFormula( TTreeFormula* ttf,
                                                 const TString& expression,
                                                 Bool_t& hasDollar )
 {
-   // checks a TTreeFormula for problems
    Bool_t worked = kTRUE;
 
    if( ttf->GetNdim() <= 0 )
@@ -276,15 +281,15 @@ Bool_t TMVA::DataSetFactory::CheckTTreeFormula( TTreeFormula* ttf,
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// While the data gets copied into the local training and testing
+/// trees, the input tree can change (for intance when changing from
+/// signal to background tree, or using TChains as input) The
+/// TTreeFormulas, that hold the input expressions need to be
+/// reassociated with the new tree, which is done here
+
 void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo & dsi )
 {
-   // While the data gets copied into the local training and testing
-   // trees, the input tree can change (for intance when changing from
-   // signal to background tree, or using TChains as input) The
-   // TTreeFormulas, that hold the input expressions need to be
-   // reassociated with the new tree, which is done here
-
    TTree *tr = tinfo.GetTree()->GetTree();
 
    tr->SetBranchStatus("*",1);
@@ -428,10 +433,11 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    return;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute covariance matrix
+
 void TMVA::DataSetFactory::CalcMinMax( DataSet* ds, TMVA::DataSetInfo& dsi )
 {
-   // compute covariance matrix
    const UInt_t nvar  = ds->GetNVariables();
    const UInt_t ntgts = ds->GetNTargets();
    const UInt_t nvis  = ds->GetNSpectators();
@@ -494,13 +500,13 @@ void TMVA::DataSetFactory::CalcMinMax( DataSet* ds, TMVA::DataSetInfo& dsi )
    delete [] vmax;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes correlation matrix for variables "theVars" in tree;
+/// "theType" defines the required event "type"
+/// ("type" variable must be present in tree)
+
 TMatrixD* TMVA::DataSetFactory::CalcCorrelationMatrix( DataSet* ds, const UInt_t classNumber )
 {
-   // computes correlation matrix for variables "theVars" in tree;
-   // "theType" defines the required event "type"
-   // ("type" variable must be present in tree)
-
    // first compute variance-covariance
    TMatrixD* mat = CalcCovarianceMatrix( ds, classNumber );
 
@@ -527,11 +533,11 @@ TMatrixD* TMVA::DataSetFactory::CalcCorrelationMatrix( DataSet* ds, const UInt_t
    return mat;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute covariance matrix
+
 TMatrixD* TMVA::DataSetFactory::CalcCovarianceMatrix( DataSet * ds, const UInt_t classNumber )
 {
-   // compute covariance matrix
-
    UInt_t nvar = ds->GetNVariables();
    UInt_t ivar = 0, jvar = 0;
 
@@ -585,7 +591,9 @@ TMatrixD* TMVA::DataSetFactory::CalcCovarianceMatrix( DataSet * ds, const UInt_t
 
 // --------------------------------------- new versions
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the dataset splitting
+
 void
 TMVA::DataSetFactory::InitOptions( TMVA::DataSetInfo& dsi,
                                    EvtStatsPerClass& nEventRequests,
@@ -594,8 +602,6 @@ TMVA::DataSetFactory::InitOptions( TMVA::DataSetInfo& dsi,
                                    TString& splitMode,
                                    TString& mixMode  )
 {
-   // the dataset splitting
-
    Configurable splitSpecs( dsi.GetSplitOptions() );
    splitSpecs.SetConfigName("DataSetFactory");
    splitSpecs.SetConfigDescription( "Configuration options given in the \"PrepareForTrainingAndTesting\" call; these options define the creation of the data sets used for training and expert validation by TMVA" );
@@ -667,16 +673,16 @@ TMVA::DataSetFactory::InitOptions( TMVA::DataSetInfo& dsi,
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// build empty event vectors
+/// distributes events between kTraining/kTesting/kMaxTreeType
+
 void
 TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                                         TMVA::DataInputHandler& dataInput,
                                         EventVectorOfClassesOfTreeType& eventsmap,
                                         EvtStatsPerClass& eventCounts)
 {
-   // build empty event vectors
-   // distributes events between kTraining/kTesting/kMaxTreeType
-
    const UInt_t nclasses = dsi.GetNClasses();
 
    eventsmap[ Types::kTraining ]    = EventVectorOfClasses(nclasses);
@@ -934,7 +940,10 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select and distribute unassigned events to kTraining and kTesting
+///Bool_t emptyUndefined  = kTRUE;
+
 TMVA::DataSet*
 TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
                                  EventVectorOfClassesOfTreeType& tmpEventVector,
@@ -944,9 +953,6 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
                                  const TString& normMode,
                                  UInt_t splitSeed)
 {
-   // Select and distribute unassigned events to kTraining and kTesting
-   //Bool_t emptyUndefined  = kTRUE;
-
    // check if the vectors of all classes are empty
    //for( Int_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ){
    //   emptyUndefined &= tmpEventVector[Types::kMaxTreeType].at(cls).empty();
@@ -1369,22 +1375,22 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// =============================================================================
+/// renormalisation of the TRAINING event weights 
+///   -none       (kind of obvious) .. use the weights as supplied by the 
+///                user..  (we store however the relative weight for later use)
+///   -numEvents      
+///   -equalNumEvents reweight the training events such that the sum of all 
+///                   backgr. (class > 0) weights equal that of the signal (class 0)
+/// =============================================================================
+
 void
 TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
                                     EventVectorOfClassesOfTreeType& tmpEventVector,
                                     const EvtStatsPerClass& eventCounts,
                                     const TString& normMode )
 {
-   // =============================================================================
-   // renormalisation of the TRAINING event weights 
-   //   -none       (kind of obvious) .. use the weights as supplied by the 
-   //                user..  (we store however the relative weight for later use)
-   //   -numEvents      
-   //   -equalNumEvents reweight the training events such that the sum of all 
-   //                   backgr. (class > 0) weights equal that of the signal (class 0)
-   // =============================================================================
-
 
 
    // print rescaling info

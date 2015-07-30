@@ -25,19 +25,21 @@
 
 ClassImp(TViewer3DPad)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Indicates if we prefer positions in local frame. Always false - pad
+/// drawing is always done in master frame.
+
 Bool_t TViewer3DPad::PreferLocalFrame() const
 {
-   // Indicates if we prefer positions in local frame. Always false - pad
-   // drawing is always done in master frame.
    return kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a scene on the viewer
+
 void TViewer3DPad::BeginScene()
 {
-   // Open a scene on the viewer
    assert(!fBuilding);
 
    // Create a 3D view if none exists
@@ -57,10 +59,11 @@ void TViewer3DPad::BeginScene()
    fBuilding = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the scene on the viewer
+
 void TViewer3DPad::EndScene()
 {
-   // Close the scene on the viewer
    assert(fBuilding);
 
    // If we are doing for auto-range pass on view invoke another pass
@@ -75,14 +78,14 @@ void TViewer3DPad::EndScene()
    fBuilding = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an 3D object described by the buffer to the viewer. Returns flags
+/// to indicate:
+/// i) if extra sections of the buffer need completing.
+/// ii) if child objects of the buffer object should be added (always true)
+
 Int_t TViewer3DPad::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 {
-   // Add an 3D object described by the buffer to the viewer. Returns flags
-   // to indicate:
-   // i) if extra sections of the buffer need completing.
-   // ii) if child objects of the buffer object should be added (always true)
-
    // Accept any children
    if (addChildren) {
       *addChildren = kTRUE;
@@ -147,26 +150,30 @@ Int_t TViewer3DPad::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
    return TBuffer3D::kNone;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// We don't support placed ID shapes - ID is discarded
+
 Int_t TViewer3DPad::AddObject(UInt_t /*placedID*/, const TBuffer3D & buffer, Bool_t * addChildren)
 {
-   // We don't support placed ID shapes - ID is discarded
    return AddObject(buffer,addChildren);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Composite shapes not supported on this viewer currently - ignore.
+/// Will result in a set of individual component shapes
+
 Bool_t TViewer3DPad::OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * /*addChildren*/)
 {
-   // Composite shapes not supported on this viewer currently - ignore.
-   // Will result in a set of individual component shapes
    return kTRUE;
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TViewer3DPad::CloseComposite()
 {};
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TViewer3DPad::AddCompositeOp(UInt_t /*operation*/)
 {};

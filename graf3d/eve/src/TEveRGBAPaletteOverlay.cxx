@@ -23,7 +23,9 @@
 
 ClassImp(TEveRGBAPaletteOverlay);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveRGBAPaletteOverlay::TEveRGBAPaletteOverlay(TEveRGBAPalette* p, Float_t posx, Float_t posy,
                                                Float_t width, Float_t height) :
    TGLOverlayElement(),
@@ -33,8 +35,6 @@ TEveRGBAPaletteOverlay::TEveRGBAPaletteOverlay(TEveRGBAPalette* p, Float_t posx,
    fWidth(width),
    fHeight(height)
 {
-   // Constructor.
-
    fAxis.SetNdivisions(900);
    fAxisPainter.SetUseAxisColors(kFALSE);
    fAxisPainter.SetLabelPixelFontSize(10);

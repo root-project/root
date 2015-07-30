@@ -67,22 +67,22 @@ typedef struct {
    int msgval;
 } srv_HS_t;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  PROOF daemon test program.
+///  Syntax
+///          xpdtest  <url> <sandbox_dir> <time_span>
+///
+///          <url>            URL to test; default 'localhost:1093'
+///          <sandbox_dir>    directory with users sandboxes; used to find out
+///                           users to check connection; default '/tmp/proofbox'
+///          <time_span>      check only users whose latest activity was within
+///                           'time_span' minutes; use -1 to check all users;
+///                           default -1.
+///
+///  Exits 0 on success, 1 on error
+
 int main(int argc, char **argv)
 {
-   //  PROOF daemon test program.
-   //  Syntax
-   //          xpdtest  <url> <sandbox_dir> <time_span>
-   //
-   //          <url>            URL to test; default 'localhost:1093'
-   //          <sandbox_dir>    directory with users sandboxes; used to find out
-   //                           users to check connection; default '/tmp/proofbox'
-   //          <time_span>      check only users whose latest activity was within
-   //                           'time_span' minutes; use -1 to check all users;
-   //                           default -1.
-   //
-   //  Exits 0 on success, 1 on error
-
    TString url, sboxdir, logfile, pidfile;
    time_t span = -1;
    int test = 0;
@@ -224,13 +224,13 @@ int main(int argc, char **argv)
 
 // Auxilliary functions
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract control info from arguments
+
 int parse_args(int argc, char **argv,
                TString &url, TString &sboxdir, time_t &span, int &test,
                TString &logfile, bool &keep, bool &verbose, long &to, TString &pidfile)
 {
-   // Extract control info from arguments
-
    url = "localhost:1093";
    sboxdir = "/tmp/proofbox";
    span = -1;
@@ -373,10 +373,11 @@ int parse_args(int argc, char **argv,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Help function
+
 void printhelp()
 {
-   // Help function
    fprintf(stderr, "\n");
    fprintf(stderr, "   xpdtest: test xproofd service on (remote) host\n");
    fprintf(stderr, "\n");
@@ -408,11 +409,12 @@ void printhelp()
    fprintf(stderr, "\n");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test proof open.
+/// Return 0 on success, 1 on failure
+
 int proof_open(const char *master, long to)
 {
-   // Test proof open.
-   // Return 0 on success, 1 on failure
    int rc = 0;
    RedirectHandle_t rh;
    TString popenfile = TString::Format("%s/xpdtest_popen_file", gSystem->TempDirectory());
@@ -430,27 +432,29 @@ int proof_open(const char *master, long to)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If we are called it means that we failed
+
 static void handle_sigalarm(int)
 {
-   // If we are called it means that we failed
    gSystem->Exit(1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do nothing
+
 static void ignore_signal(int)
 {
-   // Do nothing
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start an asynchronous firing after 'to' seconds
+/// Return
+///        0 on success
+///        1 otherwise
+
 int set_timer(bool on, long to)
 {
-   // Start an asynchronous firing after 'to' seconds
-   // Return
-   //        0 on success
-   //        1 otherwise
-
    struct itimerval itv;
    bool sett = (on && to > 0) ? 1 : 0;
    itv.it_value.tv_sec     = (sett) ? time_t(to) : time_t(0);
@@ -467,14 +471,14 @@ int set_timer(bool on, long to)
    return setitimer(ITIMER_REAL, &itv, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Non-blocking check for a PROOF service at 'url'
+/// Return
+///        0 if a XProofd daemon is listening at 'url'
+///        1 otherwise
+
 int xpd_ping(const char *host, int port)
 {
-   // Non-blocking check for a PROOF service at 'url'
-   // Return
-   //        0 if a XProofd daemon is listening at 'url'
-   //        1 otherwise
-
    // Check arguments
    if (!host || (host && strlen(host) <= 0)) {
       fprintf(stderr,"xpd_ping: host must be given!\n");
@@ -559,7 +563,8 @@ int xpd_ping(const char *host, int port)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int getsocket(struct hostent *h, int port)
 {
    int sd, rc;
@@ -601,11 +606,11 @@ int getsocket(struct hostent *h, int port)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send exactly length bytes from buffer.
+
 int sendn(int sock, const void *buffer, int length)
 {
-   // Send exactly length bytes from buffer.
-
    if (sock < 0) return -1;
 
    int n, nsent = 0;
@@ -621,12 +626,12 @@ int sendn(int sock, const void *buffer, int length)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive exactly length bytes into buffer. Returns number of bytes
+/// received. Returns -1 in case of error.
+
 int recvn(int sock, void *buffer, int length)
 {
-   // Receive exactly length bytes into buffer. Returns number of bytes
-   // received. Returns -1 in case of error.
-
    if (sock < 0) return -1;
 
    int n, nrecv = 0;

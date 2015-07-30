@@ -47,11 +47,11 @@ ClassImp(RooBinIntegrator)
 
 // Register this class with RooNumIntConfig
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register RooBinIntegrator, is parameters and capabilities with RooNumIntFactory
+
 void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
 {
-  // Register RooBinIntegrator, is parameters and capabilities with RooNumIntFactory
-
   RooRealVar numBins("numBins","Number of bins in range",100) ;
   RooBinIntegrator* proto = new RooBinIntegrator() ;
   fact.storeProtoIntegrator(proto,RooArgSet(numBins)) ;
@@ -60,19 +60,20 @@ void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooBinIntegrator::RooBinIntegrator() : _numBins(0), _useIntegrandLimits(kFALSE), _x(0)
 {
-  // Default constructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct integrator on given function binding binding
+
 RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) : 
   RooAbsIntegrator(function)
 {
-  // Construct integrator on given function binding binding
-
   _useIntegrandLimits= kTRUE;
   assert(0 != integrand() && integrand()->isValid());
 
@@ -104,12 +105,12 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct integrator on given function binding binding
+
 RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) : 
   RooAbsIntegrator(function), _binb(0)
 {
-  // Construct integrator on given function binding binding
-  
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;  
   _useIntegrandLimits= kTRUE;
   _numBins = (Int_t) configSet.getRealValue("numBins") ;
@@ -139,10 +140,11 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clone integrator with new function binding and configuration. Needed by RooNumIntFactory
+
 RooAbsIntegrator* RooBinIntegrator::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
-  // Clone integrator with new function binding and configuration. Needed by RooNumIntFactory
   return new RooBinIntegrator(function,config) ;
 }
 
@@ -150,10 +152,11 @@ RooAbsIntegrator* RooBinIntegrator::clone(const RooAbsFunc& function, const RooN
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooBinIntegrator::~RooBinIntegrator()
 {
-  // Destructor
   if(_x) delete[] _x;
   for (vector<list<Double_t>*>::iterator iter = _binb.begin() ; iter!=_binb.end() ; ++iter) {
     delete (*iter) ;
@@ -162,13 +165,13 @@ RooBinIntegrator::~RooBinIntegrator()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change our integration limits. Return kTRUE if the new limits are
+/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// if this object was constructed to always use our integrand's limits.
+
 Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax) 
 {
-  // Change our integration limits. Return kTRUE if the new limits are
-  // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
-  // if this object was constructed to always use our integrand's limits.
-
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
@@ -179,12 +182,12 @@ Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that our integration range is finite and otherwise return kFALSE.
+/// Update the limits from the integrand if requested.
+
 Bool_t RooBinIntegrator::checkLimits() const 
 {
-  // Check that our integration range is finite and otherwise return kFALSE.
-  // Update the limits from the integrand if requested.
-
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
     _xmin.resize(_function->getDimension()) ;
@@ -208,11 +211,11 @@ Bool_t RooBinIntegrator::checkLimits() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate numeric integral at given set of function binding parameters
+
 Double_t RooBinIntegrator::integral(const Double_t *) 
 {
-  // Calculate numeric integral at given set of function binding parameters
-
   assert(isValid());
 
   double sum = 0. ;

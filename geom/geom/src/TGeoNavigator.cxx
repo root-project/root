@@ -45,7 +45,8 @@ const Int_t kN3 = 3*sizeof(Double_t);
 
 ClassImp(TGeoNavigator)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGeoNavigator::TGeoNavigator()
               :fStep(0.),
                fSafety(0.),
@@ -94,7 +95,8 @@ TGeoNavigator::TGeoNavigator()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGeoNavigator::TGeoNavigator(TGeoManager* geom)
               :fStep(0.),
                fSafety(0.),
@@ -151,7 +153,9 @@ TGeoNavigator::TGeoNavigator(TGeoManager* geom)
    ResetAll();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TGeoNavigator::TGeoNavigator(const TGeoNavigator& gm)
               :TObject(gm),
                fStep(gm.fStep),
@@ -188,7 +192,6 @@ TGeoNavigator::TGeoNavigator(const TGeoNavigator& gm)
                fGlobalMatrix(gm.fGlobalMatrix),
                fPath(gm.fPath)
 {
-// Copy constructor.
    fThreadId = TGeoManager::ThreadId();
    for (Int_t i=0; i<3; i++) {
       fNormal[i] = gm.fNormal[i];
@@ -202,10 +205,11 @@ TGeoNavigator::TGeoNavigator(const TGeoNavigator& gm)
    fDivMatrix->RegisterYourself();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGeoNavigator& TGeoNavigator::operator=(const TGeoNavigator& gm)
 {
-   //assignment operator
    if(this!=&gm) {
       TObject::operator=(gm);
       fStep = gm.fStep;
@@ -255,19 +259,21 @@ TGeoNavigator& TGeoNavigator::operator=(const TGeoNavigator& gm)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoNavigator::~TGeoNavigator()
 {
-// Destructor.
    if (fCache) delete fCache;
    if (fBackupState) delete fBackupState;
    if (fOverlapClusters) delete [] fOverlapClusters;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Builds the cache for physical nodes and global matrices.
+
 void TGeoNavigator::BuildCache(Bool_t /*dummy*/, Bool_t nodeid)
 {
-// Builds the cache for physical nodes and global matrices.
    static Bool_t first = kTRUE;
    Int_t verbose = TGeoManager::GetVerboseLevel();
    Int_t nlevel = fGeometry->GetMaxLevel();
@@ -286,12 +292,13 @@ void TGeoNavigator::BuildCache(Bool_t /*dummy*/, Bool_t nodeid)
    first = kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse the tree of nodes starting from top node according to pathname.
+/// Changes the path accordingly. The path is changed to point to the top node
+/// in case of failure.
+
 Bool_t TGeoNavigator::cd(const char *path)
 {
-// Browse the tree of nodes starting from top node according to pathname.
-// Changes the path accordingly. The path is changed to point to the top node
-// in case of failure.
    CdTop();
    if (!path[0]) return kTRUE;
    TString spath = path;
@@ -330,10 +337,11 @@ Bool_t TGeoNavigator::cd(const char *path)
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a geometry path is valid without changing the state of the navigator.
+
 Bool_t TGeoNavigator::CheckPath(const char *path) const
 {
-// Check if a geometry path is valid without changing the state of the navigator.
    if (!path[0]) return kTRUE;
    TGeoNode *crtnode = fGeometry->GetTopNode();
    TString spath = path;
@@ -369,22 +377,24 @@ Bool_t TGeoNavigator::CheckPath(const char *path) const
    return kTRUE;
 }    
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change current path to point to the node having this id.
+/// Node id has to be in range : 0 to fNNodes-1 (no check for performance reasons)
+
 void TGeoNavigator::CdNode(Int_t nodeid)
 {
-// Change current path to point to the node having this id.
-// Node id has to be in range : 0 to fNNodes-1 (no check for performance reasons)
    if (fCache) {
       fCache->CdNode(nodeid);
       fGlobalMatrix = fCache->GetCurrentMatrix();
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a daughter of current node current. Can be called only with a valid
+/// daughter index (no check). Updates cache accordingly.
+
 void TGeoNavigator::CdDown(Int_t index)
 {
-// Make a daughter of current node current. Can be called only with a valid
-// daughter index (no check). Updates cache accordingly.
    TGeoNode *node = fCurrentNode->GetDaughter(index);
    Bool_t is_offset = node->IsOffset();
    if (is_offset)
@@ -398,11 +408,12 @@ void TGeoNavigator::CdDown(Int_t index)
    fLevel++;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a daughter of current node current. Can be called only with a valid
+/// daughter node (no check). Updates cache accordingly.
+
 void TGeoNavigator::CdDown(TGeoNode *node)
 {
-// Make a daughter of current node current. Can be called only with a valid
-// daughter node (no check). Updates cache accordingly.
    Bool_t is_offset = node->IsOffset();
    if (is_offset)
       node->cd();
@@ -415,11 +426,12 @@ void TGeoNavigator::CdDown(TGeoNode *node)
    fLevel++;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go one level up in geometry. Updates cache accordingly.
+/// Determine the overlapping state of current node.
+
 void TGeoNavigator::CdUp()
 {
-// Go one level up in geometry. Updates cache accordingly.
-// Determine the overlapping state of current node.
    if (!fLevel || !fCache) return;
    fLevel--;
    if (!fLevel) {
@@ -447,11 +459,12 @@ void TGeoNavigator::CdUp()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make top level node the current node. Updates the cache accordingly.
+/// Determine the overlapping state of current node.
+
 void TGeoNavigator::CdTop()
 {
-// Make top level node the current node. Updates the cache accordingly.
-// Determine the overlapping state of current node.
    if (!fCache) return;
    fLevel = 0;
    fNmany = 0;
@@ -463,10 +476,11 @@ void TGeoNavigator::CdTop()
    if (fCurrentOverlapping) fNmany++;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do a cd to the node found next by FindNextBoundary
+
 void TGeoNavigator::CdNext()
 {
-// Do a cd to the node found next by FindNextBoundary
    if (fNextDaughterIndex == -2 || !fCache) return;
    if (fNextDaughterIndex ==  -3) {
       // Next node is a many - restore it
@@ -491,32 +505,36 @@ void TGeoNavigator::CdNext()
    fNextDaughterIndex = -2;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill volume names of current branch into an array.
+
 void TGeoNavigator::GetBranchNames(Int_t *names) const
 {
-// Fill volume names of current branch into an array.
    fCache->GetBranchNames(names);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill node copy numbers of current branch into an array.
+
 void TGeoNavigator::GetBranchNumbers(Int_t *copyNumbers, Int_t *volumeNumbers) const
 {
-// Fill node copy numbers of current branch into an array.
    fCache->GetBranchNumbers(copyNumbers, volumeNumbers);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill node copy numbers of current branch into an array.
+
 void TGeoNavigator::GetBranchOnlys(Int_t *isonly) const
 {
-// Fill node copy numbers of current branch into an array.
    fCache->GetBranchOnlys(isonly);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cross a division cell. Distance to exit contained in fStep, current node
+/// points to the cell node.
+
 TGeoNode *TGeoNavigator::CrossDivisionCell()
 {
-// Cross a division cell. Distance to exit contained in fStep, current node
-// points to the cell node.
    TGeoPatternFinder *finder = fCurrentNode->GetFinder();
    if (!finder) {
       Fatal("CrossDivisionCell", "Volume has no pattern finder");
@@ -571,12 +589,12 @@ TGeoNode *TGeoNavigator::CrossDivisionCell()
    return CrossBoundaryAndLocate(kFALSE, skip);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cross next boundary and locate within current node
+/// The current point must be on the boundary of fCurrentNode.
+
 TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skipnode)
 {
-// Cross next boundary and locate within current node
-// The current point must be on the boundary of fCurrentNode.
-
 // Extrapolate current point with estimated error.
    Double_t *tr = fGlobalMatrix->GetTranslation();
    Double_t trmax = 1.+TMath::Abs(tr[0])+TMath::Abs(tr[1])+TMath::Abs(tr[2]);
@@ -632,21 +650,21 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
    return current;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find distance to next boundary and store it in fStep. Returns node to which this
+/// boundary belongs. If PATH is specified, compute only distance to the node to which
+/// PATH points. If STEPMAX is specified, compute distance only in case fSafety is smaller
+/// than this value. STEPMAX represent the step to be made imposed by other reasons than
+/// geometry (usually physics processes). Therefore in this case this method provides the
+/// answer to the question : "Is STEPMAX a safe step ?" returning a NULL node and filling
+/// fStep with a big number.
+/// In case frombdr=kTRUE, the isotropic safety is set to zero.
+/// Note : safety distance for the current point is computed ONLY in case STEPMAX is
+///        specified, otherwise users have to call explicitly TGeoManager::Safety() if
+///        they want this computed for the current point.
+
 TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bool_t frombdr)
 {
-// Find distance to next boundary and store it in fStep. Returns node to which this
-// boundary belongs. If PATH is specified, compute only distance to the node to which
-// PATH points. If STEPMAX is specified, compute distance only in case fSafety is smaller
-// than this value. STEPMAX represent the step to be made imposed by other reasons than
-// geometry (usually physics processes). Therefore in this case this method provides the
-// answer to the question : "Is STEPMAX a safe step ?" returning a NULL node and filling
-// fStep with a big number.
-// In case frombdr=kTRUE, the isotropic safety is set to zero.
-// Note : safety distance for the current point is computed ONLY in case STEPMAX is
-//        specified, otherwise users have to call explicitly TGeoManager::Safety() if
-//        they want this computed for the current point.
-
    // convert current point and direction to local reference
    Int_t iact = 3;
    Int_t idebug = TGeoManager::GetVerboseLevel();
@@ -993,13 +1011,13 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
    return fNextNode;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes as fStep the distance to next daughter of the current volume.
+/// The point and direction must be converted in the coordinate system of the current volume.
+/// The proposed step limit is fStep.
+
 TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir, Int_t &idaughter, Bool_t compmatrix)
 {
-// Computes as fStep the distance to next daughter of the current volume.
-// The point and direction must be converted in the coordinate system of the current volume.
-// The proposed step limit is fStep.
-
    Double_t snext = TGeoShape::Big();
    Int_t idebug = TGeoManager::GetVerboseLevel();
    idaughter = -1; // nothing crossed
@@ -1167,13 +1185,14 @@ TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir
    return nodefound;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance to next boundary within STEPMAX. If no boundary is found,
+/// propagate current point along current direction with fStep=STEPMAX. Otherwise
+/// propagate with fStep=SNEXT (distance to boundary) and locate/return the next
+/// node.
+
 TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe)
 {
-// Compute distance to next boundary within STEPMAX. If no boundary is found,
-// propagate current point along current direction with fStep=STEPMAX. Otherwise
-// propagate with fStep=SNEXT (distance to boundary) and locate/return the next
-// node.
    static Int_t icount = 0;
    icount++;
    Int_t iact = 3;
@@ -1529,10 +1548,11 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    return CrossBoundaryAndLocate(kTRUE, current);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns deepest node containing current point.
+
 TGeoNode *TGeoNavigator::FindNode(Bool_t safe_start)
 {
-// Returns deepest node containing current point.
    fSafety = 0;
    fSearchOverlaps = kFALSE;
    fIsOutside = kFALSE;
@@ -1550,10 +1570,11 @@ TGeoNode *TGeoNavigator::FindNode(Bool_t safe_start)
    return found;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns deepest node containing current point.
+
 TGeoNode *TGeoNavigator::FindNode(Double_t x, Double_t y, Double_t z)
 {
-// Returns deepest node containing current point.
    fPoint[0] = x;
    fPoint[1] = y;
    fPoint[2] = z;
@@ -1574,11 +1595,12 @@ TGeoNode *TGeoNavigator::FindNode(Double_t x, Double_t y, Double_t z)
    return found;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes fast normal to next crossed boundary, assuming that the current point
+/// is close enough to the boundary. Works only after calling FindNextBoundary.
+
 Double_t *TGeoNavigator::FindNormalFast()
 {
-// Computes fast normal to next crossed boundary, assuming that the current point
-// is close enough to the boundary. Works only after calling FindNextBoundary.
    if (!fNextNode) return 0;
    Double_t local[3];
    Double_t ldir[3];
@@ -1590,40 +1612,44 @@ Double_t *TGeoNavigator::FindNormalFast()
    return fNormal;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes normal vector to the next surface that will be or was already
+/// crossed when propagating on a straight line from a given point/direction.
+/// Returns the normal vector cosines in the MASTER coordinate system. The dot
+/// product of the normal and the current direction is positive defined.
+
 Double_t *TGeoNavigator::FindNormal(Bool_t /*forward*/)
 {
-// Computes normal vector to the next surface that will be or was already
-// crossed when propagating on a straight line from a given point/direction.
-// Returns the normal vector cosines in the MASTER coordinate system. The dot
-// product of the normal and the current direction is positive defined.
    return FindNormalFast();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize current point and current direction vector (normalized)
+/// in MARS. Return corresponding node.
+
 TGeoNode *TGeoNavigator::InitTrack(const Double_t *point, const Double_t *dir)
 {
-// Initialize current point and current direction vector (normalized)
-// in MARS. Return corresponding node.
    SetCurrentPoint(point);
    SetCurrentDirection(dir);
    return FindNode();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize current point and current direction vector (normalized)
+/// in MARS. Return corresponding node.
+
 TGeoNode *TGeoNavigator::InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx, Double_t ny, Double_t nz)
 {
-// Initialize current point and current direction vector (normalized)
-// in MARS. Return corresponding node.
    SetCurrentPoint(x,y,z);
    SetCurrentDirection(nx,ny,nz);
    return FindNode();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset current state flags.
+
 void TGeoNavigator::ResetState()
 {
-// Reset current state flags.
    fSearchOverlaps = kFALSE;
    fIsOutside = kFALSE;
    fIsEntering = fIsExiting = kFALSE;
@@ -1631,12 +1657,12 @@ void TGeoNavigator::ResetState()
    fIsStepEntering = fIsStepExiting = kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from the current point. This represent the distance
+/// from POINT to the closest boundary.
+
 Double_t TGeoNavigator::Safety(Bool_t inside)
 {
-// Compute safe distance from the current point. This represent the distance
-// from POINT to the closest boundary.
-
    if (fIsOnBoundary) {
       fSafety = 0;
       return fSafety;
@@ -1763,10 +1789,11 @@ Double_t TGeoNavigator::Safety(Bool_t inside)
    return fSafety;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from the current point within an overlapping node
+
 void TGeoNavigator::SafetyOverlaps()
 {
-// Compute safe distance from the current point within an overlapping node
    Double_t point[3], local[3];
    Double_t safe;
    Bool_t contains;
@@ -1833,11 +1860,12 @@ void TGeoNavigator::SafetyOverlaps()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the deepest node containing fPoint, which must be set a priori.
+/// Check if parallel world navigation is enabled
+
 TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
 {
-// Returns the deepest node containing fPoint, which must be set a priori.
-   // Check if parallel world navigation is enabled
    if (fGeometry->IsParallelWorldNav()) {
       TGeoPhysicalNode *pnode = fGeometry->GetParallelWorld()->FindNode(fPoint);
       if (pnode) {
@@ -2055,11 +2083,12 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    return fCurrentNode;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find a node inside a cluster of overlapping nodes. Current node must
+/// be on top of all the nodes in cluster. Always nc>1.
+
 TGeoNode *TGeoNavigator::FindInCluster(Int_t *cluster, Int_t nc)
 {
-// Find a node inside a cluster of overlapping nodes. Current node must
-// be on top of all the nodes in cluster. Always nc>1.
    TGeoNode *clnode = 0;
    TGeoNode *priority = fLastNode;
    // save current node
@@ -2136,14 +2165,14 @@ TGeoNode *TGeoNavigator::FindInCluster(Int_t *cluster, Int_t nc)
    return fCurrentNode;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make the cluster of overlapping nodes in a voxel, containing point in reference
+/// of the mother. Returns number of nodes containing the point. Nodes should not be
+/// offsets.
+
 Int_t TGeoNavigator::GetTouchedCluster(Int_t start, Double_t *point,
                               Int_t *check_list, Int_t ncheck, Int_t *result)
 {
-// Make the cluster of overlapping nodes in a voxel, containing point in reference
-// of the mother. Returns number of nodes containing the point. Nodes should not be
-// offsets.
-
    // we are in the mother reference system
    TGeoNode *current = fCurrentNode->GetDaughter(check_list[start]);
    Int_t novlps = 0;
@@ -2176,14 +2205,15 @@ Int_t TGeoNavigator::GetTouchedCluster(Int_t start, Double_t *point,
    return ntotal;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a rectiliniar step of length fStep from current point (fPoint) on current
+/// direction (fDirection). If the step is imposed by geometry, is_geom flag
+/// must be true (default). The cross flag specifies if the boundary should be
+/// crossed in case of a geometry step (default true). Returns new node after step.
+/// Set also on boundary condition.
+
 TGeoNode *TGeoNavigator::Step(Bool_t is_geom, Bool_t cross)
 {
-// Make a rectiliniar step of length fStep from current point (fPoint) on current
-// direction (fDirection). If the step is imposed by geometry, is_geom flag
-// must be true (default). The cross flag specifies if the boundary should be
-// crossed in case of a geometry step (default true). Returns new node after step.
-// Set also on boundary condition.
    Double_t epsil = 0;
    if (fStep<1E-6) {
       fIsNullStep=kTRUE;
@@ -2214,12 +2244,12 @@ TGeoNode *TGeoNavigator::Step(Bool_t is_geom, Bool_t cross)
    return current;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find level of virtuality of current overlapping node (number of levels
+/// up having the same tracking media.
+
 Int_t TGeoNavigator::GetVirtualLevel()
 {
-// Find level of virtuality of current overlapping node (number of levels
-// up having the same tracking media.
-
    // return if the current node is ONLY
    if (!fCurrentOverlapping) return 0;
    Int_t new_media = 0;
@@ -2238,10 +2268,11 @@ Int_t TGeoNavigator::GetVirtualLevel()
    return (new_media==0)?virtual_level:(new_media-1);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go upwards the tree until a non-overlaping node
+
 Bool_t TGeoNavigator::GotoSafeLevel()
 {
-// Go upwards the tree until a non-overlaping node
    while (fCurrentOverlapping && fLevel) CdUp();
    Double_t point[3];
    fGlobalMatrix->MasterToLocal(fPoint, point);
@@ -2280,10 +2311,11 @@ Bool_t TGeoNavigator::GotoSafeLevel()
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go upwards the tree until a non-overlaping node
+
 Int_t TGeoNavigator::GetSafeLevel() const
 {
-// Go upwards the tree until a non-overlaping node
    Bool_t overlapping = fCurrentOverlapping;
    if (!overlapping) return fLevel;
    Int_t level = fLevel;
@@ -2296,10 +2328,11 @@ Int_t TGeoNavigator::GetSafeLevel() const
    return level;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inspects path and all flags for the current state.
+
 void TGeoNavigator::InspectState() const
 {
-// Inspects path and all flags for the current state.
    Info("InspectState","Current path is: %s",GetPath());
    Int_t level;
    TGeoNode *node;
@@ -2314,11 +2347,12 @@ void TGeoNavigator::InspectState() const
    Info("InspectState","on_bound=%i   entering=%i", fIsOnBoundary, fIsEntering);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if point (x,y,z) is still in the current node.
+/// check if this is an overlapping node
+
 Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t change)
 {
-// Checks if point (x,y,z) is still in the current node.
-   // check if this is an overlapping node
    Double_t oldpt[3];
    if (fLastSafety>0) {
       Double_t dx = (x-fLastPoint[0]);
@@ -2461,13 +2495,13 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// In case a previous safety value was computed, check if the safety region is
+/// still safe for the current point and proposed step. Return value changed only
+/// if proposed distance is safe.
+
 Bool_t TGeoNavigator::IsSafeStep(Double_t proposed, Double_t &newsafety) const
 {
-// In case a previous safety value was computed, check if the safety region is
-// still safe for the current point and proposed step. Return value changed only
-// if proposed distance is safe.
-
    // Last safety not computed.
    if (fLastSafety < gTolerance) return kFALSE;
    // Proposed step too small
@@ -2486,10 +2520,11 @@ Bool_t TGeoNavigator::IsSafeStep(Double_t proposed, Double_t &newsafety) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a new point with given coordinates is the same as the last located one.
+
 Bool_t TGeoNavigator::IsSamePoint(Double_t x, Double_t y, Double_t z) const
 {
-// Check if a new point with given coordinates is the same as the last located one.
    if (TMath::Abs(x-fLastPoint[0]) < 1.E-20) {
       if (TMath::Abs(y-fLastPoint[1]) < 1.E-20) {
          if (TMath::Abs(z-fLastPoint[2]) < 1.E-20) return kTRUE;
@@ -2498,17 +2533,19 @@ Bool_t TGeoNavigator::IsSamePoint(Double_t x, Double_t y, Double_t z) const
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Backup the current state without affecting the cache stack.
+
 void TGeoNavigator::DoBackupState()
 {
-// Backup the current state without affecting the cache stack.
    if (fBackupState) fBackupState->SetState(fLevel,0, fNmany, fCurrentOverlapping);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore a backed-up state without affecting the cache stack.
+
 void TGeoNavigator::DoRestoreState()
 {
-// Restore a backed-up state without affecting the cache stack.
    if (fBackupState && fCache) {
       fCurrentOverlapping = fCache->RestoreState(fNmany, fBackupState);
       fCurrentNode=fCache->GetNode();
@@ -2517,10 +2554,11 @@ void TGeoNavigator::DoRestoreState()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return stored current matrix (global matrix of the next touched node).
+
 TGeoHMatrix *TGeoNavigator::GetHMatrix()
 {
-// Return stored current matrix (global matrix of the next touched node).
    if (!fCurrentMatrix) {
       fCurrentMatrix = new TGeoHMatrix();
       fCurrentMatrix->RegisterYourself();
@@ -2528,32 +2566,36 @@ TGeoHMatrix *TGeoNavigator::GetHMatrix()
    return fCurrentMatrix;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get path to the current node in the form /node0/node1/...
+
 const char *TGeoNavigator::GetPath() const
 {
-// Get path to the current node in the form /node0/node1/...
    if (fIsOutside) return kGeoOutsidePath;
    return fCache->GetPath();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert coordinates from master volume frame to top.
+
 void TGeoNavigator::MasterToTop(const Double_t *master, Double_t *top) const
 {
-// Convert coordinates from master volume frame to top.
    fCurrentMatrix->MasterToLocal(master, top);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert coordinates from top volume frame to master.
+
 void TGeoNavigator::TopToMaster(const Double_t *top, Double_t *master) const
 {
-// Convert coordinates from top volume frame to master.
    fCurrentMatrix->LocalToMaster(top, master);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the navigator.
+
 void TGeoNavigator::ResetAll()
 {
-// Reset the navigator.
    GetHMatrix();
    *fCurrentMatrix = gGeoIdentity;
    fCurrentNode = fGeometry->GetTopNode();
@@ -2585,10 +2627,11 @@ void TGeoNavigator::ResetAll()
 
 ClassImp(TGeoNavigatorArray)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new navigator to the array.
+
 TGeoNavigator *TGeoNavigatorArray::AddNavigator()
 {
-// Add a new navigator to the array.
    SetOwner(kTRUE);
    TGeoNavigator *nav = new TGeoNavigator(fGeoManager);
    nav->BuildCache(kTRUE, kFALSE);

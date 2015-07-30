@@ -38,47 +38,47 @@ ClassImp(TTUBS)
 //       the system adds 360 degrees to phi2.
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUBS shape default constructor
+
 TTUBS::TTUBS()
 {
-   // TUBS shape default constructor
-
    fPhi1 = 0.;
    fPhi2 = 0.;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUBS shape normal constructor
+
 TTUBS::TTUBS(const char *name, const char *title, const char *material, Float_t rmin,
              Float_t rmax, Float_t dz, Float_t phi1, Float_t phi2)
       : TTUBE(name,title,material,rmin,rmax,dz)
 {
-   // TUBS shape normal constructor
-
    fPhi1 = phi1;
    fPhi2 = phi2;
    MakeTableOfCoSin();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUBS shape "simplified" constructor
+
 TTUBS::TTUBS(const char *name, const char *title, const char *material, Float_t rmax, Float_t dz,
                Float_t phi1, Float_t phi2)
       : TTUBE(name,title,material,rmax,dz)
 {
-   // TUBS shape "simplified" constructor
-
    fPhi1 = phi1;
    fPhi2 = phi2;
    MakeTableOfCoSin();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make table of sine and cosine.
+
 void TTUBS::MakeTableOfCoSin() const
 {
-   // Make table of sine and cosine.
-
    const Double_t pi  = TMath::ATan(1) * 4.0;
    const Double_t ragrad  = pi/180.0;
 
@@ -111,32 +111,33 @@ void TTUBS::MakeTableOfCoSin() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TUBS shape default destructor
+
 TTUBS::~TTUBS()
 {
-   // TUBS shape default destructor
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a TUBE
+///
+/// Compute the closest distance of approach from point px,py to each
+/// computed outline point of the TUBE.
+
 Int_t TTUBS::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a TUBE
-   //
-   // Compute the closest distance of approach from point px,py to each
-   // computed outline point of the TUBE.
-
    Int_t n = GetNumberOfDivisions()+1;
    Int_t numPoints = n*4;
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TUBS points
+
 void TTUBS::SetPoints(Double_t *points) const
 {
-   // Create TUBS points
-
    Int_t j, n;
    Int_t indx = 0;
    Float_t dz = TTUBE::fDz;
@@ -167,11 +168,11 @@ void TTUBS::SetPoints(Double_t *points) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return total X3D needed by TNode::ls (when called with option "x")
+
 void TTUBS::Sizeof3D() const
 {
-   // Return total X3D needed by TNode::ls (when called with option "x")
-
    Int_t n = GetNumberOfDivisions()+1;
 
    gSize3D.numPoints += n*4;
@@ -180,11 +181,11 @@ void TTUBS::Sizeof3D() const
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get buffer 3d.
+
 const TBuffer3D & TTUBS::GetBuffer3D(Int_t reqSections) const
 {
-   // Get buffer 3d.
-
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);

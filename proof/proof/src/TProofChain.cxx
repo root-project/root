@@ -29,11 +29,11 @@
 
 ClassImp(TProofChain)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Crates a new PROOF chain proxy.
+
 TProofChain::TProofChain() : TChain()
 {
-   // Crates a new PROOF chain proxy.
-
    fChain        = 0;
    fTree         = 0;
    fSet          = 0;
@@ -41,11 +41,11 @@ TProofChain::TProofChain() : TChain()
    ResetBit(kOwnsChain);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Crates a new PROOF chain proxy containing the files from the chain.
+
 TProofChain::TProofChain(TChain *chain, Bool_t gettreeheader) : TChain()
 {
-   // Crates a new PROOF chain proxy containing the files from the chain.
-
    fChain        = chain;
    fTree         = 0;
    fSet          = chain ? new TDSet((const TChain &)(*chain)) : 0;
@@ -64,11 +64,11 @@ TProofChain::TProofChain(TChain *chain, Bool_t gettreeheader) : TChain()
    ResetBit(kOwnsChain);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a new PROOF chain proxy containing the files from the dset.
+
 TProofChain::TProofChain(TDSet *dset, Bool_t gettreeheader) : TChain()
 {
-   // Creates a new PROOF chain proxy containing the files from the dset.
-
    fChain        = 0;
    fTree         = 0;
    fSet          = dset;
@@ -93,11 +93,11 @@ TProofChain::TProofChain(TDSet *dset, Bool_t gettreeheader) : TChain()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TProofChain::~TProofChain()
 {
-   // Destructor.
-
    if (fChain) {
       SafeDelete(fSet);
       // Remove the chain from the private lists in the TProof objects
@@ -122,23 +122,23 @@ TProofChain::~TProofChain()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forwards the execution to the dummy tree header.
+/// See TTree::Browse().
+
 void TProofChain::Browse(TBrowser *b)
 {
-   // Forwards the execution to the dummy tree header.
-   // See TTree::Browse().
-
    fSet->Browse(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forwards the execution to the TDSet.
+/// Returns -1 in case of error or number of selected events in case of success.
+/// See TDSet::Browse().
+
 Long64_t TProofChain::Draw(const char *varexp, const TCut &selection,
                            Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
-   // Forwards the execution to the TDSet.
-   // Returns -1 in case of error or number of selected events in case of success.
-   // See TDSet::Browse().
-
    if (!gProof) {
       Error("Draw", "no active PROOF session");
       return -1;
@@ -164,14 +164,14 @@ Long64_t TProofChain::Draw(const char *varexp, const TCut &selection,
    return rv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forwards the execution to the TDSet.
+/// Returns -1 in case of error or number of selected events in case of success.
+/// See TDSet::Browse().
+
 Long64_t TProofChain::Draw(const char *varexp, const char *selection,
                            Option_t *option,Long64_t nentries, Long64_t firstentry)
 {
-   // Forwards the execution to the TDSet.
-   // Returns -1 in case of error or number of selected events in case of success.
-   // See TDSet::Browse().
-
    if (!gProof) {
       Error("Draw", "no active PROOF session");
       return -1;
@@ -197,12 +197,12 @@ Long64_t TProofChain::Draw(const char *varexp, const char *selection,
    return rv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Aliases are added to the input list. The names are comma-separated in the 
+/// TNamed 'PROOF_ListOfAliases'. For each name, there is an trey named 'alias:<name>'.
+
 void TProofChain::AddAliases()
 {
-   // Aliases are added to the input list. The names are comma-separated in the 
-   // TNamed 'PROOF_ListOfAliases'. For each name, there is an trey named 'alias:<name>'.
-
    TList *al = fChain->GetListOfAliases();
    if (al && al->GetSize() > 0) {
       TIter nxa(al);
@@ -228,22 +228,22 @@ void TProofChain::AddAliases()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Communicate the drawing attributes for this chain to the input list
+/// so that the draw selectors can use them, in case of need.
+/// The drawing attributes are:
+///
+///    LineColor          Line color
+///    LineStyle          Line style
+///    LineWidth          Line width
+///    MarkerColor        Marker color index
+///    MarkerSize         Marker size
+///    MarkerStyle        Marker style
+///    FillColor          Area fill color
+///    FillStyle          Area fill style
+
 void TProofChain::FillDrawAttributes(TProof *p)
 {
-   // Communicate the drawing attributes for this chain to the input list
-   // so that the draw selectors can use them, in case of need.
-   // The drawing attributes are:
-   //
-   //    LineColor          Line color
-   //    LineStyle          Line style
-   //    LineWidth          Line width
-   //    MarkerColor        Marker color index
-   //    MarkerSize         Marker size
-   //    MarkerStyle        Marker style
-   //    FillColor          Area fill color
-   //    FillStyle          Area fill style
-
    if (!p || !fChain) {
       Error("FillDrawAttributes", "invalid PROOF or mother chain pointers!");
       return;
@@ -276,60 +276,60 @@ void TProofChain::FillDrawAttributes(TProof *p)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forwards the execution to the dummy tree header.
+/// See TTree::FindBranch().
+
 TBranch *TProofChain::FindBranch(const char* branchname)
 {
-   // Forwards the execution to the dummy tree header.
-   // See TTree::FindBranch().
-
    return (fTree ? fTree->FindBranch(branchname) : (TBranch *)0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forwards the execution to the dummy tree header.
+/// See TTree::FindLeaf().
+
 TLeaf *TProofChain::FindLeaf(const char* searchname)
 {
-   // Forwards the execution to the dummy tree header.
-   // See TTree::FindLeaf().
-
    return (fTree ? fTree->FindLeaf(searchname) : (TLeaf *)0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forwards the execution to the dummy tree header.
+/// See TTree::GetBranch().
+
 TBranch *TProofChain::GetBranch(const char *name)
 {
-   // Forwards the execution to the dummy tree header.
-   // See TTree::GetBranch().
-
    return (fTree ? fTree->GetBranch(name) : (TBranch *)0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forwards the execution to the dummy tree header.
+/// See TTree::GetBranchStatus().
+
 Bool_t TProofChain::GetBranchStatus(const char *branchname) const
 {
-   // Forwards the execution to the dummy tree header.
-   // See TTree::GetBranchStatus().
-
    return (fTree ? fTree->GetBranchStatus(branchname) : kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forwards the execution to the dummy tree header.
+/// See TTree::GetPlayer().
+
 TVirtualTreePlayer *TProofChain::GetPlayer()
 {
-   // Forwards the execution to the dummy tree header.
-   // See TTree::GetPlayer().
-
    return (fTree ? fTree->GetPlayer() : (TVirtualTreePlayer *)0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forwards the execution to the TDSet.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+/// See TDSet::Process().
+
 Long64_t TProofChain::Process(const char *filename, Option_t *option,
                               Long64_t nentries, Long64_t firstentry)
 {
-   // Forwards the execution to the TDSet.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-   // See TDSet::Process().
-
    // Set either the entry-list (priority) or the event-list
    if (fEntryList) {
       fSet->SetEntryList(fEntryList);
@@ -340,13 +340,13 @@ Long64_t TProofChain::Process(const char *filename, Option_t *option,
    return fSet->Process(filename, option, nentries, firstentry);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProofChain::Process(TSelector *selector, Option_t *option,
                               Long64_t nentries, Long64_t firstentry)
 {
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    // Set either the entry-list (priority) or the event-list
    if (fEntryList) {
       fSet->SetEntryList(fEntryList);
@@ -357,28 +357,28 @@ Long64_t TProofChain::Process(TSelector *selector, Option_t *option,
    return fSet->Process(selector, option, nentries, firstentry);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TTree::SetDebug
+
 void TProofChain::SetDebug(Int_t level, Long64_t min, Long64_t max)
 {
-   // See TTree::SetDebug
-
    TTree::SetDebug(level, min, max);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TTree::GetName.
+
 void TProofChain::SetName(const char *name)
 {
-   // See TTree::GetName.
-
    TTree::SetName(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the total number of entries in the TProofChain, which is
+/// the number of entries in the TDSet that it holds.
+
 Long64_t TProofChain::GetEntries() const
 {
-   // Returns the total number of entries in the TProofChain, which is
-   // the number of entries in the TDSet that it holds.
-
    // this was used for holding the total number of entries
    if (TestBit(kProofLite)) {
       return (fTree ? fTree->GetEntries() : (Long64_t)(-1));
@@ -387,12 +387,12 @@ Long64_t TProofChain::GetEntries() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TTree::GetEntries(const char *selection)
+/// Not implemented in TProofChain. Shouldn't be used.
+
 Long64_t TProofChain::GetEntries(const char *selection)
 {
-   // See TTree::GetEntries(const char *selection)
-   // Not implemented in TProofChain. Shouldn't be used.
-
    if (TestBit(kProofLite)) {
       return (fTree ? fTree->GetEntries(selection) : (Long64_t)(-1));
    } else {
@@ -401,11 +401,11 @@ Long64_t TProofChain::GetEntries(const char *selection)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes the number of processed entries.
+
 void TProofChain::Progress(Long64_t total, Long64_t processed)
 {
-   // Changes the number of processed entries.
-
    if (gROOT->IsInterrupted() && gProof)
       gProof->StopProcess(kTRUE);
    if (total) { }
@@ -413,30 +413,30 @@ void TProofChain::Progress(Long64_t total, Long64_t processed)
    fReadEntry = processed;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of processed entries.
+
 Long64_t TProofChain::GetReadEntry() const
 {
-   // Returns the number of processed entries.
-
    return fReadEntry;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Releases PROOF. Disconnect the "progress" signal.
+
 void TProofChain::ReleaseProof()
 {
-   // Releases PROOF. Disconnect the "progress" signal.
-
    if (!gProof)
       return;
    gProof->Disconnect("Progress(Long64_t,Long64_t)",
                       this, "Progress(Long64_t,Long64_t)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connects the proof "Progress" signal.
+
 void TProofChain::ConnectProof()
 {
-   // Connects the proof "Progress" signal.
-
    if (gProof)
       gProof->Connect("Progress(Long64_t,Long64_t)", "TProofChain",
                        this, "Progress(Long64_t,Long64_t)");

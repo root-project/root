@@ -50,22 +50,24 @@
 
 ClassImp(TMVA::VariableNormalizeTransform)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::VariableNormalizeTransform::VariableNormalizeTransform( DataSetInfo& dsi )
    : VariableTransformBase( dsi, Types::kNormalized, "Norm" )
 { 
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::VariableNormalizeTransform::~VariableNormalizeTransform() {
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialization of the normalization transformation
+
 void TMVA::VariableNormalizeTransform::Initialize()
 {
-   // initialization of the normalization transformation
-
    UInt_t inputSize = fGet.size();
    Int_t numC = GetNClasses()+1;
    if (GetNClasses() <= 1 ) numC = 1;
@@ -80,10 +82,11 @@ void TMVA::VariableNormalizeTransform::Initialize()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prepare transformation
+
 Bool_t TMVA::VariableNormalizeTransform::PrepareTransformation (const std::vector<Event*>& events)
 {
-   // prepare transformation
    if (!IsEnabled() || IsCreated()) return kTRUE;
 
    Log() << kINFO << "Preparing the transformation." << Endl;
@@ -97,10 +100,10 @@ Bool_t TMVA::VariableNormalizeTransform::PrepareTransformation (const std::vecto
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Event* const ev, Int_t cls ) const
 {
-
    // apply the normalization transformation
    if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
 
@@ -153,10 +156,11 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Even
    return fTransformedEvent;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// apply the inverse transformation
+
 const TMVA::Event* TMVA::VariableNormalizeTransform::InverseTransform(const TMVA::Event* const ev, Int_t cls ) const
 {
-   // apply the inverse transformation
    if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
 
    // if cls (the class chosen by the user) not existing, 
@@ -197,10 +201,11 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::InverseTransform(const TMVA
    return fBackTransformedEvent;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute offset and scale from min and max
+
 void TMVA::VariableNormalizeTransform::CalcNormalizationParams( const std::vector< Event*>& events )
 {
-   // compute offset and scale from min and max
    if (events.size() <= 1) 
       Log() << kFATAL << "Not enough events (found " << events.size() << ") to calculate the normalization" << Endl;
    
@@ -256,11 +261,11 @@ void TMVA::VariableNormalizeTransform::CalcNormalizationParams( const std::vecto
    return;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates string with variable transformations applied
+
 std::vector<TString>* TMVA::VariableNormalizeTransform::GetTransformationStrings( Int_t cls ) const
 {
-   // creates string with variable transformations applied
-
    // if cls (the class chosen by the user) not existing, assume that user wants to 
    // have the matrix for all classes together. 
    if (cls < 0 || cls > GetNClasses()) cls = GetNClasses();
@@ -291,10 +296,11 @@ std::vector<TString>* TMVA::VariableNormalizeTransform::GetTransformationStrings
    return strVec;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write the transformation to the stream
+
 void TMVA::VariableNormalizeTransform::WriteTransformationToStream( std::ostream& o ) const
 {
-   // write the transformation to the stream
    o << "# min max for all variables for all classes one after the other and as a last entry for all classes together" << std::endl;
 
    Int_t numC = GetNClasses()+1;
@@ -315,11 +321,11 @@ void TMVA::VariableNormalizeTransform::WriteTransformationToStream( std::ostream
    o << "##" << std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create XML description of Normalize transformation
+
 void TMVA::VariableNormalizeTransform::AttachXMLTo(void* parent) 
 {
-   // create XML description of Normalize transformation
-
    void* trfxml = gTools().AddChild(parent, "Transform");
    gTools().AddAttr(trfxml, "Name", "Normalize");
    VariableTransformBase::AttachXMLTo( trfxml );
@@ -341,10 +347,11 @@ void TMVA::VariableNormalizeTransform::AttachXMLTo(void* parent)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the transformation matrices from the xml node
+
 void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode ) 
 {
-   // Read the transformation matrices from the xml node
    Bool_t newFormat = kFALSE;
 
    void* inpnode = NULL;
@@ -445,13 +452,13 @@ void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
    SetCreated();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// this method is only used when building a normalization transformation
+/// from old text files
+/// in this case regression didn't exist and there were no targets
+
 void TMVA::VariableNormalizeTransform::BuildTransformationFromVarInfo( const std::vector<TMVA::VariableInfo>& var ) 
 {
-   // this method is only used when building a normalization transformation
-   // from old text files
-   // in this case regression didn't exist and there were no targets
-
    UInt_t nvars = GetNVariables();
 
    if(var.size() != nvars)
@@ -476,11 +483,11 @@ void TMVA::VariableNormalizeTransform::BuildTransformationFromVarInfo( const std
    SetCreated();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the variable ranges from an input stream
+
 void TMVA::VariableNormalizeTransform::ReadTransformationFromStream( std::istream& istr, const TString& )
 {
-   // Read the variable ranges from an input stream
-
    UInt_t nvars = GetNVariables();
    UInt_t ntgts = GetNTargets();
    for( UInt_t ivar = 0; ivar < nvars; ++ivar ){
@@ -519,11 +526,11 @@ void TMVA::VariableNormalizeTransform::ReadTransformationFromStream( std::istrea
    SetCreated();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prints the transformation ranges
+
 void TMVA::VariableNormalizeTransform::PrintTransformation( std::ostream& /* o */ ) 
 {
-   // prints the transformation ranges
-
    Int_t nCls = GetNClasses();
    Int_t numC = nCls+1;
    if (nCls <= 1 ) numC = 1;
@@ -545,12 +552,13 @@ void TMVA::VariableNormalizeTransform::PrintTransformation( std::ostream& /* o *
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// creates a normalizing function
+/// TODO include target-transformation into makefunction
+
 void TMVA::VariableNormalizeTransform::MakeFunction( std::ostream& fout, const TString& fcncName, 
                                                      Int_t part, UInt_t trCounter, Int_t ) 
 {
-   // creates a normalizing function
-   // TODO include target-transformation into makefunction
    UInt_t nVar = fGet.size();
    UInt_t numC = fMin.size();
    if (part==1) {

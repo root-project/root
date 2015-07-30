@@ -25,11 +25,11 @@
 
 ClassImp(MyParticle)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MyParticle constructor.
+
 MyParticle::MyParticle() : TParticle()
 {
-   // MyParticle constructor.
-
    // initialize members to zero
    fStatus = 0;
    fNChildren = 0;
@@ -49,7 +49,9 @@ MyParticle::MyParticle() : TParticle()
    fNtrack = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MyParticle constructor.
+
 MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const TVector3 &pLocation,
                        const TVector3 &pMomentum,Double_t pPassed, Double_t pDecayLen,
                        Double_t pEnergy)
@@ -57,8 +59,6 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
                         pMomentum.z(), pEnergy, pLocation.x(), pLocation.y(),
                         pLocation.z(), 0.0)
 {
-   // MyParticle constructor.
-
    // initialize members with parameters passed in argument
    fId = id;
    fStatus = pStat;
@@ -78,15 +78,15 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
    fNtrack = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MyParticle constructor.
+
 MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const TVector3 &pLocation,
                        const TVector3 &pMomentum)
           : TParticle(pType, pStat, 1, 0, 0, 0, pMomentum.x(), pMomentum.y(),
                         pMomentum.z(), 0.0, pLocation.x(), pLocation.y(),
                         pLocation.z(), 0.0)
 {
-   // MyParticle constructor.
-
    // initialize members with parameters passed in argument
    fId = id;
    Double_t energy;
@@ -114,21 +114,21 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
    fNtrack = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns particle information.
+
 char *MyParticle::GetObjectInfo(Int_t, Int_t) const
 {
-   // Returns particle information.
-
    static char info[64];
    sprintf(info,"Particle = %s, E = %1.3e", GetName(), Energy());
    return info;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set particle momentum with TVector3 members
+
 void MyParticle::SetMoment(const TVector3 &mom)
 {
-   // Set particle momentum with TVector3 members
-
    Double_t energy;
    if (GetMass() == 0.0)
       energy = mom.Mag();
@@ -137,11 +137,11 @@ void MyParticle::SetMoment(const TVector3 &mom)
    SetMomentum(mom.x(), mom.y(), mom.z(), energy);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generates time of decay for this type of particle.
+
 void MyParticle::GenerateTimeOfDecay()
 {
-   // Generates time of decay for this type of particle.
-
    Int_t i;
    fTimeOfDecay = (GetPDG()->Lifetime() > 0 && GetPDG()->Lifetime() < 1e8)
                    ? gRandom->Exp(GetPDG()->Lifetime())
@@ -165,12 +165,12 @@ void MyParticle::GenerateTimeOfDecay()
    fTimeOfDecay /= TMath::Sqrt(1.0 - (0.996 * 0.996));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get name of particle with its PDG number, or Unknown if
+/// particle name is not defined into ParticlesDef.h
+
 const Char_t *MyParticle::GetName() const
 {
-   // Get name of particle with its PDG number, or Unknown if
-   // particle name is not defined into ParticlesDef.h
-
    Int_t i;
    Int_t my_code = GetPdgCode();
 
@@ -181,11 +181,11 @@ const Char_t *MyParticle::GetName() const
    return ("Unknown");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new track to the list of tracks for this particle.
+
 TPolyLine3D *MyParticle::AddTrack(const TVector3 &pos, Int_t color)
 {
-   // Add a new track to the list of tracks for this particle.
-
    TPolyLine3D *poly;
    fTracks->Add(new TPolyLine3D());
    fNtrack = fTracks->GetLast();
@@ -195,11 +195,11 @@ TPolyLine3D *MyParticle::AddTrack(const TVector3 &pos, Int_t color)
    return poly;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new track to the list of tracks for this particle.
+
 TPolyLine3D *MyParticle::AddTrack(Double_t x, Double_t y, Double_t z, Int_t col)
 {
-   // Add a new track to the list of tracks for this particle.
-
    TPolyLine3D *poly;
    fTracks->Add(new TPolyLine3D());
    fNtrack = fTracks->GetLast();
@@ -209,12 +209,12 @@ TPolyLine3D *MyParticle::AddTrack(Double_t x, Double_t y, Double_t z, Int_t col)
    return poly;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set next polyline point for the current track if the color did not change
+/// or add a new polyline with the new color.
+
 void MyParticle::SetNextPoint(Int_t color)
 {
-   // Set next polyline point for the current track if the color did not change
-   // or add a new polyline with the new color.
-
    TPolyLine3D *poly;
    poly = (TPolyLine3D *)fTracks->At(fNtrack);
    poly->SetNextPoint(fLocation->x(), fLocation->y(), fLocation->z());
@@ -222,21 +222,21 @@ void MyParticle::SetNextPoint(Int_t color)
       AddTrack(fLocation->x(), fLocation->y(), fLocation->z(), color);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 MyParticle::~MyParticle()
 {
-   // destructor
-
    fTracks->Delete();
    delete fTracks;
    delete fLocation;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HighLight this particle track in the display.
+
 void MyParticle::HighLight()
 {
-   // HighLight this particle track in the display.
-
    Int_t i;
    TPolyLine3D *poly;
    TIter next(fTracks);

@@ -46,21 +46,23 @@ ClassImp(RooRecursiveFraction)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooRecursiveFraction::RooRecursiveFraction()
 {
-  // Default constructor
   _listIter = _list.createIterator() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of plain RooAddPdf fraction from list of recursive fractions
+
 RooRecursiveFraction::RooRecursiveFraction(const char* name, const char* title, const RooArgList& fracList) :
   RooAbsReal(name, title),
   _list("list","First set of components",this)
 {
-  // Constructor of plain RooAddPdf fraction from list of recursive fractions
   _listIter = _list.createIterator() ;
 
   for (Int_t ifrac=fracList.getSize()-1 ; ifrac>=0 ; ifrac--) {
@@ -76,33 +78,33 @@ RooRecursiveFraction::RooRecursiveFraction(const char* name, const char* title, 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooRecursiveFraction::RooRecursiveFraction(const RooRecursiveFraction& other, const char* name) :
   RooAbsReal(other, name), 
   _list("list",this,other._list)
 {
-  // Copy constructor
-
   _listIter = _list.createIterator() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooRecursiveFraction::~RooRecursiveFraction() 
 {
-  // Destructor
-
   if (_listIter) delete _listIter ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return value of 1 - prod_i (1 - f_i )
+
 Double_t RooRecursiveFraction::evaluate() const 
 {
-  // Calculate and return value of 1 - prod_i (1 - f_i )
-
   RooAbsReal* comp ;
   const RooArgSet* nset = _list.nset() ;
 

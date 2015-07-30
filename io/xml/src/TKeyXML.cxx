@@ -27,25 +27,26 @@
 
 ClassImp(TKeyXML);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TKeyXML::TKeyXML() :
    TKey(),
    fKeyNode(0),
    fKeyId(0),
    fSubdir(kFALSE)
 {
-   // default constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates TKeyXML and convert obj data to xml structures
+
 TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, const TObject* obj, const char* name, const char* title) :
     TKey(mother),
     fKeyNode(0),
     fKeyId(keyid),
     fSubdir(kFALSE)
 {
-   // Creates TKeyXML and convert obj data to xml structures
-
    if (name)
       SetName(name);
    else
@@ -68,15 +69,15 @@ TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, const TObject* obj, const c
    StoreObject((void*)obj, obj ? obj->IsA() : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates TKeyXML and convert obj data to xml structures
+
 TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, const void* obj, const TClass* cl, const char* name, const char* title) :
    TKey(mother),
    fKeyNode(0),
    fKeyId(keyid),
    fSubdir(kFALSE)
 {
-   // Creates TKeyXML and convert obj data to xml structures
-
    if (name && *name) SetName(name);
    else SetName(cl ? cl->GetName() : "Noname");
 
@@ -93,15 +94,15 @@ TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, const void* obj, const TCla
    StoreObject(obj, cl);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates TKeyXML and takes ownership over xml node, from which object can be restored
+
 TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, XMLNodePointer_t keynode) :
    TKey(mother),
    fKeyNode(keynode),
    fKeyId(keyid),
    fSubdir(kFALSE)
 {
-   // Creates TKeyXML and takes ownership over xml node, from which object can be restored
-
    TXMLEngine* xml = XMLEngine();
 
    SetName(xml->GetAttr(keynode, xmlio::Name));
@@ -122,10 +123,11 @@ TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, XMLNodePointer_t keynode) :
    fClassName = xml->GetAttr(objnode, xmlio::ObjClass);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TKeyXML destructor
+
 TKeyXML::~TKeyXML()
 {
-   // TKeyXML destructor
    if (fKeyNode) {
       TXMLEngine* xml = XMLEngine();
       if (xml) {
@@ -137,12 +139,12 @@ TKeyXML::~TKeyXML()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete key from current directory
+/// Note: TKeyXML object is not deleted. You still have to call "delete key"
+
 void TKeyXML::Delete(Option_t * /*option*/)
 {
-   // Delete key from current directory
-   // Note: TKeyXML object is not deleted. You still have to call "delete key"
-
    TXMLEngine* xml = XMLEngine();
    if (fKeyNode && xml) {
       xml->FreeNode(fKeyNode);
@@ -152,11 +154,11 @@ void TKeyXML::Delete(Option_t * /*option*/)
    fMotherDir->GetListOfKeys()->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stores keys attributes in key node
+
 void TKeyXML::StoreKeyAttributes()
 {
-   // Stores keys attributes in key node
-
    TXMLEngine* xml = XMLEngine();
    TXMLFile* f = (TXMLFile*) GetFile();
    if ((f==0) || (xml==0) || (fKeyNode==0)) return;
@@ -172,11 +174,11 @@ void TKeyXML::StoreKeyAttributes()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  convert object to xml structure and keep this structure in key
+
 void TKeyXML::StoreObject(const void* obj, const TClass* cl)
 {
-   //  convert object to xml structure and keep this structure in key
-
    TXMLFile* f = (TXMLFile*) GetFile();
    TXMLEngine* xml = XMLEngine();
    if ((f==0) || (xml==0) || (fKeyNode==0)) return;
@@ -197,11 +199,11 @@ void TKeyXML::StoreObject(const void* obj, const TClass* cl)
    if (cl) fClassName = cl->GetName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// update key attributes in key node
+
 void TKeyXML::UpdateAttributes()
 {
-   // update key attributes in key node
-
    TXMLEngine* xml = XMLEngine();
    if ((xml==0) || (fKeyNode==0)) return;
 
@@ -210,12 +212,12 @@ void TKeyXML::UpdateAttributes()
    StoreKeyAttributes();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// updates object, stored in the node
+/// Used for TDirectory data update
+
 void TKeyXML::UpdateObject(TObject* obj)
 {
-   // updates object, stored in the node
-   // Used for TDirectory data update
-
    TXMLFile* f = (TXMLFile*) GetFile();
    TXMLEngine* xml = XMLEngine();
    if ((f==0) || (xml==0) || (obj==0) || (fKeyNode==0)) return;
@@ -233,14 +235,14 @@ void TKeyXML::UpdateObject(TObject* obj)
    StoreObject(obj, obj->IsA());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To read an object from the file.
+/// The object associated to this key is read from the file into memory.
+/// Before invoking this function, obj has been created via the
+/// default constructor.
+
 Int_t TKeyXML::Read(TObject* tobj)
 {
-   // To read an object from the file.
-   // The object associated to this key is read from the file into memory.
-   // Before invoking this function, obj has been created via the
-   // default constructor.
-
    if (tobj==0) return 0;
 
    void* res = XmlReadAny(tobj, 0);
@@ -248,12 +250,12 @@ Int_t TKeyXML::Read(TObject* tobj)
    return res==0 ? 0 : 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read object derived from TObject class, from key
+/// if it is not TObject or in case of error, return 0
+
 TObject* TKeyXML::ReadObj()
 {
-   // read object derived from TObject class, from key
-   // if it is not TObject or in case of error, return 0
-
    TObject* tobj = (TObject*) XmlReadAny(0, TObject::Class());
 
    if (tobj!=0) {
@@ -274,12 +276,12 @@ TObject* TKeyXML::ReadObj()
    return tobj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read object derived from TObject class, from key
+/// if it is not TObject or in case of error, return 0
+
 TObject* TKeyXML::ReadObjWithBuffer(char * /*bufferRead*/)
 {
-   // read object derived from TObject class, from key
-   // if it is not TObject or in case of error, return 0
-
    TObject* tobj = (TObject*) XmlReadAny(0, TObject::Class());
 
    if (tobj!=0) {
@@ -300,19 +302,19 @@ TObject* TKeyXML::ReadObjWithBuffer(char * /*bufferRead*/)
    return tobj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read object of any type
+
 void* TKeyXML::ReadObjectAny(const TClass *expectedClass)
 {
-   // read object of any type
-
    return XmlReadAny(0, expectedClass);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read object from key and cast to expected class
+
 void* TKeyXML::XmlReadAny(void* obj, const TClass* expectedClass)
 {
-   // read object from key and cast to expected class
-
    if (fKeyNode==0) return obj;
 
    TXMLFile* f = (TXMLFile*) GetFile();
@@ -358,11 +360,11 @@ void* TKeyXML::XmlReadAny(void* obj, const TClass* expectedClass)
    return ((char*)res) + delta;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return pointer on TXMLEngine object, used for xml conversion
+
 TXMLEngine* TKeyXML::XMLEngine()
 {
-   // return pointer on TXMLEngine object, used for xml conversion
-
    TXMLFile* f = (TXMLFile*) GetFile();
    return f==0 ? 0 : f->XML();
 }

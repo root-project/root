@@ -31,12 +31,13 @@
 
 #include "XrdProofdTrace.h"
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
                                  XrdSysError *, const char *adminpath, int rtime)
                 : fSandbox(ui, master, changeown)
 {
-   // Constructor
    XPDLOC(CMGR, "Client::Client")
 
    fProofServs.clear();
@@ -64,17 +65,18 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
    if (fSandbox.IsValid()) fIsValid = 1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 XrdProofdClient::~XrdProofdClient()
 {
-   // Destructor
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return TRUE if this instance matches 'id' (and 'grp', if defined)
+
 bool XrdProofdClient::Match(const char *usr, const char *grp)
 {
-   // return TRUE if this instance matches 'id' (and 'grp', if defined)
-
    if (!fIsValid) return 0;
 
    bool rc = (usr && !strcmp(usr, User())) ? 1 : 0;
@@ -84,11 +86,12 @@ bool XrdProofdClient::Match(const char *usr, const char *grp)
    return rc;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next free client ID. If none is found, increase the vector size
+/// and get the first new one
+
 int XrdProofdClient::GetClientID(XrdProofdProtocol *p)
 {
-   // Get next free client ID. If none is found, increase the vector size
-   // and get the first new one
    XPDLOC(CMGR, "Client::GetClientID")
 
    XrdClientID *cid = 0;
@@ -135,11 +138,12 @@ int XrdProofdClient::GetClientID(XrdProofdProtocol *p)
    return ic;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reserve a client ID. If none is found, increase the vector size
+/// and performe the needed initializations
+
 int XrdProofdClient::ReserveClientID(int cid)
 {
-   // Reserve a client ID. If none is found, increase the vector size
-   // and performe the needed initializations
    XPDLOC(CMGR, "Client::ReserveClientID")
 
    if (cid < 0)
@@ -171,11 +175,12 @@ int XrdProofdClient::ReserveClientID(int cid)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next free server ID. If none is found, increase the vector size
+/// and get the first new one
+
 XrdProofdProofServ *XrdProofdClient::GetFreeServObj()
 {
-   // Get next free server ID. If none is found, increase the vector size
-   // and get the first new one
    XPDLOC(CMGR, "Client::GetFreeServObj")
 
    int ic = 0, newsz = 0, sz = 0;
@@ -223,10 +228,11 @@ XrdProofdProofServ *XrdProofdClient::GetFreeServObj()
    return xps;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get server at 'id'. If needed, increase the vector size
+
 XrdProofdProofServ *XrdProofdClient::GetServObj(int id)
 {
-   // Get server at 'id'. If needed, increase the vector size
    XPDLOC(CMGR, "Client::GetServObj")
 
    TRACE(DBG, "id: "<< id);
@@ -284,10 +290,11 @@ XrdProofdProofServ *XrdProofdClient::GetServObj(int id)
    return xps;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get server instance connected via 'p'
+
 XrdProofdProofServ *XrdProofdClient::GetServer(XrdProofdProtocol *p)
 {
-   // Get server instance connected via 'p'
    XPDLOC(CMGR, "Client::GetServer")
 
    TRACE(DBG, "enter: p: " << p);
@@ -307,11 +314,11 @@ XrdProofdProofServ *XrdProofdClient::GetServer(XrdProofdProtocol *p)
    return xps;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get from the vector server instance with ID psid
+
 XrdProofdProofServ *XrdProofdClient::GetServer(int psid)
 {
-   // Get from the vector server instance with ID psid
-
    XrdSysMutexHelper mh(fMutex);
    if (fIsValid && psid > -1 && psid < (int) fProofServs.size())
       return fProofServs.at(psid);
@@ -319,10 +326,11 @@ XrdProofdProofServ *XrdProofdClient::GetServer(int psid)
    return (XrdProofdProofServ *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Erase server with id psid from the list
+
 void XrdProofdClient::EraseServer(int psid)
 {
-   // Erase server with id psid from the list
    XPDLOC(CMGR, "Client::EraseServer")
 
    TRACE(DBG, "enter: psid: " << psid);
@@ -342,10 +350,11 @@ void XrdProofdClient::EraseServer(int psid)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of valid proofserv topmaster sessions in the list
+
 int XrdProofdClient::GetTopServers()
 {
-   // Return the number of valid proofserv topmaster sessions in the list
    XPDLOC(CMGR, "Client::GetTopServers")
 
    int nv = 0;
@@ -365,10 +374,11 @@ int XrdProofdClient::GetTopServers()
    return nv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset slot at 'ic'
+
 int XrdProofdClient::ResetClientSlot(int ic)
 {
-   // Reset slot at 'ic'
    XPDLOC(CMGR, "Client::ResetClientSlot")
 
    TRACE(DBG, "enter: ic: " << ic);
@@ -384,10 +394,11 @@ int XrdProofdClient::ResetClientSlot(int ic)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return protocol attached to client slot at 'ic'
+
 XrdProofdProtocol *XrdProofdClient::GetProtocol(int ic)
 {
-   // Return protocol attached to client slot at 'ic'
    XPDLOC(CMGR, "Client::GetProtocol")
 
    TRACE(DBG, "enter: ic: " << ic);
@@ -404,10 +415,11 @@ XrdProofdProtocol *XrdProofdClient::GetProtocol(int ic)
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set slot cid to instance 'p'
+
 int XrdProofdClient::SetClientID(int cid, XrdProofdProtocol *p)
 {
-   // Set slot cid to instance 'p'
    XPDLOC(CMGR, "Client::SetClientID")
 
    TRACE(DBG, "cid: "<< cid <<", p: " << p);
@@ -430,10 +442,11 @@ int XrdProofdClient::SetClientID(int cid, XrdProofdProtocol *p)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast message 'msg' to the connected clients
+
 void XrdProofdClient::Broadcast(const char *msg)
 {
-   // Broadcast message 'msg' to the connected clients
    XPDLOC(CMGR, "Client::Broadcast")
 
    int len = 0;
@@ -457,17 +470,17 @@ void XrdProofdClient::Broadcast(const char *msg)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a touch the connected clients: this will remotely touch the associated
+/// TSocket instance and schedule an asynchronous touch of the client admin file.
+/// This request is only sent once per client: this is controlled by the flag
+/// fAskedToTouch, whcih can reset to FALSE by calling this function with reset
+/// TRUE.
+/// Return 0 if the request is sent or if asked to reset.
+/// Retunn 1 if the request was already sent.
+
 int XrdProofdClient::Touch(bool reset)
 {
-   // Send a touch the connected clients: this will remotely touch the associated
-   // TSocket instance and schedule an asynchronous touch of the client admin file.
-   // This request is only sent once per client: this is controlled by the flag
-   // fAskedToTouch, whcih can reset to FALSE by calling this function with reset
-   // TRUE.
-   // Return 0 if the request is sent or if asked to reset.
-   // Retunn 1 if the request was already sent.
-
    // If we are asked to reset, just do that and return
    if (reset) {
       fAskedToTouch = 0;
@@ -496,12 +509,13 @@ int XrdProofdClient::Touch(bool reset)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Quick verification of session 'xps' to avoid attaching clients to
+/// non responding sessions. We do here a sort of loose ping.
+/// Return true is responding, false otherwise.
+
 bool XrdProofdClient::VerifySession(XrdProofdProofServ *xps, XrdProofdResponse *r)
 {
-   // Quick verification of session 'xps' to avoid attaching clients to
-   // non responding sessions. We do here a sort of loose ping.
-   // Return true is responding, false otherwise.
    XPDLOC(CMGR, "Client::VerifySession")
 
    if (!xps || !(xps->IsValid())) {
@@ -562,14 +576,15 @@ bool XrdProofdClient::VerifySession(XrdProofdProofServ *xps, XrdProofdResponse *
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Skip the next sessions status check. This is used, for example, when
+/// somebody has shown interest in these sessions to give more time for the
+/// reconnection.
+/// If active is defined, the list of active sessions is filled.
+
 void XrdProofdClient::SkipSessionsCheck(std::list<XrdProofdProofServ *> *active,
                                         XrdOucString &emsg, XrdProofdResponse *r)
 {
-   // Skip the next sessions status check. This is used, for example, when
-   // somebody has shown interest in these sessions to give more time for the
-   // reconnection.
-   // If active is defined, the list of active sessions is filled.
    XPDLOC(CMGR, "Client::SkipSessionsCheck")
 
    XrdProofdProofServ *xps = 0;
@@ -598,12 +613,12 @@ void XrdProofdClient::SkipSessionsCheck(std::list<XrdProofdProofServ *> *active,
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a string describing the existing sessions
+
 XrdOucString XrdProofdClient::ExportSessions(XrdOucString &emsg,
                                              XrdProofdResponse *r)
 {
-   // Return a string describing the existing sessions
-
    XrdOucString out, buf;
 
    // Protect from next session check and get the list of actives
@@ -625,12 +640,13 @@ XrdOucString XrdProofdClient::ExportSessions(XrdOucString &emsg,
    return out;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate client sessions; IDs of signalled processes are added to sigpid.
+
 void XrdProofdClient::TerminateSessions(int srvtype, XrdProofdProofServ *ref,
                                         const char *msg, XrdProofdPipe *pipe,
                                         bool changeown)
 {
-   // Terminate client sessions; IDs of signalled processes are added to sigpid.
    XPDLOC(CMGR, "Client::TerminateSessions")
 
    // Loop over client sessions and terminated them
@@ -671,11 +687,11 @@ void XrdProofdClient::TerminateSessions(int srvtype, XrdProofdProofServ *ref,
    }
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this instance
+
 void XrdProofdClient::ResetSessions()
 {
-   // Reset this instance
-
    fAskedToTouch = 0;
 
    XrdSysMutexHelper mh(fMutex);

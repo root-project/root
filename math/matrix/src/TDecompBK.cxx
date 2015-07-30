@@ -54,30 +54,31 @@ ClassImp(TDecompBK)
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TDecompBK::TDecompBK()
 {
-// Default constructor
    fNIpiv = 0;
    fIpiv  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for (nrows x nrows) symmetric matrix
+
 TDecompBK::TDecompBK(Int_t nrows)
 {
-// Constructor for (nrows x nrows) symmetric matrix
-
    fNIpiv = nrows;
    fIpiv = new Int_t[fNIpiv];
    memset(fIpiv,0,fNIpiv*sizeof(Int_t));
    fU.ResizeTo(nrows,nrows);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for ([row_lwb..row_upb] x [row_lwb..row_upb]) symmetric matrix
+
 TDecompBK::TDecompBK(Int_t row_lwb,Int_t row_upb)
 {
-// Constructor for ([row_lwb..row_upb] x [row_lwb..row_upb]) symmetric matrix
-
    const Int_t nrows = row_upb-row_lwb+1;
    fNIpiv = nrows;
    fIpiv = new Int_t[fNIpiv];
@@ -86,11 +87,11 @@ TDecompBK::TDecompBK(Int_t row_lwb,Int_t row_upb)
    fU.ResizeTo(nrows,nrows);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for symmetric matrix A
+
 TDecompBK::TDecompBK(const TMatrixDSym &a,Double_t tol)
 {
-// Constructor for symmetric matrix A
-
    R__ASSERT(a.IsValid());
 
    SetBit(kMatrixSet);
@@ -109,22 +110,22 @@ TDecompBK::TDecompBK(const TMatrixDSym &a,Double_t tol)
    memcpy(fU.GetMatrixArray(),a.GetMatrixArray(),nRows*nRows*sizeof(Double_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TDecompBK::TDecompBK(const TDecompBK &another) : TDecompBase(another)
 {
-// Copy constructor
-
    fNIpiv = 0;
    fIpiv  = 0;
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix A is decomposed in components U and D so that A = U*D*U^T
+/// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
+
 Bool_t TDecompBK::Decompose()
 {
-// Matrix A is decomposed in components U and D so that A = U*D*U^T
-// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
-
    if (TestBit(kDecomposed)) return kTRUE;
 
    if ( !TestBit(kMatrixSet) ) {
@@ -303,11 +304,11 @@ Bool_t TDecompBK::Decompose()
    return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the matrix to be decomposed, decomposition status is reset.
+
 void TDecompBK::SetMatrix(const TMatrixDSym &a)
 {
-// Set the matrix to be decomposed, decomposition status is reset.
-
    R__ASSERT(a.IsValid());
 
    ResetStatus();
@@ -328,11 +329,11 @@ void TDecompBK::SetMatrix(const TMatrixDSym &a)
    memcpy(fU.GetMatrixArray(),a.GetMatrixArray(),nRows*nRows*sizeof(Double_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
+
 Bool_t TDecompBK::Solve(TVectorD &b)
 {
-// Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
-
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
       Error("Solve()","Matrix is singular");
@@ -462,11 +463,11 @@ Bool_t TDecompBK::Solve(TVectorD &b)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
+
 Bool_t TDecompBK::Solve(TMatrixDColumn &cb)
 {
-// Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
-
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
@@ -599,11 +600,11 @@ Bool_t TDecompBK::Solve(TMatrixDColumn &cb)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
+
 Bool_t TDecompBK::Invert(TMatrixDSym &inv)
 {
-// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
-
    if (inv.GetNrows() != GetNrows() || inv.GetRowLwb() != GetRowLwb()) {
       Error("Invert(TMatrixDSym &","Input matrix has wrong shape");
       return kFALSE;
@@ -622,11 +623,11 @@ Bool_t TDecompBK::Invert(TMatrixDSym &inv)
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
+
 TMatrixDSym TDecompBK::Invert(Bool_t &status)
 {
-// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
-
    const Int_t rowLwb = GetRowLwb();
    const Int_t rowUpb = rowLwb+GetNrows()-1;
 
@@ -637,11 +638,11 @@ TMatrixDSym TDecompBK::Invert(Bool_t &status)
    return inv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the class members
+
 void TDecompBK::Print(Option_t *opt) const
 {
-// Print the class members
-
    TDecompBase::Print(opt);
    printf("fIpiv:\n");
    for (Int_t i = 0; i < fNIpiv; i++)
@@ -649,11 +650,11 @@ void TDecompBK::Print(Option_t *opt) const
    fU.Print("fU");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assigment operator
+
 TDecompBK &TDecompBK::operator=(const TDecompBK &source)
 {
-// Assigment operator
-
    if (this != &source) {
       TDecompBase::operator=(source);
       fU.ResizeTo(source.fU);

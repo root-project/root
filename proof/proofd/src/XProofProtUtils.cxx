@@ -43,14 +43,14 @@
 
 namespace XPD {
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function applies the network byte order on those
+/// parts of the 16-bytes buffer, only if it is composed
+/// by some binary part
+/// Return 0 if OK, -1 in case the ID is unknown
+
 int clientMarshall(XPClientRequest* str)
 {
-   // This function applies the network byte order on those
-   // parts of the 16-bytes buffer, only if it is composed
-   // by some binary part
-   // Return 0 if OK, -1 in case the ID is unknown
-
    switch(str->header.requestid) {
 
    case kXP_login:
@@ -126,21 +126,24 @@ int clientMarshall(XPClientRequest* str)
    return 0;
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void clientUnmarshall(struct ServerResponseHeader* str)
 {
    str->status = ntohs(str->status);
    str->dlen   = ntohl(str->dlen);
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ServerResponseHeader2NetFmt(struct ServerResponseHeader *srh)
 {
    srh->status = htons(srh->status);
    srh->dlen   = htonl(srh->dlen);
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ServerInitHandShake2HostFmt(struct ServerInitHandShake *srh)
 {
    srh->msglen  = ntohl(srh->msglen);
@@ -148,12 +151,12 @@ void ServerInitHandShake2HostFmt(struct ServerInitHandShake *srh)
    srh->msgval  = ntohl(srh->msgval);
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This procedure convert the request code id (an integer defined in
+/// XProtocol.hh) in the ascii label (human readable)
+
 char *convertRequestIdToChar(kXR_int16 requestid)
 {
-   // This procedure convert the request code id (an integer defined in
-   // XProtocol.hh) in the ascii label (human readable)
-
    switch(requestid) {
 
    case kXP_login:
@@ -191,7 +194,8 @@ char *convertRequestIdToChar(kXR_int16 requestid)
    }
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 char *convertRespStatusToChar(kXR_int16 status)
 {
    switch( status) {
@@ -219,7 +223,8 @@ char *convertRespStatusToChar(kXR_int16 status)
    }
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void smartPrintClientHeader(XPClientRequest* hdr)
 {
    printf("\n\n================= DUMPING CLIENT REQUEST HEADER =================\n");
@@ -302,7 +307,8 @@ void smartPrintClientHeader(XPClientRequest* hdr)
    printf("\n=================== END CLIENT HEADER DUMPING ===================\n\n");
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void smartPrintServerHeader(struct ServerResponseHeader* hdr)
 {
    printf("\n\n======== DUMPING SERVER RESPONSE HEADER ========\n");

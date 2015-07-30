@@ -60,16 +60,18 @@ TMVA::RuleFitAPI::RuleFitAPI( const MethodRuleFit *rfbase,
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::RuleFitAPI::~RuleFitAPI()
 {
-   // destructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// welcome message
+
 void TMVA::RuleFitAPI::WelcomeMessage()
 {
-   // welcome message
    fLogger << kINFO
            << "\n"
            << "---------------------------------------------------------------------------\n"
@@ -81,10 +83,11 @@ void TMVA::RuleFitAPI::WelcomeMessage()
            << "---------------------------------------------------------------------------"
            << Endl;
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// howto message
+
 void TMVA::RuleFitAPI::HowtoSetupRF()
 {
-   // howto message
    fLogger << kINFO
            << "\n"
            << "------------------------ RULEFIT-JF INTERFACE SETUP -----------------------\n"
@@ -109,20 +112,22 @@ void TMVA::RuleFitAPI::HowtoSetupRF()
            << "---------------------------------------------------------------------------\n"
            << Endl;
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initialisation
+///   SetRFWorkDir("./rulefit");
+
 void TMVA::RuleFitAPI::InitRuleFit()
 {
-   // default initialisation
-   //   SetRFWorkDir("./rulefit");
    CheckRFWorkDir();
    FillIntParmsDef();
    FillRealParmsDef();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// import setup from MethodRuleFit
+
 void TMVA::RuleFitAPI::ImportSetup()
 {
-   // import setup from MethodRuleFit
    fRFIntParms.p            = fMethodRuleFit->DataInfo().GetNVariables();
    fRFIntParms.max_rules    = fMethodRuleFit->GetRFNrules();
    fRFIntParms.tree_size    = fMethodRuleFit->GetRFNendnodes();
@@ -141,20 +146,22 @@ void TMVA::RuleFitAPI::ImportSetup()
       fRFIntParms.lmode = kRfBoth;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the directory containing rf_go.exe.
+
 void TMVA::RuleFitAPI::SetRFWorkDir(const char * wdir)
 {
-   // set the directory containing rf_go.exe.
    fRFWorkDir = wdir;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check if the rulefit work dir is properly setup.
+/// it aborts (kFATAL) if not.
+///
+/// Check existance of directory
+
 void TMVA::RuleFitAPI::CheckRFWorkDir()
 {
-   // check if the rulefit work dir is properly setup.
-   // it aborts (kFATAL) if not.
-   //
-   // Check existance of directory
    TString oldDir = gSystem->pwd();
    if (!gSystem->cd(fRFWorkDir)) {
       fLogger << kWARNING << "Must create a rulefit directory named : " << fRFWorkDir << Endl;
@@ -172,10 +179,11 @@ void TMVA::RuleFitAPI::CheckRFWorkDir()
    gSystem->cd(oldDir.Data());
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the training parameters
+
 void TMVA::RuleFitAPI::SetTrainParms()
 {
-   // set the training parameters
    ImportSetup();
    //
    Int_t    n    = fMethodRuleFit->Data()->GetNTrainingEvents();
@@ -184,10 +192,11 @@ void TMVA::RuleFitAPI::SetTrainParms()
    fRFProgram    = kRfTrain;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the test params
+
 void TMVA::RuleFitAPI::SetTestParms()
 {
-   // set the test params
    ImportSetup();
    Int_t    n    = fMethodRuleFit->Data()->GetNTestEvents();
    //   Double_t neff = Double_t(n); // When weights are added: should be sum(wt)^2/sum(wt^2)
@@ -195,10 +204,11 @@ void TMVA::RuleFitAPI::SetTestParms()
    fRFProgram    = kRfPredict;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set default real params
+
 void TMVA::RuleFitAPI::FillRealParmsDef()
 {
-   // set default real params
    fRFRealParms.xmiss       = 9.0e30;
    fRFRealParms.trim_qntl   = 0.025;
    fRFRealParms.huber       = 0.8;
@@ -209,10 +219,11 @@ void TMVA::RuleFitAPI::FillRealParmsDef()
    fRFRealParms.conv_fac    = 1.1;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set default int params
+
 void TMVA::RuleFitAPI::FillIntParmsDef()
 {
-   // set default int params
    fRFIntParms.mode           = (int)kRfClass;
    fRFIntParms.lmode          = (int)kRfBoth;
    //   fRFIntParms.n;
@@ -228,10 +239,11 @@ void TMVA::RuleFitAPI::FillIntParmsDef()
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write all files read by rf_go.exe
+
 Bool_t TMVA::RuleFitAPI::WriteAll()
 {
-   // write all files read by rf_go.exe
    WriteIntParms();
    WriteRealParms();
    WriteLx();
@@ -243,35 +255,38 @@ Bool_t TMVA::RuleFitAPI::WriteAll()
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write int params file
+
 Bool_t TMVA::RuleFitAPI::WriteIntParms()
 {
-   // write int params file
    std::ofstream f;
    if (!OpenRFile("intparms",f)) return kFALSE;
    WriteInt(f,&fRFIntParms.mode,sizeof(fRFIntParms)/sizeof(Int_t));
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write int params file
+
 Bool_t TMVA::RuleFitAPI::WriteRealParms()
 {
-   // write int params file
    std::ofstream f;
    if (!OpenRFile("realparms",f)) return kFALSE;
    WriteFloat(f,&fRFRealParms.xmiss,sizeof(fRFRealParms)/sizeof(Float_t));
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save input variable mask
+///
+/// If the lx vector size is not the same as inputVars,
+/// resize it and fill it with 1
+/// NOTE: Always set all to 1
+///  if (fRFLx.size() != m_inputVars->size()) {
+
 Bool_t TMVA::RuleFitAPI::WriteLx()
 {
-   // Save input variable mask
-   //
-   // If the lx vector size is not the same as inputVars,
-   // resize it and fill it with 1
-   // NOTE: Always set all to 1
-   //  if (fRFLx.size() != m_inputVars->size()) {
    fRFLx.clear();
    fRFLx.resize(fMethodRuleFit->DataInfo().GetNVariables(),1);
    //  }
@@ -281,10 +296,11 @@ Bool_t TMVA::RuleFitAPI::WriteLx()
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write command to rf_go.exe
+
 Bool_t TMVA::RuleFitAPI::WriteProgram()
 {
-   // write command to rf_go.exe
    std::ofstream f;
    if (!OpenRFile("program",f)) return kFALSE;
    TString program;
@@ -308,10 +324,11 @@ Bool_t TMVA::RuleFitAPI::WriteProgram()
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write the minimum importance to be considered
+
 Bool_t TMVA::RuleFitAPI::WriteRealVarImp()
 {
-   // write the minimum importance to be considered
    std::ofstream f;
    if (!OpenRFile("realvarimp",f)) return kFALSE;
    Float_t rvp[2];
@@ -321,42 +338,47 @@ Bool_t TMVA::RuleFitAPI::WriteRealVarImp()
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// written by rf_go.exe; write rulefit output (rfout)
+
 Bool_t TMVA::RuleFitAPI::WriteRfOut()
 {
-   // written by rf_go.exe; write rulefit output (rfout)
    fLogger << kWARNING << "WriteRfOut is not yet implemented" << Endl;
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// written by rf_go.exe; write rulefit status
+
 Bool_t TMVA::RuleFitAPI::WriteRfStatus()
 {
-   // written by rf_go.exe; write rulefit status
    fLogger << kWARNING << "WriteRfStatus is not yet implemented" << Endl;
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// written by rf_go.exe (NOTE:Format unknown!)
+
 Bool_t TMVA::RuleFitAPI::WriteRuleFitMod()
 {
-   // written by rf_go.exe (NOTE:Format unknown!)
    fLogger << kWARNING << "WriteRuleFitMod is not yet implemented" << Endl;
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// written by rf_go.exe (NOTE: format unknown!)
+
 Bool_t TMVA::RuleFitAPI::WriteRuleFitSum()
 {
-   // written by rf_go.exe (NOTE: format unknown!)
    fLogger << kWARNING << "WriteRuleFitSum is not yet implemented" << Endl;
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write training data, columnwise
+
 Bool_t TMVA::RuleFitAPI::WriteTrain()
 {
-   // write training data, columnwise
    std::ofstream fx;
    std::ofstream fy;
    std::ofstream fw;
@@ -387,11 +409,11 @@ Bool_t TMVA::RuleFitAPI::WriteTrain()
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write test data
+
 Bool_t TMVA::RuleFitAPI::WriteTest()
 {
-   // Write test data
-
    fMethodRuleFit->Data()->SetCurrentType(Types::kTesting);
 
    std::ofstream f;
@@ -419,10 +441,11 @@ Bool_t TMVA::RuleFitAPI::WriteTest()
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write variable names, ascii
+
 Bool_t TMVA::RuleFitAPI::WriteVarNames()
 {
-   // write variable names, ascii
    std::ofstream f;
    if (!OpenRFile("varnames",f)) return kFALSE;
    for (UInt_t ivar=0; ivar<fMethodRuleFit->DataInfo().GetNVariables(); ivar++) {
@@ -431,7 +454,8 @@ Bool_t TMVA::RuleFitAPI::WriteVarNames()
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMVA::RuleFitAPI::WriteVarImp()
 
 {
@@ -440,18 +464,20 @@ Bool_t TMVA::RuleFitAPI::WriteVarImp()
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// written by rf_go.exe
+
 Bool_t TMVA::RuleFitAPI::WriteYhat()
 {
-   // written by rf_go.exe
    fLogger << kWARNING << "WriteYhat is not yet implemented" << Endl;
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read the score
+
 Bool_t TMVA::RuleFitAPI::ReadYhat()
 {
-   // read the score
    fRFYhat.clear();
    //
    std::ifstream f;
@@ -472,10 +498,11 @@ Bool_t TMVA::RuleFitAPI::ReadYhat()
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read variable importance
+
 Bool_t TMVA::RuleFitAPI::ReadVarImp()
 {
-   // read variable importance
    fRFVarImp.clear();
    //
    std::ifstream f;
@@ -508,10 +535,11 @@ Bool_t TMVA::RuleFitAPI::ReadVarImp()
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read model from rulefit.sum
+
 Bool_t TMVA::RuleFitAPI::ReadModelSum()
 {
-   // read model from rulefit.sum
    fRFVarImp.clear();
    //
    fLogger << kVERBOSE << "Reading RuleFit summary file" << Endl;
@@ -735,10 +763,11 @@ Bool_t TMVA::RuleFitAPI::ReadModelSum()
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute rf_go.exe
+
 Int_t TMVA::RuleFitAPI::RunRuleFit()
 {
-   // execute rf_go.exe
    TString oldDir = gSystem->pwd();
    TString cmd = "./rf_go.exe"; 
    gSystem->cd(fRFWorkDir.Data());

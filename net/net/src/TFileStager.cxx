@@ -38,14 +38,14 @@
 #include "TFileCollection.h"
 #include "THashList.h"
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieves the staging (online) status for a list of path names. Path names
+/// must be of type TUrl, TFileInfo or TObjString. The returned list is the list
+/// of staged files as TObjString (we use TObjString, because you can do a FindObject
+/// on that list using the file name, which is not possible with TUrl objects.
+
 TList* TFileStager::GetStaged(TCollection *pathlist)
 {
-   // Retrieves the staging (online) status for a list of path names. Path names
-   // must be of type TUrl, TFileInfo or TObjString. The returned list is the list
-   // of staged files as TObjString (we use TObjString, because you can do a FindObject
-   // on that list using the file name, which is not possible with TUrl objects.
-
    if (!pathlist) {
       Error("GetStaged", "list of pathnames was not specified!");
       return 0;
@@ -69,12 +69,12 @@ TList* TFileStager::GetStaged(TCollection *pathlist)
    return stagedlist;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Issue a stage request for a list of files.
+/// Return the '&' of all single Prepare commands.
+
 Bool_t TFileStager::Stage(TCollection *pathlist, Option_t *opt)
 {
-   // Issue a stage request for a list of files.
-   // Return the '&' of all single Prepare commands.
-
    TIter nxt(pathlist);
    TObject *o = 0;
    Bool_t success = kFALSE;
@@ -95,12 +95,12 @@ Bool_t TFileStager::Stage(TCollection *pathlist, Option_t *opt)
    return success;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a stager, after having loaded the relevant plug-in.
+/// The format of 'stager' depends on the plug-in.
+
 TFileStager *TFileStager::Open(const char *stager)
 {
-   // Open a stager, after having loaded the relevant plug-in.
-   // The format of 'stager' depends on the plug-in.
-
    TPluginHandler *h;
    TFileStager *s = 0;
 
@@ -120,11 +120,11 @@ TFileStager *TFileStager::Open(const char *stager)
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Just check if the file exists locally
+
 Bool_t TFileStager::IsStaged(const char *f)
 {
-   // Just check if the file exists locally
-
    // The safest is to open in raw mode
    TUrl u(f);
    u.SetOptions("filetype=raw");
@@ -141,23 +141,23 @@ Bool_t TFileStager::IsStaged(const char *f)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Just check if the file exists locally
+
 Int_t TFileStager::Locate(const char *u, TString &f)
 {
-   // Just check if the file exists locally
-
    if (!IsStaged(u))
       return -1;
    f = u;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Massive location of files. Returns < 0 on error, or number of files
+/// processed. Results are returned on the TFileCollection itself
+
 Int_t TFileStager::LocateCollection(TFileCollection *fc, Bool_t)
 {
-   // Massive location of files. Returns < 0 on error, or number of files
-   // processed. Results are returned on the TFileCollection itself
-
     TFileInfo *fi;
     TString endp;
     TIter it(fc->GetList());
@@ -182,12 +182,12 @@ Int_t TFileStager::LocateCollection(TFileCollection *fc, Bool_t)
    return count;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the path name contained in object 'o' allowing for
+/// TUrl, TObjString or TFileInfo
+
 TString TFileStager::GetPathName(TObject *o)
 {
-   // Return the path name contained in object 'o' allowing for
-   // TUrl, TObjString or TFileInfo
-
    TString pathname;
    TString cn(o->ClassName());
    if (cn == "TUrl") {

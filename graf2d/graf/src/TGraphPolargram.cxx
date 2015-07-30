@@ -9,13 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>TGraphPolargram : to draw polar axis</h2></center>
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TGraphPolargram
+\brief To draw polar axis
+
 TGraphPolargram draw the polar axis of the TGraphPolar.
-<p>
+
 Example:
-End_Html
+
 Begin_Macro(source)
 {
    TCanvas * CPol = new TCanvas("CPol","TGraphPolar Examples",500,500);
@@ -52,12 +53,13 @@ End_Macro */
 
 ClassImp(TGraphPolargram);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphPolargram Constructor.
+
 TGraphPolargram::TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
                                  Double_t tmin, Double_t tmax):
                                  TNamed(name,"Polargram")
 {
-   // TGraphPolargram Constructor.
    Init();
    fNdivRad          = 508;
    fNdivPol          = 508;
@@ -69,12 +71,12 @@ TGraphPolargram::TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Short constructor used in the case of a spider plot.
+
 TGraphPolargram::TGraphPolargram(const char* name):
                                  TNamed(name,"Polargram")
 {
-   // Short constructor used in the case of a spider plot.
-
    Init();
    fNdivRad     = 0;
    fNdivPol     = 0;
@@ -86,22 +88,22 @@ TGraphPolargram::TGraphPolargram(const char* name):
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphPolargram destructor.
+
 TGraphPolargram::~TGraphPolargram()
 {
-   // TGraphPolargram destructor.
-
    if (fPolarLabels != NULL) delete [] fPolarLabels;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the Polar range.
+/// \param[in] tmin   the start number.
+/// \param[in] tmax   the end number.
+
 void TGraphPolargram::ChangeRangePolar(Double_t tmin, Double_t tmax)
 {
-   // Set the Polar range.
-   // tmin is the start number.
-   // tmax is the end number.
-
    if (tmin < tmax) {
       fRwtmin = tmin;
       fRwtmax = tmax;
@@ -110,11 +112,11 @@ void TGraphPolargram::ChangeRangePolar(Double_t tmin, Double_t tmax)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Everything within the circle belongs to the TGraphPolargram.
+
 Int_t TGraphPolargram::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Everything within the circle belongs to the TGraphPolargram.
-
    Int_t i;
    Double_t x = gPad->AbsPixeltoX(px);
    Double_t y = gPad->AbsPixeltoY(py);
@@ -180,21 +182,21 @@ Int_t TGraphPolargram::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw Polargram.
+
 void TGraphPolargram::Draw(Option_t* options)
 {
-   // Draw Polargram.
-
    Paint(options);
    AppendPad(options);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Indicate that there is something to click here.
+
 void TGraphPolargram::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Indicate that there is something to click here.
-
    if (!gPad) return;
 
    Int_t kMaxDiff = 20;
@@ -277,11 +279,11 @@ void TGraphPolargram::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the alignement rule to apply for TText::SetTextAlign(Short_t).
+
 Int_t TGraphPolargram::FindAlign(Double_t angle)
 {
-   // Find the alignement rule to apply for TText::SetTextAlign(Short_t).
-
    Double_t pi = TMath::Pi();
 
    while(angle < 0 || angle > 2*pi){
@@ -308,11 +310,11 @@ Int_t TGraphPolargram::FindAlign(Double_t angle)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine the orientation of the polar labels according to their angle.
+
 Double_t TGraphPolargram::FindTextAngle(Double_t angle)
 {
-   // Determine the orientation of the polar labels according to their angle.
-
    Double_t pi = TMath::Pi();
    Double_t convraddeg = 180.0/pi;
 
@@ -329,11 +331,11 @@ Double_t TGraphPolargram::FindTextAngle(Double_t angle)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initiallize some of the fields of TGraphPolargram.
+
 void TGraphPolargram::Init()
 {
-   // Initiallize some of the fields of TGraphPolargram.
-
    fAxisAngle        = 0;
    fCutRadial        = 0;
    fDegree           = kFALSE;
@@ -352,11 +354,11 @@ void TGraphPolargram::Init()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint TGraphPolargram.
+
 void TGraphPolargram::Paint(Option_t * chopt)
 {
-   // Paint TGraphPolargram.
-
    Int_t optionpoldiv, optionraddiv;
    Bool_t optionLabels = kTRUE;
 
@@ -376,13 +378,13 @@ void TGraphPolargram::Paint(Option_t * chopt)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is simplifed from TEllipse::PaintEllipse.
+/// Draw this ellipse with new coordinates.
+
 void TGraphPolargram::PaintCircle(Double_t x1, Double_t y1, Double_t r,
                             Double_t phimin, Double_t phimax, Double_t theta)
 {
-   // This is simplifed from TEllipse::PaintEllipse.
-   // Draw this ellipse with new coordinates.
-
    Int_t i;
    const Int_t np = 200; // Number of point to draw circle
    static Double_t x[np+3], y[np+3];
@@ -410,12 +412,12 @@ void TGraphPolargram::PaintCircle(Double_t x1, Double_t y1, Double_t r,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw Polar divisions.
+/// Check for editable pad or create default.
+
 void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
 {
-   // Draw Polar divisions.
-   // Check for editable pad or create default.
-
    Int_t i, j, rnum, rden, first, last;
    if (!gPad) return ;
 
@@ -630,12 +632,12 @@ void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint radial divisions.
+/// Check for editable pad or create default.
+
 void TGraphPolargram::PaintRadialDivisions(Bool_t drawaxis)
 {
-   // Paint radial divisions.
-   // Check for editable pad or create default.
-
    static char chopt[8] = "";
    Int_t i,j;
    Int_t ndiv      = TMath::Abs(fNdivRad);
@@ -745,11 +747,11 @@ void TGraphPolargram::PaintRadialDivisions(Bool_t drawaxis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reduce fractions.
+
 void TGraphPolargram::ReduceFraction(Int_t num, Int_t den, Int_t &rnum, Int_t &rden)
 {
-   // Reduce fractions.
-
    Int_t a = 0;
    Int_t b = 0;
    Int_t i = 0;
@@ -772,46 +774,45 @@ void TGraphPolargram::ReduceFraction(Int_t num, Int_t den, Int_t &rnum, Int_t &r
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set axis angle.
+
 void TGraphPolargram::SetAxisAngle(Double_t angle)
 {
-   // Set axis angle.
-
    fAxisAngle = angle/180*TMath::Pi();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the number of Polar divisions: enter a number ij with 0<i<99 and 0<j<99
+/// - i sets the major Polar divisions.
+/// - j sets the minor Polar divisions.
+
 void TGraphPolargram::SetNdivPolar(Int_t ndiv)
 {
-   // Set the number of Polar divisions: enter a number ij with 0<i<99
-   //                                                           0<j<99
-   // i sets the major Polar divisions.
-   // j sets the minor Polar divisions.
-
    if (ndiv > 0)
       fNdivPol = ndiv;
    if (gPad) gPad->Modified();
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the number of radial divisions: enter a number ij with 0<i<99 and 0<j<99
+/// - i sets the major radial divisions.
+/// - j sets the minor radial divisions.
+
 void TGraphPolargram::SetNdivRadial(Int_t ndiv)
 {
-  // Set the number of radial divisions: enter a number ij with 0<i<99
-  //                                                            0<j<99
-  // i sets the major radial divisions.
-  // j sets the minor radial divisions.
-
    fNdivRad = ndiv;
    if (gPad) gPad->Modified();
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set some specified polar labels, used in the case of a spider plot.
+
 void TGraphPolargram::SetPolarLabel(Int_t div, const TString & label)
 {
-   // Set some specified polar labels, used in the case of a spider plot.
    if(fPolarLabels == NULL)
       fPolarLabels = new TString[fNdivPol];
    fPolarLabels[div]=label;
@@ -819,88 +820,88 @@ void TGraphPolargram::SetPolarLabel(Int_t div, const TString & label)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Polar labels color.
+
 void TGraphPolargram::SetPolarLabelColor(Color_t tcolorangular )
 {
-   // Set Polar labels color.
-
    fPolarLabelColor = tcolorangular;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphPolargram::SetPolarLabelFont(Font_t tfontangular)
 {
-
    // Set Polar label font.
 
    fPolarLabelFont = tfontangular;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set angular labels size.
+
 void TGraphPolargram::SetPolarLabelSize(Double_t angularsize )
 {
-   // Set angular labels size.
-
    fPolarTextSize = angularsize;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the labels offset.
+
 void TGraphPolargram::SetPolarOffset(Double_t angularOffset)
 {
-   // Set the labels offset.
-
    fPolarOffset = angularOffset;
    if (gPad) gPad->Modified();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set radial labels color.
+
 void TGraphPolargram::SetRadialLabelColor(Color_t tcolorradial )
 {
-   // Set radial labels color.
-
    fRadialLabelColor = tcolorradial;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set radial label font.
+
 void TGraphPolargram::SetRadialLabelFont(Font_t tfontradial)
 {
-   // Set radial label font.
-
    fRadialLabelFont = tfontradial;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set radial labels size.
+
 void TGraphPolargram::SetRadialLabelSize(Double_t radialsize )
 {
-   // Set radial labels size.
-
    fRadialTextSize = radialsize;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the labels offset.
+
 void TGraphPolargram::SetRadialOffset(Double_t radialOffset)
 {
-   // Set the labels offset.
-
    fRadialOffset = radialOffset;
    if (gPad) gPad->Modified();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allows to change range Polar.
+/// \param[in] tmin   the start number.
+/// \param[in] tmax   the end number.
+
 void TGraphPolargram::SetRangePolar(Double_t tmin, Double_t tmax)
 {
-   // Allows to change range Polar.
-   // tmin is the start number.
-   // tmax is the end number.
-
    fDegree = kFALSE;
    fGrad   = kFALSE;
    fRadian = kFALSE;
@@ -913,13 +914,13 @@ void TGraphPolargram::SetRangePolar(Double_t tmin, Double_t tmax)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the radial range.
+/// \param[in] rmin   radius at center of the circle.
+/// \param[in] rmax   radius at the intersection of the right X axis part and the circle.
+
 void TGraphPolargram::SetRangeRadial(Double_t rmin, Double_t rmax)
 {
-   // Set the radial range.
-   // rmin is at center of the circle.
-   // rmax is at the intersection of the right X axis part and the circle.
-
    if (rmin < rmax) {
       fRwrmin = rmin;
       fRwrmax = rmax;
@@ -928,20 +929,20 @@ void TGraphPolargram::SetRangeRadial(Double_t rmin, Double_t rmax)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set polar ticks size.
+
 void TGraphPolargram::SetTickpolarSize(Double_t tickpolarsize)
 {
-   // Set polar ticks size.
-
    fTickpolarSize = tickpolarsize;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Polar circle is labelled using degree.
+
 void TGraphPolargram::SetToDegree()
 {
-   // The Polar circle is labelled using degree.
-
    fDegree = kTRUE;
    fGrad   = kFALSE;
    fRadian = kFALSE;
@@ -949,11 +950,11 @@ void TGraphPolargram::SetToDegree()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Polar circle is labelled using gradian.
+
 void TGraphPolargram::SetToGrad()
 {
-   // The Polar circle is labelled using gradian.
-
    fGrad   = kTRUE;
    fRadian = kFALSE;
    fDegree = kFALSE;
@@ -961,11 +962,11 @@ void TGraphPolargram::SetToGrad()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Polar circle is labelled using radian.
+
 void TGraphPolargram::SetToRadian()
 {
-   // The Polar circle is labelled using radian.
-
    fRadian = kTRUE;
    fGrad   = kFALSE;
    fDegree = kFALSE;
@@ -973,9 +974,10 @@ void TGraphPolargram::SetToRadian()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set range from 0 to 2*pi
+
 void TGraphPolargram::SetTwoPi()
 {
-   //set range from 0 to 2*pi
    SetRangePolar(0,2*TMath::Pi());
 }

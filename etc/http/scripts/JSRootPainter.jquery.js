@@ -1,31 +1,49 @@
 /// @file JSRootPainter.jquery.js
 /// Part of JavaScript ROOT graphics, dependent from jQuery functionality
 
-(function() {
+(function( factory ) {
+   if ( typeof define === "function" && define.amd ) {
+      // AMD. Register as an anonymous module.
+      define( ['jquery', 'jquery-ui', 'd3', 'JSRootPainter'], factory );
+   } else {
 
-   if (typeof JSROOT != 'object') {
-      var e1 = new Error('JSROOT is not defined');
-      e1.source = 'JSRootPainter.jquery.js';
-      throw e1;
-   }
+      if (typeof jQuery == 'undefined') {
+         var e1 = new Error('jQuery not defined ');
+         e1.source = 'JSRootPainter.jquery.js';
+         throw e1;
+      }
 
-   if (typeof d3 != 'object') {
-      var e1 = new Error('This extension requires d3.v3.js');
-      e1.source = 'JSRootPainter.jquery.js';
-      throw e1;
-   }
+      if (typeof jQuery.ui == 'undefined') {
+         var e1 = new Error('jQuery-ui not defined ');
+         e1.source = 'JSRootPainter.jquery.js';
+         throw e1;
+      }
 
-   if (typeof JSROOT.Painter != 'object') {
-      var e1 = new Error('JSROOT.Painter not defined');
-      e1.source = 'JSRootPainter.jquery.js';
-      throw e1;
-   }
+      if (typeof d3 != 'object') {
+         var e1 = new Error('This extension requires d3.v3.js');
+         e1.source = 'JSRootPainter.jquery.js';
+         throw e1;
+      }
 
-   if (typeof jQuery == 'undefined') {
-      var e1 = new Error('jQuery not defined ');
-      e1.source = 'JSRootPainter.jquery.js';
-      throw e1;
+      if (typeof JSROOT == 'undefined') {
+         var e1 = new Error('JSROOT is not defined');
+         e1.source = 'JSRootPainter.jquery.js';
+         throw e1;
+      }
+
+      if (typeof JSROOT.Painter != 'object') {
+         var e1 = new Error('JSROOT.Painter not defined');
+         e1.source = 'JSRootPainter.jquery.js';
+         throw e1;
+      }
+
+      // Browser globals
+      factory(jQuery, jQuery.ui, d3, JSROOT);
    }
+} (function($, myui, d3, JSROOT) {
+
+   if ( typeof define === "function" && define.amd )
+      JSROOT.loadScript('$$$style/jquery-ui.css');
 
    JSROOT.Painter.createMenu = function(maincallback, menuname) {
       if (!menuname) menuname = "root_ctx_menu";
@@ -125,44 +143,39 @@
    JSROOT.HierarchyPainter.prototype.addItemHtml = function(hitem, parent) {
       var isroot = (parent == null);
       var has_childs = '_childs' in hitem;
+      if (!isroot) hitem._parent = parent;
 
       if ('_hidden' in hitem) return;
 
-      var cando = this.CheckCanDo(hitem);
-
-      if (!isroot) hitem._parent = parent;
-
+      var handle = JSROOT.getDrawHandle(hitem._kind);
+      var img1 = "", img2 = "";
       var can_click = false;
+      if (handle!=null) {
+         if ('icon' in handle) img1 = handle.icon;
+         if ('icon2' in handle) img2 = handle.icon2;
+         if (('func' in handle) || ('execute' in handle) || ('aslink' in handle)) can_click = true;
+      }
+      if ('_icon' in hitem) img1 = hitem['_icon'];
+      if ('_icon2' in hitem) img2 = hitem['_icon2'];
+      if ((img1.length==0) && ('_online' in hitem)) img1 = "img_globe";
+      if ((img1.length==0) && isroot) img1 = "img_base";
 
-      if (!has_childs || !cando.scan) {
-         if (cando.expand) {
-            can_click = true;
-            if (cando.img1.length == 0) {
-               cando.img1 = 'img_folder';
-               cando.img2 = 'img_folderopen';
-            }
-         } else
-         if (cando.display || cando.execute) {
-            can_click = true;
-         } else
-         if (cando.html.length > 0) can_click = true;
+      if ('_more' in hitem) {
+         can_click = true;
+         if (img1.length == 0) {
+            img1 = 'img_folder';
+            img2 = 'img_folderopen';
+         }
       }
 
-      hitem['_img1'] = cando.img1;
-      hitem['_img2'] = cando.img2;
-      if (hitem['_img2']=="") hitem['_img2'] = hitem['_img1'];
+      if ('_player' in hitem) can_click = true;
 
-      // assign root icon
-      if (isroot && (hitem['_img1'].length==0))
-         hitem['_img1'] = hitem['_img2'] = "img_base";
+      if (img2.length==0) img2 = img1;
+      if (img1.length==0) img1 = has_childs ? "img_folder" : "img_page";
+      if (img2.length==0) img2 = has_childs ? "img_folderopen" : "img_page";
 
-      // assign node icons
-
-      if (hitem['_img1'].length==0)
-         hitem['_img1'] = has_childs ? "img_folder" : "img_page";
-
-      if (hitem['_img2'].length==0)
-         hitem['_img2'] = has_childs ? "img_folderopen" : "img_page";
+      hitem['_img1'] = img1;
+      hitem['_img2'] = img2;
 
       var itemname = this.itemFullName(hitem);
 
@@ -381,22 +394,24 @@
       if (hitem==null) return;
 
       if (!plusminus) {
-         var cando = this.CheckCanDo(hitem);
-
-         if (cando.open && (cando.html.length>0))
-            return window.open(cando.html);
-
-         if (cando.expand && (hitem['_childs'] == null))
-            return this.expand(itemname, hitem, node.parent());
-
-         if (cando.display)
-            return this.display(itemname);
 
          if ('_player' in hitem)
             return this.player(itemname);
 
-         if (cando.execute)
-            return this.ExecuteCommand(itemname, node);
+         var handle = JSROOT.getDrawHandle(hitem._kind);
+         if (handle!=null) {
+            if ('aslink' in handle)
+               return window.open(itemname);
+
+            if ('func' in handle)
+               return this.display(itemname);
+
+            if ('execute' in handle)
+               return this.ExecuteCommand(itemname, node);
+         }
+
+         if ((hitem['_childs'] == null) && ('_more' in hitem))
+            return this.expand(itemname, hitem, node.parent());
 
          if (!('_childs' in hitem) || (hitem === this.h)) return;
       }
@@ -416,8 +431,6 @@
 
       var hitem = this.Find(itemname);
       if (hitem==null) return;
-
-      var cando = this.CheckCanDo(hitem);
 
       var painter = this;
 
@@ -478,7 +491,7 @@
             painter.FillOnlineMenu(menu, onlineprop, itemname);
          } else
          if (fileprop != null) {
-            var opts = JSROOT.getDrawOptions(cando.typename, 'nosame');
+            var opts = JSROOT.getDrawOptions(hitem._kind, 'nosame');
 
             menu.addDrawMenu("Draw", opts, function(arg) { painter.display(itemname, arg); });
 
@@ -741,10 +754,12 @@
 
    // ========== performs tree drawing on server ==================
 
-   JSROOT.TTreePlayer = function(itemname) {
+   JSROOT.TTreePlayer = function(itemname, url, askey) {
       JSROOT.TBasePainter.call(this);
       this.SetItemName(itemname);
-      this.hpainter = null;
+      this.url = url;
+      this.hist_painter = null;
+      this.askey = askey;
       return this;
    }
 
@@ -792,7 +807,7 @@
 
       var frame = $("#" + this.divid);
 
-      var url = this.GetItemName() + '/exe.json.gz?compact=3&method=Draw';
+      var url = this.url + '/exe.json.gz?compact=3&method=Draw';
       var expr = frame.find('.treedraw_varexp').val();
       var hname = "h_tree_draw";
 
@@ -826,13 +841,18 @@
       url += '&_ret_object_=' + hname;
 
       var player = this;
-
-      var req = JSROOT.NewHttpRequest(url, 'object', function(res) {
-         if (res==0) return;
-         $("#"+player.drawid).empty();
-         player.hpainter = JSROOT.draw(player.drawid, res)
-      });
-      req.send();
+      function SubmitDrawRequest() {
+         JSROOT.NewHttpRequest(url, 'object', function(res) {
+            if (res==null) return;
+            $("#"+player.drawid).empty();
+            player.hist_painter = JSROOT.draw(player.drawid, res)
+         }).send();
+      }
+      if (this.askey) {
+         // first let read tree from the file
+         this.askey = false;
+         JSROOT.NewHttpRequest(this.url + "/root.json", 'text', SubmitDrawRequest).send();
+      } else SubmitDrawRequest();
    }
 
    JSROOT.TTreePlayer.prototype.CheckResize = function(force) {
@@ -841,12 +861,16 @@
       var h0 = $("#" + this.divid +" .treedraw_buttons").height();
       if (h>h0+30) $("#" + this.drawid).height(h - 1 - h0);
 
-      if (this.hpainter) {
-         this.hpainter.CheckResize(force);
+      if (this.hist_painter) {
+         this.hist_painter.CheckResize(force);
       }
    }
 
-   JSROOT.drawTreePlayer = function(hpainter, itemname) {
+   JSROOT.drawTreePlayer = function(hpainter, itemname, askey) {
+
+      var url = hpainter.GetOnlineItemUrl(itemname);
+      if (url == null) return null;
+
       var mdi = hpainter.GetDisplay();
       if (mdi == null) return null;
 
@@ -855,9 +879,14 @@
 
       var divid = d3.select(frame).attr('id');
 
-      var player = new JSROOT.TTreePlayer(itemname);
+      var player = new JSROOT.TTreePlayer(itemname, url, askey);
       player.Show(divid);
       return player;
+   }
+
+   JSROOT.drawTreePlayerKey = function(hpainter, itemname) {
+      // function used when tree is not yet loaded on the server
+      return JSROOT.drawTreePlayer(hpainter, itemname, true);
    }
 
    // =======================================================================
@@ -962,5 +991,7 @@
       return JSROOT.Painter.separ.bottom;
    }
 
+   return JSROOT.Painter;
 
-})();
+}));
+

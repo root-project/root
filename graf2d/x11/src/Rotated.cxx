@@ -4,7 +4,8 @@
 #ifndef _XVERTEXT_INCLUDED_
 #define _XVERTEXT_INCLUDED_
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* ********************************************************************** *
  *
  * xvertext 5.0, Copyright (c) 1993 Alan Richardson (mppa3@uk.ac.sussex.syma)
@@ -172,11 +173,11 @@ static void               XRotFreeTextItem(Display *dpy, RotatedTextItem_t *item
 static XImage            *XRotMagnifyImage(Display *dpy, XImage *ximage);
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Routine to mimic `strdup()' (some machines don't have it)
+
 static char *my_strdup(char *str)
 {
-   // Routine to mimic `strdup()' (some machines don't have it)
-
    char *s;
 
    if(str==0) return 0;
@@ -187,12 +188,12 @@ static char *my_strdup(char *str)
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Routine to replace `strtok' : this one returns a zero length string if
+/// it encounters two consecutive delimiters
+
 static char *my_strtok(char *str1, char *str2)
 {
-   // Routine to replace `strtok' : this one returns a zero length string if
-   // it encounters two consecutive delimiters
-
    char *ret;
    int i, j, stop;
    static int start, len;
@@ -231,39 +232,39 @@ static char *my_strtok(char *str1, char *str2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return version/copyright information
+
 float XRotVersion(char *str,int n)
 {
-   // Return version/copyright information
-
    if(str!=0) strncpy(str, XV_COPYRIGHT, n);
    return XV_VERSION;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the font magnification factor for all subsequent operations
+
 void XRotSetMagnification(float m)
 {
-   // Set the font magnification factor for all subsequent operations
-
    if(m>0.) gRotStyle.fMagnify=m;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the padding used when calculating bounding boxes
+
 void XRotSetBoundingBoxPad(int p)
 {
-   // Set the padding used when calculating bounding boxes
-
    if(p>=0) gRotStyle.fBbxPadl=p;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an XImage structure and allocate memory for it
+
 static XImage *MakeXImage(Display *dpy,int  w, int h)
 {
-   // Create an XImage structure and allocate memory for it
-
    XImage *image;
    char *data;
 
@@ -284,57 +285,57 @@ static XImage *MakeXImage(Display *dpy,int  w, int h)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A front end to XRotPaintAlignedString:
+///     -no alignment, no background
+
 int XRotDrawString(Display *dpy, XFontStruct *font,float angle,Drawable drawable, GC gc, int x, int y, char *str)
 {
-   // A front end to XRotPaintAlignedString:
-   //     -no alignment, no background
-
    return (XRotPaintAlignedString(dpy, font, angle, drawable, gc,
                                   x, y, str, NONE, 0));
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A front end to XRotPaintAlignedString:
+///     -no alignment, paints background
+
 int XRotDrawImageString(Display *dpy,XFontStruct *font, float angle, Drawable drawable,GC  gc, int x, int y, char *str)
 {
-   // A front end to XRotPaintAlignedString:
-   //     -no alignment, paints background
-
    return(XRotPaintAlignedString(dpy, font, angle, drawable, gc,
                                  x, y, str, NONE, 1));
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A front end to XRotPaintAlignedString:
+///     -does alignment, no background
+
 int XRotDrawAlignedString(Display *dpy, XFontStruct *font, float angle, Drawable drawable, GC gc, int x, int y, char *text,int align)
 {
-   // A front end to XRotPaintAlignedString:
-   //     -does alignment, no background
-
    return(XRotPaintAlignedString(dpy, font, angle, drawable, gc,
                                  x, y, text, align, 0));
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A front end to XRotPaintAlignedString:
+///     -does alignment, paints background
+
 int XRotDrawAlignedImageString(Display *dpy, XFontStruct *font, float angle, Drawable drawable, GC gc, int x, int y, char *text,
                                int align)
 {
-   // A front end to XRotPaintAlignedString:
-   //     -does alignment, paints background
-
    return(XRotPaintAlignedString(dpy, font, angle, drawable, gc,
                                  x, y, text, align, 1));
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Aligns and paints a rotated string
+
 static int XRotPaintAlignedString(Display *dpy, XFontStruct *font, float angle, Drawable drawable, GC gc, int x, int y, char *text,
                                   int align, int bg)
 {
-   // Aligns and paints a rotated string
-
    int i;
    GC my_gc;
    int xp, yp;
@@ -560,12 +561,12 @@ static int XRotPaintAlignedString(Display *dpy, XFontStruct *font, float angle, 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Draw a horizontal string in a quick fashion
+
 static int XRotDrawHorizontalString(Display *dpy, XFontStruct *font, Drawable drawable, GC gc, int x, int y, char *text,
                                     int align, int bg)
 {
-   //  Draw a horizontal string in a quick fashion
-
    GC my_gc;
    int nl=1, i;
    int height;
@@ -656,12 +657,12 @@ static int XRotDrawHorizontalString(Display *dpy, XFontStruct *font, Drawable dr
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Query cache for a match with this font/text/angle/alignment
+///    request, otherwise arrange for its creation
+
 static RotatedTextItem_t *XRotRetrieveFromCache(Display *dpy, XFontStruct *font, float angle, char *text, int align)
 {
-   // Query cache for a match with this font/text/angle/alignment
-   //    request, otherwise arrange for its creation
-
    Font fid;
    char *font_name;
    unsigned long name_value;
@@ -797,11 +798,11 @@ static RotatedTextItem_t *XRotRetrieveFromCache(Display *dpy, XFontStruct *font,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Create a rotated text item
+
 static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, float angle, char *text, int align)
 {
-   //  Create a rotated text item
-
    RotatedTextItem_t *item;
    Pixmap canvas;
    GC font_gc;
@@ -1110,12 +1111,12 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a text item to the end of the cache, removing as many items
+///     from the front as required to keep cache size below limit
+
 static void XRotAddToLinkedList(Display *dpy, RotatedTextItem_t *item)
 {
-   // Adds a text item to the end of the cache, removing as many items
-   //     from the front as required to keep cache size below limit
-
    static long int current_size=0;
    static RotatedTextItem_t *last=0;
    RotatedTextItem_t *i1=gFirstTextItem, *i2;
@@ -1214,11 +1215,11 @@ static void XRotAddToLinkedList(Display *dpy, RotatedTextItem_t *item)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Free the resources used by a text item
+
 static void XRotFreeTextItem(Display *dpy, RotatedTextItem_t *item)
 {
-   //  Free the resources used by a text item
-
    free(item->fText);
 
    if(item->font_name!=0)
@@ -1237,11 +1238,11 @@ static void XRotFreeTextItem(Display *dpy, RotatedTextItem_t *item)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Magnify an XImage using bilinear interpolation
+
 static XImage *XRotMagnifyImage(Display *dpy, XImage *ximage)
 {
-   // Magnify an XImage using bilinear interpolation
-
    int i, j;
    float x, y;
    float u,t;
@@ -1343,11 +1344,11 @@ static XImage *XRotMagnifyImage(Display *dpy, XImage *ximage)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the bounding box some text will have when painted
+
 XPoint *XRotTextExtents(Display *, XFontStruct *font, float angle, int x, int y, char *text,int align)
 {
-   // Calculate the bounding box some text will have when painted
-
    int i;
    char *str1, *str2, *str3;
    const char *str2_a="\0", *str2_b="\n\0";

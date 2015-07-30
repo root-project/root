@@ -73,10 +73,11 @@ Int_t stressFit(const char *type = "Minuit", const char *algo = "Migrad", Int_t 
 Int_t    gVerbose      = -1;
 Double_t gToleranceMult = 1.e-3;
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Print test program number and its title
+
 void StatusPrint(Int_t id,const TString &title, Int_t nsuccess, Int_t nattempts)
 {
-  // Print test program number and its title
   const Int_t kMAX = 65;
   Char_t number[4];
   snprintf(number,4,"%2d",id);
@@ -86,7 +87,8 @@ void StatusPrint(Int_t id,const TString &title, Int_t nsuccess, Int_t nattempts)
   std::cout << header << " " << nsuccess << " out of " << nattempts << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RosenBrock(const Double_t *par)
 {
   const Double_t x = par[0];
@@ -96,22 +98,22 @@ Double_t RosenBrock(const Double_t *par)
   return 100*tmp1*tmp1+tmp2*tmp2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// F(x,y) = 100 (y-x^2)^2 + (1-x)^2
+///
+///   start point: F(-1.2,1.0) = 24.20
+///   minimum    : F(1.0,1.0)  = 0.
+///
+/// This narrow, parabolic valley is probably the best known of all test cases. The floor
+/// of the valley follows approximately the parabola y = x^2+1/200 .
+/// There is a region where the covariance matrix is not positive-definite and even a path
+/// where it is singular . Stepping methods tend to perform at least as well as gradient
+///  method for this function .
+/// [Reference: Comput. J. 3,175 (1960).]
+
 Bool_t RunRosenBrock()
 {
-//
-// F(x,y) = 100 (y-x^2)^2 + (1-x)^2
-//
-//   start point: F(-1.2,1.0) = 24.20
-//   minimum    : F(1.0,1.0)  = 0.
-//
-// This narrow, parabolic valley is probably the best known of all test cases. The floor
-// of the valley follows approximately the parabola y = x^2+1/200 .
-// There is a region where the covariance matrix is not positive-definite and even a path
-// where it is singular . Stepping methods tend to perform at least as well as gradient
-//  method for this function .
-// [Reference: Comput. J. 3,175 (1960).]
-
   Bool_t ok = kTRUE;
   const int nvars = 2;
 
@@ -144,7 +146,8 @@ Bool_t RunRosenBrock()
   return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t Wood4(const Double_t *par)
 {
   const Double_t w = par[0];
@@ -162,25 +165,25 @@ Double_t Wood4(const Double_t *par)
   return 100*tmp1*tmp1+w1*w1+90*tmp2*tmp2+y1*y1+10.1*(x1*x1+z1*z1)+19.8*x1*z1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// F(w,x,y,z) = 100 (y-w^2)^2 + (w-1)^2 + 90 (z-y^2)^2
+///              + (1-y)^2 + 10.1 [(x-1)^2 + (z-1)^2]
+///              + 19.8 (x-1)(z-1)
+///
+///   start point: F(-3,-1,-3,-1) = 19192
+///   minimum    : F(1,1,1,1)  =   0.
+///
+/// This is a fourth-degree polynomial which is reasonably well-behaved near the minimum,
+/// but in order to get there one must cross a rather flat, four-dimensional "plateau"
+/// which often causes minimization algorithm to get "stuck" far from the minimum. As
+/// such it is a particularly good test of convergence criteria and simulates quite well a
+/// feature of many physical problems in many variables where no good starting
+/// approximation is known .
+/// [Reference: Unpublished. See IBM Technical Report No. 320-2949.]
+
 Bool_t RunWood4()
 {
-//
-// F(w,x,y,z) = 100 (y-w^2)^2 + (w-1)^2 + 90 (z-y^2)^2
-//              + (1-y)^2 + 10.1 [(x-1)^2 + (z-1)^2]
-//              + 19.8 (x-1)(z-1)
-//
-//   start point: F(-3,-1,-3,-1) = 19192
-//   minimum    : F(1,1,1,1)  =   0.
-//
-// This is a fourth-degree polynomial which is reasonably well-behaved near the minimum,
-// but in order to get there one must cross a rather flat, four-dimensional "plateau"
-// which often causes minimization algorithm to get "stuck" far from the minimum. As
-// such it is a particularly good test of convergence criteria and simulates quite well a
-// feature of many physical problems in many variables where no good starting
-// approximation is known .
-// [Reference: Unpublished. See IBM Technical Report No. 320-2949.]
-
 
   Bool_t ok = kTRUE;
   const int nvars = 4;
@@ -219,7 +222,8 @@ Bool_t RunWood4()
   return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t Powell(const Double_t *par)
 {
   const Double_t w = par[0];
@@ -235,20 +239,20 @@ Double_t Powell(const Double_t *par)
   return tmp1*tmp1+5*tmp2*tmp2+tmp3*tmp3*tmp3*tmp3+10*tmp4*tmp4*tmp4*tmp4;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// F(w,x,y,z) = (w+10x)^2 + 5(y-z)^2 + (x-2y)^4+ 10 (w-z)^4
+///
+///   start point: F(-3,-1,0,1) = 215
+///   minimum    : F(0,0,0,0)  =   0.
+///
+/// This function is difficult because its matrix of second derivatives becomes singular
+///  at the minimum. Near the minimum the function is given by (w + 10x)^2 + 5 (y-5)^2
+/// which does not determine the minimum uniquely.
+/// [Reference: Comput. J. 5, 147 (1962).]
+
 Bool_t RunPowell()
 {
-//
-// F(w,x,y,z) = (w+10x)^2 + 5(y-z)^2 + (x-2y)^4+ 10 (w-z)^4
-//
-//   start point: F(-3,-1,0,1) = 215
-//   minimum    : F(0,0,0,0)  =   0.
-//
-// This function is difficult because its matrix of second derivatives becomes singular
-//  at the minimum. Near the minimum the function is given by (w + 10x)^2 + 5 (y-5)^2
-// which does not determine the minimum uniquely.
-// [Reference: Comput. J. 5, 147 (1962).]
-
   Bool_t ok = kTRUE;
   const int nvars = 4;
 
@@ -283,7 +287,8 @@ Bool_t RunPowell()
   return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t Fletcher(const Double_t *par)
 {
   const Double_t x = par[0];
@@ -304,24 +309,24 @@ Double_t Fletcher(const Double_t *par)
   return 100*(tmp1*tmp1+tmp2*tmp2)+z*z;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// F(x,y,z) = 100 {[z - 10 G(x,y)]^2 + ( (x^2+y^2)^1/2 - 1 )^2} + z^2
+///
+///                     | arctan(y/x)        for x > 0
+/// where 2 pi G(x,y) = |
+///                     | pi + arctan(y/x)   for x < 0
+///
+///   start point: F(-1,0,0) = 2500
+///   minimum    : F(1,0,0)  =   0.
+///
+/// F is defined only for -0.25 < G(x,y) < 0.75
+///
+/// This is a curved valley problem, similar to Rosenbrock's, but in three dimensions .
+/// [Reference: Comput. J. 6, 163 (1963).]
+
 Bool_t RunFletcher()
 {
-//
-// F(x,y,z) = 100 {[z - 10 G(x,y)]^2 + ( (x^2+y^2)^1/2 - 1 )^2} + z^2
-//
-//                     | arctan(y/x)        for x > 0
-// where 2 pi G(x,y) = |
-//                     | pi + arctan(y/x)   for x < 0
-//
-//   start point: F(-1,0,0) = 2500
-//   minimum    : F(1,0,0)  =   0.
-//
-// F is defined only for -0.25 < G(x,y) < 0.75
-//
-// This is a curved valley problem, similar to Rosenbrock's, but in three dimensions .
-// [Reference: Comput. J. 6, 163 (1963).]
-
   Bool_t ok = kTRUE;
   const int nvars = 3;
 
@@ -355,7 +360,8 @@ Bool_t RunFletcher()
   return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t GoldStein1(const Double_t *par)
 {
   const Double_t x = par[0];
@@ -369,25 +375,25 @@ Double_t GoldStein1(const Double_t *par)
   return (1+tmp1*tmp1*tmp2)*(30+tmp3*tmp3*tmp4);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// F(x,y) = (1 + (x+y+1)^2 * (19-14x+3x^2-14y+6xy+3y^2))
+///           * (30 + (2x-3y)^2 * (18-32x+12x^2+48y-36xy+27y^2))
+///
+///   start point     : F(-0.4,-0,6) = 35
+///   local  minima   : F(1.2,0.8)   = 840
+///                     F(1.8,0.2)   = 84
+///                     F(-0.6,-0.4) = 30
+///   global minimum  : F(0.0,-1.0)  = 3
+///
+/// This is an eighth-order polynomial in two variables which is well behaved near each
+/// minimum, but has four local minima and is of course non-positive-definite in many
+/// regions. The saddle point between the two lowest minima occurs at F(-0.4,-0.6)=35
+/// making this an interesting start point .
+/// [Reference: Math. Comp. 25, 571 (1971).]
+
 Bool_t RunGoldStein1()
 {
-//
-// F(x,y) = (1 + (x+y+1)^2 * (19-14x+3x^2-14y+6xy+3y^2))
-//           * (30 + (2x-3y)^2 * (18-32x+12x^2+48y-36xy+27y^2))
-//
-//   start point     : F(-0.4,-0,6) = 35
-//   local  minima   : F(1.2,0.8)   = 840
-//                     F(1.8,0.2)   = 84
-//                     F(-0.6,-0.4) = 30
-//   global minimum  : F(0.0,-1.0)  = 3
-//
-// This is an eighth-order polynomial in two variables which is well behaved near each
-// minimum, but has four local minima and is of course non-positive-definite in many
-// regions. The saddle point between the two lowest minima occurs at F(-0.4,-0.6)=35
-// making this an interesting start point .
-// [Reference: Math. Comp. 25, 571 (1971).]
-
   Bool_t ok = kTRUE;
   const int nvars = 2;
 
@@ -419,7 +425,8 @@ Bool_t RunGoldStein1()
   return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t GoldStein2(const Double_t *par)
 {
   const Double_t x = par[0];
@@ -432,19 +439,19 @@ Double_t GoldStein2(const Double_t *par)
   return TMath::Exp(0.5*tmp1*tmp1)+tmp2*tmp2*tmp2*tmp2+0.5*tmp3*tmp3;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// F(x,y) = (1 + (x+y+1)^2 * (19-14x+3x^2-14y+6xy+3y^2))
+///           * (30 + (2x-3y)^2 * (18-32x+12x^2+48y-36xy+27y^2))
+///
+///   start point     : F(1.6,3.4) =
+///   global minimum  : F(3,4)     = 1
+///
+/// This function has many local minima .
+/// [Reference: Math. Comp. 25, 571 (1971).]
+
 Bool_t RunGoldStein2()
 {
-//
-// F(x,y) = (1 + (x+y+1)^2 * (19-14x+3x^2-14y+6xy+3y^2))
-//           * (30 + (2x-3y)^2 * (18-32x+12x^2+48y-36xy+27y^2))
-//
-//   start point     : F(1.6,3.4) =
-//   global minimum  : F(3,4)     = 1
-//
-// This function has many local minima .
-// [Reference: Math. Comp. 25, 571 (1971).]
-
   Bool_t ok = kTRUE;
   const int nvars = 2;
 
@@ -489,7 +496,8 @@ TVectorD v0;
 TVectorD v;
 TVectorD r;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TrigoFletcher(const Double_t *par)
 {
   Int_t i;
@@ -507,28 +515,28 @@ Double_t TrigoFletcher(const Double_t *par)
   return r * r;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// F(\vec{x}) = \sum_{i=1}^n ( E_i - \sum_{j=1}^n (A_{ij} \sin x_j + B_{ij} \cos x_j) )^2
+///
+///   where E_i = \sum_{j=1}^n ( A_{ij} \sin x_{0j} + B_{ij} \cos x_{0j} )
+///
+///   B_{ij} and A_{ij} are random matrices composed of integers between -100 and 100;
+///   for j = 1,...,n: x_{0j} are any random numbers, -\pi < x_{0j} < \pi;
+///
+///   start point : x_j = x_{0j} + 0.1 \delta_j,  -\pi < \delta_j < \pi
+///   minimum     : F(\vec{x} = \vec{x}_0) = 0
+///
+/// This is a set of functions of any number of variables n, where the minimum is always
+/// known in advance, but where the problem can be changed by choosing different
+/// (random) values of the constants A_{ij}, B_{ij}, and x_{0j} . The difficulty can be
+/// varied by choosing larger starting deviations \delta_j . In practice, most methods
+/// find the "right" minimum, corresponding to \vec{x} = \vec{x}_0, but there are usually
+/// many subsidiary minima.
+/// [Reference: Comput. J. 6 163 (1963).]
+
 Bool_t RunTrigoFletcher()
 {
-//
-// F(\vec{x}) = \sum_{i=1}^n ( E_i - \sum_{j=1}^n (A_{ij} \sin x_j + B_{ij} \cos x_j) )^2
-//
-//   where E_i = \sum_{j=1}^n ( A_{ij} \sin x_{0j} + B_{ij} \cos x_{0j} )
-//
-//   B_{ij} and A_{ij} are random matrices composed of integers between -100 and 100;
-//   for j = 1,...,n: x_{0j} are any random numbers, -\pi < x_{0j} < \pi;
-//
-//   start point : x_j = x_{0j} + 0.1 \delta_j,  -\pi < \delta_j < \pi
-//   minimum     : F(\vec{x} = \vec{x}_0) = 0
-//
-// This is a set of functions of any number of variables n, where the minimum is always
-// known in advance, but where the problem can be changed by choosing different
-// (random) values of the constants A_{ij}, B_{ij}, and x_{0j} . The difficulty can be
-// varied by choosing larger starting deviations \delta_j . In practice, most methods
-// find the "right" minimum, corresponding to \vec{x} = \vec{x}_0, but there are usually
-// many subsidiary minima.
-// [Reference: Comput. J. 6 163 (1963).]
-
 
   const Double_t pi = TMath::Pi();
   Bool_t ok = kTRUE;
@@ -583,7 +591,8 @@ Bool_t RunTrigoFletcher()
   return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t stressFit(const char *type, const char *algo, Int_t N)
 {
   ROOT::Math::MinimizerOptions::SetDefaultMinimizer(type, algo);

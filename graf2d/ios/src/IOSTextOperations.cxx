@@ -68,22 +68,24 @@ const char *cStrFontNames[FontManager::fmdNOfFonts] =
                                "TimesNewRomanPSMT"
                               };
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Create attributed string with one attribue: the font.
+
 CTLineGuard::CTLineGuard(const char *textLine, CTFontRef font)
                   : fCTLine(0)
 {
-   //Create attributed string with one attribue: the font.
    CFStringRef keys[] = {kCTFontAttributeName};
    CFTypeRef values[] = {font};
 
    Init(textLine, 1, keys, values);
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Create attributed string with font and color.
+
 CTLineGuard::CTLineGuard(const char *textLine, CTFontRef font, Color_t /*color*/)
                   : fCTLine(0)
 {
-   //Create attributed string with font and color.
    Util::RefGuardGeneric<CGColorSpaceRef, CGColorSpaceRelease> rgbColorSpace(CGColorSpaceCreateDeviceRGB());
    if (!rgbColorSpace.Get())
       throw std::runtime_error("CTLineGuard: color space");
@@ -102,11 +104,12 @@ CTLineGuard::CTLineGuard(const char *textLine, CTFontRef font, Color_t /*color*/
    Init(textLine, 2, keys, values);
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Create attributed string with font and color.
+
 CTLineGuard::CTLineGuard(const char *textLine, CTFontRef font, const std::vector<UniChar> &symbolMap)
                   : fCTLine(0)
 {
-   //Create attributed string with font and color.
    Util::RefGuardGeneric<CGColorSpaceRef, CGColorSpaceRelease> rgbColorSpace(CGColorSpaceCreateDeviceRGB());
    if (!rgbColorSpace.Get())
       throw std::runtime_error("CTLineGuard: color space");
@@ -128,13 +131,15 @@ CTLineGuard::CTLineGuard(const char *textLine, CTFontRef font, const std::vector
    Init(convertedLine, 2, keys, values);
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CTLineGuard::~CTLineGuard()
 {
    CFRelease(fCTLine);
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void CTLineGuard::GetBounds(UInt_t &w, UInt_t &h)const
 {
    CGFloat ascent = 0.f, descent = 0.f, leading = 0.f;
@@ -142,7 +147,8 @@ void CTLineGuard::GetBounds(UInt_t &w, UInt_t &h)const
    h = UInt_t(ascent);// + descent + leading);
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void CTLineGuard::Init(const char *textLine, UInt_t nAttribs, CFStringRef *keys, CFTypeRef *values)
 {
    Util::RefGuard<CFDictionaryRef> stringAttribs(
@@ -168,7 +174,8 @@ void CTLineGuard::Init(const char *textLine, UInt_t nAttribs, CFStringRef *keys,
       throw std::runtime_error("CTLineGuard: attrib string");
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void CTLineGuard::Init(const std::vector<UniChar> &textLine, UInt_t nAttribs, CFStringRef *keys, CFTypeRef *values)
 {
    Util::RefGuard<CFDictionaryRef> stringAttribs(
@@ -194,13 +201,15 @@ void CTLineGuard::Init(const std::vector<UniChar> &textLine, UInt_t nAttribs, CF
       throw std::runtime_error("CTLineGuard: attrib string");
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 FontManager::FontManager()
                : fSelectedFont(0)
 {
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 FontManager::~FontManager()
 {
    for (UInt_t i = 0; i < fmdNOfFonts; ++i)
@@ -208,7 +217,8 @@ FontManager::~FontManager()
          CFRelease(it->second);
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 CTFontRef FontManager::SelectFont(Font_t fontIndex, Float_t fontSize)
 {
    fontIndex /= 10;
@@ -237,7 +247,8 @@ CTFontRef FontManager::SelectFont(Font_t fontIndex, Float_t fontSize)
    return fSelectedFont = it->second;
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void FontManager::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
 {
    if (!fSelectedFont)
@@ -254,7 +265,8 @@ void FontManager::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
    }
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t FontManager::GetAscent()const
 {
    if (!fSelectedFont)
@@ -263,7 +275,8 @@ Double_t FontManager::GetAscent()const
    return CTFontGetAscent(fSelectedFont);
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t FontManager::GetDescent()const
 {
    if (!fSelectedFont)
@@ -272,7 +285,8 @@ Double_t FontManager::GetDescent()const
    return CTFontGetDescent(fSelectedFont);
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t FontManager::GetLeading()const
 {
    if (!fSelectedFont)
@@ -281,7 +295,8 @@ Double_t FontManager::GetLeading()const
    return CTFontGetLeading(fSelectedFont);
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void FontManager::InitSymbolMap()
 {
    fSymbolMap.clear();

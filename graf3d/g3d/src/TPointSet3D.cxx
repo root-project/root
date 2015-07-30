@@ -36,28 +36,28 @@
 
 ClassImp(TPointSet3D);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TPointSet3D::TPointSet3D(const TPointSet3D &t) :
    TPolyMarker3D(t), TAttBBox(t), fOwnIds(kFALSE), fIds()
 {
-   // Copy constructor.
-
    CopyIds(t);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TPointSet3D::~TPointSet3D()
 {
-   // Destructor.
-
    ClearIds();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy id objects from point-set 't'.
+
 void TPointSet3D::CopyIds(const TPointSet3D& t)
 {
-   // Copy id objects from point-set 't'.
-
    fOwnIds = t.fOwnIds;
    fIds.Expand(t.fIds.GetSize());
    if (fOwnIds) {
@@ -69,11 +69,11 @@ void TPointSet3D::CopyIds(const TPointSet3D& t)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignement operator.
+
 TPointSet3D& TPointSet3D::operator=(const TPointSet3D& t)
 {
-   // Assignement operator.
-
    if (this != &t) {
       ClearIds();
       TPolyMarker3D::operator=(t);
@@ -82,11 +82,11 @@ TPointSet3D& TPointSet3D::operator=(const TPointSet3D& t)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the bounding box of this points set.
+
 void TPointSet3D::ComputeBBox()
 {
-   // Compute the bounding box of this points set.
-
    if (Size() > 0) {
       BBoxInit();
       Int_t    n = Size();
@@ -98,31 +98,31 @@ void TPointSet3D::ComputeBBox()
       BBoxZero();
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set id of last point.
+/// Use this method if you also use TPolyMarker3D::SetNextPoint().
+
 void TPointSet3D::SetPointId(TObject* id)
 {
-   // Set id of last point.
-   // Use this method if you also use TPolyMarker3D::SetNextPoint().
-
    SetPointId(fLastPoint, id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set id of point n.
+
 void TPointSet3D::SetPointId(Int_t n, TObject* id)
 {
-   // Set id of point n.
-
    if (n >= fN) return;
    if (fN > fIds.GetSize())
       fIds.Expand(fN);
    fIds.AddAt(id, n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clears the id-array. If ids are owned the TObjects are deleted.
+
 void TPointSet3D::ClearIds()
 {
-   // Clears the id-array. If ids are owned the TObjects are deleted.
-
    if (fOwnIds) {
       for (Int_t i=0; i<fIds.GetSize(); ++i)
          delete GetPointId(i);
@@ -130,16 +130,16 @@ void TPointSet3D::ClearIds()
    fIds.Expand(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This virtual method is called from TPointSet3DGL when a point is
+/// selected.
+/// At this point it just prints out n and id of the point (if it exists).
+/// To make something useful out of this do:
+///  a) subclass and re-implement this method;
+///  b) extend this class to include TExec or some other kind of callback.
+
 void TPointSet3D::PointSelected(Int_t n)
 {
-   // This virtual method is called from TPointSet3DGL when a point is
-   // selected.
-   // At this point it just prints out n and id of the point (if it exists).
-   // To make something useful out of this do:
-   //  a) subclass and re-implement this method;
-   //  b) extend this class to include TExec or some other kind of callback.
-
    TObject* id = GetPointId(n);
    printf("TPointSet3D::PointSelected n=%d, id=(%s*)0x%lx\n",
           n, id ? id->IsA()->GetName() : "void", (ULong_t)id);
@@ -147,11 +147,11 @@ void TPointSet3D::PointSelected(Int_t n)
       id->Print();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TPointSet3D.
+
 void TPointSet3D::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TPointSet3D.
-
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TPointSet3D::Class(), this);
       if (fOwnIds) {

@@ -13,7 +13,9 @@
 
 static int log_message_handler(const struct mg_connection *conn, const char *message)
 {
-   TCivetweb* engine = (TCivetweb*) mg_get_request_info((struct mg_connection *)conn)->user_data;
+   const struct mg_context *ctx = mg_get_context(conn);
+
+   TCivetweb* engine = (TCivetweb*) mg_get_user_data(ctx);
 
    if (engine) return engine->ProcessLog(message);
 
@@ -191,7 +193,9 @@ static int begin_request_handler(struct mg_connection *conn)
 
 ClassImp(TCivetweb)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TCivetweb::TCivetweb() :
    THttpEngine("civetweb", "compact embedded http server"),
    fCtx(0),
@@ -199,44 +203,43 @@ TCivetweb::TCivetweb() :
    fTopName(),
    fDebug(kFALSE)
 {
-   // constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TCivetweb::~TCivetweb()
 {
-   // destructor
-
    if (fCtx != 0) mg_stop((struct mg_context *) fCtx);
    if (fCallbacks != 0) free(fCallbacks);
    fCtx = 0;
    fCallbacks = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process civetweb log message, can be used to detect critical errors
+
 Int_t TCivetweb::ProcessLog(const char* message)
 {
-   // process civetweb log message, can be used to detect critical errors
-
-   if (gDebug>0) Error("Log", "%s", message);
+   if ((gDebug>0) || (strstr(message,"cannot bind to")!=0)) Error("Log", "%s", message);
 
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates embedded civetweb server
+/// As main argument, http port should be specified like "8090".
+/// Or one can provide combination of ipaddress and portnumber like 127.0.0.1:8090
+/// Extra parameters like in URL string could be specified after '?' mark:
+///    thrds=N   - there N is number of threads used by the civetweb (default is 5)
+///    top=name  - configure top name, visible in the web browser
+///    auth_file=filename  - authentication file name, created with htdigets utility
+///    auth_domain=domain   - authentication domain
+///    loopback  - bind specified port to loopback 127.0.0.1 address
+///    debug  - enable debug mode, server always returns html page with request info
+
 Bool_t TCivetweb::Create(const char *args)
 {
-   // Creates embedded civetweb server
-   // As main argument, http port should be specified like "8090".
-   // Or one can provide combination of ipaddress and portnumber like 127.0.0.1:8090
-   // Extra parameters like in URL string could be specified after '?' mark:
-   //    thrds=N   - there N is number of threads used by the civetweb (default is 5)
-   //    top=name  - configure top name, visible in the web browser
-   //    auth_file=filename  - authentication file name, created with htdigets utility
-   //    auth_domain=domain   - authentication domain
-   //    loopback  - bind specified port to loopback 127.0.0.1 address
-   //    debug  - enable debug mode, server always returns html page with request info
-
    fCallbacks = malloc(sizeof(struct mg_callbacks));
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
    ((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;

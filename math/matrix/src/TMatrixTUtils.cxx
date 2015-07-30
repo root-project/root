@@ -37,12 +37,12 @@
 #include "TMath.h"
 #include "TVectorT.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with row "row" of matrix
+
 template<class Element>
 TMatrixTRow_const<Element>::TMatrixTRow_const(const TMatrixT<Element> &matrix,Int_t row)
 {
-// Constructor with row "row" of matrix
-
    R__ASSERT(matrix.IsValid());
 
    fRowInd = row-matrix.GetRowLwb();
@@ -59,12 +59,12 @@ TMatrixTRow_const<Element>::TMatrixTRow_const(const TMatrixT<Element> &matrix,In
    fInc = 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with row "row" of symmetric matrix
+
 template<class Element>
 TMatrixTRow_const<Element>::TMatrixTRow_const(const TMatrixTSym<Element> &matrix,Int_t row)
 {
-// Constructor with row "row" of symmetric matrix
-
    R__ASSERT(matrix.IsValid());
 
    fRowInd = row-matrix.GetRowLwb();
@@ -81,73 +81,75 @@ TMatrixTRow_const<Element>::TMatrixTRow_const(const TMatrixTSym<Element> &matrix
    fInc = 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with row "row" of symmetric matrix
+
 template<class Element>
 TMatrixTRow<Element>::TMatrixTRow(TMatrixT<Element> &matrix,Int_t row)
             :TMatrixTRow_const<Element>(matrix,row)
 {
-// Constructor with row "row" of symmetric matrix
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with row "row" of symmetric matrix
+
 template<class Element>
 TMatrixTRow<Element>::TMatrixTRow(TMatrixTSym<Element> &matrix,Int_t row)
             :TMatrixTRow_const<Element>(matrix,row)
 {
-// Constructor with row "row" of symmetric matrix
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 template<class Element>
 TMatrixTRow<Element>::TMatrixTRow(const TMatrixTRow<Element> &mr) : TMatrixTRow_const<Element>(mr)
 {
-// Copy constructor
-
    *this = mr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign val to every element of the matrix row.
+
 template<class Element>
 void TMatrixTRow<Element>::operator=(Element val)
 {
-// Assign val to every element of the matrix row.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *rp = const_cast<Element *>(this->fPtr);
    for ( ; rp < this->fPtr+this->fMatrix->GetNcols(); rp += this->fInc)
       *rp = val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add val to every element of the matrix row.
+
 template<class Element>
 void TMatrixTRow<Element>::operator+=(Element val)
 {
-// Add val to every element of the matrix row.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *rp = const_cast<Element *>(this->fPtr);
    for ( ; rp < this->fPtr+this->fMatrix->GetNcols(); rp += this->fInc)
       *rp += val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix row with val.
+
 template<class Element>
 void TMatrixTRow<Element>::operator*=(Element val)
 {
-// Multiply every element of the matrix row with val.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *rp = const_cast<Element *>(this->fPtr);
    for ( ; rp < this->fPtr + this->fMatrix->GetNcols(); rp += this->fInc)
       *rp *= val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 template<class Element>
 void TMatrixTRow<Element>::operator=(const TMatrixTRow_const<Element> &mr)
 {
-// Assignment operator
-
    const TMatrixTBase<Element> *mt = mr.GetMatrix();
    if (this->fMatrix->GetMatrixArray() == mt->GetMatrixArray() && this->fRowInd == mr.GetRowIndex()) return;
 
@@ -165,13 +167,13 @@ void TMatrixTRow<Element>::operator=(const TMatrixTRow_const<Element> &mr)
       *rp1 = *rp2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign a vector to a matrix row. The vector is considered row-vector
+/// to allow the assignment in the strict sense.
+
 template<class Element>
 void TMatrixTRow<Element>::operator=(const TVectorT<Element> &vec)
 {
-// Assign a vector to a matrix row. The vector is considered row-vector
-// to allow the assignment in the strict sense.
-
    R__ASSERT(this->fMatrix->IsValid());
    R__ASSERT(vec.IsValid());
 
@@ -186,12 +188,12 @@ void TMatrixTRow<Element>::operator=(const TVectorT<Element> &vec)
       *rp = *vp++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to every element of the matrix row the corresponding element of row r.
+
 template<class Element>
 void TMatrixTRow<Element>::operator+=(const TMatrixTRow_const<Element> &r)
 {
-// Add to every element of the matrix row the corresponding element of row r.
-
   const TMatrixTBase<Element> *mt = r.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -208,13 +210,13 @@ void TMatrixTRow<Element>::operator+=(const TMatrixTRow_const<Element> &r)
      *rp1 += *rp2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix row with the
+/// corresponding element of row r.
+
 template<class Element>
 void TMatrixTRow<Element>::operator*=(const TMatrixTRow_const<Element> &r)
 {
-// Multiply every element of the matrix row with the
-// corresponding element of row r.
-
    const TMatrixTBase<Element> *mt = r.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -231,12 +233,12 @@ void TMatrixTRow<Element>::operator*=(const TMatrixTRow_const<Element> &r)
       *rp1 *= *rp2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with column "col" of matrix
+
 template<class Element>
 TMatrixTColumn_const<Element>::TMatrixTColumn_const(const TMatrixT<Element> &matrix,Int_t col)
 {
-// Constructor with column "col" of matrix
-
    R__ASSERT(matrix.IsValid());
 
    this->fColInd = col-matrix.GetColLwb();
@@ -253,12 +255,12 @@ TMatrixTColumn_const<Element>::TMatrixTColumn_const(const TMatrixT<Element> &mat
    fInc = matrix.GetNcols();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with column "col" of matrix
+
 template<class Element>
 TMatrixTColumn_const<Element>::TMatrixTColumn_const(const TMatrixTSym<Element> &matrix,Int_t col)
 {
-// Constructor with column "col" of matrix
-
    R__ASSERT(matrix.IsValid());
 
    fColInd = col-matrix.GetColLwb();
@@ -275,73 +277,75 @@ TMatrixTColumn_const<Element>::TMatrixTColumn_const(const TMatrixTSym<Element> &
    fInc = matrix.GetNcols();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with column "col" of matrix
+
 template<class Element>
 TMatrixTColumn<Element>::TMatrixTColumn(TMatrixT<Element> &matrix,Int_t col)
                :TMatrixTColumn_const<Element>(matrix,col)
 {
-// Constructor with column "col" of matrix
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with column "col" of matrix
+
 template<class Element>
 TMatrixTColumn<Element>::TMatrixTColumn(TMatrixTSym<Element> &matrix,Int_t col)
                :TMatrixTColumn_const<Element>(matrix,col)
 {
-// Constructor with column "col" of matrix
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 template<class Element>
 TMatrixTColumn<Element>::TMatrixTColumn(const TMatrixTColumn<Element> &mc) : TMatrixTColumn_const<Element>(mc)
 {
-// Copy constructor
-
    *this = mc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign val to every element of the matrix column.
+
 template<class Element>
 void TMatrixTColumn<Element>::operator=(Element val)
 {
-// Assign val to every element of the matrix column.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *cp = const_cast<Element *>(this->fPtr);
    for ( ; cp < this->fPtr+this->fMatrix->GetNoElements(); cp += this->fInc)
       *cp = val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add val to every element of the matrix column.
+
 template<class Element>
 void TMatrixTColumn<Element>::operator+=(Element val)
 {
-// Add val to every element of the matrix column.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *cp = const_cast<Element *>(this->fPtr);
    for ( ; cp < this->fPtr+this->fMatrix->GetNoElements(); cp += this->fInc)
       *cp += val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix column with val.
+
 template<class Element>
 void TMatrixTColumn<Element>::operator*=(Element val)
 {
-// Multiply every element of the matrix column with val.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *cp = const_cast<Element *>(this->fPtr);
    for ( ; cp < this->fPtr+this->fMatrix->GetNoElements(); cp += this->fInc)
       *cp *= val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 template<class Element>
 void TMatrixTColumn<Element>::operator=(const TMatrixTColumn_const<Element> &mc)
 {
-// Assignment operator
-
    const TMatrixTBase<Element> *mt = mc.GetMatrix();
    if (this->fMatrix->GetMatrixArray() == mt->GetMatrixArray() && this->fColInd == mc.GetColIndex()) return;
 
@@ -359,12 +363,12 @@ void TMatrixTColumn<Element>::operator=(const TMatrixTColumn_const<Element> &mc)
       *cp1 = *cp2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign a vector to a matrix column.
+
 template<class Element>
 void TMatrixTColumn<Element>::operator=(const TVectorT<Element> &vec)
 {
-// Assign a vector to a matrix column.
-
    R__ASSERT(this->fMatrix->IsValid());
    R__ASSERT(vec.IsValid());
 
@@ -381,12 +385,12 @@ void TMatrixTColumn<Element>::operator=(const TVectorT<Element> &vec)
    R__ASSERT(vp == vec.GetMatrixArray()+vec.GetNrows());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to every element of the matrix row the corresponding element of row mc.
+
 template<class Element>
 void TMatrixTColumn<Element>::operator+=(const TMatrixTColumn_const<Element> &mc)
 {
-// Add to every element of the matrix row the corresponding element of row mc.
-
    const TMatrixTBase<Element> *mt = mc.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -403,13 +407,13 @@ void TMatrixTColumn<Element>::operator+=(const TMatrixTColumn_const<Element> &mc
       *cp1 += *cp2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix column with the
+/// corresponding element of column mc.
+
 template<class Element>
 void TMatrixTColumn<Element>::operator*=(const TMatrixTColumn_const<Element> &mc)
 {
-// Multiply every element of the matrix column with the
-// corresponding element of column mc.
-
    const TMatrixTBase<Element> *mt = mc.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -426,12 +430,12 @@ void TMatrixTColumn<Element>::operator*=(const TMatrixTColumn_const<Element> &mc
       *cp1 *= *cp2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTDiag_const<Element>::TMatrixTDiag_const(const TMatrixT<Element> &matrix)
 {
-// Constructor
-
    R__ASSERT(matrix.IsValid());
 
    fMatrix = &matrix;
@@ -440,12 +444,12 @@ TMatrixTDiag_const<Element>::TMatrixTDiag_const(const TMatrixT<Element> &matrix)
    fInc    = matrix.GetNcols()+1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTDiag_const<Element>::TMatrixTDiag_const(const TMatrixTSym<Element> &matrix)
 {
-// Constructor
-
    R__ASSERT(matrix.IsValid());
 
    fMatrix = &matrix;
@@ -454,73 +458,75 @@ TMatrixTDiag_const<Element>::TMatrixTDiag_const(const TMatrixTSym<Element> &matr
    fInc    = matrix.GetNcols()+1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTDiag<Element>::TMatrixTDiag(TMatrixT<Element> &matrix)
              :TMatrixTDiag_const<Element>(matrix)
 {
-// Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTDiag<Element>::TMatrixTDiag(TMatrixTSym<Element> &matrix)
              :TMatrixTDiag_const<Element>(matrix)
 {
-// Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 template<class Element>
 TMatrixTDiag<Element>::TMatrixTDiag(const TMatrixTDiag<Element> &md) : TMatrixTDiag_const<Element>(md)
 {
-// Copy constructor
-
    *this = md;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign val to every element of the matrix diagonal.
+
 template<class Element>
 void TMatrixTDiag<Element>::operator=(Element val)
 {
-// Assign val to every element of the matrix diagonal.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *dp = const_cast<Element *>(this->fPtr);
    for (Int_t i = 0; i < this->fNdiag; i++, dp += this->fInc)
       *dp = val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign val to every element of the matrix diagonal.
+
 template<class Element>
 void TMatrixTDiag<Element>::operator+=(Element val)
 {
-// Assign val to every element of the matrix diagonal.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *dp = const_cast<Element *>(this->fPtr);
    for (Int_t i = 0; i < this->fNdiag; i++, dp += this->fInc)
       *dp += val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign val to every element of the matrix diagonal.
+
 template<class Element>
 void TMatrixTDiag<Element>::operator*=(Element val)
 {
-// Assign val to every element of the matrix diagonal.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *dp = const_cast<Element *>(this->fPtr);
    for (Int_t i = 0; i < this->fNdiag; i++, dp += this->fInc)
       *dp *= val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 template<class Element>
 void TMatrixTDiag<Element>::operator=(const TMatrixTDiag_const<Element> &md)
 {
-// Assignment operator
-
    const TMatrixTBase<Element> *mt = md.GetMatrix();
    if (this->fMatrix == mt) return;
 
@@ -538,12 +544,12 @@ void TMatrixTDiag<Element>::operator=(const TMatrixTDiag_const<Element> &md)
       *dp1 = *dp2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign a vector to the matrix diagonal.
+
 template<class Element>
 void TMatrixTDiag<Element>::operator=(const TVectorT<Element> &vec)
 {
-// Assign a vector to the matrix diagonal.
-
    R__ASSERT(this->fMatrix->IsValid());
    R__ASSERT(vec.IsValid());
 
@@ -558,13 +564,13 @@ void TMatrixTDiag<Element>::operator=(const TVectorT<Element> &vec)
       *dp = *vp++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to every element of the matrix diagonal the
+/// corresponding element of diagonal md.
+
 template<class Element>
 void TMatrixTDiag<Element>::operator+=(const TMatrixTDiag_const<Element> &md)
 {
-// Add to every element of the matrix diagonal the
-// corresponding element of diagonal md.
-
    const TMatrixTBase<Element> *mt = md.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -580,13 +586,13 @@ void TMatrixTDiag<Element>::operator+=(const TMatrixTDiag_const<Element> &md)
       *dp1 += *dp2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix diagonal with the
+/// corresponding element of diagonal md.
+
 template<class Element>
 void TMatrixTDiag<Element>::operator*=(const TMatrixTDiag_const<Element> &md)
 {
-// Multiply every element of the matrix diagonal with the
-// corresponding element of diagonal md.
-
    const TMatrixTBase<Element> *mt = md.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -602,12 +608,12 @@ void TMatrixTDiag<Element>::operator*=(const TMatrixTDiag_const<Element> &md)
       *dp1 *= *dp2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTFlat_const<Element>::TMatrixTFlat_const(const TMatrixT<Element> &matrix)
 {
-// Constructor
-
    R__ASSERT(matrix.IsValid());
 
    fMatrix = &matrix;
@@ -615,12 +621,12 @@ TMatrixTFlat_const<Element>::TMatrixTFlat_const(const TMatrixT<Element> &matrix)
    fNelems = matrix.GetNoElements();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTFlat_const<Element>::TMatrixTFlat_const(const TMatrixTSym<Element> &matrix)
 {
-// Constructor
-
    R__ASSERT(matrix.IsValid());
 
    fMatrix = &matrix;
@@ -628,73 +634,75 @@ TMatrixTFlat_const<Element>::TMatrixTFlat_const(const TMatrixTSym<Element> &matr
    fNelems = matrix.GetNoElements();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTFlat<Element>::TMatrixTFlat(TMatrixT<Element> &matrix)
              :TMatrixTFlat_const<Element>(matrix)
 {
-// Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTFlat<Element>::TMatrixTFlat(TMatrixTSym<Element> &matrix)
              :TMatrixTFlat_const<Element>(matrix)
 {
-// Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 template<class Element>
 TMatrixTFlat<Element>::TMatrixTFlat(const TMatrixTFlat<Element> &mf) : TMatrixTFlat_const<Element>(mf)
 {
-// Copy constructor
-
    *this = mf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign val to every element of the matrix.
+
 template<class Element>
 void TMatrixTFlat<Element>::operator=(Element val)
 {
-// Assign val to every element of the matrix.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *fp = const_cast<Element *>(this->fPtr);
    while (fp < this->fPtr+this->fMatrix->GetNoElements())
       *fp++ = val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add val to every element of the matrix.
+
 template<class Element>
 void TMatrixTFlat<Element>::operator+=(Element val)
 {
-// Add val to every element of the matrix.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *fp = const_cast<Element *>(this->fPtr);
    while (fp < this->fPtr+this->fMatrix->GetNoElements())
       *fp++ += val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix with val.
+
 template<class Element>
 void TMatrixTFlat<Element>::operator*=(Element val)
 {
-// Multiply every element of the matrix with val.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *fp = const_cast<Element *>(this->fPtr);
    while (fp < this->fPtr+this->fMatrix->GetNoElements())
       *fp++ *= val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 template<class Element>
 void TMatrixTFlat<Element>::operator=(const TMatrixTFlat_const<Element> &mf)
 {
-// Assignment operator
-
    const TMatrixTBase<Element> *mt = mf.GetMatrix();
    if (this->fMatrix->GetMatrixArray() == mt->GetMatrixArray()) return;
 
@@ -711,12 +719,12 @@ void TMatrixTFlat<Element>::operator=(const TMatrixTFlat_const<Element> &mf)
       *fp1++ = *fp2++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign a vector to the matrix. The matrix is traversed row-wise
+
 template<class Element>
 void TMatrixTFlat<Element>::operator=(const TVectorT<Element> &vec)
 {
-// Assign a vector to the matrix. The matrix is traversed row-wise
-
    R__ASSERT(vec.IsValid());
 
    if (this->fMatrix->GetNoElements() != vec.GetNrows()) {
@@ -730,12 +738,12 @@ void TMatrixTFlat<Element>::operator=(const TVectorT<Element> &vec)
        *fp++ = *vp++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to every element of the matrix the corresponding element of matrix mf.
+
 template<class Element>
 void TMatrixTFlat<Element>::operator+=(const TMatrixTFlat_const<Element> &mf)
 {
-// Add to every element of the matrix the corresponding element of matrix mf.
-
    const TMatrixTBase<Element> *mt = mf.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -751,12 +759,12 @@ void TMatrixTFlat<Element>::operator+=(const TMatrixTFlat_const<Element> &mf)
       *fp1++ += *fp2++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix with the corresponding element of diagonal mf.
+
 template<class Element>
 void TMatrixTFlat<Element>::operator*=(const TMatrixTFlat_const<Element> &mf)
 {
-// Multiply every element of the matrix with the corresponding element of diagonal mf.
-
    const TMatrixTBase<Element> *mt = mf.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -772,15 +780,15 @@ void TMatrixTFlat<Element>::operator*=(const TMatrixTFlat_const<Element> &mf)
       *fp1++ *= *fp2++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make a reference to submatrix [row_lwbs..row_upbs][col_lwbs..col_upbs];
+/// The indexing range of the reference is
+/// [0..row_upbs-row_lwbs+1][0..col_upb-col_lwbs+1] (default)
+
 template<class Element>
 TMatrixTSub_const<Element>::TMatrixTSub_const(const TMatrixT<Element> &matrix,Int_t row_lwbs,Int_t row_upbs,
                                               Int_t col_lwbs,Int_t col_upbs)
 {
-// make a reference to submatrix [row_lwbs..row_upbs][col_lwbs..col_upbs];
-// The indexing range of the reference is
-// [0..row_upbs-row_lwbs+1][0..col_upb-col_lwbs+1] (default)
-
    R__ASSERT(matrix.IsValid());
 
    fRowOff    = 0;
@@ -826,15 +834,15 @@ TMatrixTSub_const<Element>::TMatrixTSub_const(const TMatrixT<Element> &matrix,In
    fNcolsSub  = col_upbs-col_lwbs+1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make a reference to submatrix [row_lwbs..row_upbs][col_lwbs..col_upbs];
+/// The indexing range of the reference is
+/// [0..row_upbs-row_lwbs+1][0..col_upb-col_lwbs+1] (default)
+
 template<class Element>
 TMatrixTSub_const<Element>::TMatrixTSub_const(const TMatrixTSym<Element> &matrix,Int_t row_lwbs,Int_t row_upbs,
                                               Int_t col_lwbs,Int_t col_upbs)
 {
-// make a reference to submatrix [row_lwbs..row_upbs][col_lwbs..col_upbs];
-// The indexing range of the reference is
-// [0..row_upbs-row_lwbs+1][0..col_upb-col_lwbs+1] (default)
-
    R__ASSERT(matrix.IsValid());
 
    fRowOff    = 0;
@@ -880,40 +888,42 @@ TMatrixTSub_const<Element>::TMatrixTSub_const(const TMatrixTSym<Element> &matrix
    fNcolsSub  = col_upbs-col_lwbs+1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTSub<Element>::TMatrixTSub(TMatrixT<Element> &matrix,Int_t row_lwbs,Int_t row_upbs,
                                   Int_t col_lwbs,Int_t col_upbs)
             :TMatrixTSub_const<Element>(matrix,row_lwbs,row_upbs,col_lwbs,col_upbs)
 {
-// Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTSub<Element>::TMatrixTSub(TMatrixTSym<Element> &matrix,Int_t row_lwbs,Int_t row_upbs,
                                   Int_t col_lwbs,Int_t col_upbs)
             :TMatrixTSub_const<Element>(matrix,row_lwbs,row_upbs,col_lwbs,col_upbs)
 {
-// Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 template<class Element>
 TMatrixTSub<Element>::TMatrixTSub(const TMatrixTSub<Element> &ms) : TMatrixTSub_const<Element>(ms)
 {
-// Copy constructor
-
    *this = ms;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a rank 1 operation on the matrix:
+///     A += alpha * v * v^T
+
 template<class Element>
 void TMatrixTSub<Element>::Rank1Update(const TVectorT<Element> &v,Element alpha)
 {
-// Perform a rank 1 operation on the matrix:
-//     A += alpha * v * v^T
-
    R__ASSERT(this->fMatrix->IsValid());
    R__ASSERT(v.IsValid());
 
@@ -934,12 +944,12 @@ void TMatrixTSub<Element>::Rank1Update(const TVectorT<Element> &v,Element alpha)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign val to every element of the sub matrix.
+
 template<class Element>
 void TMatrixTSub<Element>::operator=(Element val)
 {
-// Assign val to every element of the sub matrix.
-
    R__ASSERT(this->fMatrix->IsValid());
 
    Element *p = (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->GetMatrixArray();
@@ -951,12 +961,12 @@ void TMatrixTSub<Element>::operator=(Element val)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add val to every element of the sub matrix.
+
 template<class Element>
 void TMatrixTSub<Element>::operator+=(Element val)
 {
-// Add val to every element of the sub matrix.
-
    R__ASSERT(this->fMatrix->IsValid());
 
    Element *p = (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->GetMatrixArray();
@@ -968,12 +978,12 @@ void TMatrixTSub<Element>::operator+=(Element val)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the sub matrix by val .
+
 template<class Element>
 void TMatrixTSub<Element>::operator*=(Element val)
 {
-// Multiply every element of the sub matrix by val .
-
    R__ASSERT(this->fMatrix->IsValid());
 
    Element *p = (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->GetMatrixArray();
@@ -985,12 +995,12 @@ void TMatrixTSub<Element>::operator*=(Element val)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 template<class Element>
 void TMatrixTSub<Element>::operator=(const TMatrixTSub_const<Element> &ms)
 {
-// Assignment operator
-
    const TMatrixTBase<Element> *mt = ms.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -1044,12 +1054,12 @@ void TMatrixTSub<Element>::operator=(const TMatrixTSub_const<Element> &ms)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 template<class Element>
 void TMatrixTSub<Element>::operator=(const TMatrixTBase<Element> &m)
 {
-// Assignment operator
-
    R__ASSERT(this->fMatrix->IsValid());
    R__ASSERT(m.IsValid());
 
@@ -1064,12 +1074,12 @@ void TMatrixTSub<Element>::operator=(const TMatrixTBase<Element> &m)
    (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->SetSub(row_lwbs,col_lwbs,m);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to every element of the submatrix the corresponding element of submatrix ms.
+
 template<class Element>
 void TMatrixTSub<Element>::operator+=(const TMatrixTSub_const<Element> &ms)
 {
-// Add to every element of the submatrix the corresponding element of submatrix ms.
-
    const TMatrixTBase<Element> *mt = ms.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -1118,12 +1128,12 @@ void TMatrixTSub<Element>::operator+=(const TMatrixTSub_const<Element> &ms)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply submatrix with submatrix ms.
+
 template<class Element>
 void TMatrixTSub<Element>::operator*=(const TMatrixTSub_const<Element> &ms)
 {
-// Multiply submatrix with submatrix ms.
-
    if (this->fNcolsSub != ms.GetNrows() || this->fNcolsSub != ms.GetNcols()) {
       Error("operator*=(const TMatrixTSub_const &)","source sub matrix has wrong shape");
       return;
@@ -1177,12 +1187,12 @@ void TMatrixTSub<Element>::operator*=(const TMatrixTSub_const<Element> &ms)
       delete [] trp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to every element of the submatrix the corresponding element of matrix mt.
+
 template<class Element>
 void TMatrixTSub<Element>::operator+=(const TMatrixTBase<Element> &mt)
 {
-// Add to every element of the submatrix the corresponding element of matrix mt.
-
    R__ASSERT(this->fMatrix->IsValid());
    R__ASSERT(mt.IsValid());
 
@@ -1204,12 +1214,12 @@ void TMatrixTSub<Element>::operator+=(const TMatrixTBase<Element> &mt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply submatrix with matrix source.
+
 template<class Element>
 void TMatrixTSub<Element>::operator*=(const TMatrixT<Element> &source)
 {
-// Multiply submatrix with matrix source.
-
    if (this->fNcolsSub != source.GetNrows() || this->fNcolsSub != source.GetNcols()) {
       Error("operator*=(const TMatrixT<Element> &)","source matrix has wrong shape");
       return;
@@ -1262,12 +1272,12 @@ void TMatrixTSub<Element>::operator*=(const TMatrixT<Element> &source)
       delete [] trp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply submatrix with matrix source.
+
 template<class Element>
 void TMatrixTSub<Element>::operator*=(const TMatrixTSym<Element> &source)
 {
-// Multiply submatrix with matrix source.
-
    if (this->fNcolsSub != source.GetNrows() || this->fNcolsSub != source.GetNcols()) {
       Error("operator*=(const TMatrixTSym<Element> &)","source matrix has wrong shape");
       return;
@@ -1320,12 +1330,12 @@ void TMatrixTSub<Element>::operator*=(const TMatrixTSym<Element> &source)
       delete [] trp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with row "row" of matrix
+
 template<class Element>
 TMatrixTSparseRow_const<Element>::TMatrixTSparseRow_const(const TMatrixTSparse<Element> &matrix,Int_t row)
 {
-// Constructor with row "row" of matrix
-
    R__ASSERT(matrix.IsValid());
 
    fRowInd = row-matrix.GetRowLwb();
@@ -1346,7 +1356,8 @@ TMatrixTSparseRow_const<Element>::TMatrixTSparseRow_const(const TMatrixTSparse<E
    fDataPtr = matrix.GetMatrixArray()+sIndex;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Element TMatrixTSparseRow_const<Element>::operator()(Int_t i) const
 {
@@ -1364,25 +1375,27 @@ Element TMatrixTSparseRow_const<Element>::operator()(Int_t i) const
   }
  }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with row "row" of matrix
+
 template<class Element>
 TMatrixTSparseRow<Element>::TMatrixTSparseRow(TMatrixTSparse<Element> &matrix,Int_t row)
                                     : TMatrixTSparseRow_const<Element>(matrix,row)
 {
-// Constructor with row "row" of matrix
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 template<class Element>
 TMatrixTSparseRow<Element>::TMatrixTSparseRow(const TMatrixTSparseRow<Element> &mr)
                                     : TMatrixTSparseRow_const<Element>(mr)
 {
-// Copy constructor
-
    *this = mr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Element TMatrixTSparseRow<Element>::operator()(Int_t i) const
 {
@@ -1400,12 +1413,12 @@ Element TMatrixTSparseRow<Element>::operator()(Int_t i) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operator() : pick element row(i)
+
 template<class Element>
 Element &TMatrixTSparseRow<Element>::operator()(Int_t i)
 {
-// operator() : pick element row(i)
-
    if (!this->fMatrix) return TMatrixTBase<Element>::NaNValue(); 
    R__ASSERT(this->fMatrix->IsValid());
 
@@ -1439,48 +1452,48 @@ Element &TMatrixTSparseRow<Element>::operator()(Int_t i)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign val to every non-zero (!) element of the matrix row.
+
 template<class Element>
 void TMatrixTSparseRow<Element>::operator=(Element val)
 {
-// Assign val to every non-zero (!) element of the matrix row.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *rp = const_cast<Element *>(this->fDataPtr);
    for ( ; rp < this->fDataPtr+this->fNindex; rp++)
       *rp = val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add val to every non-zero (!) element of the matrix row.
+
 template<class Element>
 void TMatrixTSparseRow<Element>::operator+=(Element val)
 {
-// Add val to every non-zero (!) element of the matrix row.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *rp = const_cast<Element *>(this->fDataPtr);
    for ( ; rp < this->fDataPtr+this->fNindex; rp++)
       *rp += val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix row by val.
+
 template<class Element>
 void TMatrixTSparseRow<Element>::operator*=(Element val)
 {
-// Multiply every element of the matrix row by val.
-
    R__ASSERT(this->fMatrix->IsValid());
    Element *rp = const_cast<Element *>(this->fDataPtr);
    for ( ; rp < this->fDataPtr+this->fNindex; rp++)
       *rp *= val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 template<class Element>
 void TMatrixTSparseRow<Element>::operator=(const TMatrixTSparseRow_const<Element> &mr)
 {
-// Assignment operator
-
    const TMatrixTBase<Element> *mt = mr.GetMatrix();
    if (this->fMatrix == mt) return;
 
@@ -1507,13 +1520,13 @@ void TMatrixTSparseRow<Element>::operator=(const TMatrixTSparseRow_const<Element
    this->fDataPtr = this->fMatrix->GetMatrixArray()+sIndex;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign a vector to a matrix row. The vector is considered row-vector
+/// to allow the assignment in the strict sense.
+
 template<class Element>
 void TMatrixTSparseRow<Element>::operator=(const TVectorT<Element> &vec)
 {
-// Assign a vector to a matrix row. The vector is considered row-vector
-// to allow the assignment in the strict sense.
-
    R__ASSERT(this->fMatrix->IsValid());
    R__ASSERT(vec.IsValid());
 
@@ -1534,12 +1547,12 @@ void TMatrixTSparseRow<Element>::operator=(const TVectorT<Element> &vec)
    this->fDataPtr = this->fMatrix->GetMatrixArray()+sIndex;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to every element of the matrix row the corresponding element of row r.
+
 template<class Element>
 void TMatrixTSparseRow<Element>::operator+=(const TMatrixTSparseRow_const<Element> &r)
 {
-// Add to every element of the matrix row the corresponding element of row r.
-
    const TMatrixTBase<Element> *mt = r.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -1568,13 +1581,13 @@ void TMatrixTSparseRow<Element>::operator+=(const TMatrixTSparseRow_const<Elemen
    this->fDataPtr = this->fMatrix->GetMatrixArray()+sIndex;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix row with the
+/// corresponding element of row r.
+
 template<class Element>
 void TMatrixTSparseRow<Element>::operator*=(const TMatrixTSparseRow_const<Element> &r)
 {
-// Multiply every element of the matrix row with the
-// corresponding element of row r.
-
    const TMatrixTBase<Element> *mt = r.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -1604,12 +1617,12 @@ void TMatrixTSparseRow<Element>::operator*=(const TMatrixTSparseRow_const<Elemen
    this->fDataPtr = this->fMatrix->GetMatrixArray()+sIndex;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTSparseDiag_const<Element>::TMatrixTSparseDiag_const(const TMatrixTSparse<Element> &matrix)
 {
-// Constructor
-
    R__ASSERT(matrix.IsValid());
 
    fMatrix  = &matrix;
@@ -1617,7 +1630,8 @@ TMatrixTSparseDiag_const<Element>::TMatrixTSparseDiag_const(const TMatrixTSparse
    fDataPtr = matrix.GetMatrixArray();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Element TMatrixTSparseDiag_const<Element>::operator()(Int_t i) const
 {
@@ -1638,25 +1652,27 @@ Element TMatrixTSparseDiag_const<Element>::operator()(Int_t i) const
   return 0.0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTSparseDiag<Element>::TMatrixTSparseDiag(TMatrixTSparse<Element> &matrix)
                    :TMatrixTSparseDiag_const<Element>(matrix)
 {
-// Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 template<class Element>
 TMatrixTSparseDiag<Element>::TMatrixTSparseDiag(const TMatrixTSparseDiag<Element> &md)
                   : TMatrixTSparseDiag_const<Element>(md)
 {
-// Constructor
-
    *this = md;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Element TMatrixTSparseDiag<Element>::operator()(Int_t i) const
 {
@@ -1677,12 +1693,12 @@ Element TMatrixTSparseDiag<Element>::operator()(Int_t i) const
     return 0.0;
  }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operator() : pick element diag(i)
+
 template<class Element>
 Element &TMatrixTSparseDiag<Element>::operator()(Int_t i)
 {
-// operator() : pick element diag(i)
-
    R__ASSERT(this->fMatrix->IsValid());
 
    if (i < 0 || i >= this->fNdiag) {
@@ -1718,45 +1734,45 @@ Element &TMatrixTSparseDiag<Element>::operator()(Int_t i)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign val to every element of the matrix diagonal.
+
 template<class Element>
 void TMatrixTSparseDiag<Element>::operator=(Element val)
 {
-// Assign val to every element of the matrix diagonal.
-
    R__ASSERT(this->fMatrix->IsValid());
    for (Int_t i = 0; i < this->fNdiag; i++)
       (*this)(i) = val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add val to every element of the matrix diagonal.
+
 template<class Element>
 void TMatrixTSparseDiag<Element>::operator+=(Element val)
 {
-// Add val to every element of the matrix diagonal.
-
    R__ASSERT(this->fMatrix->IsValid());
    for (Int_t i = 0; i < this->fNdiag; i++)
       (*this)(i) += val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix diagonal by val.
+
 template<class Element>
 void TMatrixTSparseDiag<Element>::operator*=(Element val)
 {
-// Multiply every element of the matrix diagonal by val.
-
    R__ASSERT(this->fMatrix->IsValid());
    for (Int_t i = 0; i < this->fNdiag; i++)
       (*this)(i) *= val;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 template<class Element>
 void TMatrixTSparseDiag<Element>::operator=(const TMatrixTSparseDiag_const<Element> &md)
 {
-// Assignment operator
-
    const TMatrixTBase<Element> *mt = md.GetMatrix();
    if (this->fMatrix == mt) return;
 
@@ -1771,12 +1787,12 @@ void TMatrixTSparseDiag<Element>::operator=(const TMatrixTSparseDiag_const<Eleme
       (*this)(i) = md(i);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign a vector to the matrix diagonal.
+
 template<class Element>
 void TMatrixTSparseDiag<Element>::operator=(const TVectorT<Element> &vec)
 {
-// Assign a vector to the matrix diagonal.
-
    R__ASSERT(this->fMatrix->IsValid());
    R__ASSERT(vec.IsValid());
 
@@ -1790,13 +1806,13 @@ void TMatrixTSparseDiag<Element>::operator=(const TVectorT<Element> &vec)
       (*this)(i) = vp[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to every element of the matrix diagonal the
+/// corresponding element of diagonal md.
+
 template<class Element>
 void TMatrixTSparseDiag<Element>::operator+=(const TMatrixTSparseDiag_const<Element> &md)
 {
-// Add to every element of the matrix diagonal the
-// corresponding element of diagonal md.
-
    const TMatrixTBase<Element> *mt = md.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -1810,13 +1826,13 @@ void TMatrixTSparseDiag<Element>::operator+=(const TMatrixTSparseDiag_const<Elem
       (*this)(i) += md(i);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix diagonal with the
+/// corresponding element of diagonal md.
+
 template<class Element>
 void TMatrixTSparseDiag<Element>::operator*=(const TMatrixTSparseDiag_const<Element> &md)
 {
-// Multiply every element of the matrix diagonal with the
-// corresponding element of diagonal md.
-
    const TMatrixTBase<Element> *mt = md.GetMatrix();
 
    R__ASSERT(this->fMatrix->IsValid());
@@ -1830,11 +1846,11 @@ void TMatrixTSparseDiag<Element>::operator*=(const TMatrixTSparseDiag_const<Elem
       (*this)(i) *= md(i);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Random number generator [0....1] with seed ix
+
 Double_t Drand(Double_t &ix)
 {
-// Random number generator [0....1] with seed ix
-
    const Double_t a   = 16807.0;
    const Double_t b15 = 32768.0;
    const Double_t b16 = 65536.0;

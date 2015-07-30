@@ -42,7 +42,10 @@
 
 ClassImp(TMVA::KDEKernel)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+/// sanity check
+
 TMVA::KDEKernel::KDEKernel( EKernelIter kiter, const TH1 *hist, Float_t lower_edge, Float_t upper_edge,
                             EKernelBorder kborder, Float_t FineFactor )
    : fSigma( 1. ),
@@ -54,8 +57,6 @@ TMVA::KDEKernel::KDEKernel( EKernelIter kiter, const TH1 *hist, Float_t lower_ed
      fKDEborder ( kborder ),
      fLogger( new MsgLogger("KDEKernel") )
 {
-   // constructor
-   // sanity check
    if (hist == NULL) {
       Log() << kFATAL << "Called without valid histogram pointer (hist)!" << Endl;
    } 
@@ -69,10 +70,11 @@ TMVA::KDEKernel::KDEKernel( EKernelIter kiter, const TH1 *hist, Float_t lower_ed
    fHiddenIteration=false;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::KDEKernel::~KDEKernel()
 {
-   // destructor
    if (fHist           != NULL) delete fHist;
    if (fFirstIterHist  != NULL) delete fFirstIterHist;
    if (fSigmaHist      != NULL) delete fSigmaHist;
@@ -80,10 +82,11 @@ TMVA::KDEKernel::~KDEKernel()
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// when using Gaussian as Kernel function this is faster way to calculate the integrals
+
 Double_t GaussIntegral(Double_t *x, Double_t *par)
 {
-   // when using Gaussian as Kernel function this is faster way to calculate the integrals
    if ( (par[1]<=0) || (x[0]>x[1])) return -1.;
   
    Float_t xs1=(x[0]-par[0])/par[1];
@@ -102,12 +105,12 @@ Double_t GaussIntegral(Double_t *x, Double_t *par)
    return -1.;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fIter == 1 ---> nonadaptive KDE
+/// fIter == 2 ---> adaptive KDE
+
 void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
 {
-   // fIter == 1 ---> nonadaptive KDE
-   // fIter == 2 ---> adaptive KDE
- 
    if (ktype == kGauss) {
 
       // i.e. gauss kernel
@@ -208,10 +211,11 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculates the integral of the Kernel
+
 Float_t TMVA::KDEKernel::GetBinKernelIntegral( Float_t lowr, Float_t highr, Float_t mean, Int_t binnum )
 {
-   // calculates the integral of the Kernel
    if ((fIter == kNonadaptiveKDE) || fHiddenIteration  ) 
       fKernel_integ->SetParameters(mean,fSigma); // non adaptive KDE
    else if ((fIter == kAdaptiveKDE) && !fHiddenIteration ) 

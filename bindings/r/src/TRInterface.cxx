@@ -16,7 +16,8 @@ extern "C"
 }
 #include<TRint.h>
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TRInterface class</h2></center>
 
@@ -120,11 +121,12 @@ ClassImp(TRInterface)
 static ROOT::R::TRInterface *gR = NULL;
 static Bool_t statusEventLoop;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The command line arguments are by deafult argc=0 and argv=NULL,
+/// The verbose mode is by default disabled but you can enable it to show procedures information in stdout/stderr
+
 TRInterface::TRInterface(const int argc, const char *argv[], const bool loadRcpp, const bool verbose, const bool interactive): TObject()
 {
-// The command line arguments are by deafult argc=0 and argv=NULL,
-// The verbose mode is by default disabled but you can enable it to show procedures information in stdout/stderr
    if (RInside::instancePtr()) throw std::runtime_error("Can only have one TRInterface instance");
    fR = new RInside(argc, argv, loadRcpp, verbose, interactive);
 
@@ -187,8 +189,6 @@ void TRInterface::LoadModule(TString name)
 //______________________________________________________________________________
 Int_t  TRInterface::Eval(const TString &code, TRObject  &ans)
 {
-// Parse R code and returns status of execution.
-// the RObject's response is saved in  ans
    SEXP fans;
 
    Int_t rc=kFALSE;
@@ -205,10 +205,11 @@ Int_t  TRInterface::Eval(const TString &code, TRObject  &ans)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute R code.
+
 void TRInterface::Execute(const TString &code)
 {
-// Execute R code.
   try{ 
 
         fR->parseEvalQ(code.Data());
@@ -249,7 +250,8 @@ void TRInterface::SetVerbose(Bool_t status)
    fR->setVerbose(status);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TRInterface::Binding TRInterface::operator[](const TString &name)
 {
    return Binding(this, name);
@@ -258,7 +260,6 @@ TRInterface::Binding TRInterface::operator[](const TString &name)
 //______________________________________________________________________________
 void TRInterface::Assign(const TRFunctionExport &obj, const TString &name)
 {
-   //This method lets you pass c++ functions to R environment.
    fR->assign(*obj.f, name.Data());
 }
 
@@ -272,9 +273,6 @@ void TRInterface::Assign(const TRDataFrame &obj, const TString &name)
 //______________________________________________________________________________
 void TRInterface::Interactive()
 {
-   //This method launches a R command line to run directly R code which you can
-   //pass to ROOT calling the apropiate method.
-
    while (kTRUE) {
       char *line = readline("[r]:");
       if (!line) continue;
@@ -286,10 +284,11 @@ void TRInterface::Interactive()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return a pointer to TRInterface.
+
 TRInterface *TRInterface::InstancePtr()
 {
-  //return a pointer to TRInterface.
    if (!gR) {
       const char *R_argv[] = {"rootr", "--gui=none", "--no-save", "--no-readline", "--silent", "--vanilla", "--slave"};
       gR = new TRInterface(7, R_argv, true, false, false);
@@ -298,10 +297,11 @@ TRInterface *TRInterface::InstancePtr()
    return gR;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return a reference object of TRInterface.
+
 TRInterface &TRInterface::Instance()
 {
-  //return a reference object of TRInterface.
    return  *TRInterface::InstancePtr();
 }
 
@@ -328,10 +328,11 @@ Bool_t TRInterface::Install(TString pkg,TString repos)
 #undef _POSIX_C_SOURCE
 #include <R_ext/eventloop.h>
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///run the R's eventloop to process graphics events
+
 void TRInterface::ProcessEventsLoop()
 {
-   //run the R's eventloop to process graphics events
    if (!statusEventLoop) {
       th = new TThread([](void * args) {
          while (kTRUE) {

@@ -14,30 +14,30 @@
 
 ClassImp(TMySQLRow)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Single row of query result.
+
 TMySQLRow::TMySQLRow(void *res, ULong_t rowHandle)
 {
-   // Single row of query result.
-
    fResult      = (MYSQL_RES *) res;
    fFields      = (MYSQL_ROW) rowHandle;
    fFieldLength = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy row object.
+
 TMySQLRow::~TMySQLRow()
 {
-   // Destroy row object.
-
    if (fFields)
       Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close row.
+
 void TMySQLRow::Close(Option_t *)
 {
-   // Close row.
-
    if (!fFields)
       return;
 
@@ -46,11 +46,11 @@ void TMySQLRow::Close(Option_t *)
    fFieldLength = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if row is open and field index within range.
+
 Bool_t TMySQLRow::IsValid(Int_t field)
 {
-   // Check if row is open and field index within range.
-
    if (!fFields) {
       Error("IsValid", "row closed");
       return kFALSE;
@@ -62,11 +62,11 @@ Bool_t TMySQLRow::IsValid(Int_t field)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get length in bytes of specified field.
+
 ULong_t TMySQLRow::GetFieldLength(Int_t field)
 {
-   // Get length in bytes of specified field.
-
    if (!IsValid(field))
       return 0;
 
@@ -81,11 +81,11 @@ ULong_t TMySQLRow::GetFieldLength(Int_t field)
    return fFieldLength[field];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get specified field from row (0 <= field < GetFieldCount()).
+
 const char *TMySQLRow::GetField(Int_t field)
 {
-   // Get specified field from row (0 <= field < GetFieldCount()).
-
    if (!IsValid(field))
       return 0;
 

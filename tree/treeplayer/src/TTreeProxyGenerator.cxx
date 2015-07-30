@@ -1714,11 +1714,11 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       }
    }
 
-   //----------------------------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Parse the options string.
+
    void TTreeProxyGenerator::ParseOptions()
    {
-      // Parse the options string.
-
       TString opt = fOptionStr;
 
       fOptions = 0;
@@ -1728,15 +1728,15 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       }
    }
 
-   //----------------------------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Add the "pragma C++ class" if needed and return
+   /// true if it has been added _or_ if it is known to
+   /// not be needed.
+   /// (I.e. return kFALSE if a container of this class
+   /// can not have a "pragma C++ class"
+
    static Bool_t R__AddPragmaForClass(TTreeProxyGenerator *gen, TClass *cl)
    {
-      // Add the "pragma C++ class" if needed and return
-      // true if it has been added _or_ if it is known to
-      // not be needed.
-      // (I.e. return kFALSE if a container of this class
-      // can not have a "pragma C++ class"
-
       if (!cl) return kFALSE;
       if (cl->GetCollectionProxy()) {
          TClass *valcl = cl->GetCollectionProxy()->GetValueClass();
@@ -1752,23 +1752,24 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       return kFALSE;
    }
 
-   //----------------------------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Add the "pragma C++ class" if needed and return
+   /// true if it has been added _or_ if it is known to
+   /// not be needed.
+   /// (I.e. return kFALSE if a container of this class
+   /// can not have a "pragma C++ class"
+
    static Bool_t R__AddPragmaForClass(TTreeProxyGenerator *gen, const char *classname)
    {
-      // Add the "pragma C++ class" if needed and return
-      // true if it has been added _or_ if it is known to
-      // not be needed.
-      // (I.e. return kFALSE if a container of this class
-      // can not have a "pragma C++ class"
-
       return R__AddPragmaForClass( gen, TClass::GetClass(classname) );
 
    }
 
-   //----------------------------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Check whether the file exist and do something useful if it does
+
    void TTreeProxyGenerator::WriteProxy()
    {
-      // Check whether the file exist and do something useful if it does
       if (fScript.Length()==0) {
          Error("WriteProxy","No user script has been specified.");
          return;

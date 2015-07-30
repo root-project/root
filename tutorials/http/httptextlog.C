@@ -24,6 +24,9 @@
 //     http://localhost:8080/log/draw.htm?monitoring=2000
 //  In last case it could be used in iframe, also it requires less code to load on the page
 
+#include <stdio.h>
+#include <string.h>
+
 #include "TNamed.h"
 #include "TList.h"
 #include "TObjString.h"
@@ -32,6 +35,7 @@
 #include "TRandom3.h"
 #include "TSystem.h"
 #include "THttpServer.h"
+#include "TRootSniffer.h"
 #include "TDatime.h"
 #include "TClass.h"
 
@@ -108,19 +112,27 @@ class TMsgList : public TNamed {
          return &fSelect;
       }
 
-   ClassDef(TMsgList, 1); // Debug messages list *SNIFF* _autoload=currentdir/httptextlog.js _make_request=MakeMsgListRequest _after_request=AfterMsgListRequest _icon=img_text
+   ClassDef(TMsgList, 1); // Custom messages list
 };
 
 void httptextlog()
 {
+   // create logging instance
+   TMsgList* log = new TMsgList("log", 200);
 
-   if (TMsgList::Class()->GetMethodAllAny("Select") == 0) {
+   if ((TMsgList::Class()->GetMethodAllAny("Select") == 0) || (strcmp(log->ClassName(), "TMsgList")!=0)) {
       printf("Most probably, macro runs in interpreter mode\n");
       printf("To access new methods from TMsgList class,\n");
       printf("one should run macro with ACLiC like:\n");
       printf("   shell> root -b httpextlog.C+\n");
       return;
     }
+
+   if (gSystem->AccessPathName("httptextlog.js")!=0) {
+      printf("Please start macro from directory where httptextlog.js is available\n");
+      printf("Only in this case web interface can work\n");
+      return;
+   }
 
    // create histograms, just for fun
    TH1D *hpx = new TH1D("hpx","This is the px distribution",100,-4,4);
@@ -129,11 +141,11 @@ void httptextlog()
    TH2F *hpxpy = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
    hpxpy->SetDirectory(0);
 
-   // create logging instance
-   TMsgList* log = new TMsgList("log", 200);
-
    // start http server
    THttpServer* serv = new THttpServer("http:8080");
+
+   // let always load httptextlog.js script in the browser
+   serv->GetSniffer()->SetAutoLoad("currentdir/httptextlog.js");
 
    // register histograms
    serv->Register("/", hpx);

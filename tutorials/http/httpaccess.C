@@ -28,11 +28,26 @@ void httpaccess()
    TH2D *hpxpy = new TH2D("hpxpy","py vs px",40,-4,4,40,-4,4);
    hpxpy->SetDirectory(0);
 
+   if (gSystem->AccessPathName("auth.txt")!=0) {
+      printf("Please start macro from directory where auth.txt file is available\n");
+      printf("It required to supply authentication information for the http server\n");
+      return;
+   }
+
    // start http server
    THttpServer* serv = new THttpServer("http:8080?auth_file=auth.txt&auth_domain=root");
 
+   // or start FastCGI server, where host server (like Apache or lighttpd) should enable own authentication
+   // for apache one should add correspondent module and authentication for fastcgi location
+   // for lighttpd one add following lines to configuration file:
+   //   server.modules += ( "mod_auth" )
+   //   auth.backend = "htdigest"
+   //   auth.backend.htdigest.userfile = "/srv/auth/auth.txt"
+   //   auth.require = ( "/root.app" => ( "method" => "digest", "realm" => "root", "require" => "valid-user" ))
+   // THttpServer* serv = new THttpServer("fastcgi:9000");
+
    // One could specify location of newer version of JSROOT
-   // serv->SetJSROOT("https://root.cern.ch/js/3.5/");
+   // serv->SetJSROOT("https://root.cern.ch/js/3.6/");
 
    // register histograms
    serv->Register("/", hpx);

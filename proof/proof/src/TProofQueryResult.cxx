@@ -26,14 +26,14 @@
 
 ClassImp(TProofQueryResult)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor.
+
 TProofQueryResult::TProofQueryResult(Int_t sn, const char *opt, TList *inlist,
                                      Long64_t ent, Long64_t fst, TDSet *dset,
                                      const char *sel, TObject *elist)
                   : TQueryResult(sn, opt, inlist, ent, fst, sel)
 {
-   // Main constructor.
-
    fNumWrks = -1;
    fStartLog = -1;
 
@@ -44,11 +44,11 @@ TProofQueryResult::TProofQueryResult(Int_t sn, const char *opt, TList *inlist,
       fInputList->Add(elist);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call when running starts.
+
 void TProofQueryResult::SetRunning(Int_t startlog, const char *par, Int_t nwrks)
 {
-   // Call when running starts.
-
    Info("SetRunning", "nwrks: %d", nwrks);
 
    fStatus = kRunning;

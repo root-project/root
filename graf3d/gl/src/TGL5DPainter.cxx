@@ -30,7 +30,9 @@
 //iso-surfaces. 5D - not implemented yet.
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Constructor.
+
 TGL5DPainter::TGL5DPainter(TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
          : TGLPlotPainter(data, camera, coord),
            fMeshBuilder(kTRUE),//kTRUE == average normals.
@@ -40,19 +42,19 @@ TGL5DPainter::TGL5DPainter(TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlotCoo
            fAlpha(0.4),
            fNContours(kNContours)
 {
-   //Constructor.
    if (fData->fV4IsString)
       fNContours = Int_t(fData->fV4MinMax.second) - Int_t(fData->fV4MinMax.first) + 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Try to add new iso-surface.
+///If something goes wrong, return
+///iterator to the end of fIsos.
+
 TGL5DPainter::SurfIter_t TGL5DPainter::AddSurface(Double_t v4, Color_t ci,
                                                   Double_t iso, Double_t sigma,
                                                   Double_t range, Int_t lownps)
 {
-   //Try to add new iso-surface.
-   //If something goes wrong, return
-   //iterator to the end of fIsos.
    fData->SelectPoints(v4, range);
 
    if (fData->SelectedSize() < size_type(lownps)) {
@@ -94,10 +96,11 @@ TGL5DPainter::SurfIter_t TGL5DPainter::AddSurface(Double_t v4, Color_t ci,
    return fIsos.begin();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Add new surface. Simplified version for ged.
+
 void TGL5DPainter::AddSurface(Double_t v4)
 {
-   //Add new surface. Simplified version for ged.
    const Rgl::Range_t &v4R = fData->fV4MinMax;
    const Bool_t isString   = fData->fV4IsString;
    const Double_t rms  = TMath::RMS(fData->fNP, fData->fV4);  //RMS of the N points.
@@ -109,10 +112,11 @@ void TGL5DPainter::AddSurface(Double_t v4)
    AddSurface(v4, 1, 0.125, 0.05, range);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Remove iso-surface.
+
 void TGL5DPainter::RemoveSurface(SurfIter_t surf)
 {
-   //Remove iso-surface.
    if (surf == fIsos.end()) {
       Error("TGL5DPainter::RemoveSurface", "Invalid iterator, surface does not exist.");
       return;
@@ -121,21 +125,23 @@ void TGL5DPainter::RemoveSurface(SurfIter_t surf)
    fIsos.erase(surf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Return info for plot part under cursor.
+
 char *TGL5DPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
-   //Return info for plot part under cursor.
    static char mess[] = {"gl5d"};
    return mess;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Create mesh.
+///InitGeometry creates surfaces for auto-iso levels.
+///Called the first time and each time number of auto-levels is
+///reset via the editor.
+
 Bool_t TGL5DPainter::InitGeometry()
 {
-   //Create mesh.
-   //InitGeometry creates surfaces for auto-iso levels.
-   //Called the first time and each time number of auto-levels is
-   //reset via the editor.
    if (fInit)
       return kTRUE;
    //Only in cartesian.
@@ -179,20 +185,22 @@ Bool_t TGL5DPainter::InitGeometry()
    return fInit = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///User clicks right mouse button (in a pad).
+
 void TGL5DPainter::StartPan(Int_t px, Int_t py)
 {
-   //User clicks right mouse button (in a pad).
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
    fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Mouse events handler.
+
 void TGL5DPainter::Pan(Int_t px, Int_t py)
 {
-   //Mouse events handler.
    if (fSelectedPart >= fSelectionBase) {//Pan camera.
       SaveModelviewMatrix();
       SaveProjectionMatrix();
@@ -227,16 +235,17 @@ void TGL5DPainter::Pan(Int_t px, Int_t py)
    fUpdateSelection = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No additional options for TGL5DPainter.
+
 void TGL5DPainter::AddOption(const TString &/*option*/)
 {
-   //No additional options for TGL5DPainter.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGL5DPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
-
    //Change color sheme.
    if (event == kKeyPress) {
       if (py == kKey_c || py == kKey_C) {
@@ -257,10 +266,11 @@ void TGL5DPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set selection range parameter.
+
 void TGL5DPainter::SetAlpha(Double_t newVal)
 {
-   //Set selection range parameter.
    if (fAlpha != newVal && !fData->fV4IsString) {
       fAlpha = newVal;
       fInit = kFALSE;
@@ -271,11 +281,11 @@ void TGL5DPainter::SetAlpha(Double_t newVal)
       Warning("SetAlpha", "Alpha is not required for string data (your 4-th dimension is string).");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set the number of predefined contours.
+
 void TGL5DPainter::SetNContours(Int_t n)
 {
-   //Set the number of predefined contours.
-
    if (n <= 0) {
       Warning("SetNContours", "Bad number of contours: %d", n);
       return;
@@ -286,14 +296,15 @@ void TGL5DPainter::SetNContours(Int_t n)
    InitGeometry();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No need to create or delete meshes,
+///number of meshes (iso-levels) are
+///the same, but meshes must be rebuilt
+///in new ranges.
+///Only in cartesian.
+
 void TGL5DPainter::ResetGeometryRanges()
 {
-   //No need to create or delete meshes,
-   //number of meshes (iso-levels) are
-   //the same, but meshes must be rebuilt
-   //in new ranges.
-   //Only in cartesian.
    fCoord->SetRanges(fXAxis, fYAxis, fZAxis);
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(),
                        fCoord->GetYRangeScaled(),
@@ -324,24 +335,27 @@ void TGL5DPainter::ResetGeometryRanges()
    fBoxCut.ResetBoxGeometry();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///std::list::begin.
+
 TGL5DPainter::SurfIter_t TGL5DPainter::SurfacesBegin()
 {
-   //std::list::begin.
    return fIsos.begin();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///std::list::end.
+
 TGL5DPainter::SurfIter_t TGL5DPainter::SurfacesEnd()
 {
-   //std::list::end.
    return fIsos.end();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Initialize OpenGL state variables.
+
 void TGL5DPainter::InitGL() const
 {
-   //Initialize OpenGL state variables.
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
    glEnable(GL_DEPTH_TEST);
@@ -349,10 +363,11 @@ void TGL5DPainter::InitGL() const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Return some gl states to original values.
+
 void TGL5DPainter::DeInitGL()const
 {
-   //Return some gl states to original values.
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
    glDisable(GL_CULL_FACE);
    glDisable(GL_DEPTH_TEST);
@@ -360,11 +375,11 @@ void TGL5DPainter::DeInitGL()const
    glDisable(GL_LIGHTING);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw a set of meshes.
+
 void TGL5DPainter::DrawPlot() const
 {
-   //Draw a set of meshes.
-
    //Shift plot to point of origin.
    const Rgl::PlotTranslation trGuard(this);
 
@@ -429,10 +444,11 @@ void TGL5DPainter::DrawPlot() const
       fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set the color for iso-surface.
+
 void TGL5DPainter::SetSurfaceColor(ConstSurfIter_t it)const
 {
-   //Set the color for iso-surface.
    Color_t ind = it->fColor;
    Float_t rgba[] = {0.f, 0.f, 0.f, static_cast<Float_t>(it->fAlpha / 100.)};
    Rgl::Pad::ExtractRGBA(ind, rgba);
@@ -443,10 +459,11 @@ void TGL5DPainter::SetSurfaceColor(ConstSurfIter_t it)const
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw full cloud of points.
+
 void TGL5DPainter::DrawCloud()const
 {
-   //Draw full cloud of points.
    const TGLDisableGuard light(GL_LIGHTING);
    const TGLDisableGuard depth(GL_DEPTH_TEST);
 
@@ -467,10 +484,11 @@ void TGL5DPainter::DrawCloud()const
    glPointSize(1.f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw cloud for selected iso-surface.
+
 void TGL5DPainter::DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const
 {
-   //Draw cloud for selected iso-surface.
    const TGLDisableGuard light(GL_LIGHTING);
 
    Float_t rgba[4] = {};
@@ -494,11 +512,11 @@ void TGL5DPainter::DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const
    glPointSize(1.f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw one iso-surface.
+
 void TGL5DPainter::DrawMesh(ConstSurfIter_t surf)const
 {
-   //Draw one iso-surface.
-
    const Mesh_t &m = surf->fMesh;
 
    if (!fBoxCut.IsActive()) {

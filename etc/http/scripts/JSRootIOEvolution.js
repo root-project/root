@@ -1,19 +1,26 @@
 /// @file JSRootIOEvolution.js
 /// I/O methods of JavaScript ROOT
 
-(function(){
+(function( factory ) {
+   if ( typeof define === "function" && define.amd ) {
+      // AMD. Register as an anonymous module.
+      define( ['JSRootCore', 'rawinflate'], factory );
+   } else {
+      if (typeof JSROOT == 'undefined') {
+         var e1 = new Error("This extension requires JSRootCore.js");
+         e1.source = "JSRootIOEvolution.js";
+         throw e1;
+      }
 
-   if (typeof JSROOT != "object") {
-      var e1 = new Error("This extension requires JSRootCore.js");
-      e1.source = "JSRootIOEvolution.js";
-      throw e1;
-   }
+      if (typeof JSROOT.IO == "object") {
+         var e1 = new Error("This JSROOT IO already loaded");
+         e1.source = "JSRootIOEvolution.js";
+         throw e1;
+      }
 
-   if (typeof JSROOT.IO == "object") {
-      var e1 = new Error("This JSROOT IO already loaded");
-      e1.source = "JSRootIOEvolution.js";
-      throw e1;
+      factory(JSROOT);
    }
+} (function(JSROOT) {
 
    JSROOT.IO = {
          kBase : 0, kOffsetL : 20, kOffsetP : 40, kCounter : 6, kCharStar : 7,
@@ -91,7 +98,7 @@
       if (str.charAt(off) == 'Z' && str.charAt(off+1) == 'L') {
          /* New zlib format */
          var data = str.substr(off + JSROOT.IO.Z_HDRSIZE + 2, srcsize);
-         return RawInflate.inflate(data);
+         return window.RawInflate.inflate(data);
       }
       /* Old zlib format */
       else {
@@ -362,6 +369,39 @@
       this.o += len;
 
       return (this.b.charCodeAt(pos) == 0) ? '' : this.b.substring(pos, pos + len);
+   }
+
+   JSROOT.TBuffer.prototype.ReadSpecial = function(typ, typname)
+   {
+      // For the moment only few cases are supported,
+      // later one could made more generic approach here
+
+      var ver = this.ReadVersion();
+      var res = null;
+
+      if (typname == "vector<double>") res = this.ReadFastArray(this.ntoi4(),'D'); else
+      if (typname == "vector<int>") res = this.ReadFastArray(this.ntoi4(),'I'); else
+      if (typname == "vector<float>") res = this.ReadFastArray(this.ntoi4(),'F'); else
+      if (typname == "vector<TObject*>") {
+         var n = this.ntoi4();
+         res = [];
+         for (var i=0;i<n;i++) res.push(this.ReadObjectAny());
+      }  else
+      if (typname.indexOf("map<TString,int")==0) {
+         var n = this.ntoi4();
+         res = [];
+         for (var i=0;i<n;i++) {
+            var str = this.ReadTString();
+            var val = this.ntoi4();
+            res.push({ first: str, second: val});
+         }
+      } else {
+         JSROOT.console('failed to stream element of type ' + typname);
+      }
+
+      if (!this.CheckBytecount(ver,"Reading " + typname)) res = null;
+
+      return res;
    }
 
    JSROOT.TBuffer.prototype.GetMappedObject = function(tag) {
@@ -708,13 +748,16 @@
       return this.CheckBytecount(R__v, "ReadStreamerBase");
    }
 
-   JSROOT.TBuffer.prototype.ReadStreamerBasicType = function(streamerbase) {
-      // stream an object of class TStreamerBasicType
+   JSROOT.TBuffer.prototype.ReadStreamerSubElement = function(streamerbase, lmt) {
+      // stream an object class derived from TStreamerElement
+      // without data members, check version number
+      if (lmt==null) lmt = 1;
+
       var R__v = this.ReadVersion();
-      if (R__v['val'] > 1) {
+      if (R__v['val'] > lmt) {
          this.ReadStreamerElement(streamerbase);
       }
-      return this.CheckBytecount(R__v, "ReadStreamerBasicType");
+      return this.CheckBytecount(R__v, "ReadStreamerSubElement");
    }
 
    JSROOT.TBuffer.prototype.ReadStreamerBasicPointer = function(streamerbase) {
@@ -739,15 +782,6 @@
          streamerSTL['ctype'] = this.ntou4();
       }
       return this.CheckBytecount(R__v, "ReadStreamerSTL");
-   }
-
-   JSROOT.TBuffer.prototype.ReadTStreamerObject = function(streamerbase) {
-      // stream an object of class TStreamerObject
-      var R__v = this.ReadVersion();
-      if (R__v['val'] > 1) {
-         this.ReadStreamerElement(streamerbase);
-      }
-      return this.CheckBytecount(R__v, "ReadTStreamerObject");
    }
 
    JSROOT.TBuffer.prototype.ReadClass = function() {
@@ -847,20 +881,19 @@
       else if (classname == "TStreamerBase") {
          this.ReadStreamerBase(obj);
       }
-      else if (classname == "TStreamerBasicType") {
-         this.ReadStreamerBasicType(obj);
-      }
       else if ((classname == "TStreamerBasicPointer") || (classname == "TStreamerLoop")) {
          this.ReadStreamerBasicPointer(obj);
       }
       else if (classname == "TStreamerSTL") {
          this.ReadStreamerSTL(obj);
       }
-      else if (classname == "TStreamerObject" ||
-            classname == "TStreamerObjectAny" ||
-            classname == "TStreamerString" ||
-            classname == "TStreamerObjectPointer" ) {
-         this.ReadTStreamerObject(obj);
+      else if (classname == "TStreamerObject" || classname == "TStreamerBasicType" ||
+            classname == "TStreamerObjectAny" || classname == "TStreamerString" ||
+            classname == "TStreamerObjectPointer") {
+         this.ReadStreamerSubElement(obj);
+      }
+      else if (classname == "TStreamerObjectAnyPointer") {
+         this.ReadStreamerSubElement(obj, 0);
       }
       else if (classname == "TBasket") {
          this.ReadTBasket(obj);
@@ -938,7 +971,7 @@
             obj[prop] = buf.ntou8();
             break;
          case JSROOT.IO.kBits:
-            alert('failed to stream ' + prop + ' (' + this[prop]['typename'] + ')');
+            alert('failed to stream bits ' + prop + ' (' + this[prop]['typename'] + ')');
             break;
          case JSROOT.IO.kLong64:
             obj[prop] = buf.ntoi8();
@@ -978,19 +1011,19 @@
          case JSROOT.IO.kTNamed:
             buf.ReadTNamed(obj);
             break;
-         case JSROOT.IO.kAnyPnoVT:
-         case JSROOT.IO.kSTLp:
-         case JSROOT.IO.kSkip:
-         case JSROOT.IO.kSkipL:
-         case JSROOT.IO.kSkipP:
-         case JSROOT.IO.kConv:
-         case JSROOT.IO.kConvL:
-         case JSROOT.IO.kConvP:
-         case JSROOT.IO.kSTL:
-         case JSROOT.IO.kSTLstring:
+         //case JSROOT.IO.kAnyPnoVT:
+         //case JSROOT.IO.kSTLp:
+         //case JSROOT.IO.kSTL:
+         //case JSROOT.IO.kSkip:
+         //case JSROOT.IO.kSkipL:
+         //case JSROOT.IO.kSkipP:
+         //case JSROOT.IO.kConv:
+         //case JSROOT.IO.kConvL:
+         //case JSROOT.IO.kConvP:
+         //case JSROOT.IO.kSTLstring:
+         //case JSROOT.IO.kStreamLoop:
          case JSROOT.IO.kStreamer:
-         case JSROOT.IO.kStreamLoop:
-            alert('failed to stream ' + prop + ' (' + this[prop]['typename'] + ')');
+            obj[prop] = buf.ReadSpecial(this[prop]['type'], this[prop]['typename']);
             break;
          case JSROOT.IO.kOffsetL+JSROOT.IO.kShort:
          case JSROOT.IO.kOffsetL+JSROOT.IO.kUShort:
@@ -1792,7 +1825,10 @@
       this.fTagOffset = 0;
    }
 
-})();
+   return JSROOT;
+
+}));
+
 
 // JSRootIOEvolution.js ends
 

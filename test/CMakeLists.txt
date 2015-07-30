@@ -286,3 +286,8 @@ if(ROOT_tbb_FOUND)
     add_dependencies(testTBB TBB)
   endif()
 endif()
+
+#--g2root------------------------------------------------------------------------------------------
+if(TARGET g2root)
+  ROOT_ADD_TEST(test-g2root COMMAND g2root)
+endif()

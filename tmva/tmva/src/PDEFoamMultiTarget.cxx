@@ -56,68 +56,71 @@
 
 ClassImp(TMVA::PDEFoamMultiTarget)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer, user should not use it.
+
 TMVA::PDEFoamMultiTarget::PDEFoamMultiTarget()
    : PDEFoamEvent()
    , fTargetSelection(kMean)
 {
-   // Default constructor for streamer, user should not use it.
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User constructor
+///
+/// Parameters:
+///
+/// - name - name of PDEFoam object
+///
+/// - ts - target selection method used in
+///   GetCellValue(const std::map<Int_t, Float_t>& xvec, ECellValue)
+///   Cadidates are: TMVA::kMean, TMVA::kMpv
+///
+///   - TMVA::kMean - The function GetCellValue() finds all cells
+///     which contain a given event vector 'xvec' and returns the
+///     mean target (for every target variable in the foam).
+///
+///   - TMVA::kMpv - The function GetCellValue() finds all cells
+///     which contain a given event vector 'xvec' and returns the
+///     most probable target (for every target variable in the
+///     foam), that is the target value which corresponds to the
+///     cell with the largest event density.
+
 TMVA::PDEFoamMultiTarget::PDEFoamMultiTarget(const TString& name, ETargetSelection ts)
    : PDEFoamEvent(name)
    , fTargetSelection(ts)
 {
-   // User constructor
-   //
-   // Parameters:
-   //
-   // - name - name of PDEFoam object
-   //
-   // - ts - target selection method used in
-   //   GetCellValue(const std::map<Int_t, Float_t>& xvec, ECellValue)
-   //   Cadidates are: TMVA::kMean, TMVA::kMpv
-   //
-   //   - TMVA::kMean - The function GetCellValue() finds all cells
-   //     which contain a given event vector 'xvec' and returns the
-   //     mean target (for every target variable in the foam).
-   //
-   //   - TMVA::kMpv - The function GetCellValue() finds all cells
-   //     which contain a given event vector 'xvec' and returns the
-   //     most probable target (for every target variable in the
-   //     foam), that is the target value which corresponds to the
-   //     cell with the largest event density.
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy Constructor  NOT IMPLEMENTED (NEVER USED)
+
 TMVA::PDEFoamMultiTarget::PDEFoamMultiTarget(const PDEFoamMultiTarget &from)
    : PDEFoamEvent(from)
    , fTargetSelection(from.fTargetSelection)
 {
-   // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is overridden from PDFEFoam.  It returns all
+/// regression targets (in order), given an untransformed event
+/// vector 'xvec'.  The key of 'xvec' is the dimension and the value
+/// (Float_t) is the coordinate.
+///
+/// Note: number of foam dimensions = number of variables + number
+/// of targets
+///
+/// Parameters:
+/// - xvec - map of event variables (no targets!)
+/// - cv - cell value to return (ignored!)
+///
+/// Return:
+/// Targets, ordered by missing dimensions in 'xvec'.
+/// The size of the returned vector = foam dimension - size of xvec.
+
 std::vector<Float_t> TMVA::PDEFoamMultiTarget::GetCellValue(const std::map<Int_t, Float_t>& xvec, ECellValue /*cv*/)
 {
-   // This function is overridden from PDFEFoam.  It returns all
-   // regression targets (in order), given an untransformed event
-   // vector 'xvec'.  The key of 'xvec' is the dimension and the value
-   // (Float_t) is the coordinate.
-   //
-   // Note: number of foam dimensions = number of variables + number
-   // of targets
-   //
-   // Parameters:
-   // - xvec - map of event variables (no targets!)
-   // - cv - cell value to return (ignored!)
-   //
-   // Return:
-   // Targets, ordered by missing dimensions in 'xvec'.
-   // The size of the returned vector = foam dimension - size of xvec.
-
    // transform event vector
    std::map<Int_t, Float_t> txvec; // transformed event vector
    for (std::map<Int_t, Float_t>::const_iterator it = xvec.begin();

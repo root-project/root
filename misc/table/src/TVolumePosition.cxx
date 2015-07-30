@@ -48,20 +48,21 @@ ClassImp(TVolumePosition)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Node normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ======================
+///*-*
+///*-*    name    is the name of the node
+///*-*    title   is title
+///*-*    x,y,z   are the offsets of the volume with respect to his mother
+///*-*    matrixname  is the name of the rotation matrix
+///*-*
+///*-*    This new node is added into the list of sons of the current node
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 TVolumePosition::TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t z, const char *matrixname)
 : fMatrix(0),fNode(node),fId(0)
 {
-//*-*-*-*-*-*-*-*-*-*-*Node normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================
-//*-*
-//*-*    name    is the name of the node
-//*-*    title   is title
-//*-*    x,y,z   are the offsets of the volume with respect to his mother
-//*-*    matrixname  is the name of the rotation matrix
-//*-*
-//*-*    This new node is added into the list of sons of the current node
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    SetMatrixOwner(kFALSE);
    fX[0] = x; fX[1] =y; fX[2] = z;
    if (!node) return;
@@ -75,28 +76,30 @@ TVolumePosition::TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Node normal constructor*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ================================
+///*-*
+///*-*    name    is the name of the node
+///*-*    title   is title
+///*-*    x,y,z   are the offsets of the volume with respect to his mother
+///*-*    matrix  is the pointer to the rotation matrix
+///*-*
+///*-*    This new node is added into the list of sons of the current node
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 TVolumePosition::TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t z, TRotMatrix *matrix)
                : fMatrix(matrix),fNode(node),fId(0)
 {
-//*-*-*-*-*-*-*-*-*-*-*Node normal constructor*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ================================
-//*-*
-//*-*    name    is the name of the node
-//*-*    title   is title
-//*-*    x,y,z   are the offsets of the volume with respect to his mother
-//*-*    matrix  is the pointer to the rotation matrix
-//*-*
-//*-*    This new node is added into the list of sons of the current node
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    SetMatrixOwner(kFALSE);
    if (!gGeometry) new TGeometry;
    fX[0] = x; fX[1] = y; fX[2] = z;
    if (!fMatrix) fMatrix = TVolume::GetIdentity();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick the "old" position by pieces
+
 TVolumePosition::TVolumePosition(const TVolumePosition* oldPosition, const TVolumePosition* curPosition){
-   // Pick the "old" position by pieces
    fMatrix = 0;
    SetMatrixOwner(kFALSE);
    TVolume *curNode = 0;
@@ -159,16 +162,18 @@ TVolumePosition::TVolumePosition(const TVolumePosition&pos): TObject()
    ((TVolumePosition &)pos).SetMatrixOwner(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TVolumePosition::~TVolumePosition()
 {
-   //to be documented
    DeleteOwnMatrix();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumePosition::Browse(TBrowser *b)
 {
-   //to be documented
    if (GetNode()) {
       TShape *shape = GetNode()->GetShape();
       b->Add(GetNode(),shape?shape->GetName():GetNode()->GetName());
@@ -178,38 +183,40 @@ void TVolumePosition::Browse(TBrowser *b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a Node*-*-*-*-*-*
+///*-*                  ===========================================
+///*-*  Compute the closest distance of approach from point px,py to this node.
+///*-*  The distance is computed in pixels units.
+///*-*
+///*-*
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 Int_t TVolumePosition::DistancetoPrimitive(Int_t, Int_t)
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a Node*-*-*-*-*-*
-//*-*                  ===========================================
-//*-*  Compute the closest distance of approach from point px,py to this node.
-//*-*  The distance is computed in pixels units.
-//*-*
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    return 99999;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*Draw Referenced node with current parameters*-*-*-*
+///*-*                   =============================================
+
 void TVolumePosition::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Draw Referenced node with current parameters*-*-*-*
-//*-*                   =============================================
    TVolume *node = GetNode();
    if (node) node->Draw(option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
+///*-*                  =========================================
+///*-*  This member function must be implemented to realize the action
+///*-*  corresponding to the mouse click on the object in the window
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 void TVolumePosition::ExecuteEvent(Int_t, Int_t, Int_t)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//*-*  This member function must be implemented to realize the action
-//*-*  corresponding to the mouse click on the object in the window
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
 //   if (gPad->GetView())
 //             gPad->GetView()->ExecuteRotateView(event, px, py);
 
@@ -217,17 +224,19 @@ void TVolumePosition::ExecuteEvent(Int_t, Int_t, Int_t)
    gPad->SetCursor(kHand);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return VolumePosition name
+
 const Char_t *TVolumePosition::GetName() const
 {
-   //return VolumePosition name
    return GetNode()?GetNode()->GetName():IsA()->GetName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 char *TVolumePosition::GetObjectInfo(Int_t, Int_t) const
 {
-   //to be documented
    if (!gPad) return 0;
    if (!GetNode()) return 0;
    static char info[64];
@@ -235,30 +244,33 @@ char *TVolumePosition::GetObjectInfo(Int_t, Int_t) const
    return info;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Double_t *TVolumePosition::Errmx2Master(const Double_t *localError, Double_t *masterError) const
 {
-   //to be documented
    Double_t error[6];
    TCL::vzero(&error[1],4);
    error[0] = localError[0]; error[2] = localError[1]; error[5] = localError[2];
    return Cormx2Master(error, masterError);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Float_t *TVolumePosition::Errmx2Master(const Float_t *localError, Float_t *masterError) const
 {
-   //to be documented
    Float_t error[6];
    TCL::vzero(&error[1],4);
    error[0] = localError[0]; error[2] = localError[1]; error[5] = localError[2];
    return Cormx2Master(error, masterError);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Double_t *TVolumePosition::Cormx2Master(const Double_t *localCorr, Double_t *masterCorr)const
 {
-   //to be documented
    Double_t *res = 0;
    const TRotMatrix *rm = GetMatrix();
    double *m = 0;
@@ -269,10 +281,11 @@ Double_t *TVolumePosition::Cormx2Master(const Double_t *localCorr, Double_t *mas
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Float_t *TVolumePosition::Cormx2Master(const Float_t *localCorr, Float_t *masterCorr) const
 {
-   //to be documented
    Float_t *res = 0;
    const TRotMatrix *rm = GetMatrix();
    Double_t *m = 0;
@@ -285,28 +298,31 @@ Float_t *TVolumePosition::Cormx2Master(const Float_t *localCorr, Float_t *master
       res =  TCL::ucopy(localCorr,masterCorr,6);
    return res;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Double_t *TVolumePosition::Errmx2Local(const Double_t *masterError, Double_t *localError) const
 {
-   //to be documented
    Double_t error[6];
    TCL::vzero(&error[1],4);
    error[0] = masterError[0]; error[2] = masterError[1]; error[5] = masterError[2];
    return Cormx2Local(error, localError);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Float_t *TVolumePosition::Errmx2Local(const Float_t *masterError, Float_t *localError) const
 {
-   //to be documented
    Float_t error[6];
    TCL::vzero(&error[1],4);
    error[0] = masterError[0]; error[2] = masterError[1]; error[5] = masterError[2];
    return Cormx2Local(error, localError);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Double_t *TVolumePosition::Cormx2Local(const Double_t *localCorr, Double_t *masterCorr) const
 {
-   //to be documented
    Double_t *res = 0;
    TRotMatrix *rm = (TRotMatrix *) GetMatrix();
    double *m = 0;
@@ -317,10 +333,11 @@ Double_t *TVolumePosition::Cormx2Local(const Double_t *localCorr, Double_t *mast
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Float_t *TVolumePosition::Cormx2Local(const Float_t *localCorr, Float_t *masterCorr) const
 {
-   //to be documented
    Float_t *res = 0;
    TRotMatrix *rm = (TRotMatrix *) GetMatrix();
    Double_t *m = 0;
@@ -335,16 +352,17 @@ Float_t *TVolumePosition::Cormx2Local(const Float_t *localCorr, Float_t *masterC
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*Convert one point from local system to master reference system*-*-*
+///*-*      ==============================================================
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TVolumePosition::UpdateMatrix should be called before.
+
 Double_t *TVolumePosition::Local2Master(const Double_t *local, Double_t *master, Int_t nPoints) const
 {
-//*-*-*-*-*Convert one point from local system to master reference system*-*-*
-//*-*      ==============================================================
-//
-//  Note that before invoking this function, the global rotation matrix
-//  and translation vector for this node must have been computed.
-//  This is automatically done by the Paint functions.
-//  Otherwise TVolumePosition::UpdateMatrix should be called before.
    Double_t *matrix = 0;
    Double_t *trans = 0;
    if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = ((TRotMatrix *)fMatrix)->GetMatrix()) )  {
@@ -360,17 +378,18 @@ Double_t *TVolumePosition::Local2Master(const Double_t *local, Double_t *master,
    return trans;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*Convert nPoints points from local system to master reference system*-*-*
+///*-*      ==============================================================
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TVolumePosition::UpdateMatrix should be called before.
+///
+
 Float_t *TVolumePosition::Local2Master(const Float_t *local, Float_t *master, Int_t nPoints) const
 {
-   //*-*-*-*Convert nPoints points from local system to master reference system*-*-*
-   //*-*      ==============================================================
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TVolumePosition::UpdateMatrix should be called before.
-   //
    Double_t *matrix = 0;
    Float_t *trans = 0;
    if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = ((TRotMatrix *)fMatrix)->GetMatrix()) )
@@ -389,16 +408,17 @@ Float_t *TVolumePosition::Local2Master(const Float_t *local, Float_t *master, In
    }
    return trans;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*Convert one point from master system to local reference system*-*-*
+///*-*      ==============================================================
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TVolumePosition::UpdateMatrix should be called before.
+
 Double_t *TVolumePosition::Master2Local(const Double_t *master, Double_t *local, Int_t nPoints) const
 {
-   //*-*-*-*-*Convert one point from master system to local reference system*-*-*
-   //*-*      ==============================================================
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TVolumePosition::UpdateMatrix should be called before.
    Double_t *matrix = 0;
    Double_t *trans = 0;
    if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = ((TRotMatrix *)fMatrix)->GetMatrix()) ){
@@ -415,17 +435,18 @@ Double_t *TVolumePosition::Master2Local(const Double_t *master, Double_t *local,
    return trans;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*Convert nPoints points from master system to local reference system*-*-*
+///*-*      ==============================================================
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TVolumePosition::UpdateMatrix should be called before.
+///
+
 Float_t *TVolumePosition::Master2Local(const Float_t *master, Float_t *local, Int_t nPoints) const
 {
-   //*-*-*-*Convert nPoints points from master system to local reference system*-*-*
-   //*-*      ==============================================================
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TVolumePosition::UpdateMatrix should be called before.
-   //
    Double_t *matrix = 0;
    Float_t *trans = 0;
    if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = ((TRotMatrix *)fMatrix)->GetMatrix()) ){
@@ -443,33 +464,35 @@ Float_t *TVolumePosition::Master2Local(const Float_t *master, Float_t *local, In
    }
    return trans;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*Paint Referenced node with current parameters*-*-*-*
+///*-*                   ==============================================
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 void TVolumePosition::Paint(Option_t *)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Paint Referenced node with current parameters*-*-*-*
-//*-*                   ==============================================
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Error("Paint","Position can not be painted");
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumePosition::Print(Option_t *) const
 {
-   //to be documented
    std::cout << *this << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-* Reset this position *-*-*-*-*-*-*-*-*-*-*
+///*-*                           ===================
+///*-*    x,y,z   are the offsets of the volume with respect to his mother
+///*-*    matrix  is the pointer to the rotation matrix
+///*-*
+///*-*    This method is to re-use the memory this object without delete/create steps
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 TVolumePosition *TVolumePosition::Reset(TVolume *node,Double_t x, Double_t y, Double_t z, TRotMatrix *matrix)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-* Reset this position *-*-*-*-*-*-*-*-*-*-*
-//*-*                           ===================
-//*-*    x,y,z   are the offsets of the volume with respect to his mother
-//*-*    matrix  is the pointer to the rotation matrix
-//*-*
-//*-*    This method is to re-use the memory this object without delete/create steps
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
 // This method has to be protected since it doesn't set properly kIsOwn bit.
 
    fNode = node;
@@ -479,10 +502,11 @@ TVolumePosition *TVolumePosition::Reset(TVolume *node,Double_t x, Double_t y, Do
    return this;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumePosition::SavePrimitive(std::ostream &, Option_t * /*= ""*/)
 {
-   //to be documented
 #if 0
    out << "TVolumePosition *CreatePosition() { " << std::endl;
    out << "  TVolumePosition *myPosition = 0;    " << std::endl;
@@ -499,26 +523,29 @@ void TVolumePosition::SavePrimitive(std::ostream &, Option_t * /*= ""*/)
 #endif
 
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void   TVolumePosition::SetLineAttributes()
 {
-   //to be documented
    TVolume *thisNode = GetNode();
    if (thisNode) thisNode->SetLineAttributes();
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumePosition::SetMatrix(TRotMatrix *matrix)
 {
-   //to be documented
    if (matrix != fMatrix) {
       DeleteOwnMatrix();
       fMatrix = matrix;
    }
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumePosition::UpdatePosition(Option_t *)
 {
-   //to be documented
    TTablePadView3D *view3D=(TTablePadView3D *)gPad->GetView3D();
 //*-*- Update translation vector and rotation matrix for new level
    if (gGeometry->GeomLevel() && fMatrix) {
@@ -530,16 +557,17 @@ void TVolumePosition::UpdatePosition(Option_t *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumePosition::SetVisibility(Int_t vis)
 {
-   //to be documented
    TVolume *node = GetNode();
    if (node) node->SetVisibility(TVolume::ENodeSEEN(vis));
 }
-//______________________________________________________________________________
-TVolumePosition &TVolumePosition::Mult(const TVolumePosition &curPosition) {
+////////////////////////////////////////////////////////////////////////////////
 
+TVolumePosition &TVolumePosition::Mult(const TVolumePosition &curPosition) {
    // This method mupltiply the position of this object to the position of the
    // curPosition object.
    // It doesn't change Id of either object involved.
@@ -586,18 +614,20 @@ TVolumePosition &TVolumePosition::Mult(const TVolumePosition &curPosition) {
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolumePosition::SetXYZ(Double_t *xyz)
 {
-   //to be documented
    if (xyz)  memcpy(fX,xyz,sizeof(fX));
    else      memset(fX,0,sizeof(fX));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TVolumePosition.
+
 void TVolumePosition::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TVolumePosition.
    TRotMatrix     *save = fMatrix;
    if (R__b.IsReading()) {
       fMatrix = 0;
@@ -609,10 +639,11 @@ void TVolumePosition::Streamer(TBuffer &R__b)
       fMatrix = save;
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 std::ostream& operator<<(std::ostream& s,const TVolumePosition &target)
 {
-   //to be documented
    s << " Node: ";
    if (target.GetNode()) s <<  target.GetNode()->GetName() << std::endl;
    else                  s << "NILL" << std::endl;

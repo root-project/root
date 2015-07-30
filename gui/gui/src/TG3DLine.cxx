@@ -27,33 +27,33 @@
 ClassImp(TGHorizontal3DLine)
 ClassImp(TGVertical3DLine)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGHorizontal3DLine::TGHorizontal3DLine(const TGWindow *p, UInt_t w, UInt_t h,
                                        UInt_t options, Pixel_t back) :
                     TGFrame(p, w, h, options, back)
 {
-   // constructor
-
    SetWindowName();
    fEditDisabled = kEditDisableHeight;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGVertical3DLine::TGVertical3DLine(const TGWindow *p, UInt_t w, UInt_t h,
                                    UInt_t options, Pixel_t back) :
                   TGFrame(p, w, h, options, back)
 {
-   // constructor
-
    SetWindowName();
    fEditDisabled = kEditDisableWidth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save an vertical 3D line as a C++ statement(s) on output stream out.
+
 void TGHorizontal3DLine::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save an vertical 3D line as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << "   TGHorizontal3DLine *";
@@ -73,11 +73,11 @@ void TGHorizontal3DLine::SavePrimitive(std::ostream &out, Option_t *option /*= "
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save an vertical 3D line as a C++ statement(s) on output stream out.
+
 void TGVertical3DLine::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save an vertical 3D line as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << "   TGVertical3DLine *";

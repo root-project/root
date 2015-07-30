@@ -32,48 +32,52 @@ ClassImp(RooExtendedTerm)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooExtendedTerm::RooExtendedTerm()
 {
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. An ExtendedTerm has no observables, it only introduces an extended
+/// ML term with the given number of expected events when an extended ML is constructed
+/// from this p.d.f.
+
 RooExtendedTerm::RooExtendedTerm(const char *name, const char *title, const RooAbsReal& n) :
   RooAbsPdf(name,title),
   _n("n","Nexpected",this,(RooAbsReal&)n)
 {
-  // Constructor. An ExtendedTerm has no observables, it only introduces an extended
-  // ML term with the given number of expected events when an extended ML is constructed
-  // from this p.d.f.
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooExtendedTerm::RooExtendedTerm(const RooExtendedTerm& other, const char* name) :
   RooAbsPdf(other,name),
   _n("n",this,other._n)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooExtendedTerm::~RooExtendedTerm() 
 {
-  // Destructor
-
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of expected events from associated event count variable
+
 Double_t RooExtendedTerm::expectedEvents(const RooArgSet* /*nset*/) const 
 {
-  // Return number of expected events from associated event count variable
   return _n ;
 }
 

@@ -408,8 +408,11 @@ Bool_t ROOT::TBranchProxy::Setup()
                fMemberOffset = fClass->GetDataMemberOffset(member);
 
             }
-
-         } else if (fBranch->IsA() != TBranch::Class() && fElement->IsA() != TStreamerBasicType::Class()) {
+         // The extra condition (fElement is not a TStreamerSTL) is to handle the case where fBranch is a
+         // TBranchElement and fElement is a TStreamerSTL. Without the extra condition we get an error
+         // message, although the vector (i.e. the TBranchElement) is accessible.
+         } else if (fBranch->IsA() != TBranch::Class() && fElement->IsA() != TStreamerBasicType::Class()
+                    && fElement->IsA() != TStreamerSTL::Class()) {
             Error("Setup","%s",Form("Missing TClass object for %s\n",fClassName.Data()));
          }
 

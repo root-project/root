@@ -242,11 +242,12 @@ void stressIOPlugins()
    stressIOPluginsForProto((const char*)0,0);
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///based on stress2()
+///check length and compression factor in stress.root
+
 void stressIOPlugins1()
 {
-   //based on stress2()
-   //check length and compression factor in stress.root
    const char *title = "Check size & compression factor of a Root file";
    Bprint(1, title);
 
@@ -270,21 +271,21 @@ void stressIOPlugins1()
    delete f;
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// based on stress5()
+/// Test of Postscript.
+/// Make a complex picture. Verify number of lines on ps file
+/// Testing automatically the graphics package is a complex problem.
+/// The best way we have found is to generate a Postscript image
+/// of a complex canvas containing many objects.
+/// The number of lines in the ps file is compared with a reference run.
+/// A few lines (up to 2 or 3) of difference may be expected because
+/// Postscript works with floats. The date and time of the run are also
+/// different.
+/// You can also inspect visually the ps file with a ps viewer.
+
 void stressIOPlugins2()
 {
-// based on stress5()
-// Test of Postscript.
-// Make a complex picture. Verify number of lines on ps file
-// Testing automatically the graphics package is a complex problem.
-// The best way we have found is to generate a Postscript image
-// of a complex canvas containing many objects.
-// The number of lines in the ps file is compared with a reference run.
-// A few lines (up to 2 or 3) of difference may be expected because
-// Postscript works with floats. The date and time of the run are also
-// different.
-// You can also inspect visually the ps file with a ps viewer.
-
    const char *title = "Test graphics & Postscript";
    Bprint(2,title);
 
@@ -348,10 +349,10 @@ void stressIOPlugins2()
    delete f;
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t test3read(const TString &fn, const char *title)
 {
-
 //  Read the event file
 //  Loop on all events in the file (reading everything).
 //  Count number of bytes read
@@ -385,10 +386,11 @@ Int_t test3read(const TString &fn, const char *title)
 }
 
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// based on stress8()
+
 void stressIOPlugins3()
 {
-   // based on stress8()
    const char *title = "Trees split and compression modes";
    Bprint(3,title);
 
@@ -407,7 +409,8 @@ void stressIOPlugins3()
    }
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void stressIOPlugins4()
 {
    Long64_t nent;
@@ -570,7 +573,8 @@ void stressIOPlugins4()
    }
 }
 
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void stressIOPlugins5()
 {
    Bool_t tryziparchive = kFALSE;

@@ -110,7 +110,8 @@ public:
 
 //
 // Special timer to dispatch pending events while processing
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TDispatchTimer : public TTimer {
 private:
    TProofPlayer    *fPlayer;
@@ -120,13 +121,13 @@ public:
 
    Bool_t Notify();
 };
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle expiration of the timer associated with dispatching pending
+/// events while processing. We must act as fast as possible here, so
+/// we just set a flag submitting a request for dispatching pending events
+
 Bool_t TDispatchTimer::Notify()
 {
-   // Handle expiration of the timer associated with dispatching pending
-   // events while processing. We must act as fast as possible here, so
-   // we just set a flag submitting a request for dispatching pending events
-
    if (gDebug > 0) printf("TDispatchTimer::Notify: called!\n");
 
    fPlayer->SetBit(TProofPlayer::kDispatchOneEvent);
@@ -138,7 +139,8 @@ Bool_t TDispatchTimer::Notify()
 
 //
 // Special timer to notify reach of max packet proc time
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TProctimeTimer : public TTimer {
 private:
    TProofPlayer    *fPlayer;
@@ -148,13 +150,13 @@ public:
 
    Bool_t Notify();
 };
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle expiration of the timer associated with dispatching pending
+/// events while processing. We must act as fast as possible here, so
+/// we just set a flag submitting a request for dispatching pending events
+
 Bool_t TProctimeTimer::Notify()
 {
-   // Handle expiration of the timer associated with dispatching pending
-   // events while processing. We must act as fast as possible here, so
-   // we just set a flag submitting a request for dispatching pending events
-
    if (gDebug > 0) printf("TProctimeTimer::Notify: called!\n");
 
    fPlayer->SetBit(TProofPlayer::kMaxProcTimeReached);
@@ -165,7 +167,8 @@ Bool_t TProctimeTimer::Notify()
 
 //
 // Special timer to handle stop/abort request via exception raising
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TStopTimer : public TTimer {
 private:
    Bool_t           fAbort;
@@ -177,15 +180,15 @@ public:
    Bool_t Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for the timer to stop/abort processing.
+/// The 'timeout' is in seconds.
+/// Make sure that 'to' make sense, i.e. not larger than 10 days;
+/// the minimum value is 10 ms (0 does not seem to start the timer ...).
+
 TStopTimer::TStopTimer(TProofPlayer *p, Bool_t abort, Int_t to)
            : TTimer(((to <= 0 || to > 864000) ? 10 : to * 1000), kFALSE)
 {
-   // Constructor for the timer to stop/abort processing.
-   // The 'timeout' is in seconds.
-   // Make sure that 'to' make sense, i.e. not larger than 10 days;
-   // the minimum value is 10 ms (0 does not seem to start the timer ...).
-
    if (gDebug > 0)
       Info ("TStopTimer","enter: %d, timeout: %d", abort, to);
 
@@ -196,14 +199,14 @@ TStopTimer::TStopTimer(TProofPlayer *p, Bool_t abort, Int_t to)
       Info ("TStopTimer","timeout set to %s ms", fTime.AsString());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle the signal coming from the expiration of the timer
+/// associated with an abort or stop request.
+/// We raise an exception which will be processed in the
+/// event loop.
+
 Bool_t TStopTimer::Notify()
 {
-   // Handle the signal coming from the expiration of the timer
-   // associated with an abort or stop request.
-   // We raise an exception which will be processed in the
-   // event loop.
-
    if (gDebug > 0) printf("TStopTimer::Notify: called!\n");
 
    if (fAbort)
@@ -220,7 +223,9 @@ ClassImp(TProofPlayer)
 
 THashList *TProofPlayer::fgDrawInputPars = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TProofPlayer::TProofPlayer(TProof *)
    : fAutoBins(0), fOutput(0), fSelector(0), fCreateSelObj(kTRUE), fSelectorClass(0),
      fFeedbackTimer(0), fFeedbackPeriod(2000),
@@ -232,8 +237,6 @@ TProofPlayer::TProofPlayer(TProof *)
      fOutputFile(0),
      fSaveMemThreshold(-1), fSavePartialResults(kFALSE), fSaveResultsPerPacket(kFALSE)
 {
-   // Default ctor.
-
    fInput         = new TList;
    fExitStatus    = kFinished;
    fProgressStatus = new TProofProgressStatus();
@@ -250,11 +253,11 @@ TProofPlayer::TProofPlayer(TProof *)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TProofPlayer::~TProofPlayer()
 {
-   // Destructor.
-
    fInput->Clear("nodelete");
    SafeDelete(fInput);
    // The output list is owned by fSelector and destroyed in there
@@ -268,24 +271,24 @@ TProofPlayer::~TProofPlayer()
    SafeDelete(fStopTimer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set processing bit according to 'on'
+
 void TProofPlayer::SetProcessing(Bool_t on)
 {
-   // Set processing bit according to 'on'
-
    if (on)
       SetBit(TProofPlayer::kIsProcessing);
    else
       ResetBit(TProofPlayer::kIsProcessing);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop the process after this event. If timeout is positive, start
+/// a timer firing after timeout seconds to hard-stop time-expensive
+/// events.
+
 void TProofPlayer::StopProcess(Bool_t abort, Int_t timeout)
 {
-   // Stop the process after this event. If timeout is positive, start
-   // a timer firing after timeout seconds to hard-stop time-expensive
-   // events.
-
    if (gDebug > 0)
       Info ("StopProcess","abort: %d, timeout: %d", abort, timeout);
 
@@ -303,11 +306,11 @@ void TProofPlayer::StopProcess(Bool_t abort, Int_t timeout)
       SetStopTimer(kTRUE, abort, to);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable/disable the timer to dispatch pening events while processing.
+
 void TProofPlayer::SetDispatchTimer(Bool_t on)
 {
-   // Enable/disable the timer to dispatch pening events while processing.
-
    SafeDelete(fDispatchTimer);
    ResetBit(TProofPlayer::kDispatchOneEvent);
    if (on) {
@@ -316,12 +319,12 @@ void TProofPlayer::SetDispatchTimer(Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable/disable the timer to stop/abort processing.
+/// The 'timeout' is in seconds.
+
 void TProofPlayer::SetStopTimer(Bool_t on, Bool_t abort, Int_t timeout)
 {
-   // Enable/disable the timer to stop/abort processing.
-   // The 'timeout' is in seconds.
-
    fStopTimerMtx = (fStopTimerMtx) ? fStopTimerMtx : new TMutex(kTRUE);
    R__LOCKGUARD(fStopTimerMtx);
 
@@ -341,12 +344,12 @@ void TProofPlayer::SetStopTimer(Bool_t on, Bool_t abort, Int_t timeout)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add query result to the list, making sure that there are no
+/// duplicates.
+
 void TProofPlayer::AddQueryResult(TQueryResult *q)
 {
-   // Add query result to the list, making sure that there are no
-   // duplicates.
-
    if (!q) {
       Warning("AddQueryResult","query undefined - do nothing");
       return;
@@ -404,12 +407,12 @@ void TProofPlayer::AddQueryResult(TQueryResult *q)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all query result instances referenced 'ref' from
+/// the list of results.
+
 void TProofPlayer::RemoveQueryResult(const char *ref)
 {
-   // Remove all query result instances referenced 'ref' from
-   // the list of results.
-
    if (fQueryResults) {
       TIter nxq(fQueryResults);
       TQueryResult *qr = 0;
@@ -422,12 +425,12 @@ void TProofPlayer::RemoveQueryResult(const char *ref)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get query result instances referenced 'ref' from
+/// the list of results.
+
 TQueryResult *TProofPlayer::GetQueryResult(const char *ref)
 {
-   // Get query result instances referenced 'ref' from
-   // the list of results.
-
    if (fQueryResults) {
       if (ref && strlen(ref) > 0) {
          TIter nxq(fQueryResults);
@@ -446,59 +449,59 @@ TQueryResult *TProofPlayer::GetQueryResult(const char *ref)
    return (TQueryResult *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current query and save previous value.
+
 void TProofPlayer::SetCurrentQuery(TQueryResult *q)
 {
-   // Set current query and save previous value.
-
    fPreviousQuery = fQuery;
    fQuery = q;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object to input list.
+
 void TProofPlayer::AddInput(TObject *inp)
 {
-   // Add object to input list.
-
    fInput->Add(inp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear input list.
+
 void TProofPlayer::ClearInput()
 {
-   // Clear input list.
-
    fInput->Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get output object by name.
+
 TObject *TProofPlayer::GetOutput(const char *name) const
 {
-   // Get output object by name.
-
    if (fOutput)
       return fOutput->FindObject(name);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get output list.
+
 TList *TProofPlayer::GetOutputList() const
 {
-   // Get output list.
-
    TList *ol = fOutput;
    if (!ol && fQuery)
       ol = fQuery->GetOutputList();
    return ol;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reinitialize fSelector using the selector files in the query result.
+/// Needed when Finalize is called after a Process execution for the same
+/// selector name.
+
 Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
 {
-   // Reinitialize fSelector using the selector files in the query result.
-   // Needed when Finalize is called after a Process execution for the same
-   // selector name.
-
    Int_t rc = 0;
 
    // Make sure we have a query
@@ -659,127 +662,127 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Incorporate output object (may not be used in this class).
+
 Int_t TProofPlayer::AddOutputObject(TObject *)
 {
-   // Incorporate output object (may not be used in this class).
-
    MayNotUse("AddOutputObject");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Incorporate output list (may not be used in this class).
+
 void TProofPlayer::AddOutput(TList *)
 {
-   // Incorporate output list (may not be used in this class).
-
    MayNotUse("AddOutput");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store output list (may not be used in this class).
+
 void TProofPlayer::StoreOutput(TList *)
 {
-   // Store output list (may not be used in this class).
-
    MayNotUse("StoreOutput");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store feedback list (may not be used in this class).
+
 void TProofPlayer::StoreFeedback(TObject *, TList *)
 {
-   // Store feedback list (may not be used in this class).
-
    MayNotUse("StoreFeedback");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Report progress (may not be used in this class).
+
 void TProofPlayer::Progress(Long64_t /*total*/, Long64_t /*processed*/)
 {
-   // Report progress (may not be used in this class).
-
    MayNotUse("Progress");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Report progress (may not be used in this class).
+
 void TProofPlayer::Progress(Long64_t /*total*/, Long64_t /*processed*/,
                             Long64_t /*bytesread*/,
                             Float_t /*evtRate*/, Float_t /*mbRate*/,
                             Float_t /*evtrti*/, Float_t /*mbrti*/)
 {
-   // Report progress (may not be used in this class).
-
    MayNotUse("Progress");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Report progress (may not be used in this class).
+
 void TProofPlayer::Progress(TProofProgressInfo * /*pi*/)
 {
-   // Report progress (may not be used in this class).
-
    MayNotUse("Progress");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set feedback list (may not be used in this class).
+
 void TProofPlayer::Feedback(TList *)
 {
-   // Set feedback list (may not be used in this class).
-
    MayNotUse("Feedback");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw feedback creation proxy. When accessed via TProof avoids
+/// link dependency on libProofPlayer.
+
 TDrawFeedback *TProofPlayer::CreateDrawFeedback(TProof *p)
 {
-   // Draw feedback creation proxy. When accessed via TProof avoids
-   // link dependency on libProofPlayer.
-
    return new TDrawFeedback(p);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set draw feedback option.
+
 void TProofPlayer::SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt)
 {
-   // Set draw feedback option.
-
    if (f)
       f->SetOption(opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete draw feedback object.
+
 void TProofPlayer::DeleteDrawFeedback(TDrawFeedback *f)
 {
-   // Delete draw feedback object.
-
    delete f;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the partial results of this query to a dedicated file under the user
+/// data directory. The file name has the form
+///         <session_tag>.q<query_seq_num>.root
+/// The file pat and the file are created if not existing already.
+/// Only objects in the outputlist not being TProofOutputFile are saved.
+/// The packets list 'packets' is saved if given.
+/// Trees not attached to any file are attached to the open file.
+/// If 'queryend' is kTRUE evrything is written out (TTrees included).
+/// The actual saving action is controlled by 'force' and by fSavePartialResults /
+/// fSaveResultsPerPacket:
+///
+///    fSavePartialResults = kFALSE/kTRUE  no-saving/saving
+///    fSaveResultsPerPacket = kFALSE/kTRUE  save-per-query/save-per-packet
+///
+/// The function CheckMemUsage sets fSavePartialResults = 1 if fSaveMemThreshold > 0 and
+/// ProcInfo_t::fMemResident >= fSaveMemThreshold: from that point on partial results
+/// are always saved and expensive calls to TSystem::GetProcInfo saved.
+/// The switch fSaveResultsPerPacket is instead controlled by the user or admin
+/// who can also force saving in all cases; parameter PROOF_SavePartialResults or
+/// RC env ProofPlayer.SavePartialResults .
+/// However, if 'force' is kTRUE, fSavePartialResults and fSaveResultsPerPacket
+/// are ignored.
+/// Return -1 in case of problems, 0 otherwise.
+
 Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
 {
-   // Save the partial results of this query to a dedicated file under the user
-   // data directory. The file name has the form
-   //         <session_tag>.q<query_seq_num>.root
-   // The file pat and the file are created if not existing already.
-   // Only objects in the outputlist not being TProofOutputFile are saved.
-   // The packets list 'packets' is saved if given.
-   // Trees not attached to any file are attached to the open file.
-   // If 'queryend' is kTRUE evrything is written out (TTrees included).
-   // The actual saving action is controlled by 'force' and by fSavePartialResults /
-   // fSaveResultsPerPacket:
-   //
-   //    fSavePartialResults = kFALSE/kTRUE  no-saving/saving
-   //    fSaveResultsPerPacket = kFALSE/kTRUE  save-per-query/save-per-packet
-   //
-   // The function CheckMemUsage sets fSavePartialResults = 1 if fSaveMemThreshold > 0 and
-   // ProcInfo_t::fMemResident >= fSaveMemThreshold: from that point on partial results
-   // are always saved and expensive calls to TSystem::GetProcInfo saved.
-   // The switch fSaveResultsPerPacket is instead controlled by the user or admin
-   // who can also force saving in all cases; parameter PROOF_SavePartialResults or
-   // RC env ProofPlayer.SavePartialResults .
-   // However, if 'force' is kTRUE, fSavePartialResults and fSaveResultsPerPacket
-   // are ignored.
-   // Return -1 in case of problems, 0 otherwise.
-
    Bool_t save = (force || (fSavePartialResults &&
                  (queryend || fSaveResultsPerPacket))) ? kTRUE : kFALSE;
    if (!save) {
@@ -960,12 +963,12 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that a valid selector object
+/// Return -1 in case of problems, 0 otherwise
+
 Int_t TProofPlayer::AssertSelector(const char *selector_file)
 {
-   // Make sure that a valid selector object
-   // Return -1 in case of problems, 0 otherwise
-
    if (selector_file && strlen(selector_file)) {
       if (fCreateSelObj) SafeDelete(fSelector);
       // Get selector files from cache
@@ -996,11 +999,11 @@ Int_t TProofPlayer::AssertSelector(const char *selector_file)
    // Done
    return 0;
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update fProgressStatus
+
 void TProofPlayer::UpdateProgressInfo()
 {
-   // Update fProgressStatus
-
    if (fProgressStatus) {
       fProgressStatus->IncEntries(fProcessedRun);
       fProgressStatus->SetBytesRead(TFile::GetFileBytesRead()-fReadBytesRun);
@@ -1013,15 +1016,15 @@ void TProofPlayer::UpdateProgressInfo()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process specified TDSet on PROOF worker.
+/// The return value is -1 in case of error and TSelector::GetStatus()
+/// in case of success.
+
 Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                                Option_t *option, Long64_t nentries,
                                Long64_t first)
 {
-   // Process specified TDSet on PROOF worker.
-   // The return value is -1 in case of error and TSelector::GetStatus()
-   // in case of success.
-
    PDB(kGlobal,1) Info("Process","Enter");
 
    fExitStatus = kFinished;
@@ -1201,14 +1204,11 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       TPair *currentElem = 0;
       // The event loop on the worker
       Long64_t fst = -1, num;
-      TEntryList *enl = 0;
-      TEventList *evl = 0;
       Long_t maxproctime = -1;
       Bool_t newrun = kFALSE;
-      while ((fEvIter->GetNextPacket(fst, num, &enl, &evl) != -1) &&
+      while ((fEvIter->GetNextPacket(fst, num) != -1) &&
               !fSelStatus->TestBit(TStatus::kNotOk) &&
               fSelector->GetAbort() == TSelector::kContinue) {
-
          // This is needed by the inflate infrastructure to calculate
          // sleeping times
          SetBit(TProofPlayer::kIsProcessing);
@@ -1293,21 +1293,9 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             if (!(!fSelStatus->TestBit(TStatus::kNotOk) &&
                    fSelector->GetAbort() == TSelector::kContinue)) break;
 
-            // Set entry number; if data iteration we may need to test the entry or event lists
-            if (fEvIter->TestBit(TEventIter::kData)) {
-               if (enl){
-                  entry = enl->GetEntry(fst);
-               } else if (evl) {
-                  entry = evl->GetEntry(fst);
-               } else {
-                  entry = fst;
-               }
-               fst++;
-            } else {
-               entry = fst++;
-            }
-            // Pre-event processing
-            fEvIter->PreProcessEvent(entry);
+            // Get the netry number, taking into account entry or event lists
+            entry = fEvIter->GetEntryNumber(fst);
+            fst++;
 
             // Set the last entry
             TProofServ::SetLastEntry(entry);
@@ -1489,15 +1477,15 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process specified TDSet on PROOF worker with TSelector object
+/// The return value is -1 in case of error and TSelector::GetStatus()
+/// in case of success.
+
 Long64_t TProofPlayer::Process(TDSet *dset, TSelector *selector,
                                Option_t *option, Long64_t nentries,
                                Long64_t first)
 {
-   // Process specified TDSet on PROOF worker with TSelector object
-   // The return value is -1 in case of error and TSelector::GetStatus()
-   // in case of success.
-
    if (!selector) {
       Error("Process", "selector object undefiend!");
       return -1;
@@ -1509,22 +1497,22 @@ Long64_t TProofPlayer::Process(TDSet *dset, TSelector *selector,
    return Process(dset, (const char *)0, option, nentries, first);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented: meaningful only in the remote player. Returns kFALSE.
+
 Bool_t TProofPlayer::JoinProcess(TList *)
 {
-   // Not implemented: meaningful only in the remote player. Returns kFALSE.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the memory usage, if requested.
+/// Return kTRUE if OK, kFALSE if above 95% of at least one between virtual or
+/// resident limits are depassed.
+
 Bool_t TProofPlayer::CheckMemUsage(Long64_t &mfreq, Bool_t &w80r,
                                    Bool_t &w80v, TString &wmsg)
 {
-   // Check the memory usage, if requested.
-   // Return kTRUE if OK, kFALSE if above 95% of at least one between virtual or
-   // resident limits are depassed.
-
    Long64_t processed = GetEventsProcessed() + fProcessedRun;
    if (mfreq > 0 && processed%mfreq == 0) {
       // Record the memory information
@@ -1578,47 +1566,48 @@ Bool_t TProofPlayer::CheckMemUsage(Long64_t &mfreq, Bool_t &w80r,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize query (may not be used in this class).
+
 Long64_t TProofPlayer::Finalize(Bool_t, Bool_t)
 {
-   // Finalize query (may not be used in this class).
-
    MayNotUse("Finalize");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize query (may not be used in this class).
+
 Long64_t TProofPlayer::Finalize(TQueryResult *)
 {
-   // Finalize query (may not be used in this class).
-
    MayNotUse("Finalize");
    return -1;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge output (may not be used in this class).
+
 void TProofPlayer::MergeOutput(Bool_t)
 {
-   // Merge output (may not be used in this class).
-
    MayNotUse("MergeOutput");
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TProofPlayer::MapOutputListToDataMembers() const
 {
    TOutputListSelectorDataMap* olsdm = new TOutputListSelectorDataMap(fSelector);
    fOutput->Add(olsdm);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update automatic binning parameters for given object "name".
+
 void TProofPlayer::UpdateAutoBin(const char *name,
                                  Double_t& xmin, Double_t& xmax,
                                  Double_t& ymin, Double_t& ymax,
                                  Double_t& zmin, Double_t& zmax)
 {
-   // Update automatic binning parameters for given object "name".
-
    if ( fAutoBins == 0 ) {
       fAutoBins = new THashList;
    }
@@ -1639,55 +1628,55 @@ void TProofPlayer::UpdateAutoBin(const char *name,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next packet (may not be used in this class).
+
 TDSetElement *TProofPlayer::GetNextPacket(TSlave *, TMessage *)
 {
-   // Get next packet (may not be used in this class).
-
    MayNotUse("GetNextPacket");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set up feedback (may not be used in this class).
+
 void TProofPlayer::SetupFeedback()
 {
-   // Set up feedback (may not be used in this class).
-
    MayNotUse("SetupFeedback");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop feedback (may not be used in this class).
+
 void TProofPlayer::StopFeedback()
 {
-   // Stop feedback (may not be used in this class).
-
    MayNotUse("StopFeedback");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw (may not be used in this class).
+
 Long64_t TProofPlayer::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
                                   const char * /*selection*/, Option_t * /*option*/,
                                   Long64_t /*nentries*/, Long64_t /*firstentry*/)
 {
-   // Draw (may not be used in this class).
-
    MayNotUse("DrawSelect");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle tree header request.
+
 void TProofPlayer::HandleGetTreeHeader(TMessage *)
 {
-   // Handle tree header request.
-
    MayNotUse("HandleGetTreeHeader|");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive histo from slave.
+
 void TProofPlayer::HandleRecvHisto(TMessage *mess)
 {
-   // Receive histo from slave.
-
    TObject *obj = mess->ReadObject(mess->GetClass());
    if (obj->InheritsFrom(TH1::Class())) {
       TH1 *h = (TH1*)obj;
@@ -1700,13 +1689,13 @@ void TProofPlayer::HandleRecvHisto(TMessage *mess)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the object if it is a canvas.
+/// Return 0 in case of success, 1 if it is not a canvas or libProofDraw
+/// is not available.
+
 Int_t TProofPlayer::DrawCanvas(TObject *obj)
 {
-   // Draw the object if it is a canvas.
-   // Return 0 in case of success, 1 if it is not a canvas or libProofDraw
-   // is not available.
-
    static Int_t (*gDrawCanvasHook)(TObject *) = 0;
 
    // Load the library the first time
@@ -1734,14 +1723,14 @@ Int_t TProofPlayer::DrawCanvas(TObject *obj)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse the arguments from var, sel and opt and fill the selector and
+/// object name accordingly.
+/// Return 0 in case of success, 1 if libProofDraw is not available.
+
 Int_t TProofPlayer::GetDrawArgs(const char *var, const char *sel, Option_t *opt,
                                 TString &selector, TString &objname)
 {
-   // Parse the arguments from var, sel and opt and fill the selector and
-   // object name accordingly.
-   // Return 0 in case of success, 1 if libProofDraw is not available.
-
    static Int_t (*gGetDrawArgsHook)(const char *, const char *, Option_t *,
                                     TString &, TString &) = 0;
 
@@ -1771,11 +1760,11 @@ Int_t TProofPlayer::GetDrawArgs(const char *var, const char *sel, Option_t *opt,
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create/destroy a named canvas for feedback
+
 void TProofPlayer::FeedBackCanvas(const char *name, Bool_t create)
 {
-   // Create/destroy a named canvas for feedback
-
    static void (*gFeedBackCanvasHook)(const char *, Bool_t) = 0;
 
    // Load the library the first time
@@ -1802,29 +1791,29 @@ void TProofPlayer::FeedBackCanvas(const char *name, Bool_t create)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the size in bytes of the cache
+
 Long64_t TProofPlayer::GetCacheSize()
 {
-   // Return the size in bytes of the cache
-
    if (fEvIter) return fEvIter->GetCacheSize();
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of entries in the learning phase
+
 Int_t TProofPlayer::GetLearnEntries()
 {
-   // Return the number of entries in the learning phase
-
    if (fEvIter) return fEvIter->GetLearnEntries();
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switch on/off merge timer
+
 void TProofPlayerRemote::SetMerging(Bool_t on)
 {
-   // Switch on/off merge timer
-
    if (on) {
       if (!fMergeSTW) fMergeSTW = new TStopwatch();
       PDB(kGlobal,1)
@@ -1854,16 +1843,16 @@ void TProofPlayerRemote::SetMerging(Bool_t on)
 
 ClassImp(TProofPlayerLocal)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process the specified TSelector object 'nentries' times.
+/// Used to test the PROOF interator mechanism for cycle-driven selectors in a
+/// local session.
+/// The return value is -1 in case of error and TSelector::GetStatus()
+/// in case of success.
+
 Long64_t TProofPlayerLocal::Process(TSelector *selector,
                                     Long64_t nentries, Option_t *option)
 {
-   // Process the specified TSelector object 'nentries' times.
-   // Used to test the PROOF interator mechanism for cycle-driven selectors in a
-   // local session.
-   // The return value is -1 in case of error and TSelector::GetStatus()
-   // in case of success.
-
    if (!selector) {
       Error("Process", "selector object undefiend!");
       return -1;
@@ -1879,17 +1868,17 @@ Long64_t TProofPlayerLocal::Process(TSelector *selector,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process the specified TSelector file 'nentries' times.
+/// Used to test the PROOF interator mechanism for cycle-driven selectors in a
+/// local session.
+/// Process specified TDSet on PROOF worker with TSelector object
+/// The return value is -1 in case of error and TSelector::GetStatus()
+/// in case of success.
+
 Long64_t TProofPlayerLocal::Process(const char *selector,
                                     Long64_t nentries, Option_t *option)
 {
-   // Process the specified TSelector file 'nentries' times.
-   // Used to test the PROOF interator mechanism for cycle-driven selectors in a
-   // local session.
-   // Process specified TDSet on PROOF worker with TSelector object
-   // The return value is -1 in case of error and TSelector::GetStatus()
-   // in case of success.
-
    TDSetProxy *set = new TDSetProxy("", "", "");
    set->SetBit(TDSet::kEmpty);
    set->SetBit(TDSet::kIsLocal);
@@ -1905,11 +1894,11 @@ Long64_t TProofPlayerLocal::Process(const char *selector,
 
 ClassImp(TProofPlayerRemote)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TProofPlayerRemote::~TProofPlayerRemote()
 {
-   // Destructor.
-
    SafeDelete(fOutput);      // owns the output list
    SafeDelete(fOutputLists);
 
@@ -1921,14 +1910,14 @@ TProofPlayerRemote::~TProofPlayerRemote()
       SafeDelete(fProcessMessage);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init the packetizer
+/// Return 0 on success (fPacketizer is correctly initialized), -1 on failure.
+
 Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
                                          Long64_t first, const char *defpackunit,
                                          const char *defpackdata)
 {
-   // Init the packetizer
-   // Return 0 on success (fPacketizer is correctly initialized), -1 on failure.
-
    SafeDelete(fPacketizer);
    PDB(kGlobal,1) Info("Process","Enter");
    fDSet = dset;
@@ -2178,16 +2167,16 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process specified TDSet on PROOF.
+/// This method is called on client and on the PROOF master.
+/// The return value is -1 in case of an error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                      Option_t *option, Long64_t nentries,
                                      Long64_t first)
 {
-   // Process specified TDSet on PROOF.
-   // This method is called on client and on the PROOF master.
-   // The return value is -1 in case of an error and TSelector::GetStatus() in
-   // in case of success.
-
    PDB(kGlobal,1) Info("Process", "Enter");
 
    fDSet = dset;
@@ -2510,16 +2499,16 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process specified TDSet on PROOF.
+/// This method is called on client and on the PROOF master.
+/// The return value is -1 in case of an error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProofPlayerRemote::Process(TDSet *dset, TSelector *selector,
                                      Option_t *option, Long64_t nentries,
                                      Long64_t first)
 {
-   // Process specified TDSet on PROOF.
-   // This method is called on client and on the PROOF master.
-   // The return value is -1 in case of an error and TSelector::GetStatus() in
-   // in case of success.
-
    if (!selector) {
       Error("Process", "selector object undefined");
       return -1;
@@ -2539,12 +2528,12 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, TSelector *selector,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prepares the given list of new workers to join a progressing process.
+/// Returns kTRUE on success, kFALSE otherwise.
+
 Bool_t TProofPlayerRemote::JoinProcess(TList *workers)
 {
-   // Prepares the given list of new workers to join a progressing process.
-   // Returns kTRUE on success, kFALSE otherwise.
-
    if (!fProcessMessage || !fProof || !fPacketizer) {
       Error("Process", "Should not happen: fProcessMessage=%p fProof=%p fPacketizer=%p",
          fProcessMessage, fProof, fPacketizer);
@@ -2589,11 +2578,11 @@ Bool_t TProofPlayerRemote::JoinProcess(TList *workers)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge output in files
+
 Bool_t TProofPlayerRemote::MergeOutputFiles()
 {
-   // Merge output in files
-
    PDB(kOutput,1) Info("MergeOutputFiles", "enter: fOutput size: %d", fOutput->GetSize());
    PDB(kOutput,2) fOutput->ls();
 
@@ -2771,12 +2760,13 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the selector's data members:
+/// find the mapping of data members to otuput list entries in the output list
+/// and apply it.
+
 void TProofPlayerRemote::SetSelectorDataMembersFromOutputList()
 {
-   // Set the selector's data members:
-   // find the mapping of data members to otuput list entries in the output list
-   // and apply it.
    TOutputListSelectorDataMap* olsdm
       = TOutputListSelectorDataMap::FindInList(fOutput);
    if (!olsdm) {
@@ -2788,10 +2778,10 @@ void TProofPlayerRemote::SetSelectorDataMembersFromOutputList()
    olsdm->SetDataMembers(fSelector);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
 {
-
    // Finalize a query.
    // Returns -1 in case of an error, 0 otherwise.
 
@@ -2979,11 +2969,11 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
    return rv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize the results of a query already processed.
+
 Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
 {
-   // Finalize the results of a query already processed.
-
    PDB(kGlobal,1) Info("Finalize(TQueryResult *)","Enter");
 
    if (!IsClient()) {
@@ -3050,11 +3040,11 @@ Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send the selector file(s) to master or worker nodes.
+
 Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
 {
-   // Send the selector file(s) to master or worker nodes.
-
    // Check input
    if (!selector_file) {
       Info("SendSelector", "Invalid input: selector (file) name undefined");
@@ -3120,11 +3110,11 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge objects in output the lists.
+
 void TProofPlayerRemote::MergeOutput(Bool_t saveMemValues)
 {
-   // Merge objects in output the lists.
-
    PDB(kOutput,1) Info("MergeOutput","Enter");
 
    TObject *obj = 0;
@@ -3258,11 +3248,11 @@ void TProofPlayerRemote::MergeOutput(Bool_t saveMemValues)
    PDB(kOutput,1) Info("MergeOutput","leave (%d object(s))", fOutput->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Progress signal.
+
 void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed)
 {
-   // Progress signal.
-
    if (IsClient()) {
       fProof->Progress(total, processed);
    } else {
@@ -3273,14 +3263,14 @@ void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Progress signal.
+
 void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed,
                                   Long64_t bytesread,
                                   Float_t initTime, Float_t procTime,
                                   Float_t evtrti, Float_t mbrti)
 {
-   // Progress signal.
-
    PDB(kGlobal,1)
       Info("Progress","%lld %lld %lld %f %f %f %f", total, processed, bytesread,
                                              initTime, procTime, evtrti, mbrti);
@@ -3295,11 +3285,11 @@ void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Progress signal.
+
 void TProofPlayerRemote::Progress(TProofProgressInfo *pi)
 {
-   // Progress signal.
-
    if (pi) {
       PDB(kGlobal,1)
          Info("Progress","%lld %lld %lld %f %f %f %f %d %f", pi->fTotal, pi->fProcessed, pi->fBytesRead,
@@ -3323,19 +3313,19 @@ void TProofPlayerRemote::Progress(TProofProgressInfo *pi)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Feedback signal.
+
 void TProofPlayerRemote::Feedback(TList *objs)
 {
-   // Feedback signal.
-
    fProof->Feedback(objs);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop process after this event.
+
 void TProofPlayerRemote::StopProcess(Bool_t abort, Int_t)
 {
-   // Stop process after this event.
-
    if (fPacketizer != 0)
       fPacketizer->StopProcess(abort, kFALSE);
    if (abort == kTRUE)
@@ -3344,17 +3334,17 @@ void TProofPlayerRemote::StopProcess(Bool_t abort, Int_t)
       fExitStatus = kStopped;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Incorporate the received object 'obj' into the output list fOutput.
+/// The latter is created if not existing.
+/// This method short cuts 'StoreOutput + MergeOutput' optimizing the memory
+/// consumption.
+/// Returns -1 in case of error, 1 if the object has been merged into another
+/// one (so that its ownership has not been taken and can be deleted), and 0
+/// otherwise.
+
 Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
 {
-   // Incorporate the received object 'obj' into the output list fOutput.
-   // The latter is created if not existing.
-   // This method short cuts 'StoreOutput + MergeOutput' optimizing the memory
-   // consumption.
-   // Returns -1 in case of error, 1 if the object has been merged into another
-   // one (so that its ownership has not been taken and can be deleted), and 0
-   // otherwise.
-
    PDB(kOutput,1)
       Info("AddOutputObject","Enter: %p (%s)", obj, obj ? obj->ClassName() : "undef");
 
@@ -3494,11 +3484,11 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
    return (merged ? 1 : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Control output redirection to TProof::fLogFileW
+
 void TProofPlayerRemote::RedirectOutput(Bool_t on)
 {
-   // Control output redirection to TProof::fLogFileW
-
    if (on && fProof && fProof->fLogFileW) {
       TProofServ::SetErrorHandlerFile(fProof->fLogFileW);
       fErrorHandler = SetErrorHandler(TProofServ::ErrorHandler);
@@ -3510,14 +3500,14 @@ void TProofPlayerRemote::RedirectOutput(Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Incorporate the content of the received output list 'out' into the final
+/// output list fOutput. The latter is created if not existing.
+/// This method short cuts 'StoreOutput + MergeOutput' limiting the memory
+/// consumption.
+
 void TProofPlayerRemote::AddOutput(TList *out)
 {
-   // Incorporate the content of the received output list 'out' into the final
-   // output list fOutput. The latter is created if not existing.
-   // This method short cuts 'StoreOutput + MergeOutput' limiting the memory
-   // consumption.
-
    PDB(kOutput,1) Info("AddOutput","Enter");
 
    // We must something to process
@@ -3598,12 +3588,12 @@ void TProofPlayerRemote::AddOutput(TList *out)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Printout the memory record after merging object 'obj'
+/// This record is used by the memory monitor
+
 void TProofPlayerRemote::NotifyMemory(TObject *obj)
 {
-   // Printout the memory record after merging object 'obj'
-   // This record is used by the memory monitor
-
    if (fProof && (!IsClient() || fProof->IsLite())){
       ProcInfo_t pi;
       if (!gSystem->GetProcInfo(&pi)){
@@ -3619,27 +3609,27 @@ void TProofPlayerRemote::NotifyMemory(TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the message to be notified in case of exception
+
 void TProofPlayerRemote::SetLastMergingMsg(TObject *obj)
 {
-   // Set the message to be notified in case of exception
-
    TString lastMsg = TString::Format("while merging object '%s'", obj->GetName());
    TProofServ::SetLastMsg(lastMsg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Incorporate object 'newobj' in the list 'outlist'.
+/// The object is merged with an object of the same name already existing in
+/// the list, or just added.
+/// The boolean merged is set to kFALSE when the object is just added to 'outlist';
+/// this happens if the Merge() method does not exist or if a object named as 'obj'
+/// is not already in the list. If the obj is not 'merged' than it should not be
+/// deleted, unless outlist is not owner of its objects.
+/// Return 0 on success, -1 on error.
+
 Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &merged)
 {
-   // Incorporate object 'newobj' in the list 'outlist'.
-   // The object is merged with an object of the same name already existing in
-   // the list, or just added.
-   // The boolean merged is set to kFALSE when the object is just added to 'outlist';
-   // this happens if the Merge() method does not exist or if a object named as 'obj'
-   // is not already in the list. If the obj is not 'merged' than it should not be
-   // deleted, unless outlist is not owner of its objects.
-   // Return 0 on success, -1 on error.
-
    merged = kTRUE;
 
    PDB(kOutput,1)
@@ -3701,11 +3691,11 @@ Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &m
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Low statistic histograms need a special treatment when using autobin
+
 TObject *TProofPlayerRemote::HandleHistogram(TObject *obj, Bool_t &merged)
 {
-   // Low statistic histograms need a special treatment when using autobin
-
    TH1 *h = dynamic_cast<TH1 *>(obj);
    if (!h) {
       // Not an histo
@@ -3817,12 +3807,12 @@ TObject *TProofPlayerRemote::HandleHistogram(TObject *obj, Bool_t &merged)
    PDB(kOutput,1) Info("HandleHistogram", "leaving");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE is the histograms 'h0' and 'h1' have the same binning and ranges
+/// on the axis (i.e. if they can be just Add-ed for merging).
+
 Bool_t TProofPlayerRemote::HistoSameAxis(TH1 *h0, TH1 *h1)
 {
-   // Return kTRUE is the histograms 'h0' and 'h1' have the same binning and ranges
-   // on the axis (i.e. if they can be just Add-ed for merging).
-
    Bool_t rc = kFALSE;
    if (!h0 || !h1) return rc;
 
@@ -3859,11 +3849,11 @@ Bool_t TProofPlayerRemote::HistoSameAxis(TH1 *h0, TH1 *h1)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store received output list.
+
 void TProofPlayerRemote::StoreOutput(TList *out)
 {
-   // Store received output list.
-
    PDB(kOutput,1) Info("StoreOutput","Enter");
 
    if ( out == 0 ) {
@@ -3933,11 +3923,11 @@ void TProofPlayerRemote::StoreOutput(TList *out)
    PDB(kOutput,1) Info("StoreOutput", "leave");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge feedback lists.
+
 TList *TProofPlayerRemote::MergeFeedback()
 {
-   // Merge feedback lists.
-
    PDB(kFeedback,1)
       Info("MergeFeedback","Enter");
 
@@ -4041,11 +4031,11 @@ TList *TProofPlayerRemote::MergeFeedback()
    return fb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store feedback results from the specified slave.
+
 void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
 {
-   // Store feedback results from the specified slave.
-
    PDB(kFeedback,1)
       Info("StoreFeedback","Enter");
 
@@ -4102,11 +4092,11 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
       Info("StoreFeedback","Leave");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup reporting of feedback objects.
+
 void TProofPlayerRemote::SetupFeedback()
 {
-   // Setup reporting of feedback objects.
-
    if (IsClient()) return; // Client does not need timer
 
    fFeedback = (TList*) fInput->FindObject("FeedbackList");
@@ -4125,11 +4115,11 @@ void TProofPlayerRemote::SetupFeedback()
    fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop reporting of feedback objects.
+
 void TProofPlayerRemote::StopFeedback()
 {
-   // Stop reporting of feedback objects.
-
    if (fFeedbackTimer == 0) return;
 
    PDB(kFeedback,1) Info("StopFeedback","Stop Timer");
@@ -4137,11 +4127,11 @@ void TProofPlayerRemote::StopFeedback()
    SafeDelete(fFeedbackTimer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send feedback objects to client.
+
 Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
 {
-   // Send feedback objects to client.
-
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 
    if (fFeedbackTimer == 0) return kFALSE; // timer already switched off
@@ -4195,11 +4185,11 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
    return kFALSE; // ignored?
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next packet for specified slave.
+
 TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
 {
-   // Get next packet for specified slave.
-
    // The first call to this determines the end of initialization
    SetInitTime();
 
@@ -4230,22 +4220,22 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
    return e;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is the player running on the client?
+
 Bool_t TProofPlayerRemote::IsClient() const
 {
-   // Is the player running on the client?
-
    return fProof ? fProof->TestBit(TProof::kIsClient) : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw (support for TChain::Draw()).
+/// Returns -1 in case of error or number of selected events in case of success.
+
 Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
                                         const char *selection, Option_t *option,
                                         Long64_t nentries, Long64_t firstentry)
 {
-   // Draw (support for TChain::Draw()).
-   // Returns -1 in case of error or number of selected events in case of success.
-
    if (!fgDrawInputPars) {
       fgDrawInputPars = new THashList;
       fgDrawInputPars->Add(new TObjString("FeedbackList"));
@@ -4313,11 +4303,11 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
    return r;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set init time
+
 void TProofPlayerRemote::SetInitTime()
 {
-   // Set init time
-
    if (fPacketizer)
       fPacketizer->SetInitTime();
 }
@@ -4327,11 +4317,11 @@ void TProofPlayerRemote::SetInitTime()
 
 ClassImp(TProofPlayerSlave)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup feedback.
+
 void TProofPlayerSlave::SetupFeedback()
 {
-   // Setup feedback.
-
    TList *fb = (TList*) fInput->FindObject("FeedbackList");
    if (fb) {
       PDB(kFeedback,1)
@@ -4355,11 +4345,11 @@ void TProofPlayerSlave::SetupFeedback()
    fFeedback = fb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop feedback.
+
 void TProofPlayerSlave::StopFeedback()
 {
-   // Stop feedback.
-
    if (fFeedbackTimer == 0) return;
 
    PDB(kFeedback,1) Info("StopFeedback","Stop Timer");
@@ -4367,11 +4357,11 @@ void TProofPlayerSlave::StopFeedback()
    SafeDelete(fFeedbackTimer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle timer event.
+
 Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
 {
-   // Handle timer event.
-
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 
    // If in sequential (0-slave-PROOF) mode we do not have a packetizer
@@ -4428,11 +4418,11 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
    return kFALSE; // ignored?
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle tree header request.
+
 void TProofPlayerSlave::HandleGetTreeHeader(TMessage *mess)
 {
-   // Handle tree header request.
-
    TMessage answ(kPROOF_GETTREEHEADER);
 
    TDSet *dset;
@@ -4486,15 +4476,15 @@ void TProofPlayerSlave::HandleGetTreeHeader(TMessage *mess)
 
 ClassImp(TProofPlayerSuperMaster)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process specified TDSet on PROOF. Runs on super master.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file,
                                           Option_t *option, Long64_t nentries,
                                           Long64_t first)
 {
-   // Process specified TDSet on PROOF. Runs on super master.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    fProgressStatus->Reset();
    PDB(kGlobal,1) Info("Process","Enter");
 
@@ -4687,11 +4677,11 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Report progress.
+
 void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total, Long64_t processed)
 {
-   // Report progress.
-
    Int_t idx = fSlaves.IndexOf(sl);
    fSlaveProgress[idx] = processed;
    if (fSlaveTotals[idx] != total)
@@ -4707,14 +4697,14 @@ void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total, Long64_t proc
    Progress(tot, proc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Report progress.
+
 void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total,
                                        Long64_t processed, Long64_t bytesread,
                                        Float_t initTime, Float_t procTime,
                                        Float_t evtrti, Float_t mbrti)
 {
-   // Report progress.
-
    PDB(kGlobal,2)
       Info("Progress","%s: %lld %lld %f %f %f %f", sl->GetName(),
                       processed, bytesread, initTime, procTime, evtrti, mbrti);
@@ -4768,11 +4758,11 @@ void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total,
    Progress(tot, proc, bytes, init, ptime, erti, srti);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Progress signal.
+
 void TProofPlayerSuperMaster::Progress(TSlave *wrk, TProofProgressInfo *pi)
 {
-   // Progress signal.
-
    if (pi) {
       PDB(kGlobal,2)
          Info("Progress","%s: %lld %lld %lld %f %f %f %f %d %f", wrk->GetOrdinal(),
@@ -4835,11 +4825,11 @@ void TProofPlayerSuperMaster::Progress(TSlave *wrk, TProofProgressInfo *pi)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send progress and feedback to client.
+
 Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
 {
-   // Send progress and feedback to client.
-
    if (fFeedbackTimer == 0) return kFALSE; // timer stopped already
 
    Int_t i;
@@ -4899,11 +4889,11 @@ Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
       return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup reporting of feedback objects and progress messages.
+
 void TProofPlayerSuperMaster::SetupFeedback()
 {
-   // Setup reporting of feedback objects and progress messages.
-
    if (IsClient()) return; // Client does not need timer
 
    TProofPlayerRemote::SetupFeedback();

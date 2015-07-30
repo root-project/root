@@ -24,7 +24,8 @@
 
 ClassImp(TGSimpleTable)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TGSimpleTable</h2></center>
 <br><br>
@@ -37,23 +38,23 @@ The interface is accesible through the GetInterface() method.
 End_Html
 */
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGSimpleTable constuctor.
+
 TGSimpleTable::TGSimpleTable(TGWindow *p, Int_t id, Double_t **data,
                              UInt_t nrows, UInt_t ncolumns)
    : TGTable(p, id, 0, nrows, ncolumns)
 {
-   // TGSimpleTable constuctor.
-
    TGSimpleTableInterface *iface = new TGSimpleTableInterface(data, nrows,
                                                               ncolumns);
    SetInterface(iface,nrows, ncolumns);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGSimpleTable destructor.
+
 TGSimpleTable::~TGSimpleTable()
 {
-   // TGSimpleTable destructor.
-
    delete fInterface;
 }
 

@@ -37,14 +37,14 @@
 
 ClassImp(TProofCondor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start proof using condor
+
 TProofCondor::TProofCondor(const char *masterurl, const char *conffile,
                            const char *confdir, Int_t loglevel,
                            const char *, TProofMgr *mgr)
   : fCondor(0), fTimer(0)
 {
-   // Start proof using condor
-
    // Default initializations
    InitMembers();
 
@@ -66,20 +66,20 @@ TProofCondor::TProofCondor(const char *masterurl, const char *conffile,
    Init(masterurl, conffile, confdir, loglevel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up Condor PROOF environment.
+
 TProofCondor::~TProofCondor()
 {
-   // Clean up Condor PROOF environment.
-
    SafeDelete(fCondor);
    SafeDelete(fTimer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup Condor workers using dynamic information
+
 Bool_t TProofCondor::StartSlaves(Bool_t)
 {
-   // Setup Condor workers using dynamic information
-
    fCondor = new TCondor;
    TString jobad = GetJobAd();
 
@@ -276,11 +276,11 @@ Bool_t TProofCondor::StartSlaves(Bool_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Suspend or resume PROOF via Condor.
+
 void TProofCondor::SetActive(Bool_t active)
 {
-   // Suspend or resume PROOF via Condor.
-
    if (fTimer == 0) {
       fTimer = new TTimer();
    }
@@ -302,11 +302,11 @@ void TProofCondor::SetActive(Bool_t active)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get job Ad
+
 TString TProofCondor::GetJobAd()
 {
-   // Get job Ad
-
    TString ad;
 
    ad = "JobUniverse = 5\n"; // vanilla

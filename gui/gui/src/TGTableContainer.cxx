@@ -32,12 +32,12 @@ ClassImp(TGTableHeaderFrame)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the container used to view TGTableCells. p.
+
 TGTableFrame::TGTableFrame(const TGWindow *p, UInt_t nrows, UInt_t ncolumns)
    : TQObject(), fFrame(0), fCanvas(0)
 {
-   // Create the container used to view TGTableCells. p.
-
    fFrame = new TGCompositeFrame(p, 10, 10, kHorizontalFrame,
                                  TGFrame::GetWhitePixel());
    fFrame->Connect("ProcessedEvent(Event_t*)", "TGTableFrame", this,
@@ -50,11 +50,11 @@ TGTableFrame::TGTableFrame(const TGWindow *p, UInt_t nrows, UInt_t ncolumns)
                          kPointerMotionMask, kNone, kNone);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse wheel to scroll.
+
 void TGTableFrame::HandleMouseWheel(Event_t *event)
 {
-   // Handle mouse wheel to scroll.
-
    if (event->fType != kButtonPress && event->fType != kButtonRelease)
       return;
 
@@ -80,11 +80,11 @@ void TGTableFrame::HandleMouseWheel(Event_t *event)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a region of container in viewport.
+
 void TGTableFrame::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Draw a region of container in viewport.
-
    TGFrameElement *el;
    //   Handle_t id = fId;
 
@@ -109,14 +109,14 @@ void TGTableFrame::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTableHeaderFrame constuctor.
+
 TGTableHeaderFrame::TGTableHeaderFrame(const TGWindow *p, TGTable *table,
                                        UInt_t w, UInt_t h, EHeaderType type,
                                        UInt_t options) :
    TGCompositeFrame(p, w, h, options), fX0(0), fY0(0), fTable(table)
 {
-   // TGTableHeaderFrame constuctor.
-
    if (type == kRowHeader) {
       ChangeOptions(GetOptions() | kVerticalFrame);
       fY0 = fTable->GetTableHeader()->GetHeight();
@@ -130,11 +130,11 @@ TGTableHeaderFrame::TGTableHeaderFrame(const TGWindow *p, TGTable *table,
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a region of container in viewport.
+
 void TGTableHeaderFrame::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Draw a region of container in viewport.
-
    TGFrameElement *el;
    //   Handle_t id = fId;
 

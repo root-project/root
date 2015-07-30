@@ -31,91 +31,91 @@
 
 templateClassImp(TMatrixT)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for (nrows x ncols) matrix
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(Int_t nrows,Int_t ncols)
 {
-// Constructor for (nrows x ncols) matrix
-
    Allocate(nrows,ncols,0,0,1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for ([row_lwb..row_upb] x [col_lwb..col_upb]) matrix
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
 {
-// Constructor for ([row_lwb..row_upb] x [col_lwb..col_upb]) matrix
-
    Allocate(row_upb-row_lwb+1,col_upb-col_lwb+1,row_lwb,col_lwb,1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// option="F": array elements contains the matrix stored column-wise
+///             like in Fortran, so a[i,j] = elements[i+no_rows*j],
+/// else        it is supposed that array elements are stored row-wise
+///             a[i,j] = elements[i*no_cols+j]
+///
+/// array elements are copied
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(Int_t no_rows,Int_t no_cols,const Element *elements,Option_t *option)
 {
-// option="F": array elements contains the matrix stored column-wise
-//             like in Fortran, so a[i,j] = elements[i+no_rows*j],
-// else        it is supposed that array elements are stored row-wise
-//             a[i,j] = elements[i*no_cols+j]
-//
-// array elements are copied
-
    Allocate(no_rows,no_cols);
    TMatrixTBase<Element>::SetMatrixArray(elements,option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// array elements are copied
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                             const Element *elements,Option_t *option)
 {
-// array elements are copied
-
    Allocate(row_upb-row_lwb+1,col_upb-col_lwb+1,row_lwb,col_lwb);
    TMatrixTBase<Element>::SetMatrixArray(elements,option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &another) : TMatrixTBase<Element>(another)
 {
-// Copy constructor
-
    R__ASSERT(another.IsValid());
    Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor of a symmetric matrix
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &another)
 {
-// Copy constructor of a symmetric matrix
-
    R__ASSERT(another.IsValid());
    Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor of a sparse matrix
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixTSparse<Element> &another)
 {
-// Copy constructor of a sparse matrix
-
    R__ASSERT(another.IsValid());
    Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of matrix applying a specific operation to the prototype.
+/// Example: TMatrixT<Element> a(10,12); ...; TMatrixT<Element> b(TMatrixT::kTransposed, a);
+/// Supported operations are: kZero, kUnit, kTransposed, kInverted and kAtA.
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(EMatrixCreatorsOp1 op,const TMatrixT<Element> &prototype)
 {
-// Constructor of matrix applying a specific operation to the prototype.
-// Example: TMatrixT<Element> a(10,12); ...; TMatrixT<Element> b(TMatrixT::kTransposed, a);
-// Supported operations are: kZero, kUnit, kTransposed, kInverted and kAtA.
-
    R__ASSERT(prototype.IsValid());
 
    switch(op) {
@@ -159,14 +159,14 @@ TMatrixT<Element>::TMatrixT(EMatrixCreatorsOp1 op,const TMatrixT<Element> &proto
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of matrix applying a specific operation to two prototypes.
+/// Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
+/// Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,const TMatrixT<Element> &b)
 {
-// Constructor of matrix applying a specific operation to two prototypes.
-// Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
-// Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
-
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
 
@@ -216,14 +216,14 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of matrix applying a specific operation to two prototypes.
+/// Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
+/// Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSym<Element> &b)
 {
-// Constructor of matrix applying a specific operation to two prototypes.
-// Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
-// Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
-
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
 
@@ -273,14 +273,14 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of matrix applying a specific operation to two prototypes.
+/// Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
+/// Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,const TMatrixT<Element> &b)
 {
-// Constructor of matrix applying a specific operation to two prototypes.
-// Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
-// Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
-
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
 
@@ -330,14 +330,14 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of matrix applying a specific operation to two prototypes.
+/// Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
+/// Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSym<Element> &b)
 {
-// Constructor of matrix applying a specific operation to two prototypes.
-// Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
-// Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
-
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
 
@@ -387,24 +387,24 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor using the TMatrixTLazy class
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixTLazy<Element> &lazy_constructor)
 {
-// Constructor using the TMatrixTLazy class
-
    Allocate(lazy_constructor.GetRowUpb()-lazy_constructor.GetRowLwb()+1,
             lazy_constructor.GetColUpb()-lazy_constructor.GetColLwb()+1,
             lazy_constructor.GetRowLwb(),lazy_constructor.GetColLwb(),1);
    lazy_constructor.FillIn(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete data pointer m, if it was assigned on the heap
+
 template<class Element>
 void TMatrixT<Element>::Delete_m(Int_t size,Element *&m)
 {
-// Delete data pointer m, if it was assigned on the heap
-
    if (m) {
       if (size > this->kSizeMax)
          delete [] m;
@@ -412,13 +412,13 @@ void TMatrixT<Element>::Delete_m(Int_t size,Element *&m)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return data pointer . if requested size <= kSizeMax, assign pointer
+/// to the stack space
+
 template<class Element>
 Element* TMatrixT<Element>::New_m(Int_t size)
 {
-// Return data pointer . if requested size <= kSizeMax, assign pointer
-// to the stack space
-
    if (size == 0) return 0;
    else {
       if ( size <= this->kSizeMax )
@@ -430,14 +430,14 @@ Element* TMatrixT<Element>::New_m(Int_t size)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy copySize doubles from *oldp to *newp . However take care of the
+/// situation where both pointers are assigned to the same stack space
+
 template<class Element>
 Int_t TMatrixT<Element>::Memcpy_m(Element *newp,const Element *oldp,Int_t copySize,
                                   Int_t newSize,Int_t oldSize)
 {
-// Copy copySize doubles from *oldp to *newp . However take care of the
-// situation where both pointers are assigned to the same stack space
-
    if (copySize == 0 || oldp == newp)
       return 0;
    else {
@@ -457,14 +457,14 @@ Int_t TMatrixT<Element>::Memcpy_m(Element *newp,const Element *oldp,Int_t copySi
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate new matrix. Arguments are number of rows, columns, row
+/// lowerbound (0 default) and column lowerbound (0 default).
+
 template<class Element>
 void TMatrixT<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
                                  Int_t init,Int_t /*nr_nonzeros*/)
 {
-// Allocate new matrix. Arguments are number of rows, columns, row
-// lowerbound (0 default) and column lowerbound (0 default).
-
    this->fIsOwner = kTRUE;
    this->fTol     = std::numeric_limits<Element>::epsilon();
    fElements      = 0;
@@ -496,12 +496,12 @@ void TMatrixT<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t
      fElements = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix summation. Create a matrix C such that C = A + B.
+
 template<class Element>
 void TMatrixT<Element>::Plus(const TMatrixT<Element> &a,const TMatrixT<Element> &b)
 {
-// General matrix summation. Create a matrix C such that C = A + B.
-
    if (gMatrixCheck) {
       if (!AreCompatible(a,b)) {
          Error("Plus","matrices not compatible");
@@ -530,12 +530,12 @@ void TMatrixT<Element>::Plus(const TMatrixT<Element> &a,const TMatrixT<Element> 
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix summation. Create a matrix C such that C = A + B.
+
 template<class Element>
 void TMatrixT<Element>::Plus(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b)
 {
-// General matrix summation. Create a matrix C such that C = A + B.
-
    if (gMatrixCheck) {
       if (!AreCompatible(a,b)) {
          Error("Plus","matrices not compatible");
@@ -564,12 +564,12 @@ void TMatrixT<Element>::Plus(const TMatrixT<Element> &a,const TMatrixTSym<Elemen
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix summation. Create a matrix C such that C = A - B.
+
 template<class Element>
 void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixT<Element> &b)
 {
-// General matrix summation. Create a matrix C such that C = A - B.
-
    if (gMatrixCheck) {
       if (!AreCompatible(a,b)) {
          Error("Minus","matrices not compatible");
@@ -598,12 +598,12 @@ void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixT<Element>
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix summation. Create a matrix C such that C = A - B.
+
 template<class Element>
 void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b)
 {
-// General matrix summation. Create a matrix C such that C = A - B.
-
    if (gMatrixCheck) {
       if (!AreCompatible(a,b)) {
          Error("Minus","matrices not compatible");
@@ -632,12 +632,12 @@ void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixTSym<Eleme
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix multiplication. Create a matrix C such that C = A * B.
+
 template<class Element>
 void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixT<Element> &b)
 {
-// General matrix multiplication. Create a matrix C such that C = A * B.
-
    if (gMatrixCheck) {
       if (a.GetNcols() != b.GetNrows() || a.GetColLwb() != b.GetRowLwb()) {
          Error("Mult","A rows and B columns incompatible");
@@ -680,13 +680,13 @@ void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixT<Element> 
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix multiplication, with A symmetric and B general.
+/// Create a matrix C such that C = A * B.
+
 template<class Element>
 void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixT<Element> &b)
 {
-// Matrix multiplication, with A symmetric and B general.
-// Create a matrix C such that C = A * B.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -732,13 +732,13 @@ void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixT<Elemen
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix multiplication, with A general and B symmetric.
+/// Create a matrix C such that C = A * B.
+
 template<class Element>
 void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b)
 {
-// Matrix multiplication, with A general and B symmetric.
-// Create a matrix C such that C = A * B.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -783,14 +783,14 @@ void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixTSym<Elemen
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix multiplication, with A symmetric and B symmetric.
+/// (Actually copied for the moment routine for B general)
+/// Create a matrix C such that C = A * B.
+
 template<class Element>
 void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b)
 {
-// Matrix multiplication, with A symmetric and B symmetric.
-// (Actually copied for the moment routine for B general)
-// Create a matrix C such that C = A * B.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -835,13 +835,13 @@ void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixTSym<Ele
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a matrix C such that C = A' * B. In other words,
+/// c[i,j] = SUM{ a[k,i] * b[k,j] }.
+
 template<class Element>
 void TMatrixT<Element>::TMult(const TMatrixT<Element> &a,const TMatrixT<Element> &b)
 {
-// Create a matrix C such that C = A' * B. In other words,
-// c[i,j] = SUM{ a[k,i] * b[k,j] }.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -885,13 +885,13 @@ void TMatrixT<Element>::TMult(const TMatrixT<Element> &a,const TMatrixT<Element>
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a matrix C such that C = A' * B. In other words,
+/// c[i,j] = SUM{ a[k,i] * b[k,j] }.
+
 template<class Element>
 void TMatrixT<Element>::TMult(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b)
 {
-// Create a matrix C such that C = A' * B. In other words,
-// c[i,j] = SUM{ a[k,i] * b[k,j] }.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -935,12 +935,12 @@ void TMatrixT<Element>::TMult(const TMatrixT<Element> &a,const TMatrixTSym<Eleme
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix multiplication. Create a matrix C such that C = A * B^T.
+
 template<class Element>
 void TMatrixT<Element>::MultT(const TMatrixT<Element> &a,const TMatrixT<Element> &b)
 {
-// General matrix multiplication. Create a matrix C such that C = A * B^T.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -986,13 +986,13 @@ void TMatrixT<Element>::MultT(const TMatrixT<Element> &a,const TMatrixT<Element>
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix multiplication, with A symmetric and B general.
+/// Create a matrix C such that C = A * B^T.
+
 template<class Element>
 void TMatrixT<Element>::MultT(const TMatrixTSym<Element> &a,const TMatrixT<Element> &b)
 {
-// Matrix multiplication, with A symmetric and B general.
-// Create a matrix C such that C = A * B^T.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -1037,13 +1037,13 @@ void TMatrixT<Element>::MultT(const TMatrixTSym<Element> &a,const TMatrixT<Eleme
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use the array data to fill the matrix ([row_lwb..row_upb] x [col_lwb..col_upb])
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::Use(Int_t row_lwb,Int_t row_upb,
                                           Int_t col_lwb,Int_t col_upb,Element *data)
 {
-// Use the array data to fill the matrix ([row_lwb..row_upb] x [col_lwb..col_upb])
-
    if (gMatrixCheck) {
       if (row_upb < row_lwb)
       {
@@ -1069,17 +1069,17 @@ TMatrixT<Element> &TMatrixT<Element>::Use(Int_t row_lwb,Int_t row_upb,
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get submatrix [row_lwb..row_upb] x [col_lwb..col_upb]; The indexing range of the
+/// returned matrix depends on the argument option:
+///
+/// option == "S" : return [0..row_upb-row_lwb][0..col_upb-col_lwb] (default)
+/// else          : return [row_lwb..row_upb][col_lwb..col_upb]
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixT<Element>::GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                                  TMatrixTBase<Element> &target,Option_t *option) const
 {
-// Get submatrix [row_lwb..row_upb] x [col_lwb..col_upb]; The indexing range of the
-// returned matrix depends on the argument option:
-//
-// option == "S" : return [0..row_upb-row_lwb][0..col_upb-col_lwb] (default)
-// else          : return [row_lwb..row_upb][col_lwb..col_upb]
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
@@ -1139,13 +1139,13 @@ TMatrixTBase<Element> &TMatrixT<Element>::GetSub(Int_t row_lwb,Int_t row_upb,Int
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert matrix source starting at [row_lwb][col_lwb], thereby overwriting the part
+/// [row_lwb..row_lwb+nrows_source][col_lwb..col_lwb+ncols_source];
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixT<Element>::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase<Element> &source)
 {
-// Insert matrix source starting at [row_lwb][col_lwb], thereby overwriting the part
-// [row_lwb..row_lwb+nrows_source][col_lwb..col_lwb+ncols_source];
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(source.IsValid());
@@ -1192,14 +1192,14 @@ TMatrixTBase<Element> &TMatrixT<Element>::SetSub(Int_t row_lwb,Int_t col_lwb,con
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of the matrix to nrows x ncols
+/// New dynamic elements are created, the overlapping part of the old ones are
+/// copied to the new structures, then the old elements are deleted.
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
 {
-// Set size of the matrix to nrows x ncols
-// New dynamic elements are created, the overlapping part of the old ones are
-// copied to the new structures, then the old elements are deleted.
-
    R__ASSERT(this->IsValid());
    if (!this->fIsOwner) {
       Error("ResizeTo(Int_t,Int_t)","Not owner of data array,cannot resize");
@@ -1257,15 +1257,15 @@ TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t nrows,Int_t ncols,Int_t
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb]
+/// New dynamic elemenst are created, the overlapping part of the old ones are
+/// copied to the new structures, then the old elements are deleted.
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                                    Int_t /*nr_nonzeros*/)
 {
-// Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb]
-// New dynamic elemenst are created, the overlapping part of the old ones are
-// copied to the new structures, then the old elements are deleted.
-
    R__ASSERT(this->IsValid());
    if (!this->fIsOwner) {
       Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
@@ -1345,12 +1345,12 @@ TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t row_lwb,Int_t row_upb,I
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the matrix determinant
+
 template<class Element>
 Double_t TMatrixT<Element>::Determinant() const
 {
-// Return the matrix determinant
-
    const TMatrixT<Element> &tmp = *this;
    TDecompLU lu(tmp,this->fTol);
    Double_t d1,d2;
@@ -1358,34 +1358,34 @@ Double_t TMatrixT<Element>::Determinant() const
    return d1*TMath::Power(2.0,d2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the matrix determinant as d1,d2 where det = d1*TMath::Power(2.0,d2)
+
 template<class Element>
 void TMatrixT<Element>::Determinant(Double_t &d1,Double_t &d2) const
 {
-// Return the matrix determinant as d1,d2 where det = d1*TMath::Power(2.0,d2)
-
    const TMatrixT<Element> &tmp = *this;
    TDecompLU lu(tmp,Double_t(this->fTol));
    lu.Det(d1,d2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invert the matrix and calculate its determinant
+
 template <>
 TMatrixT<Double_t> &TMatrixT<Double_t>::Invert(Double_t *det)
 {
-// Invert the matrix and calculate its determinant
-
    R__ASSERT(this->IsValid());
    TDecompLU::InvertLU(*this, Double_t(fTol), det);
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invert the matrix and calculate its determinant
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::Invert(Double_t *det)
 {
-// Invert the matrix and calculate its determinant
-
    TMatrixD tmp(*this);
    if (TDecompLU::InvertLU(tmp, Double_t(this->fTol),det))
       std::copy(tmp.GetMatrixArray(), tmp.GetMatrixArray() + this->GetNoElements(), this->GetMatrixArray());
@@ -1393,13 +1393,13 @@ TMatrixT<Element> &TMatrixT<Element>::Invert(Double_t *det)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invert the matrix and calculate its determinant, however upto (6x6)
+/// a fast Cramer inversion is used .
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::InvertFast(Double_t *det)
 {
-// Invert the matrix and calculate its determinant, however upto (6x6)
-// a fast Cramer inversion is used .
-
    R__ASSERT(this->IsValid());
 
    const Char_t nRows = Char_t(this->GetNrows());
@@ -1453,12 +1453,12 @@ TMatrixT<Element> &TMatrixT<Element>::InvertFast(Double_t *det)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transpose matrix source.
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::Transpose(const TMatrixT<Element> &source)
 {
-// Transpose matrix source.
-
    R__ASSERT(this->IsValid());
    R__ASSERT(source.IsValid());
 
@@ -1522,13 +1522,13 @@ TMatrixT<Element> &TMatrixT<Element>::Transpose(const TMatrixT<Element> &source)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a rank 1 operation on matrix A:
+///     A += alpha * v * v^T
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v,Element alpha)
 {
-// Perform a rank 1 operation on matrix A:
-//     A += alpha * v * v^T
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(v.IsValid());
@@ -1550,13 +1550,13 @@ TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v,Ele
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a rank 1 operation on matrix A:
+///     A += alpha * v1 * v2^T
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v1,const TVectorT<Element> &v2,Element alpha)
 {
-// Perform a rank 1 operation on matrix A:
-//     A += alpha * v1 * v2^T
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(v1.IsValid());
@@ -1585,12 +1585,12 @@ TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v1,co
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate scalar v * (*this) * v^T
+
 template<class Element>
 Element TMatrixT<Element>::Similarity(const TVectorT<Element> &v) const
 {
-// Calculate scalar v * (*this) * v^T
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(v.IsValid());
@@ -1623,15 +1623,15 @@ Element TMatrixT<Element>::Similarity(const TVectorT<Element> &v) const
    return sum1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply/divide matrix columns by a vector:
+/// option:
+/// "D"   :  b(i,j) = a(i,j)/v(i)   i = 0,fNrows-1 (default)
+/// else  :  b(i,j) = a(i,j)*v(i)
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::NormByColumn(const TVectorT<Element> &v,Option_t *option)
 {
-// Multiply/divide matrix columns by a vector:
-// option:
-// "D"   :  b(i,j) = a(i,j)/v(i)   i = 0,fNrows-1 (default)
-// else  :  b(i,j) = a(i,j)*v(i)
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(v.IsValid());
@@ -1670,15 +1670,15 @@ TMatrixT<Element> &TMatrixT<Element>::NormByColumn(const TVectorT<Element> &v,Op
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply/divide matrix rows with a vector:
+/// option:
+/// "D"   :  b(i,j) = a(i,j)/v(j)   i = 0,fNcols-1 (default)
+/// else  :  b(i,j) = a(i,j)*v(j)
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::NormByRow(const TVectorT<Element> &v,Option_t *option)
 {
-// Multiply/divide matrix rows with a vector:
-// option:
-// "D"   :  b(i,j) = a(i,j)/v(j)   i = 0,fNcols-1 (default)
-// else  :  b(i,j) = a(i,j)*v(j)
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(v.IsValid());
@@ -1716,12 +1716,12 @@ TMatrixT<Element> &TMatrixT<Element>::NormByRow(const TVectorT<Element> &v,Optio
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixT<Element> &source)
 {
-// Assignment operator
-
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator=(const TMatrixT &)","matrices not compatible");
       return *this;
@@ -1735,12 +1735,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixT<Element> &source)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTSym<Element> &source)
 {
-// Assignment operator
-
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator=(const TMatrixTSym &)","matrices not compatible");
       return *this;
@@ -1754,12 +1754,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTSym<Element> &sour
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTSparse<Element> &source)
 {
-// Assignment operator
-
    if ((gMatrixCheck &&
         this->GetNrows()  != source.GetNrows())  || this->GetNcols()  != source.GetNcols() ||
         this->GetRowLwb() != source.GetRowLwb() || this->GetColLwb() != source.GetColLwb()) {
@@ -1789,12 +1789,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTSparse<Element> &s
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTLazy<Element> &lazy_constructor)
 {
-// Assignment operator
-
    R__ASSERT(this->IsValid());
 
    if (lazy_constructor.GetRowUpb() != this->GetRowUpb() ||
@@ -1810,12 +1810,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTLazy<Element> &laz
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign val to every element of the matrix.
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator=(Element val)
 {
-// Assign val to every element of the matrix.
-
    R__ASSERT(this->IsValid());
 
    Element *ep = this->GetMatrixArray();
@@ -1826,12 +1826,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(Element val)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add val to every element of the matrix.
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator+=(Element val)
 {
-// Add val to every element of the matrix.
-
    R__ASSERT(this->IsValid());
 
    Element *ep = this->GetMatrixArray();
@@ -1842,12 +1842,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator+=(Element val)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Subtract val from every element of the matrix.
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator-=(Element val)
 {
-// Subtract val from every element of the matrix.
-
    R__ASSERT(this->IsValid());
 
    Element *ep = this->GetMatrixArray();
@@ -1858,12 +1858,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator-=(Element val)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix with val.
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator*=(Element val)
 {
-// Multiply every element of the matrix with val.
-
    R__ASSERT(this->IsValid());
 
    Element *ep = this->GetMatrixArray();
@@ -1874,12 +1874,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(Element val)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the source matrix.
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator+=(const TMatrixT<Element> &source)
 {
-// Add the source matrix.
-
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator+=(const TMatrixT &)","matrices not compatible");
       return *this;
@@ -1894,12 +1894,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator+=(const TMatrixT<Element> &source
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the source matrix.
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator+=(const TMatrixTSym<Element> &source)
 {
-// Add the source matrix.
-
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator+=(const TMatrixTSym &)","matrices not compatible");
       return *this;
@@ -1914,12 +1914,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator+=(const TMatrixTSym<Element> &sou
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Subtract the source matrix.
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator-=(const TMatrixT<Element> &source)
 {
-// Subtract the source matrix.
-
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator=-(const TMatrixT &)","matrices not compatible");
       return *this;
@@ -1934,12 +1934,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator-=(const TMatrixT<Element> &source
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Subtract the source matrix.
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator-=(const TMatrixTSym<Element> &source)
 {
-// Subtract the source matrix.
-
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator=-(const TMatrixTSym &)","matrices not compatible");
       return *this;
@@ -1954,14 +1954,14 @@ TMatrixT<Element> &TMatrixT<Element>::operator-=(const TMatrixTSym<Element> &sou
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute target = target * source inplace. Strictly speaking, it can't be
+/// done inplace, though only the row of the target matrix needs to be saved.
+/// "Inplace" multiplication is only allowed when the 'source' matrix is square.
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixT<Element> &source)
 {
-// Compute target = target * source inplace. Strictly speaking, it can't be
-// done inplace, though only the row of the target matrix needs to be saved.
-// "Inplace" multiplication is only allowed when the 'source' matrix is square.
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(source.IsValid());
@@ -2018,13 +2018,13 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixT<Element> &source
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute target = target * source inplace. Strictly speaking, it can't be
+/// done inplace, though only the row of the target matrix needs to be saved.
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTSym<Element> &source)
 {
-// Compute target = target * source inplace. Strictly speaking, it can't be
-// done inplace, though only the row of the target matrix needs to be saved.
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(source.IsValid());
@@ -2080,13 +2080,13 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTSym<Element> &sou
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply a matrix row by the diagonal of another matrix
+/// matrix(i,j) *= diag(j), j=0,fNcols-1
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTDiag_const<Element> &diag)
 {
-// Multiply a matrix row by the diagonal of another matrix
-// matrix(i,j) *= diag(j), j=0,fNcols-1
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(diag.GetMatrix()->IsValid());
@@ -2110,13 +2110,13 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTDiag_const<Elemen
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divide a matrix row by the diagonal of another matrix
+/// matrix(i,j) /= diag(j)
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTDiag_const<Element> &diag)
 {
-// Divide a matrix row by the diagonal of another matrix
-// matrix(i,j) /= diag(j)
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(diag.GetMatrix()->IsValid());
@@ -2145,13 +2145,13 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTDiag_const<Elemen
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply a matrix by the column of another matrix
+/// matrix(i,j) *= another(i,k) for fixed k
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTColumn_const<Element> &col)
 {
-// Multiply a matrix by the column of another matrix
-// matrix(i,j) *= another(i,k) for fixed k
-
    const TMatrixTBase<Element> *mt = col.GetMatrix();
 
    if (gMatrixCheck) {
@@ -2178,13 +2178,13 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTColumn_const<Elem
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divide a matrix by the column of another matrix
+/// matrix(i,j) /= another(i,k) for fixed k
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTColumn_const<Element> &col)
 {
-// Divide a matrix by the column of another matrix
-// matrix(i,j) /= another(i,k) for fixed k
-
    const TMatrixTBase<Element> *mt = col.GetMatrix();
 
    if (gMatrixCheck) {
@@ -2217,13 +2217,13 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTColumn_const<Elem
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply a matrix by the row of another matrix
+/// matrix(i,j) *= another(k,j) for fixed k
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTRow_const<Element> &row)
 {
-// Multiply a matrix by the row of another matrix
-// matrix(i,j) *= another(k,j) for fixed k
-
    const TMatrixTBase<Element> *mt = row.GetMatrix();
 
    if (gMatrixCheck) {
@@ -2251,13 +2251,13 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTRow_const<Element
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divide a matrix by the row of another matrix
+/// matrix(i,j) /= another(k,j) for fixed k
+
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTRow_const<Element> &row)
 {
-// Divide a matrix by the row of another matrix
-// matrix(i,j) /= another(k,j) for fixed k
-
    const TMatrixTBase<Element> *mt = row.GetMatrix();
    R__ASSERT(this->IsValid());
    R__ASSERT(mt->IsValid());
@@ -2288,15 +2288,15 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTRow_const<Element
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a matrix containing the eigen-vectors ordered by descending values
+/// of Re^2+Im^2 of the complex eigen-values .
+/// If the matrix is asymmetric, only the real part of the eigen-values is
+/// returned . For full functionality use TMatrixDEigen .
+
 template<class Element>
 const TMatrixT<Element> TMatrixT<Element>::EigenVectors(TVectorT<Element> &eigenValues) const
 {
-// Return a matrix containing the eigen-vectors ordered by descending values
-// of Re^2+Im^2 of the complex eigen-values .
-// If the matrix is asymmetric, only the real part of the eigen-values is
-// returned . For full functionality use TMatrixDEigen .
-
    if (!this->IsSymmetric())
       Warning("EigenVectors(TVectorT &)","Only real part of eigen-values will be returned");
    TMatrixDEigen eigen(*this);
@@ -2305,174 +2305,174 @@ const TMatrixT<Element> TMatrixT<Element>::EigenVectors(TVectorT<Element> &eigen
    return eigen.GetEigenVectors();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = source1+source2
+
 template<class Element>
 TMatrixT<Element> operator+(const TMatrixT<Element> &source1,const TMatrixT<Element> &source2)
 {
-// operation this = source1+source2
-
    TMatrixT<Element> target(source1);
    target += source2;
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = source1+source2
+
 template<class Element>
 TMatrixT<Element> operator+(const TMatrixT<Element> &source1,const TMatrixTSym<Element> &source2)
 {
-// operation this = source1+source2
-
    TMatrixT<Element> target(source1);
    target += source2;
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = source1+source2
+
 template<class Element>
 TMatrixT<Element> operator+(const TMatrixTSym<Element> &source1,const TMatrixT<Element> &source2)
 {
-// operation this = source1+source2
-
    return operator+(source2,source1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = source+val
+
 template<class Element>
 TMatrixT<Element> operator+(const TMatrixT<Element> &source,Element val)
 {
-// operation this = source+val
-
    TMatrixT<Element> target(source);
    target += val;
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = val+source
+
 template<class Element>
 TMatrixT<Element> operator+(Element val,const TMatrixT<Element> &source)
 {
-// operation this = val+source
-
    return operator+(source,val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = source1-source2
+
 template<class Element>
 TMatrixT<Element> operator-(const TMatrixT<Element> &source1,const TMatrixT<Element> &source2)
 {
-// operation this = source1-source2
-
    TMatrixT<Element> target(source1);
    target -= source2;
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = source1-source2
+
 template<class Element>
 TMatrixT<Element> operator-(const TMatrixT<Element> &source1,const TMatrixTSym<Element> &source2)
 {
-// operation this = source1-source2
-
    TMatrixT<Element> target(source1);
    target -= source2;
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = source1-source2
+
 template<class Element>
 TMatrixT<Element> operator-(const TMatrixTSym<Element> &source1,const TMatrixT<Element> &source2)
 {
-// operation this = source1-source2
-
    return Element(-1.0)*(operator-(source2,source1));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = source-val
+
 template<class Element>
 TMatrixT<Element> operator-(const TMatrixT<Element> &source,Element val)
 {
-// operation this = source-val
-
    TMatrixT<Element> target(source);
    target -= val;
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = val-source
+
 template<class Element>
 TMatrixT<Element> operator-(Element val,const TMatrixT<Element> &source)
 {
-// operation this = val-source
-
    return Element(-1.0)*operator-(source,val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = val*source
+
 template<class Element>
 TMatrixT<Element> operator*(Element val,const TMatrixT<Element> &source)
 {
-// operation this = val*source
-
    TMatrixT<Element> target(source);
    target *= val;
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = val*source
+
 template<class Element>
 TMatrixT<Element> operator*(const TMatrixT<Element> &source,Element val)
 {
-// operation this = val*source
-
    return operator*(val,source);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = source1*source2
+
 template<class Element>
 TMatrixT<Element> operator*(const TMatrixT<Element> &source1,const TMatrixT<Element> &source2)
 {
-// operation this = source1*source2
-
    TMatrixT<Element> target(source1,TMatrixT<Element>::kMult,source2);
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = source1*source2
+
 template<class Element>
 TMatrixT<Element> operator*(const TMatrixT<Element> &source1,const TMatrixTSym<Element> &source2)
 {
-// operation this = source1*source2
-
    TMatrixT<Element> target(source1,TMatrixT<Element>::kMult,source2);
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = source1*source2
+
 template<class Element>
 TMatrixT<Element> operator*(const TMatrixTSym<Element> &source1,const TMatrixT<Element> &source2)
 {
-// operation this = source1*source2
-
    TMatrixT<Element> target(source1,TMatrixT<Element>::kMult,source2);
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// operation this = source1*source2
+
 template<class Element>
 TMatrixT<Element> operator*(const TMatrixTSym<Element> &source1,const TMatrixTSym<Element> &source2)
 {
-// operation this = source1*source2
-
    TMatrixT<Element> target(source1,TMatrixT<Element>::kMult,source2);
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical AND
+
 template<class Element>
 TMatrixT<Element> operator&&(const TMatrixT<Element> &source1,const TMatrixT<Element> &source2)
 {
-// Logical AND
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2492,12 +2492,12 @@ TMatrixT<Element> operator&&(const TMatrixT<Element> &source1,const TMatrixT<Ele
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical AND
+
 template<class Element>
 TMatrixT<Element> operator&&(const TMatrixT<Element> &source1,const TMatrixTSym<Element> &source2)
 {
-// Logical AND
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2517,20 +2517,21 @@ TMatrixT<Element> operator&&(const TMatrixT<Element> &source1,const TMatrixTSym<
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical AND
+
 template<class Element>
 TMatrixT<Element> operator&&(const TMatrixTSym<Element> &source1,const TMatrixT<Element> &source2)
 {
-// Logical AND
    return operator&&(source2,source1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical OR
+
 template<class Element>
 TMatrixT<Element> operator||(const TMatrixT<Element> &source1,const TMatrixT<Element> &source2)
 {
-// Logical OR
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2550,12 +2551,12 @@ TMatrixT<Element> operator||(const TMatrixT<Element> &source1,const TMatrixT<Ele
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical OR
+
 template<class Element>
 TMatrixT<Element> operator||(const TMatrixT<Element> &source1,const TMatrixTSym<Element> &source2)
 {
-// Logical OR
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2575,21 +2576,21 @@ TMatrixT<Element> operator||(const TMatrixT<Element> &source1,const TMatrixTSym<
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical OR
+
 template<class Element>
 TMatrixT<Element> operator||(const TMatrixTSym<Element> &source1,const TMatrixT<Element> &source2)
 {
-// Logical OR
-
    return operator||(source2,source1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 > source2
+
 template<class Element>
 TMatrixT<Element> operator>(const TMatrixT<Element> &source1,const TMatrixT<Element> &source2)
 {
-// logical operation source1 > source2
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2610,12 +2611,12 @@ TMatrixT<Element> operator>(const TMatrixT<Element> &source1,const TMatrixT<Elem
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 > source2
+
 template<class Element>
 TMatrixT<Element> operator>(const TMatrixT<Element> &source1,const TMatrixTSym<Element> &source2)
 {
-// logical operation source1 > source2
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2636,21 +2637,21 @@ TMatrixT<Element> operator>(const TMatrixT<Element> &source1,const TMatrixTSym<E
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 > source2
+
 template<class Element>
 TMatrixT<Element> operator>(const TMatrixTSym<Element> &source1,const TMatrixT<Element> &source2)
 {
-// logical operation source1 > source2
-
    return operator<=(source2,source1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 >= source2
+
 template<class Element>
 TMatrixT<Element> operator>=(const TMatrixT<Element> &source1,const TMatrixT<Element> &source2)
 {
-// logical operation source1 >= source2
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2671,12 +2672,12 @@ TMatrixT<Element> operator>=(const TMatrixT<Element> &source1,const TMatrixT<Ele
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 >= source2
+
 template<class Element>
 TMatrixT<Element> operator>=(const TMatrixT<Element> &source1,const TMatrixTSym<Element> &source2)
 {
-// logical operation source1 >= source2
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2697,21 +2698,21 @@ TMatrixT<Element> operator>=(const TMatrixT<Element> &source1,const TMatrixTSym<
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 >= source2
+
 template<class Element>
 TMatrixT<Element> operator>=(const TMatrixTSym<Element> &source1,const TMatrixT<Element> &source2)
 {
-// logical operation source1 >= source2
-
    return operator<(source2,source1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 <= source2
+
 template<class Element>
 TMatrixT<Element> operator<=(const TMatrixT<Element> &source1,const TMatrixT<Element> &source2)
 {
-// logical operation source1 <= source2
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2732,12 +2733,12 @@ TMatrixT<Element> operator<=(const TMatrixT<Element> &source1,const TMatrixT<Ele
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 <= source2
+
 template<class Element>
 TMatrixT<Element> operator<=(const TMatrixT<Element> &source1,const TMatrixTSym<Element> &source2)
 {
-// logical operation source1 <= source2
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2758,21 +2759,21 @@ TMatrixT<Element> operator<=(const TMatrixT<Element> &source1,const TMatrixTSym<
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 <= source2
+
 template<class Element>
 TMatrixT<Element> operator<=(const TMatrixTSym<Element> &source1,const TMatrixT<Element> &source2)
 {
-// logical operation source1 <= source2
-
    return operator>(source2,source1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 < source2
+
 template<class Element>
 TMatrixT<Element> operator<(const TMatrixT<Element> &source1,const TMatrixT<Element> &source2)
 {
-// logical operation source1 < source2
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2791,12 +2792,12 @@ TMatrixT<Element> operator<(const TMatrixT<Element> &source1,const TMatrixT<Elem
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 < source2
+
 template<class Element>
 TMatrixT<Element> operator<(const TMatrixT<Element> &source1,const TMatrixTSym<Element> &source2)
 {
-// logical operation source1 < source2
-
   TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2817,21 +2818,21 @@ TMatrixT<Element> operator<(const TMatrixT<Element> &source1,const TMatrixTSym<E
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 < source2
+
 template<class Element>
 TMatrixT<Element> operator<(const TMatrixTSym<Element> &source1,const TMatrixT<Element> &source2)
 {
-// logical operation source1 < source2
-
    return operator>=(source2,source1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 != source2
+
 template<class Element>
 TMatrixT<Element> operator!=(const TMatrixT<Element> &source1,const TMatrixT<Element> &source2)
 {
-// logical operation source1 != source2
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2852,12 +2853,12 @@ TMatrixT<Element> operator!=(const TMatrixT<Element> &source1,const TMatrixT<Ele
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 != source2
+
 template<class Element>
 TMatrixT<Element> operator!=(const TMatrixT<Element> &source1,const TMatrixTSym<Element> &source2)
 {
-// logical operation source1 != source2
-
    TMatrixT<Element> target;
 
    if (gMatrixCheck && !AreCompatible(source1,source2)) {
@@ -2878,22 +2879,22 @@ TMatrixT<Element> operator!=(const TMatrixT<Element> &source1,const TMatrixTSym<
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 != source2
+
 template<class Element>
 TMatrixT<Element> operator!=(const TMatrixTSym<Element> &source1,const TMatrixT<Element> &source2)
 {
-// logical operation source1 != source2
-
    return operator!=(source2,source1);
 }
 
 /*
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 != val
+
 template<class Element>
 TMatrixT<Element> operator!=(const TMatrixT<Element> &source1,Element val)
 {
-// logical operation source1 != val
-
    TMatrixT<Element> target; target.ResizeTo(source1);
 
    const Element *sp = source1.GetMatrixArray();
@@ -2906,22 +2907,22 @@ TMatrixT<Element> operator!=(const TMatrixT<Element> &source1,Element val)
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// logical operation source1 != val
+
 template<class Element>
 TMatrixT<Element> operator!=(Element val,const TMatrixT<Element> &source1)
 {
-// logical operation source1 != val
-
    return operator!=(source1,val);
 }
 */
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modify addition: target += scalar * source.
+
 template<class Element>
 TMatrixT<Element> &Add(TMatrixT<Element> &target,Element scalar,const TMatrixT<Element> &source)
 {
-// Modify addition: target += scalar * source.
-
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("Add(TMatrixT &,Element,const TMatrixT &)","matrices not compatible");
       return target;
@@ -2944,12 +2945,12 @@ TMatrixT<Element> &Add(TMatrixT<Element> &target,Element scalar,const TMatrixT<E
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modify addition: target += scalar * source.
+
 template<class Element>
 TMatrixT<Element> &Add(TMatrixT<Element> &target,Element scalar,const TMatrixTSym<Element> &source)
 {
-// Modify addition: target += scalar * source.
-
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("Add(TMatrixT &,Element,const TMatrixTSym &)","matrices not compatible");
       return target;
@@ -2964,12 +2965,12 @@ TMatrixT<Element> &Add(TMatrixT<Element> &target,Element scalar,const TMatrixTSy
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply target by the source, element-by-element.
+
 template<class Element>
 TMatrixT<Element> &ElementMult(TMatrixT<Element> &target,const TMatrixT<Element> &source)
 {
-// Multiply target by the source, element-by-element.
-
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("ElementMult(TMatrixT &,const TMatrixT &)","matrices not compatible");
       return target;
@@ -2984,12 +2985,12 @@ TMatrixT<Element> &ElementMult(TMatrixT<Element> &target,const TMatrixT<Element>
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply target by the source, element-by-element.
+
 template<class Element>
 TMatrixT<Element> &ElementMult(TMatrixT<Element> &target,const TMatrixTSym<Element> &source)
 {
-// Multiply target by the source, element-by-element.
-
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("ElementMult(TMatrixT &,const TMatrixTSym &)","matrices not compatible");
       return target;
@@ -3004,12 +3005,12 @@ TMatrixT<Element> &ElementMult(TMatrixT<Element> &target,const TMatrixTSym<Eleme
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divide target by the source, element-by-element.
+
 template<class Element>
 TMatrixT<Element> &ElementDiv(TMatrixT<Element> &target,const TMatrixT<Element> &source)
 {
-// Divide target by the source, element-by-element.
-
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("ElementDiv(TMatrixT &,const TMatrixT &)","matrices not compatible");
       return target;
@@ -3032,12 +3033,12 @@ TMatrixT<Element> &ElementDiv(TMatrixT<Element> &target,const TMatrixT<Element> 
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply target by the source, element-by-element.
+
 template<class Element>
 TMatrixT<Element> &ElementDiv(TMatrixT<Element> &target,const TMatrixTSym<Element> &source)
 {
-// Multiply target by the source, element-by-element.
-
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("ElementDiv(TMatrixT &,const TMatrixTSym &)","matrices not compatible");
       return target;
@@ -3060,13 +3061,13 @@ TMatrixT<Element> &ElementDiv(TMatrixT<Element> &target,const TMatrixTSym<Elemen
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Elementary routine to calculate matrix multiplication A*B
+
 template<class Element>
 void AMultB(const Element * const ap,Int_t na,Int_t ncolsa,
             const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp)
 {
-// Elementary routine to calculate matrix multiplication A*B
-
    const Element *arp0 = ap;                     // Pointer to  A[i,0];
    while (arp0 < ap+na) {
       for (const Element *bcp = bp; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
@@ -3083,13 +3084,13 @@ void AMultB(const Element * const ap,Int_t na,Int_t ncolsa,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Elementary routine to calculate matrix multiplication A^T*B
+
 template<class Element>
 void AtMultB(const Element * const ap,Int_t ncolsa,
              const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp)
 {
-// Elementary routine to calculate matrix multiplication A^T*B
-
    const Element *acp0 = ap;           // Pointer to  A[i,0];
    while (acp0 < ap+ncolsa) {
       for (const Element *bcp = bp; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
@@ -3107,13 +3108,13 @@ void AtMultB(const Element * const ap,Int_t ncolsa,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Elementary routine to calculate matrix multiplication A*B^T
+
 template<class Element>
 void AMultBt(const Element * const ap,Int_t na,Int_t ncolsa,
              const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp)
 {
-// Elementary routine to calculate matrix multiplication A*B^T
-
    const Element *arp0 = ap;                    // Pointer to  A[i,0];
    while (arp0 < ap+na) {
       const Element *brp0 = bp;                  // Pointer to  B[j,0];
@@ -3130,12 +3131,12 @@ void AMultBt(const Element * const ap,Int_t na,Int_t ncolsa,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TMatrixT.
+
 template<class Element>
 void TMatrixT<Element>::Streamer(TBuffer &R__b)
 {
-// Stream an object of class TMatrixT.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

@@ -79,11 +79,13 @@ using namespace std ;
 ClassImp(RooWorkspace)
 ;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(RooWorkspace::CodeRepo)
 ;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(RooWorkspace::WSDir)
 ;
 
@@ -93,33 +95,33 @@ string RooWorkspace::_classFileExportDir = ".wscode.%s.%s" ;
 Bool_t RooWorkspace::_autoClass = kFALSE ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add 'dir' to search path for class declaration (header) files, when
+/// attempting to import class code with importClassClode()
+
 void RooWorkspace::addClassDeclImportDir(const char* dir) 
 {
-  // Add 'dir' to search path for class declaration (header) files, when
-  // attempting to import class code with importClassClode()
-
   _classDeclDirList.push_back(dir) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add 'dir' to search path for class implementation (.cxx) files, when
+/// attempting to import class code with importClassClode()
+
 void RooWorkspace::addClassImplImportDir(const char* dir) 
 {
-  // Add 'dir' to search path for class implementation (.cxx) files, when
-  // attempting to import class code with importClassClode()
-
   _classImplDirList.push_back(dir) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify the name of the directory in which embedded source
+/// code is unpacked and compiled. The specified string may contain
+/// one '%s' token which will be substituted by the workspace name
+
 void RooWorkspace::setClassFileExportDir(const char* dir) 
 {
-  // Specify the name of the directory in which embedded source
-  // code is unpacked and compiled. The specified string may contain
-  // one '%s' token which will be substituted by the workspace name
-
   if (dir) {
     _classFileExportDir = dir ;
   } else {
@@ -128,30 +130,33 @@ void RooWorkspace::setClassFileExportDir(const char* dir)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If flag is true, source code of classes not the the ROOT distribution
+/// is automatically imported if on object of such a class is imported
+/// in the workspace
+
 void RooWorkspace::autoImportClassCode(Bool_t flag) 
 {
-  // If flag is true, source code of classes not the the ROOT distribution
-  // is automatically imported if on object of such a class is imported
-  // in the workspace
   _autoClass = flag ; 
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooWorkspace::RooWorkspace() : _classes(this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
 {
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct empty workspace with given name and title
+
 RooWorkspace::RooWorkspace(const char* name, const char* title) : 
   TNamed(name,title?title:name), _classes(this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
 {
-  // Construct empty workspace with given name and title
 }
 
 
@@ -165,12 +170,12 @@ RooWorkspace::RooWorkspace(const char* name, Bool_t doCINTExport)  :
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Workspace copy constructor
+
 RooWorkspace::RooWorkspace(const RooWorkspace& other) : 
   TNamed(other), _uuid(other._uuid), _classes(other._classes,this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
 {
-  // Workspace copy constructor
-
   // Copy owned nodes
   other._allOwnedNodes.snapshot(_allOwnedNodes,kTRUE) ;
 
@@ -212,11 +217,11 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Workspace destructor
+
 RooWorkspace::~RooWorkspace() 
 {
-  // Workspace destructor
-
   // Delete references to variables that were declared in CINT 
   if (_doExport) {
     unExport() ;
@@ -235,15 +240,15 @@ RooWorkspace::~RooWorkspace()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Import a RooAbsArg or RooAbsData set from a workspace in a file. Filespec should be constructed as "filename:wspacename:objectname"
+/// The arguments will be passed on to the relevant RooAbsArg& or RooAbsData& import call
+
 Bool_t RooWorkspace::import(const char* fileSpec, 
 			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
 			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6, 
 			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9) 
 {
-  // Import a RooAbsArg or RooAbsData set from a workspace in a file. Filespec should be constructed as "filename:wspacename:objectname"
-  // The arguments will be passed on to the relevant RooAbsArg& or RooAbsData& import call
-
   // Parse file/workspace/objectname specification
   char buf[10240] ;
   strlcpy(buf,fileSpec,10240) ;
@@ -292,15 +297,15 @@ Bool_t RooWorkspace::import(const char* fileSpec,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Import multiple RooAbsArg objects into workspace. For details on arguments see documentation
+/// of import() method for single RooAbsArg
+
 Bool_t RooWorkspace::import(const RooArgSet& args,
 			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
 			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6, 
 			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9) 
 {
-  // Import multiple RooAbsArg objects into workspace. For details on arguments see documentation
-  // of import() method for single RooAbsArg
-
   TIterator* iter = args.createIterator() ;
   RooAbsArg* oneArg ;
   Bool_t ret(kFALSE) ;
@@ -312,35 +317,35 @@ Bool_t RooWorkspace::import(const RooArgSet& args,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Import a RooAbsArg object, e.g. function, p.d.f or variable into the workspace. This import function clones the input argument and will
+///  own the clone. If a composite object is offered for import, e.g. a p.d.f with parameters and observables, the
+///  complete tree of objects is imported. If any of the _variables_ of a composite object (parameters/observables) are already 
+///  in the workspace the imported p.d.f. is connected to the already existing variables. If any of the _function_ objects (p.d.f, formulas) 
+///  to be imported already exists in the workspace an error message is printed and the import of the entire tree of objects is cancelled. 
+///  Several optional arguments can be provided to modify the import procedure.
+///
+///  Accepted arguments
+///  -------------------------------
+///  RenameConflictNodes(const char* suffix) -- Add suffix to branch node name if name conflicts with existing node in workspace
+///  RenameAllNodes(const char* suffix) -- Add suffix to all branch node names including top level node
+///  RenameAllVariables(const char* suffix) -- Add suffix to all variables names
+///  RenameAllVariablesExcept(const char* suffix, const char* exceptionList) -- Add suffix to all variables names, except ones listed
+///  RenameVariable(const char* inputName, const char* outputName) -- Rename variable as specified upon import.
+///  RecycleConflictNodes() -- If any of the function objects to be imported already exist in the name space, connect the
+///                            imported expression to the already existing nodes. WARNING: use with care! If function definitions
+///                            do not match, this alters the definition of your function upon import
+///  Silence() -- Do not issue any info message
+///
+///  The RenameConflictNodes, RenameNodes and RecycleConflictNodes arguments are mutually exclusive. The RenameVariable argument can be repeated
+///  as often as necessary to rename multiple variables. Alternatively, a single RenameVariable argument can be given with
+///  two comma separated lists.
+
 Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
 			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6, 
 			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9) 
 {
-  //  Import a RooAbsArg object, e.g. function, p.d.f or variable into the workspace. This import function clones the input argument and will
-  //  own the clone. If a composite object is offered for import, e.g. a p.d.f with parameters and observables, the
-  //  complete tree of objects is imported. If any of the _variables_ of a composite object (parameters/observables) are already 
-  //  in the workspace the imported p.d.f. is connected to the already existing variables. If any of the _function_ objects (p.d.f, formulas) 
-  //  to be imported already exists in the workspace an error message is printed and the import of the entire tree of objects is cancelled. 
-  //  Several optional arguments can be provided to modify the import procedure.
-  //
-  //  Accepted arguments
-  //  -------------------------------
-  //  RenameConflictNodes(const char* suffix) -- Add suffix to branch node name if name conflicts with existing node in workspace
-  //  RenameAllNodes(const char* suffix) -- Add suffix to all branch node names including top level node
-  //  RenameAllVariables(const char* suffix) -- Add suffix to all variables names
-  //  RenameAllVariablesExcept(const char* suffix, const char* exceptionList) -- Add suffix to all variables names, except ones listed
-  //  RenameVariable(const char* inputName, const char* outputName) -- Rename variable as specified upon import.
-  //  RecycleConflictNodes() -- If any of the function objects to be imported already exist in the name space, connect the
-  //                            imported expression to the already existing nodes. WARNING: use with care! If function definitions
-  //                            do not match, this alters the definition of your function upon import
-  //  Silence() -- Do not issue any info message
-  //
-  //  The RenameConflictNodes, RenameNodes and RecycleConflictNodes arguments are mutually exclusive. The RenameVariable argument can be repeated
-  //  as often as necessary to rename multiple variables. Alternatively, a single RenameVariable argument can be given with
-  //  two comma separated lists.
-
   RooLinkedList args ;
   args.Add((TObject*)&arg1) ;
   args.Add((TObject*)&arg2) ;
@@ -741,7 +746,8 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t RooWorkspace::import(RooAbsData& inData, 
 			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
 			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6, 
@@ -876,13 +882,13 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define a named RooArgSet with given constituents. If importMissing is true, any constituents
+/// of aset that are not in the workspace will be imported, otherwise an error is returned
+/// for missing components
+
 Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t importMissing) 
 {
-  // Define a named RooArgSet with given constituents. If importMissing is true, any constituents
-  // of aset that are not in the workspace will be imported, otherwise an error is returned
-  // for missing components
-
   // Check if set was previously defined, if so print warning
   map<string,RooArgSet>::iterator i = _namedSets.find(name) ;
   if (i!=_namedSets.end()) {
@@ -919,12 +925,12 @@ Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t i
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define a named set in the work space through a comma separated list of
+/// names of objects already in the workspace
+
 Bool_t RooWorkspace::defineSet(const char* name, const char* contentList) 
 {
-  // Define a named set in the work space through a comma separated list of
-  // names of objects already in the workspace
-
   // Check if set was previously defined, if so print warning
   map<string,RooArgSet>::iterator i = _namedSets.find(name) ;
   if (i!=_namedSets.end()) {
@@ -958,12 +964,12 @@ Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define a named set in the work space through a comma separated list of
+/// names of objects already in the workspace
+
 Bool_t RooWorkspace::extendSet(const char* name, const char* newContents) 
 {
-  // Define a named set in the work space through a comma separated list of
-  // names of objects already in the workspace
-
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
@@ -989,12 +995,12 @@ Bool_t RooWorkspace::extendSet(const char* name, const char* newContents)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to previously defined named set with given nmame
+/// If no such set is found a null pointer is returned
+
 const RooArgSet* RooWorkspace::set(const char* name) 
 {
-  // Return pointer to previously defined named set with given nmame
-  // If no such set is found a null pointer is returned
-
   map<string,RooArgSet>::iterator i = _namedSets.find(name) ;
   return (i!=_namedSets.end()) ? &(i->second) : 0 ;
 }
@@ -1002,11 +1008,11 @@ const RooArgSet* RooWorkspace::set(const char* name)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rename set to a new name
+
 Bool_t RooWorkspace::renameSet(const char* name, const char* newName) 
 {
-  // Rename set to a new name
-
   // First check if set exists
   if (!set(name)) {
     coutE(InputArguments) << "RooWorkspace::renameSet(" << GetName() << ") ERROR a set with name " << name
@@ -1033,11 +1039,11 @@ Bool_t RooWorkspace::renameSet(const char* name, const char* newName)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a named set from the workspace
+
 Bool_t RooWorkspace::removeSet(const char* name) 
 {
-  // Remove a named set from the workspace
-
   // First check if set exists
   if (!set(name)) {
     coutE(InputArguments) << "RooWorkspace::removeSet(" << GetName() << ") ERROR a set with name " << name
@@ -1054,12 +1060,12 @@ Bool_t RooWorkspace::removeSet(const char* name)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open an import transaction operations. Returns kTRUE if successful, kFALSE
+/// if there is already an ongoing transaction
+
 Bool_t RooWorkspace::startTransaction() 
 {
-  // Open an import transaction operations. Returns kTRUE if successful, kFALSE
-  // if there is already an ongoing transaction
-
   // Check that there was no ongoing transaction
   if (_openTrans) {
     return kFALSE ;
@@ -1073,13 +1079,13 @@ Bool_t RooWorkspace::startTransaction()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cancel an ongoing import transaction. All objects imported since startTransaction()
+/// will be removed and the transaction will be terminated. Return kTRUE if cancel operation
+/// succeeds, return kFALSE if there was no open transaction
+
 Bool_t RooWorkspace::cancelTransaction() 
 {
-  // Cancel an ongoing import transaction. All objects imported since startTransaction()
-  // will be removed and the transaction will be terminated. Return kTRUE if cancel operation
-  // succeeds, return kFALSE if there was no open transaction
-  
   // Check that there is an ongoing transaction
   if (!_openTrans) {
     return kFALSE ;
@@ -1135,7 +1141,8 @@ Bool_t RooWorkspace::commitTransaction()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t RooWorkspace::importClassCode(TClass* theClass, Bool_t doReplace) 
 {
   return _classes.autoImportClass(theClass,doReplace) ;
@@ -1143,14 +1150,14 @@ Bool_t RooWorkspace::importClassCode(TClass* theClass, Bool_t doReplace)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inport code of all classes in the workspace that have a class name
+/// that matches pattern 'pat' and which are not found to be part of
+/// the standard ROOT distribution. If doReplace is true any existing
+/// class code saved in the workspace is replaced
+
 Bool_t RooWorkspace::importClassCode(const char* pat, Bool_t doReplace)  
 {
-  // Inport code of all classes in the workspace that have a class name
-  // that matches pattern 'pat' and which are not found to be part of
-  // the standard ROOT distribution. If doReplace is true any existing
-  // class code saved in the workspace is replaced
-
   Bool_t ret(kTRUE) ;
 
   TRegexp re(pat,kTRUE) ;
@@ -1173,14 +1180,14 @@ Bool_t RooWorkspace::importClassCode(const char* pat, Bool_t doReplace)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save snapshot of values and attributes (including "Constant") of parameters 'params'
+/// If importValues is FALSE, the present values from the object in the workspace are
+/// saved. If importValues is TRUE, the values of the objects passed in the 'params'
+/// argument are saved
+
 Bool_t RooWorkspace::saveSnapshot(const char* name, const char* paramNames) 
 {
-  // Save snapshot of values and attributes (including "Constant") of parameters 'params'
-  // If importValues is FALSE, the present values from the object in the workspace are
-  // saved. If importValues is TRUE, the values of the objects passed in the 'params'
-  // argument are saved
-
   return saveSnapshot(name,argSet(paramNames),kFALSE) ;
 }
 
@@ -1188,14 +1195,14 @@ Bool_t RooWorkspace::saveSnapshot(const char* name, const char* paramNames)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save snapshot of values and attributes (including "Constant") of parameters 'params'
+/// If importValues is FALSE, the present values from the object in the workspace are
+/// saved. If importValues is TRUE, the values of the objects passed in the 'params'
+/// argument are saved
+
 Bool_t RooWorkspace::saveSnapshot(const char* name, const RooArgSet& params, Bool_t importValues) 
 {
-  // Save snapshot of values and attributes (including "Constant") of parameters 'params'
-  // If importValues is FALSE, the present values from the object in the workspace are
-  // saved. If importValues is TRUE, the values of the objects passed in the 'params'
-  // argument are saved
-
   RooArgSet* actualParams = (RooArgSet*) _allOwnedNodes.selectCommon(params) ;
   RooArgSet* snapshot = (RooArgSet*) actualParams->snapshot() ;
   delete actualParams ;
@@ -1221,12 +1228,12 @@ Bool_t RooWorkspace::saveSnapshot(const char* name, const RooArgSet& params, Boo
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load the values and attributes of the parameters in the snapshot saved with
+/// the given name
+
 Bool_t RooWorkspace::loadSnapshot(const char* name) 
 {
-  // Load the values and attributes of the parameters in the snapshot saved with
-  // the given name
-
   RooArgSet* snap = (RooArgSet*) _snapshots.find(name) ;
   if (!snap) {
     coutE(ObjectHandling) << "RooWorkspace::loadSnapshot(" << GetName() << ") no snapshot with name " << name << " is available" << endl ;
@@ -1241,15 +1248,15 @@ Bool_t RooWorkspace::loadSnapshot(const char* name)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the RooArgSet containgin a snapshot of variables contained in the workspace
+///
+/// Note that the variables of the objects in the snapshots are _copies_ of the
+/// variables in the workspace. To load the values of a snapshot in the workspace
+/// variables use loadSnapshot() instead
+
 const RooArgSet* RooWorkspace::getSnapshot(const char* name) const
 {
-  // Return the RooArgSet containgin a snapshot of variables contained in the workspace
-  //
-  // Note that the variables of the objects in the snapshots are _copies_ of the
-  // variables in the workspace. To load the values of a snapshot in the workspace
-  // variables use loadSnapshot() instead
-
   RooArgSet* snap = (RooArgSet*) _snapshots.find(name) ;
   if (!snap) {
     coutE(ObjectHandling) << "RooWorkspace::loadSnapshot(" << GetName() << ") no snapshot with name " << name << " is available" << endl ;
@@ -1291,64 +1298,67 @@ const RooArgSet* RooWorkspace::getSnapshot(const char* name) const
 // }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve p.d.f (RooAbsPdf) with given name. A null pointer is returned if not found
+
 RooAbsPdf* RooWorkspace::pdf(const char* name) const
 { 
-  // Retrieve p.d.f (RooAbsPdf) with given name. A null pointer is returned if not found
-
   return dynamic_cast<RooAbsPdf*>(_allOwnedNodes.find(name)) ; 
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve function (RooAbsReal) with given name. Note that all RooAbsPdfs are also RooAbsReals. A null pointer is returned if not found.
+
 RooAbsReal* RooWorkspace::function(const char* name) const 
 { 
-  // Retrieve function (RooAbsReal) with given name. Note that all RooAbsPdfs are also RooAbsReals. A null pointer is returned if not found.
-
   return dynamic_cast<RooAbsReal*>(_allOwnedNodes.find(name)) ; 
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve real-valued variable (RooRealVar) with given name. A null pointer is returned if not found
+
 RooRealVar* RooWorkspace::var(const char* name) const
 { 
-  // Retrieve real-valued variable (RooRealVar) with given name. A null pointer is returned if not found
-
   return dynamic_cast<RooRealVar*>(_allOwnedNodes.find(name)) ; 
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve discrete variable (RooCategory) with given name. A null pointer is returned if not found
+
 RooCategory* RooWorkspace::cat(const char* name) const
 { 
-  // Retrieve discrete variable (RooCategory) with given name. A null pointer is returned if not found
-
   return dynamic_cast<RooCategory*>(_allOwnedNodes.find(name)) ; 
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve discrete function (RooAbsCategory) with given name. A null pointer is returned if not found
+
 RooAbsCategory* RooWorkspace::catfunc(const char* name) const
 {
-  // Retrieve discrete function (RooAbsCategory) with given name. A null pointer is returned if not found
   return dynamic_cast<RooAbsCategory*>(_allOwnedNodes.find(name)) ; 
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return RooAbsArg with given name. A null pointer is returned if none is found.
+
 RooAbsArg* RooWorkspace::arg(const char* name) const
 {
-  // Return RooAbsArg with given name. A null pointer is returned if none is found.
   return _allOwnedNodes.find(name) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return set of RooAbsArgs matching to given list of names
+
 RooArgSet RooWorkspace::argSet(const char* nameList) const
 {
-  // Return set of RooAbsArgs matching to given list of names
   RooArgSet ret ;
 
   char tmp[10240] ;
@@ -1368,11 +1378,12 @@ RooArgSet RooWorkspace::argSet(const char* nameList) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return fundamental (i.e. non-derived) RooAbsArg with given name. Fundamental types
+/// are e.g. RooRealVar, RooCategory. A null pointer is returned if none is found.
+
 RooAbsArg* RooWorkspace::fundArg(const char* name) const
 {
-  // Return fundamental (i.e. non-derived) RooAbsArg with given name. Fundamental types
-  // are e.g. RooRealVar, RooCategory. A null pointer is returned if none is found.
   RooAbsArg* tmp = arg(name) ;
   if (!tmp) {
     return 0 ;
@@ -1382,30 +1393,31 @@ RooAbsArg* RooWorkspace::fundArg(const char* name) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve dataset (binned or unbinned) with given name. A null pointer is returned if not found
+
 RooAbsData* RooWorkspace::data(const char* name) const
 {
-  // Retrieve dataset (binned or unbinned) with given name. A null pointer is returned if not found
-
   return (RooAbsData*)_dataList.FindObject(name) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve dataset (binned or unbinned) with given name. A null pointer is returned if not found
+
 RooAbsData* RooWorkspace::embeddedData(const char* name) const
 {
-  // Retrieve dataset (binned or unbinned) with given name. A null pointer is returned if not found
-
   return (RooAbsData*)_embeddedDataList.FindObject(name) ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return set with all variable objects
+
 RooArgSet RooWorkspace::allVars() const
 {
-  // Return set with all variable objects
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
@@ -1422,10 +1434,11 @@ RooArgSet RooWorkspace::allVars() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return set with all category objects
+
 RooArgSet RooWorkspace::allCats() const
 {
-  // Return set with all category objects
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
@@ -1443,10 +1456,11 @@ RooArgSet RooWorkspace::allCats() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return set with all function objects
+
 RooArgSet RooWorkspace::allFunctions() const
 {
-  // Return set with all function objects
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
@@ -1465,10 +1479,11 @@ RooArgSet RooWorkspace::allFunctions() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return set with all category function objects
+
 RooArgSet RooWorkspace::allCatFunctions() const
 {
-  // Return set with all category function objects
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
@@ -1485,10 +1500,11 @@ RooArgSet RooWorkspace::allCatFunctions() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return set with all resolution model objects
+
 RooArgSet RooWorkspace::allResolutionModels() const
 {
-  // Return set with all resolution model objects
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
@@ -1505,10 +1521,11 @@ RooArgSet RooWorkspace::allResolutionModels() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return set with all probability density function objects
+
 RooArgSet RooWorkspace::allPdfs() const
 {
-  // Return set with all probability density function objects
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
@@ -1525,11 +1542,11 @@ RooArgSet RooWorkspace::allPdfs() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of all dataset in the workspace
+
 list<RooAbsData*> RooWorkspace::allData() const 
 {
-  // Return list of all dataset in the workspace
-
   list<RooAbsData*> ret ;
   TIterator* iter = _dataList.MakeIterator() ;
   RooAbsData* dat ;
@@ -1541,11 +1558,11 @@ list<RooAbsData*> RooWorkspace::allData() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of all dataset in the workspace
+
 list<RooAbsData*> RooWorkspace::allEmbeddedData() const 
 {
-  // Return list of all dataset in the workspace
-
   list<RooAbsData*> ret ;
   TIterator* iter = _embeddedDataList.MakeIterator() ;
   RooAbsData* dat ;
@@ -1558,11 +1575,11 @@ list<RooAbsData*> RooWorkspace::allEmbeddedData() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of all generic objects in the workspace
+
 list<TObject*> RooWorkspace::allGenericObjects() const 
 {
-  // Return list of all generic objects in the workspace
-
   list<TObject*> ret ;
   TIterator* iter = _genObjects.MakeIterator() ;
   TObject* gobj ;
@@ -1582,16 +1599,16 @@ list<TObject*> RooWorkspace::allGenericObjects() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Import code of class 'tc' into the repository. If code is already in repository it is only imported
+/// again if doReplace is false. The names and location of the source files is determined from the information
+/// in TClass. If no location is found in the TClass information, the files are searched in the workspace
+/// search path, defined by addClassDeclImportDir() and addClassImplImportDir() for declaration and implementation
+/// files respectively. If files cannot be found, abort with error status, otherwise update the internal
+/// class-to-file map and import the contents of the files, if they are not imported yet.
+
 Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace) 
 {
-  // Import code of class 'tc' into the repository. If code is already in repository it is only imported
-  // again if doReplace is false. The names and location of the source files is determined from the information
-  // in TClass. If no location is found in the TClass information, the files are searched in the workspace
-  // search path, defined by addClassDeclImportDir() and addClassImplImportDir() for declaration and implementation
-  // files respectively. If files cannot be found, abort with error status, otherwise update the internal
-  // class-to-file map and import the contents of the files, if they are not imported yet.
-
 
   oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo(" << _wspace->GetName() << ") request to import code of class " << tc->GetName() << endl ;
 
@@ -1982,18 +1999,18 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create transient TDirectory representation of this workspace. This directory
+/// will appear as a subdirectory of the directory that contains the workspace
+/// and will have the name of the workspace suffixed with "Dir". The TDirectory
+/// interface is read-only. Any attempt to insert objects into the workspace
+/// directory representation will result in an error message. Note that some
+/// ROOT object like TH1 automatically insert themselves into the current directory
+/// when constructed. This will give error messages when done in a workspace
+/// directory.
+
 Bool_t RooWorkspace::makeDir() 
 {
-  // Create transient TDirectory representation of this workspace. This directory
-  // will appear as a subdirectory of the directory that contains the workspace
-  // and will have the name of the workspace suffixed with "Dir". The TDirectory
-  // interface is read-only. Any attempt to insert objects into the workspace
-  // directory representation will result in an error message. Note that some
-  // ROOT object like TH1 automatically insert themselves into the current directory
-  // when constructed. This will give error messages when done in a workspace
-  // directory.
-
   if (_dir) return kTRUE ;
 
   TString title= Form("TDirectory representation of RooWorkspace %s",GetName()) ;
@@ -2012,15 +2029,15 @@ Bool_t RooWorkspace::makeDir()
  
  
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Import a clone of a generic TObject into workspace generic object container. Imported
+/// object can be retrieved by name through the obj() method. The object is cloned upon
+/// importation and the input argument does not need to live beyond the import call
+/// 
+/// Returns kTRUE if an error has occurred.
+
 Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting) 
 {
-  // Import a clone of a generic TObject into workspace generic object container. Imported
-  // object can be retrieved by name through the obj() method. The object is cloned upon
-  // importation and the input argument does not need to live beyond the import call
-  // 
-  // Returns kTRUE if an error has occurred.
-  
   // First check if object with given name already exists
   TObject* oldObj = _genObjects.FindObject(object.GetName()) ;
   if (oldObj && !replaceExisting) {
@@ -2051,17 +2068,17 @@ Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Import a clone of a generic TObject into workspace generic object container. 
+/// The imported object will be stored under the given alias name rather than its
+/// own name. Imported object can be retrieved its alias name through the obj() method. 
+/// The object is cloned upon importation and the input argument does not need to live beyond the import call
+/// This method is mostly useful for importing objects that do not have a settable name such as TMatrix
+/// 
+/// Returns kTRUE if an error has occurred.
+
 Bool_t RooWorkspace::import(TObject& object, const char* aliasName, Bool_t replaceExisting) 
 {
-  // Import a clone of a generic TObject into workspace generic object container. 
-  // The imported object will be stored under the given alias name rather than its
-  // own name. Imported object can be retrieved its alias name through the obj() method. 
-  // The object is cloned upon importation and the input argument does not need to live beyond the import call
-  // This method is mostly useful for importing objects that do not have a settable name such as TMatrix
-  // 
-  // Returns kTRUE if an error has occurred.
-  
   // First check if object with given name already exists
   TObject* oldObj = _genObjects.FindObject(object.GetName()) ;
   if (oldObj && !replaceExisting) {
@@ -2089,10 +2106,11 @@ Bool_t RooWorkspace::import(TObject& object, const char* aliasName, Bool_t repla
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert RooStudyManager module
+
 Bool_t RooWorkspace::addStudy(RooAbsStudy& study) 
 {
-  // Insert RooStudyManager module
   RooAbsStudy* clone = (RooAbsStudy*) study.Clone() ;
   _studyMods.Add(clone) ;
   return kFALSE ;
@@ -2101,21 +2119,22 @@ Bool_t RooWorkspace::addStudy(RooAbsStudy& study)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all RooStudyManager modules
+
 void RooWorkspace::clearStudies() 
 {
-  // Remove all RooStudyManager modules
   _studyMods.Delete() ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return any type of object (RooAbsArg, RooAbsData or generic object) with given name)
+
 TObject* RooWorkspace::obj(const char* name) const
 {
-  // Return any type of object (RooAbsArg, RooAbsData or generic object) with given name)
-
   // Try RooAbsArg first
   TObject* ret = arg(name) ;
   if (ret) return ret ;
@@ -2130,11 +2149,11 @@ TObject* RooWorkspace::obj(const char* name) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return generic object with given name
+
 TObject* RooWorkspace::genobj(const char* name)  const
 {
-  // Return generic object with given name
-
   // Find object by name
   TObject* gobj = _genObjects.FindObject(name) ;
 
@@ -2149,7 +2168,8 @@ TObject* RooWorkspace::genobj(const char* name)  const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t RooWorkspace::cd(const char* path) 
 {
   makeDir() ;
@@ -2158,10 +2178,11 @@ Bool_t RooWorkspace::cd(const char* path)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save this current workspace into given file
+
 Bool_t RooWorkspace::writeToFile(const char* fileName, Bool_t recreate) 
 {
-  // Save this current workspace into given file
   TFile f(fileName,recreate?"RECREATE":"UPDATE") ;
   Write() ;
   return kFALSE ;
@@ -2169,11 +2190,11 @@ Bool_t RooWorkspace::writeToFile(const char* fileName, Bool_t recreate)
  
  
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return instance to factory tool 
+
 RooFactoryWSTool& RooWorkspace::factory()
 {
-  // Return instance to factory tool 
-
   if (_factory) {
     return *_factory ;  
   }
@@ -2185,21 +2206,22 @@ RooFactoryWSTool& RooWorkspace::factory()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Short-hand function for factory()->process(expr) ;
+
 RooAbsArg* RooWorkspace::factory(const char* expr)
 {
-  // Short-hand function for factory()->process(expr) ;
   return factory().process(expr) ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print contents of the workspace 
+
 void RooWorkspace::Print(Option_t* opts) const 
 {
-  // Print contents of the workspace 
-
   Bool_t treeMode(kFALSE) ;
   if (TString(opts).Contains("t")) {
     treeMode=kTRUE ;
@@ -2478,14 +2500,14 @@ void RooWorkspace::Print(Option_t* opts) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Custom streamer for the workspace. Stream contents of workspace
+/// and code repository. When reading, read code repository first
+/// and compile missing classes before proceeding with streaming
+/// of workspace contents to avoid errors.
+
 void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
 {
-  // Custom streamer for the workspace. Stream contents of workspace
-  // and code repository. When reading, read code repository first
-  // and compile missing classes before proceeding with streaming
-  // of workspace contents to avoid errors.
-
   typedef ::RooWorkspace::CodeRepo thisClass;
 
    // Stream an object of class RooWorkspace::CodeRepo.
@@ -2581,16 +2603,16 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class RooWorkspace. This is a standard ROOT streamer for the
+/// I/O part. This custom function exists to detach all external client links
+/// from the payload prior to writing the payload so that these client links
+/// are not persisted. (Client links occur if external function objects use 
+/// objects contained in the workspace as input)
+/// After the actual writing, these client links are restored.
+
 void RooWorkspace::Streamer(TBuffer &R__b)
 {
-  // Stream an object of class RooWorkspace. This is a standard ROOT streamer for the
-  // I/O part. This custom function exists to detach all external client links
-  // from the payload prior to writing the payload so that these client links
-  // are not persisted. (Client links occur if external function objects use 
-  // objects contained in the workspace as input)
-  // After the actual writing, these client links are restored.
-
    if (R__b.IsReading()) {
 
       R__b.ReadClassBuffer(RooWorkspace::Class(),this);
@@ -2703,11 +2725,11 @@ void RooWorkspace::Streamer(TBuffer &R__b)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return STL string with last of class names contained in the code repository
+
 std::string RooWorkspace::CodeRepo::listOfClassNames() const 
 {
-  // Return STL string with last of class names contained in the code repository
-
   string ret ;
   map<TString,ClassRelInfo>::const_iterator iter = _c2fmap.begin() ;
   while(iter!=_c2fmap.end()) {
@@ -2723,17 +2745,17 @@ std::string RooWorkspace::CodeRepo::listOfClassNames() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For all classes in the workspace for which no class definition is
+/// found in the ROOT class table extract source code stored in code
+/// repository into temporary directory set by
+/// setClassFileExportDir(), compile classes and link them with
+/// current ROOT session. If a compilation error occurs print
+/// instructions for user how to fix errors and recover workspace and
+/// abort import procedure.
+
 Bool_t RooWorkspace::CodeRepo::compileClasses() 
 {
-  // For all classes in the workspace for which no class definition is
-  // found in the ROOT class table extract source code stored in code
-  // repository into temporary directory set by
-  // setClassFileExportDir(), compile classes and link them with
-  // current ROOT session. If a compilation error occurs print
-  // instructions for user how to fix errors and recover workspace and
-  // abort import procedure.
-
   Bool_t haveDir=kFALSE ;
 
   // Retrieve name of directory in which to export code files
@@ -2917,11 +2939,11 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal access to TDirectory append method
+
 void RooWorkspace::WSDir::InternalAppend(TObject* obj) 
 {
-  // Internal access to TDirectory append method
-
 #if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
   TDirectory::Append(obj) ;
 #else
@@ -2931,14 +2953,15 @@ void RooWorkspace::WSDir::InternalAppend(TObject* obj)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overload TDirectory interface method to prohibit insertion of objects in read-only directory workspace representation
+
 #if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
 void RooWorkspace::WSDir::Add(TObject* obj) 
 #else
 void RooWorkspace::WSDir::Add(TObject* obj,Bool_t) 
 #endif
 {
-  // Overload TDirectory interface method to prohibit insertion of objects in read-only directory workspace representation
   if (dynamic_cast<RooAbsArg*>(obj) || dynamic_cast<RooAbsData*>(obj)) {
     coutE(ObjectHandling) << "RooWorkspace::WSDir::Add(" << GetName() << ") ERROR: Directory is read-only representation of a RooWorkspace, use RooWorkspace::import() to add objects" << endl ;
   } else {
@@ -2947,14 +2970,15 @@ void RooWorkspace::WSDir::Add(TObject* obj,Bool_t)
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overload TDirectory interface method to prohibit insertion of objects in read-only directory workspace representation
+
 #if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
 void RooWorkspace::WSDir::Append(TObject* obj) 
 #else
 void RooWorkspace::WSDir::Append(TObject* obj,Bool_t) 
 #endif
 {
-  // Overload TDirectory interface method to prohibit insertion of objects in read-only directory workspace representation
   if (dynamic_cast<RooAbsArg*>(obj) || dynamic_cast<RooAbsData*>(obj)) {
     coutE(ObjectHandling) << "RooWorkspace::WSDir::Add(" << GetName() << ") ERROR: Directory is read-only representation of a RooWorkspace, use RooWorkspace::import() to add objects" << endl ;
   } else {
@@ -2964,12 +2988,12 @@ void RooWorkspace::WSDir::Append(TObject* obj,Bool_t)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate export of workspace symbols to CINT in a namespace with given name. If no name
+/// is given the namespace will have the same name as the workspace
+
 void RooWorkspace::exportToCint(const char* nsname) 
 {
-  // Activate export of workspace symbols to CINT in a namespace with given name. If no name
-  // is given the namespace will have the same name as the workspace
-
   // If export is already active, do nothing
   if (_doExport) {
     coutE(ObjectHandling) << "RooWorkspace::exportToCint(" << GetName() << ") WARNING: repeated calls to exportToCint() have no effect" << endl ;
@@ -3001,11 +3025,11 @@ void RooWorkspace::exportToCint(const char* nsname)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Export reference to given workspace object to CINT
+
 void RooWorkspace::exportObj(TObject* wobj)
 {
-  // Export reference to given workspace object to CINT
-
   // Do nothing if export flag is not set
   if (!_doExport) return ;
 
@@ -3030,11 +3054,11 @@ void RooWorkspace::exportObj(TObject* wobj)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if given name is a valid C++ identifier name
+
 Bool_t RooWorkspace::isValidCPPID(const char* name)   
 {
-  // Return true if given name is a valid C++ identifier name
-
   string oname(name) ;
   if (isdigit(oname[0])) {
     return kFALSE ;
@@ -3049,10 +3073,11 @@ Bool_t RooWorkspace::isValidCPPID(const char* name)
   return kTRUE ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete exported reference in CINT namespace 
+
 void RooWorkspace::unExport()
 {
-  // Delete exported reference in CINT namespace 
   char buf[10240] ;
   TIterator* iter = _allOwnedNodes.createIterator() ;
   TObject* wobj ;

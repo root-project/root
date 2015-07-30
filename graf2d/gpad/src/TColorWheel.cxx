@@ -22,7 +22,8 @@
 
 ClassImp(TColorWheel)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>TColorWheel : Draw the ROOT Color Wheel.</h2></center>
 The wheel contains the recommended 216 colors to be used in web applications.
@@ -52,11 +53,11 @@ Begin_Macro(source)
 }
 End_Macro */
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TColorWheel::TColorWheel() :TNamed("wheel","ROOT Color Wheel")
 {
-   // constructor
-
    fCanvas = 0;
    fArc    = 0;
    fLine   = 0;
@@ -86,11 +87,11 @@ TColorWheel::TColorWheel() :TNamed("wheel","ROOT Color Wheel")
    SetBit(kCanDelete);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TColorWheel::~TColorWheel()
 {
-   // destructor
-
    //delete fCanvas;  please don't do that
    delete fArc;
    delete fLine;
@@ -98,21 +99,21 @@ TColorWheel::~TColorWheel()
    delete fGraph;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// always return the color wheel
+
 Int_t TColorWheel::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // always return the color wheel
-
    if (px+py < 0) return 1;
    return 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the color wheel
+
 void TColorWheel::Draw(Option_t *option)
 {
-   // Paint the color wheel
-
    if (!fCanvas) {
       fCanvas = new TCanvas("wheel","ROOT Color Wheel",10,10,400,400);
       fCanvas->ToggleEventStatus();
@@ -123,11 +124,11 @@ void TColorWheel::Draw(Option_t *option)
    AppendPad(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the color number pointed by the mouse
+
 Int_t TColorWheel::GetColor(Int_t px, Int_t py) const
 {
-   // Return the color number pointed by the mouse
-
    Double_t x = fCanvas->AbsPixeltoX(px);
    Double_t y = fCanvas->AbsPixeltoY(py);
    Int_t n = 0;
@@ -148,11 +149,11 @@ Int_t TColorWheel::GetColor(Int_t px, Int_t py) const
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the color number pointed by the mouse
+
 char  *TColorWheel::GetObjectInfo(Int_t px, Int_t py) const
 {
-   // Return the color number pointed by the mouse
-
    static char info[50];
    info[0] = 0;
 
@@ -167,11 +168,11 @@ char  *TColorWheel::GetObjectInfo(Int_t px, Int_t py) const
    return info;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the color number when the mouse point to a circle
+
 Int_t TColorWheel::InCircles(Double_t x, Double_t y, Int_t coffset, Double_t angle) const
 {
-   // Return the color number when the mouse point to a circle
-
    Double_t ang = angle*TMath::DegToRad();
    Double_t u,v;
    Rotate(x,y,u,v,ang);
@@ -184,11 +185,11 @@ Int_t TColorWheel::InCircles(Double_t x, Double_t y, Int_t coffset, Double_t ang
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the color number when the mouse point to the gray circle
+
 Int_t TColorWheel::InGray(Double_t x, Double_t y) const
 {
-   // Return the color number when the mouse point to the gray circle
-
    if (x*x+y*y > fRgray*fRgray) return -1;
    Double_t ang = TMath::ATan2(y,x)*TMath::RadToDeg();
    if (ang < 0) ang += 360;
@@ -200,11 +201,11 @@ Int_t TColorWheel::InGray(Double_t x, Double_t y) const
    return kBlack;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the color number when the mouse point to a rectangle
+
 Int_t TColorWheel::InRectangles(Double_t x, Double_t y, Int_t coffset, Double_t angle) const
 {
-   // Return the color number when the mouse point to a rectangle
-
    Double_t ang = angle*TMath::DegToRad();
    Double_t u,v;
    Rotate(x,y,u,v,ang);
@@ -215,11 +216,11 @@ Int_t TColorWheel::InRectangles(Double_t x, Double_t y, Int_t coffset, Double_t 
    return coffset+div-9;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the color wheel
+
 void TColorWheel::Paint(Option_t * /*option*/)
 {
-   // Paint the color wheel
-
    if (!fArc) {
       fArc   = new TArc;
       fLine  = new TLine;
@@ -248,11 +249,11 @@ void TColorWheel::Paint(Option_t * /*option*/)
    fText->PaintText(-10.2,-10.2,"ROOT Color Wheel");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw one color of type circle
+
 void TColorWheel::PaintCircle(Int_t coffset,Int_t n, Double_t x, Double_t y, Double_t ang) const
 {
-   // Draw one color of type circle
-
    Double_t u,v;
    Rotate(x,y,u,v,ang);
    Int_t colorn = coffset+n;
@@ -269,11 +270,11 @@ void TColorWheel::PaintCircle(Int_t coffset,Int_t n, Double_t x, Double_t y, Dou
    else     fText->PaintText(u,v,Form("%d", n));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw all colors of type circle
+
 void TColorWheel::PaintCircles(Int_t coffset, Double_t angle) const
 {
-   // Draw all colors of type circle
-
    Double_t ang = TMath::DegToRad()*angle;
    Double_t u,v,u0,v0;
    Rotate(fR0+4.6*fDr,2.8*fDr,u0,v0,ang);
@@ -296,11 +297,11 @@ void TColorWheel::PaintCircles(Int_t coffset, Double_t angle) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw all colors of type rectangle
+
 void TColorWheel::PaintRectangles(Int_t coffset, Double_t angle) const
 {
-   // Draw all colors of type rectangle
-
    Double_t ang = TMath::DegToRad()*angle;
    Double_t rmin = fRmin, rmax=fRmax;
    Double_t dr = (rmax-rmin)/10;
@@ -379,11 +380,11 @@ void TColorWheel::PaintRectangles(Int_t coffset, Double_t angle) const
    fLine->PaintLine(x[0],y[0],x[1],y[1]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the gray colors + white + black
+
 void TColorWheel::PaintGray() const
 {
-   // Draw the gray colors + white + black
-
    Double_t r = fRgray;
    fArc->SetFillColor(kWhite);
    fArc->PaintEllipse(0,0,r,r,0,60,0);
@@ -418,11 +419,11 @@ void TColorWheel::PaintGray() const
    fText->PaintText(0.5*r,-0.35*r,"kBlack");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate point x,y with an angle=ang
+
 void TColorWheel::Rotate(Double_t x, Double_t y, Double_t &u, Double_t &v, Double_t ang) const
 {
-   // Rotate point x,y with an angle=ang
-
    u = x*TMath::Cos(ang)  + y*TMath::Sin(ang);
    v = x*TMath::Sin(ang)  - y*TMath::Cos(ang);
 }

@@ -52,7 +52,10 @@ TList   *TDataSetManager::fgDataSetSrvMaps = 0;
 
 ClassImp(TDataSetManager)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Main constructor
+
 TDataSetManager::TDataSetManager(const char *group, const char *user,
                                            const char *options)
                      : fGroup(group),
@@ -61,9 +64,6 @@ TDataSetManager::TDataSetManager(const char *group, const char *user,
                        fUserUsed(), fNTouchedFiles(0), fNOpenedFiles(0),
                        fNDisappearedFiles(0), fMTimeGroupConfig(-1)
 {
-   //
-   // Main constructor
-
    // Fill default group and user if none is given
    if (fGroup.IsNull())
       fGroup = "default";
@@ -122,33 +122,33 @@ TDataSetManager::TDataSetManager(const char *group, const char *user,
    ReadGroupConfig(gEnv->GetValue("Proof.GroupFile", ""));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TDataSetManager::~TDataSetManager()
 {
-   // Destructor
-
    // Clear used space
    fGroupQuota.DeleteAll();
    fGroupUsed.DeleteAll();
    fUserUsed.DeleteAll();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse the opts string and set the init bits accordingly
+/// Available options:
+///    Cq:               set kCheckQuota
+///    Ar:               set kAllowRegister
+///    Av:               set kAllowVerify
+///    Ti:               set kTrustInfo
+///    Sb:               set kIsSandbox
+///    Ca:               set kUseCache or kDoNotUseCache
+/// The opts string may also contain additional unrelated info: in such a case
+/// the field delimited by the prefix "opt:" is analyzed, e.g. if opts is
+/// "/tmp/dataset  opt:Cq:-Ar: root://lxb6046.cern.ch" only the substring
+/// "Cq:-Ar:" will be parsed .
+
 void TDataSetManager::ParseInitOpts(const char *opts)
 {
-   // Parse the opts string and set the init bits accordingly
-   // Available options:
-   //    Cq:               set kCheckQuota
-   //    Ar:               set kAllowRegister
-   //    Av:               set kAllowVerify
-   //    Ti:               set kTrustInfo
-   //    Sb:               set kIsSandbox
-   //    Ca:               set kUseCache or kDoNotUseCache
-   // The opts string may also contain additional unrelated info: in such a case
-   // the field delimited by the prefix "opt:" is analyzed, e.g. if opts is
-   // "/tmp/dataset  opt:Cq:-Ar: root://lxb6046.cern.ch" only the substring
-   // "Cq:-Ar:" will be parsed .
-
    // Default option bits
    ResetBit(TDataSetManager::kCheckQuota);
    SetBit(TDataSetManager::kAllowRegister);
@@ -192,20 +192,20 @@ void TDataSetManager::ParseInitOpts(const char *opts)
       ResetBit(TDataSetManager::kDoNotUseCache);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read group config file 'cf'.
+/// If cf == 0 re-read, if changed, the file pointed by fGroupConfigFile .
+///
+/// expects the following directives:
+/// Group definition:
+///   group <groupname> <user>+
+/// disk quota
+///   property <groupname> diskquota <quota in GB>
+/// average filesize (to be used when the file size is not available)
+///   averagefilesize <average size>{G,g,M,m,K,k}
+
 Bool_t TDataSetManager::ReadGroupConfig(const char *cf)
 {
-   // Read group config file 'cf'.
-   // If cf == 0 re-read, if changed, the file pointed by fGroupConfigFile .
-   //
-   // expects the following directives:
-   // Group definition:
-   //   group <groupname> <user>+
-   // disk quota
-   //   property <groupname> diskquota <quota in GB>
-   // average filesize (to be used when the file size is not available)
-   //   averagefilesize <average size>{G,g,M,m,K,k}
-
    // Validate input
    FileStat_t st;
    if (!cf || (strlen(cf) <= 0) || !strcmp(cf, fGroupConfigFile.Data())) {
@@ -379,14 +379,14 @@ Bool_t TDataSetManager::ReadGroupConfig(const char *cf)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static utility function to gt the number of bytes from a string
+/// representation in the form "<digit><sfx>" with <sfx> = {"", "k", "M", "G",
+/// "T", "P"} (case insensitive).
+/// Returns -1 if the format is wrong.
+
 Long64_t TDataSetManager::ToBytes(const char *size)
 {
-   // Static utility function to gt the number of bytes from a string
-   // representation in the form "<digit><sfx>" with <sfx> = {"", "k", "M", "G",
-   // "T", "P"} (case insensitive).
-   // Returns -1 if the format is wrong.
-
    Long64_t lsize = -1;
 
    // Check if valid
@@ -416,87 +416,87 @@ Long64_t TDataSetManager::ToBytes(const char *size)
    return lsize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Utility function used in various methods for user dataset upload.
+
 TFileCollection *TDataSetManager::GetDataSet(const char *, const char *)
 {
-   // Utility function used in various methods for user dataset upload.
-
    AbstractMethod("GetDataSet");
    return (TFileCollection *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Removes the indicated dataset
+
 Bool_t TDataSetManager::RemoveDataSet(const char *)
 {
-   // Removes the indicated dataset
-
    AbstractMethod("RemoveDataSet");
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if the indicated dataset exits
+
 Bool_t TDataSetManager::ExistsDataSet(const char *)
 {
-   // Checks if the indicated dataset exits
-
    AbstractMethod("ExistsDataSet");
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Returns all datasets for the <group> and <user> specified by <uri>.
+/// If <user> is 0, it returns all datasets for the given <group>.
+/// If <group> is 0, it returns all datasets.
+/// The returned TMap contains:
+///    <group> --> <map of users> --> <map of datasets> --> <dataset> (TFileCollection)
+///
+/// The unsigned int 'option' is forwarded to GetDataSet and BrowseDataSet.
+/// Available options (to be .or.ed):
+///    kShowDefault    a default selection is shown that include the ones from
+///                    the current user, the ones from the group and the common ones
+///    kPrint          print the dataset content
+///    kQuotaUpdate    update quotas
+///    kExport         use export naming
+///
+/// NB1: options "kPrint", "kQuoatUpdate" and "kExport" are mutually exclusive
+/// NB2: for options "kPrint" and "kQuoatUpdate" return is null.
+
 TMap *TDataSetManager::GetDataSets(const char *, UInt_t)
 {
-   //
-   // Returns all datasets for the <group> and <user> specified by <uri>.
-   // If <user> is 0, it returns all datasets for the given <group>.
-   // If <group> is 0, it returns all datasets.
-   // The returned TMap contains:
-   //    <group> --> <map of users> --> <map of datasets> --> <dataset> (TFileCollection)
-   //
-   // The unsigned int 'option' is forwarded to GetDataSet and BrowseDataSet.
-   // Available options (to be .or.ed):
-   //    kShowDefault    a default selection is shown that include the ones from
-   //                    the current user, the ones from the group and the common ones
-   //    kPrint          print the dataset content
-   //    kQuotaUpdate    update quotas
-   //    kExport         use export naming
-   //
-   // NB1: options "kPrint", "kQuoatUpdate" and "kExport" are mutually exclusive
-   // NB2: for options "kPrint" and "kQuoatUpdate" return is null.
-
    AbstractMethod("GetDataSets");
 
    return (TMap *)0;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scans the dataset indicated by 'uri' following the 'opts' directives
+///
+/// The 'opts' string contains up to 4 directive fields separated by ':'
+///
+///  'selection' field :
+///    A, allfiles:    process all files
+///    D, staged:      process only staged (on Disk) files (if 'allfiles:' is not specified
+///                    the default is to process only files marked as non-staged)
+///  'pre-action field':
+///    O, open:        open the files marked as staged when processing only files
+///                    marked as non-staged
+///    T, touch:       open and touch the files marked as staged when processing
+///                    only files marked as non-staged
+///    I, nostagedcheck: do not check the actual stage status on selected files
+///
+///  'process' field:
+///    N, noaction:    do nothing on the selected files
+///    P, fullproc:    open the selected files and extract the meta information
+///    L, locateonly:  only locate the selected files
+///    S, stageonly:   issue a stage request for the selected files not yet staged
+///
+///  'auxiliary' field
+///    V, verbose:     notify the actions
+///
+/// Returns 0 on success, -1 if any failure occurs.
+
 Int_t TDataSetManager::ScanDataSet(const char *uri, const char *opts)
 {
-   // Scans the dataset indicated by 'uri' following the 'opts' directives
-   //
-   // The 'opts' string contains up to 4 directive fields separated by ':'
-   //
-   //  'selection' field :
-   //    A, allfiles:    process all files
-   //    D, staged:      process only staged (on Disk) files (if 'allfiles:' is not specified
-   //                    the default is to process only files marked as non-staged)
-   //  'pre-action field':
-   //    O, open:        open the files marked as staged when processing only files
-   //                    marked as non-staged
-   //    T, touch:       open and touch the files marked as staged when processing
-   //                    only files marked as non-staged
-   //    I, nostagedcheck: do not check the actual stage status on selected files
-   //
-   //  'process' field:
-   //    N, noaction:    do nothing on the selected files
-   //    P, fullproc:    open the selected files and extract the meta information
-   //    L, locateonly:  only locate the selected files
-   //    S, stageonly:   issue a stage request for the selected files not yet staged
-   //
-   //  'auxiliary' field
-   //    V, verbose:     notify the actions
-   //
-   // Returns 0 on success, -1 if any failure occurs.
-
    // Extract the directives
    UInt_t o = 0;
    if (opts && strlen(opts) > 0) {
@@ -531,26 +531,26 @@ Int_t TDataSetManager::ScanDataSet(const char *uri, const char *opts)
    return ScanDataSet(uri, o);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scans the dataset indicated by <uri> and returns the number of missing files.
+/// Returns -1 if any failure occurs.
+/// For more details, see documentation of
+/// ScanDataSet(TFileCollection *dataset, const char *option)
+
 Int_t TDataSetManager::ScanDataSet(const char *, UInt_t)
 {
-   // Scans the dataset indicated by <uri> and returns the number of missing files.
-   // Returns -1 if any failure occurs.
-   // For more details, see documentation of
-   // ScanDataSet(TFileCollection *dataset, const char *option)
-
    AbstractMethod("ScanDataSet");
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Gets quota information from this dataset
+
 void TDataSetManager::GetQuota(const char *group, const char *user,
                                     const char *dsName, TFileCollection *dataset)
 {
-   //
-   // Gets quota information from this dataset
-
    if (gDebug > 0)
       Info("GetQuota", "processing dataset %s %s %s", group, user, dsName);
 
@@ -580,11 +580,11 @@ void TDataSetManager::GetQuota(const char *group, const char *user,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display quota information
+
 void TDataSetManager::ShowQuota(const char *opt)
 {
-   // Display quota information
-
    UpdateUsedSpace();
 
    TMap *groupQuotaMap = GetGroupQuotaMap();
@@ -632,12 +632,12 @@ void TDataSetManager::ShowQuota(const char *opt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Prints the quota
+
 void TDataSetManager::PrintUsedSpace()
 {
-   //
-   // Prints the quota
-
    Info("PrintUsedSpace", "listing used space");
 
    TIter iter(&fUserUsed);
@@ -667,12 +667,12 @@ void TDataSetManager::PrintUsedSpace()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Log info to the monitoring server
+
 void TDataSetManager::MonitorUsedSpace(TVirtualMonitoringWriter *monitoring)
 {
-   //
-   // Log info to the monitoring server
-
    Info("MonitorUsedSpace", "sending used space to monitoring server");
 
    TIter iter(&fUserUsed);
@@ -708,12 +708,12 @@ void TDataSetManager::MonitorUsedSpace(TVirtualMonitoringWriter *monitoring)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Returns the used space of that group
+
 Long64_t TDataSetManager::GetGroupUsed(const char *group)
 {
-   //
-   // Returns the used space of that group
-
    if (fgCommonDataSetTag == group)
       group = fCommonGroup;
 
@@ -728,12 +728,12 @@ Long64_t TDataSetManager::GetGroupUsed(const char *group)
    return size->GetVal();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// returns the quota a group is allowed to have
+
 Long64_t TDataSetManager::GetGroupQuota(const char *group)
 {
-   //
-   // returns the quota a group is allowed to have
-
    if (fgCommonDataSetTag == group)
       group = fCommonGroup;
 
@@ -747,65 +747,65 @@ Long64_t TDataSetManager::GetGroupQuota(const char *group)
    return value->GetVal();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// updates the used space maps
+
 void TDataSetManager::UpdateUsedSpace()
 {
-   // updates the used space maps
-
    AbstractMethod("UpdateUsedSpace");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register a dataset, perfoming quota checkings, if needed.
+/// Returns 0 on success, -1 on failure
+
 Int_t TDataSetManager::RegisterDataSet(const char *,
                                        TFileCollection *, const char *)
 {
-   // Register a dataset, perfoming quota checkings, if needed.
-   // Returns 0 on success, -1 on failure
-
    AbstractMethod("RegisterDataSet");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save into the <datasetdir>/dataset.list file the name of the last updated
+/// or created or modified dataset
+/// Returns 0 on success, -1 on error
+
 Int_t TDataSetManager::NotifyUpdate(const char * /*group*/,
                                     const char * /*user*/,
                                     const char * /*dspath*/,
                                     Long_t /*mtime*/,
                                     const char * /*checksum*/)
 {
-   // Save into the <datasetdir>/dataset.list file the name of the last updated
-   // or created or modified dataset
-   // Returns 0 on success, -1 on error
-
    AbstractMethod("NotifyUpdate");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear cached information matching uri
+
 Int_t TDataSetManager::ClearCache(const char * /*uri*/)
 {
-   // Clear cached information matching uri
-
    AbstractMethod("ClearCache");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show cached information matching uri
+
 Int_t TDataSetManager::ShowCache(const char * /*uri*/)
 {
-   // Show cached information matching uri
-
    AbstractMethod("ShowCache");
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates URI for the dataset manger in the form '[[/dsGroup/]dsUser/]dsName[#dsObjPath]',
+/// The optional dsObjPath can be in the form [subdir/]objname]'.
+
 TString TDataSetManager::CreateUri(const char *dsGroup, const char *dsUser,
                                         const char *dsName, const char *dsObjPath)
 {
-   // Creates URI for the dataset manger in the form '[[/dsGroup/]dsUser/]dsName[#dsObjPath]',
-   // The optional dsObjPath can be in the form [subdir/]objname]'.
-
    TString uri;
 
    if (dsGroup && strlen(dsGroup) > 0) {
@@ -826,25 +826,25 @@ TString TDataSetManager::CreateUri(const char *dsGroup, const char *dsUser,
    return uri;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parses a (relative) URI that describes a DataSet on the cluster.
+/// The input 'uri' should be in the form '[[/group/]user/]dsname[#[subdir/]objname]',
+///  where 'objname' is the name of the object (e.g. the tree name) and the 'subdir'
+/// is the directory in the file wher it should be looked for.
+/// After resolving against a base URI consisting of proof://masterhost/group/user/
+/// - meaning masterhost, group and user of the current session -
+/// the path is checked to contain exactly three elements separated by '/':
+/// group/user/dsname
+/// If wildcards, '*' is allowed in group and user and dsname is allowed to be empty.
+/// If onlyCurrent, only group and user of current session are allowed.
+/// Only non-null parameters are filled by this function.
+/// Returns kTRUE in case of success.
+
 Bool_t TDataSetManager::ParseUri(const char *uri,
                                  TString *dsGroup, TString *dsUser,
                                  TString *dsName, TString *dsTree,
                                  Bool_t onlyCurrent, Bool_t wildcards)
 {
-   // Parses a (relative) URI that describes a DataSet on the cluster.
-   // The input 'uri' should be in the form '[[/group/]user/]dsname[#[subdir/]objname]',
-   //  where 'objname' is the name of the object (e.g. the tree name) and the 'subdir'
-   // is the directory in the file wher it should be looked for.
-   // After resolving against a base URI consisting of proof://masterhost/group/user/
-   // - meaning masterhost, group and user of the current session -
-   // the path is checked to contain exactly three elements separated by '/':
-   // group/user/dsname
-   // If wildcards, '*' is allowed in group and user and dsname is allowed to be empty.
-   // If onlyCurrent, only group and user of current session are allowed.
-   // Only non-null parameters are filled by this function.
-   // Returns kTRUE in case of success.
-
    TString uristr(uri);
 
    // If URI contains fields in the form "Field=Value;" it is a virtual URI and
@@ -994,18 +994,18 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Partition dataset 'ds' accordingly to the servers.
+/// The returned TMap contains:
+///                <server> --> <subdataset> (TFileCollection)
+/// where <subdataset> is the subset of 'ds' on <server>
+/// The partitioning is done using all the URLs in the TFileInfo's, so the
+/// resulting datasets are not mutually exclusive.
+/// The string 'exclude' contains a comma-separated list of servers to exclude
+/// from the map.
+
 TMap *TDataSetManager::GetSubDataSets(const char *ds, const char *exclude)
 {
-   // Partition dataset 'ds' accordingly to the servers.
-   // The returned TMap contains:
-   //                <server> --> <subdataset> (TFileCollection)
-   // where <subdataset> is the subset of 'ds' on <server>
-   // The partitioning is done using all the URLs in the TFileInfo's, so the
-   // resulting datasets are not mutually exclusive.
-   // The string 'exclude' contains a comma-separated list of servers to exclude
-   // from the map.
-
    TMap *map = (TMap *)0;
 
    if (!ds || strlen(ds) <= 0) {
@@ -1033,16 +1033,16 @@ TMap *TDataSetManager::GetSubDataSets(const char *ds, const char *exclude)
    return map;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Formatted printout of the content of TFileCollection 'fc'.
+/// Options in the form
+///           popt = u * 10 + f
+///     f    0 => header only, 1 => header + files
+///   when printing files
+///     u    0 => print file name only, 1 => print full URL
+
 void TDataSetManager::PrintDataSet(TFileCollection *fc, Int_t popt)
 {
-   // Formatted printout of the content of TFileCollection 'fc'.
-   // Options in the form
-   //           popt = u * 10 + f
-   //     f    0 => header only, 1 => header + files
-   //   when printing files
-   //     u    0 => print file name only, 1 => print full URL
-
    if (!fc) return;
 
    Int_t f = popt%10;
@@ -1070,34 +1070,34 @@ void TDataSetManager::PrintDataSet(TFileCollection *fc, Int_t popt)
    Printf("+++");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints formatted information about the dataset 'uri'.
+/// The type and format of output is driven by 'opt':
+///
+///   1. opt = "server:srv1[,srv2[,srv3[,...]]]"
+///            Print info about the subsets of 'uri' on servers srv1, srv2, ...
+///   2. opt = "servers[:exclude:srv1[,srv2[,srv3[,...]]]]"
+///            Print info about the subsets of 'uri' on all servers, except
+///            the ones in the exclude list srv1, srv2, ...
+///   3. opt = <any>
+///            Print info about all datasets matching 'uri'
+///
+///   If 'opt' contains 'full:' the list of files in the datasets are also printed.
+///   In case 3. this is enabled only if 'uri' matches a single dataset.
+///
+///   In case 3, if 'opt' contains
+///      'full:'      the list of files in the datasets are also printed.
+///      'forcescan:' the dataset are open to get the information; otherwise the
+///                   pre-processed information is used.
+///      'noheader:'  the labelling header is not printed; usefull when to chain
+///                   several printouts
+///      'noupdate:'  do not update the cache (which may be slow on very remote
+///                   servers)
+///      'refresh:'   refresh the information (requires appropriate credentials;
+///                   typically it can be done only for owned datasets)
+
 void TDataSetManager::ShowDataSets(const char *uri, const char *opt)
 {
-   // Prints formatted information about the dataset 'uri'.
-   // The type and format of output is driven by 'opt':
-   //
-   //   1. opt = "server:srv1[,srv2[,srv3[,...]]]"
-   //            Print info about the subsets of 'uri' on servers srv1, srv2, ...
-   //   2. opt = "servers[:exclude:srv1[,srv2[,srv3[,...]]]]"
-   //            Print info about the subsets of 'uri' on all servers, except
-   //            the ones in the exclude list srv1, srv2, ...
-   //   3. opt = <any>
-   //            Print info about all datasets matching 'uri'
-   //
-   //   If 'opt' contains 'full:' the list of files in the datasets are also printed.
-   //   In case 3. this is enabled only if 'uri' matches a single dataset.
-   //
-   //   In case 3, if 'opt' contains
-   //      'full:'      the list of files in the datasets are also printed.
-   //      'forcescan:' the dataset are open to get the information; otherwise the
-   //                   pre-processed information is used.
-   //      'noheader:'  the labelling header is not printed; usefull when to chain
-   //                   several printouts
-   //      'noupdate:'  do not update the cache (which may be slow on very remote
-   //                   servers)
-   //      'refresh:'   refresh the information (requires appropriate credentials;
-   //                   typically it can be done only for owned datasets)
-
    TFileCollection *fc = 0;
    TString o(opt);
    Int_t popt = 0;
@@ -1167,67 +1167,67 @@ void TDataSetManager::ShowDataSets(const char *uri, const char *opt)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go through the files in the specified dataset, selecting files according to
+/// 'fopt' and doing on these files the actions described by 'sopt'.
+/// If required, the information in 'dataset' is updated.
+///
+/// The int fopt controls which files have to be processed (or added to the list
+/// if ropt is 1 - see below); 'fopt' is defined in term of csopt and fsopt:
+///                    fopt = sign(fsopt) * csopt * 100 + fsopt
+/// where 'fsopt' controls the actual selection
+///    -1              all files in the dataset
+///     0              process only files marked as 'non-staged'
+///   >=1              as 0 but files that are marked 'staged' are open
+///   >=2              as 1 but files that are marked 'staged' are touched
+///    10              process only files marked as 'staged'; files marked as 'non-staged'
+///                    are ignored
+/// and 'csopt' controls if an actual check on the staged status (via TFileStager) is done
+///     0              check that the file is staged using TFileStager
+///     1              do not hard check the staged status
+/// (example: use fopt = -101 to check the staged status of all the files, or fopt = 110
+///  to re-check the stage status of all the files marked as staged)
+///
+/// If 'dbg' is true, some information about the ongoing operations is reguraly
+/// printed; this can be useful when processing very large datasets, an operation
+/// which can take a very long time.
+///
+/// The int 'sopt' controls what is done on the selected files (this is effective only
+/// if ropt is 0 or 2 - see below):
+///    -1              no action (fopt = 2 and sopt = -1 touches all staged files)
+///     0              do the full process: open the files and fill the meta-information
+///                    in the TFileInfo object, including the end-point URL
+///     1              only locate the files, by updating the end-point URL (uses TFileStager::Locate
+///                    which is must faster of an TFile::Open)
+///     2              issue a stage request on the files
+///
+/// The int 'ropt' controls which actions are performed:
+///     0              do the full process: get list of files to process and process them
+///     1              get the list of files to be scanned and return it in flist
+///     2              process the files in flist (according to sopt)
+/// When defined flist is under the responsability the caller.
+///
+/// If avgsz > 0 it is used for the final update of the dataset global counters.
+///
+/// If 'mss' is defined use it to initialize the stager (instead of the Url in the
+/// TFileInfo objects)
+///
+/// If maxfiles > 0, select for processing a maximum of 'filesmax' files (but if fopt is 1 or 2
+/// all files marked as 'staged' are still open or touched)
+///
+/// Return code
+///     1 dataset was not changed
+///     2 dataset was changed
+///
+/// The number of touched, opened and disappeared files are returned in the respective
+/// variables, if these are defined.
+
 Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
                                    Int_t fopt, Int_t sopt, Int_t ropt, Bool_t dbg,
                                    Int_t *touched, Int_t *opened, Int_t *disappeared,
                                    TList *flist, Long64_t avgsz, const char *mss,
                                    Int_t maxfiles, const char *stageopts)
 {
-   // Go through the files in the specified dataset, selecting files according to
-   // 'fopt' and doing on these files the actions described by 'sopt'.
-   // If required, the information in 'dataset' is updated.
-   //
-   // The int fopt controls which files have to be processed (or added to the list
-   // if ropt is 1 - see below); 'fopt' is defined in term of csopt and fsopt:
-   //                    fopt = sign(fsopt) * csopt * 100 + fsopt
-   // where 'fsopt' controls the actual selection
-   //    -1              all files in the dataset
-   //     0              process only files marked as 'non-staged'
-   //   >=1              as 0 but files that are marked 'staged' are open
-   //   >=2              as 1 but files that are marked 'staged' are touched
-   //    10              process only files marked as 'staged'; files marked as 'non-staged'
-   //                    are ignored
-   // and 'csopt' controls if an actual check on the staged status (via TFileStager) is done
-   //     0              check that the file is staged using TFileStager
-   //     1              do not hard check the staged status
-   // (example: use fopt = -101 to check the staged status of all the files, or fopt = 110
-   //  to re-check the stage status of all the files marked as staged)
-   //
-   // If 'dbg' is true, some information about the ongoing operations is reguraly
-   // printed; this can be useful when processing very large datasets, an operation
-   // which can take a very long time.
-   //
-   // The int 'sopt' controls what is done on the selected files (this is effective only
-   // if ropt is 0 or 2 - see below):
-   //    -1              no action (fopt = 2 and sopt = -1 touches all staged files)
-   //     0              do the full process: open the files and fill the meta-information
-   //                    in the TFileInfo object, including the end-point URL
-   //     1              only locate the files, by updating the end-point URL (uses TFileStager::Locate
-   //                    which is must faster of an TFile::Open)
-   //     2              issue a stage request on the files
-   //
-   // The int 'ropt' controls which actions are performed:
-   //     0              do the full process: get list of files to process and process them
-   //     1              get the list of files to be scanned and return it in flist
-   //     2              process the files in flist (according to sopt)
-   // When defined flist is under the responsability the caller.
-   //
-   // If avgsz > 0 it is used for the final update of the dataset global counters.
-   //
-   // If 'mss' is defined use it to initialize the stager (instead of the Url in the
-   // TFileInfo objects)
-   //
-   // If maxfiles > 0, select for processing a maximum of 'filesmax' files (but if fopt is 1 or 2
-   // all files marked as 'staged' are still open or touched)
-   //
-   // Return code
-   //     1 dataset was not changed
-   //     2 dataset was changed
-   //
-   // The number of touched, opened and disappeared files are returned in the respective
-   // variables, if these are defined.
-
    // Max number of files
    if (maxfiles > -1 && dbg)
       ::Info("TDataSetManager::ScanDataSet", "processing a maximum of %d files", maxfiles);
@@ -1378,45 +1378,45 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check stage status of the file described by "fileInfo".
+/// fopt is same as "fopt" in TDataSetManager::ScanDataSet, which is repeated below:
+/// The int fopt controls which files have to be processed (or added to the list
+/// if ropt is 1 - see below); 'fopt' is defined in term of csopt and fsopt:
+///                    fopt = sign(fsopt) * csopt * 100 + fsopt
+/// where 'fsopt' controls the actual selection
+///    -1              all files in the dataset
+///     0              process only files marked as 'non-staged'
+///   >=1              as 0 but files that are marked 'staged' are open
+///   >=2              as 1 but files that are marked 'staged' are touched
+///    10              process only files marked as 'staged'; files marked as 'non-staged'
+///                    are ignored
+/// and 'csopt' controls if an actual check on the staged status (via TFileStager) is done
+///     0              check that the file is staged using TFileStager
+///     1              do not hard check the staged status
+/// (example: use fopt = -101 to check the staged status of all the files, or fopt = 110
+///  to re-check the stage status of all the files marked as staged)
+///
+/// If 'dbg' is true, some information about the ongoing operations is reguraly
+/// printed; this can be useful when processing very large datasets, an operation
+/// which can take a very long time.
+///
+/// If maxfiles > 0, select for processing a maximum of 'filesmax' files (but if fopt is 1 or 2
+/// all files marked as 'staged' are still open or touched)
+///
+/// Return code
+///     kTRUE the file appears newly staged
+///     kFALSE otherwise
+///
+/// changed is true if the fileinfo is modified
+/// touched is true if the file is open and read
+/// disappeared is true if the file is marked staged but actually not staged
+
 Bool_t TDataSetManager::CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t maxfiles,
                                           Int_t newstagedfiles, TFileStager* stager,
                                           Bool_t createStager, Bool_t dbg, Bool_t& changed,
                                           Bool_t& touched, Bool_t& disappeared)
 {
-   // Check stage status of the file described by "fileInfo".
-   // fopt is same as "fopt" in TDataSetManager::ScanDataSet, which is repeated below:
-   // The int fopt controls which files have to be processed (or added to the list
-   // if ropt is 1 - see below); 'fopt' is defined in term of csopt and fsopt:
-   //                    fopt = sign(fsopt) * csopt * 100 + fsopt
-   // where 'fsopt' controls the actual selection
-   //    -1              all files in the dataset
-   //     0              process only files marked as 'non-staged'
-   //   >=1              as 0 but files that are marked 'staged' are open
-   //   >=2              as 1 but files that are marked 'staged' are touched
-   //    10              process only files marked as 'staged'; files marked as 'non-staged'
-   //                    are ignored
-   // and 'csopt' controls if an actual check on the staged status (via TFileStager) is done
-   //     0              check that the file is staged using TFileStager
-   //     1              do not hard check the staged status
-   // (example: use fopt = -101 to check the staged status of all the files, or fopt = 110
-   //  to re-check the stage status of all the files marked as staged)
-   //
-   // If 'dbg' is true, some information about the ongoing operations is reguraly
-   // printed; this can be useful when processing very large datasets, an operation
-   // which can take a very long time.
-   //
-   // If maxfiles > 0, select for processing a maximum of 'filesmax' files (but if fopt is 1 or 2
-   // all files marked as 'staged' are still open or touched)
-   //
-   // Return code
-   //     kTRUE the file appears newly staged
-   //     kFALSE otherwise
-   //
-   // changed is true if the fileinfo is modified
-   // touched is true if the file is open and read
-   // disappeared is true if the file is marked staged but actually not staged
-
    // File selection, Reopen and Touch options
    Bool_t allf     = (fopt == -1)               ? kTRUE : kFALSE;
    Bool_t checkstg = (fopt >= 100 || fopt < -1) ? kFALSE : kTRUE;
@@ -1555,13 +1555,13 @@ Bool_t TDataSetManager::CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Locate, stage, or fully validate file "fileInfo".
+
 void TDataSetManager::ProcessFile(TFileInfo *fileInfo, Int_t sopt, Bool_t checkstg, Bool_t doall,
                                   TFileStager* stager,  Bool_t createStager, const char *stageopts,
                                   Bool_t dbg, Bool_t& changed, Bool_t& opened)
 {
-// Locate, stage, or fully validate file "fileInfo".
-
    // File processing options
    //Bool_t noaction   = (sopt == -1) ? kTRUE : kFALSE;
    Bool_t fullproc   = (sopt == 0)  ? kTRUE : kFALSE;
@@ -1648,12 +1648,12 @@ void TDataSetManager::ProcessFile(TFileInfo *fileInfo, Int_t sopt, Bool_t checks
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open the file described by 'fileinfo' to extract the relevant meta-information.
+/// Return 0 if OK, -2 if the file cannot be open, -1 if it is corrupted
+
 Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
 {
-   // Open the file described by 'fileinfo' to extract the relevant meta-information.
-   // Return 0 if OK, -2 if the file cannot be open, -1 if it is corrupted
-
    Int_t rc = -2;
    // We need an input
    if (!fileinfo) {
@@ -1792,15 +1792,15 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
    return rc;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Navigate the directory 'd' (and its subdirectories) looking for TTree objects.
+/// Fill in the relevant metadata information in 'fi'. The name of the TFileInfoMeta
+/// metadata entry will be "/dir1/dir2/.../tree_name".
+/// Return 0 on success, -1 if any problem happens (object found in keys cannot be read,
+/// for example)
+
 Int_t TDataSetManager::FillMetaData(TFileInfo *fi, TDirectory *d, const char *rdir)
 {
-   // Navigate the directory 'd' (and its subdirectories) looking for TTree objects.
-   // Fill in the relevant metadata information in 'fi'. The name of the TFileInfoMeta
-   // metadata entry will be "/dir1/dir2/.../tree_name".
-   // Return 0 on success, -1 if any problem happens (object found in keys cannot be read,
-   // for example)
-
    // Check inputs
    if (!fi || !d || !rdir) {
       ::Error("TDataSetManager::FillMetaData",
@@ -1861,12 +1861,12 @@ Int_t TDataSetManager::FillMetaData(TFileInfo *fi, TDirectory *d, const char *rd
    return 0;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a server mapping list from the content of 'srvmaps'
+/// Return the list (owned by the caller) or 0 if no valid info could be found)
+
 TList *TDataSetManager::ParseDataSetSrvMaps(const TString &srvmaps)
 {
-   // Create a server mapping list from the content of 'srvmaps'
-   // Return the list (owned by the caller) or 0 if no valid info could be found)
-
    TList *srvmapslist = 0;
    if (srvmaps.IsNull()) {
       ::Warning("TDataSetManager::ParseDataSetSrvMaps",
@@ -1914,22 +1914,22 @@ TList *TDataSetManager::ParseDataSetSrvMaps(const TString &srvmaps)
    return srvmapslist;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static getter for server mapping list
+
 TList *TDataSetManager::GetDataSetSrvMaps()
 {
-   // Static getter for server mapping list
-
    return fgDataSetSrvMaps;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the dataset server mappings apply to the url defined by 'furl'.
+/// Use srvmaplist if defined, else use the default list.
+/// If yes, resolve the mapping into file1 and return kTRUE.
+/// Otherwise return kFALSE.
+
 Bool_t TDataSetManager::CheckDataSetSrvMaps(TUrl *furl, TString &file1, TList *srvmaplist)
 {
-   // Check if the dataset server mappings apply to the url defined by 'furl'.
-   // Use srvmaplist if defined, else use the default list.
-   // If yes, resolve the mapping into file1 and return kTRUE.
-   // Otherwise return kFALSE.
-
    Bool_t replaced = kFALSE;
    if (!furl) return replaced;
 
@@ -1976,11 +1976,11 @@ Bool_t TDataSetManager::CheckDataSetSrvMaps(TUrl *furl, TString &file1, TList *s
    return replaced;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update scan counters
+
 void TDataSetManager::SetScanCounters(Int_t t, Int_t o, Int_t d)
 {
-   // Update scan counters
-
    fNTouchedFiles = (t > -1) ? t : fNTouchedFiles;
    fNOpenedFiles = (o > -1) ? o : fNOpenedFiles;
    fNDisappearedFiles = (d > -1) ? d : fNDisappearedFiles;

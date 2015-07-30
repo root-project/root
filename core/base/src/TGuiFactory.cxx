@@ -35,82 +35,83 @@ TGuiFactory *gBatchGuiFactory = 0;
 
 ClassImp(TGuiFactory)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGuiFactory ctor only called by derived classes.
+
 TGuiFactory::TGuiFactory(const char *name, const char *title)
     : TNamed(name, title)
 {
-   // TGuiFactory ctor only called by derived classes.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a batch version of TApplicationImp.
+
 TApplicationImp *TGuiFactory::CreateApplicationImp(const char *classname, int *argc, char **argv)
 {
-   // Create a batch version of TApplicationImp.
-
    return new TApplicationImp(classname, argc, argv);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a batch version of TCanvasImp.
+
 TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height)
 {
-   // Create a batch version of TCanvasImp.
-
    return new TCanvasImp(c, title, width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a batch version of TCanvasImp.
+
 TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   // Create a batch version of TCanvasImp.
-
    return new TCanvasImp(c, title, x, y, width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a batch version of TBrowserImp.
+
 TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *)
 {
-   // Create a batch version of TBrowserImp.
-
    return new TBrowserImp(b, title, width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a batch version of TBrowserImp.
+
 TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *)
 {
-   // Create a batch version of TBrowserImp.
-
    return new TBrowserImp(b, title, x, y, width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a batch version of TContextMenuImp.
+
 TContextMenuImp *TGuiFactory::CreateContextMenuImp(TContextMenu *c, const char *, const char *)
 {
-   // Create a batch version of TContextMenuImp.
-
    return new TContextMenuImp(c);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a batch version of TControlBarImp.
+
 TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *title)
 {
-   // Create a batch version of TControlBarImp.
-
    return new TControlBarImp(c, title);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a batch version of TControlBarImp.
+
 TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *title, Int_t x, Int_t y)
 {
-   // Create a batch version of TControlBarImp.
-
    return new TControlBarImp(c, title, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a batch version of TInspectorImp.
+
 TInspectorImp *TGuiFactory::CreateInspectorImp(const TObject *obj, UInt_t width, UInt_t height)
 {
-   // Create a batch version of TInspectorImp.
-
    if (gROOT->IsBatch()) {
       return new TInspectorImp(obj, width, height);
    }

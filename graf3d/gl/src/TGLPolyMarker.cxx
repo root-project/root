@@ -26,7 +26,8 @@
 #include "TClass.h"
 #include "TError.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>GL Polymarker</h2></center>
 To draw a 3D polymarker in a GL window.
@@ -34,14 +35,15 @@ End_Html */
 
 ClassImp(TGLPolyMarker)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///TAttMarker is not TObject descendant, so I need dynamic_cast
+
 TGLPolyMarker::TGLPolyMarker(const TBuffer3D & buffer) :
    TGLLogicalShape(buffer),
    fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()),
    fStyle(7),
    fSize(1.)
 {
-   //TAttMarker is not TObject descendant, so I need dynamic_cast
    if (TAttMarker *realObj = dynamic_cast<TAttMarker *>(buffer.fID)) {
       fStyle = realObj->GetMarkerStyle();
       fSize  = realObj->GetMarkerSize() / 2.;
@@ -49,10 +51,11 @@ TGLPolyMarker::TGLPolyMarker(const TBuffer3D & buffer) :
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Debug tracing
+
 void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Debug tracing
    if (gDebug > 4) {
       Info("TGLPolyMarker::DirectDraw", "this %ld (class %s) LOD %d", (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
@@ -118,10 +121,11 @@ void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw stars
+
 void TGLPolyMarker::DrawStars()const
 {
-   // Draw stars
    glDisable(GL_LIGHTING);
    const Double_t diag = TMath::Sqrt(2 * fSize * fSize) / 2;
 

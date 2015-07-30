@@ -112,7 +112,8 @@ TF1NormSum::TF1NormSum()
    fCstIndexes = std::vector < Int_t     > (0);   
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TF1NormSum::TF1NormSum(const std::vector <TF1*> &functions, const std::vector <Double_t> &coeffs, Double_t scale)
 {
    std::vector <std::shared_ptr < TF1 > >f;
@@ -124,11 +125,11 @@ TF1NormSum::TF1NormSum(const std::vector <TF1*> &functions, const std::vector <D
    InitializeDataMembers(f,coeffs,scale);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TF1NormSum constructor taking 2 functions, and 2 coefficients (if not equal to 1)
+
 TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, Double_t coeff1, Double_t coeff2, Double_t scale)
 {
-   // TF1NormSum constructor taking 2 functions, and 2 coefficients (if not equal to 1)
-   
    std::vector < std::shared_ptr < TF1 > > functions(2);
    std::vector < Double_t > coeffs(2);
    TF1 * fnew1 = 0;
@@ -154,11 +155,11 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, Double_t coeff1, Double_t
    InitializeDataMembers(functions, coeffs,scale);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TF1NormSum constructor taking 3 functions, and 3 coefficients (if not equal to 1)
+
 TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, TF1* function3, Double_t coeff1, Double_t coeff2, Double_t coeff3, Double_t scale)
 {
-   // TF1NormSum constructor taking 3 functions, and 3 coefficients (if not equal to 1)
-   
    std::vector < std::shared_ptr < TF1 > > functions(3);
    std::vector < Double_t > coeffs(3);
    TF1 * fnew1 = 0;
@@ -190,13 +191,13 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, TF1* function3, Double_t 
    InitializeDataMembers(functions, coeffs,scale);
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  TF1NormSum constructortaking any addition of formulas with coefficient or not
+/// example 1 : 2.*expo + gauss + 0.5* gauss
+/// example 2 : expo + 0.3*f1 if f1 is defined in the list of fucntions
+
 TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
 {
-   //  TF1NormSum constructortaking any addition of formulas with coefficient or not
-   // example 1 : 2.*expo + gauss + 0.5* gauss
-   // example 2 : expo + 0.3*f1 if f1 is defined in the list of fucntions
-   
    TF1::InitStandardFunctions();
    
    TObjArray *arrayall    = formula.Tokenize("*+");
@@ -267,10 +268,11 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
     }*/
 }
 
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overload the parenthesis to add the functions
+
 double TF1NormSum::operator()(double* x, double* p)
 {
-   // Overload the parenthesis to add the functions
    if (p!=0)   TF1NormSum::SetParameters(p);                           // first refresh the parameters
    
    Double_t sum = 0.;
@@ -282,10 +284,10 @@ double TF1NormSum::operator()(double* x, double* p)
    return fScale * sum;
 }
 
-//_________________________________________________________________   
-std::vector<double>  TF1NormSum::GetParameters() const {
-   // return array of parameters
+////////////////////////////////////////////////////////////////////////////////
+/// return array of parameters
 
+std::vector<double>  TF1NormSum::GetParameters() const {
    std::vector<double> params(GetNpar() );
    int offset = 0;
    int nOfNonCstParams = 0;
@@ -304,12 +306,12 @@ std::vector<double>  TF1NormSum::GetParameters() const {
    }
    return params;
 }
-//_________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize array of all parameters.
+/// double *params must contains first an array of the coefficients, then an array of the parameters.
+
 void TF1NormSum::SetParameters(const double* params)//params should have the size [fNOfFunctions][fNOfNonCstParams]
 {
-   // Initialize array of all parameters.
-   // double *params must contains first an array of the coefficients, then an array of the parameters.
-
    for (unsigned int n=0; n<fNOfFunctions; n++)                         //initialization of the coefficients
    {
       fCoeffs[n] = params[n];
@@ -339,14 +341,14 @@ void TF1NormSum::SetParameters(const double* params)//params should have the siz
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize array of all parameters.
+/// Overload the TF1::SetParameters() method.
+/// A maximum of 10 parameters must be used, with first the coefficients, then the parameters
+
 void TF1NormSum::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double_t p3, Double_t p4,
                                Double_t p5, Double_t p6, Double_t p7, Double_t p8, Double_t p9, Double_t p10)
 {
-   // Initialize array of all parameters.
-   // Overload the TF1::SetParameters() method.
-   // A maximum of 10 parameters must be used, with first the coefficients, then the parameters
-   
    const double params[] = {p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10};
    TF1NormSum::SetParameters(params);
    

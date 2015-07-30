@@ -35,35 +35,38 @@ ClassImp(RooRealVarSharedProperties)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooRealVarSharedProperties::RooRealVarSharedProperties() 
 {
-  // Default constructor
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with unique-id string
+
 RooRealVarSharedProperties::RooRealVarSharedProperties(const char* uuidstr) : RooSharedProperties(uuidstr)
 {
-  // Constructor with unique-id string
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooRealVarSharedProperties::RooRealVarSharedProperties(const RooRealVarSharedProperties& other) :
   RooSharedProperties(other), 
   _altBinning(other._altBinning)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooRealVarSharedProperties::~RooRealVarSharedProperties() 
 {
-  // Destructor
-
   _altBinning.Delete() ;
 } 
 

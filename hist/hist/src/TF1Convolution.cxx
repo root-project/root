@@ -60,14 +60,15 @@ public:
    }
    Double_t operator()(Double_t x) const
    {
-      return fFunction1->Eval(x) * fFunction2->Eval(x-fT0);
+      return fFunction1->Eval(x) * fFunction2->Eval(fT0-x);
    }
 };
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// use copy instead of Clone
+
 void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_t useFFT)
 {
-   // use copy instead of Clone
    if (function1) { 
       TF1 * fnew1 = (TF1*) function1->IsA()->New();
       function1->Copy(*fnew1); 
@@ -115,17 +116,19 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
       fParams2.erase(fParams2.begin()+fCstIndex);
    }
 }
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from the two function pointer and a flag is using FFT
+
 TF1Convolution::TF1Convolution(TF1* function1, TF1* function2, Bool_t useFFT)
 {
-   // constructor from the two function pointer and a flag is using FFT
    InitializeDataMembers(function1,function2, useFFT);   
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from the two function pointer and the convolution range
+
 TF1Convolution::TF1Convolution(TF1* function1, TF1* function2, Double_t xmin, Double_t xmax, Bool_t useFFT)
 {
-   // constructor from the two function pointer and the convolution range
    InitializeDataMembers(function1, function2,useFFT);
    if (xmin < xmax) { 
       fXmin      = xmin;
@@ -133,10 +136,11 @@ TF1Convolution::TF1Convolution(TF1* function1, TF1* function2, Double_t xmin, Do
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from a formula expression as f1 * f2 where f1 and f2 are two functions known to ROOT
+
 TF1Convolution::TF1Convolution(TString formula,  Double_t xmin, Double_t xmax, Bool_t useFFT)
 {
-   // constructor from a formula expression as f1 * f2 where f1 and f2 are two functions known to ROOT
    TF1::InitStandardFunctions();
    
    TObjArray *objarray   = formula.Tokenize("*");
@@ -165,11 +169,12 @@ TF1Convolution::TF1Convolution(TString formula,  Double_t xmin, Double_t xmax, B
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from 2 function names where f1 and f2 are two functions known to ROOT
+/// if the function names are not knwon to ROOT then a corresponding 
+
 TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmin, Double_t xmax, Bool_t useFFT)
 {
-   // constructor from 2 function names where f1 and f2 are two functions known to ROOT
-   // if the function names are not knwon to ROOT then a corresponding 
    TF1::InitStandardFunctions();
    (TString)formula1.ReplaceAll(" ","");
    (TString)formula2.ReplaceAll(" ","");
@@ -194,11 +199,11 @@ TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmi
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///perform the FFT of the two functions
+
 void TF1Convolution::MakeFFTConv()
 {
-   //perform the FFT of the two functions
-
    if (gDebug)
       Info("MakeFFTConv","Making FFT convolution using %d points in range [%g,%g]",fNofPoints,fXmin,fXmax);
    
@@ -251,13 +256,15 @@ void TF1Convolution::MakeFFTConv()
    {
       // we need this since we have applied a shift in the middle of f2
       int j = i + fNofPoints/2;
-      if (j >= fNofPoints) j -= fNofPoints; 
-      fGraphConv->SetPoint(i, x[i], fftinverse->GetPointReal(j)/fNofPoints);//because it is not normalized
+      if (j >= fNofPoints) j -= fNofPoints;
+      // need to normalize by dividing by the number of points and multiply by the bin width = Range/Number of points
+      fGraphConv->SetPoint(i, x[i], fftinverse->GetPointReal(j)*(fXmax-fXmin)/(fNofPoints*fNofPoints) );  
    }
    fFlagGraph = true; // we can use the graph
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TF1Convolution::EvalFFTConv(Double_t t)
 {
    if (!fFlagGraph)  MakeFFTConv();
@@ -268,43 +275,30 @@ Double_t TF1Convolution::EvalFFTConv(Double_t t)
       return EvalNumConv(t); 
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// perform numerical convolution
+/// could in principle cache the integral  in a Graph as it is done for the FFTW
+
 Double_t TF1Convolution::EvalNumConv(Double_t t)
 {
-   // perform numerical convolution
-   // could in principle cache the integral  in a Grap[h as it is done for the FFTW
    TF1Convolution_EvalWrapper fconv( fFunction1, fFunction2, t);
    Double_t result = 0;
    
-   if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS )
-   {
-      ROOT::Math::GaussIntegrator integrator(1e-9, 1e-9);
-      integrator.SetFunction(ROOT::Math::Functor1D(fconv));
-      if      (fXmin != - TMath::Infinity() && fXmax != TMath::Infinity())
-         result =  integrator.Integral(fXmin, fXmax);
-      else if (fXmin == - TMath::Infinity() && fXmax != TMath::Infinity())
-         result = integrator.IntegralLow(fXmax);
-      else if (fXmin != - TMath::Infinity() && fXmax == TMath::Infinity())
-         result = integrator.IntegralUp(fXmin);
-      else if (fXmin == - TMath::Infinity() && fXmax == TMath::Infinity())
-         result = integrator.Integral();
-   }
-   else
-   {
-      ROOT::Math::IntegratorOneDim integrator(fconv, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), 1e-9, 1e-9);
-      if      (fXmin != - TMath::Infinity() && fXmax != TMath::Infinity() )
-         result =  integrator.Integral(fXmin, fXmax);
-      else if (fXmin == - TMath::Infinity() && fXmax != TMath::Infinity() )
-         result = integrator.IntegralLow(fXmax);
-      else if (fXmin != - TMath::Infinity() && fXmax == TMath::Infinity() )
-         result = integrator.IntegralUp(fXmin);
-      else if (fXmin == - TMath::Infinity() && fXmax == TMath::Infinity() )
-         result = integrator.Integral();
-   }
+   ROOT::Math::IntegratorOneDim integrator(fconv, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), 1e-9, 1e-9);
+   if      (fXmin != - TMath::Infinity() && fXmax != TMath::Infinity() )
+      result =  integrator.Integral(fXmin, fXmax);
+   else if (fXmin == - TMath::Infinity() && fXmax != TMath::Infinity() )
+      result = integrator.IntegralLow(fXmax);
+   else if (fXmin != - TMath::Infinity() && fXmax == TMath::Infinity() )
+      result = integrator.IntegralUp(fXmin);
+   else if (fXmin == - TMath::Infinity() && fXmax == TMath::Infinity() )
+      result = integrator.Integral();
+
    return result;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TF1Convolution::operator()(Double_t* t, Double_t* p)//used in TF1 when doing the fit, will be valuated at each point
 {
    if (p!=0)   TF1Convolution::SetParameters(p);                           // first refresh the parameters
@@ -314,7 +308,8 @@ Double_t TF1Convolution::operator()(Double_t* t, Double_t* p)//used in TF1 when 
    else           result = EvalNumConv(t[0]);
    return result;
 }
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TF1Convolution::SetNofPointsFFT(Int_t n)
 {
    if (n<0) return;
@@ -323,7 +318,8 @@ void TF1Convolution::SetNofPointsFFT(Int_t n)
    fFlagGraph = false; // to indicate we need to re-do the graph
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TF1Convolution::SetParameters(Double_t* p)
 {
    bool equalParams = true;
@@ -365,7 +361,8 @@ void TF1Convolution::SetParameters(Double_t* p)
    // }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TF1Convolution::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double_t p3,
                                    Double_t p4, Double_t p5, Double_t p6, Double_t p7)
 {
@@ -373,7 +370,8 @@ void TF1Convolution::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double
    TF1Convolution::SetParameters(params);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TF1Convolution::SetExtraRange(Double_t percentage)
 {
    if (percentage<0) return;
@@ -383,7 +381,8 @@ void TF1Convolution::SetExtraRange(Double_t percentage)
    fFlagGraph = false;  // to indicate we need to re-do the convolution
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TF1Convolution::SetRange(Double_t a, Double_t b)
 {
    if (a>=b)   return;

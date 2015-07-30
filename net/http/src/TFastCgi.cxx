@@ -91,7 +91,9 @@ void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 
 ClassImp(TFastCgi)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normal constructor
+
 TFastCgi::TFastCgi() :
    THttpEngine("fastcgi", "fastcgi interface to webserver"),
    fSocket(0),
@@ -99,14 +101,13 @@ TFastCgi::TFastCgi() :
    fTopName(),
    fThrd(0)
 {
-   // normal constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TFastCgi::~TFastCgi()
 {
-   // destructor
-
    if (fThrd) {
       // running thread will be killed
       fThrd->Kill();
@@ -121,12 +122,12 @@ TFastCgi::~TFastCgi()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initializes fastcgi variables and start thread,
+/// which will process incoming http requests
+
 Bool_t TFastCgi::Create(const char *args)
 {
-   // initializes fastcgi variables and start thread,
-   // which will process incoming http requests
-
 #ifndef HTTP_WITHOUT_FASTCGI
    FCGX_Init();
 
@@ -176,7 +177,8 @@ Bool_t TFastCgi::Create(const char *args)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void *TFastCgi::run_func(void *args)
 {
 #ifndef HTTP_WITHOUT_FASTCGI
@@ -225,6 +227,10 @@ void *TFastCgi::run_func(void *args)
          header.Append("\r\n");
       }
       arg.SetRequestHeader(header);
+
+      TString username = arg.GetRequestHeader("REMOTE_USER");
+      if ((username.Length()>0) && (arg.GetRequestHeader("AUTH_TYPE").Length()>0))
+         arg.SetUserName(username);
 
       if (engine->fDebugMode) {
          FCGX_FPrintF(request.out,

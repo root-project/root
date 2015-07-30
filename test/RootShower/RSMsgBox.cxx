@@ -14,7 +14,8 @@
 #include "RootShower.h"
 #include "RSHelpText.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RootShowerMsgBox::RootShowerMsgBox(const TGWindow *p, const TGWindow *main,
                        UInt_t w, UInt_t h, UInt_t options) :
      TGTransientFrame(p, main, w, h, options)
@@ -99,7 +100,8 @@ RootShowerMsgBox::RootShowerMsgBox(const TGWindow *p, const TGWindow *main,
    fClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RootShowerMsgBox::~RootShowerMsgBox()
 {
    delete fLogoLayout;
@@ -113,18 +115,19 @@ RootShowerMsgBox::~RootShowerMsgBox()
    delete fBly;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close dialog in response to window manager close.
+
 void RootShowerMsgBox::CloseWindow()
 {
-   // Close dialog in response to window manager close.
-
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages sent to this dialog.
+
 Bool_t RootShowerMsgBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
 {
-   // Process messages sent to this dialog.
    TRootHelpDialog* hd;
 
    switch (GET_MSG(msg)) {

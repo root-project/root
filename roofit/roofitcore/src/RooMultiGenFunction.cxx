@@ -42,7 +42,8 @@ ClassImp(RooMultiGenFunction)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMultiGenFunction::RooMultiGenFunction(const RooAbsFunc& func) :
   _ftor(func) 
 {
@@ -50,34 +51,39 @@ RooMultiGenFunction::RooMultiGenFunction(const RooAbsFunc& func) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMultiGenFunction::RooMultiGenFunction(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters) :
   _ftor(func,observables,parameters)
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMultiGenFunction::RooMultiGenFunction(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters, const RooArgSet& nset) :
   _ftor(func,observables,parameters,nset)
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMultiGenFunction::RooMultiGenFunction(const RooMultiGenFunction& other) :
   ROOT::Math::IMultiGenFunction(other), _ftor(other._ftor)
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMultiGenFunction::~RooMultiGenFunction() 
 {
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 double RooMultiGenFunction::DoEval(const double* x) const 
 {
   return _ftor(x) ;

@@ -25,13 +25,13 @@
 
 ClassImp(TRootHelpDialog)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a help text dialog.
+
 TRootHelpDialog::TRootHelpDialog(const TGWindow *main,
     const char *title, UInt_t w, UInt_t h) :
     TGTransientFrame(gClient->GetRoot(), main, w, h)
 {
-   // Create a help text dialog.
-
    fView = new TGTextView(this, w, h, kSunkenFrame | kDoubleBorder);
    fL1 = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 3, 3, 3, 3);
    AddFrame(fView, fL1);
@@ -51,56 +51,56 @@ TRootHelpDialog::TRootHelpDialog(const TGWindow *main,
    CenterOnParent();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete help text dialog.
+
 TRootHelpDialog::~TRootHelpDialog()
 {
-   // Delete help text dialog.
-
    delete fView;
    delete fOK;
    delete fL1;
    delete fL2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show help dialog.
+
 void TRootHelpDialog::Popup()
 {
-   // Show help dialog.
-
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set help text from helpText buffer in TGTextView.
+
 void TRootHelpDialog::SetText(const char *helpText)
 {
-   // Set help text from helpText buffer in TGTextView.
-
    fView->LoadBuffer(helpText);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add help text from helpText buffer to already existing text in TGTextView.
+
 void TRootHelpDialog::AddText(const char *helpText)
 {
-   // Add help text from helpText buffer to already existing text in TGTextView.
-
    TGText tt;
    tt.LoadBuffer(helpText);
    fView->AddText(&tt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when closed via window manager action.
+
 void TRootHelpDialog::CloseWindow()
 {
-   // Called when closed via window manager action.
-
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process OK button.
+
 Bool_t TRootHelpDialog::ProcessMessage(Long_t msg, Long_t, Long_t)
 {
-   // Process OK button.
-
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)) {

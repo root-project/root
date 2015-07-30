@@ -67,61 +67,67 @@ static std::auto_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnColorMap;
 
 void   TMVA::MsgLogger::InhibitOutput() { fgInhibitOutput = kTRUE;  }
 void   TMVA::MsgLogger::EnableOutput()  { fgInhibitOutput = kFALSE; }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
    : fObjSource ( source ),
      fStrSource ( "" ),
      fActiveType( kINFO ),
      fMinType   ( minType )
 {
-   // constructor
    InitMaps();   
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
    : fObjSource ( 0 ),
      fStrSource ( source ),
      fActiveType( kINFO ),
      fMinType   ( minType )
 {
-   // constructor
    InitMaps();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::MsgLogger::MsgLogger( EMsgType minType )
    : fObjSource ( 0 ),
      fStrSource ( "Unknown" ),
      fActiveType( kINFO ),
      fMinType   ( minType )
 {
-   // constructor
    InitMaps();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor
+
 TMVA::MsgLogger::MsgLogger( const MsgLogger& parent )
    : std::basic_ios<MsgLogger::char_type, MsgLogger::traits_type>(),
      std::ostringstream(),
      TObject(),
      fObjSource(0)
 {
-   // copy constructor
    InitMaps();
    *this = parent;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MsgLogger::~MsgLogger()
 {
-   // destructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assingment operator
+
 TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent )
 {
-   // assingment operator
    if (&parent != this) {
       fObjSource  = parent.fObjSource;
       fStrSource  = parent.fStrSource;
@@ -132,10 +138,11 @@ TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent )
    return *this;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make sure the source name is no longer than fgMaxSourceSize:
+
 std::string TMVA::MsgLogger::GetFormattedSource() const
 {
-   // make sure the source name is no longer than fgMaxSourceSize:
    std::string source_name;
    if (fObjSource) source_name = fObjSource->GetName();
    else            source_name = fStrSource;
@@ -148,10 +155,11 @@ std::string TMVA::MsgLogger::GetFormattedSource() const
    return source_name;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the full logger prefix
+
 std::string TMVA::MsgLogger::GetPrintedSource() const
 {
-   // the full logger prefix
    std::string source_name = GetFormattedSource();
    if (source_name.size() < fgMaxSourceSize)
       for (std::string::size_type i=source_name.size(); i<fgMaxSourceSize; i++) source_name.push_back( ' ' );
@@ -159,11 +167,11 @@ std::string TMVA::MsgLogger::GetPrintedSource() const
    return fgPrefix + source_name + fgSuffix;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// activates the logger writer
+
 void TMVA::MsgLogger::Send()
 {
-   // activates the logger writer
-
    // make sure the source name is no longer than fgMaxSourceSize:
    std::string source_name = GetFormattedSource();
 
@@ -192,12 +200,12 @@ void TMVA::MsgLogger::Send()
    return;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// putting the output string, the message type, and the color
+/// switcher together into a single string
+
 void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
 {
-   // putting the output string, the message type, and the color
-   // switcher together into a single string
-
    if ( (type < fMinType || fgInhibitOutput) && type!=kFATAL ) return; // no output
 
    std::map<EMsgType, std::string>::const_iterator stype;
@@ -227,19 +235,20 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// end line
+
 TMVA::MsgLogger& TMVA::MsgLogger::Endmsg( MsgLogger& logger )
 {
-   // end line
    logger.Send();
    return logger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the message type and color maps
+
 void TMVA::MsgLogger::InitMaps()
 {
-   // Create the message type and color maps
-
    if(!fgTypeMap) {
      std::map<TMVA::EMsgType, std::string>*tmp  = new std::map<TMVA::EMsgType, std::string>();
    

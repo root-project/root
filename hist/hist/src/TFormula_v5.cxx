@@ -124,11 +124,11 @@ namespace ROOT {
 //   of all TMath functions.
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Formula default constructor.
+
 TFormula::TFormula(): TNamed()
 {
-   // Formula default constructor.
-
    fNdim   = 0;
    fNpar   = 0;
    fNoper  = 0;
@@ -152,12 +152,12 @@ TFormula::TFormula(): TNamed()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal Formula constructor.
+
 TFormula::TFormula(const char *name,const char *expression) :
    TNamed(name,expression)
 {
-   // Normal Formula constructor.
-
    fNdim   = 0;
    fNpar   = 0;
    fNoper  = 0;
@@ -266,11 +266,11 @@ TFormula::TFormula(const char *name,const char *expression) :
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TFormula::TFormula(const TFormula &formula) : TNamed()
 {
-   // Default constructor.
-
    fNdim   = 0;
    fNpar   = 0;
    fNoper  = 0;
@@ -293,11 +293,11 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
 TFormula& TFormula::operator=(const TFormula &rhs)
 {
-   // Operator =
-
    if (this != &rhs) {
       rhs.Copy(*this);
    }
@@ -305,11 +305,11 @@ TFormula& TFormula::operator=(const TFormula &rhs)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Formula default destructor.
+
 TFormula::~TFormula()
 {
-   // Formula default destructor.
-
    if (gROOT) {
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfFunctions()->Remove(this);
@@ -319,27 +319,27 @@ TFormula::~TFormula()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the chain as function call.
+///
+///   If you overload this member function, you also HAVE TO
+///   never call the constructor:
+///
+///     TFormula::TFormula(const char *name,const char *expression)
+///
+///   and write your own constructor
+///
+///     MyClass::MyClass(const char *name,const char *expression) : TFormula()
+///
+///   which has to call the TFormula default constructor and whose implementation
+///   should be similar to the implementation of the normal TFormula constructor
+///
+///   This is necessary because the normal TFormula constructor call indirectly
+///   the virtual member functions Analyze, DefaultString, DefaultValue
+///   and DefaultVariable.
+
 Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 {
-   // Check if the chain as function call.
-   //
-   //   If you overload this member function, you also HAVE TO
-   //   never call the constructor:
-   //
-   //     TFormula::TFormula(const char *name,const char *expression)
-   //
-   //   and write your own constructor
-   //
-   //     MyClass::MyClass(const char *name,const char *expression) : TFormula()
-   //
-   //   which has to call the TFormula default constructor and whose implementation
-   //   should be similar to the implementation of the normal TFormula constructor
-   //
-   //   This is necessary because the normal TFormula constructor call indirectly
-   //   the virtual member functions Analyze, DefaultString, DefaultValue
-   //   and DefaultVariable.
-
    int i;
 
    // We have to decompose the chain is 3 potential components:
@@ -510,158 +510,159 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Analyze a sub-expression in one formula.
+///
+///   Expressions in one formula are recursively analyzed.
+///   Result of analysis is stored in the object tables.
+///
+///                  Table of function codes and errors
+///                  ==================================
+///
+///   * functions :
+///
+///     +           1                   pow          20
+///     -           2                   sq           21
+///     *           3                   sqrt         22
+///     /           4                   strstr       23
+///     %           5                   min          24
+///                                     max          25
+///                                     log          30
+///     cos         10                  exp          31
+///     sin         11                  log10        32
+///     tan         12
+///     acos        13                  abs          41
+///     asin        14                  sign         42
+///     atan        15                  int          43
+///     atan2       16
+///     fmod        17                  rndm         50
+///
+///     cosh        70                  acosh        73
+///     sinh        71                  asinh        74
+///     tanh        72                  atanh        75
+///
+///     expo       100                  gaus        110     gausn  (see note below)
+///     expo(0)    100 0                gaus(0)     110 0   gausn(0)
+///     expo(1)    100 1                gaus(1)     110 1   gausn(1)
+///     xexpo      100 x                xgaus       110 x   xgausn
+///     yexpo      101 x                ygaus       111 x   ygausn
+///     zexpo      102 x                zgaus       112 x   zgausn
+///     xyexpo     105 x                xygaus      115 x   xygausn
+///     yexpo(5)   102 5                ygaus(5)    111 5   ygausn(5)
+///     xyexpo(2)  105 2                xygaus(2)   115 2   xygausn(2)
+///
+///     landau      120 x   landaun (see note below)
+///     landau(0)   120 0   landaun(0)
+///     landau(1)   120 1   landaun(1)
+///     xlandau     120 x   xlandaun
+///     ylandau     121 x   ylandaun
+///     zlandau     122 x   zlandaun
+///     xylandau    125 x   xylandaun
+///     ylandau(5)  121 5   ylandaun(5)
+///     xylandau(2) 125 2   xylandaun(2)
+///
+///     pol0        130 x               pol1        130 1xx
+///     pol0(0)     130 0               pol1(0)     130 100
+///     pol0(1)     130 1               pol1(1)     130 101
+///     xpol0       130 x               xpol1       130 101
+///     ypol0       131 x               ypol1       131 101
+///     zpol0       132 x               zpol1       132 1xx
+///     ypol0(5)    131 5               ypol1(5)    131 105
+///
+///     pi          40
+///
+///     &&          60                  <            64
+///     ||          61                  >            65
+///     ==          62                  <=           66
+///     !=          63                  =>           67
+///     !           68
+///     ==(string)  76                  &            78
+///     !=(string)  77                  |            79
+///     <<(shift)   80                  >>(shift)    81
+///     ? :         82
+///
+///   * constants (kConstants) :
+///
+///    c0  141 1      c1  141 2  etc..
+///
+///   * strings (kStringConst):
+///
+///    sX  143 x
+///
+///   * variables (kFormulaVar) :
+///
+///     x    144 0      y    144 1      z    144 2      t    144 3
+///
+///   * parameters :
+///
+///     [1]        140 1
+///     [2]        140 2
+///     etc.
+///
+///   Special cases for normalized gaussian or landau distributions
+///   =============================================================
+///   the expression "gaus" is a substitute for
+///     [0]*exp(-0.5*((x-[1])/[2])**2)
+///   to obtain a standard normalized gaussian, use "gausn" instead of "gaus"
+///   the expression "gausn" is a substitute for
+///     [0]*exp(-0.5*((x-[1])/[2])**2)/(sqrt(2*pi)*[2]))
+///   WARNING: gaus and gausn are mutually exclusive in the same expression.
+///
+///   In the same way the expression "landau" is a substitute for
+///     [0]*TMath::Landau(x,[1],[2],kFALSE)
+///   to obtain a standard normalized landau, use "landaun" instead of "landau"
+///   the expression "landaun" is a substitute for
+///     [0]*TMath::Landau(x,[1],[2],kTRUE)
+///   WARNING: landau and landaun are mutually exclusive in the same expression.
+///
+///   Boolean optimization (kBoolOptmize) :
+///   =====================================
+///
+///     Those pseudo operation are used to implement lazy evaluation of
+///     && and ||.  When the left hand of the expression if false
+///     (respectively true), the evaluation of the right is entirely skipped
+///     (since it would not change the value of the expreession).
+///
+///     &&   142 11 (one operation on right) 142 21 (2 operations on right)
+///     ||   142 12 (one operation on right) 142 22 (2 operations on right)
+///
+///   * functions calls (kFunctionCall) :
+///
+///    f0 145  0  f1 145  1  etc..
+///
+///   Errors :
+///   ========
+///
+///     1  : Division By Zero
+///     2  : Invalid Floating Point Operation
+///     4  : Empty String
+///     5  : invalid syntax
+///     6  : Too many operators
+///     7  : Too many parameters
+///    10  : z specified but not x and y
+///    11  : z and y specified but not x
+///    12  : y specified but not x
+///    13  : z and x specified but not y
+///    20  : non integer value for parameter number
+///    21  : atan2 requires two arguments
+///    22  : pow requires two arguments
+///    23  : degree of polynomial not specified
+///    24  : Degree of polynomial must be positive
+///    25  : Degree of polynomial must be less than 20
+///    26  : Unknown name
+///    27  : Too many constants in expression
+///    28  : strstr requires two arguments
+///    29  : interpreted or compiled function have to return a numerical type
+///    30  : Bad numerical expression
+///    31  : Part of the variable exist but some of it is not accessible or useable
+///    40  : '(' is expected
+///    41  : ')' is expected
+///    42  : '[' is expected
+///    43  : ']' is expected
+///Begin_Html
+
 void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 {
-   // Analyze a sub-expression in one formula.
-   //
-   //   Expressions in one formula are recursively analyzed.
-   //   Result of analysis is stored in the object tables.
-   //
-   //                  Table of function codes and errors
-   //                  ==================================
-   //
-   //   * functions :
-   //
-   //     +           1                   pow          20
-   //     -           2                   sq           21
-   //     *           3                   sqrt         22
-   //     /           4                   strstr       23
-   //     %           5                   min          24
-   //                                     max          25
-   //                                     log          30
-   //     cos         10                  exp          31
-   //     sin         11                  log10        32
-   //     tan         12
-   //     acos        13                  abs          41
-   //     asin        14                  sign         42
-   //     atan        15                  int          43
-   //     atan2       16
-   //     fmod        17                  rndm         50
-   //
-   //     cosh        70                  acosh        73
-   //     sinh        71                  asinh        74
-   //     tanh        72                  atanh        75
-   //
-   //     expo       100                  gaus        110     gausn  (see note below)
-   //     expo(0)    100 0                gaus(0)     110 0   gausn(0)
-   //     expo(1)    100 1                gaus(1)     110 1   gausn(1)
-   //     xexpo      100 x                xgaus       110 x   xgausn
-   //     yexpo      101 x                ygaus       111 x   ygausn
-   //     zexpo      102 x                zgaus       112 x   zgausn
-   //     xyexpo     105 x                xygaus      115 x   xygausn
-   //     yexpo(5)   102 5                ygaus(5)    111 5   ygausn(5)
-   //     xyexpo(2)  105 2                xygaus(2)   115 2   xygausn(2)
-   //
-   //     landau      120 x   landaun (see note below)
-   //     landau(0)   120 0   landaun(0)
-   //     landau(1)   120 1   landaun(1)
-   //     xlandau     120 x   xlandaun
-   //     ylandau     121 x   ylandaun
-   //     zlandau     122 x   zlandaun
-   //     xylandau    125 x   xylandaun
-   //     ylandau(5)  121 5   ylandaun(5)
-   //     xylandau(2) 125 2   xylandaun(2)
-   //
-   //     pol0        130 x               pol1        130 1xx
-   //     pol0(0)     130 0               pol1(0)     130 100
-   //     pol0(1)     130 1               pol1(1)     130 101
-   //     xpol0       130 x               xpol1       130 101
-   //     ypol0       131 x               ypol1       131 101
-   //     zpol0       132 x               zpol1       132 1xx
-   //     ypol0(5)    131 5               ypol1(5)    131 105
-   //
-   //     pi          40
-   //
-   //     &&          60                  <            64
-   //     ||          61                  >            65
-   //     ==          62                  <=           66
-   //     !=          63                  =>           67
-   //     !           68
-   //     ==(string)  76                  &            78
-   //     !=(string)  77                  |            79
-   //     <<(shift)   80                  >>(shift)    81
-   //     ? :         82
-   //
-   //   * constants (kConstants) :
-   //
-   //    c0  141 1      c1  141 2  etc..
-   //
-   //   * strings (kStringConst):
-   //
-   //    sX  143 x
-   //
-   //   * variables (kFormulaVar) :
-   //
-   //     x    144 0      y    144 1      z    144 2      t    144 3
-   //
-   //   * parameters :
-   //
-   //     [1]        140 1
-   //     [2]        140 2
-   //     etc.
-   //
-   //   Special cases for normalized gaussian or landau distributions
-   //   =============================================================
-   //   the expression "gaus" is a substitute for
-   //     [0]*exp(-0.5*((x-[1])/[2])**2)
-   //   to obtain a standard normalized gaussian, use "gausn" instead of "gaus"
-   //   the expression "gausn" is a substitute for
-   //     [0]*exp(-0.5*((x-[1])/[2])**2)/(sqrt(2*pi)*[2]))
-   //   WARNING: gaus and gausn are mutually exclusive in the same expression.
-   //
-   //   In the same way the expression "landau" is a substitute for
-   //     [0]*TMath::Landau(x,[1],[2],kFALSE)
-   //   to obtain a standard normalized landau, use "landaun" instead of "landau"
-   //   the expression "landaun" is a substitute for
-   //     [0]*TMath::Landau(x,[1],[2],kTRUE)
-   //   WARNING: landau and landaun are mutually exclusive in the same expression.
-   //
-   //   Boolean optimization (kBoolOptmize) :
-   //   =====================================
-   //
-   //     Those pseudo operation are used to implement lazy evaluation of
-   //     && and ||.  When the left hand of the expression if false
-   //     (respectively true), the evaluation of the right is entirely skipped
-   //     (since it would not change the value of the expreession).
-   //
-   //     &&   142 11 (one operation on right) 142 21 (2 operations on right)
-   //     ||   142 12 (one operation on right) 142 22 (2 operations on right)
-   //
-   //   * functions calls (kFunctionCall) :
-   //
-   //    f0 145  0  f1 145  1  etc..
-   //
-   //   Errors :
-   //   ========
-   //
-   //     1  : Division By Zero
-   //     2  : Invalid Floating Point Operation
-   //     4  : Empty String
-   //     5  : invalid syntax
-   //     6  : Too many operators
-   //     7  : Too many parameters
-   //    10  : z specified but not x and y
-   //    11  : z and y specified but not x
-   //    12  : y specified but not x
-   //    13  : z and x specified but not y
-   //    20  : non integer value for parameter number
-   //    21  : atan2 requires two arguments
-   //    22  : pow requires two arguments
-   //    23  : degree of polynomial not specified
-   //    24  : Degree of polynomial must be positive
-   //    25  : Degree of polynomial must be less than 20
-   //    26  : Unknown name
-   //    27  : Too many constants in expression
-   //    28  : strstr requires two arguments
-   //    29  : interpreted or compiled function have to return a numerical type
-   //    30  : Bad numerical expression
-   //    31  : Part of the variable exist but some of it is not accessible or useable
-   //    40  : '(' is expected
-   //    41  : ')' is expected
-   //    42  : '[' is expected
-   //    43  : ']' is expected
-   //Begin_Html
    /*
    <img src="gif/analyze.gif">
    */
@@ -2145,12 +2146,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether the operand at 'oper-1' is compatible with the operation
+/// at 'oper'.
+
 Bool_t TFormula::CheckOperands(Int_t oper, Int_t &err)
 {
-   // Check whether the operand at 'oper-1' is compatible with the operation
-   // at 'oper'.
-
    if ( IsString(oper-1) && !StringToNumber(oper-1) ) {
       Error("Compile","\"%s\" requires a numerical operand.",fExpr[oper].Data());
       err = 45;
@@ -2160,12 +2161,12 @@ Bool_t TFormula::CheckOperands(Int_t oper, Int_t &err)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether the operands at 'leftoper' and 'oper-1' are compatible with
+/// the operation at 'oper'.
+
 Bool_t TFormula::CheckOperands(Int_t leftoper, Int_t oper, Int_t &err)
 {
-   // Check whether the operands at 'leftoper' and 'oper-1' are compatible with
-   // the operation at 'oper'.
-
    if ( IsString(oper-1) || IsString(leftoper) ) {
       if (IsString(oper-1) && StringToNumber(oper-1)) {
           return kTRUE;
@@ -2181,35 +2182,35 @@ Bool_t TFormula::CheckOperands(Int_t leftoper, Int_t oper, Int_t &err)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to 'demote' a string into an array bytes.  If this is not possible,
+/// return false.
+
 Bool_t TFormula::StringToNumber(Int_t /* code */)
 {
-   // Try to 'demote' a string into an array bytes.  If this is not possible,
-   // return false.
-
    // In TFormula proper, we can not handle array of bytes ...
    return kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resets the objects.
+///
+/// Resets the object to its state before compilation.
+
 void TFormula::Clear(Option_t * /*option*/ )
 {
-   // Resets the objects.
-   //
-   // Resets the object to its state before compilation.
-
    ClearFormula();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resets the objects.
+///
+/// Resets the object to its state before compilation.
+
 void TFormula::ClearFormula(Option_t * /*option*/ )
 {
-   // Resets the objects.
-   //
-   // Resets the object to its state before compilation.
-
    fNdim   = 0;
    fNpar   = 0;
    fNoper  = 0;
@@ -2250,30 +2251,31 @@ namespace {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compile expression already stored in fTitle.
+///
+///   Loop on all subexpressions of formula stored in fTitle
+///
+///   If you overload this member function, you also HAVE TO
+///   never call the constructor:
+///
+///     TFormula::TFormula(const char *name,const char *expression)
+///
+///   and write your own constructor
+///
+///     MyClass::MyClass(const char *name,const char *expression) : TFormula()
+///
+///   which has to call the TFormula default constructor and whose implementation
+///   should be similar to the implementation of the normal TFormula constructor
+///
+///   This is necessary because the normal TFormula constructor call indirectly
+///   the virtual member functions Analyze, DefaultString, DefaultValue
+///   and DefaultVariable.
+///
+///Begin_Html
+
 Int_t TFormula::Compile(const char *expression)
 {
-   // Compile expression already stored in fTitle.
-   //
-   //   Loop on all subexpressions of formula stored in fTitle
-   //
-   //   If you overload this member function, you also HAVE TO
-   //   never call the constructor:
-   //
-   //     TFormula::TFormula(const char *name,const char *expression)
-   //
-   //   and write your own constructor
-   //
-   //     MyClass::MyClass(const char *name,const char *expression) : TFormula()
-   //
-   //   which has to call the TFormula default constructor and whose implementation
-   //   should be similar to the implementation of the normal TFormula constructor
-   //
-   //   This is necessary because the normal TFormula constructor call indirectly
-   //   the virtual member functions Analyze, DefaultString, DefaultValue
-   //   and DefaultVariable.
-   //
-   //Begin_Html
    /*
    <img src="gif/compile.gif">
    */
@@ -2444,11 +2446,11 @@ Int_t TFormula::Compile(const char *expression)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this formula.
+
 void TFormula::Copy(TObject &obj) const
 {
-   // Copy this formula.
-
    Int_t i;
    ((TFormula&)obj).ClearFormula();
    TNamed::Copy(obj);
@@ -2516,90 +2518,90 @@ void TFormula::Copy(TObject &obj) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return address of string corresponding to special code.
+///
+///   This member function is inactive in the TFormula class.
+///   It may be redefined in derived classes.
+///
+///   If you overload this member function, you also HAVE TO
+///   never call the constructor:
+///
+///     TFormula::TFormula(const char *name,const char *expression)
+///
+///   and write your own constructor
+///
+///     MyClass::MyClass(const char *name,const char *expression) : TFormula()
+///
+///   which has to call the TFormula default constructor and whose implementation
+///   should be similar to the implementation of the normal TFormula constructor
+///
+///   This is necessary because the normal TFormula constructor call indirectly
+///   the virtual member functions Analyze, DefaultString, DefaultValue
+///   and DefaultVariable.
+
 char *TFormula::DefinedString(Int_t)
 {
-   // Return address of string corresponding to special code.
-   //
-   //   This member function is inactive in the TFormula class.
-   //   It may be redefined in derived classes.
-   //
-   //   If you overload this member function, you also HAVE TO
-   //   never call the constructor:
-   //
-   //     TFormula::TFormula(const char *name,const char *expression)
-   //
-   //   and write your own constructor
-   //
-   //     MyClass::MyClass(const char *name,const char *expression) : TFormula()
-   //
-   //   which has to call the TFormula default constructor and whose implementation
-   //   should be similar to the implementation of the normal TFormula constructor
-   //
-   //   This is necessary because the normal TFormula constructor call indirectly
-   //   the virtual member functions Analyze, DefaultString, DefaultValue
-   //   and DefaultVariable.
-
    return 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return value corresponding to special code.
+///
+///   This member function is inactive in the TFormula class.
+///   It may be redefined in derived classes.
+///
+///   If you overload this member function, you also HAVE TO
+///   never call the constructor:
+///
+///     TFormula::TFormula(const char *name,const char *expression)
+///
+///   and write your own constructor
+///
+///     MyClass::MyClass(const char *name,const char *expression) : TFormula()
+///
+///   which has to call the TFormula default constructor and whose implementation
+///   should be similar to the implementation of the normal TFormula constructor
+///
+///   This is necessary because the normal TFormula constructor call indirectly
+///   the virtual member functions Analyze, DefaultString, DefaultValue
+///   and DefaultVariable.
+
 Double_t TFormula::DefinedValue(Int_t)
 {
-   // Return value corresponding to special code.
-   //
-   //   This member function is inactive in the TFormula class.
-   //   It may be redefined in derived classes.
-   //
-   //   If you overload this member function, you also HAVE TO
-   //   never call the constructor:
-   //
-   //     TFormula::TFormula(const char *name,const char *expression)
-   //
-   //   and write your own constructor
-   //
-   //     MyClass::MyClass(const char *name,const char *expression) : TFormula()
-   //
-   //   which has to call the TFormula default constructor and whose implementation
-   //   should be similar to the implementation of the normal TFormula constructor
-   //
-   //   This is necessary because the normal TFormula constructor call indirectly
-   //   the virtual member functions Analyze, DefaultString, DefaultValue
-   //   and DefaultVariable.
-
    return 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if expression is in the list of defined variables.
+///
+///   This member function can be overloaded in derived classes
+///
+///   If you overload this member function, you also HAVE TO
+///   never call the constructor:
+///
+///     TFormula::TFormula(const char *name,const char *expression)
+///
+///   and write your own constructor
+///
+///     MyClass::MyClass(const char *name,const char *expression) : TFormula()
+///
+///   which has to call the TFormula default constructor and whose implementation
+///   should be similar to the implementation of the normal TFormula constructor
+///
+///   This is necessary because the normal TFormula constructor call indirectly
+///   the virtual member functions Analyze, DefaultString, DefaultValue
+///   and DefaultVariable.
+///
+///   The expected returns values are
+///     -2 :  the name has been recognized but won't be usable
+///     -1 :  the name has not been recognized
+///    >=0 :  the name has been recognized, return the action parameter.
+
 Int_t TFormula::DefinedVariable(TString &chaine,Int_t &action)
 {
-   // Check if expression is in the list of defined variables.
-   //
-   //   This member function can be overloaded in derived classes
-   //
-   //   If you overload this member function, you also HAVE TO
-   //   never call the constructor:
-   //
-   //     TFormula::TFormula(const char *name,const char *expression)
-   //
-   //   and write your own constructor
-   //
-   //     MyClass::MyClass(const char *name,const char *expression) : TFormula()
-   //
-   //   which has to call the TFormula default constructor and whose implementation
-   //   should be similar to the implementation of the normal TFormula constructor
-   //
-   //   This is necessary because the normal TFormula constructor call indirectly
-   //   the virtual member functions Analyze, DefaultString, DefaultValue
-   //   and DefaultVariable.
-   //
-   //   The expected returns values are
-   //     -2 :  the name has been recognized but won't be usable
-   //     -1 :  the name has not been recognized
-   //    >=0 :  the name has been recognized, return the action parameter.
-
    action = kVariable;
    if (chaine == "x") {
       if (fNdim < 1) fNdim = 1;
@@ -2639,15 +2641,15 @@ Int_t TFormula::DefinedVariable(TString &chaine,Int_t &action)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate this formula.
+///
+///   The current value of variables x,y,z,t is passed through x, y, z and t.
+///   The parameters used will be the ones in the array params if params is given
+///    otherwise parameters will be taken from the stored data members fParams
+
 Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 {
-   // Evaluate this formula.
-   //
-   //   The current value of variables x,y,z,t is passed through x, y, z and t.
-   //   The parameters used will be the ones in the array params if params is given
-   //    otherwise parameters will be taken from the stored data members fParams
-
    Double_t xx[4];
    xx[0] = x;
    xx[1] = y;
@@ -2657,15 +2659,16 @@ Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate this formula.
+///
+///   The current value of variables x,y,z,t is passed through the pointer x.
+///   The parameters used will be the ones in the array params if params is given
+///    otherwise parameters will be taken from the stored data members fParams
+///Begin_Html
+
 Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
 {
-   // Evaluate this formula.
-   //
-   //   The current value of variables x,y,z,t is passed through the pointer x.
-   //   The parameters used will be the ones in the array params if params is given
-   //    otherwise parameters will be taken from the stored data members fParams
-   //Begin_Html
    /*
    <img src="gif/eval.gif">
    */
@@ -2974,25 +2977,25 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
 
 }
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Reconstruct the formula expression from the internal TFormula member variables
+///
+///   This function uses the internal member variables of TFormula to
+///   construct the mathematical expression associated with the TFormula
+///   instance. This function can be used to get an expanded version of the
+///   expression originally assigned to the TFormula instance, i.e. that
+///   the string returned by GetExpFormula() doesn't depend on other
+///   TFormula object names.
+///
+///  if option contains "p" the returned string will contain the formula
+///  expression with symbolic parameters, eg [0] replaced by the actual value
+///  of the parameter. Example:
+///  if expression in formula is: "[0]*(x>-[1])+[2]*exp(-[3]*x)"
+///  and parameters are 3.25,-4.01,4.44,-0.04, GetExpFormula("p") will return:
+///   "(3.25*(x>+4.01))+(4.44*exp(+0.04*x))"
+
 TString TFormula::GetExpFormula(Option_t *option) const
 {
-   // Reconstruct the formula expression from the internal TFormula member variables
-   //
-   //   This function uses the internal member variables of TFormula to
-   //   construct the mathematical expression associated with the TFormula
-   //   instance. This function can be used to get an expanded version of the
-   //   expression originally assigned to the TFormula instance, i.e. that
-   //   the string returned by GetExpFormula() doesn't depend on other
-   //   TFormula object names.
-   //
-   //  if option contains "p" the returned string will contain the formula
-   //  expression with symbolic parameters, eg [0] replaced by the actual value
-   //  of the parameter. Example:
-   //  if expression in formula is: "[0]*(x>-[1])+[2]*exp(-[3]*x)"
-   //  and parameters are 3.25,-4.01,4.44,-0.04, GetExpFormula("p") will return:
-   //   "(3.25*(x>+4.01))+(4.44*exp(+0.04*x))"
-
    if (fNoper>0) {
       TString* tab=new TString[fNoper];
       Bool_t* ismulti=new Bool_t[fNoper];
@@ -3179,32 +3182,32 @@ TString TFormula::GetExpFormula(Option_t *option) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return linear part.
+
 const TObject* TFormula::GetLinearPart(Int_t i)
 {
-   // Return linear part.
-
    if (!fLinearParts.IsEmpty())
       return fLinearParts.UncheckedAt(i);
    return 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return value of parameter number ipar.
+
 Double_t TFormula::GetParameter(Int_t ipar) const
 {
-   // Return value of parameter number ipar.
-
    if (ipar <0 || ipar >= fNpar) return 0;
    return fParams[ipar];
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return value of parameter named parName.
+
 Double_t TFormula::GetParameter(const char *parName) const
 {
-   // Return value of parameter named parName.
-
    const Double_t kNaN = 1e-300;
    Int_t index = GetParNumber(parName);
    if (index==-1) {
@@ -3215,22 +3218,22 @@ Double_t TFormula::GetParameter(const char *parName) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return name of one parameter.
+
 const char *TFormula::GetParName(Int_t ipar) const
 {
-   // Return name of one parameter.
-
    if (ipar <0 || ipar >= fNpar) return "";
    if (fNames[ipar].Length() > 0) return (const char*)fNames[ipar];
    return Form("p%d",ipar);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return parameter number by name.
+
 Int_t TFormula::GetParNumber(const char *parName) const
 {
-   // Return parameter number by name.
-
    if (!parName)
       return -1;
 
@@ -3241,20 +3244,20 @@ Int_t TFormula::GetParNumber(const char *parName) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the expression at the index 'oper' has to be treated as a string
+
 Bool_t TFormula::IsString(Int_t oper) const
 {
-   // Return true if the expression at the index 'oper' has to be treated as a string
-
    return GetAction(oper) == kStringConst;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump this formula with its attributes.
+
 void TFormula::Print(Option_t *) const
 {
-   // Dump this formula with its attributes.
-
    Int_t i;
    Printf(" %20s : %s Ndim= %d, Npar= %d, Noper= %d",GetName(),GetTitle(), fNdim,fNpar,fNoper);
    for (i=0;i<fNoper;i++) {
@@ -3279,12 +3282,12 @@ void TFormula::Print(Option_t *) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If the formula is for linear fitting, change the title to
+/// normal and fill the LinearParts array
+
 void TFormula::ProcessLinear(TString &formula)
 {
-   // If the formula is for linear fitting, change the title to
-   // normal and fill the LinearParts array
-
    TString formula2(formula);
    char repl[20];
    char *pch;
@@ -3350,11 +3353,11 @@ void TFormula::ProcessLinear(TString &formula)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize parameter number ipar.
+
 void TFormula::SetParameter(const char *name, Double_t value)
 {
-   // Initialize parameter number ipar.
-
    Int_t ipar = GetParNumber(name);
    if (ipar <0 || ipar >= fNpar) return;
    fParams[ipar] = value;
@@ -3362,23 +3365,23 @@ void TFormula::SetParameter(const char *name, Double_t value)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize parameter number ipar.
+
 void TFormula::SetParameter(Int_t ipar, Double_t value)
 {
-   // Initialize parameter number ipar.
-
    if (ipar <0 || ipar >= fNpar) return;
    fParams[ipar] = value;
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize array of all parameters.
+/// See also the next function with the same name.
+
 void TFormula::SetParameters(const Double_t *params)
 {
-   // Initialize array of all parameters.
-   // See also the next function with the same name.
-
    for (Int_t i=0; i<fNpar;i++) {
       fParams[i] = params[i];
    }
@@ -3386,16 +3389,16 @@ void TFormula::SetParameters(const Double_t *params)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize up to 11 parameters
+/// All arguments except THE FIRST TWO are optional
+/// In case of a function with only one parameter, call this function with p1=0.
+/// Minimum two arguments are required to differentiate this function
+/// from the SetParameters(cont Double_t *params)
+
 void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Double_t p4
                        ,Double_t p5,Double_t p6,Double_t p7,Double_t p8,Double_t p9,Double_t p10)
 {
-   // Initialize up to 11 parameters
-   // All arguments except THE FIRST TWO are optional
-   // In case of a function with only one parameter, call this function with p1=0.
-   // Minimum two arguments are required to differentiate this function
-   // from the SetParameters(cont Double_t *params)
-
    if (fNpar > 0) fParams[0] = p0;
    if (fNpar > 1) fParams[1] = p1;
    if (fNpar > 2) fParams[2] = p2;
@@ -3411,22 +3414,22 @@ void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Dou
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set name of parameter number ipar
+
 void TFormula::SetParName(Int_t ipar, const char *name)
 {
-   // Set name of parameter number ipar
-
    if (ipar <0 || ipar >= fNpar) return;
    fNames[ipar] = name;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set up to 11 parameter names.
+
 void TFormula::SetParNames(const char*name0,const char*name1,const char*name2,const char*name3,const char*name4,
                      const char*name5,const char*name6,const char*name7,const char*name8,const char*name9,const char*name10)
 {
-   // Set up to 11 parameter names.
-
    if (fNpar > 0) fNames[0] = name0;
    if (fNpar > 1) fNames[1] = name1;
    if (fNpar > 2) fNames[2] = name2;
@@ -3440,11 +3443,11 @@ void TFormula::SetParNames(const char*name0,const char*name1,const char*name2,co
    if (fNpar >10) fNames[10]= name10;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object.
+
 void TFormula::Streamer(TBuffer &b, const TClass *onfile_class)
 {
-   // Stream a class object.
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
@@ -3459,11 +3462,11 @@ void TFormula::Streamer(TBuffer &b, const TClass *onfile_class)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object.
+
 void TFormula::Streamer(TBuffer &b)
 {
-   // Stream a class object.
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
@@ -3478,11 +3481,11 @@ void TFormula::Streamer(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// specialized streamer function being able to read old TF1 versions as TF1Old in memory
+
 void TFormula::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TClass *onfile_class)
 {
-   // specialized streamer function being able to read old TF1 versions as TF1Old in memory
-
          
    //printf("Reading TFormula - version %d \n",v);
    if (v > 3 ) { 
@@ -3707,16 +3710,16 @@ void TFormula::Convert(UInt_t /* fromVersion */)
 /////////////////////////////////////////////////////////////////////////////////
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  TOper offset  - helper class for TFormula*
+///                     specify type of operand
+///                     fTypeX   = kVariable
+///                              = kParameter
+///                              = kConstant
+///                     fOffestX = offset in corresponding array
+
 TOperOffset::TOperOffset()
 {
-   //  TOper offset  - helper class for TFormula*
-   //                     specify type of operand
-   //                     fTypeX   = kVariable
-   //                              = kParameter
-   //                              = kConstant
-   //                     fOffestX = offset in corresponding array
-
    fType0=0;
    fType1=0;
    fType2=0;
@@ -3730,12 +3733,12 @@ TOperOffset::TOperOffset()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  MakePrimitive
+///  find TFormulaPrimitive replacement for some operands
+
 void  TFormula::MakePrimitive(const char *expr, Int_t pos)
 {
-   //  MakePrimitive
-   //  find TFormulaPrimitive replacement for some operands
-
    TString cbase(expr);
    cbase.ReplaceAll("Double_t ","");
    int paran = cbase.First("(");
@@ -3777,35 +3780,35 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MI include
+///
+/// Optimize formula
+/// 1.) Minimize the number of operands
+///     a.)  several operanands are glued togther
+///     b.)  some primitive functions glued together - exemp. (x+y) => PlusXY(x,y)
+///     c.)  maximize number of standard calls minimizing number of jumps in Eval cases
+///     d.)  variables, parameters and constants are mapped - using fOperOfssets0
+///          Eval procedure use direct acces to data (only one corresponding case statement in eval procedure)
+///
+///          pdata[operand={Var,Par,Const}][offset]
+///          pdata[fOperOffsets0[i]][fOperOffset1[i+1]]
+/// 2.) The fastest evaluation function is chosen at the end
+///     a.) fOptimal := pointer to the fastest function for given evaluation string
+///             switch(GetActionOptimized(0)){
+///               case kData : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive0; break;}
+///               case kUnary : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive1; break;}
+///               case kBinary : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive2; break;}
+///               case kThree : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive3; break;}
+///               case kFDM : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive4; break;}
+///             }
+///     b.) ex. fOptimal = ::EvalPrimitive0 - if it return only variable, constant or parameter
+///                      = ::EvalParameter1 - if only one unary operation
+///                      = ::EvalPrimitive2 - if only one binary operation
+///                        .......
+
 void TFormula::Optimize()
 {
-   // MI include
-   //
-   // Optimize formula
-   // 1.) Minimize the number of operands
-   //     a.)  several operanands are glued togther
-   //     b.)  some primitive functions glued together - exemp. (x+y) => PlusXY(x,y)
-   //     c.)  maximize number of standard calls minimizing number of jumps in Eval cases
-   //     d.)  variables, parameters and constants are mapped - using fOperOfssets0
-   //          Eval procedure use direct acces to data (only one corresponding case statement in eval procedure)
-   //
-   //          pdata[operand={Var,Par,Const}][offset]
-   //          pdata[fOperOffsets0[i]][fOperOffset1[i+1]]
-   // 2.) The fastest evaluation function is chosen at the end
-   //     a.) fOptimal := pointer to the fastest function for given evaluation string
-   //             switch(GetActionOptimized(0)){
-   //               case kData : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive0; break;}
-   //               case kUnary : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive1; break;}
-   //               case kBinary : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive2; break;}
-   //               case kThree : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive3; break;}
-   //               case kFDM : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive4; break;}
-   //             }
-   //     b.) ex. fOptimal = ::EvalPrimitive0 - if it return only variable, constant or parameter
-   //                      = ::EvalParameter1 - if only one unary operation
-   //                      = ::EvalPrimitive2 - if only one binary operation
-   //                        .......
-
    //
    // Initialize data members
    //
@@ -4098,11 +4101,11 @@ void TFormula::Optimize()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate primitive formula
+
 Double_t TFormula::EvalPrimitive(const Double_t *x, const Double_t *params)
 {
-   // Evaluate primitive formula
-
    const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
    Double_t result = pdata[fOperOffset->fType0][fOperOffset->fOffset0];
    switch((fOperOptimized[0] >> kTFOperShift)) {
@@ -4120,68 +4123,69 @@ Double_t TFormula::EvalPrimitive(const Double_t *x, const Double_t *params)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate primitive formula
+
 Double_t TFormula::EvalPrimitive0(const Double_t *x, const Double_t *params)
 {
-   // Evaluate primitive formula
-
    const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
    return  pdata[fOperOffset->fType0][fOperOffset->fOffset0];
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate primitive formula
+
 Double_t TFormula::EvalPrimitive1(const Double_t *x, const Double_t *params)
 {
-   // Evaluate primitive formula
-
    const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
    return (fPredefined[0]->fFunc10)(pdata[fOperOffset->fType0][fOperOffset->fOffset0]);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate primitive formula
+
 Double_t TFormula::EvalPrimitive2(const Double_t *x, const Double_t *params)
 {
-   // Evaluate primitive formula
-
    const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
    return (fPredefined[0]->fFunc110)(pdata[fOperOffset->fType0][fOperOffset->fOffset0],
       pdata[fOperOffset->fType1][fOperOffset->fOffset1]);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate primitive formula
+
 Double_t TFormula::EvalPrimitive3(const Double_t *x, const Double_t *params)
 {
-   // Evaluate primitive formula
-
    const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
    return (fPredefined[0]->fFunc1110)(pdata[fOperOffset->fType0][fOperOffset->fOffset0], pdata[fOperOffset->fType1][fOperOffset->fOffset1],
       pdata[fOperOffset->fType2][fOperOffset->fOffset2]);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate primitive formula
+
 Double_t TFormula::EvalPrimitive4(const Double_t *x, const Double_t *params)
 {
-   // Evaluate primitive formula
-
    const Double_t *par = (params!=0)?params:fParams;
    return (fPredefined[0]->fFuncG)((Double_t*)&x[fOperOffset->fType0],
       (Double_t*)&par[fOperOffset->fOffset0]);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate this formula.
+///
+///   The current value of variables x,y,z,t is passed through the pointer x.
+///   The parameters used will be the ones in the array params if params is given
+///    otherwise parameters will be taken from the stored data members fParams
+///Begin_Html
+
 Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
 {
-   // Evaluate this formula.
-   //
-   //   The current value of variables x,y,z,t is passed through the pointer x.
-   //   The parameters used will be the ones in the array params if params is given
-   //    otherwise parameters will be taken from the stored data members fParams
-   //Begin_Html
    /*
    <img src="gif/eval.gif">
    */
@@ -4467,11 +4471,11 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pre compile function
+
 Int_t TFormula::PreCompile()
 {
-   // Pre compile function
-
    TString str = fTitle;
    if (str.Length()<3) return 1;
    if (str[str.Length()-1]!='+'&&str[str.Length()-2]!='+') return 1;
@@ -4504,32 +4508,32 @@ Int_t TFormula::PreCompile()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function to set the maximum value of 3 parameters
+///  -maxop    : maximum number of operations
+///  -maxpar   : maximum number of parameters
+///  -maxconst : maximum number of constants
+/// None of these parameters cannot be less than 10 (default is 1000)
+/// call this function to increase one or all maxima when processing
+/// very complex formula, eg TFormula::SetMaxima(100000,1000,1000000);
+/// If you process many functions with a small number of operations/parameters
+/// you may gain some memory and performance by decreasing these values.
+
 void TFormula::SetMaxima(Int_t maxop, Int_t maxpar, Int_t maxconst)
 {
-   // static function to set the maximum value of 3 parameters
-   //  -maxop    : maximum number of operations
-   //  -maxpar   : maximum number of parameters
-   //  -maxconst : maximum number of constants
-   // None of these parameters cannot be less than 10 (default is 1000)
-   // call this function to increase one or all maxima when processing
-   // very complex formula, eg TFormula::SetMaxima(100000,1000,1000000);
-   // If you process many functions with a small number of operations/parameters
-   // you may gain some memory and performance by decreasing these values.
-
    gMAXOP    = TMath::Max(10,maxop);
    gMAXPAR   = TMath::Max(10,maxpar);
    gMAXCONST = TMath::Max(10,maxconst);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function to get the maximum value of 3 parameters
+///  -maxop    : maximum number of operations
+///  -maxpar   : maximum number of parameters
+///  -maxconst : maximum number of constants
+
 void TFormula::GetMaxima(Int_t& maxop, Int_t& maxpar, Int_t& maxconst)
 {
-   // static function to get the maximum value of 3 parameters
-   //  -maxop    : maximum number of operations
-   //  -maxpar   : maximum number of parameters
-   //  -maxconst : maximum number of constants
-
    maxop = gMAXOP;
    maxpar = gMAXPAR;
    maxconst = gMAXCONST;

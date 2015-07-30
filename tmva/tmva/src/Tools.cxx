@@ -102,35 +102,39 @@ void         TMVA::Tools::DestroyInstance() {
 #endif
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::Tools::Tools() :
    fRegexp("$&|!%^&()'<>?= "),
    fLogger(new MsgLogger("Tools")),
    fXMLEngine(new TXMLEngine())
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::Tools::~Tools()
 {
-   // destructor
    delete fLogger;
    delete fXMLEngine;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normalise to output range: [-1, 1]
+
 Double_t TMVA::Tools::NormVariable( Double_t x, Double_t xmin, Double_t xmax )
 {
-   // normalise to output range: [-1, 1]
    return 2*(x - xmin)/(xmax - xmin) - 1.0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute "separation" defined as
+/// <s2> = (1/2) Int_-oo..+oo { (S(x) - B(x))^2/(S(x) + B(x)) dx }
+
 Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
 {
-   // compute "separation" defined as
-   // <s2> = (1/2) Int_-oo..+oo { (S(x) - B(x))^2/(S(x) + B(x)) dx }
    Double_t separation = 0;
 
    // sanity checks
@@ -176,12 +180,12 @@ Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
    return separation;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute "separation" defined as
+/// <s2> = (1/2) Int_-oo..+oo { (S(x) - B(x))2/(S(x) + B(x)) dx }
+
 Double_t TMVA::Tools::GetSeparation( const PDF& pdfS, const PDF& pdfB ) const
 {
-   // compute "separation" defined as
-   // <s2> = (1/2) Int_-oo..+oo { (S(x) - B(x))2/(S(x) + B(x)) dx }
-
    Double_t xmin = pdfS.GetXmin();
    Double_t xmax = pdfS.GetXmax();
    // sanity check
@@ -205,14 +209,15 @@ Double_t TMVA::Tools::GetSeparation( const PDF& pdfS, const PDF& pdfB ) const
    return separation;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// sanity check
+
 void TMVA::Tools::ComputeStat( const std::vector<TMVA::Event*>& events, std::vector<Float_t>* valVec,
                                Double_t& meanS, Double_t& meanB,
                                Double_t& rmsS,  Double_t& rmsB,
                                Double_t& xmin,  Double_t& xmax,
                                Int_t signalClass, Bool_t  norm )
 {
-   // sanity check
    if (0 == valVec)
       Log() << kFATAL << "<Tools::ComputeStat> value vector is zero pointer" << Endl;
 
@@ -271,12 +276,13 @@ void TMVA::Tools::ComputeStat( const std::vector<TMVA::Event*>& events, std::vec
    delete [] wgtVecB;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// square-root of symmetric matrix
+/// of course the resulting sqrtMat is also symmetric, but it's easier to
+/// treat it as a general matrix
+
 TMatrixD* TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat )
 {
-   // square-root of symmetric matrix
-   // of course the resulting sqrtMat is also symmetric, but it's easier to
-   // treat it as a general matrix
    Int_t n = symMat->GetNrows();
 
    // compute eigenvectors
@@ -325,10 +331,11 @@ TMatrixD* TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat )
    return sqrtMat;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// turns covariance into correlation matrix
+
 const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
 {
-   // turns covariance into correlation matrix
    if (covMat == 0) return 0;
 
    // sanity check
@@ -365,13 +372,13 @@ const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
    return corrMat;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// projects variable from tree into normalised histogram
+
 TH1* TMVA::Tools::projNormTH1F( TTree* theTree, const TString& theVarName,
                                 const TString& name, Int_t nbins,
                                 Double_t xmin, Double_t xmax, const TString& cut )
 {
-   // projects variable from tree into normalised histogram
-
    // needed because of ROOT bug (feature) that excludes events that have value == xmax
    xmax += 0.00001;
 
@@ -382,10 +389,11 @@ TH1* TMVA::Tools::projNormTH1F( TTree* theTree, const TString& theVarName,
    return hist;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normalises histogram
+
 Double_t TMVA::Tools::NormHist( TH1* theHist, Double_t norm )
 {
-   // normalises histogram
    if (!theHist) return 0;
 
    if (theHist->GetSumw2N() == 0) theHist->Sumw2();
@@ -399,10 +407,11 @@ Double_t TMVA::Tools::NormHist( TH1* theHist, Double_t norm )
    return 1.0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse the string and cut into labels separated by ":"
+
 TList* TMVA::Tools::ParseFormatLine( TString formatString, const char* sep )
 {
-   // Parse the string and cut into labels separated by ":"
    TList*   labelList = new TList();
    labelList->SetOwner();
    while (formatString.First(sep)==0) formatString.Remove(0,1); // remove initial separators
@@ -424,12 +433,13 @@ TList* TMVA::Tools::ParseFormatLine( TString formatString, const char* sep )
    return labelList;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// parse option string for ANN methods
+/// default settings (should be defined in theOption string)
+
 vector<Int_t>* TMVA::Tools::ParseANNOptionString( TString theOptions, Int_t nvar,
                                                   vector<Int_t>* nodes )
 {
-   // parse option string for ANN methods
-   // default settings (should be defined in theOption string)
    TList* list  = TMVA::Tools::ParseFormatLine( theOptions, ":" );
 
    // format and syntax of option string: "3000:N:N+2:N-3:6"
@@ -499,10 +509,11 @@ Bool_t TMVA::Tools::CheckSplines( const TH1* theHist, const TSpline* theSpline )
    return retval;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes difference between two vectors
+
 std::vector<Double_t> TMVA::Tools::MVADiff( std::vector<Double_t>& a, std::vector<Double_t>& b )
 {
-   // computes difference between two vectors
    if (a.size() != b.size()) {
       throw;
    }
@@ -511,26 +522,29 @@ std::vector<Double_t> TMVA::Tools::MVADiff( std::vector<Double_t>& a, std::vecto
    return result;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// scales double vector
+
 void TMVA::Tools::Scale( std::vector<Double_t>& v, Double_t f )
 {
-   // scales double vector
    for (UInt_t i=0; i<v.size();i++) v[i]*=f;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// scales float vector
+
 void TMVA::Tools::Scale( std::vector<Float_t>& v, Float_t f )
 {
-   // scales float vector
    for (UInt_t i=0; i<v.size();i++) v[i]*=f;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// sort 2D vector (AND in parallel a TString vector) in such a way
+/// that the "first vector is sorted" and the other vectors are reshuffled
+/// in the same way as necessary to have the first vector sorted.
+/// I.e. the correlation between the elements is kept.
+
 void TMVA::Tools::UsefulSortAscending( std::vector<vector<Double_t> >& v, std::vector<TString>* vs ){
-   // sort 2D vector (AND in parallel a TString vector) in such a way
-   // that the "first vector is sorted" and the other vectors are reshuffled
-   // in the same way as necessary to have the first vector sorted.
-   // I.e. the correlation between the elements is kept.
    UInt_t nArrays=v.size();
    Double_t temp;
    if (nArrays > 0) {
@@ -550,13 +564,14 @@ void TMVA::Tools::UsefulSortAscending( std::vector<vector<Double_t> >& v, std::v
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// sort 2D vector (AND in parallel a TString vector) in such a way
+/// that the "first vector is sorted" and the other vectors are reshuffled
+/// in the same way as necessary to have the first vector sorted.
+/// I.e. the correlation between the elements is kept.
+
 void TMVA::Tools::UsefulSortDescending( std::vector<std::vector<Double_t> >& v, std::vector<TString>* vs )
 {
-   // sort 2D vector (AND in parallel a TString vector) in such a way
-   // that the "first vector is sorted" and the other vectors are reshuffled
-   // in the same way as necessary to have the first vector sorted.
-   // I.e. the correlation between the elements is kept.
    UInt_t nArrays=v.size();
    Double_t temp;
    if (nArrays > 0) {
@@ -576,12 +591,12 @@ void TMVA::Tools::UsefulSortDescending( std::vector<std::vector<Double_t> >& v, 
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mutual Information method for non-linear correlations estimates in 2D histogram
+/// Author: Moritz Backes, Geneva (2009)
+
 Double_t TMVA::Tools::GetMutualInformation( const TH2F& h_ )
 {
-   // Mutual Information method for non-linear correlations estimates in 2D histogram
-   // Author: Moritz Backes, Geneva (2009)
-
    Double_t hi = h_.Integral();
    if (hi == 0) return -1;
 
@@ -607,12 +622,12 @@ Double_t TMVA::Tools::GetMutualInformation( const TH2F& h_ )
    return mutualInfo;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute Correlation Ratio of 2D histogram to estimate functional dependency between two variables
+/// Author: Moritz Backes, Geneva (2009)
+
 Double_t TMVA::Tools::GetCorrelationRatio( const TH2F& h_ )
 {
-   // Compute Correlation Ratio of 2D histogram to estimate functional dependency between two variables
-   // Author: Moritz Backes, Geneva (2009)
-
    Double_t hi = h_.Integral();
    if (hi == 0.) return -1;
 
@@ -630,11 +645,11 @@ Double_t TMVA::Tools::GetCorrelationRatio( const TH2F& h_ )
    return corrRatio;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the mean in Y for a given bin X of a 2D histogram
+
 Double_t TMVA::Tools::GetYMean_binX( const TH2& h, Int_t bin_x )
 {
-   // Compute the mean in Y for a given bin X of a 2D histogram
-
    if (h.Integral(bin_x,bin_x,1,h.GetNbinsY()) == 0.) {return 0;}
    Double_t y_bin_mean = 0.;
    TH1* py = h.ProjectionY();
@@ -645,11 +660,11 @@ Double_t TMVA::Tools::GetYMean_binX( const TH2& h, Int_t bin_x )
    return y_bin_mean;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transpose quadratic histogram
+
 TH2F* TMVA::Tools::TransposeHist( const TH2F& h )
 {
-   // Transpose quadratic histogram
-
    // sanity check
    if (h.GetNbinsX() != h.GetNbinsY()) {
       Log() << kFATAL << "<TransposeHist> cannot transpose non-quadratic histogram" << Endl;
@@ -679,10 +694,11 @@ TH2F* TMVA::Tools::TransposeHist( const TH2F& h )
    return transposedHisto; // ownership returned
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check for "silence" option in configuration option string
+
 Bool_t TMVA::Tools::CheckForSilentOption( const TString& cs ) const
 {
-   // check for "silence" option in configuration option string
    Bool_t isSilent = kFALSE;
 
    TString s( cs );
@@ -695,10 +711,11 @@ Bool_t TMVA::Tools::CheckForSilentOption( const TString& cs ) const
    return isSilent;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check if verbosity "V" set in option
+
 Bool_t TMVA::Tools::CheckForVerboseOption( const TString& cs ) const
 {
-   // check if verbosity "V" set in option
    Bool_t isVerbose = kFALSE;
 
    TString s( cs );
@@ -712,30 +729,33 @@ Bool_t TMVA::Tools::CheckForVerboseOption( const TString& cs ) const
    return isVerbose;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// sort vector
+
 void TMVA::Tools::UsefulSortDescending( std::vector<Double_t>& v )
 {
-   // sort vector
    vector< vector<Double_t> > vtemp;
    vtemp.push_back(v);
    UsefulSortDescending(vtemp);
    v = vtemp[0];
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// sort vector
+
 void TMVA::Tools::UsefulSortAscending( std::vector<Double_t>& v )
 {
-   // sort vector
    vector<vector<Double_t> > vtemp;
    vtemp.push_back(v);
    UsefulSortAscending(vtemp);
    v = vtemp[0];
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// find index of maximum entry in vector
+
 Int_t TMVA::Tools::GetIndexMaxElement( std::vector<Double_t>& v )
 {
-   // find index of maximum entry in vector
    if (v.empty()) return -1;
 
    Int_t pos=0; Double_t mx=v[0];
@@ -748,10 +768,11 @@ Int_t TMVA::Tools::GetIndexMaxElement( std::vector<Double_t>& v )
    return pos;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// find index of minimum entry in vector
+
 Int_t TMVA::Tools::GetIndexMinElement( std::vector<Double_t>& v )
 {
-   // find index of minimum entry in vector
    if (v.empty()) return -1;
 
    Int_t pos=0; Double_t mn=v[0];
@@ -765,12 +786,12 @@ Int_t TMVA::Tools::GetIndexMinElement( std::vector<Double_t>& v )
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check if regular expression
+/// helper function to search for "$!%^&()'<>?= " in a string
+
 Bool_t TMVA::Tools::ContainsRegularExpression( const TString& s )
 {
-   // check if regular expression
-   // helper function to search for "$!%^&()'<>?= " in a string
-
    Bool_t  regular = kFALSE;
    for (Int_t i = 0; i < Tools::fRegexp.Length(); i++)
       if (s.Contains( Tools::fRegexp[i] )) { regular = kTRUE; break; }
@@ -778,13 +799,13 @@ Bool_t TMVA::Tools::ContainsRegularExpression( const TString& s )
    return regular;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// replace regular expressions
+/// helper function to remove all occurences "$!%^&()'<>?= " from a string
+/// and replace all ::,$,*,/,+,- with _M_,_S_,_T_,_D_,_P_,_M_ respectively
+
 TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, const TString& r )
 {
-   // replace regular expressions
-   // helper function to remove all occurences "$!%^&()'<>?= " from a string
-   // and replace all ::,$,*,/,+,- with _M_,_S_,_T_,_D_,_P_,_M_ respectively
-
    TString snew = s;
    for (Int_t i = 0; i < Tools::fRegexp.Length(); i++)
       snew.ReplaceAll( Tools::fRegexp[i], r );
@@ -810,10 +831,11 @@ TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, const TString&
    return snew;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// human readable color strings
+
 const TString& TMVA::Tools::Color( const TString& c )
 {
-   // human readable color strings
    static const TString gClr_none         = "" ;
    static const TString gClr_white        = "\033[1;37m";  // white
    static const TString gClr_black        = "\033[30m";    // black
@@ -868,13 +890,13 @@ const TString& TMVA::Tools::Color( const TString& c )
    return gClr_none;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// formatted output of simple table
+
 void TMVA::Tools::FormattedOutput( const std::vector<Double_t>& values, const std::vector<TString>& V,
                                    const TString titleVars, const TString titleValues, MsgLogger& logger,
                                    TString format )
 {
-   // formatted output of simple table
-
    // sanity check
    UInt_t nvar = V.size();
    if ((UInt_t)values.size() != nvar) {
@@ -918,11 +940,11 @@ void TMVA::Tools::FormattedOutput( const std::vector<Double_t>& values, const st
    logger << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// formatted output of matrix (with labels)
+
 void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>& V, MsgLogger& logger )
 {
-   // formatted output of matrix (with labels)
-
    // sanity check: matrix must be quadratic
    UInt_t nvar = V.size();
    if ((UInt_t)M.GetNcols() != nvar || (UInt_t)M.GetNrows() != nvar) {
@@ -966,13 +988,13 @@ void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>
    logger << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// formatted output of matrix (with labels)
+
 void TMVA::Tools::FormattedOutput( const TMatrixD& M,
                                    const std::vector<TString>& vert, const std::vector<TString>& horiz,
                                    MsgLogger& logger )
 {
-   // formatted output of matrix (with labels)
-
    // sanity check: matrix must be quadratic
    UInt_t nvvar = vert.size();
    UInt_t nhvar = horiz.size();
@@ -1021,26 +1043,29 @@ void TMVA::Tools::FormattedOutput( const TMatrixD& M,
    logger << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// histogramming utility
+
 TString TMVA::Tools::GetXTitleWithUnit( const TString& title, const TString& unit )
 {
-   // histogramming utility
    return ( unit == "" ? title : ( title + "  [" + unit + "]" ) );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// histogramming utility
+
 TString TMVA::Tools::GetYTitleWithUnit( const TH1& h, const TString& unit, Bool_t normalised )
 {
-   // histogramming utility
    TString retval = ( normalised ? "(1/N) " : "" );
    retval += Form( "dN_{ }/^{ }%.3g %s", h.GetXaxis()->GetBinWidth(1), unit.Data() );
    return retval;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// writes a float value with the available precision to a stream
+
 void TMVA::Tools::WriteFloatArbitraryPrecision( Float_t val, ostream& os )
 {
-   // writes a float value with the available precision to a stream
    os << val << " :: ";
    void * c = &val;
    for (int i=0; i<4; i++) {
@@ -1051,10 +1076,11 @@ void TMVA::Tools::WriteFloatArbitraryPrecision( Float_t val, ostream& os )
    os << ":: ";
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reads a float value with the available precision from a stream
+
 void TMVA::Tools::ReadFloatArbitraryPrecision( Float_t& val, istream& is )
 {
-   // reads a float value with the available precision from a stream
    Float_t a = 0;
    is >> a;
    TString dn;
@@ -1072,17 +1098,19 @@ void TMVA::Tools::ReadFloatArbitraryPrecision( Float_t& val, istream& is )
 
 // XML file reading/writing helper functions
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add attribute from xml
+
 Bool_t TMVA::Tools::HasAttr( void* node, const char* attrname )
 {
-   // add attribute from xml
    return xmlengine().HasAttr(node, attrname);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add attribute from xml
+
 void TMVA::Tools::ReadAttr( void* node, const char* attrname, TString& value )
 {
-   // add attribute from xml
    if (!HasAttr(node, attrname)) {
       const char * nodename = xmlengine().GetNodeName(node);
       Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" << Endl;
@@ -1091,39 +1119,44 @@ void TMVA::Tools::ReadAttr( void* node, const char* attrname, TString& value )
    value = TString(val);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add attribute to node
+
 void TMVA::Tools::AddAttr( void* node, const char* attrname, const char* value )
 {
-   // add attribute to node
    if( node == 0 ) return;
    gTools().xmlengine().NewAttr(node, 0, attrname, value );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add child node
+
 void* TMVA::Tools::AddChild( void* parent, const char* childname, const char* content, bool isRootNode )
 {
-   // add child node
    if( !isRootNode && parent == 0 ) return 0;
    return gTools().xmlengine().NewChild(parent, 0, childname, content);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMVA::Tools::AddComment( void* node, const char* comment ) {
    if( node == 0 ) return kFALSE;
    return gTools().xmlengine().AddComment(node, comment);
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get parent node
+
 void* TMVA::Tools::GetParent( void* child)
 {
-   // get parent node
    void* par = xmlengine().GetParent(child);
 
    return par;
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get child node
+
 void* TMVA::Tools::GetChild( void* parent, const char* childname )
 {
-   // get child node
    void* ch = xmlengine().GetChild(parent);
    if (childname != 0) {
       while (ch!=0 && strcmp(xmlengine().GetNodeName(ch),childname) != 0) ch = xmlengine().GetNext(ch);
@@ -1131,10 +1164,11 @@ void* TMVA::Tools::GetChild( void* parent, const char* childname )
    return ch;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// XML helpers
+
 void* TMVA::Tools::GetNextChild( void* prevchild, const char* childname )
 {
-   // XML helpers
    void* ch = xmlengine().GetNext(prevchild);
    if (childname != 0) {
       while (ch!=0 && strcmp(xmlengine().GetNodeName(ch),childname)!=0) ch = xmlengine().GetNext(ch);
@@ -1142,32 +1176,36 @@ void* TMVA::Tools::GetNextChild( void* prevchild, const char* childname )
    return ch;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// XML helpers
+
 const char* TMVA::Tools::GetContent( void* node )
 {
-   // XML helpers
    return xmlengine().GetNodeContent(node);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// XML helpers
+
 const char* TMVA::Tools::GetName( void* node )
 {
-   // XML helpers
    return xmlengine().GetNodeName(node);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// XML helpers
+
 Bool_t TMVA::Tools::AddRawLine( void* node, const char * raw )
 {
-   // XML helpers
    return xmlengine().AddRawLine( node, raw );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// splits the option string at 'separator' and fills the list
+/// 'splitV' with the primitive strings
+
 std::vector<TString> TMVA::Tools::SplitString(const TString& theOpt, const char separator ) const
 {
-   // splits the option string at 'separator' and fills the list
-   // 'splitV' with the primitive strings
    std::vector<TString> splitV;
    TString splitOpt(theOpt);
    splitOpt.ReplaceAll("\n"," ");
@@ -1187,28 +1225,31 @@ std::vector<TString> TMVA::Tools::SplitString(const TString& theOpt, const char 
    return splitV;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// string tools
+
 TString TMVA::Tools::StringFromInt( Long_t i )
 {
-   // string tools
    std::stringstream s;
    s << i;
    return TString(s.str().c_str());
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// string tools
+
 TString TMVA::Tools::StringFromDouble( Double_t d )
 {
-   // string tools
    std::stringstream s;
    s << Form( "%5.8e", d );
    return TString(s.str().c_str());
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// XML helpers
+
 void TMVA::Tools::WriteTMatrixDToXML( void* node, const char* name, TMatrixD* mat )
 {
-   // XML helpers
    void* matnode = xmlengine().NewChild(node, 0, name);
    xmlengine().NewAttr(matnode,0,"Rows", StringFromInt(mat->GetNrows()) );
    xmlengine().NewAttr(matnode,0,"Columns", StringFromInt(mat->GetNcols()) );
@@ -1221,14 +1262,16 @@ void TMVA::Tools::WriteTMatrixDToXML( void* node, const char* name, TMatrixD* ma
    xmlengine().AddRawLine( matnode, s.str().c_str() );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::Tools::WriteTVectorDToXML( void* node, const char* name, TVectorD* vec )
 {
    TMatrixD mat(1,vec->GetNoElements(),&((*vec)[0]));
    WriteTMatrixDToXML( node, name, &mat );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::Tools::ReadTVectorDFromXML( void* node, const char* name, TVectorD* vec )
 {
    TMatrixD mat(1,vec->GetNoElements(),&((*vec)[0]));
@@ -1236,7 +1279,8 @@ void TMVA::Tools::ReadTVectorDFromXML( void* node, const char* name, TVectorD* v
    for (int i=0;i<vec->GetNoElements();++i) (*vec)[i] = mat[0][i];
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::Tools::ReadTMatrixDFromXML( void* node, const char* name, TMatrixD* mat )
 {
    if (strcmp(xmlengine().GetNodeName(node),name)!=0){
@@ -1260,10 +1304,11 @@ void TMVA::Tools::ReadTMatrixDFromXML( void* node, const char* name, TMatrixD* m
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// direct output, eg, when starting ROOT session -> no use of Logger here
+
 void TMVA::Tools::TMVAWelcomeMessage()
 {
-   // direct output, eg, when starting ROOT session -> no use of Logger here
    std::cout << std::endl;
    std::cout << Color("bold") << "TMVA -- Toolkit for Multivariate Data Analysis" << Color("reset") << std::endl;
    std::cout << "        " << "Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE << std::endl;
@@ -1273,18 +1318,20 @@ void TMVA::Tools::TMVAWelcomeMessage()
    std::cout << "        " << "License:       http://tmva.sf.net/LICENSE" << std::endl << std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prints the TMVA release number and date
+
 void TMVA::Tools::TMVAVersionMessage( MsgLogger& logger )
 {
-   // prints the TMVA release number and date
    logger << "___________TMVA Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE
           << "" << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prints the ROOT release number and date
+
 void TMVA::Tools::ROOTVersionMessage( MsgLogger& logger )
 {
-   // prints the ROOT release number and date
    static const char * const months[] = { "Jan","Feb","Mar","Apr","May",
                                    "Jun","Jul","Aug","Sep","Oct",
                                    "Nov","Dec" };
@@ -1297,12 +1344,12 @@ void TMVA::Tools::ROOTVersionMessage( MsgLogger& logger )
    logger << "You are running ROOT Version: " << gROOT->GetVersion() << ", " << versionDate << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// various kinds of welcome messages
+/// ASCII text generated by this site: http://www.network-science.de/ascii/
+
 void TMVA::Tools::TMVAWelcomeMessage( MsgLogger& logger, EWelcomeMessage msgType )
 {
-   // various kinds of welcome messages
-   // ASCII text generated by this site: http://www.network-science.de/ascii/
-
    switch (msgType) {
 
    case kStandardWelcomeMsg:
@@ -1395,11 +1442,11 @@ void TMVA::Tools::TMVAWelcomeMessage( MsgLogger& logger, EWelcomeMessage msgType
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// kinds of TMVA citation
+
 void TMVA::Tools::TMVACitation( MsgLogger& logger, ECitation citType )
 {
-   // kinds of TMVA citation
-
    switch (citType) {
 
    case kPlainText:
@@ -1442,13 +1489,15 @@ void TMVA::Tools::TMVACitation( MsgLogger& logger, ECitation citType )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMVA::Tools::HistoHasEquidistantBins(const TH1& h)
 {
    return !(h.GetXaxis()->GetXbins()->fN);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::vector<TMatrixDSym*>*
 TMVA::Tools::CalcCovarianceMatrices( const std::vector<const Event*>& events, Int_t maxCls, VariableTransformBase* transformBase )
 {
@@ -1465,12 +1514,12 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<const Event*>& events, In
    return returnValue;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute covariance matrices
+
 std::vector<TMatrixDSym*>*
 TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls, VariableTransformBase* transformBase )
 {
-   // compute covariance matrices
-
    if (events.empty()) {
       Log() << kWARNING << " Asked to calculate a covariance matrix for an empty event vectors.. sorry cannot do that -> return NULL"<<Endl;
       return 0;

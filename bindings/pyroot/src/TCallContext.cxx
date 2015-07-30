@@ -13,11 +13,12 @@ namespace PyROOT {
 } // namespace PyROOT
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the global memory policy, which affects object ownership when objects
+/// are passed as function arguments.
+
 Bool_t PyROOT::TCallContext::SetMemoryPolicy( ECallFlags e )
 {
-// Set the global memory policy, which affects object ownership when objects
-// are passed as function arguments.
    if ( kUseHeuristics <= e && e <= kUseStrict ) {
       sMemoryPolicy = e;
       return kTRUE;
@@ -25,11 +26,12 @@ Bool_t PyROOT::TCallContext::SetMemoryPolicy( ECallFlags e )
    return kFALSE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the global signal policy, which determines whether a jmp address
+/// should be saved to return to after a C++ segfault.
+
 Bool_t PyROOT::TCallContext::SetSignalPolicy( ECallFlags e )
 {
-// Set the global signal policy, which determines whether a jmp address
-// should be saved to return to after a C++ segfault.
    if ( kFast <= e && e <= kSafe ) {
       sSignalPolicy = e;
       return kTRUE;

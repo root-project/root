@@ -244,21 +244,6 @@ public: \
    static int ImplFileLine(); \
    static const char *ImplFileName();
 
-#define _ClassDefInterp_(name,id,virtual_keyword, overrd) \
-private: \
-public: \
-   static TClass *Class() { static TClass* sIsA = 0; if (!sIsA) sIsA = TClass::GetClass(#name); return sIsA; } \
-   static const char *Class_Name() { return #name; } \
-   static Version_t Class_Version() { return id; } \
-   static TClass *Dictionary() { return 0; } \
-   virtual_keyword TClass *IsA() const overrd { return name::Class(); } \
-   virtual_keyword void ShowMembers(TMemberInspector&insp) const overrd { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
-   virtual_keyword void Streamer(TBuffer&) overrd { Error ("Streamer", "Cannot stream interpreted class."); } \
-   void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
-   static const char *DeclFileName() { return __FILE__; } \
-   static int ImplFileLine() { return 0; } \
-   static const char *ImplFileName() { return __FILE__; }
-
 #define ClassDef(name,id) \
    _ClassDef_(name,id,virtual,)   \
    static int DeclFileLine() { return __LINE__; }

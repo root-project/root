@@ -46,30 +46,30 @@
 TRefTable *TRefTable::fgRefTable = 0;
 
 ClassImp(TRefTable)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for I/O.
+
 TRefTable::TRefTable() : fNumPIDs(0), fAllocSize(0), fN(0), fParentIDs(0), fParentID(-1),
                          fDefaultSize(10), fUID(0), fUIDContext(0), fSize(0), fParents(0), fOwner(0)
 {
-   // Default constructor for I/O.
-
    fgRefTable   = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TRefTable with initial size.
+
 TRefTable::TRefTable(TObject *owner, Int_t size) :
      fNumPIDs(0), fAllocSize(0), fN(0), fParentIDs(0), fParentID(-1),
      fDefaultSize(size<10 ? 10 : size), fUID(0), fUIDContext(0), fSize(0), fParents(new TObjArray(1)), fOwner(owner)
 {
-   // Create a TRefTable with initial size.
-
    fgRefTable   = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TRefTable::~TRefTable()
 {
-   // Destructor.
-
    delete [] fAllocSize;
    delete [] fN;
    for (Int_t pid = 0; pid < fNumPIDs; ++pid) {
@@ -80,13 +80,13 @@ TRefTable::~TRefTable()
    if (fgRefTable == this) fgRefTable = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new uid to the table.
+/// we add a new pair (uid,fparent) to the map
+/// This function is called by TObject::Streamer or TStreamerInfo::WriteBuffer
+
 Int_t TRefTable::Add(Int_t uid, TProcessID *context)
 {
-   // Add a new uid to the table.
-   // we add a new pair (uid,fparent) to the map
-   // This function is called by TObject::Streamer or TStreamerInfo::WriteBuffer
-
    if (!context)
       context = TProcessID::GetSessionProcessID();
    Int_t iid = GetInternalIdxForPID(context);
@@ -113,11 +113,11 @@ Int_t TRefTable::Add(Int_t uid, TProcessID *context)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the internal index for fProcessIDs, fAllocSize, etc given a PID.
+
 Int_t TRefTable::AddInternalIdxForPID(TProcessID *procid)
 {
-   // Add the internal index for fProcessIDs, fAllocSize, etc given a PID.
-
    if (!procid)
       procid = TProcessID::GetSessionProcessID();
    Int_t pid = procid->GetUniqueID();
@@ -139,11 +139,11 @@ Int_t TRefTable::AddInternalIdxForPID(TProcessID *procid)
    return iid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear all entries in the table.
+
 void TRefTable::Clear(Option_t * /*option*/ )
 {
-   // Clear all entries in the table.
-
    for (Int_t iid = 0; iid < fNumPIDs; ++iid) {
       memset(fParentIDs[iid], 0, sizeof(Int_t) * fN[iid]);
    }
@@ -151,21 +151,21 @@ void TRefTable::Clear(Option_t * /*option*/ )
    fParentID = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand fParentIDs to newsize for ProcessID pid.
+
 Int_t TRefTable::Expand(Int_t pid, Int_t newsize)
 {
-   // Expand fParentIDs to newsize for ProcessID pid.
-
    Int_t iid = GetInternalIdxForPID(pid);
    if (iid < 0) return -1;
    return ExpandForIID(iid, newsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand fParentIDs to newsize for internel ProcessID index iid.
+
 Int_t TRefTable::ExpandForIID(Int_t iid, Int_t newsize)
 {
-   // Expand fParentIDs to newsize for internel ProcessID index iid.
-
    if (newsize < 0)  return newsize;
    if (newsize != fAllocSize[iid]) {
       Int_t *temp = fParentIDs[iid];
@@ -187,11 +187,11 @@ Int_t TRefTable::ExpandForIID(Int_t iid, Int_t newsize)
    return newsize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand the arrays of managed PIDs
+
 void TRefTable::ExpandPIDs(Int_t numpids)
 {
-   // Expand the arrays of managed PIDs
-
    if (numpids <= fNumPIDs) return;
 
    // else add to internal tables
@@ -218,12 +218,12 @@ void TRefTable::ExpandPIDs(Int_t numpids)
           (fNumPIDs - oldNumPIDs) * sizeof(Int_t*));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill buffer b with the fN elements in fParentdIDs.
+/// This function is called by TBranchRef::FillLeaves.
+
 void TRefTable::FillBuffer(TBuffer & b)
 {
-   // Fill buffer b with the fN elements in fParentdIDs.
-   // This function is called by TBranchRef::FillLeaves.
-
    b << -fNumPIDs; // write out "-" to signal new TRefTable buffer format using PID table
    for (Int_t iid = 0; iid < fNumPIDs; ++iid) {
       b << fN[iid];
@@ -232,20 +232,22 @@ void TRefTable::FillBuffer(TBuffer & b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get fProcessGUIDs' index of the TProcessID with GUID guid
+
 Int_t TRefTable::FindPIDGUID(const char *guid) const
 {
-   // Get fProcessGUIDs' index of the TProcessID with GUID guid
    std::vector<std::string>::const_iterator posPID
       = std::find(fProcessGUIDs.begin(), fProcessGUIDs.end(), guid);
    if (posPID == fProcessGUIDs.end()) return -1;
    return posPID - fProcessGUIDs.begin();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return object corresponding to uid.
+
 TObject *TRefTable::GetParent(Int_t uid, TProcessID *context /* =0 */ ) const
 {
-   // Return object corresponding to uid.
    if (!fParents) return 0;
 
    Int_t iid = -1;
@@ -260,51 +262,51 @@ TObject *TRefTable::GetParent(Int_t uid, TProcessID *context /* =0 */ ) const
    return fParents->UncheckedAt(pnumber);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the index for fProcessIDs, fAllocSize, etc given a PID.
+/// Uses fMapPIDtoInternal and the pid's GUID / fProcessGUID
+
 Int_t TRefTable::GetInternalIdxForPID(TProcessID *procid) const
 {
-   // Get the index for fProcessIDs, fAllocSize, etc given a PID.
-   // Uses fMapPIDtoInternal and the pid's GUID / fProcessGUID
-
    return const_cast <TRefTable*>(this)->AddInternalIdxForPID(procid);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the index for fProcessIDs, fAllocSize, etc given a PID.
+/// Uses fMapPIDtoInternal and the pid's GUID / fProcessGUID
+
 Int_t TRefTable::GetInternalIdxForPID(Int_t pid) const
 {
-   // Get the index for fProcessIDs, fAllocSize, etc given a PID.
-   // Uses fMapPIDtoInternal and the pid's GUID / fProcessGUID
-
    return GetInternalIdxForPID(TProcessID::GetProcessID(pid));
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning the current TRefTable.
+
 TRefTable *TRefTable::GetRefTable()
 {
-   // Static function returning the current TRefTable.
-
    return fgRefTable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by TRef::Streamer or TStreamerInfo::ReadBuffer
+/// when reading a reference.
+/// This function, in turns, notifies the TRefTable owner for action.
+/// eg, when the owner is a TBranchRef, TBranchRef::Notify is called
+/// to read the branch containing the referenced object.
+
 Bool_t TRefTable::Notify()
 {
-   // This function is called by TRef::Streamer or TStreamerInfo::ReadBuffer
-   // when reading a reference.
-   // This function, in turns, notifies the TRefTable owner for action.
-   // eg, when the owner is a TBranchRef, TBranchRef::Notify is called
-   // to read the branch containing the referenced object.
-
    return fOwner->Notify();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill buffer b with the fN elements in fParentdIDs.
+/// This function is called by TBranchRef::ReadLeaves
+
 void TRefTable::ReadBuffer(TBuffer &b)
 {
-   // Fill buffer b with the fN elements in fParentdIDs.
-   // This function is called by TBranchRef::ReadLeaves
-
    Int_t firstInt = 0;          // we don't know yet what it means
    b >> firstInt;
 
@@ -337,22 +339,24 @@ void TRefTable::ReadBuffer(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear all entries in the table.
+
 void TRefTable::Reset(Option_t * /*option*/ )
 {
-   // Clear all entries in the table.
    Clear();
    if (fParents) fParents->Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Set current parent object, typically a branch of a tree.
+///
+/// This function is called by TBranchElement::Fill() and by
+/// TBranchElement::GetEntry().
+///
+
 Int_t TRefTable::SetParent(const TObject* parent, Int_t branchID)
 {
-   // -- Set current parent object, typically a branch of a tree.
-   //
-   // This function is called by TBranchElement::Fill() and by
-   // TBranchElement::GetEntry().
-   //
    if (!fParents) {
       return -1;
    }
@@ -374,19 +378,19 @@ Int_t TRefTable::SetParent(const TObject* parent, Int_t branchID)
    return fParentID;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function setting the current TRefTable.
+
 void TRefTable::SetRefTable(TRefTable *table)
 {
-   // Static function setting the current TRefTable.
-
    fgRefTable = table;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TRefTable.
+
 void TRefTable::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TRefTable.
-
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TRefTable::Class(),this);
    } else {

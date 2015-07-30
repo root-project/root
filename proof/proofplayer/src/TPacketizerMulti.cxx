@@ -38,14 +38,14 @@
 
 ClassImp(TPacketizerMulti)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TPacketizerMulti::TPacketizerMulti(TDSet *dset, TList *wrks,
                                    Long64_t first, Long64_t num,
                                    TList *input, TProofProgressStatus *st)
                  : TVirtualPacketizer(input, st)
 {
-   // Constructor
-
    PDB(kPacketizer,1) Info("TPacketizerMulti",
                            "enter (first %lld, num %lld)", first, num);
    fValid = kFALSE;
@@ -132,11 +132,11 @@ TPacketizerMulti::TPacketizerMulti(TDSet *dset, TList *wrks,
    PDB(kPacketizer,1) Info("TPacketizerMulti", "done");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TPacketizerMulti::~TPacketizerMulti()
 {
-   // Destructor.
-
    if (fPacketizers) {
       fPacketizers->SetOwner(kTRUE);
       SafeDelete(fPacketizers);
@@ -150,13 +150,13 @@ TPacketizerMulti::~TPacketizerMulti()
    SafeDelete(fPacketizersIter);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next packet from the current packetizer.
+/// If the current packetizer is done, move to next.
+/// Retun null when all packetizers are done.
+
 TDSetElement *TPacketizerMulti::GetNextPacket(TSlave *wrk, TMessage *r)
 {
-   // Get next packet from the current packetizer.
-   // If the current packetizer is done, move to next.
-   // Retun null when all packetizers are done.
-
    TDSetElement *elem = 0;
 
    // Must be valid
@@ -229,14 +229,14 @@ TDSetElement *TPacketizerMulti::GetNextPacket(TSlave *wrk, TMessage *r)
    return elem;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a packetizer for dataset 'dset'
+/// Return null on failure.
+
 TVirtualPacketizer *TPacketizerMulti::CreatePacketizer(TDSet *dset, TList *wrks,
                                                        Long64_t first, Long64_t num,
                                                        TList *input, TProofProgressStatus *st)
 {
-   // Create a packetizer for dataset 'dset'
-   // Return null on failure.
-
    TVirtualPacketizer *packetizer = 0;
 
    // Check inputs

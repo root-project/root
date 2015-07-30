@@ -124,7 +124,8 @@ static const Double_t gMAXDOUBLE=1e300;
 static const Double_t gMINDOUBLE=-1e300;
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TFumili::TFumili(Int_t maxpar)
 {//----------- FUMILI constructor ---------
    // maxpar is the maximum number of parameters used with TFumili object
@@ -165,11 +166,12 @@ TFumili::TFumili(Int_t maxpar)
    gROOT->GetListOfSpecials()->Add(gFumili);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///   Allocates memory for internal arrays. Called by TFumili::TFumili
+///
+
 void TFumili::BuildArrays(){
-   //
-   //   Allocates memory for internal arrays. Called by TFumili::TFumili
-   //
    fCmPar      = new Double_t[fMaxParam];
    fA          = new Double_t[fMaxParam];
    fPL0        = new Double_t[fMaxParam];
@@ -202,37 +204,39 @@ void TFumili::BuildArrays(){
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// TFumili destructor
+///
+
 TFumili::~TFumili() {
-   //
-   // TFumili destructor
-   //
    DeleteArrays();
    gROOT->GetListOfSpecials()->Remove(this);
    if (gFumili == this) gFumili = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return a chisquare equivalent
+
 Double_t TFumili::Chisquare(Int_t npar, Double_t *params) const
 {
-   // return a chisquare equivalent
-
    Double_t amin = 0;
    H1FitChisquareFumili(npar,params,amin,params,1);
    return 2*amin;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Resets all parameter names, values and errors to zero
+///
+/// Argument opt is ignored
+///
+/// NB: this procedure doesn't reset parameter limits
+///
+
 void TFumili::Clear(Option_t *)
 {
-   //
-   // Resets all parameter names, values and errors to zero
-   //
-   // Argument opt is ignored
-   //
-   // NB: this procedure doesn't reset parameter limits
-   //
    fNpar = fMaxParam;
    fNfcn = 0;
    for (Int_t i=0;i<fNpar;i++) {
@@ -248,11 +252,12 @@ void TFumili::Clear(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Deallocates memory. Called from destructor TFumili::~TFumili
+///
+
 void TFumili::DeleteArrays(){
-   //
-   // Deallocates memory. Called from destructor TFumili::~TFumili
-   //
    delete[] fCmPar;
    delete[] fANames;
    delete[] fDF;
@@ -271,19 +276,20 @@ void TFumili::DeleteArrays(){
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Calculates partial derivatives of theoretical function
+///
+/// Input:
+///    fX  - vector of data point
+/// Output:
+///    DF - array of derivatives
+///
+/// ARITHM.F
+/// Converted from CERNLIB
+///
+
 void TFumili::Derivatives(Double_t *df,Double_t *fX){
-   //
-   // Calculates partial derivatives of theoretical function
-   //
-   // Input:
-   //    fX  - vector of data point
-   // Output:
-   //    DF - array of derivatives
-   //
-   // ARITHM.F
-   // Converted from CERNLIB
-   //
    Double_t ff,ai,hi,y,pi;
    y = EvalTFN(df,fX);
    for (Int_t i=0;i<fNpar;i++) {
@@ -316,46 +322,46 @@ void TFumili::Derivatives(Double_t *df,Double_t *fX){
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the minimisation function
+///  Input parameters:
+///    npar:    number of currently variable parameters
+///    par:     array of (constant and variable) parameters
+///    flag:    Indicates what is to be calculated
+///    grad:    array of gradients
+///  Output parameters:
+///    fval:    The calculated function value.
+///    grad:    The vector of first derivatives.
+///
+/// The meaning of the parameters par is of course defined by the user,
+/// who uses the values of those parameters to calculate their function value.
+/// The starting values must be specified by the user.
+/// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/// Inside FCN user has to define Z-matrix by means TFumili::GetZ
+///  and TFumili::Derivatives,
+/// set theoretical function by means of TFumili::SetUserFunc,
+/// but first - pass number of parameters by TFumili::SetParNumber
+/// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/// Later values are determined by Fumili as it searches for the minimum
+/// or performs whatever analysis is requested by the user.
+///
+/// The default function calls the function specified in SetFCN
+///
+
 Int_t TFumili::Eval(Int_t& npar, Double_t *grad, Double_t &fval, Double_t *par, Int_t flag)
 {
-   // Evaluate the minimisation function
-   //  Input parameters:
-   //    npar:    number of currently variable parameters
-   //    par:     array of (constant and variable) parameters
-   //    flag:    Indicates what is to be calculated
-   //    grad:    array of gradients
-   //  Output parameters:
-   //    fval:    The calculated function value.
-   //    grad:    The vector of first derivatives.
-   //
-   // The meaning of the parameters par is of course defined by the user,
-   // who uses the values of those parameters to calculate their function value.
-   // The starting values must be specified by the user.
-   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   // Inside FCN user has to define Z-matrix by means TFumili::GetZ
-   //  and TFumili::Derivatives,
-   // set theoretical function by means of TFumili::SetUserFunc,
-   // but first - pass number of parameters by TFumili::SetParNumber
-   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   // Later values are determined by Fumili as it searches for the minimum
-   // or performs whatever analysis is requested by the user.
-   //
-   // The default function calls the function specified in SetFCN
-   //
-
    if (fFCN) (*fFCN)(npar,grad,fval,par,flag);
    return npar;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate theoretical function
+/// df: array of partial derivatives
+/// X:  vector of theoretical function argument
+
 Double_t TFumili::EvalTFN(Double_t * /*df*/, Double_t *X)
 {
-   // Evaluate theoretical function
-   // df: array of partial derivatives
-   // X:  vector of theoretical function argument
-
    // for the time being disable possibility to compute derivatives
    //if(fTFN)
    //  return (*fTFN)(df,X,fA);
@@ -367,23 +373,24 @@ Double_t TFumili::EvalTFN(Double_t * /*df*/, Double_t *X)
    //return 0.;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Execute MINUIT commands. MINImize, SIMplex, MIGrad and FUMili all
+///  will call TFumili::Minimize method.
+///
+///  For full command list see
+///  MINUIT. Reference Manual. CERN Program Library Long Writeup D506.
+///
+///  Improvement and errors calculation are not yet implemented as well
+///  as Monte-Carlo seeking and minimization.
+///  Contour commands are also unsupported.
+///
+///  command   : command string
+///  args      : array of arguments
+///  nargs     : number of arguments
+///
+
 Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
-   //
-   //  Execute MINUIT commands. MINImize, SIMplex, MIGrad and FUMili all
-   //  will call TFumili::Minimize method.
-   //
-   //  For full command list see
-   //  MINUIT. Reference Manual. CERN Program Library Long Writeup D506.
-   //
-   //  Improvement and errors calculation are not yet implemented as well
-   //  as Monte-Carlo seeking and minimization.
-   //  Contour commands are also unsupported.
-   //
-   //  command   : command string
-   //  args      : array of arguments
-   //  nargs     : number of arguments
-   //
    TString comand = command;
    static TString clower = "abcdefghijklmnopqrstuvwxyz";
    static TString cupper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -548,12 +555,13 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Called from TFumili::ExecuteCommand in case
+/// of "SET xxx" and "SHOW xxx".
+///
+
 Int_t TFumili::ExecuteSetCommand(Int_t nargs){
-   //
-   // Called from TFumili::ExecuteCommand in case
-   // of "SET xxx" and "SHOW xxx".
-   //
    static Int_t nntot = 30;
    static const char *cname[30] = {
       "FCN value ", // 0 .
@@ -766,30 +774,30 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
    return -3;
 }
 
-//______________________________________________________________________________
-void TFumili::FixParameter(Int_t ipar) {
-   // Fixes parameter number ipar
+////////////////////////////////////////////////////////////////////////////////
+/// Fixes parameter number ipar
 
+void TFumili::FixParameter(Int_t ipar) {
    if(ipar>=0 && ipar<fNpar && fPL0[ipar]>0.) {
       fPL0[ipar] = -fPL0[ipar];
       fLastFixed = ipar;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return a pointer to the covariance matrix
+
 Double_t *TFumili::GetCovarianceMatrix() const
 {
-   // return a pointer to the covariance matrix
-
    return fZ;
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return element i,j from the covariance matrix
+
 Double_t TFumili::GetCovarianceMatrixElement(Int_t i, Int_t j) const
 {
-   // return element i,j from the covariance matrix
-
    if (!fZ) return 0;
    if (i < 0 || i >= fNpar || j < 0 || j >= fNpar) {
       Error("GetCovarianceMatrixElement","Illegal arguments i=%d, j=%d",i,j);
@@ -799,19 +807,19 @@ Double_t TFumili::GetCovarianceMatrixElement(Int_t i, Int_t j) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the total number of parameters (free + fixed)
+
 Int_t TFumili::GetNumberTotalParameters() const
 {
-   // return the total number of parameters (free + fixed)
-
    return fNpar;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the number of free parameters
+
 Int_t TFumili::GetNumberFreeParameters() const
 {
-   // return the number of free parameters
-
    Int_t nfree = fNpar;
    for (Int_t i=0;i<fNpar;i++) {
       if (IsFixed(i)) nfree--;
@@ -819,37 +827,37 @@ Int_t TFumili::GetNumberFreeParameters() const
    return nfree;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return error of parameter ipar
+
 Double_t TFumili::GetParError(Int_t ipar) const
 {
-   // return error of parameter ipar
-
    if (ipar<0 || ipar>=fNpar) return 0;
    else return fParamError[ipar];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return current value of parameter ipar
+
 Double_t TFumili::GetParameter(Int_t ipar) const
 {
-   // return current value of parameter ipar
-
    if (ipar<0 || ipar>=fNpar) return 0;
    else return fA[ipar];
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get various ipar parameter attributs:
+///
+/// cname:    parameter name
+/// value:    parameter value
+/// verr:     parameter error
+/// vlow:     lower limit
+/// vhigh:    upper limit
+/// WARNING! parname must be suitably dimensionned in the calling function.
+
 Int_t TFumili::GetParameter(Int_t ipar,char *cname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const
 {
-   // Get various ipar parameter attributs:
-   //
-   // cname:    parameter name
-   // value:    parameter value
-   // verr:     parameter error
-   // vlow:     lower limit
-   // vhigh:    upper limit
-   // WARNING! parname must be suitably dimensionned in the calling function.
-
    if (ipar<0 || ipar>=fNpar) {
       value = 0;
       verr  = 0;
@@ -865,20 +873,21 @@ Int_t TFumili::GetParameter(Int_t ipar,char *cname,Double_t &value,Double_t &ver
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return name of parameter ipar
+
 const char *TFumili::GetParName(Int_t ipar) const
 {
-   // return name of parameter ipar
-
    if (ipar < 0 || ipar > fNpar) return "";
    return fANames[ipar].Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return errors after MINOs
+/// not implemented
+
 Int_t TFumili::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const
 {
-   // Return errors after MINOs
-   // not implemented
    eparab = 0;
    globcc = 0;
    if (ipar<0 || ipar>=fNpar) {
@@ -891,15 +900,16 @@ Int_t TFumili::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t 
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return global fit parameters
+///   amin     : chisquare
+///   edm      : estimated distance to minimum
+///   errdef
+///   nvpar    : number of variable parameters
+///   nparx    : total number of parameters
+
 Int_t TFumili::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const
 {
-   // return global fit parameters
-   //   amin     : chisquare
-   //   edm      : estimated distance to minimum
-   //   errdef
-   //   nvpar    : number of variable parameters
-   //   nparx    : total number of parameters
    amin   = 2*fS;
    edm    = fGT; //
    errdef = 0; // ??
@@ -913,12 +923,12 @@ Int_t TFumili::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return Sum(log(i) i=0,n
+/// used by log likelihood fits
+
 Double_t TFumili::GetSumLog(Int_t n)
 {
-   // return Sum(log(i) i=0,n
-   // used by log likelihood fits
-
    if (n < 0) return 0;
    if (n > fNlog) {
       if (fSumLog) delete [] fSumLog;
@@ -936,15 +946,16 @@ Double_t TFumili::GetSumLog(Int_t n)
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inverts packed diagonal matrix Z by square-root method.
+///  Matrix elements corresponding to
+/// fix parameters are removed.
+///
+/// n: number of variable parameters
+///
+
 void TFumili::InvertZ(Int_t n)
 {
-   // Inverts packed diagonal matrix Z by square-root method.
-   //  Matrix elements corresponding to
-   // fix parameters are removed.
-   //
-   // n: number of variable parameters
-   //
    static Double_t am = 3.4e138;
    static Double_t rp = 5.0e-14;
    Double_t  ap, aps, c, d;
@@ -1058,11 +1069,11 @@ void TFumili::InvertZ(Int_t n)
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return kTRUE if parameter ipar is fixed, kFALSE othersise)
+
 Bool_t TFumili::IsFixed(Int_t ipar) const
 {
-   //return kTRUE if parameter ipar is fixed, kFALSE othersise)
-
    if(ipar < 0 || ipar >= fNpar) {
       Warning("IsFixed","Illegal parameter number :%d",ipar);
       return kFALSE;
@@ -1072,7 +1083,8 @@ Bool_t TFumili::IsFixed(Int_t ipar) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TFumili::Minimize()
 {// Main minimization procedure
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
@@ -1481,19 +1493,20 @@ L19:
    goto L3;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints fit results.
+///
+/// ikode is the type of printing parameters
+/// p is function value
+///
+///  ikode = 1   - print values, errors and limits
+///  ikode = 2   - print values, errors and steps
+///  ikode = 3   - print values, errors, steps and derivatives
+///  ikode = 4   - print only values and errors
+///
+
 void TFumili::PrintResults(Int_t ikode,Double_t p) const
 {
-   // Prints fit results.
-   //
-   // ikode is the type of printing parameters
-   // p is function value
-   //
-   //  ikode = 1   - print values, errors and limits
-   //  ikode = 2   - print values, errors and steps
-   //  ikode = 3   - print values, errors, steps and derivatives
-   //  ikode = 4   - print only values and errors
-   //
    TString exitStatus="";
    TString xsexpl="";
    TString colhdu[3],colhdl[3],cx2,cx3;
@@ -1593,10 +1606,10 @@ void TFumili::PrintResults(Int_t ikode,Double_t p) const
 }
 
 
-//______________________________________________________________________________
-void TFumili::ReleaseParameter(Int_t ipar) {
-   // Releases parameter number ipar
+////////////////////////////////////////////////////////////////////////////////
+/// Releases parameter number ipar
 
+void TFumili::ReleaseParameter(Int_t ipar) {
    if(ipar>=0 && ipar<fNpar && fPL0[ipar]<=0.) {
       fPL0[ipar] = -fPL0[ipar];
       if (fPL0[ipar] == 0. || fPL0[ipar]>=1.) fPL0[ipar]=.1;
@@ -1604,31 +1617,31 @@ void TFumili::ReleaseParameter(Int_t ipar) {
 }
 
 
-//______________________________________________________________________________
-void TFumili::SetData(Double_t *exdata,Int_t numpoints,Int_t vecsize){
-   // Sets pointer to data array provided by user.
-   // Necessary if SetFCN is not called.
-   //
-   // numpoints:    number of experimental points
-   // vecsize:      size of data point vector + 2
-   //               (for N-dimensional fit vecsize=N+2)
-   // exdata:       data array with following format
-   //
-   //   exdata[0] = ExpValue_0     - experimental data value number 0
-   //   exdata[1] = ExpSigma_0     - error of value number 0
-   //   exdata[2] = X_0[0]
-   //   exdata[3] = X_0[1]
-   //       .........
-   //   exdata[vecsize-1] = X_0[vecsize-3]
-   //   exdata[vecsize]   = ExpValue_1
-   //   exdata[vecsize+1] = ExpSigma_1
-   //   exdata[vecsize+2] = X_1[0]
-   //       .........
-   //   exdata[vecsize*(numpoints-1)] = ExpValue_(numpoints-1)
-   //       .........
-   //   exdata[vecsize*numpoints-1] = X_(numpoints-1)[vecsize-3]
-   //
+////////////////////////////////////////////////////////////////////////////////
+/// Sets pointer to data array provided by user.
+/// Necessary if SetFCN is not called.
+///
+/// numpoints:    number of experimental points
+/// vecsize:      size of data point vector + 2
+///               (for N-dimensional fit vecsize=N+2)
+/// exdata:       data array with following format
+///
+///   exdata[0] = ExpValue_0     - experimental data value number 0
+///   exdata[1] = ExpSigma_0     - error of value number 0
+///   exdata[2] = X_0[0]
+///   exdata[3] = X_0[1]
+///       .........
+///   exdata[vecsize-1] = X_0[vecsize-3]
+///   exdata[vecsize]   = ExpValue_1
+///   exdata[vecsize+1] = ExpSigma_1
+///   exdata[vecsize+2] = X_1[0]
+///       .........
+///   exdata[vecsize*(numpoints-1)] = ExpValue_(numpoints-1)
+///       .........
+///   exdata[vecsize*numpoints-1] = X_(numpoints-1)[vecsize-3]
+///
 
+void TFumili::SetData(Double_t *exdata,Int_t numpoints,Int_t vecsize){
    if(exdata){
       fNED1 = numpoints;
       fNED2 = vecsize;
@@ -1637,24 +1650,25 @@ void TFumili::SetData(Double_t *exdata,Int_t numpoints,Int_t vecsize){
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ret fit method (chisquare or loglikelihood)
+
 void TFumili::SetFitMethod(const char *name)
 {
-   // ret fit method (chisquare or loglikelihood)
-
    if (!strcmp(name,"H1FitChisquare"))    SetFCN(H1FitChisquareFumili);
    if (!strcmp(name,"H1FitLikelihood"))   SetFCN(H1FitLikelihoodFumili);
    if (!strcmp(name,"GraphFitChisquare")) SetFCN(GraphFitChisquareFumili);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets for prameter number ipar initial parameter value,
+/// name parname, initial error verr and limits vlow and vhigh
+/// If vlow = vhigh but not equil to zero, parameter will be fixed.
+/// If vlow = vhigh = 0, parameter is released and its limits are discarded
+///
+
 Int_t TFumili::SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh) {
-   // Sets for prameter number ipar initial parameter value,
-   // name parname, initial error verr and limits vlow and vhigh
-   // If vlow = vhigh but not equil to zero, parameter will be fixed.
-   // If vlow = vhigh = 0, parameter is released and its limits are discarded
-   //
    if (ipar<0 || ipar>=fNpar) return -1;
    fANames[ipar] = parname;
    fA[ipar] = value;
@@ -1679,12 +1693,13 @@ Int_t TFumili::SetParameter(Int_t ipar,const char *parname,Double_t value,Double
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Evaluates objective function ( chi-square ), gradients and
+///  Z-matrix using data provided by user via TFumili::SetData
+///
+
 Int_t TFumili::SGZ()
 {
-   //  Evaluates objective function ( chi-square ), gradients and
-   //  Z-matrix using data provided by user via TFumili::SetData
-   //
    fS = 0.;
    Int_t i,j,l,k2=1,k1,ki=0;
    Double_t *x  = new Double_t[fNED2];
@@ -1743,16 +1758,16 @@ Int_t TFumili::SGZ()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Minimization function for H1s using a Chisquare method
+///  Default method (function evaluated at center of bin)
+///  for each point the cache contains the following info
+///    -1D : bc,e,xc  (bin content, error, x of center of bin)
+///    -2D : bc,e,xc,yc
+///    -3D : bc,e,xc,yc,zc
+
 void TFumili::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-   //  Minimization function for H1s using a Chisquare method
-   //  Default method (function evaluated at center of bin)
-   //  for each point the cache contains the following info
-   //    -1D : bc,e,xc  (bin content, error, x of center of bin)
-   //    -2D : bc,e,xc,yc
-   //    -3D : bc,e,xc,yc,zc
-
    Foption_t fitOption = GetFitOption();
    if (fitOption.Integral) {
       FitChisquareI(npar,gin,f,u,flag);
@@ -1815,16 +1830,16 @@ void TFumili::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Minimization function for H1s using a Chisquare method
+///  The "I"ntegral method is used
+///  for each point the cache contains the following info
+///    -1D : bc,e,xc,xw  (bin content, error, x of center of bin, x bin width of bin)
+///    -2D : bc,e,xc,xw,yc,yw
+///    -3D : bc,e,xc,xw,yc,yw,zc,zw
+
 void TFumili::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-   //  Minimization function for H1s using a Chisquare method
-   //  The "I"ntegral method is used
-   //  for each point the cache contains the following info
-   //    -1D : bc,e,xc,xw  (bin content, error, x of center of bin, x bin width of bin)
-   //    -2D : bc,e,xc,xw,yc,yw
-   //    -3D : bc,e,xc,xw,yc,yw,zc,zw
-
    Double_t cu,eu,fu,fsum;
    Double_t x[3];
    Double_t *zik=0;
@@ -1886,20 +1901,20 @@ void TFumili::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Minimization function for H1s using a Likelihood method*-*-*-*-*-*
+///     Basically, it forms the likelihood by determining the Poisson
+///     probability that given a number of entries in a particular bin,
+///     the fit would predict it's value.  This is then done for each bin,
+///     and the sum of the logs is taken as the likelihood.
+///  Default method (function evaluated at center of bin)
+///  for each point the cache contains the following info
+///    -1D : bc,e,xc  (bin content, error, x of center of bin)
+///    -2D : bc,e,xc,yc
+///    -3D : bc,e,xc,yc,zc
+
 void TFumili::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-   //  Minimization function for H1s using a Likelihood method*-*-*-*-*-*
-   //     Basically, it forms the likelihood by determining the Poisson
-   //     probability that given a number of entries in a particular bin,
-   //     the fit would predict it's value.  This is then done for each bin,
-   //     and the sum of the logs is taken as the likelihood.
-   //  Default method (function evaluated at center of bin)
-   //  for each point the cache contains the following info
-   //    -1D : bc,e,xc  (bin content, error, x of center of bin)
-   //    -2D : bc,e,xc,yc
-   //    -3D : bc,e,xc,yc,zc
-
    Foption_t fitOption = GetFitOption();
    if (fitOption.Integral) {
       FitLikelihoodI(npar,gin,f,u,flag);
@@ -1974,20 +1989,20 @@ void TFumili::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Minimization function for H1s using a Likelihood method*-*-*-*-*-*
+///     Basically, it forms the likelihood by determining the Poisson
+///     probability that given a number of entries in a particular bin,
+///     the fit would predict it's value.  This is then done for each bin,
+///     and the sum of the logs is taken as the likelihood.
+///  The "I"ntegral method is used
+///  for each point the cache contains the following info
+///    -1D : bc,e,xc,xw  (bin content, error, x of center of bin, x bin width of bin)
+///    -2D : bc,e,xc,xw,yc,yw
+///    -3D : bc,e,xc,xw,yc,yw,zc,zw
+
 void TFumili::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-   //  Minimization function for H1s using a Likelihood method*-*-*-*-*-*
-   //     Basically, it forms the likelihood by determining the Poisson
-   //     probability that given a number of entries in a particular bin,
-   //     the fit would predict it's value.  This is then done for each bin,
-   //     and the sum of the logs is taken as the likelihood.
-   //  The "I"ntegral method is used
-   //  for each point the cache contains the following info
-   //    -1D : bc,e,xc,xw  (bin content, error, x of center of bin, x bin width of bin)
-   //    -2D : bc,e,xc,xw,yc,yw
-   //    -3D : bc,e,xc,xw,yc,yw,zc,zw
-
    Double_t cu,fu,fobs,fsub;
    Double_t dersum[100];
    Double_t x[3];
@@ -2069,31 +2084,31 @@ void TFumili::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
 //  STATIC functions
 //______________________________________________________________________________
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///           Minimization function for H1s using a Chisquare method
+///           ======================================================
+
 void H1FitChisquareFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-//           Minimization function for H1s using a Chisquare method
-//           ======================================================
-
    TFumili *hFitter = (TFumili*)TVirtualFitter::GetFitter();
    hFitter->FitChisquare(npar, gin, f, u, flag);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   -*-*-*-*Minimization function for H1s using a Likelihood method*-*-*-*-*-*
+///           =======================================================
+///     Basically, it forms the likelihood by determining the Poisson
+///     probability that given a number of entries in a particular bin,
+///     the fit would predict it's value.  This is then done for each bin,
+///     and the sum of the logs is taken as the likelihood.
+///     PDF:  P=exp(-f(x_i))/[F_i]!*(f(x_i))^[F_i]
+///    where F_i - experimental value, f(x_i) - expected theoretical value
+///    [F_i] - integer part of F_i.
+///    drawback is that if F_i>Int_t - GetSumLog will fail
+///    for big F_i is faster to use Euler's Gamma-function
+
 void H1FitLikelihoodFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-//   -*-*-*-*Minimization function for H1s using a Likelihood method*-*-*-*-*-*
-//           =======================================================
-//     Basically, it forms the likelihood by determining the Poisson
-//     probability that given a number of entries in a particular bin,
-//     the fit would predict it's value.  This is then done for each bin,
-//     and the sum of the logs is taken as the likelihood.
-//     PDF:  P=exp(-f(x_i))/[F_i]!*(f(x_i))^[F_i]
-//    where F_i - experimental value, f(x_i) - expected theoretical value
-//    [F_i] - integer part of F_i.
-//    drawback is that if F_i>Int_t - GetSumLog will fail
-//    for big F_i is faster to use Euler's Gamma-function
-
 
    TFumili *hFitter = (TFumili*)TVirtualFitter::GetFitter();
    hFitter->FitLikelihood(npar, gin, f, u, flag);
@@ -2101,38 +2116,38 @@ void H1FitLikelihoodFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Minimization function for Graphs using a Chisquare method*-*-*-*-*
+///*-*        =========================================================
+///
+/// In case of a TGraphErrors object, ex, the error along x,  is projected
+/// along the y-direction by calculating the function at the points x-exlow and
+/// x+exhigh.
+///
+/// The chisquare is computed as the sum of the quantity below at each point:
+///
+///                     (y - f(x))**2
+///         -----------------------------------
+///         ey**2 + (0.5*(exl + exh)*f'(x))**2
+///
+/// where x and y are the point coordinates and f'(x) is the derivative of function f(x).
+/// This method to approximate the uncertainty in y because of the errors in x, is called
+/// "effective variance" method.
+/// The improvement, compared to the previously used  method (f(x+ exhigh) - f(x-exlow))/2
+/// is of (error of x)**2 order.
+///  NOTE:
+///  1) By using the "effective variance" method a simple linear regression
+///      becomes a non-linear case , which takes several iterations
+///      instead of 0 as in the linear case .
+///
+///  2) The effective variance technique assumes that there is no correlation
+///      between the x and y coordinate .
+///
+/// In case the function lies below (above) the data point, ey is ey_low (ey_high).
+
 void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
                        Double_t *u, Int_t flag)
 {
-//*-*-*-*-*-*Minimization function for Graphs using a Chisquare method*-*-*-*-*
-//*-*        =========================================================
-//
-// In case of a TGraphErrors object, ex, the error along x,  is projected
-// along the y-direction by calculating the function at the points x-exlow and
-// x+exhigh.
-//
-// The chisquare is computed as the sum of the quantity below at each point:
-//
-//                     (y - f(x))**2
-//         -----------------------------------
-//         ey**2 + (0.5*(exl + exh)*f'(x))**2
-//
-// where x and y are the point coordinates and f'(x) is the derivative of function f(x).
-// This method to approximate the uncertainty in y because of the errors in x, is called
-// "effective variance" method.
-// The improvement, compared to the previously used  method (f(x+ exhigh) - f(x-exlow))/2
-// is of (error of x)**2 order.
-//  NOTE:
-//  1) By using the "effective variance" method a simple linear regression
-//      becomes a non-linear case , which takes several iterations
-//      instead of 0 as in the linear case .
-//
-//  2) The effective variance technique assumes that there is no correlation
-//      between the x and y coordinate .
-//
-// In case the function lies below (above) the data point, ey is ey_low (ey_high).
-
    Double_t cu,eu,exl,exh,ey,eux,fu,fsum;
    Double_t x[1];
    Int_t i, bin, npfits=0;

@@ -185,13 +185,13 @@
 
 ClassImp(TDataMember)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TDataMember ctor. TDataMembers are constructed in TClass
+/// via a call to TCling::CreateListOfDataMembers(). It parses the comment
+/// string, initializes optionlist and getter/setter methods.
+
 TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 {
-   // Default TDataMember ctor. TDataMembers are constructed in TClass
-   // via a call to TCling::CreateListOfDataMembers(). It parses the comment
-   // string, initializes optionlist and getter/setter methods.
-
    fInfo        = info;
    fClass       = cl;
    fDataType    = 0;
@@ -208,12 +208,13 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
    Init(false);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Routines called by the constructor and Update to reset the member's
+/// information.
+/// afterReading is set when initializing after reading through Streamer().
+
 void TDataMember::Init(bool afterReading)
 {
-   // Routines called by the constructor and Update to reset the member's
-   // information.
-   // afterReading is set when initializing after reading through Streamer().
    const char *t = 0;
    if (!afterReading) {
       // Initialize from fInfo
@@ -482,7 +483,9 @@ void TDataMember::Init(bool afterReading)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TDataMember::TDataMember(const TDataMember& dm) :
   TDictionary(dm),
   fInfo(gCling->DataMemberInfo_FactoryCopy(dm.fInfo)),
@@ -501,15 +504,15 @@ TDataMember::TDataMember(const TDataMember& dm) :
   fValueSetter(0),
   fOptions(dm.fOptions ? (TList*)dm.fOptions->Clone() : 0)
 {
-   //copy constructor
    for(Int_t d = 0; d < fArrayDim; ++d)
       fArrayMaxIndex[d] = dm.fArrayMaxIndex[d];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignement operator
+
 TDataMember& TDataMember::operator=(const TDataMember& dm)
 {
-   //assignement operator
    if(this!=&dm) {
       gCling->DataMemberInfo_Delete(fInfo);
       delete fValueSetter;
@@ -540,11 +543,11 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TDataMember dtor deletes adopted CINT DataMemberInfo object.
+
 TDataMember::~TDataMember()
 {
-   // TDataMember dtor deletes adopted CINT DataMemberInfo object.
-
    delete [] fArrayMaxIndex;
    gCling->DataMemberInfo_Delete(fInfo);
    delete fValueSetter;
@@ -555,11 +558,11 @@ TDataMember::~TDataMember()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of array dimensions.
+
 Int_t TDataMember::GetArrayDim() const
 {
-   // Return number of array dimensions.
-
    if (fArrayDim<0 && fInfo) {
       R__LOCKGUARD(gInterpreterMutex);
       TDataMember *dm = const_cast<TDataMember*>(this);
@@ -575,13 +578,13 @@ Int_t TDataMember::GetArrayDim() const
    return fArrayDim;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If the data member is pointer and has a valid array size in its comments
+/// GetArrayIndex returns a string pointing to it;
+/// otherwise it returns an empty string.
+
 const char *TDataMember::GetArrayIndex() const
 {
-   // If the data member is pointer and has a valid array size in its comments
-   // GetArrayIndex returns a string pointing to it;
-   // otherwise it returns an empty string.
-
    if (!IsaPointer()) return "";
    if (fArrayIndex.Length()==0 && fInfo) {
       R__LOCKGUARD(gInterpreterMutex);
@@ -593,18 +596,19 @@ const char *TDataMember::GetArrayIndex() const
    return fArrayIndex;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDictionary::DeclId_t TDataMember::GetDeclId() const
 {
    if (fInfo) return gInterpreter->GetDeclId(fInfo);
    else return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return maximum index for array dimension "dim".
+
 Int_t TDataMember::GetMaxIndex(Int_t dim) const
 {
-   // Return maximum index for array dimension "dim".
-
    if (fArrayDim<0 && fInfo) {
       return gCling->DataMemberInfo_MaxIndex(fInfo,dim);
    } else {
@@ -613,37 +617,38 @@ Int_t TDataMember::GetMaxIndex(Int_t dim) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get type of data member, e,g.: "class TDirectory*" -> "TDirectory".
+
 const char *TDataMember::GetTypeName() const
 {
-   // Get type of data member, e,g.: "class TDirectory*" -> "TDirectory".
-
    if (fProperty==(-1)) Property();
    return fTypeName.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get full type description of data member, e,g.: "class TDirectory*".
+
 const char *TDataMember::GetFullTypeName() const
 {
-   // Get full type description of data member, e,g.: "class TDirectory*".
    if (fProperty==(-1)) Property();
 
    return fFullTypeName.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get full type description of data member, e,g.: "class TDirectory*".
+
 const char *TDataMember::GetTrueTypeName() const
 {
-   // Get full type description of data member, e,g.: "class TDirectory*".
-
    return fTrueTypeName.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get offset from "this".
+
 Long_t TDataMember::GetOffset() const
 {
-   // Get offset from "this".
-
    if (fOffset>=0) return fOffset;
 
    R__LOCKGUARD(gInterpreterMutex);
@@ -688,11 +693,11 @@ Long_t TDataMember::GetOffset() const
    return fOffset;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get offset from "this" using the information in CINT only.
+
 Long_t TDataMember::GetOffsetCint() const
 {
-   // Get offset from "this" using the information in CINT only.
-
    if (fOffset>=0) return fOffset;
 
    R__LOCKGUARD(gInterpreterMutex);
@@ -702,12 +707,12 @@ Long_t TDataMember::GetOffsetCint() const
    else return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the sizeof the underlying type of the data member
+/// (i.e. if the member is an array sizeof(member)/length)
+
 Int_t TDataMember::GetUnitSize() const
 {
-   // Get the sizeof the underlying type of the data member
-   // (i.e. if the member is an array sizeof(member)/length)
-
    if (IsaPointer()) return sizeof(void*);
    if (IsEnum()    ) return sizeof(Int_t);
    if (IsBasic()   ) return GetDataType()->Size();
@@ -720,51 +725,51 @@ Int_t TDataMember::GetUnitSize() const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if data member is a basic type, e.g. char, int, long...
+
 Bool_t TDataMember::IsBasic() const
 {
-   // Return true if data member is a basic type, e.g. char, int, long...
-
    if (fProperty == -1) Property();
    return (fProperty & kIsFundamental) ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if data member is an enum.
+
 Bool_t TDataMember::IsEnum() const
 {
-   // Return true if data member is an enum.
-
    if (fProperty == -1) Property();
    return (fProperty & kIsEnum) ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if data member is a pointer.
+
 Bool_t TDataMember::IsaPointer() const
 {
-   // Return true if data member is a pointer.
-
    if (fProperty == -1) Property();
    return (fProperty & kIsPointer) ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The return type is defined in TDictionary (kVector, kList, etc.)
+
 int TDataMember::IsSTLContainer()
 {
-   // The return type is defined in TDictionary (kVector, kList, etc.)
-
    if (fSTLCont != -1) return fSTLCont;
    R__LOCKGUARD(gInterpreterMutex);
    fSTLCont = TClassEdit::UnderlyingIsSTLCont(GetTrueTypeName());
    return fSTLCont;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if this data member object is pointing to a currently
+/// loaded data member.  If a function is unloaded after the TDataMember
+/// is created, the TDataMember will be set to be invalid.
+
 Bool_t TDataMember::IsValid()
 {
-   // Return true if this data member object is pointing to a currently
-   // loaded data member.  If a function is unloaded after the TDataMember
-   // is created, the TDataMember will be set to be invalid.
-
    if (fOffset >= 0) return kTRUE;
 
    // Register the transaction when checking the validity of the object.
@@ -784,11 +789,11 @@ Bool_t TDataMember::IsValid()
    return fInfo != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get property description word. For meaning of bits see EProperty.
+
 Long_t TDataMember::Property() const
 {
-   // Get property description word. For meaning of bits see EProperty.
-
    if (fProperty!=(-1)) return fProperty;
 
    R__LOCKGUARD(gInterpreterMutex);
@@ -809,23 +814,23 @@ Long_t TDataMember::Property() const
    return fProperty;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns list of options - list of TOptionListItems
+
 TList *TDataMember::GetOptions() const
 {
-   // Returns list of options - list of TOptionListItems
-
    return fOptions;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a TMethodCall method responsible for getting the value
+/// of data member. The cl argument specifies the class of the object
+/// which will be used to call this method (in case of multiple
+/// inheritance TMethodCall needs to know this to calculate the proper
+/// offset).
+
 TMethodCall *TDataMember::GetterMethod(TClass *cl)
 {
-   // Return a TMethodCall method responsible for getting the value
-   // of data member. The cl argument specifies the class of the object
-   // which will be used to call this method (in case of multiple
-   // inheritance TMethodCall needs to know this to calculate the proper
-   // offset).
-
    if (!fValueGetter || cl) {
 
       R__LOCKGUARD(gInterpreterMutex);
@@ -861,15 +866,15 @@ TMethodCall *TDataMember::GetterMethod(TClass *cl)
    return fValueGetter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a TMethodCall method responsible for setting the value
+/// of data member. The cl argument specifies the class of the object
+/// which will be used to call this method (in case of multiple
+/// inheritance TMethodCall needs to know this to calculate the proper
+/// offset).
+
 TMethodCall *TDataMember::SetterMethod(TClass *cl)
 {
-   // Return a TMethodCall method responsible for setting the value
-   // of data member. The cl argument specifies the class of the object
-   // which will be used to call this method (in case of multiple
-   // inheritance TMethodCall needs to know this to calculate the proper
-   // offset).
-
    if (!fValueSetter || cl) {
 
       R__LOCKGUARD(gInterpreterMutex);
@@ -905,14 +910,14 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
    return fValueSetter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the TFunction to reflect the new info.
+///
+/// This can be used to implement unloading (info == 0) and then reloading
+/// (info being the 'new' decl address).
+
 Bool_t TDataMember::Update(DataMemberInfo_t *info)
 {
-   // Update the TFunction to reflect the new info.
-   //
-   // This can be used to implement unloading (info == 0) and then reloading
-   // (info being the 'new' decl address).
-
    R__LOCKGUARD(gInterpreterMutex);
 
    if (fInfo) gCling->DataMemberInfo_Delete(fInfo);
@@ -942,10 +947,11 @@ Bool_t TDataMember::Update(DataMemberInfo_t *info)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of TDataMember. Forces calculation of all cached
+/// (and persistent) values.
+
 void TDataMember::Streamer(TBuffer& b) {
-   // Stream an object of TDataMember. Forces calculation of all cached
-   // (and persistent) values.
    if (b.IsReading()) {
       b.ReadClassBuffer(Class(), this);
       Init(true /*reading*/);
@@ -967,12 +973,12 @@ void TDataMember::Streamer(TBuffer& b) {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constuctor.
+
 TOptionListItem::TOptionListItem(TDataMember *d, Long_t val, Long_t valmask,
                  Long_t tglmask,const char *name, const char *label)
 {
-   // Constuctor.
-
    fDataMember    = d;
    fValue         = val;
    fValueMaskBit  = valmask;

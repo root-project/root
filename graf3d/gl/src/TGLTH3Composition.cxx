@@ -21,10 +21,11 @@
 
 ClassImp(TGLTH3Composition)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///I have to define it, since explicit copy ctor was declared.
+
 TGLTH3Composition::TGLTH3Composition()
 {
-   //I have to define it, since explicit copy ctor was declared.
 }
 
 namespace {
@@ -33,11 +34,12 @@ void CompareAxes(const TAxis *a1, const TAxis *a2, const TString &axisName);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Add TH3 into collection. Throw if fHists is not empty
+///but ranges are not equal.
+
 void TGLTH3Composition::AddTH3(const TH3 *h, ETH3BinShape shape)
 {
-   //Add TH3 into collection. Throw if fHists is not empty
-   //but ranges are not equal.
    const TAxis *xa = h->GetXaxis();
    const TAxis *ya = h->GetYaxis();
    const TAxis *za = h->GetZaxis();
@@ -57,36 +59,40 @@ void TGLTH3Composition::AddTH3(const TH3 *h, ETH3BinShape shape)
    fHists.push_back(TH3Pair_t(h, shape));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check if "this" is under cursor.
+
 Int_t TGLTH3Composition::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   //Check if "this" is under cursor.
    if (!fPainter.get())
       return 9999;
 
    return fPainter->DistancetoPrimitive(px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Mouse and keyboard events.
+
 void TGLTH3Composition::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   //Mouse and keyboard events.
    fPainter->ExecuteEvent(event, px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///I cannot show bin content in a status bar -
+///since there can be several bins in one.
+
 char *TGLTH3Composition::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 {
-   //I cannot show bin content in a status bar -
-   //since there can be several bins in one.
    static char message[] = "TH3 composition";
    return message;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Paint a composition of 3d hists.
+
 void TGLTH3Composition::Paint(Option_t * /*option*/)
 {
-   //Paint a composition of 3d hists.
    if (!fHists.size())
       return;
 
@@ -103,24 +109,27 @@ void TGLTH3Composition::Paint(Option_t * /*option*/)
 
 ClassImp(TGLTH3CompositionPainter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Ctor.
+
 TGLTH3CompositionPainter::TGLTH3CompositionPainter(TGLTH3Composition *data, TGLPlotCamera *cam,
                                                    TGLPlotCoordinates *coord)
                              : TGLPlotPainter(data, cam, coord, kFALSE, kFALSE, kFALSE),
                                fData(data)
 {
-   //Ctor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Will be never called from TPad.
+
 char *TGLTH3CompositionPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
-   //Will be never called from TPad.
    static char message[] = "TH3 composition";
    return message;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TGLTH3CompositionPainter::InitGeometry()
 {
    if (!fData->fHists.size())
@@ -166,21 +175,23 @@ Bool_t TGLTH3CompositionPainter::InitGeometry()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Move plot or box cut.
+
 void TGLTH3CompositionPainter::StartPan(Int_t px, Int_t py)
 {
-   //Move plot or box cut.
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
    fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User's moving mouse cursor, with middle mouse button pressed (for pad).
+/// Calculate 3d shift related to 2d mouse movement.
+
 void TGLTH3CompositionPainter::Pan(Int_t px, Int_t py)
 {
-   // User's moving mouse cursor, with middle mouse button pressed (for pad).
-   // Calculate 3d shift related to 2d mouse movement.
    if (fSelectedPart >= fSelectionBase) {//Pan camera.
       SaveModelviewMatrix();
       SaveProjectionMatrix();
@@ -214,16 +225,18 @@ void TGLTH3CompositionPainter::Pan(Int_t px, Int_t py)
    fUpdateSelection = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///No options for composition.
+
 void TGLTH3CompositionPainter::AddOption(const TString &/*option*/)
 {
-   //No options for composition.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Switch on/off box cut.
+
 void TGLTH3CompositionPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
-   //Switch on/off box cut.
    if (event == kButton1Double && fBoxCut.IsActive()) {
       fBoxCut.TurnOnOff();
       if (!gVirtualX->IsCmdThread())
@@ -240,10 +253,11 @@ void TGLTH3CompositionPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize some gl state variables.
+
 void TGLTH3CompositionPainter::InitGL()const
 {
-   // Initialize some gl state variables.
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
@@ -253,10 +267,11 @@ void TGLTH3CompositionPainter::InitGL()const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Return back some gl state variables.
+
 void TGLTH3CompositionPainter::DeInitGL()const
 {
-   //Return back some gl state variables.
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_LIGHTING);
    glDisable(GL_LIGHT0);
@@ -264,11 +279,11 @@ void TGLTH3CompositionPainter::DeInitGL()const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw composition of TH3s.
+
 void TGLTH3CompositionPainter::DrawPlot()const
 {
-   //Draw composition of TH3s.
-
    //Shift plot to point of origin.
    const Rgl::PlotTranslation trGuard(this);
 
@@ -382,10 +397,11 @@ void TGLTH3CompositionPainter::DrawPlot()const
    glPolygonMode(GL_FRONT, GL_FILL);//3]
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set material.
+
 void TGLTH3CompositionPainter::SetColor(Int_t color)const
 {
-   //Set material.
    Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.05f};
 
    if (color != kWhite)
@@ -400,17 +416,19 @@ void TGLTH3CompositionPainter::SetColor(Int_t color)const
 
 namespace {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void AxisError(const TString & errorMsg)
 {
    Error("TGLTH3Composition::AddTH3", "%s", errorMsg.Data());
    throw std::runtime_error(errorMsg.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check number of bins.
+
 void CompareAxes(const TAxis *a1, const TAxis *a2, const TString &axisName)
 {
-   //Check number of bins.
    if (a1->GetNbins() != a2->GetNbins())
       AxisError("New hist has different number of bins along " + axisName);
 

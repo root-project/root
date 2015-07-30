@@ -4,7 +4,8 @@
 #include "TGeoManager.h"
 #include "TVirtualGeoPainter.h"
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class iterplugin : public TGeoIteratorPlugin
 {
 public:

@@ -70,7 +70,8 @@ inline void calculateValues(F mathFunc,
 
 }
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 template <typename T>
 void compareOutputs(const std::vector<T>& inputVector1,
                     const std::vector<T>& inputVector2,
@@ -128,7 +129,8 @@ void treatBinDiffHisto(TH1F& histo,
    }
 }
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 template <typename T, typename F>
 inline double measureTiming(F mathFunc,
                             const std::vector<T>& inputVector,

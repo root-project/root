@@ -18,18 +18,18 @@
 // TRefArrayProxy is a container proxy, which allows to access references stored
 // in a TRefArray from TTree::Draw
 
-//______________________________________________________________________________
-void* TRefArrayProxy::GetObject(TFormLeafInfoReference* /*info*/, void* data, Int_t instance)  {
-   // Access referenced object(-data)
+////////////////////////////////////////////////////////////////////////////////
+/// Access referenced object(-data)
 
+void* TRefArrayProxy::GetObject(TFormLeafInfoReference* /*info*/, void* data, Int_t instance)  {
    TRefArray* ref = (TRefArray*)data;//((char*)data + info->GetOffset());
    return ref->At(instance);
 }
 
-//______________________________________________________________________________
-Int_t  TRefArrayProxy::GetCounterValue(TFormLeafInfoReference* /*info*/, void* data)   {
-   // TVirtualRefProxy overload: Access to container size (if container reference (ie TRefArray) etc)
+////////////////////////////////////////////////////////////////////////////////
+/// TVirtualRefProxy overload: Access to container size (if container reference (ie TRefArray) etc)
 
+Int_t  TRefArrayProxy::GetCounterValue(TFormLeafInfoReference* /*info*/, void* data)   {
    TRefArray* ref = (TRefArray*)data;
    return ref->GetEntriesFast();
 }

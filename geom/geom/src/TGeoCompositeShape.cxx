@@ -159,34 +159,38 @@
 #include "TGeoCompositeShape.h"
 ClassImp(TGeoCompositeShape)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Needed just for cleanup.
+
 void TGeoCompositeShape::ClearThreadData() const
 {
-   // Needed just for cleanup.
    if (fNode) fNode->ClearThreadData();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Needed just for cleanup.
+
 void TGeoCompositeShape::CreateThreadData(Int_t nthreads)
 {
-   // Needed just for cleanup.
    if (fNode) fNode->CreateThreadData(nthreads);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoCompositeShape::TGeoCompositeShape()
                    :TGeoBBox(0, 0, 0)
 {
-// Default constructor
    SetShapeBit(TGeoShape::kGeoComb);
    fNode  = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
                    :TGeoBBox(0, 0, 0)
 {
-// Default constructor
    SetShapeBit(TGeoShape::kGeoComb);
    SetName(name);
    fNode  = 0;
@@ -198,11 +202,12 @@ TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoCompositeShape::TGeoCompositeShape(const char *expression)
                    :TGeoBBox(0, 0, 0)
 {
-// Default constructor
    SetShapeBit(TGeoShape::kGeoComb);
    fNode  = 0;
    MakeNode(expression);
@@ -214,11 +219,12 @@ TGeoCompositeShape::TGeoCompositeShape(const char *expression)
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with a Boolean node
+
 TGeoCompositeShape::TGeoCompositeShape(const char *name, TGeoBoolNode *node)
                    :TGeoBBox(0,0,0)
 {
-// Constructor with a Boolean node
    SetName(name);
    fNode = node;
    if (!fNode) {
@@ -228,17 +234,19 @@ TGeoCompositeShape::TGeoCompositeShape(const char *name, TGeoBoolNode *node)
    ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGeoCompositeShape::~TGeoCompositeShape()
 {
-// destructor
    if (fNode) delete fNode;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes capacity of this shape [length^3] by sampling with 1% error.
+
 Double_t TGeoCompositeShape::Capacity() const
 {
-// Computes capacity of this shape [length^3] by sampling with 1% error.
    Double_t pt[3];
    if (!gRandom) gRandom = new TRandom3();
    Double_t vbox = 8*fDX*fDY*fDZ; // cm3
@@ -255,90 +263,100 @@ Double_t TGeoCompositeShape::Capacity() const
    return capacity;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute bounding box of the sphere
+
 void TGeoCompositeShape::ComputeBBox()
 {
-// compute bounding box of the sphere
    if(fNode) fNode->ComputeBBox(fDX, fDY, fDZ, fOrigin);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes normal vector in POINT to the composite shape.
+
 void TGeoCompositeShape::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Computes normal vector in POINT to the composite shape.
    if (fNode) fNode->ComputeNormal(point,dir,norm);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tests if point is inside the shape.
+
 Bool_t TGeoCompositeShape::Contains(const Double_t *point) const
 {
-// Tests if point is inside the shape.
    if (fNode) return fNode->Contains(point);
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute closest distance from point px,py to each corner.
+
 Int_t TGeoCompositeShape::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// Compute closest distance from point px,py to each corner.
    const Int_t numPoints = GetNmeshVertices();
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from outside point to this composite shape.
+/// Check if the bounding box is crossed within the requested distance
+
 Double_t TGeoCompositeShape::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact,
                                       Double_t step, Double_t *safe) const
 {
-// Compute distance from outside point to this composite shape.
-// Check if the bounding box is crossed within the requested distance
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
    if (fNode) return fNode->DistFromOutside(point, dir, iact, step, safe);
    return TGeoShape::Big();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from inside point to outside of this composite shape.
+
 Double_t TGeoCompositeShape::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact,
                                       Double_t step, Double_t *safe) const
 {
-// Compute distance from inside point to outside of this composite shape.
    if (fNode) return fNode->DistFromInside(point, dir, iact, step, safe);
    return TGeoShape::Big();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divide all range of iaxis in range/step cells
+
 TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume  * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/,
                                        Int_t /*ndiv*/, Double_t /*start*/, Double_t /*step*/)
 {
-// Divide all range of iaxis in range/step cells
    Error("Divide", "Composite shapes cannot be divided");
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns numbers of vertices, segments and polygons composing the shape mesh.
+
 void TGeoCompositeShape::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
-// Returns numbers of vertices, segments and polygons composing the shape mesh.
    nvert = GetNmeshVertices();
    nsegs = 0;
    npols = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print shape parameters
+
 void TGeoCompositeShape::InspectShape() const
 {
-// print shape parameters
    printf("*** TGeoCompositeShape : %s = %s\n", GetName(), GetTitle());
    printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a booleann node according to the top level boolean operation of expression.
+/// Propagates signal to branches until expression is fully decomposed.
+///   printf("Making node for : %s\n", expression);
+
 void TGeoCompositeShape::MakeNode(const char *expression)
 {
-// Make a booleann node according to the top level boolean operation of expression.
-// Propagates signal to branches until expression is fully decomposed.
-//   printf("Making node for : %s\n", expression);
    if (fNode) delete fNode;
    fNode = 0;
    SetTitle(expression);
@@ -367,13 +385,13 @@ void TGeoCompositeShape::MakeNode(const char *expression)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this composite shape into the current 3D viewer
+/// Returns bool flag indicating if the caller should continue to
+/// paint child objects
+
 Bool_t TGeoCompositeShape::PaintComposite(Option_t *option) const
 {
-   // Paint this composite shape into the current 3D viewer
-   // Returns bool flag indicating if the caller should continue to
-   // paint child objects
-
    Bool_t addChildren = kTRUE;
 
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
@@ -411,10 +429,11 @@ Bool_t TGeoCompositeShape::PaintComposite(Option_t *option) const
    return addChildren;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register the shape and all components to TGeoManager class.
+
 void TGeoCompositeShape::RegisterYourself()
 {
-// Register the shape and all components to TGeoManager class.
    if (gGeoManager->GetListOfShapes()->FindObject(this)) return;
    gGeoManager->AddShape(this);
    TGeoMatrix *matrix;
@@ -452,19 +471,21 @@ void TGeoCompositeShape::RegisterYourself()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes the closest distance from given point to this shape, according
+/// to option. The matching point on the shape is stored in spoint.
+
 Double_t TGeoCompositeShape::Safety(const Double_t *point, Bool_t in) const
 {
-// computes the closest distance from given point to this shape, according
-// to option. The matching point on the shape is stored in spoint.
    if (fNode) return fNode->Safety(point,in);
    return 0.;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoCompositeShape::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
    if (fNode) fNode->SavePrimitive(out,option);
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
@@ -473,72 +494,81 @@ void TGeoCompositeShape::SavePrimitive(std::ostream &out, Option_t *option /*= "
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create points for a composite shape
+
 void TGeoCompositeShape::SetPoints(Double_t *points) const
 {
-// create points for a composite shape
    if (fNode) fNode->SetPoints(points);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create points for a composite shape
+
 void TGeoCompositeShape::SetPoints(Float_t *points) const
 {
-// create points for a composite shape
    if (fNode) fNode->SetPoints(points);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute size of this 3D object
+
 void TGeoCompositeShape::Sizeof3D() const
 {
-// compute size of this 3D object
    if (fNode) fNode->Sizeof3D();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of vertices of the mesh representation
+
 Int_t TGeoCompositeShape::GetNmeshVertices() const
 {
-// Return number of vertices of the mesh representation
    if (!fNode) return 0;
    return fNode->GetNpoints();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the inside status for each of the points in the array.
+/// Input: Array of point coordinates + vector size
+/// Output: Array of Booleans for the inside of each point
+
 void TGeoCompositeShape::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
 {
-// Check the inside status for each of the points in the array.
-// Input: Array of point coordinates + vector size
-// Output: Array of Booleans for the inside of each point
    for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the normal for an array o points so that norm.dot.dir is positive
+/// Input: Arrays of point coordinates and directions + vector size
+/// Output: Array of normal directions
+
 void TGeoCompositeShape::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
 {
-// Compute the normal for an array o points so that norm.dot.dir is positive
-// Input: Arrays of point coordinates and directions + vector size
-// Output: Array of normal directions
    for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoCompositeShape::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+
 void TGeoCompositeShape::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from each of the points in the input array.
+/// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+/// Output: Safety values
+
 void TGeoCompositeShape::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
 {
-// Compute safe distance from each of the points in the input array.
-// Input: Array of point coordinates, array of statuses for these points, size of the arrays
-// Output: Safety values
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }

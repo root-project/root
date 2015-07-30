@@ -41,39 +41,41 @@ ClassImp(RooEllipse)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooEllipse::RooEllipse() 
 { 
-  // Default constructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooEllipse::~RooEllipse() 
 {
-  // Destructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a 2-dimensional ellipse centered at (x1,x2) that represents the confidence
+/// level contour for a measurement with errors (s1,s2) and correlation coefficient rho.
+/// The resulting curve is defined as the unique ellipse that passes through these points:
+///
+///   (x1+rho*s1,x2+s2) , (x1-rho*s1,x2-s2) , (x1+s1,x2+rho*s2) , (x1-s1,x2-rho*s2)
+///
+/// and is described by the implicit equation:
+///
+///   x*x      2*rho*x*y      y*y
+///  -----  -  ---------  +  -----  =  1 - rho*rho
+///  s1*s1       s1*s2       s2*s2
+///
+/// The input parameters s1,s2 must be > 0 and also |rho| <= 1.
+/// The degenerate case |rho|=1 corresponds to a straight line and
+/// is handled as a special case.
+
 RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, Double_t s2, Double_t rho, Int_t points) 
 {
-  // Create a 2-dimensional ellipse centered at (x1,x2) that represents the confidence
-  // level contour for a measurement with errors (s1,s2) and correlation coefficient rho.
-  // The resulting curve is defined as the unique ellipse that passes through these points:
-  //
-  //   (x1+rho*s1,x2+s2) , (x1-rho*s1,x2-s2) , (x1+s1,x2+rho*s2) , (x1-s1,x2-rho*s2)
-  //
-  // and is described by the implicit equation:
-  //
-  //   x*x      2*rho*x*y      y*y
-  //  -----  -  ---------  +  -----  =  1 - rho*rho
-  //  s1*s1       s1*s2       s2*s2
-  //
-  // The input parameters s1,s2 must be > 0 and also |rho| <= 1.
-  // The degenerate case |rho|=1 corresponds to a straight line and
-  // is handled as a special case.
-
   SetName(name);
   SetTitle(name);
 
@@ -119,34 +121,38 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print name of ellipse on ostream
+
 void RooEllipse::printName(ostream& os) const 
 {
-  // Print name of ellipse on ostream
   os << GetName() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print title of ellipse on ostream
+
 void RooEllipse::printTitle(ostream& os) const 
 {
-  // Print title of ellipse on ostream
   os << GetName() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class name of ellipse on ostream
+
 void RooEllipse::printClassName(ostream& os) const 
 {
-  // Print class name of ellipse on ostream
   os << IsA()->GetName() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print detailed multi line information on ellipse on ostreamx
+
 void RooEllipse::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
 {
-  // Print detailed multi line information on ellipse on ostreamx
   RooPlotable::printMultiline(os,contents,verbose,indent);
   for(Int_t index=0; index < fNpoints; index++) {
     os << indent << "Point [" << index << "] is at (" << fX[index] << "," << fY[index] << ")" << endl;

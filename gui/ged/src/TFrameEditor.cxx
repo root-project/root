@@ -42,13 +42,13 @@ enum EFrameWid {
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of TFrame editor GUI.
+
 TFrameEditor::TFrameEditor(const TGWindow *p, Int_t width,
                            Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of TFrame editor GUI.
-
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGButtonGroup *bgr = new TGButtonGroup(f2,3,1,3,0, "Frame Border Mode");
    bgr->SetRadioButtonExclusive(kTRUE);
@@ -76,11 +76,11 @@ TFrameEditor::TFrameEditor(const TGWindow *p, Int_t width,
    AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of frame editor.
+
 TFrameEditor::~TFrameEditor()
 {
-   // Destructor of frame editor.
-
    // children of TGButonGroup are not deleted
    delete fBmode;
    delete fBmode0;
@@ -88,11 +88,11 @@ TFrameEditor::~TFrameEditor()
    delete fBmodelh;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TFrameEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fBmode->Connect("Toggled(Bool_t)","TFrameEditor",this,"DoBorderMode()");
    fBmode0->Connect("Toggled(Bool_t)","TFrameEditor",this,"DoBorderMode()");
    fBmode1->Connect("Toggled(Bool_t)","TFrameEditor",this,"DoBorderMode()");
@@ -101,11 +101,11 @@ void TFrameEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the frame attributes.
+
 void TFrameEditor::SetModel(TObject* obj)
 {
-   // Pick up the frame attributes.
-
    fFrame = (TFrame *)obj;
 
    Int_t par;
@@ -123,11 +123,11 @@ void TFrameEditor::SetModel(TObject* obj)
    if (fInit) ConnectSignals2Slots();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the border mode settings.
+
 void TFrameEditor::DoBorderMode()
 {
-   // Slot connected to the border mode settings.
-
    Int_t mode = 0;
    if (fBmode->GetState() == kButtonDown) mode = -1;
    else if (fBmode0->GetState() == kButtonDown) mode = 0;
@@ -144,11 +144,11 @@ void TFrameEditor::DoBorderMode()
    gPad->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the border size settings.
+
 void TFrameEditor::DoBorderSize(Int_t size)
 {
-   // Slot connected to the border size settings.
-
    fFrame->SetBorderSize(size);
    Update();
 }

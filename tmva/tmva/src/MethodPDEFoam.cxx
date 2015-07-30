@@ -70,7 +70,9 @@ REGISTER_METHOD(PDEFoam)
 
 ClassImp(TMVA::MethodPDEFoam)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// init PDEFoam objects
+
 TMVA::MethodPDEFoam::MethodPDEFoam( const TString& jobName,
                                     const TString& methodTitle,
                                     DataSetInfo& dsi,
@@ -105,10 +107,11 @@ TMVA::MethodPDEFoam::MethodPDEFoam( const TString& jobName,
    , fXmax()
    , fFoam()
 {
-   // init PDEFoam objects
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from weight file
+
 TMVA::MethodPDEFoam::MethodPDEFoam( DataSetInfo& dsi,
                                     const TString& theWeightFile,
                                     TDirectory* theTargetDir ) :
@@ -141,25 +144,25 @@ TMVA::MethodPDEFoam::MethodPDEFoam( DataSetInfo& dsi,
    , fXmax()
    , fFoam()
 {
-   // constructor from weight file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// PDEFoam can handle classification with multiple classes and regression
+/// with one or more regression-targets
+
 Bool_t TMVA::MethodPDEFoam::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
-   // PDEFoam can handle classification with multiple classes and regression
-   // with one or more regression-targets
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    if (type == Types::kMulticlass ) return kTRUE;
    if (type == Types::kRegression) return kTRUE;
    return kFALSE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initialization called by all constructors
+
 void TMVA::MethodPDEFoam::Init( void )
 {
-   // default initialization called by all constructors
-
    // init PDEFoam options
    fSigBgSeparated = kFALSE;   // default: unified foam
    fFrac           = 0.001;    // fraction of outlier events
@@ -192,12 +195,13 @@ void TMVA::MethodPDEFoam::Init( void )
       SetSignalReferenceCut( 0.5 ); // MVA output in [0, 1]
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Declare MethodPDEFoam options
+///
+
 void TMVA::MethodPDEFoam::DeclareOptions()
 {
-   //
-   // Declare MethodPDEFoam options
-   //
    DeclareOptionRef( fSigBgSeparated = kFALSE, "SigBgSeparate", "Separate foams for signal and background" );
    DeclareOptionRef( fFrac = 0.001,           "TailCut",  "Fraction of outlier events that are excluded from the foam in each dimension" );
    DeclareOptionRef( fVolFrac = 1./15.,    "VolFrac",  "Size of sampling box, used for density calculation during foam build-up (maximum value: 1.0 is equivalent to volume of entire foam)");
@@ -228,19 +232,20 @@ void TMVA::MethodPDEFoam::DeclareOptions()
 }
 
 
-//_______________________________________________________________________
-void TMVA::MethodPDEFoam::DeclareCompatibilityOptions() {
-   // options that are used ONLY for the READER to ensure backward compatibility
+////////////////////////////////////////////////////////////////////////////////
+/// options that are used ONLY for the READER to ensure backward compatibility
 
+void TMVA::MethodPDEFoam::DeclareCompatibilityOptions() {
    MethodBase::DeclareCompatibilityOptions();
    DeclareOptionRef(fCutNmin = kTRUE, "CutNmin",  "Requirement for minimal number of events in cell");
    DeclareOptionRef(fPeekMax = kTRUE, "PeekMax",  "Peek cell with max. loss for the next split");
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process user options
+
 void TMVA::MethodPDEFoam::ProcessOptions()
 {
-   // process user options
    if (!(fFrac>=0. && fFrac<=1.)) {
       Log() << kWARNING << "TailCut not in [0.,1] ==> using 0.001 instead" << Endl;
       fFrac = 0.001;
@@ -294,22 +299,23 @@ void TMVA::MethodPDEFoam::ProcessOptions()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodPDEFoam::~MethodPDEFoam( void )
 {
-   // destructor
    DeleteFoams();
 
    if (fKernelEstimator != NULL)
       delete fKernelEstimator;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine foam range [fXmin, fXmax] for all dimensions, such
+/// that a fraction of 'fFrac' events lie outside the foam.
+
 void TMVA::MethodPDEFoam::CalcXminXmax()
 {
-   // Determine foam range [fXmin, fXmax] for all dimensions, such
-   // that a fraction of 'fFrac' events lie outside the foam.
-
    fXmin.clear();
    fXmax.clear();
    UInt_t kDim = GetNvar(); // == Data()->GetNVariables();
@@ -413,11 +419,11 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
    return;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Train PDE-Foam depending on the set options
+
 void TMVA::MethodPDEFoam::Train( void )
 {
-   // Train PDE-Foam depending on the set options
-
    Log() << kVERBOSE << "Calculate Xmin and Xmax for every dimension" << Endl;
    CalcXminXmax();
 
@@ -460,14 +466,14 @@ void TMVA::MethodPDEFoam::Train( void )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creation of 2 separated foams: one for signal events, one for
+/// backgound events.  At the end the foam cells of fFoam[0] will
+/// contain the average number of signal events and fFoam[1] will
+/// contain the average number of background events.
+
 void TMVA::MethodPDEFoam::TrainSeparatedClassification()
 {
-   // Creation of 2 separated foams: one for signal events, one for
-   // backgound events.  At the end the foam cells of fFoam[0] will
-   // contain the average number of signal events and fFoam[1] will
-   // contain the average number of background events.
-
    TString foamcaption[2];
    foamcaption[0] = "SignalFoam";
    foamcaption[1] = "BgFoam";
@@ -501,12 +507,12 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create only one unified foam (fFoam[0]) whose cells contain the
+/// average discriminator (N_sig)/(N_sig + N_bg)
+
 void TMVA::MethodPDEFoam::TrainUnifiedClassification()
 {
-   // Create only one unified foam (fFoam[0]) whose cells contain the
-   // average discriminator (N_sig)/(N_sig + N_bg)
-
    fFoam.push_back( InitFoam("DiscrFoam", kDiscr, fSignalClass) );
 
    Log() << kVERBOSE << "Filling binary search tree of discriminator foam with events" << Endl;
@@ -534,15 +540,15 @@ void TMVA::MethodPDEFoam::TrainUnifiedClassification()
    fFoam.back()->Finalize();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create one unified foam (see TrainUnifiedClassification()) for
+/// each class, where the cells of foam i (fFoam[i]) contain the
+/// average fraction of events of class i, i.e.
+///
+///   D = number events of class i / total number of events
+
 void TMVA::MethodPDEFoam::TrainMultiClassification()
 {
-   // Create one unified foam (see TrainUnifiedClassification()) for
-   // each class, where the cells of foam i (fFoam[i]) contain the
-   // average fraction of events of class i, i.e.
-   //
-   //   D = number events of class i / total number of events
-
    for (UInt_t iClass=0; iClass<DataInfo().GetNClasses(); ++iClass) {
 
       fFoam.push_back( InitFoam(Form("MultiClassFoam%u",iClass), kMultiClass, iClass) );
@@ -575,13 +581,13 @@ void TMVA::MethodPDEFoam::TrainMultiClassification()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Training one (mono target regression) foam, whose cells contain
+/// the average 0th target.  The dimension of the foam = number of
+/// non-targets (= number of variables).
+
 void TMVA::MethodPDEFoam::TrainMonoTargetRegression()
 {
-   // Training one (mono target regression) foam, whose cells contain
-   // the average 0th target.  The dimension of the foam = number of
-   // non-targets (= number of variables).
-
    if (Data()->GetNTargets() != 1) {
       Log() << kFATAL << "Can't do mono-target regression with "
             << Data()->GetNTargets() << " targets!" << Endl;
@@ -616,13 +622,13 @@ void TMVA::MethodPDEFoam::TrainMonoTargetRegression()
    fFoam.back()->Finalize();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Training one (multi target regression) foam, whose cells contain
+/// the average event density.  The dimension of the foam = number
+/// of non-targets + number of targets.
+
 void TMVA::MethodPDEFoam::TrainMultiTargetRegression()
 {
-   // Training one (multi target regression) foam, whose cells contain
-   // the average event density.  The dimension of the foam = number
-   // of non-targets + number of targets.
-
    Log() << kDEBUG << "Number of variables: " << Data()->GetNVariables() << Endl;
    Log() << kDEBUG << "Number of Targets:   " << Data()->GetNTargets()   << Endl;
    Log() << kDEBUG << "Dimension of foam:   " << Data()->GetNVariables()+Data()->GetNTargets() << Endl;
@@ -673,29 +679,29 @@ void TMVA::MethodPDEFoam::TrainMultiTargetRegression()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return Mva-Value.
+///
+/// In case of 'fSigBgSeparated==false' (one unifiend PDEFoam was
+/// trained) the function returns the content of the cell, which
+/// corresponds to the current TMVA::Event, i.e.  D =
+/// N_sig/(N_bg+N_sig).
+///
+/// In case of 'fSigBgSeparated==true' (two separate PDEFoams were
+/// trained) the function returns
+///
+///    D = Density_sig/(Density_sig+Density_bg)
+///
+/// where 'Density_sig' is the content of the cell in the signal
+/// PDEFoam (fFoam[0]) and 'Density_bg' is the content of the cell
+/// in the background PDEFoam (fFoam[1]).
+///
+/// In both cases the error on the discriminant is stored in 'err'
+/// and 'errUpper'.  (Of course err and errUpper must be non-zero
+/// and point to valid address to make this work.)
+
 Double_t TMVA::MethodPDEFoam::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // Return Mva-Value.
-   //
-   // In case of 'fSigBgSeparated==false' (one unifiend PDEFoam was
-   // trained) the function returns the content of the cell, which
-   // corresponds to the current TMVA::Event, i.e.  D =
-   // N_sig/(N_bg+N_sig).
-   //
-   // In case of 'fSigBgSeparated==true' (two separate PDEFoams were
-   // trained) the function returns
-   //
-   //    D = Density_sig/(Density_sig+Density_bg)
-   //
-   // where 'Density_sig' is the content of the cell in the signal
-   // PDEFoam (fFoam[0]) and 'Density_bg' is the content of the cell
-   // in the background PDEFoam (fFoam[1]).
-   //
-   // In both cases the error on the discriminant is stored in 'err'
-   // and 'errUpper'.  (Of course err and errUpper must be non-zero
-   // and point to valid address to make this work.)
-
    const Event* ev = GetEvent();
    Double_t discr = 0.;
 
@@ -731,17 +737,17 @@ Double_t TMVA::MethodPDEFoam::GetMvaValue( Double_t* err, Double_t* errUpper )
       return discr;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the error on the Mva value
+///
+/// If fSigBgSeparated == true the error is calculated from the
+/// number of events in the signal and background PDEFoam cells.
+///
+/// If fSigBgSeparated == false, the error is taken directly from
+/// the PDEFoam cell.
+
 Double_t TMVA::MethodPDEFoam::CalculateMVAError()
 {
-   // Calculate the error on the Mva value
-   //
-   // If fSigBgSeparated == true the error is calculated from the
-   // number of events in the signal and background PDEFoam cells.
-   //
-   // If fSigBgSeparated == false, the error is taken directly from
-   // the PDEFoam cell.
-
    const Event* ev = GetEvent(); // current event
    Double_t mvaError = 0.0; // the error on the Mva value
 
@@ -770,12 +776,12 @@ Double_t TMVA::MethodPDEFoam::CalculateMVAError()
    return mvaError;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the multiclass MVA response for the PDEFoam classifier.  The
+/// returned MVA values are normalized, i.e. their sum equals 1.
+
 const std::vector<Float_t>& TMVA::MethodPDEFoam::GetMulticlassValues()
 {
-   // Get the multiclass MVA response for the PDEFoam classifier.  The
-   // returned MVA values are normalized, i.e. their sum equals 1.
-
    const TMVA::Event *ev = GetEvent();
    std::vector<Float_t> xvec = ev->GetValues();
 
@@ -803,13 +809,13 @@ const std::vector<Float_t>& TMVA::MethodPDEFoam::GetMulticlassValues()
    return *fMulticlassReturnVal;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute ranking of input variables from the number of cuts made
+/// in each PDEFoam dimension.  The PDEFoam dimension (the variable)
+/// for which the most cuts were done is ranked highest.
+
 const TMVA::Ranking* TMVA::MethodPDEFoam::CreateRanking()
 {
-   // Compute ranking of input variables from the number of cuts made
-   // in each PDEFoam dimension.  The PDEFoam dimension (the variable)
-   // for which the most cuts were done is ranked highest.
-
    // create the ranking object
    fRanking = new Ranking(GetName(), "Variable Importance");
    std::vector<Float_t> importance(GetNvar(), 0);
@@ -851,18 +857,18 @@ const TMVA::Ranking* TMVA::MethodPDEFoam::CreateRanking()
    return fRanking;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill in 'nCuts' the number of cuts made in every foam dimension,
+/// starting at the root cell 'cell'.
+///
+/// Parameters:
+///
+/// - cell - root cell to start the counting from
+///
+/// - nCuts - the number of cuts are saved in this vector
+
 void TMVA::MethodPDEFoam::GetNCuts(PDEFoamCell *cell, std::vector<UInt_t> &nCuts)
 {
-   // Fill in 'nCuts' the number of cuts made in every foam dimension,
-   // starting at the root cell 'cell'.
-   //
-   // Parameters:
-   //
-   // - cell - root cell to start the counting from
-   //
-   // - nCuts - the number of cuts are saved in this vector
-
    if (cell == NULL || cell->GetStat() == 1) // cell is active
       return;
 
@@ -874,11 +880,11 @@ void TMVA::MethodPDEFoam::GetNCuts(PDEFoamCell *cell, std::vector<UInt_t> &nCuts
       GetNCuts(cell->GetDau1(), nCuts);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Xmin, Xmax for every dimension in the given pdefoam object
+
 void TMVA::MethodPDEFoam::SetXminXmax( TMVA::PDEFoam *pdefoam )
 {
-   // Set Xmin, Xmax for every dimension in the given pdefoam object
-
    if (!pdefoam){
       Log() << kFATAL << "Null pointer given!" << Endl;
       return;
@@ -896,30 +902,30 @@ void TMVA::MethodPDEFoam::SetXminXmax( TMVA::PDEFoam *pdefoam )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new PDEFoam, set the PDEFoam options (nCells, nBin,
+/// Xmin, Xmax, etc.) and initialize the PDEFoam by calling
+/// pdefoam->Initialize().
+///
+/// Parameters:
+///
+/// - foamcaption - name of PDEFoam object
+///
+/// - ft - type of PDEFoam
+///   Candidates are:
+///     - kSeparate    - creates TMVA::PDEFoamEvent
+///     - kDiscr       - creates TMVA::PDEFoamDiscriminant
+///     - kMonoTarget  - creates TMVA::PDEFoamTarget
+///     - kMultiTarget - creates TMVA::MultiTarget
+///     - kMultiClass  - creates TMVA::PDEFoamDiscriminant
+///
+///   If 'fDTSeparation != kFoam' then a TMVA::PDEFoamDecisionTree
+///   is created (the separation type depends on fDTSeparation).
+///
+/// - cls - marked event class (optional, default value = 0)
+
 TMVA::PDEFoam* TMVA::MethodPDEFoam::InitFoam(TString foamcaption, EFoamType ft, UInt_t cls)
 {
-   // Create a new PDEFoam, set the PDEFoam options (nCells, nBin,
-   // Xmin, Xmax, etc.) and initialize the PDEFoam by calling
-   // pdefoam->Initialize().
-   //
-   // Parameters:
-   //
-   // - foamcaption - name of PDEFoam object
-   //
-   // - ft - type of PDEFoam
-   //   Candidates are:
-   //     - kSeparate    - creates TMVA::PDEFoamEvent
-   //     - kDiscr       - creates TMVA::PDEFoamDiscriminant
-   //     - kMonoTarget  - creates TMVA::PDEFoamTarget
-   //     - kMultiTarget - creates TMVA::MultiTarget
-   //     - kMultiClass  - creates TMVA::PDEFoamDiscriminant
-   //
-   //   If 'fDTSeparation != kFoam' then a TMVA::PDEFoamDecisionTree
-   //   is created (the separation type depends on fDTSeparation).
-   //
-   // - cls - marked event class (optional, default value = 0)
-
    // number of foam dimensions
    Int_t dim = 1;
    if (ft == kMultiTarget)
@@ -1031,11 +1037,11 @@ TMVA::PDEFoam* TMVA::MethodPDEFoam::InitFoam(TString foamcaption, EFoamType ft, 
    return pdefoam;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return regression values for both multi- and mono-target regression
+
 const std::vector<Float_t>& TMVA::MethodPDEFoam::GetRegressionValues()
 {
-   // Return regression values for both multi- and mono-target regression
-
    if (fRegressionReturnVal == 0) fRegressionReturnVal = new std::vector<Float_t>();
    fRegressionReturnVal->clear();
    fRegressionReturnVal->reserve(Data()->GetNTargets());
@@ -1082,11 +1088,12 @@ const std::vector<Float_t>& TMVA::MethodPDEFoam::GetRegressionValues()
    return (*fRegressionReturnVal);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create a pdefoam kernel estimator, depending on the current
+/// value of fKernel
+
 TMVA::PDEFoamKernelBase* TMVA::MethodPDEFoam::CreatePDEFoamKernel()
 {
-   // create a pdefoam kernel estimator, depending on the current
-   // value of fKernel
    switch (fKernel) {
    case kNone:
       return new PDEFoamKernelTrivial();
@@ -1101,21 +1108,23 @@ TMVA::PDEFoamKernelBase* TMVA::MethodPDEFoam::CreatePDEFoamKernel()
    return NULL;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes all trained foams
+
 void TMVA::MethodPDEFoam::DeleteFoams()
 {
-   // Deletes all trained foams
    for (UInt_t i=0; i<fFoam.size(); i++)
       if (fFoam.at(i)) delete fFoam.at(i);
    fFoam.clear();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reset MethodPDEFoam:
+/// - delete all PDEFoams
+/// - delete the kernel estimator
+
 void TMVA::MethodPDEFoam::Reset()
 {
-   // reset MethodPDEFoam:
-   // - delete all PDEFoams
-   // - delete the kernel estimator
    DeleteFoams();
 
    if (fKernelEstimator != NULL) {
@@ -1124,15 +1133,16 @@ void TMVA::MethodPDEFoam::Reset()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodPDEFoam::PrintCoefficients( void )
 {}
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create XML output of PDEFoam method variables
+
 void TMVA::MethodPDEFoam::AddWeightsXMLTo( void* parent ) const
 {
-   // create XML output of PDEFoam method variables
-
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "SigBgSeparated",  fSigBgSeparated );
    gTools().AddAttr( wght, "Frac",            fFrac );
@@ -1171,11 +1181,11 @@ void TMVA::MethodPDEFoam::AddWeightsXMLTo( void* parent ) const
    WriteFoamsToFile();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write PDEFoams to file
+
 void TMVA::MethodPDEFoam::WriteFoamsToFile() const
 {
-   // Write PDEFoams to file
-
    // fill variable names into foam
    FillVariableNamesToFoam();
 
@@ -1203,11 +1213,11 @@ void TMVA::MethodPDEFoam::WriteFoamsToFile() const
          << gTools().Color("lightblue") << rfname << gTools().Color("reset") << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read options and internal parameters
+
 void  TMVA::MethodPDEFoam::ReadWeightsFromStream( std::istream& istr )
 {
-   // read options and internal parameters
-
    istr >> fSigBgSeparated;                 // Seperate Sig and Bg, or not
    istr >> fFrac;                           // Fraction used for calc of Xmin, Xmax
    istr >> fDiscrErrCut;                    // cut on discrimant error
@@ -1259,11 +1269,11 @@ void  TMVA::MethodPDEFoam::ReadWeightsFromStream( std::istream& istr )
    ReadFoamsFromFile();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read PDEFoam variables from xml weight file
+
 void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode )
 {
-   // read PDEFoam variables from xml weight file
-
    gTools().ReadAttr( wghtnode, "SigBgSeparated",  fSigBgSeparated );
    gTools().ReadAttr( wghtnode, "Frac",            fFrac );
    gTools().ReadAttr( wghtnode, "DiscrErrCut",     fDiscrErrCut );
@@ -1335,26 +1345,26 @@ void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode )
    fKernelEstimator = CreatePDEFoamKernel();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reads a foam with name 'foamname' from file, and returns a clone
+/// of the foam.  The given ROOT file must be open.  (The ROOT file
+/// will not be closed in this function.)
+///
+/// Parameters:
+///
+/// - file - an open ROOT file
+///
+/// - foamname - name of foam to load from the file
+///
+/// Returns:
+///
+/// If a foam with name 'foamname' exists in the file, then it is
+/// read from the file, cloned and returned.  If a foam with name
+/// 'foamname' does not exist in the file or the clone operation
+/// does not succeed, then NULL is returned.
+
 TMVA::PDEFoam* TMVA::MethodPDEFoam::ReadClonedFoamFromFile(TFile* file, const TString& foamname)
 {
-   // Reads a foam with name 'foamname' from file, and returns a clone
-   // of the foam.  The given ROOT file must be open.  (The ROOT file
-   // will not be closed in this function.)
-   //
-   // Parameters:
-   //
-   // - file - an open ROOT file
-   //
-   // - foamname - name of foam to load from the file
-   //
-   // Returns:
-   //
-   // If a foam with name 'foamname' exists in the file, then it is
-   // read from the file, cloned and returned.  If a foam with name
-   // 'foamname' does not exist in the file or the clone operation
-   // does not succeed, then NULL is returned.
-
    if (file == NULL) {
       Log() << kWARNING << "<ReadClonedFoamFromFile>: NULL pointer given" << Endl;
       return NULL;
@@ -1376,11 +1386,11 @@ TMVA::PDEFoam* TMVA::MethodPDEFoam::ReadClonedFoamFromFile(TFile* file, const TS
    return foam;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read foams from file
+
 void TMVA::MethodPDEFoam::ReadFoamsFromFile()
 {
-   // read foams from file
-
    TString rfname( GetWeightFileName() );
 
    // replace in case of txt weight file
@@ -1429,10 +1439,11 @@ void TMVA::MethodPDEFoam::ReadFoamsFromFile()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert UInt_t to EKernel (used for reading weight files)
+
 TMVA::MethodPDEFoam::EKernel TMVA::MethodPDEFoam::UIntToKernel(UInt_t iker)
 {
-   // convert UInt_t to EKernel (used for reading weight files)
    switch(iker) {
    case 0:  return kNone;
    case 1:  return kGaus;
@@ -1444,10 +1455,11 @@ TMVA::MethodPDEFoam::EKernel TMVA::MethodPDEFoam::UIntToKernel(UInt_t iker)
    return kNone;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// convert UInt_t to ETargetSelection (used for reading weight files)
+
 TMVA::ETargetSelection TMVA::MethodPDEFoam::UIntToTargetSelection(UInt_t its)
 {
-   // convert UInt_t to ETargetSelection (used for reading weight files)
    switch(its) {
    case 0:  return kMean;
    case 1:  return kMpv;
@@ -1458,10 +1470,11 @@ TMVA::ETargetSelection TMVA::MethodPDEFoam::UIntToTargetSelection(UInt_t its)
    return kMean;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// store the variable names in all foams
+
 void TMVA::MethodPDEFoam::FillVariableNamesToFoam() const
 {
-   // store the variable names in all foams
    for (UInt_t ifoam=0; ifoam<fFoam.size(); ifoam++) {
       for (Int_t idim=0; idim<fFoam.at(ifoam)->GetTotDim(); idim++) {
          if(fMultiTargetRegression && (UInt_t)idim>=DataInfo().GetNVariables())
@@ -1472,17 +1485,19 @@ void TMVA::MethodPDEFoam::FillVariableNamesToFoam() const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write PDEFoam-specific classifier response
+/// NOT IMPLEMENTED YET!
+
 void TMVA::MethodPDEFoam::MakeClassSpecific( std::ostream& /*fout*/, const TString& /*className*/ ) const
 {
-   // write PDEFoam-specific classifier response
-   // NOT IMPLEMENTED YET!
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// provide help message
+
 void TMVA::MethodPDEFoam::GetHelpMessage() const
 {
-   // provide help message
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;

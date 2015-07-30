@@ -65,29 +65,29 @@ ClassImp(TXTRU)
 // Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/polytype.gif"> </P> End_Html
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TXTRU shape - default constructor
+
 TXTRU::TXTRU()
    : fNxy(0), fNxyAlloc(0), fNz(0), fNzAlloc(0), fXvtx(0), fYvtx(0),
      fZ(0), fScale(0), fX0(0), fY0(0)
 {
-   // TXTRU shape - default constructor
-
    fPolygonShape  = kUncheckedXY;
    fZOrdering     = kUncheckedZ;
    fSplitConcave  = kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TXTRU shape - normal constructor
+///
+/// Parameters of Nxy positions must be entered via TXTRU::DefineVertex
+/// Parameters of Nz  positions must be entered via TXTRU::DefineSection
+
 TXTRU::TXTRU(const char *name, const char *title, const char *material,
              Int_t nxy, Int_t nz)
    : TShape (name,title,material)
 {
-   // TXTRU shape - normal constructor
-   //
-   // Parameters of Nxy positions must be entered via TXTRU::DefineVertex
-   // Parameters of Nz  positions must be entered via TXTRU::DefineSection
-
    // start in a known state even if "Error" is encountered
    fNxy      = 0;
    fNxyAlloc = 0;
@@ -144,22 +144,22 @@ TXTRU::TXTRU(const char *name, const char *title, const char *material,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TXTRU copy constructor
+
 TXTRU::TXTRU(const TXTRU &xtru) : TShape(xtru)
 {
-   // TXTRU copy constructor
-
    // patterned after other ROOT objects
 
    ((TXTRU&)xtru).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TXTRU destructor deallocates arrays
+
 TXTRU::~TXTRU()
 {
-   // TXTRU destructor deallocates arrays
-
    if (fXvtx) delete [] fXvtx;
    if (fYvtx) delete [] fYvtx;
    fXvtx     = 0;
@@ -183,11 +183,11 @@ TXTRU::~TXTRU()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deep assignment operator
+
 TXTRU& TXTRU::operator=(const TXTRU &rhs)
 {
-   // Deep assignment operator
-
    // protect against self-assignment
    if (this == &rhs) return *this;
 
@@ -207,11 +207,11 @@ TXTRU& TXTRU::operator=(const TXTRU &rhs)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TXTRU Copy method
+
 void TXTRU::Copy(TObject &obj) const
 {
-   // TXTRU Copy method
-
    // patterned after other ROOT objects
 
    TObject::Copy(obj);
@@ -244,12 +244,12 @@ void TXTRU::Copy(TObject &obj) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set z section iz information
+/// expand size of array if necessary
+
 void TXTRU::DefineSection(Int_t iz, Float_t z, Float_t scale, Float_t x0, Float_t y0)
 {
-   // Set z section iz information
-   // expand size of array if necessary
-
    if (iz < 0) return;
 
    // setting a new section makes things unverified
@@ -299,9 +299,9 @@ void TXTRU::DefineSection(Int_t iz, Float_t z, Float_t scale, Float_t x0, Float_
 }
 
 
-//______________________________________________________________________________
-void TXTRU::DefineVertex(Int_t ipt, Float_t x, Float_t y) {
+////////////////////////////////////////////////////////////////////////////////
 
+void TXTRU::DefineVertex(Int_t ipt, Float_t x, Float_t y) {
    // Set vertex point ipt to (x,y)
    // expand size of array if necessary
 
@@ -342,20 +342,20 @@ void TXTRU::DefineVertex(Int_t ipt, Float_t x, Float_t y) {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the distance from point px,py to a TXTRU
+/// by calculating the closest approach to each corner
+
 Int_t TXTRU::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute the distance from point px,py to a TXTRU
-   // by calculating the closest approach to each corner
-
    Int_t numPoints = fNz*fNxy;
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
 
-//______________________________________________________________________________
-Float_t TXTRU::GetOutlinePointX(Int_t n) const {
+////////////////////////////////////////////////////////////////////////////////
 
+Float_t TXTRU::GetOutlinePointX(Int_t n) const {
    // Return x coordinate of a vertex point
 
    if ((n < 0) || (n >= fNxy)) {
@@ -366,9 +366,9 @@ Float_t TXTRU::GetOutlinePointX(Int_t n) const {
 }
 
 
-//______________________________________________________________________________
-Float_t TXTRU::GetOutlinePointY(Int_t n) const {
+////////////////////////////////////////////////////////////////////////////////
 
+Float_t TXTRU::GetOutlinePointY(Int_t n) const {
    // Return y coordinate of a vertex point
 
    if ((n < 0) || (n >= fNxy)) {
@@ -379,9 +379,9 @@ Float_t TXTRU::GetOutlinePointY(Int_t n) const {
 }
 
 
-//______________________________________________________________________________
-Float_t TXTRU::GetSectionX0(Int_t n) const {
+////////////////////////////////////////////////////////////////////////////////
 
+Float_t TXTRU::GetSectionX0(Int_t n) const {
    // Return x0 shift of a z section
 
    if ((n < 0) || (n >= fNz)) {
@@ -392,9 +392,9 @@ Float_t TXTRU::GetSectionX0(Int_t n) const {
 }
 
 
-//______________________________________________________________________________
-Float_t TXTRU::GetSectionY0(Int_t n) const {
+////////////////////////////////////////////////////////////////////////////////
 
+Float_t TXTRU::GetSectionY0(Int_t n) const {
    // Return y0 shift of a z section
 
    if ((n < 0) || (n >= fNz)) {
@@ -405,9 +405,9 @@ Float_t TXTRU::GetSectionY0(Int_t n) const {
 }
 
 
-//______________________________________________________________________________
-Float_t TXTRU::GetSectionScale(Int_t n) const {
+////////////////////////////////////////////////////////////////////////////////
 
+Float_t TXTRU::GetSectionScale(Int_t n) const {
    // Return scale factor for a z section
 
    if ((n < 0) || (n >= fNz)) {
@@ -418,9 +418,9 @@ Float_t TXTRU::GetSectionScale(Int_t n) const {
 }
 
 
-//______________________________________________________________________________
-Float_t TXTRU::GetSectionZ(Int_t n) const {
+////////////////////////////////////////////////////////////////////////////////
 
+Float_t TXTRU::GetSectionZ(Int_t n) const {
    // Return z of a z section
 
    if ((n < 0) || (n >= fNz)) {
@@ -431,14 +431,14 @@ Float_t TXTRU::GetSectionZ(Int_t n) const {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump the info of this TXTRU shape
+/// Option: "xy" to get x-y information
+///         "z"  to get z information
+///         "alloc" to show full allocated arrays (not just used values)
+
 void TXTRU::Print(Option_t *option) const
 {
-   // Dump the info of this TXTRU shape
-   // Option: "xy" to get x-y information
-   //         "z"  to get z information
-   //         "alloc" to show full allocated arrays (not just used values)
-
    TString opt = option;
    opt.ToLower();
 
@@ -509,12 +509,12 @@ void TXTRU::Print(Option_t *option) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TXTRU points in buffer
+/// order as expected by other methods (counterclockwise xy, increasing z)
+
 void TXTRU::SetPoints(Double_t *points) const
 {
-   // Create TXTRU points in buffer
-   // order as expected by other methods (counterclockwise xy, increasing z)
-
    if (points) {
       Int_t ipt, ixy, iz, ioff;
       Float_t x, y;
@@ -547,26 +547,26 @@ void TXTRU::SetPoints(Double_t *points) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return total X3D needed by TNode::ls (when called with option "x")
+
 void TXTRU::Sizeof3D() const
 {
-   // Return total X3D needed by TNode::ls (when called with option "x")
-
    gSize3D.numPoints += fNz*fNxy;
    gSize3D.numSegs   += (2*fNz-1)*fNxy;
    gSize3D.numPolys  += (fNz-1)*fNxy+2;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// (Dis)Enable the splitting of concave polygon outlines into
+/// multiple convex polygons.  This would make for better rendering
+/// in solid mode, but introduces extra, potentially confusing, lines
+/// in wireframe mode.
+/// *** Not yet implemented ***
+
 void TXTRU::SplitConcavePolygon(Bool_t split)
 {
-   // (Dis)Enable the splitting of concave polygon outlines into
-   // multiple convex polygons.  This would make for better rendering
-   // in solid mode, but introduces extra, potentially confusing, lines
-   // in wireframe mode.
-   // *** Not yet implemented ***
-
    fSplitConcave = split;
 
    // Not implemented yet
@@ -579,9 +579,9 @@ void TXTRU::SplitConcavePolygon(Bool_t split)
 }
 
 
-//______________________________________________________________________________
-void TXTRU::TruncateNxy(Int_t npts) {
+////////////////////////////////////////////////////////////////////////////////
 
+void TXTRU::TruncateNxy(Int_t npts) {
    // Truncate the vertex list
 
    if ((npts < 0) || (npts > fNxy)) {
@@ -593,9 +593,9 @@ void TXTRU::TruncateNxy(Int_t npts) {
 }
 
 
-//______________________________________________________________________________
-void TXTRU::TruncateNz(Int_t nz) {
+////////////////////////////////////////////////////////////////////////////////
 
+void TXTRU::TruncateNz(Int_t nz) {
    // Truncate the z section list
 
    if ((nz < 0) || (nz > fNz)) {
@@ -607,13 +607,13 @@ void TXTRU::TruncateNz(Int_t nz) {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine ordering over which to process points, segments, surfaces
+/// so that they render correctly.  Generally this has to do
+/// with getting outward normals in the hidden/solid surface case.
+
 void TXTRU::CheckOrdering()
 {
-   // Determine ordering over which to process points, segments, surfaces
-   // so that they render correctly.  Generally this has to do
-   // with getting outward normals in the hidden/solid surface case.
-
    Float_t plus, minus, zero;
 
    // Check on polygon's shape
@@ -726,11 +726,11 @@ void TXTRU::CheckOrdering()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump the vertex points for visual inspection
+
 void TXTRU::DumpPoints(int npoints, float *pointbuff) const
 {
-   // Dump the vertex points for visual inspection
-
    std::cout << "TXTRU::DumpPoints - " << npoints << " points" << std::endl;
    int ioff = 0;
    float x,y,z;
@@ -744,11 +744,11 @@ void TXTRU::DumpPoints(int npoints, float *pointbuff) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump the segment info for visual inspection
+
 void TXTRU::DumpSegments(int nsegments, int *segbuff) const
 {
-   // Dump the segment info for visual inspection
-
    std::cout << "TXTRU::DumpSegments - " << nsegments << " segments" << std::endl;
    int ioff = 0;
    int icol, p1, p2;
@@ -762,11 +762,11 @@ void TXTRU::DumpSegments(int nsegments, int *segbuff) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump the derived polygon info for visual inspection
+
 void TXTRU::DumpPolygons(int npolygons, int *polybuff, int buffsize) const
 {
-   // Dump the derived polygon info for visual inspection
-
    std::cout << "TXTRU::DumpPolygons - " << npolygons << " polygons" << std::endl;
    int ioff = 0;
    int icol, nseg, iseg;
@@ -789,11 +789,11 @@ void TXTRU::DumpPolygons(int npolygons, int *polybuff, int buffsize) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get buffer 3d.
+
 const TBuffer3D & TXTRU::GetBuffer3D(Int_t reqSections) const
 {
-   // Get buffer 3d.
-
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);

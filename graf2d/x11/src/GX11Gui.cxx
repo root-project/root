@@ -150,7 +150,8 @@ struct RXpmAttributes:XpmAttributes{};
 struct RXSetWindowAttributes:XSetWindowAttributes{};
 struct RVisual:Visual{};
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline void SplitLong(Long_t ll, Long_t &i1, Long_t &i2)
 {
    union { Long_t l; Int_t i[2]; } conv;
@@ -160,7 +161,8 @@ inline void SplitLong(Long_t ll, Long_t &i1, Long_t &i2)
    i2 = conv.i[1];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 inline void AsmLong(Long_t i1, Long_t i2, Long_t &ll)
 {
    union { Long_t l; Int_t i[2]; } conv;
@@ -170,11 +172,11 @@ inline void AsmLong(Long_t i1, Long_t i2, Long_t &ll)
    ll = conv.l;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle X11 error.
+
 static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
 {
-   // Handle X11 error.
-
    char msg[80];
    XGetErrorText(disp, err->error_code, msg, 80);
 
@@ -207,12 +209,12 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle X11 I/O error (happens when connection to display server
+/// is broken).
+
 static Int_t RootX11IOErrorHandler(Display *)
 {
-   // Handle X11 I/O error (happens when connection to display server
-   // is broken).
-
    ::Error("RootX11IOErrorHandler", "fatal X11 error (connection to server lost?!)");
    fprintf(stderr,"\n**** Save data and exit application ****\n\n");
    // delete X connection handler (to avoid looping in TSystem::DispatchOneEvent())
@@ -228,111 +230,111 @@ static Int_t RootX11IOErrorHandler(Display *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map window on screen.
+
 void TGX11::MapWindow(Window_t id)
 {
-   // Map window on screen.
-
    if (!id) return;
 
    XMapWindow((Display*)fDisplay, (Window) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map sub windows.
+
 void TGX11::MapSubwindows(Window_t id)
 {
-   // Map sub windows.
-
    if (!id) return;
 
    XMapSubwindows((Display*)fDisplay, (Window) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map window on screen and put on top of all windows.
+
 void TGX11::MapRaised(Window_t id)
 {
-   // Map window on screen and put on top of all windows.
-
    if (!id) return;
 
    XMapRaised((Display*)fDisplay, (Window) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unmap window from screen.
+
 void TGX11::UnmapWindow(Window_t id)
 {
-   // Unmap window from screen.
-
    if (!id) return;
 
    XUnmapWindow((Display*)fDisplay, (Window) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy window.
+
 void TGX11::DestroyWindow(Window_t id)
 {
-   // Destroy window.
-
    if (!id) return;
 
    XDestroyWindow((Display*)fDisplay, (Window) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy subwindows of this window.
+
 void TGX11::DestroySubwindows(Window_t id)
 {
-   // Destroy subwindows of this window.
-
    if (!id) return;
 
    XDestroySubwindows((Display*)fDisplay, (Window) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Put window on top of window stack.
+
 void TGX11::RaiseWindow(Window_t id)
 {
-   // Put window on top of window stack.
-
    if (!id) return;
 
    XRaiseWindow((Display*)fDisplay, (Window) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lower window so it lays below all its siblings.
+
 void TGX11::LowerWindow(Window_t id)
 {
-   // Lower window so it lays below all its siblings.
-
    if (!id) return;
 
    XLowerWindow((Display*)fDisplay, (Window) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move a window.
+
 void TGX11::MoveWindow(Window_t id, Int_t x, Int_t y)
 {
-   // Move a window.
-
    if (!id) return;
 
    XMoveWindow((Display*)fDisplay, (Window) id, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move and resize a window.
+
 void TGX11::MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Move and resize a window.
-
    if (!id) return;
 
    XMoveResizeWindow((Display*)fDisplay, (Window) id, x, y, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the window.
+
 void TGX11::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
 {
-   // Resize the window.
-
    if (!id) return;
 
    // protect against potential negative values
@@ -341,54 +343,54 @@ void TGX11::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
    XResizeWindow((Display*)fDisplay, (Window) id, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Iconify the window.
+
 void TGX11::IconifyWindow(Window_t id)
 {
-   // Iconify the window.
-
    if (!id) return;
 
    XIconifyWindow((Display*)fDisplay, (Window) id, fScreenNumber);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reparent window to new parent window at position (x,y).
+
 void TGX11::ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y)
 {
-   // Reparent window to new parent window at position (x,y).
-
    if (!id) return;
 
    XReparentWindow((Display*)fDisplay, (Window) id, (Window) pid, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the window background color.
+
 void TGX11::SetWindowBackground(Window_t id, ULong_t color)
 {
-   // Set the window background color.
-
    if (!id) return;
 
    XSetWindowBackground((Display*)fDisplay, (Window) id, color);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pixmap as window background.
+
 void TGX11::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
 {
-   // Set pixmap as window background.
-
    if (!id) return;
 
    XSetWindowBackgroundPixmap((Display*)fDisplay, (Window) id, (Pixmap) pxm);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return handle to newly created X window.
+
 Window_t TGX11::CreateWindow(Window_t parent, Int_t x, Int_t y,
                              UInt_t w, UInt_t h, UInt_t border,
                              Int_t depth, UInt_t clss,
                              void *visual, SetWindowAttributes_t *attr, UInt_t)
 {
-   // Return handle to newly created X window.
-
    RXSetWindowAttributes xattr;
    ULong_t              xmask = 0;
 
@@ -413,11 +415,11 @@ Window_t TGX11::CreateWindow(Window_t parent, Int_t x, Int_t y,
                                    xmask, &xattr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map event mask to or from X.
+
 void TGX11::MapEventMask(UInt_t &emask, UInt_t &xemask, Bool_t tox)
 {
-   // Map event mask to or from X.
-
    if (tox) {
       Long_t lxemask = NoEventMask;
       if ((emask & kKeyPressMask))
@@ -478,12 +480,12 @@ void TGX11::MapEventMask(UInt_t &emask, UInt_t &xemask, Bool_t tox)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map a SetWindowAttributes_t to a XSetWindowAttributes structure.
+
 void TGX11::MapSetWindowAttributes(SetWindowAttributes_t *attr,
                                    ULong_t &xmask, RXSetWindowAttributes &xattr)
 {
-   // Map a SetWindowAttributes_t to a XSetWindowAttributes structure.
-
    Mask_t mask = attr->fMask;
    xmask = 0;
 
@@ -566,13 +568,13 @@ void TGX11::MapSetWindowAttributes(SetWindowAttributes_t *attr,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map a GCValues_t to a XCGValues structure if tox is true. Map
+/// the other way in case tox is false.
+
 void TGX11::MapGCValues(GCValues_t &gval,
                         ULong_t &xmask, RXGCValues &xgval, Bool_t tox)
 {
-   // Map a GCValues_t to a XCGValues structure if tox is true. Map
-   // the other way in case tox is false.
-
    if (tox) {
       // map GCValues_t to XGCValues
       Mask_t mask = gval.fMask;
@@ -774,11 +776,11 @@ void TGX11::MapGCValues(GCValues_t &gval,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get window attributes and return filled in attributes structure.
+
 void TGX11::GetWindowAttributes(Window_t id, WindowAttributes_t &attr)
 {
-   // Get window attributes and return filled in attributes structure.
-
    if (!id) return;
 
    XWindowAttributes xattr;
@@ -816,15 +818,15 @@ void TGX11::GetWindowAttributes(Window_t id, WindowAttributes_t &attr)
    attr.fScreen             = xattr.screen;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open connection to display server (if such a thing exist on the
+/// current platform). On X11 this method returns on success the X
+/// display socket descriptor (> 0), 0 in case of batch mode and < 0
+/// in case of failure (cannot connect to display dpyName). It also
+/// initializes the TGX11 class via Init(). Called from TGClient ctor.
+
 Int_t TGX11::OpenDisplay(const char *dpyName)
 {
-   // Open connection to display server (if such a thing exist on the
-   // current platform). On X11 this method returns on success the X
-   // display socket descriptor (> 0), 0 in case of batch mode and < 0
-   // in case of failure (cannot connect to display dpyName). It also
-   // initializes the TGX11 class via Init(). Called from TGClient ctor.
-
 #ifdef _REENTRANT
    // In some cases there can be problems due to XInitThreads, like when
    // using Qt, so we allow for it to be turned off
@@ -853,91 +855,91 @@ Int_t TGX11::OpenDisplay(const char *dpyName)
    return ConnectionNumber(dpy);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to display server.
+
 void TGX11::CloseDisplay()
 {
-   // Close connection to display server.
-
    XCloseDisplay((Display*)fDisplay);
    fDisplay = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns handle to display (might be usefull in some cases where
+/// direct X11 manipulation outside of TVirtualX is needed, e.g. GL
+/// interface).
+
 Display_t TGX11::GetDisplay() const
 {
-   // Returns handle to display (might be usefull in some cases where
-   // direct X11 manipulation outside of TVirtualX is needed, e.g. GL
-   // interface).
-
    return (Display_t) fDisplay;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns handle to visual (might be usefull in some cases where
+/// direct X11 manipulation outside of TVirtualX is needed, e.g. GL
+/// interface).
+
 Visual_t TGX11::GetVisual() const
 {
-   // Returns handle to visual (might be usefull in some cases where
-   // direct X11 manipulation outside of TVirtualX is needed, e.g. GL
-   // interface).
-
    return (Visual_t) fVisual;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns handle to colormap (might be usefull in some cases where
+/// direct X11 manipulation outside of TVirtualX is needed, e.g. GL
+/// interface).
+
 Colormap_t TGX11::GetColormap() const
 {
-   // Returns handle to colormap (might be usefull in some cases where
-   // direct X11 manipulation outside of TVirtualX is needed, e.g. GL
-   // interface).
-
    return (Colormap_t) fColormap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns screen number (might be usefull in some cases where
+/// direct X11 manipulation outside of TVirtualX is needed, e.g. GL
+/// interface).
+
 Int_t TGX11::GetScreen() const
 {
-   // Returns screen number (might be usefull in some cases where
-   // direct X11 manipulation outside of TVirtualX is needed, e.g. GL
-   // interface).
-
    return fScreenNumber;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns depth of screen (number of bit planes). Equivalent to
+/// GetPlanes().
+
 Int_t TGX11::GetDepth() const
 {
-   // Returns depth of screen (number of bit planes). Equivalent to
-   // GetPlanes().
-
    return fDepth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return atom handle for atom_name. If it does not exist
+/// create it if only_if_exist is false. Atoms are used to communicate
+/// between different programs (i.e. window manager) via the X server.
+
 Atom_t TGX11::InternAtom(const char *atom_name, Bool_t only_if_exist)
 {
-   // Return atom handle for atom_name. If it does not exist
-   // create it if only_if_exist is false. Atoms are used to communicate
-   // between different programs (i.e. window manager) via the X server.
-
    Atom a = XInternAtom((Display*)fDisplay, (char *)atom_name, (Bool)only_if_exist);
 
    if (a == None) return kNone;
    return (Atom_t) a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return handle to the default root window created when calling
+/// XOpenDisplay().
+
 Window_t TGX11::GetDefaultRootWindow() const
 {
-   // Return handle to the default root window created when calling
-   // XOpenDisplay().
-
    return (Window_t) fRootWin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the parent of the window.
+
 Window_t TGX11::GetParent(Window_t id) const
 {
-   // Return the parent of the window.
-
    if (!id) return (Window_t)0;
 
    Window  root, parent;
@@ -952,22 +954,22 @@ Window_t TGX11::GetParent(Window_t id) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load font and query font. If font is not found 0 is returned,
+/// otherwise an opaque pointer to the FontStruct_t.
+/// Free the loaded font using DeleteFont().
+
 FontStruct_t TGX11::LoadQueryFont(const char *font_name)
 {
-   // Load font and query font. If font is not found 0 is returned,
-   // otherwise an opaque pointer to the FontStruct_t.
-   // Free the loaded font using DeleteFont().
-
    XFontStruct *fs = XLoadQueryFont((Display*)fDisplay, (char *)font_name);
    return (FontStruct_t) fs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return handle to font described by font structure.
+
 FontH_t TGX11::GetFontHandle(FontStruct_t fs)
 {
-   // Return handle to font described by font structure.
-
    if (fs) {
       XFontStruct *fss = (XFontStruct *)fs;
       return fss->fid;
@@ -975,20 +977,20 @@ FontH_t TGX11::GetFontHandle(FontStruct_t fs)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitely delete font structure obtained with LoadQueryFont().
+
 void TGX11::DeleteFont(FontStruct_t fs)
 {
-   // Explicitely delete font structure obtained with LoadQueryFont().
-
    if (fDisplay) XFreeFont((Display*)fDisplay, (XFontStruct *) fs);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a graphics context using the values set in gval (but only for
+/// those entries that are in the mask).
+
 GContext_t TGX11::CreateGC(Drawable_t id, GCValues_t *gval)
 {
-   // Create a graphics context using the values set in gval (but only for
-   // those entries that are in the mask).
-
    RXGCValues xgval;
    ULong_t   xmask = 0;
 
@@ -1006,11 +1008,11 @@ GContext_t TGX11::CreateGC(Drawable_t id, GCValues_t *gval)
    return (GContext_t) gc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change entries in an existing graphics context, gc, by values from gval.
+
 void TGX11::ChangeGC(GContext_t gc, GCValues_t *gval)
 {
-   // Change entries in an existing graphics context, gc, by values from gval.
-
    RXGCValues xgval;
    ULong_t   xmask = 0;
 
@@ -1023,13 +1025,13 @@ void TGX11::ChangeGC(GContext_t gc, GCValues_t *gval)
       MapGCFont((GContext_t)gc, gval->fFont);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copies graphics context from org to dest. Only the values specified
+/// in mask are copied. If mask = 0 then copy all fields. Both org and
+/// dest must exist.
+
 void TGX11::CopyGC(GContext_t org, GContext_t dest, Mask_t mask)
 {
-   // Copies graphics context from org to dest. Only the values specified
-   // in mask are copied. If mask = 0 then copy all fields. Both org and
-   // dest must exist.
-
    GCValues_t gval;
    RXGCValues  xgval;
    ULong_t    xmask;
@@ -1045,81 +1047,81 @@ void TGX11::CopyGC(GContext_t org, GContext_t dest, Mask_t mask)
    XCopyGC((Display*)fDisplay, (GC) org, xmask, (GC) dest);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitely delete a graphics context.
+
 void TGX11::DeleteGC(GContext_t gc)
 {
-   // Explicitely delete a graphics context.
-
    // Protection against deletion of global TGGC objects, which are
    // destructed after fDisplay has been closed.
    if (fDisplay)
       XFreeGC((Display*)fDisplay, (GC) gc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create cursor handle (just return cursor from cursor pool fCursors).
+
 Cursor_t TGX11::CreateCursor(ECursor cursor)
 {
-   // Create cursor handle (just return cursor from cursor pool fCursors).
-
    return (Cursor_t) fCursors[cursor];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the specified cursor.
+
 void TGX11::SetCursor(Window_t id, Cursor_t curid)
 {
-   // Set the specified cursor.
-
    if (!id) return;
 
    XDefineCursor((Display*)fDisplay, (Window) id, (Cursor) curid);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a pixmap of the width and height you specified
+/// and returns a pixmap ID that identifies it.
+
 Pixmap_t TGX11::CreatePixmap(Drawable_t id, UInt_t w, UInt_t h)
 {
-   // Creates a pixmap of the width and height you specified
-   // and returns a pixmap ID that identifies it.
-
    return (Pixmap_t) XCreatePixmap((Display*)fDisplay, (Drawable) (id ? id : fRootWin), w, h, fDepth);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a pixmap from bitmap data. Ones will get foreground color and
+/// zeroes background color.
+
 Pixmap_t TGX11::CreatePixmap(Drawable_t id, const char *bitmap,
             UInt_t width, UInt_t height, ULong_t forecolor, ULong_t backcolor,
             Int_t depth)
 {
-   // Create a pixmap from bitmap data. Ones will get foreground color and
-   // zeroes background color.
-
    return (Pixmap_t) XCreatePixmapFromBitmapData((Display*)fDisplay, (id ? id : fRootWin), (char *)bitmap,
                            width, height, forecolor, backcolor, depth);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a bitmap (i.e. pixmap with depth 1) from the bitmap data.
+
 Pixmap_t TGX11::CreateBitmap(Drawable_t id, const char *bitmap,
                              UInt_t width, UInt_t height)
 {
-   // Create a bitmap (i.e. pixmap with depth 1) from the bitmap data.
-
    return (Pixmap_t) XCreateBitmapFromData((Display*)fDisplay, (id ? id : fRootWin), (char *)bitmap,
                                            width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitely delete pixmap resource.
+
 void TGX11::DeletePixmap(Pixmap_t pmap)
 {
-   // Explicitely delete pixmap resource.
-
    if (fDisplay) XFreePixmap((Display*)fDisplay, (Pixmap) pmap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map a PictureAttributes_t to a XpmAttributes structure. If toxpm is
+/// kTRUE map from attr to xpmattr, else map the other way.
+
 void TGX11::MapPictureAttributes(PictureAttributes_t &attr, RXpmAttributes &xpmattr,
                                  Bool_t toxpm)
 {
-   // Map a PictureAttributes_t to a XpmAttributes structure. If toxpm is
-   // kTRUE map from attr to xpmattr, else map the other way.
-
 #ifdef XpmVersion
    if (toxpm) {
       Mask_t  mask = attr.fMask;
@@ -1194,15 +1196,15 @@ void TGX11::MapPictureAttributes(PictureAttributes_t &attr, RXpmAttributes &xpma
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a picture pixmap from data on file. The picture attributes
+/// are used for input and output. Returns kTRUE in case of success,
+/// kFALSE otherwise. If mask does not exist it is set to kNone.
+
 Bool_t TGX11::CreatePictureFromFile(Drawable_t id, const char *filename,
                                     Pixmap_t &pict, Pixmap_t &pict_mask,
                                     PictureAttributes_t &attr)
 {
-   // Create a picture pixmap from data on file. The picture attributes
-   // are used for input and output. Returns kTRUE in case of success,
-   // kFALSE otherwise. If mask does not exist it is set to kNone.
-
    if (strstr(filename, ".gif") || strstr(filename, ".GIF")) {
       pict = ReadGIF(0, 0, filename, id);
       pict_mask = kNone;
@@ -1247,14 +1249,14 @@ Bool_t TGX11::CreatePictureFromFile(Drawable_t id, const char *filename,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a pixture pixmap from data. The picture attributes
+/// are used for input and output. Returns kTRUE in case of success,
+/// kFALSE otherwise. If mask does not exist it is set to kNone.
+
 Bool_t TGX11::CreatePictureFromData(Drawable_t id, char **data, Pixmap_t &pict,
                                     Pixmap_t &pict_mask, PictureAttributes_t &attr)
 {
-   // Create a pixture pixmap from data. The picture attributes
-   // are used for input and output. Returns kTRUE in case of success,
-   // kFALSE otherwise. If mask does not exist it is set to kNone.
-
 #ifdef XpmVersion
    RXpmAttributes xpmattr;
 
@@ -1290,12 +1292,12 @@ Bool_t TGX11::CreatePictureFromData(Drawable_t id, char **data, Pixmap_t &pict,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read picture data from file and store in ret_data. Returns kTRUE in
+/// case of success, kFALSE otherwise.
+
 Bool_t TGX11::ReadPictureDataFromFile(const char *filename, char ***ret_data)
 {
-   // Read picture data from file and store in ret_data. Returns kTRUE in
-   // case of success, kFALSE otherwise.
-
 #ifdef XpmVersion
    if (XpmReadFileToData((char*)filename, ret_data) == XpmSuccess)
       return kTRUE;
@@ -1305,11 +1307,11 @@ Bool_t TGX11::ReadPictureDataFromFile(const char *filename, char ***ret_data)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete picture data created by the function ReadPictureDataFromFile.
+
 void TGX11::DeletePictureData(void *data)
 {
-   // Delete picture data created by the function ReadPictureDataFromFile.
-
 #ifdef XpmVersion
    // some older libXpm's don't have this function and it is typically
    // implemented with a simple free()
@@ -1318,21 +1320,21 @@ void TGX11::DeletePictureData(void *data)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify a dash pattertn. Offset defines the phase of the pattern.
+/// Each element in the dash_list array specifies the length (in pixels)
+/// of a segment of the pattern. N defines the length of the list.
+
 void TGX11::SetDashes(GContext_t gc, Int_t offset, const char *dash_list, Int_t n)
 {
-   // Specify a dash pattertn. Offset defines the phase of the pattern.
-   // Each element in the dash_list array specifies the length (in pixels)
-   // of a segment of the pattern. N defines the length of the list.
-
    XSetDashes((Display*)fDisplay, (GC) gc, offset, (char *)dash_list, n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map a ColorStruct_t to a XColor structure.
+
 void TGX11::MapColorStruct(ColorStruct_t *color, RXColor &xcolor)
 {
-   // Map a ColorStruct_t to a XColor structure.
-
    xcolor.pixel = color->fPixel;
    xcolor.red   = color->fRed;
    xcolor.green = color->fGreen;
@@ -1340,15 +1342,15 @@ void TGX11::MapColorStruct(ColorStruct_t *color, RXColor &xcolor)
    xcolor.flags = color->fMask;  //ident mapping
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse string cname containing color name, like "green" or "#00FF00".
+/// It returns a filled in ColorStruct_t. Returns kFALSE in case parsing
+/// failed, kTRUE in case of success. On success, the ColorStruct_t
+/// fRed, fGreen and fBlue fields are all filled in and the mask is set
+/// for all three colors, but fPixel is not set.
+
 Bool_t TGX11::ParseColor(Colormap_t cmap, const char *cname, ColorStruct_t &color)
 {
-   // Parse string cname containing color name, like "green" or "#00FF00".
-   // It returns a filled in ColorStruct_t. Returns kFALSE in case parsing
-   // failed, kTRUE in case of success. On success, the ColorStruct_t
-   // fRed, fGreen and fBlue fields are all filled in and the mask is set
-   // for all three colors, but fPixel is not set.
-
    XColor xc;
 
    if (XParseColor((Display*)fDisplay, (Colormap)cmap, (char *)cname, &xc)) {
@@ -1362,13 +1364,13 @@ Bool_t TGX11::ParseColor(Colormap_t cmap, const char *cname, ColorStruct_t &colo
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find and allocate a color cell according to the color values specified
+/// in the ColorStruct_t. If no cell could be allocated it returns kFALSE,
+/// otherwise kTRUE.
+
 Bool_t TGX11::AllocColor(Colormap_t cmap, ColorStruct_t &color)
 {
-   // Find and allocate a color cell according to the color values specified
-   // in the ColorStruct_t. If no cell could be allocated it returns kFALSE,
-   // otherwise kTRUE.
-
    RXColor xc;
 
    MapColorStruct(&color, xc);
@@ -1382,13 +1384,13 @@ Bool_t TGX11::AllocColor(Colormap_t cmap, ColorStruct_t &color)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill in the primary color components for a specific pixel value.
+/// On input fPixel should be set on return the fRed, fGreen and
+/// fBlue components will be set.
+
 void TGX11::QueryColor(Colormap_t cmap, ColorStruct_t &color)
 {
-   // Fill in the primary color components for a specific pixel value.
-   // On input fPixel should be set on return the fRed, fGreen and
-   // fBlue components will be set.
-
    XColor xc;
 
    xc.pixel = color.fPixel;
@@ -1404,42 +1406,42 @@ void TGX11::QueryColor(Colormap_t cmap, ColorStruct_t &color)
    color.fBlue  = xc.blue;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free color cell with specified pixel value.
+
 void TGX11::FreeColor(Colormap_t cmap, ULong_t pixel)
 {
-   // Free color cell with specified pixel value.
-
    if (fRedDiv == -1)
       XFreeColors((Display*)fDisplay, (Colormap)cmap, &pixel, 1, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of pending events.
+
 Int_t TGX11::EventsPending()
 {
-   // Returns number of pending events.
-
    if (!fDisplay) return 0;
    return XPending((Display*)fDisplay);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copies first pending event from event queue to Event_t structure
+/// and removes event from queue. Not all of the event fields are valid
+/// for each event type, except fType and fWindow.
+
 void TGX11::NextEvent(Event_t &event)
 {
-   // Copies first pending event from event queue to Event_t structure
-   // and removes event from queue. Not all of the event fields are valid
-   // for each event type, except fType and fWindow.
-
    XNextEvent((Display*)fDisplay, (XEvent*)fXEvent);
 
    // fill in Event_t
    MapEvent(event, fXEvent, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map modifier key state to or from X.
+
 void TGX11::MapModifierState(UInt_t &state, UInt_t &xstate, Bool_t tox)
 {
-   // Map modifier key state to or from X.
-
    if (tox) {
       xstate = 0;
       if ((state & kKeyShiftMask))
@@ -1495,12 +1497,12 @@ void TGX11::MapModifierState(UInt_t &state, UInt_t &xstate, Bool_t tox)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map Event_t structure to XEvent structure. If tox is false
+/// map the other way.
+
 void TGX11::MapEvent(Event_t &ev, void *xevi, Bool_t tox)
 {
-   // Map Event_t structure to XEvent structure. If tox is false
-   // map the other way.
-
    XEvent &xev = *(XEvent *)xevi;
 
    if (tox) {
@@ -1688,34 +1690,34 @@ void TGX11::MapEvent(Event_t &ev, void *xevi, Bool_t tox)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sound bell. Percent is loudness from -100% .. 100%.
+
 void TGX11::Bell(Int_t percent)
 {
-   // Sound bell. Percent is loudness from -100% .. 100%.
-
    XBell((Display*)fDisplay, percent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a drawable (i.e. pixmap) to another drawable (pixmap, window).
+/// The graphics context gc will be used and the source will be copied
+/// from src_x,src_y,src_x+width,src_y+height to dest_x,dest_y.
+
 void TGX11::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
                      Int_t src_x, Int_t src_y, UInt_t width, UInt_t height,
                      Int_t dest_x, Int_t dest_y)
 {
-   // Copy a drawable (i.e. pixmap) to another drawable (pixmap, window).
-   // The graphics context gc will be used and the source will be copied
-   // from src_x,src_y,src_x+width,src_y+height to dest_x,dest_y.
-
    if (!src || !dest) return;
 
    XCopyArea((Display*)fDisplay, src, dest, (GC) gc, src_x, src_y, width, height,
              dest_x, dest_y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change window attributes.
+
 void TGX11::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *attr)
 {
-   // Change window attributes.
-
    if (!id) return;
 
    RXSetWindowAttributes xattr;
@@ -1730,47 +1732,47 @@ void TGX11::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *attr)
       XSetWindowBorderWidth((Display*)fDisplay, (Window) id, attr->fBorderWidth);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function alters the property for the specified window and
+/// causes the X server to generate a PropertyNotify event on that
+/// window.
+
 void TGX11::ChangeProperty(Window_t id, Atom_t property, Atom_t type,
                            UChar_t *data, Int_t len)
 {
-   // This function alters the property for the specified window and
-   // causes the X server to generate a PropertyNotify event on that
-   // window.
-
    if (!id) return;
 
    XChangeProperty((Display*)fDisplay, (Window) id, (Atom) property, (Atom) type,
                    8, PropModeReplace, data, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line.
+
 void TGX11::DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
-   // Draw a line.
-
    if (!id) return;
 
    XDrawLine((Display*)fDisplay, (Drawable) id, (GC) gc, x1, y1, x2, y2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear a window area to the bakcground color.
+
 void TGX11::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Clear a window area to the bakcground color.
-
    if (!id) return;
 
    XClearArea((Display*)fDisplay, (Window) id, x, y, w, h, False);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if there is for window "id" an event of type "type". If there
+/// is fill in the event structure and return true. If no such event
+/// return false.
+
 Bool_t TGX11::CheckEvent(Window_t id, EGEventType type, Event_t &ev)
 {
-   // Check if there is for window "id" an event of type "type". If there
-   // is fill in the event structure and return true. If no such event
-   // return false.
-
    if (!id) return kFALSE;
 
    Event_t tev;
@@ -1797,11 +1799,11 @@ Bool_t TGX11::CheckEvent(Window_t id, EGEventType type, Event_t &ev)
    return r ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send event ev to window id.
+
 void TGX11::SendEvent(Window_t id, Event_t *ev)
 {
-   // Send event ev to window id.
-
    if (!ev || !id) return;
 
    XEvent xev;
@@ -1811,35 +1813,35 @@ void TGX11::SendEvent(Window_t id, Event_t *ev)
    XSendEvent((Display*)fDisplay, (Window) id, False, None, &xev);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tell WM to send message when window is closed via WM.
+
 void TGX11::WMDeleteNotify(Window_t id)
 {
-   // Tell WM to send message when window is closed via WM.
-
    if (!id) return;
 
    XSetWMProtocols((Display*)fDisplay, (Window) id, &gWM_DELETE_WINDOW, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Turn key auto repeat on or off.
+
 void TGX11::SetKeyAutoRepeat(Bool_t on)
 {
-   // Turn key auto repeat on or off.
-
    if (on)
       XAutoRepeatOn((Display*)fDisplay);
    else
       XAutoRepeatOff((Display*)fDisplay);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Establish passive grab on a certain key. That is, when a certain key
+/// keycode is hit while certain modifier's (Shift, Control, Meta, Alt)
+/// are active then the keyboard will be grabed for window id.
+/// When grab is false, ungrab the keyboard for this key and modifier.
+
 void TGX11::GrabKey(Window_t id, Int_t keycode, UInt_t modifier, Bool_t grab)
 {
-   // Establish passive grab on a certain key. That is, when a certain key
-   // keycode is hit while certain modifier's (Shift, Control, Meta, Alt)
-   // are active then the keyboard will be grabed for window id.
-   // When grab is false, ungrab the keyboard for this key and modifier.
-
 //   if (!id) return;
 
    UInt_t xmod;
@@ -1853,16 +1855,16 @@ void TGX11::GrabKey(Window_t id, Int_t keycode, UInt_t modifier, Bool_t grab)
       XUngrabKey((Display*)fDisplay, keycode, xmod, (Window) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Establish passive grab on a certain mouse button. That is, when a
+/// certain mouse button is hit while certain modifier's (Shift, Control,
+/// Meta, Alt) are active then the mouse will be grabed for window id.
+/// When grab is false, ungrab the mouse button for this button and modifier.
+
 void TGX11::GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
                        UInt_t evmask, Window_t confine, Cursor_t cursor,
                        Bool_t grab)
 {
-   // Establish passive grab on a certain mouse button. That is, when a
-   // certain mouse button is hit while certain modifier's (Shift, Control,
-   // Meta, Alt) are active then the mouse will be grabed for window id.
-   // When grab is false, ungrab the mouse button for this button and modifier.
-
    if (!id) return;
 
    UInt_t xmod;
@@ -1880,14 +1882,14 @@ void TGX11::GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
       XUngrabButton((Display*)fDisplay, button, xmod, (Window) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Establish an active pointer grab. While an active pointer grab is in
+/// effect, further pointer events are only reported to the grabbing
+/// client window.
+
 void TGX11::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
                         Cursor_t cursor, Bool_t grab, Bool_t owner_events)
 {
-   // Establish an active pointer grab. While an active pointer grab is in
-   // effect, further pointer events are only reported to the grabbing
-   // client window.
-
 //   if (!id) return;
 
    if (grab) {
@@ -1901,11 +1903,11 @@ void TGX11::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
       XUngrabPointer((Display*)fDisplay, CurrentTime);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set window name.
+
 void TGX11::SetWindowName(Window_t id, char *name)
 {
-   // Set window name.
-
    if (!id) return;
 
    XTextProperty wname;
@@ -1918,11 +1920,11 @@ void TGX11::SetWindowName(Window_t id, char *name)
    XFree(wname.value);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set window icon name.
+
 void TGX11::SetIconName(Window_t id, char *name)
 {
-   // Set window icon name.
-
    if (!id) return;
 
    XTextProperty wname;
@@ -1935,11 +1937,11 @@ void TGX11::SetIconName(Window_t id, char *name)
    XFree(wname.value);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pixmap the WM can use when the window is iconized.
+
 void TGX11::SetIconPixmap(Window_t id, Pixmap_t pic)
 {
-   // Set pixmap the WM can use when the window is iconized.
-
    if (!id) return;
 
    XWMHints hints;
@@ -1950,11 +1952,11 @@ void TGX11::SetIconPixmap(Window_t id, Pixmap_t pic)
    XSetWMHints((Display*)fDisplay, (Window) id, &hints);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the windows class and resource name.
+
 void TGX11::SetClassHints(Window_t id, char *className, char *resourceName)
 {
-   // Set the windows class and resource name.
-
    if (!id) return;
 
    XClassHint class_hints;
@@ -1964,11 +1966,11 @@ void TGX11::SetClassHints(Window_t id, char *className, char *resourceName)
    XSetClassHint((Display*)fDisplay, (Window) id, &class_hints);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set decoration style for MWM-compatible wm (mwm, ncdwm, fvwm?).
+
 void TGX11::SetMWMHints(Window_t id, UInt_t value, UInt_t funcs, UInt_t input)
 {
-   // Set decoration style for MWM-compatible wm (mwm, ncdwm, fvwm?).
-
    if (!id) return;
 
    MWMHintsProperty_t prop;
@@ -1982,11 +1984,11 @@ void TGX11::SetMWMHints(Window_t id, UInt_t value, UInt_t funcs, UInt_t input)
                    PropModeReplace, (UChar_t *)&prop, kPropMWMHintElements);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tell the window manager the desired window position.
+
 void TGX11::SetWMPosition(Window_t id, Int_t x, Int_t y)
 {
-   // Tell the window manager the desired window position.
-
    if (!id) return;
 
    XSizeHints hints;
@@ -1998,11 +2000,11 @@ void TGX11::SetWMPosition(Window_t id, Int_t x, Int_t y)
    XSetWMNormalHints((Display*)fDisplay, (Window) id, &hints);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tell the window manager the desired window size.
+
 void TGX11::SetWMSize(Window_t id, UInt_t w, UInt_t h)
 {
-   // Tell the window manager the desired window size.
-
    if (!id) return;
 
    XSizeHints hints;
@@ -2014,14 +2016,14 @@ void TGX11::SetWMSize(Window_t id, UInt_t w, UInt_t h)
    XSetWMNormalHints((Display*)fDisplay, (Window) id, &hints);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Give the window manager minimum and maximum size hints. Also
+/// specify via winc and hinc the resize increments.
+
 void TGX11::SetWMSizeHints(Window_t id, UInt_t wmin, UInt_t hmin,
                            UInt_t wmax, UInt_t hmax,
                            UInt_t winc, UInt_t hinc)
 {
-   // Give the window manager minimum and maximum size hints. Also
-   // specify via winc and hinc the resize increments.
-
    if (!id) return;
 
    XSizeHints hints;
@@ -2037,11 +2039,11 @@ void TGX11::SetWMSizeHints(Window_t id, UInt_t wmin, UInt_t hmin,
    XSetWMNormalHints((Display*)fDisplay, (Window) id, &hints);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the initial state of the window. Either kNormalState or kIconicState.
+
 void TGX11::SetWMState(Window_t id, EInitialState state)
 {
-   // Set the initial state of the window. Either kNormalState or kIconicState.
-
    if (!id) return;
 
    XWMHints hints;
@@ -2058,53 +2060,53 @@ void TGX11::SetWMState(Window_t id, EInitialState state)
    XSetWMHints((Display*)fDisplay, (Window) id, &hints);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tell window manager that window is a transient window of main.
+
 void TGX11::SetWMTransientHint(Window_t id, Window_t main_id)
 {
-   // Tell window manager that window is a transient window of main.
-
    if (!id) return;
 
    XSetTransientForHint((Display*)fDisplay, (Window) id, (Window) main_id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a string using a specific graphics context in position (x,y).
+
 void TGX11::DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
                        const char *s, Int_t len)
 {
-   // Draw a string using a specific graphics context in position (x,y).
-
    if (!id) return;
 
    XDrawString((Display*)fDisplay, (Drawable) id, (GC) gc, x, y, (char *) s, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return length of string in pixels. Size depends on font.
+
 Int_t TGX11::TextWidth(FontStruct_t font, const char *s, Int_t len)
 {
-   // Return length of string in pixels. Size depends on font.
-
    return XTextWidth((XFontStruct*) font, (char*) s, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return some font properties.
+
 void TGX11::GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent)
 {
-   // Return some font properties.
-
    XFontStruct *f = (XFontStruct *) font;
 
    max_ascent  = f->max_bounds.ascent;
    max_descent = f->max_bounds.descent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current values from graphics context gc. Which values of the
+/// context to get is encoded in the GCValues::fMask member. If fMask = 0
+/// then copy all fields.
+
 void TGX11::GetGCValues(GContext_t gc, GCValues_t &gval)
 {
-   // Get current values from graphics context gc. Which values of the
-   // context to get is encoded in the GCValues::fMask member. If fMask = 0
-   // then copy all fields.
-
    RXGCValues xgval;
    ULong_t   xmask;
 
@@ -2120,12 +2122,12 @@ void TGX11::GetGCValues(GContext_t gc, GCValues_t &gval)
    MapGCValues(gval, xmask, xgval, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve associated font structure once we have the font handle.
+/// Free returned FontStruct_t using FreeFontStruct().
+
 FontStruct_t TGX11::GetFontStruct(FontH_t fh)
 {
-   // Retrieve associated font structure once we have the font handle.
-   // Free returned FontStruct_t using FreeFontStruct().
-
    XFontStruct *fs;
 
    fs = XQueryFont((Display*)fDisplay, (Font) fh);
@@ -2133,11 +2135,11 @@ FontStruct_t TGX11::GetFontStruct(FontH_t fh)
    return (FontStruct_t) fs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free font structure returned by GetFontStruct().
+
 void TGX11::FreeFontStruct(FontStruct_t fs)
 {
-   // Free font structure returned by GetFontStruct().
-
    // in XFree86 4.0 XFreeFontInfo() is broken, ok again in 4.0.1
    static int xfree86_400 = -1;
    if (xfree86_400 == -1) {
@@ -2152,67 +2154,67 @@ void TGX11::FreeFontStruct(FontStruct_t fs)
       XFreeFontInfo(0, (XFontStruct *) fs, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear window.
+
 void TGX11::ClearWindow(Window_t id)
 {
-   // Clear window.
-
    if (!id) return;
 
    XClearWindow((Display*)fDisplay, (Window) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a keysym to the appropriate keycode. For example keysym is
+/// a letter and keycode is the matching keyboard key (which is dependend
+/// on the current keyboard mapping).
+
 Int_t TGX11::KeysymToKeycode(UInt_t keysym)
 {
-   // Convert a keysym to the appropriate keycode. For example keysym is
-   // a letter and keycode is the matching keyboard key (which is dependend
-   // on the current keyboard mapping).
-
    UInt_t xkeysym;
    MapKeySym(keysym, xkeysym);
 
    return XKeysymToKeycode((Display*)fDisplay, xkeysym);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a filled rectangle. Filling is done according to the gc.
+
 void TGX11::FillRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Draw a filled rectangle. Filling is done according to the gc.
-
    if (!id) return;
 
    XFillRectangle((Display*)fDisplay, (Drawable) id, (GC) gc, x, y, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a rectangle outline.
+
 void TGX11::DrawRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Draw a rectangle outline.
-
    if (!id) return;
 
    XDrawRectangle((Display*)fDisplay, (Drawable) id, (GC) gc, x, y, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draws multiple line segments. Each line is specified by a pair of points.
+
 void TGX11::DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nseg)
 {
-   // Draws multiple line segments. Each line is specified by a pair of points.
-
    if (!id) return;
 
    XDrawSegments((Display*)fDisplay, (Drawable) id, (GC) gc, (XSegment *) seg, nseg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines which input events the window is interested in. By default
+/// events are propageted up the window stack. This mask can also be
+/// set at window creation time via the SetWindowAttributes_t::fEventMask
+/// attribute.
+
 void TGX11::SelectInput(Window_t id, UInt_t evmask)
 {
-   // Defines which input events the window is interested in. By default
-   // events are propageted up the window stack. This mask can also be
-   // set at window creation time via the SetWindowAttributes_t::fEventMask
-   // attribute.
-
    if (!id) return;
 
    UInt_t xevmask;
@@ -2222,11 +2224,11 @@ void TGX11::SelectInput(Window_t id, UInt_t evmask)
    XSelectInput((Display*)fDisplay, (Window) id, xevmask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the window id of the window having the input focus.
+
 Window_t TGX11::GetInputFocus()
 {
-   // Returns the window id of the window having the input focus.
-
    Window focus;
    int    return_to;
 
@@ -2234,11 +2236,11 @@ Window_t TGX11::GetInputFocus()
    return (Window_t) focus;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set keyboard input focus to window id.
+
 void TGX11::SetInputFocus(Window_t id)
 {
-   // Set keyboard input focus to window id.
-
    if (!id) return;
 
    XWindowAttributes xattr;
@@ -2249,53 +2251,53 @@ void TGX11::SetInputFocus(Window_t id)
       XSetInputFocus((Display*)fDisplay, (Window) id, RevertToParent, CurrentTime);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the window id of the current owner of the primary selection.
+/// That is the window in which, for example some text is selected.
+
 Window_t TGX11::GetPrimarySelectionOwner()
 {
-   // Returns the window id of the current owner of the primary selection.
-   // That is the window in which, for example some text is selected.
-
    return (Window_t) XGetSelectionOwner((Display*)fDisplay, XA_PRIMARY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Makes the window id the current owner of the primary selection.
+/// That is the window in which, for example some text is selected.
+
 void TGX11::SetPrimarySelectionOwner(Window_t id)
 {
-   // Makes the window id the current owner of the primary selection.
-   // That is the window in which, for example some text is selected.
-
    if (!id) return;
 
    XSetSelectionOwner((Display*)fDisplay, XA_PRIMARY, id, CurrentTime);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// XConvertSelection() causes a SelectionRequest event to be sent to the
+/// current primary selection owner. This event specifies the selection
+/// property (primary selection), the format into which to convert that
+/// data before storing it (target = XA_STRING), the property in which
+/// the owner will place the information (sel_property), the window that
+/// wants the information (id), and the time of the conversion request
+/// (when).
+/// The selection owner responds by sending a SelectionNotify event, which
+/// confirms the selected atom and type.
+
 void TGX11::ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when)
 {
-   // XConvertSelection() causes a SelectionRequest event to be sent to the
-   // current primary selection owner. This event specifies the selection
-   // property (primary selection), the format into which to convert that
-   // data before storing it (target = XA_STRING), the property in which
-   // the owner will place the information (sel_property), the window that
-   // wants the information (id), and the time of the conversion request
-   // (when).
-   // The selection owner responds by sending a SelectionNotify event, which
-   // confirms the selected atom and type.
-
    if (!id) return;
 
    XConvertSelection((Display*)fDisplay, XA_PRIMARY, XA_STRING, (Atom) clipboard,
                      (Window) id, (Time) when);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert the keycode from the event structure to a key symbol (according
+/// to the modifiers specified in the event structure and the current
+/// keyboard mapping). In buf a null terminated ASCII string is returned
+/// representing the string that is currently mapped to the key code.
+
 void TGX11::LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym)
 {
-   // Convert the keycode from the event structure to a key symbol (according
-   // to the modifiers specified in the event structure and the current
-   // keyboard mapping). In buf a null terminated ASCII string is returned
-   // representing the string that is currently mapped to the key code.
-
    XEvent xev;
    KeySym xkeysym;
 
@@ -2312,12 +2314,12 @@ void TGX11::LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym
    keysym = (Int_t) ks;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map to and from X key symbols. Keysym are the values returned by
+/// XLookUpString.
+
 void TGX11::MapKeySym(UInt_t &keysym, UInt_t &xkeysym, Bool_t tox)
 {
-   // Map to and from X key symbols. Keysym are the values returned by
-   // XLookUpString.
-
    if (tox) {
       xkeysym = XK_VoidSymbol;
       if (keysym < 127) {
@@ -2352,13 +2354,13 @@ void TGX11::MapKeySym(UInt_t &keysym, UInt_t &xkeysym, Bool_t tox)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get contents of paste buffer atom into string. If del is true delete
+/// the paste buffer afterwards.
+
 void TGX11::GetPasteBuffer(Window_t id, Atom_t atom, TString &text, Int_t &nchar,
                            Bool_t del)
 {
-   // Get contents of paste buffer atom into string. If del is true delete
-   // the paste buffer afterwards.
-
    if (!id) return;
 
    Atom actual_type, property = (Atom) atom;
@@ -2394,15 +2396,15 @@ void TGX11::GetPasteBuffer(Window_t id, Atom_t atom, TString &text, Int_t &nchar
    nchar = (Int_t) nread;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TranslateCoordinates translates coordinates from the frame of
+/// reference of one window to another. If the point is contained
+/// in a mapped child of the destination, the id of that child is
+/// returned as well.
+
 void TGX11::TranslateCoordinates(Window_t src, Window_t dest, Int_t src_x,
                      Int_t src_y, Int_t &dest_x, Int_t &dest_y, Window_t &child)
 {
-   // TranslateCoordinates translates coordinates from the frame of
-   // reference of one window to another. If the point is contained
-   // in a mapped child of the destination, the id of that child is
-   // returned as well.
-
    if (!src || !dest) return;
 
    Window xchild;
@@ -2412,12 +2414,12 @@ void TGX11::TranslateCoordinates(Window_t src, Window_t dest, Int_t src_x,
    child = (Window_t) xchild;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return geometry of window (should be called GetGeometry but signature
+/// already used).
+
 void TGX11::GetWindowSize(Drawable_t id, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 {
-   // Return geometry of window (should be called GetGeometry but signature
-   // already used).
-
    if (!id) return;
 
    Window wdummy;
@@ -2426,35 +2428,35 @@ void TGX11::GetWindowSize(Drawable_t id, Int_t &x, Int_t &y, UInt_t &w, UInt_t &
    XGetGeometry((Display*)fDisplay, (Drawable) id, &wdummy, &x, &y, &w, &h, &bdum, &ddum);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// FillPolygon fills the region closed by the specified path.
+/// The path is closed automatically if the last point in the list does
+/// not coincide with the first point. All point coordinates are
+/// treated as relative to the origin. For every pair of points
+/// inside the polygon, the line segment connecting them does not
+/// intersect the path.
+
 void TGX11::FillPolygon(Window_t id, GContext_t gc, Point_t *points, Int_t npnt)
 {
-   // FillPolygon fills the region closed by the specified path.
-   // The path is closed automatically if the last point in the list does
-   // not coincide with the first point. All point coordinates are
-   // treated as relative to the origin. For every pair of points
-   // inside the polygon, the line segment connecting them does not
-   // intersect the path.
-
    if (!id) return;
 
    XFillPolygon((Display*)fDisplay, (Window) id, (GC) gc, (XPoint *) points, npnt,
                 Convex, CoordModeOrigin);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the root window the pointer is logically on and the pointer
+/// coordinates relative to the root window's origin.
+/// The pointer coordinates returned to win_x and win_y are relative to
+/// the origin of the specified window. In this case, QueryPointer returns
+/// the child that contains the pointer, if any, or else kNone to
+/// childw. QueryPointer returns the current logical state of the
+/// keyboard buttons and the modifier keys in mask.
+
 void TGX11::QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
                          Int_t &root_x, Int_t &root_y, Int_t &win_x,
                          Int_t &win_y, UInt_t &mask)
 {
-   // Returns the root window the pointer is logically on and the pointer
-   // coordinates relative to the root window's origin.
-   // The pointer coordinates returned to win_x and win_y are relative to
-   // the origin of the specified window. In this case, QueryPointer returns
-   // the child that contains the pointer, if any, or else kNone to
-   // childw. QueryPointer returns the current logical state of the
-   // keyboard buttons and the modifier keys in mask.
-
    if (!id) return;
 
    Window xrootw, xchildw;
@@ -2469,145 +2471,145 @@ void TGX11::QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
    MapModifierState(mask, xmask, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set foreground color in graphics context (shortcut for ChangeGC with
+/// only foreground mask set).
+
 void TGX11::SetForeground(GContext_t gc, ULong_t foreground)
 {
-   // Set foreground color in graphics context (shortcut for ChangeGC with
-   // only foreground mask set).
-
    XSetForeground((Display*)fDisplay, (GC) gc, foreground);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set clipping rectangles in graphics context. X, Y specify the origin
+/// of the rectangles. Recs specifies an array of rectangles that define
+/// the clipping mask and n is the number of rectangles.
+
 void TGX11::SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n)
 {
-   // Set clipping rectangles in graphics context. X, Y specify the origin
-   // of the rectangles. Recs specifies an array of rectangles that define
-   // the clipping mask and n is the number of rectangles.
-
    XSetClipRectangles((Display*)fDisplay, (GC) gc, x, y, (XRectangle *) recs, n, Unsorted);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Flush (mode = 0, default) or synchronize (mode = 1) X output buffer.
+/// Flush flushes output buffer. Sync flushes buffer and waits till all
+/// requests have been processed by X server.
+
 void TGX11::Update(Int_t mode)
 {
-   // Flush (mode = 0, default) or synchronize (mode = 1) X output buffer.
-   // Flush flushes output buffer. Sync flushes buffer and waits till all
-   // requests have been processed by X server.
-
    if (mode == 0)
       XFlush((Display*)fDisplay);
    if (mode == 1)
       XSync((Display*)fDisplay, False);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new empty region.
+
 Region_t TGX11::CreateRegion()
 {
-   // Create a new empty region.
-
    return (Region_t) XCreateRegion();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy region.
+
 void TGX11::DestroyRegion(Region_t reg)
 {
-   // Destroy region.
-
    XDestroyRegion((Region)reg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Union of rectangle with a region.
+
 void TGX11::UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest)
 {
-   // Union of rectangle with a region.
-
    XRectangle *r = (XRectangle *) rect;   // 1 on 1 mapping
    XUnionRectWithRegion(r, (Region) src, (Region) dest);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create region for the polygon defined by the points array.
+/// If winding is true use WindingRule else EvenOddRule as fill rule.
+
 Region_t TGX11::PolygonRegion(Point_t *points, Int_t np, Bool_t winding)
 {
-   // Create region for the polygon defined by the points array.
-   // If winding is true use WindingRule else EvenOddRule as fill rule.
-
    XPoint *p = (XPoint *) points;
    return (Region_t) XPolygonRegion(p, np, winding ? WindingRule : EvenOddRule);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the union of rega and regb and return result region.
+/// The output region may be the same result region.
+
 void TGX11::UnionRegion(Region_t rega, Region_t regb, Region_t result)
 {
-   // Compute the union of rega and regb and return result region.
-   // The output region may be the same result region.
-
    XUnionRegion((Region) rega, (Region) regb, (Region) result);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the intersection of rega and regb and return result region.
+/// The output region may be the same as the result region.
+
 void TGX11::IntersectRegion(Region_t rega, Region_t regb, Region_t result)
 {
-   // Compute the intersection of rega and regb and return result region.
-   // The output region may be the same as the result region.
-
    XIntersectRegion((Region) rega, (Region) regb, (Region) result);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Subtract rega from regb.
+
 void TGX11::SubtractRegion(Region_t rega, Region_t regb, Region_t result)
 {
-   // Subtract rega from regb.
-
    XSubtractRegion((Region) rega, (Region) regb, (Region) result);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the difference between the union and intersection of
+/// two regions.
+
 void TGX11::XorRegion(Region_t rega, Region_t regb, Region_t result)
 {
-   // Calculate the difference between the union and intersection of
-   // two regions.
-
    XXorRegion((Region) rega, (Region) regb, (Region) result);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the region is empty.
+
 Bool_t TGX11::EmptyRegion(Region_t reg)
 {
-   // Return true if the region is empty.
-
    return (Bool_t) XEmptyRegion((Region) reg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if the point x,y is in the region.
+
 Bool_t TGX11::PointInRegion(Int_t x, Int_t y, Region_t reg)
 {
-   // Returns true if the point x,y is in the region.
-
    return (Bool_t) XPointInRegion((Region) reg, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if two regions are equal.
+
 Bool_t TGX11::EqualRegion(Region_t rega, Region_t regb)
 {
-   // Returns true if two regions are equal.
-
    return (Bool_t) XEqualRegion((Region) rega, (Region) regb);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return smallest enclosing rectangle.
+
 void TGX11::GetRegionBox(Region_t reg, Rectangle_t *rect)
 {
-   // Return smallest enclosing rectangle.
-
    XClipBox((Region) reg, (XRectangle*) rect);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of font names matching fontname regexp, like "-*-times-*".
+
 char **TGX11::ListFonts(const char *fontname, Int_t max, Int_t &count)
 {
-   // Return list of font names matching fontname regexp, like "-*-times-*".
-
    char **fontlist;
    Int_t fontcount = 0;
    fontlist = XListFonts((Display*)fDisplay, (char *)fontname, max, &fontcount);
@@ -2615,19 +2617,19 @@ char **TGX11::ListFonts(const char *fontname, Int_t max, Int_t &count)
    return fontlist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free list of font names.
+
 void TGX11::FreeFontNames(char **fontlist)
 {
-   // Free list of font names.
-
    XFreeFontNames(fontlist);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a client-side XImage. Returns handle to XImage.
+
 Drawable_t TGX11::CreateImage(UInt_t width, UInt_t height)
 {
-   // Create a client-side XImage. Returns handle to XImage.
-
    Int_t bitmap_pad;
 
    if (fDepth <= 8)
@@ -2646,93 +2648,93 @@ Drawable_t TGX11::CreateImage(UInt_t width, UInt_t height)
    return (Drawable_t) xim;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get size of XImage img.
+
 void TGX11::GetImageSize(Drawable_t img, UInt_t &width, UInt_t &height)
 {
-   // Get size of XImage img.
-
    width  = ((XImage*)img)->width;
    height = ((XImage*)img)->height;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pixel at specified location in XImage img.
+
 void TGX11::PutPixel(Drawable_t img, Int_t x, Int_t y, ULong_t pixel)
 {
-   // Set pixel at specified location in XImage img.
-
    XPutPixel((XImage*) img, x, y, pixel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Put (x,y,w,h) part of image img in window win at position dx,dy.
+
 void TGX11::PutImage(Drawable_t win, GContext_t gc, Drawable_t img, Int_t dx,
                      Int_t dy, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Put (x,y,w,h) part of image img in window win at position dx,dy.
-
    if (!win) return;
 
    XPutImage((Display*)fDisplay, (Drawable) win, (GC) gc, (XImage*) img,
              x, y, dx, dy, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy XImage img.
+
 void TGX11::DeleteImage(Drawable_t img)
 {
-   // Destroy XImage img.
-
    XDestroyImage((XImage*) img);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Nonrectangular Window Shape Extension adds nonrectangular
+/// windows to the System.
+/// This allows for making shaped (partially transparent) windows
+
 void TGX11::ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask)
 {
-   // The Nonrectangular Window Shape Extension adds nonrectangular
-   // windows to the System.
-   // This allows for making shaped (partially transparent) windows
-
    XShapeCombineMask((Display*)fDisplay, (Window) id, ShapeBounding, x, y,
                      (Pixmap) mask, ShapeSet);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the width of the screen in millimeters.
+
 UInt_t TGX11::ScreenWidthMM() const
 {
-   // Returns the width of the screen in millimeters.
-
    return (UInt_t)WidthMMOfScreen(DefaultScreenOfDisplay((Display*)fDisplay));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes the specified property only if the property was defined on the
+/// specified window and causes the X server to generate a PropertyNotify
+/// event on the window unless the property does not exist.
+
 void TGX11::DeleteProperty(Window_t win, Atom_t& prop)
 {
-   // Deletes the specified property only if the property was defined on the
-   // specified window and causes the X server to generate a PropertyNotify
-   // event on the window unless the property does not exist.
-
    XDeleteProperty((Display*)fDisplay, win, prop);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the actual type of the property; the actual format of the property;
+/// the number of 8-bit, 16-bit, or 32-bit items transferred; the number of
+/// bytes remaining to be read in the property; and a pointer to the data
+/// actually returned.
+
 Int_t TGX11::GetProperty(Window_t win, Atom_t prop, Long_t offset, Long_t length,
                          Bool_t del, Atom_t req_type, Atom_t *act_type,
                          Int_t *act_format, ULong_t *nitems, ULong_t *bytes,
                          unsigned char **prop_list)
 {
-   // Returns the actual type of the property; the actual format of the property;
-   // the number of 8-bit, 16-bit, or 32-bit items transferred; the number of
-   // bytes remaining to be read in the property; and a pointer to the data
-   // actually returned.
-
    return XGetWindowProperty((Display*)fDisplay, win, prop, offset, length, del, req_type,
                              act_type, act_format, nitems, bytes, prop_list);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes the specified dynamic parameters if the pointer is actively
+/// grabbed by the client.
+
 void TGX11::ChangeActivePointerGrab(Window_t /*win*/, UInt_t mask, Cursor_t cur)
 {
-   // Changes the specified dynamic parameters if the pointer is actively
-   // grabbed by the client.
-
    UInt_t xevmask;
    MapEventMask(mask, xevmask);
    if (cur == kNone)
@@ -2741,44 +2743,44 @@ void TGX11::ChangeActivePointerGrab(Window_t /*win*/, UInt_t mask, Cursor_t cur)
       XChangeActivePointerGrab((Display*)fDisplay, xevmask, cur, CurrentTime);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Requests that the specified selection be converted to the specified
+/// target type.
+
 void TGX11::ConvertSelection(Window_t win, Atom_t &sel, Atom_t &target,
                              Atom_t &prop, Time_t &stamp)
 {
-   // Requests that the specified selection be converted to the specified
-   // target type.
-
    XConvertSelection((Display*)fDisplay, sel, target, prop, win, stamp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes the owner and last-change time for the specified selection
+
 Bool_t TGX11::SetSelectionOwner(Window_t owner, Atom_t &sel)
 {
-   // Changes the owner and last-change time for the specified selection
-
    return XSetSelectionOwner((Display*)fDisplay, sel, owner, CurrentTime);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function alters the property for the specified window and
+/// causes the X server to generate a PropertyNotify event on that
+/// window.
+
 void TGX11::ChangeProperties(Window_t id, Atom_t property, Atom_t type,
                              Int_t format, UChar_t *data, Int_t len)
 {
-   // This function alters the property for the specified window and
-   // causes the X server to generate a PropertyNotify event on that
-   // window.
-
    if (!id) return;
 
    XChangeProperty((Display*)fDisplay, (Window) id, (Atom) property, (Atom) type,
                    format, PropModeReplace, data, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add XdndAware property and the list of drag and drop types to the
+/// Window win.
+
 void TGX11::SetDNDAware(Window_t win, Atom_t *typelist)
 {
-   // Add XdndAware property and the list of drag and drop types to the
-   // Window win.
-
    unsigned char version = 4;
    Atom_t dndaware = InternAtom("XdndAware", kFALSE);
    XChangeProperty((Display*)fDisplay, (Window) win, (Atom) dndaware, (Atom) XA_ATOM,
@@ -2795,11 +2797,11 @@ void TGX11::SetDNDAware(Window_t win, Atom_t *typelist)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the list of drag and drop types to the Window win.
+
 void TGX11::SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist)
 {
-   // Add the list of drag and drop types to the Window win.
-
    if (typelist) {
       int n;
       for (n = 0; typelist[n]; n++) { }
@@ -2810,14 +2812,14 @@ void TGX11::SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively search in the children of Window for a Window which is at
+/// location x, y and is DND aware, with a maximum depth of maxd.
+/// Possibility to exclude dragwin and input.
+
 Window_t TGX11::FindRWindow(Window_t win, Window_t dragwin, Window_t input,
                             int x, int y, int maxd)
 {
-   // Recursively search in the children of Window for a Window which is at
-   // location x, y and is DND aware, with a maximum depth of maxd.
-   // Possibility to exclude dragwin and input.
-
    WindowAttributes_t wattr;
    static Atom_t *dndTypeList = 0;
 
@@ -2862,12 +2864,12 @@ Window_t TGX11::FindRWindow(Window_t win, Window_t dragwin, Window_t input,
    return kNone;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if Window win is DND aware, and knows any of the DND formats
+/// passed in argument.
+
 Bool_t TGX11::IsDNDAware(Window_t win, Atom_t *typelist)
 {
-   // Checks if Window win is DND aware, and knows any of the DND formats
-   // passed in argument.
-
    Atom_t  actual;
    Int_t   format;
    ULong_t count, remaining;

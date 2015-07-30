@@ -34,24 +34,26 @@
 
 ClassImp(TH2GL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2GL::TH2GL() :
    TGLPlot3D(), fM(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TH2GL::~TH2GL()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TH2GL::SetModel(TObject* obj, const Option_t* opt)
 {
-   // Set model object.
-
    TString option(opt);
    option.ToLower();
 
@@ -91,19 +93,19 @@ Bool_t TH2GL::SetModel(TObject* obj, const Option_t* opt)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup bounding-box.
+
 void TH2GL::SetBBox()
 {
-   // Setup bounding-box.
-
    fBoundingBox.Set(fPlotPainter->RefBackBox().Get3DBox());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render the object.
+
 void TH2GL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Render the object.
-
    fPlotPainter->RefBackBox().FindFrontPoint();
 
    glPushAttrib(GL_ENABLE_BIT | GL_LIGHTING_BIT);

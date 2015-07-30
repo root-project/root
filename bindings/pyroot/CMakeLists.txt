@@ -20,7 +20,7 @@ if(WIN32)
 endif()
 ROOT_LINKER_LIBRARY(PyROOT *.cxx G__PyROOT.cxx LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES})
 
-if(WIN32)
+if(MSVC)
   add_custom_command(TARGET PyROOT POST_BUILD
                      COMMAND link -dll -nologo -IGNORE:4001 -machine:ix86 -export:initlibPyROOT
                     $<TARGET_LINKER_FILE:PyROOT> -nodefaultlib kernel32.lib msvcrt.lib
@@ -41,6 +41,10 @@ foreach(pyfile ${pyfiles})
   install(CODE "execute_process(COMMAND python -O -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
   file(COPY ${pyfile} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
 endforeach()
+
+set( ROOTaaSDirName "ROOTaaS")
+install (DIRECTORY ${ROOTaaSDirName} DESTINATION ${runtimedir})
+file(COPY ${ROOTaaSDirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
 
 #---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()

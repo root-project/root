@@ -57,43 +57,43 @@ Double_t gCurrent_y     = 0; // Current y in the pad metric.
 Double_t gCurrent_ang   = 0; // Current angular, within current_phi1
                                     // and current_phi2.
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TPie::TPie() : TNamed()
 {
-   // Default constructor.
-
    Init(1, 0, 0.5, 0.5, 0.4);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This constructor creates a pie chart when only the number of
+/// the slices is known. The number of slices is fixed.
+
 TPie::TPie(const char *name, const char *title, Int_t npoints) :
            TNamed(name,title)
 {
-   // This constructor creates a pie chart when only the number of
-   // the slices is known. The number of slices is fixed.
-
    Init(npoints, 0, 0.5, 0.5, 0.4);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor. The 1st and 2nd parameters are the name of the object
+/// and its title.
+///
+/// The number of points passed at this point is used to allocate the memory.
+///
+/// Slices values are given as Double_t.
+///
+/// The 4th elements is an array containing, in double precision format,
+/// the value of each slice. It is also possible to specify the filled color
+/// of each slice. If the color array is not specfied the slices are colored
+/// using a color sequence in the standard palette.
+
 TPie::TPie(const char *name, const char *title,
            Int_t npoints, Double_t *vals,
            Int_t *colors, const char *lbls[]) : TNamed(name,title)
 {
-   // Normal constructor. The 1st and 2nd parameters are the name of the object
-   // and its title.
-   //
-   // The number of points passed at this point is used to allocate the memory.
-   //
-   // Slices values are given as Double_t.
-   //
-   // The 4th elements is an array containing, in double precision format,
-   // the value of each slice. It is also possible to specify the filled color
-   // of each slice. If the color array is not specfied the slices are colored
-   // using a color sequence in the standard palette.
-
    Init(npoints, 0, 0.5, 0.5, 0.4);
    for (Int_t i=0; i<fNvals; ++i) fPieSlices[i]->SetValue(vals[i]);
 
@@ -102,14 +102,14 @@ TPie::TPie(const char *name, const char *title,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor (Float_t).
+
 TPie::TPie(const char *name,
            const char *title,
            Int_t npoints, Float_t *vals,
            Int_t *colors, const char *lbls[]) : TNamed(name,title)
 {
-   // Normal constructor (Float_t).
-
    Init(npoints, 0, 0.5, 0.5, 0.4);
    for (Int_t i=0; i<fNvals; ++i) fPieSlices[i]->SetValue(vals[i]);
 
@@ -118,11 +118,11 @@ TPie::TPie(const char *name,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a TH1
+
 TPie::TPie(const TH1 *h) : TNamed(h->GetName(),h->GetTitle())
 {
-   // Constructor from a TH1
-
    Int_t i;
 
    const TAxis *axis = h->GetXaxis();
@@ -143,11 +143,11 @@ TPie::TPie(const TH1 *h) : TNamed(h->GetName(),h->GetTitle())
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TPie::TPie(const TPie &cpy) : TNamed(cpy), TAttText(cpy)
 {
-   // Copy constructor.
-
    Init(cpy.fNvals, cpy.fAngularOffset, cpy.fX, cpy.fY, cpy.fRadius);
 
    for (Int_t i=0;i<fNvals;++i) {
@@ -156,11 +156,11 @@ TPie::TPie(const TPie &cpy) : TNamed(cpy), TAttText(cpy)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TPie::~TPie()
 {
-   // Destructor.
-
    if (fNvals>0) {
       delete [] fPieSlices;
    }
@@ -170,11 +170,11 @@ TPie::~TPie()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the distance to the chart in gPad.
+
 Int_t TPie::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Evaluate the distance to the chart in gPad.
-
    Int_t dist = 9999;
 
    gCurrent_slice = DistancetoSlice(px,py);
@@ -188,14 +188,14 @@ Int_t TPie::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the slice number at the pixel position (px,py).
+/// Returns -1 if no slice is picked.
+///
+/// Used by DistancetoPrimitive.
+
 Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
 {
-   // Returns the slice number at the pixel position (px,py).
-   // Returns -1 if no slice is picked.
-   //
-   // Used by DistancetoPrimitive.
-
    MakeSlices();
 
    Int_t result(-1);
@@ -276,13 +276,13 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the pie chart.
+///
+/// The possible options are listed in the TPie::Paint() method.
+
 void TPie::Draw(Option_t *option)
 {
-   // Draw the pie chart.
-   //
-   // The possible options are listed in the TPie::Paint() method.
-
    TString soption(option);
    soption.ToLower();
 
@@ -301,12 +301,12 @@ void TPie::Draw(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method is for internal use. It is used by Execute event to draw the
+/// outline of "this" TPie. Used when the opaque movements are not permitted.
+
 void TPie::DrawGhost()
 {
-   // This method is for internal use. It is used by Execute event to draw the
-   // outline of "this" TPie. Used when the opaque movements are not permitted.
-
    MakeSlices();
 
    // XY metric
@@ -399,11 +399,11 @@ void TPie::DrawGhost()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the mouse events.
+
 void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute the mouse events.
-
    if (!gPad) return;
    if (!gPad->IsEditable() && event != kMouseEnter) return;
 
@@ -645,104 +645,104 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the label of the entry number "i".
+
 const char* TPie::GetEntryLabel(Int_t i)
 {
-   // Returns the label of the entry number "i".
-
    return GetSlice(i)->GetTitle();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the color of the slice number "i".
+
 Int_t TPie::GetEntryFillColor(Int_t i)
 {
-   // Return the color of the slice number "i".
-
    return GetSlice(i)->GetFillColor();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the style use to fill the slice number "i".
+
 Int_t TPie::GetEntryFillStyle(Int_t i)
 {
-   // Return the style use to fill the slice number "i".
-
    return GetSlice(i)->GetFillStyle();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the line color used to outline thi "i" slice
+
 Int_t TPie::GetEntryLineColor(Int_t i)
 {
-   // Return the line color used to outline thi "i" slice
-
    return GetSlice(i)->GetLineColor();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the style used to outline thi "i" slice
+
 Int_t TPie::GetEntryLineStyle(Int_t i)
 {
-   // Return the style used to outline thi "i" slice
-
    return GetSlice(i)->GetLineStyle();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the line width used to outline thi "i" slice
+
 Int_t TPie::GetEntryLineWidth(Int_t i)
 {
-   // Return the line width used to outline thi "i" slice
-
    return GetSlice(i)->GetLineWidth();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the radial offset's value for the slice number "i".
+
 Double_t TPie::GetEntryRadiusOffset(Int_t i)
 {
-   // Return the radial offset's value for the slice number "i".
-
    return GetSlice(i)->GetRadiusOffset();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the value associated with the slice number "i".
+
 Double_t TPie::GetEntryVal(Int_t i)
 {
-   // Return the value associated with the slice number "i".
-
    return GetSlice(i)->GetValue();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If created before by Paint option or by MakeLegend method return
+/// the pointer to the legend, otherwise return 0;
+
 TLegend* TPie::GetLegend()
 {
-   // If created before by Paint option or by MakeLegend method return
-   // the pointer to the legend, otherwise return 0;
-
    return fLegend;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the reference to the slice of index 'id'. There are no controls
+/// of memory corruption, be carefull.
+
 TPieSlice* TPie::GetSlice(Int_t id)
 {
-   // Return the reference to the slice of index 'id'. There are no controls
-   // of memory corruption, be carefull.
-
    return fPieSlices[id];
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common initialization for all constructors.
+/// This is a private function called to allocate the memory.
+
 void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
 {
-   // Common initialization for all constructors.
-   // This is a private function called to allocate the memory.
-
    gIsUptSlice = kFALSE;
 
    fAngularOffset = ao;
@@ -780,17 +780,17 @@ void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method create a legend that explains the contents
+/// of the slice for this pie-chart.
+///
+/// The parameter passed reppresents the option passed to shown the slices,
+/// see TLegend::AddEntry() for futher details.
+///
+/// The pointer of the TLegend is returned.
+
 TLegend* TPie::MakeLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char *leg_header)
 {
-   // This method create a legend that explains the contents
-   // of the slice for this pie-chart.
-   //
-   // The parameter passed reppresents the option passed to shown the slices,
-   // see TLegend::AddEntry() for futher details.
-   //
-   // The pointer of the TLegend is returned.
-
    if (!fLegend) fLegend = new TLegend(x1,y1,x2,y2,leg_header);
    else fLegend->Clear();
 
@@ -804,28 +804,28 @@ TLegend* TPie::MakeLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2, co
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a Pie chart in a canvas.
+/// The possible option are:
+///
+/// "R"   Print the labels along the central "R"adius of slices.
+/// "T"   Print the label in a direction "T"angent to circle that describes
+///       the TPie.
+/// "SC"  Paint the the labels with the "S"ame "C"olor as the slices.
+/// "3D"  Draw the pie-chart with a pseudo 3D effect.
+/// "NOL" No OutLine: Don't draw the slices' outlines, any property over the
+///       slices' line is ignored.
+/// ">"   Sort the slices in increasing order.
+/// "<"   Sort the slices in decreasing order.
+///
+/// After the use of > or < options the internal order of the TPieSlices
+/// is changed.
+///
+/// Other options changing the labels' format are described in
+/// TPie::SetLabelFormat().
+
 void TPie::Paint(Option_t *option)
 {
-   // Paint a Pie chart in a canvas.
-   // The possible option are:
-   //
-   // "R"   Print the labels along the central "R"adius of slices.
-   // "T"   Print the label in a direction "T"angent to circle that describes
-   //       the TPie.
-   // "SC"  Paint the the labels with the "S"ame "C"olor as the slices.
-   // "3D"  Draw the pie-chart with a pseudo 3D effect.
-   // "NOL" No OutLine: Don't draw the slices' outlines, any property over the
-   //       slices' line is ignored.
-   // ">"   Sort the slices in increasing order.
-   // "<"   Sort the slices in decreasing order.
-   //
-   // After the use of > or < options the internal order of the TPieSlices
-   // is changed.
-   //
-   // Other options changing the labels' format are described in
-   // TPie::SetLabelFormat().
-
    MakeSlices();
 
    TString soption(option);
@@ -1143,11 +1143,11 @@ void TPie::Paint(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TPie::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    out << "   " << std::endl;
    if (gROOT->ClassSaved(TPie::Class())) {
       out << "   ";
@@ -1199,11 +1199,11 @@ void TPie::SavePrimitive(std::ostream &out, Option_t *option)
 
 
 
-//______________________________________________________________________________
-void TPie::SetAngle3D(Float_t val) {
-   // Set the value of for the pseudo 3D view angle, in degree.
-   // The range of the permitted values is: [0,90]
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of for the pseudo 3D view angle, in degree.
+/// The range of the permitted values is: [0,90]
 
+void TPie::SetAngle3D(Float_t val) {
    // check if val is in the permitted range
    while (val>360.) val -= 360.;
    while (val<0)    val += 360.;
@@ -1214,11 +1214,11 @@ void TPie::SetAngle3D(Float_t val) {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the global angular offset for slices in degree [0,360]
+
 void TPie::SetAngularOffset(Double_t offset)
 {
-   // Set the global angular offset for slices in degree [0,360]
-
    fAngularOffset = offset;
 
    while (fAngularOffset>=360.) fAngularOffset -= 360.;
@@ -1228,187 +1228,187 @@ void TPie::SetAngularOffset(Double_t offset)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the coordinates of the circle that describe the pie:
+/// - the 1st and the 2nd arguments are the x and y center's coordinates.
+/// - the 3rd value is the pie-chart's radius.
+///
+/// All the coordinates are in NDC space.
+
 void TPie::SetCircle(Double_t x, Double_t y, Double_t rad)
 {
-   // Set the coordinates of the circle that describe the pie:
-   // - the 1st and the 2nd arguments are the x and y center's coordinates.
-   // - the 3rd value is the pie-chart's radius.
-   //
-   // All the coordinates are in NDC space.
-
    fX      = x;
    fY      = y;
    fRadius = rad;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set slice number "i" label. The first parameter is the index of the slice,
+/// the other is the label text.
+
 void TPie::SetEntryLabel(Int_t i, const char *text)
 {
-   // Set slice number "i" label. The first parameter is the index of the slice,
-   // the other is the label text.
-
    // Set the Label of a single slice
    if (i>=0 && i<fNvals) fPieSlices[i]->SetTitle(text);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the color for the slice's outline. "i" is the slice number.
+
 void TPie::SetEntryLineColor(Int_t i, Int_t color)
 {
-   // Set the color for the slice's outline. "i" is the slice number.
-
    if (i>=0 && i<fNvals) fPieSlices[i]->SetLineColor(color);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the style for the slice's outline. "i" is the slice number.
+
 void TPie::SetEntryLineStyle(Int_t i, Int_t style)
 {
-   // Set the style for the slice's outline. "i" is the slice number.
-
    if (i>=0 && i<fNvals) fPieSlices[i]->SetLineStyle(style);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the width of the slice's outline. "i" is the slice number.
+
 void TPie::SetEntryLineWidth(Int_t i, Int_t width)
 {
-   // Set the width of the slice's outline. "i" is the slice number.
-
    if (i>=0 && i<fNvals) fPieSlices[i]->SetLineWidth(width);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the color for the slice "i".
+
 void TPie::SetEntryFillColor(Int_t i, Int_t color)
 {
-   // Set the color for the slice "i".
-
    if (i>=0 && i<fNvals) fPieSlices[i]->SetFillColor(color);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the fill style for the "i" slice
+
 void TPie::SetEntryFillStyle(Int_t i, Int_t style)
 {
-   // Set the fill style for the "i" slice
-
    if (i>=0 && i<fNvals) fPieSlices[i]->SetFillStyle(style);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the distance, in the direction of the radius of the slice.
+
 void TPie::SetEntryRadiusOffset(Int_t i, Double_t shift)
 {
-   // Set the distance, in the direction of the radius of the slice.
-
    if (i>=0 && i<fNvals) fPieSlices[i]->SetRadiusOffset(shift);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of a slice
+
 void TPie::SetEntryVal(Int_t i, Double_t val)
 {
-   // Set the value of a slice
-
    if (i>=0 && i<fNvals) fPieSlices[i]->SetValue(val);
 
    MakeSlices(kTRUE);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the fill colors for all the TPie's slices.
+
 void TPie::SetFillColors(Int_t *colors)
 {
-   // Set the fill colors for all the TPie's slices.
-
    if (!colors) return;
    for (Int_t i=0;i<fNvals;++i) fPieSlices[i]->SetFillColor(colors[i]);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the height, in pixel, for the piechart if is drawn using
+/// the pseudo-3d mode.
+///
+/// The default value is 20 pixel.
+
 void TPie::SetHeight(Double_t val/*=20*/)
 {
-   // Set the height, in pixel, for the piechart if is drawn using
-   // the pseudo-3d mode.
-   //
-   // The default value is 20 pixel.
-
    fHeight = val;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method is used to customize the label format. The format string
+/// must contain one of these modifiers:
+///
+/// - %txt  : to print the text label associated with the slice
+/// - %val  : to print the numeric value of the slice
+/// - %frac : to print the relative fraction of this slice
+/// - %perc : to print the % of this slice
+///
+/// ex. : mypie->SetLabelFormat("%txt (%frac)");
+
 void TPie::SetLabelFormat(const char *fmt)
 {
-   // This method is used to customize the label format. The format string
-   // must contain one of these modifiers:
-   //
-   // - %txt  : to print the text label associated with the slice
-   // - %val  : to print the numeric value of the slice
-   // - %frac : to print the relative fraction of this slice
-   // - %perc : to print the % of this slice
-   //
-   // ex. : mypie->SetLabelFormat("%txt (%frac)");
-
    fLabelFormat = fmt;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set numeric format in the label, is used if the label format
+/// there is the modifier %frac, in this case the value is printed
+/// using this format.
+///
+/// The numeric format use the standard C modifier used in stdio library:
+/// %f, %2.1$, %e... for further documentation you can use the printf
+/// mapage ("man 3 printf" on linux)
+///
+/// ex. : mypie->SetLabelFormat("%txt (%frac)");
+///       mypie->SetFractionFormat("2.1f");
+
 void TPie::SetFractionFormat(const char *fmt)
 {
-   // Set numeric format in the label, is used if the label format
-   // there is the modifier %frac, in this case the value is printed
-   // using this format.
-   //
-   // The numeric format use the standard C modifier used in stdio library:
-   // %f, %2.1$, %e... for further documentation you can use the printf
-   // mapage ("man 3 printf" on linux)
-   //
-   // ex. : mypie->SetLabelFormat("%txt (%frac)");
-   //       mypie->SetFractionFormat("2.1f");
-
    fFractionFormat = fmt;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the labels for all the slices.
+
 void TPie::SetLabels(const char *lbls[])
 {
-   // Set the labels for all the slices.
-
    if (!lbls) return;
    for (Int_t i=0;i<fNvals;++i) fPieSlices[i]->SetTitle(lbls[i]);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the distance between the label end the external line of the TPie.
+
 void TPie::SetLabelsOffset(Float_t labelsoffset)
 {
-   // Set the distance between the label end the external line of the TPie.
-
    fLabelsOffset = labelsoffset;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the numeric format for the percent value of a slice, default: %3.1f
+
 void TPie::SetPercentFormat(const char *fmt)
 {
-   // Set the numeric format for the percent value of a slice, default: %3.1f
-
    fPercentFormat = fmt;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the pie chart's radius' value.
+
 void TPie::SetRadius(Double_t rad)
 {
-   // Set the pie chart's radius' value.
-
    if (rad>0) {
       fRadius = rad;
    } else {
@@ -1418,40 +1418,40 @@ void TPie::SetRadius(Double_t rad)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the numeric format the slices' values.
+/// Used by %val (see SetLabelFormat()).
+
 void TPie::SetValueFormat(const char *fmt)
 {
-   // Set the numeric format the slices' values.
-   // Used by %val (see SetLabelFormat()).
-
    fValueFormat = fmt;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set X value.
+
 void TPie::SetX(Double_t x)
 {
-   // Set X value.
-
    fX = x;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Y value.
+
 void TPie::SetY(Double_t y)
 {
-   // Set Y value.
-
    fY = y;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make the slices.
+/// If they already exist it does nothing unless force=kTRUE.
+
 void TPie::MakeSlices(Bool_t force)
 {
-   // Make the slices.
-   // If they already exist it does nothing unless force=kTRUE.
-
    if (fSlices && !force) return;
 
    fSum = .0;
@@ -1479,15 +1479,15 @@ void TPie::MakeSlices(Bool_t force)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method, mainly intended for internal use, ordered the  slices accoording their values.
+/// The default (amode=kTRUE) is inscreasing order, but is also possible in decreasing order (amode=kFALSE).
+///
+/// If the merge_thresold>0 the slice that contains a quantity smaller than merge_thresold are merged
+/// togheter
+
 void TPie::SortSlices(Bool_t amode, Float_t merge_threshold)
 {
-   // This method, mainly intended for internal use, ordered the  slices accoording their values.
-   // The default (amode=kTRUE) is inscreasing order, but is also possible in decreasing order (amode=kFALSE).
-   //
-   // If the merge_thresold>0 the slice that contains a quantity smaller than merge_thresold are merged
-   // togheter
-
 
    // main loop to order, bubble sort, the array
    Bool_t isDone = kFALSE;

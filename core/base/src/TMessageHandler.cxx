@@ -36,12 +36,12 @@
 
 ClassImp(TMessageHandler)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new message handler for class cl and add it to the list
+/// of message handlers.
+
 TMessageHandler::TMessageHandler(const TClass *cl, Bool_t derived)
 {
-   // Create a new message handler for class cl and add it to the list
-   // of message handlers.
-
    fClass   = cl;
    fMessObj = 0;
    fMessId  = 0;
@@ -58,12 +58,12 @@ TMessageHandler::TMessageHandler(const TClass *cl, Bool_t derived)
    Add();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new message handler for class named cl and add it to the list
+/// of message handlers.
+
 TMessageHandler::TMessageHandler(const char *cl, Bool_t derived)
 {
-   // Create a new message handler for class named cl and add it to the list
-   // of message handlers.
-
    fClass   = TClass::GetClass(cl);
    fMessObj = 0;
    fMessId  = 0;
@@ -78,22 +78,22 @@ TMessageHandler::TMessageHandler(const char *cl, Bool_t derived)
    Add();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up the messagehandler.
+
 TMessageHandler:: ~TMessageHandler()
 {
-   // Clean up the messagehandler.
-
    Remove();
    if (fSize <= 0) return;
    delete [] fCnts;
    delete [] fMessIds;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add this message handler to the list of messages handlers.
+
 void TMessageHandler::Add()
 {
-   // Add this message handler to the list of messages handlers.
-
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfMessageHandlers()->Add(this);
    if (fClass) {
@@ -104,11 +104,11 @@ void TMessageHandler::Add()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return counter for message with ID=messid.
+
 Int_t TMessageHandler::GetMessageCount(Int_t messId) const
 {
-   // Return counter for message with ID=messid.
-
    if (fSize <= 0) return 0;
    for (Int_t i = 0; i < fSize; i++) {
       if (fMessIds[i] == messId) return fCnts[i];
@@ -116,11 +116,11 @@ Int_t TMessageHandler::GetMessageCount(Int_t messId) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return total number of messages.
+
 Int_t TMessageHandler::GetTotalMessageCount() const
 {
-   // Return total number of messages.
-
    if (fSize <= 0) return 0;
    Int_t count = 0;
    for (Int_t i = 0; i < fSize; i++) {
@@ -129,11 +129,11 @@ Int_t TMessageHandler::GetTotalMessageCount() const
    return count;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store message origin, keep statistics and call Notify().
+
 void TMessageHandler::HandleMessage(Int_t id, const TObject *obj)
 {
-   // Store message origin, keep statistics and call Notify().
-
    // check if message must be managed by this message handler
    if (fClass) {
       if (fDerived) {
@@ -180,11 +180,11 @@ void TMessageHandler::HandleMessage(Int_t id, const TObject *obj)
    fMessIds[fSize-1] = fMessId;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method must be overridden to handle object notifcation.
+
 Bool_t TMessageHandler::Notify()
 {
-   // This method must be overridden to handle object notifcation.
-
    if (fClass) return kFALSE;
    // case of default handler
    // encode class number in message id
@@ -196,11 +196,11 @@ Bool_t TMessageHandler::Notify()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print statistics for this message handler.
+
 void TMessageHandler::Print(Option_t *) const
 {
-   // Print statistics for this message handler.
-
    printf("\n ****** Message Handler: %s has a total of %d messages\n",GetName(),GetTotalMessageCount());
    if (fSize <= 0) return;
    Int_t id, uid;
@@ -231,11 +231,11 @@ void TMessageHandler::Print(Option_t *) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove this message handler from the list of messages handlers.
+
 void TMessageHandler::Remove()
 {
-   // Remove this message handler from the list of messages handlers.
-
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfMessageHandlers()->Remove(this);
    Removed();  // emit Removed() signal

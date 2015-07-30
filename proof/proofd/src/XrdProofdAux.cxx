@@ -40,12 +40,12 @@
 
 XrdSysRecMutex XrdProofdAux::fgFormMutex;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Translates the admin message type in a human readable string.
+/// Must be consistent with the values in XProofProtocol.h
+
 const char *XrdProofdAux::AdminMsgType(int type)
 {
-   // Translates the admin message type in a human readable string.
-   // Must be consistent with the values in XProofProtocol.h
-
    static const char *msgtypes[] = { "Undef",
      "QuerySessions", "SessionTag", "SessionAlias", "GetWorkers", "QueryWorkers",
      "CleanupSessions", "QueryLogPaths", "ReadBuffer", "QueryROOTVersions",
@@ -60,13 +60,13 @@ const char *XrdProofdAux::AdminMsgType(int type)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Translates the proof request type in a human readable string.
+/// Must be consistent with the values in XProofProtocol.h.
+/// The reserved ones are for un
+
 const char *XrdProofdAux::ProofRequestTypes(int type)
 {
-   // Translates the proof request type in a human readable string.
-   // Must be consistent with the values in XProofProtocol.h.
-   // The reserved ones are for un
-
    static const char *reqtypes[] = { "Undef",
       "XP_login", "XP_auth", "XP_create", "XP_destroy", "XP_attach", "XP_detach",
       "XP_3107", "XP_3108", "XP_3109", "XP_3110",
@@ -81,19 +81,19 @@ const char *XrdProofdAux::ProofRequestTypes(int type)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand path 'p' relative to:
+///     $HOME               if begins with ~/
+///     <user>'s $HOME      if begins with ~<user>/
+///     $PWD                if does not begin with '/' or '~'
+///   getenv(<ENVVAR>)      if it begins with $<ENVVAR>)
+/// The returned array of chars is the result of reallocation
+/// of the input one.
+/// If something is inconsistent, for example <ENVVAR> does not
+/// exists, the original string is untouched
+
 char *XrdProofdAux::Expand(char *p)
 {
-   // Expand path 'p' relative to:
-   //     $HOME               if begins with ~/
-   //     <user>'s $HOME      if begins with ~<user>/
-   //     $PWD                if does not begin with '/' or '~'
-   //   getenv(<ENVVAR>)      if it begins with $<ENVVAR>)
-   // The returned array of chars is the result of reallocation
-   // of the input one.
-   // If something is inconsistent, for example <ENVVAR> does not
-   // exists, the original string is untouched
-
    // Make sure there soething to expand
    if (!p || strlen(p) <= 0 || p[0] == '/')
       return p;
@@ -176,29 +176,29 @@ char *XrdProofdAux::Expand(char *p)
    return po;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand path 'p' relative to:
+///     $HOME               if begins with ~/
+///     <user>'s $HOME      if begins with ~<user>/
+///     $PWD                if does not begin with '/' or '~'
+///   getenv(<ENVVAR>)      if it begins with $<ENVVAR>)
+/// The input string is updated with the result.
+/// If something is inconsistent, for example <ENVVAR> does not
+/// exists, the original string is untouched
+
 void XrdProofdAux::Expand(XrdOucString &p)
 {
-   // Expand path 'p' relative to:
-   //     $HOME               if begins with ~/
-   //     <user>'s $HOME      if begins with ~<user>/
-   //     $PWD                if does not begin with '/' or '~'
-   //   getenv(<ENVVAR>)      if it begins with $<ENVVAR>)
-   // The input string is updated with the result.
-   // If something is inconsistent, for example <ENVVAR> does not
-   // exists, the original string is untouched
-
    char *po = strdup((char *)p.c_str());
    po = Expand(po);
    p = po;
    SafeFree(po);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract first integer from string at 'str', if any
+
 long int XrdProofdAux::GetLong(char *str)
 {
-   // Extract first integer from string at 'str', if any
-
    // Reposition on first digit
    char *p = str;
    while ((*p < 48 || *p > 57) && (*p) != '\0')
@@ -216,12 +216,12 @@ long int XrdProofdAux::GetLong(char *str)
    return strtol(p, 0, 10);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get information about group with 'gid' in a thread safe way.
+/// Retur 0 on success, -errno on error
+
 int XrdProofdAux::GetGroupInfo(const char *grp, XrdProofGI &gi)
 {
-   // Get information about group with 'gid' in a thread safe way.
-   // Retur 0 on success, -errno on error
-
    // Make sure input is defined
    if (!grp || strlen(grp) <= 0)
       return -EINVAL;
@@ -250,12 +250,12 @@ int XrdProofdAux::GetGroupInfo(const char *grp, XrdProofGI &gi)
       return -ENOENT;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get information about group with 'gid' in a thread safe way.
+/// Retur 0 on success, -errno on error
+
 int XrdProofdAux::GetGroupInfo(int gid, XrdProofGI &gi)
 {
-   // Get information about group with 'gid' in a thread safe way.
-   // Retur 0 on success, -errno on error
-
    // Make sure input make sense
    if (gid <= 0)
       return -EINVAL;
@@ -284,12 +284,12 @@ int XrdProofdAux::GetGroupInfo(int gid, XrdProofGI &gi)
       return -ENOENT;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get information about user 'usr' in a thread safe way.
+/// Return 0 on success, -errno on error
+
 int XrdProofdAux::GetUserInfo(const char *usr, XrdProofUI &ui)
 {
-   // Get information about user 'usr' in a thread safe way.
-   // Return 0 on success, -errno on error
-
    // Make sure input is defined
    if (!usr || strlen(usr) <= 0)
       return -EINVAL;
@@ -320,12 +320,12 @@ int XrdProofdAux::GetUserInfo(const char *usr, XrdProofUI &ui)
       return -ENOENT;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get information about user with 'uid' in a thread safe way.
+/// Retur 0 on success, -errno on error
+
 int XrdProofdAux::GetUserInfo(int uid, XrdProofUI &ui)
 {
-   // Get information about user with 'uid' in a thread safe way.
-   // Retur 0 on success, -errno on error
-
    // Make sure input make sense
    if (uid < 0)
       return -EINVAL;
@@ -356,12 +356,12 @@ int XrdProofdAux::GetUserInfo(int uid, XrdProofUI &ui)
       return -ENOENT;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write nb bytes at buf to descriptor 'fd' ignoring interrupts
+/// Return the number of bytes written or -1 in case of error
+
 int XrdProofdAux::Write(int fd, const void *buf, size_t nb)
 {
-   // Write nb bytes at buf to descriptor 'fd' ignoring interrupts
-   // Return the number of bytes written or -1 in case of error
-
    if (fd < 0)
       return -1;
 
@@ -386,10 +386,11 @@ int XrdProofdAux::Write(int fd, const void *buf, size_t nb)
    return written;
 }
 
-//_________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logs error message 'emsg' to file 'flog' using standard technology
+
 void XrdProofdAux::LogEmsgToFile(const char *flog, const char *emsg, const char *pfx)
 {
-   // Logs error message 'emsg' to file 'flog' using standard technology
    XPDLOC(AUX, "Aux::LogEmsgToFile")
 
    if (flog && strlen(flog)) {
@@ -418,13 +419,14 @@ void XrdProofdAux::LogEmsgToFile(const char *flog, const char *emsg, const char 
    return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that 'path' exists and is owned by the entity
+/// described by 'ui'.
+/// If changeown is TRUE it tries to acquire the privileges before.
+/// Return 0 in case of success, -1 in case of error
+
 int XrdProofdAux::AssertDir(const char *path, XrdProofUI ui, bool changeown)
 {
-   // Make sure that 'path' exists and is owned by the entity
-   // described by 'ui'.
-   // If changeown is TRUE it tries to acquire the privileges before.
-   // Return 0 in case of success, -1 in case of error
    XPDLOC(AUX, "Aux::AssertDir")
 
    TRACE(DBG, path);
@@ -454,13 +456,14 @@ int XrdProofdAux::AssertDir(const char *path, XrdProofUI ui, bool changeown)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that the base dir of 'path' is either owned by 'ui' or
+/// gives full permissions to 'ui'.
+/// If 'path' is a directory, go through the paths inside it recursively.
+/// Return 0 in case of success, -1 in case of error
+
 int XrdProofdAux::AssertBaseDir(const char *path, XrdProofUI ui)
 {
-   // Make sure that the base dir of 'path' is either owned by 'ui' or
-   // gives full permissions to 'ui'.
-   // If 'path' is a directory, go through the paths inside it recursively.
-   // Return 0 in case of success, -1 in case of error
    XPDLOC(AUX, "Aux::AssertBaseDir")
 
    TRACE(DBG, path);
@@ -498,12 +501,13 @@ int XrdProofdAux::AssertBaseDir(const char *path, XrdProofUI ui)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the ownership of 'path' to the entity described by 'ui'.
+/// If 'path' is a directory, go through the paths inside it recursively.
+/// Return 0 in case of success, -1 in case of error
+
 int XrdProofdAux::ChangeOwn(const char *path, XrdProofUI ui)
 {
-   // Change the ownership of 'path' to the entity described by 'ui'.
-   // If 'path' is a directory, go through the paths inside it recursively.
-   // Return 0 in case of success, -1 in case of error
    XPDLOC(AUX, "Aux::ChangeOwn")
 
    TRACE(DBG, path);
@@ -554,12 +558,13 @@ int XrdProofdAux::ChangeOwn(const char *path, XrdProofUI ui)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the permission mode of 'path' to 'mode'.
+/// If 'path' is a directory, go through the paths inside it recursively.
+/// Return 0 in case of success, -1 in case of error
+
 int XrdProofdAux::ChangeMod(const char *path, unsigned int mode)
 {
-   // Change the permission mode of 'path' to 'mode'.
-   // If 'path' is a directory, go through the paths inside it recursively.
-   // Return 0 in case of success, -1 in case of error
    XPDLOC(AUX, "Aux::ChangeMod")
 
    TRACE(HDBG, "path: "<<path);
@@ -642,12 +647,13 @@ int XrdProofdAux::ChangeMod(const char *path, unsigned int mode)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change current directory to 'dir'.
+/// If changeown is TRUE it tries to acquire the privileges before.
+/// Return 0 in case of success, -1 in case of error
+
 int XrdProofdAux::ChangeToDir(const char *dir, XrdProofUI ui, bool changeown)
 {
-   // Change current directory to 'dir'.
-   // If changeown is TRUE it tries to acquire the privileges before.
-   // Return 0 in case of success, -1 in case of error
    XPDLOC(AUX, "Aux::ChangeToDir")
 
    TRACE(DBG, "changing to " << ((dir) ? dir : "**undef***"));
@@ -680,11 +686,12 @@ int XrdProofdAux::ChangeToDir(const char *dir, XrdProofUI ui, bool changeown)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a symlink 'link' to 'path'
+/// Return 0 in case of success, -1 in case of error
+
 int XrdProofdAux::SymLink(const char *path, const char *link)
 {
-   // Create a symlink 'link' to 'path'
-   // Return 0 in case of success, -1 in case of error
    XPDLOC(AUX, "Aux::SymLink")
 
    TRACE(DBG, path<<" -> "<<link);
@@ -708,12 +715,13 @@ int XrdProofdAux::SymLink(const char *path, const char *link)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check existence and match condition of an 'if' directive
+/// If none (valid) is found, return -1.
+/// Else, return number of chars matching.
+
 int XrdProofdAux::CheckIf(XrdOucStream *s, const char *host)
 {
-   // Check existence and match condition of an 'if' directive
-   // If none (valid) is found, return -1.
-   // Else, return number of chars matching.
    XPDLOC(AUX, "")
 
    // There must be an 'if'
@@ -743,11 +751,12 @@ int XrdProofdAux::CheckIf(XrdOucStream *s, const char *host)
    return h.matches((const char *)val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find out and return the number of CPUs in the local machine.
+/// Return -1 in case of failure.
+
 int XrdProofdAux::GetNumCPUs()
 {
-   // Find out and return the number of CPUs in the local machine.
-   // Return -1 in case of failure.
    XPDLOC(AUX, "Aux::GetNumCPUs")
 
    static int ncpu = -1;
@@ -811,19 +820,20 @@ int XrdProofdAux::GetNumCPUs()
 }
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a list of all processes on the system.  This routine
+/// allocates the list and puts it in *plist and counts the
+/// number of entries in 'nproc'. Caller is responsible for 'freeing'
+/// the list.
+/// On success, the function returns 0.
+/// On error, the function returns an errno value.
+///
+/// Adapted from: reply to Technical Q&A 1123,
+///               http://developer.apple.com/qa/qa2001/qa1123.html
+///
+
 int XrdProofdAux::GetMacProcList(kinfo_proc **plist, int &nproc)
 {
-   // Returns a list of all processes on the system.  This routine
-   // allocates the list and puts it in *plist and counts the
-   // number of entries in 'nproc'. Caller is responsible for 'freeing'
-   // the list.
-   // On success, the function returns 0.
-   // On error, the function returns an errno value.
-   //
-   // Adapted from: reply to Technical Q&A 1123,
-   //               http://developer.apple.com/qa/qa2001/qa1123.html
-   //
    XPDLOC(AUX, "Aux::GetMacProcList")
 
    int rc = 0;
@@ -900,13 +910,14 @@ int XrdProofdAux::GetMacProcList(kinfo_proc **plist, int &nproc)
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get from the process table list of PIDs for processes named "proofserv'
+/// For {linux, sun, macosx} it uses the system info; for other systems it
+/// invokes the command shell 'ps ax' via popen.
+/// Return the number of processes found, or -1 if some error occured.
+
 int XrdProofdAux::GetProcesses(const char *pn, std::map<int,XrdOucString> *pmap)
 {
-   // Get from the process table list of PIDs for processes named "proofserv'
-   // For {linux, sun, macosx} it uses the system info; for other systems it
-   // invokes the command shell 'ps ax' via popen.
-   // Return the number of processes found, or -1 if some error occured.
    XPDLOC(AUX, "Aux::GetProcesses")
 
    int np = 0;
@@ -1091,11 +1102,11 @@ int XrdProofdAux::GetProcesses(const char *pn, std::map<int,XrdOucString> *pmap)
    return np;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract an integer from a file
+
 int XrdProofdAux::GetIDFromPath(const char *path, XrdOucString &emsg)
 {
-   // Extract an integer from a file
-
    emsg = "";
    // Get the ID
    int id = -1;
@@ -1115,12 +1126,12 @@ int XrdProofdAux::GetIDFromPath(const char *path, XrdOucString &emsg)
    return id;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true is 's' contains at least one of the comma-separated tokens
+/// in 'tokens'. Else returns false.
+
 bool XrdProofdAux::HasToken(const char *s, const char *tokens)
 {
-   // Returns true is 's' contains at least one of the comma-separated tokens
-   // in 'tokens'. Else returns false.
-
    if (s && strlen(s) > 0) {
       XrdOucString tks(tokens), tok;
       int from = 0;
@@ -1130,14 +1141,15 @@ bool XrdProofdAux::HasToken(const char *s, const char *tokens)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a process named 'pname' and process 'pid' is still
+/// in the process table.
+/// For {linux, sun, macosx} it uses the system info; for other systems it
+/// invokes the command shell 'ps ax' via popen.
+/// Return 1 if running, 0 if not running, -1 if the check could not be run.
+
 int XrdProofdAux::VerifyProcessByID(int pid, const char *pname)
 {
-   // Check if a process named 'pname' and process 'pid' is still
-   // in the process table.
-   // For {linux, sun, macosx} it uses the system info; for other systems it
-   // invokes the command shell 'ps ax' via popen.
-   // Return 1 if running, 0 if not running, -1 if the check could not be run.
    XPDLOC(AUX, "Aux::VerifyProcessByID")
 
    int rc = 0;
@@ -1269,14 +1281,15 @@ int XrdProofdAux::VerifyProcessByID(int pid, const char *pname)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Kill the process 'pid'.
+/// A SIGTERM is sent, unless 'kill' is TRUE, in which case a SIGKILL is used.
+/// If add is TRUE (default) the pid is added to the list of processes
+/// requested to terminate.
+/// Return 0 on success, -1 if not allowed or other errors occured.
+
 int XrdProofdAux::KillProcess(int pid, bool forcekill, XrdProofUI ui, bool changeown)
 {
-   // Kill the process 'pid'.
-   // A SIGTERM is sent, unless 'kill' is TRUE, in which case a SIGKILL is used.
-   // If add is TRUE (default) the pid is added to the list of processes
-   // requested to terminate.
-   // Return 0 on success, -1 if not allowed or other errors occured.
    XPDLOC(AUX, "Aux::KillProcess")
 
    TRACE(DBG, "pid: "<<pid<< ", forcekill: "<< forcekill);
@@ -1324,11 +1337,12 @@ int XrdProofdAux::KillProcess(int pid, bool forcekill, XrdProofUI ui, bool chang
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove directory at path and its content.
+/// Returns 0 on success, -errno of the last error on failure
+
 int XrdProofdAux::RmDir(const char *path)
 {
-   // Remove directory at path and its content.
-   // Returns 0 on success, -errno of the last error on failure
    XPDLOC(AUX, "Aux::RmDir")
 
    int rc = 0;
@@ -1385,12 +1399,13 @@ int XrdProofdAux::RmDir(const char *path)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move content of directory at oldpath to newpath.
+/// The destination path 'newpath' must exist.
+/// Returns 0 on success, -errno of the last error on failure
+
 int XrdProofdAux::MvDir(const char *oldpath, const char *newpath)
 {
-   // Move content of directory at oldpath to newpath.
-   // The destination path 'newpath' must exist.
-   // Returns 0 on success, -errno of the last error on failure
    XPDLOC(AUX, "Aux::MvDir")
 
    int rc = 0;
@@ -1461,13 +1476,13 @@ int XrdProofdAux::MvDir(const char *oldpath, const char *newpath)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set access (opt == 1), modify (opt =2 ) or access&modify (opt = 0, default)
+/// times of path to current time.
+/// Returns 0 on success, -errno on failure
+
 int XrdProofdAux::Touch(const char *path, int opt)
 {
-   // Set access (opt == 1), modify (opt =2 ) or access&modify (opt = 0, default)
-   // times of path to current time.
-   // Returns 0 on success, -errno on failure
-
    if (opt == 0) {
       if (utime(path, 0) != 0)
          return -errno;
@@ -1493,10 +1508,11 @@ int XrdProofdAux::Touch(const char *path, int opt)
    return 0;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive 'msg' from pipe fd
+
 int XrdProofdAux::ReadMsg(int fd, XrdOucString &msg)
 {
-   // Receive 'msg' from pipe fd
    XPDLOC(AUX, "Aux::ReadMsg")
 
    msg = "";
@@ -1536,14 +1552,15 @@ int XrdProofdAux::ReadMsg(int fd, XrdOucString &msg)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse a path in the form of "<before>[.<pid>][.<after>]", filling 'rest'
+/// and returning 'pid'.
+/// Return 0 if pid is not defined; 'before' is filled with the string preceding
+/// <pid>, <after> with the string following <pid>.
+
 int XrdProofdAux::ParsePidPath(const char *path,
                                XrdOucString &before, XrdOucString &after)
 {
-   // Parse a path in the form of "<before>[.<pid>][.<after>]", filling 'rest'
-   // and returning 'pid'.
-   // Return 0 if pid is not defined; 'before' is filled with the string preceding
-   // <pid>, <after> with the string following <pid>.
    XPDLOC(AUX, "ParsePidPath")
 
    before = "";
@@ -1588,12 +1605,12 @@ int XrdProofdAux::ParsePidPath(const char *path,
    return pid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse a path in the form of "<usr>[.<grp>][.<pid>]", filling 'usr' and 'grp'.
+/// Returns -1 on failure, 0 if the pid is not defined or the pid.
+
 int XrdProofdAux::ParseUsrGrp(const char *path, XrdOucString &usr, XrdOucString &grp)
 {
-   // Parse a path in the form of "<usr>[.<grp>][.<pid>]", filling 'usr' and 'grp'.
-   // Returns -1 on failure, 0 if the pid is not defined or the pid.
-
    XrdOucString rest, after;
    int pid = ParsePidPath(path, rest, after);
 
@@ -1616,11 +1633,11 @@ int XrdProofdAux::ParseUsrGrp(const char *path, XrdOucString &usr, XrdOucString 
 // Functions to process directives for integer and strings
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generic class directive processor
+
 int DoDirectiveClass(XrdProofdDirective *d, char *val, XrdOucStream *cfg, bool rcf)
 {
-   // Generic class directive processor
-
    if (!d || !(d->fVal))
       // undefined inputs
       return -1;
@@ -1628,10 +1645,11 @@ int DoDirectiveClass(XrdProofdDirective *d, char *val, XrdOucStream *cfg, bool r
    return ((XrdProofdConfig *)d->fVal)->DoDirective(d, val, cfg, rcf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process directive for an integer
+
 int DoDirectiveInt(XrdProofdDirective *d, char *val, XrdOucStream *cfg, bool rcf)
 {
-   // Process directive for an integer
    XPDLOC(AUX, "DoDirectiveInt")
 
    if (!d || !(d->fVal) || !val)
@@ -1655,10 +1673,11 @@ int DoDirectiveInt(XrdProofdDirective *d, char *val, XrdOucStream *cfg, bool rcf
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process directive for a string
+
 int DoDirectiveString(XrdProofdDirective *d, char *val, XrdOucStream *cfg, bool rcf)
 {
-   // Process directive for a string
    XPDLOC(AUX, "DoDirectiveString")
 
    if (!d || !(d->fVal) || !val)
@@ -1680,11 +1699,11 @@ int DoDirectiveString(XrdProofdDirective *d, char *val, XrdOucStream *cfg, bool 
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set host field for directive 'd' to (const char *h)
+
 int SetHostInDirectives(const char *, XrdProofdDirective *d, void *h)
 {
-   // Set host field for directive 'd' to (const char *h)
-
    const char *host = (const char *)h;
 
    if (!d || !host || strlen(host) <= 0)
@@ -1700,11 +1719,11 @@ int SetHostInDirectives(const char *, XrdProofdDirective *d, void *h)
 //
 // XrdProofdPipe: class implementing pipe functionality
 //
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor: create the pipe
+
 XrdProofdPipe::XrdProofdPipe()
 {
-   // Constructor: create the pipe
-
    // Init pipe for the poller
    if (pipe(fPipe) != 0) {
       fPipe[0] = -1;
@@ -1712,20 +1731,20 @@ XrdProofdPipe::XrdProofdPipe()
    }
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 XrdProofdPipe::~XrdProofdPipe()
 {
-   // Destructor
-
    // Close the pipe
    Close();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If open, close and invalidated the pipe descriptors
+
 void XrdProofdPipe::Close()
 {
-   // If open, close and invalidated the pipe descriptors
-
    if (IsValid()) {
       close(fPipe[0]);
       close(fPipe[1]);
@@ -1734,10 +1753,11 @@ void XrdProofdPipe::Close()
    }
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Post message on the pipe
+
 int XrdProofdPipe::Post(int type, const char *msg)
 {
-   // Post message on the pipe
    XPDLOC(AUX, "Pipe::Post")
 
 
@@ -1763,10 +1783,11 @@ int XrdProofdPipe::Post(int type, const char *msg)
    return -1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recv message from the pipe
+
 int XrdProofdPipe::Recv(XpdMsg &msg)
 {
-   // Recv message from the pipe
    XPDLOC(AUX, "Pipe::Recv")
 
    if (IsValid()) {
@@ -1785,10 +1806,11 @@ int XrdProofdPipe::Recv(XpdMsg &msg)
    return -1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Poll over the read pipe for to secs; return whatever poll returns
+
 int XrdProofdPipe::Poll(int to)
 {
-   // Poll over the read pipe for to secs; return whatever poll returns
    XPDLOC(AUX, "Pipe::Poll")
 
    if (IsValid()) {
@@ -1815,10 +1837,11 @@ int XrdProofdPipe::Poll(int to)
 //
 // XpdMsg: class to handle messages received over the pipe
 //
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init from buffer
+
 int XpdMsg::Init(const char *buf)
 {
-   // Init from buffer
    XPDLOC(AUX, "Msg::Init")
 
    fType = -1;
@@ -1855,10 +1878,11 @@ int XpdMsg::Init(const char *buf)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next token and interpret it as an int
+
 int XpdMsg::Get(int &i)
 {
-   // Get next token and interpret it as an int
    XPDLOC(AUX, "Msg::Get")
 
    TRACE(HDBG,"int &i: "<<fFrom<<" "<<fBuf);
@@ -1877,10 +1901,11 @@ int XpdMsg::Get(int &i)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next token
+
 int XpdMsg::Get(XrdOucString &s)
 {
-   // Get next token
    XPDLOC(AUX, "Msg::Get")
 
    TRACE(HDBG,"XrdOucString &s: "<<fFrom<<" "<<fBuf);
@@ -1894,10 +1919,11 @@ int XpdMsg::Get(XrdOucString &s)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next token and interpret it as a pointer
+
 int XpdMsg::Get(void **p)
 {
-   // Get next token and interpret it as a pointer
    XPDLOC(AUX, "Msg::Get")
 
    TRACE(HDBG,"void **p: "<<fFrom<<" "<<fBuf);
@@ -1918,22 +1944,22 @@ int XpdMsg::Get(void **p)
 // Class to handle condensed multi-string specification, e.g <head>[01-25]<tail>
 //
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init the multi-string handler.
+/// Supported formats:
+///    <head>[1-4]<tail>   for  <head>1<tail>, ..., <head>4<tail> (4 items)
+///    <head>[a,b]<tail>   for  <head>a<tail>, <head>b<tail> (2 items)
+///    <head>[a,1-3]<tail> for  <head>a<tail>, <head>1<tail>, <head>2<tail>,
+///                             <head>3<tail> (4 items)
+///    <head>[01-15]<tail> for  <head>01<tail>, ..., <head>15<tail> (15 items)
+///
+/// A dashed is possible only between numerically treatable values, i.e.
+/// single letters ([a-Z] will take all tokens between 'a' and 'Z') or n-field
+/// numbers ([001-999] will take all numbers 1 to 999 always using 3 spaces).
+/// Mixed values (e.g. [a-034]) are not allowed.
+
 void XrdProofdMultiStr::Init(const char *s)
 {
-   // Init the multi-string handler.
-   // Supported formats:
-   //    <head>[1-4]<tail>   for  <head>1<tail>, ..., <head>4<tail> (4 items)
-   //    <head>[a,b]<tail>   for  <head>a<tail>, <head>b<tail> (2 items)
-   //    <head>[a,1-3]<tail> for  <head>a<tail>, <head>1<tail>, <head>2<tail>,
-   //                             <head>3<tail> (4 items)
-   //    <head>[01-15]<tail> for  <head>01<tail>, ..., <head>15<tail> (15 items)
-   //
-   // A dashed is possible only between numerically treatable values, i.e.
-   // single letters ([a-Z] will take all tokens between 'a' and 'Z') or n-field
-   // numbers ([001-999] will take all numbers 1 to 999 always using 3 spaces).
-   // Mixed values (e.g. [a-034]) are not allowed.
-
    fN = 0;
    if (s && strlen(s)) {
       XrdOucString kernel(s);
@@ -1970,11 +1996,11 @@ void XrdProofdMultiStr::Init(const char *s)
    }
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if 's' is compatible with this multi-string
+
 bool XrdProofdMultiStr::Matches(const char *s)
 {
-   // Return true if 's' is compatible with this multi-string
-
    if (s && strlen(s)) {
       XrdOucString str(s);
       if (fHead.length() <= 0 || str.beginswith(fHead)) {
@@ -1993,11 +2019,11 @@ bool XrdProofdMultiStr::Matches(const char *s)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a string with comma-separated elements
+
 XrdOucString XrdProofdMultiStr::Export()
 {
-   // Return a string with comma-separated elements
-
    XrdOucString str(fN * (fHead.length() + fTail.length() + 4)) ;
    str = "";
    if (fN > 0) {
@@ -2019,11 +2045,11 @@ XrdOucString XrdProofdMultiStr::Export()
    return str;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return i-th combination (i : 0 -> fN-1)
+
 XrdOucString XrdProofdMultiStr::Get(int i)
 {
-   // Return i-th combination (i : 0 -> fN-1)
-
    XrdOucString str;
 
    if (i >= 0) {
@@ -2046,20 +2072,21 @@ XrdOucString XrdProofdMultiStr::Get(int i)
    return str;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init the multi-string token.
+/// Supported formats:
+///    [1-4]   for  1, ..., 4 (4 items)
+///    [a,b]   for  a, b<tail> (2 items)
+///    [a,1-3] for  a, 1, 2, 3 (4 items)
+///    [01-15] for  01, ..., 15 (15 items)
+///
+/// A dashed is possible only between numerically treatable values, i.e.
+/// single letters ([a-Z] will take all tokens between 'a' and 'Z') or n-field
+/// numbers ([001-999] will take all numbers 1 to 999 always using 3 spaces).
+/// Mixed values (e.g. [a-034]) are not allowed.
+
 void XrdProofdMultiStrToken::Init(const char *s)
 {
-   // Init the multi-string token.
-   // Supported formats:
-   //    [1-4]   for  1, ..., 4 (4 items)
-   //    [a,b]   for  a, b<tail> (2 items)
-   //    [a,1-3] for  a, 1, 2, 3 (4 items)
-   //    [01-15] for  01, ..., 15 (15 items)
-   //
-   // A dashed is possible only between numerically treatable values, i.e.
-   // single letters ([a-Z] will take all tokens between 'a' and 'Z') or n-field
-   // numbers ([001-999] will take all numbers 1 to 999 always using 3 spaces).
-   // Mixed values (e.g. [a-034]) are not allowed.
    XPDLOC(AUX, "MultiStrToken::Init")
 
    fIa = LONG_MAX;
@@ -2145,11 +2172,11 @@ void XrdProofdMultiStrToken::Init(const char *s)
    return;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if 's' is compatible with this token
+
 bool XrdProofdMultiStrToken::Matches(const char *s)
 {
-   // Return true if 's' is compatible with this token
-
    if (s && strlen(s)) {
       if (fType == kSimple)
          return ((fA == s) ? 1 : 0);
@@ -2180,11 +2207,11 @@ bool XrdProofdMultiStrToken::Matches(const char *s)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Export 'next' token; use next < 0 start from the first
+
 XrdOucString XrdProofdMultiStrToken::Export(int &next)
 {
-   // Export 'next' token; use next < 0 start from the first
-
    XrdOucString tkn(fA.length());
 
    // If simple, return the one we have
@@ -2227,16 +2254,16 @@ XrdOucString XrdProofdMultiStrToken::Export(int &next)
    return tkn;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt', the up to 5 'const char *',
+/// up to 6 'int' arguments, up to 5 'void *' and up to 1 unsigned integer.
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
                                          int ns, const char *ss[5],
                                          int ni, int ii[6],
                                          int np, void *pp[5],
                                          int nu, unsigned int ui)
 {
-   // Recreate the string according to 'fmt', the up to 5 'const char *',
-   // up to 6 'int' arguments, up to 5 'void *' and up to 1 unsigned integer.
-
    int len = 0;
    if (!fmt || (len = strlen(fmt)) <= 0) return;
 
@@ -2284,13 +2311,13 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'const char *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
                         const char *s0, const char *s1,
                         const char *s2, const char *s3, const char *s4)
 {
-   // Recreate the string according to 'fmt' and the 5 'const char *' arguments
-
    const char *ss[5] = {s0, s1, s2, s3, s4};
    int ii[6] = {0,0,0,0,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2298,12 +2325,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
    XrdProofdAux::Form(s,fmt,5,ss,0,ii,0,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'int' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0,
                                          int i1, int i2, int i3, int i4, int i5)
 {
-   // Recreate the string according to 'fmt' and the 5 'int' arguments
-
    const char *ss[5] = {0, 0, 0, 0, 0};
    int ii[6] = {i0,i1,i2,i3,i4,i5};
    void *pp[5] = {0,0,0,0,0};
@@ -2311,12 +2338,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0,
    XrdProofdAux::Form(s,fmt,0,ss,6,ii,5,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
                                          void *p0, void *p1, void *p2, void *p3, void *p4)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {0, 0, 0, 0, 0};
    int ii[6] = {0,0,0,0,0,0};
    void *pp[5] = {p0,p1,p2,p3,p4};
@@ -2325,12 +2352,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, const char *s0,
                                      const char *s1, const char *s2, const char *s3)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0, s1, s2, s3, 0};
    int ii[6] = {i0,0,0,0,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2338,12 +2365,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, const char *s0
    XrdProofdAux::Form(s,fmt,4,ss,1,ii,0,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
                                      int i0, int i1, int i2, int i3)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,0,0,0,0};
    int ii[6] = {i0,i1,i2,i3,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2351,12 +2378,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
    XrdProofdAux::Form(s,fmt,1,ss,4,ii,0,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
                                      int i0, int i1, unsigned int ui)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,0,0,0,0};
    int ii[6] = {i0,i1,0,0,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2364,12 +2391,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
    XrdProofdAux::Form(s,fmt,1,ss,2,ii,0,pp, 1, ui);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0, const char *s1,
                                      int i0, int i1, int i2)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,s1,0,0,0};
    int ii[6] = {i0,i1,i2,0,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2377,12 +2404,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0, const 
    XrdProofdAux::Form(s,fmt,2,ss,3,ii,0,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1,
                                      const char *s0, const char *s1, const char *s2)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,s1,s2,0,0};
    int ii[6] = {i0,i1,0,0,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2391,14 +2418,14 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
                                          const char *s1, const char *s2,
                                          int i0, int i1,
                                          const char *s3, const char *s4)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,s1,s2,s3,s4};
    int ii[6] = {i0,i1,0,0,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2406,13 +2433,13 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
    XrdProofdAux::Form(s,fmt,5,ss,2,ii,0,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
                                          int i0, int i1, const char *s1,
                                          const char *s2, const char *s3)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,s1,s2,s3,0};
    int ii[6] = {i0,i1,0,0,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2420,13 +2447,13 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
    XrdProofdAux::Form(s,fmt,4,ss,2,ii,0,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
                                          const char *s1, const char *s2,
                                          int i0, unsigned int ui)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,s1,s2,0,0};
    int ii[6] = {i0,0,0,0,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2434,12 +2461,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
    XrdProofdAux::Form(s,fmt,3,ss,1,ii,0,pp, 1, ui);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1, int i2,
                                          const char *s0, const char *s1)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,s1,0,0,0};
    int ii[6] = {i0,i1,i2,0,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2448,12 +2475,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1, int i2
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
                           const char *s1, const char *s2, const char *s3, int i0)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,s1,s2,s3,0};
    int ii[6] = {i0,0,0,0,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2461,12 +2488,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, const char *s0,
    XrdProofdAux::Form(s,fmt,4,ss,1,ii,0,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1, int i2,
                                          int i3, const char *s0)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,0,0,0,0};
    int ii[6] = {i0,i1,i2,i3,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2474,11 +2501,11 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1, int i2
    XrdProofdAux::Form(s,fmt,1,ss,4,ii,0,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1, void *p0)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {0,0,0,0,0};
    int ii[6] = {i0,i1,0,0,0,0};
    void *pp[5] = {p0,0,0,0,0};
@@ -2486,12 +2513,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1, void *
    XrdProofdAux::Form(s,fmt,0,ss,2,ii,1,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
                                          int i0, int i1, int i2, void *p0)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {0,0,0,0,0};
    int ii[6] = {i0,i1,i2,0,0,0};
    void *pp[5] = {p0,0,0,0,0};
@@ -2499,12 +2526,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
    XrdProofdAux::Form(s,fmt,0,ss,3,ii,1,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
                                          int i0, int i1, int i2, int i3, void *p0)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {0,0,0,0,0};
    int ii[6] = {i0,i1,i2,i3,0,0};
    void *pp[5] = {p0,0,0,0,0};
@@ -2512,12 +2539,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
    XrdProofdAux::Form(s,fmt,0,ss,4,ii,1,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1,
                                                           void *p0, int i2, int i3)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {0,0,0,0,0};
    int ii[6] = {i0,i1,i2,i3,0,0};
    void *pp[5] = {p0,0,0,0,0};
@@ -2525,11 +2552,11 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0, int i1,
    XrdProofdAux::Form(s,fmt,0,ss,4,ii,1,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, void *p0, int i0, int i1)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {0,0,0,0,0};
    int ii[6] = {i0,i1,0,0,0,0};
    void *pp[5] = {p0,0,0,0,0};
@@ -2537,12 +2564,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, void *p0, int i0, int 
    XrdProofdAux::Form(s,fmt,0,ss,2,ii,1,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
                                          const char *s0, void *p0, int i0, int i1)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,0,0,0,0};
    int ii[6] = {i0,i1,0,0,0,0};
    void *pp[5] = {p0,0,0,0,0};
@@ -2550,12 +2577,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
    XrdProofdAux::Form(s,fmt,1,ss,2,ii,1,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
                                          void *p0, const char *s0, int i0)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,0,0,0,0};
    int ii[6] = {i0,0,0,0,0,};
    void *pp[5] = {p0,0,0,0,0};
@@ -2563,12 +2590,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
    XrdProofdAux::Form(s,fmt,1,ss,1,ii,1,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
                                          const char *s0, const char *s1, void *p0)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,s1,0,0,0};
    int ii[6] = {0,0,0,0,0,0};
    void *pp[5] = {p0,0,0,0,0};
@@ -2576,12 +2603,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
    XrdProofdAux::Form(s,fmt,2,ss,0,ii,1,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0,
                                          const char *s0, const char *s1, int i1, int i2)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,s1,0,0,0};
    int ii[6] = {i0,i1,i2,0,0,0};
    void *pp[5] = {0,0,0,0,0};
@@ -2589,12 +2616,12 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0,
    XrdProofdAux::Form(s,fmt,2,ss,3,ii,0,pp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the string according to 'fmt' and the 5 'void *' arguments
+
 void XrdProofdAux::Form(XrdOucString &s, const char *fmt, int i0,
                                          const char *s0, int i1, int i2)
 {
-   // Recreate the string according to 'fmt' and the 5 'void *' arguments
-
    const char *ss[5] = {s0,0,0,0,0};
    int ii[6] = {i0,i1,i2,0,0,0};
    void *pp[5] = {0,0,0,0,0};

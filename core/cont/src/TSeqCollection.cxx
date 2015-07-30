@@ -26,12 +26,12 @@
 
 ClassImp(TSeqCollection)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return index of object in collection. Returns -1 when object not found.
+/// Uses member IsEqual() to find object.
+
 Int_t TSeqCollection::IndexOf(const TObject *obj) const
 {
-   // Return index of object in collection. Returns -1 when object not found.
-   // Uses member IsEqual() to find object.
-
    Int_t   idx = 0;
    TIter   next(this);
    TObject *ob;
@@ -43,35 +43,35 @@ Int_t TSeqCollection::IndexOf(const TObject *obj) const
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns index of last object in collection. Returns -1 when no
+/// objects in collection.
+
 Int_t TSeqCollection::GetLast() const
 {
-   // Returns index of last object in collection. Returns -1 when no
-   // objects in collection.
-
    TObject *tmp = Last();
    return tmp ? IndexOf(tmp) : -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare to objects in the collection. Use member Compare() of object a.
+
 Int_t TSeqCollection::ObjCompare(TObject *a, TObject *b)
 {
-   // Compare to objects in the collection. Use member Compare() of object a.
-
    if (a == 0 && b == 0) return 0;
    if (a == 0) return 1;
    if (b == 0) return -1;
    return a->Compare(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort array of TObject pointers using a quicksort algorithm.
+/// The algorithm used is a non stable sort (i.e. already sorted
+/// elements might switch/change places).
+/// Uses ObjCompare() to compare objects.
+
 void TSeqCollection::QSort(TObject **a, Int_t first, Int_t last)
 {
-   // Sort array of TObject pointers using a quicksort algorithm.
-   // The algorithm used is a non stable sort (i.e. already sorted
-   // elements might switch/change places).
-   // Uses ObjCompare() to compare objects.
-
    R__LOCKGUARD2(gCollectionMutex);
 
    static TObject *tmp;
@@ -110,16 +110,16 @@ void TSeqCollection::QSort(TObject **a, Int_t first, Int_t last)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort array a of TObject pointers using a quicksort algorithm.
+/// Arrays b will be sorted just like a (a determines the sort).
+/// Argument nBs is the number of TObject** arrays in b.
+/// The algorithm used is a non stable sort (i.e. already sorted
+/// elements might switch/change places).
+/// Uses ObjCompare() to compare objects.
+
 void TSeqCollection::QSort(TObject **a, Int_t nBs, TObject ***b, Int_t first, Int_t last)
 {
-   // Sort array a of TObject pointers using a quicksort algorithm.
-   // Arrays b will be sorted just like a (a determines the sort).
-   // Argument nBs is the number of TObject** arrays in b.
-   // The algorithm used is a non stable sort (i.e. already sorted
-   // elements might switch/change places).
-   // Uses ObjCompare() to compare objects.
-
    R__LOCKGUARD2(gCollectionMutex);
 
    static TObject *tmp1, **tmp2;
@@ -162,30 +162,30 @@ void TSeqCollection::QSort(TObject **a, Int_t nBs, TObject ***b, Int_t first, In
    if (depth == 0 && nBs > 0) delete [] tmp2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge this collection with all collections coming in the input list. The
+/// input list must contain other collections of objects compatible with the
+/// ones in this collection and ordered in the same manner. For example, if this
+/// collection contains a TH1 object and a tree, all collections in the input
+/// list have to contain a histogram and a tree. In case the list contains
+/// collections, the objects in the input lists must also be collections with
+/// the same structure and number of objects.
+/// If some objects inside the collection are instances of a class that do not
+/// have a Merge function (like TObjString), rather than merging, a copy of each
+/// instance (via a call to Clone) is appended to the output.
+///
+/// Example
+/// =========
+///   this                          list
+/// ____________                  ---------------------|
+/// | A (TH1F) |  __________      | L1 (TSeqCollection)|- [A1, B1(C1,D1,E1)]
+/// | B (TList)|-| C (TTree)|     | L1 (TSeqCollection)|- [A2, B2(C2,D2,E2)]
+/// |__________| | D (TH1F) |     | ...                |- [...]
+///              | E (TH1F) |     |____________________|
+///              |__________|
+
 Long64_t TSeqCollection::Merge(TCollection *list)
 {
-   // Merge this collection with all collections coming in the input list. The
-   // input list must contain other collections of objects compatible with the
-   // ones in this collection and ordered in the same manner. For example, if this
-   // collection contains a TH1 object and a tree, all collections in the input
-   // list have to contain a histogram and a tree. In case the list contains
-   // collections, the objects in the input lists must also be collections with
-   // the same structure and number of objects.
-   // If some objects inside the collection are instances of a class that do not
-   // have a Merge function (like TObjString), rather than merging, a copy of each
-   // instance (via a call to Clone) is appended to the output.
-   //
-   // Example
-   // =========
-   //   this                          list
-   // ____________                  ---------------------|
-   // | A (TH1F) |  __________      | L1 (TSeqCollection)|- [A1, B1(C1,D1,E1)]
-   // | B (TList)|-| C (TTree)|     | L1 (TSeqCollection)|- [A2, B2(C2,D2,E2)]
-   // |__________| | D (TH1F) |     | ...                |- [...]
-   //              | E (TH1F) |     |____________________|
-   //              |__________|
-
    Long64_t nmerged = 0;
    if (IsEmpty() || !list) {
       Warning("Merge", "list is empty - nothing to merge");

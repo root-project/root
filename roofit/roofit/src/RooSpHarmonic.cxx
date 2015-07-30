@@ -57,7 +57,8 @@ ClassImp(RooSpHarmonic)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 namespace {
     inline double N(int l, int m=0) { 
         double n = sqrt( double(2*l+1)/(4*TMath::Pi())*TMath::Factorial(l-m)/TMath::Factorial(l+m) );
@@ -65,7 +66,8 @@ namespace {
     }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooSpHarmonic::RooSpHarmonic() :
   _n(0),
   _sgn1(0),
@@ -73,7 +75,8 @@ RooSpHarmonic::RooSpHarmonic() :
 {
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooSpHarmonic::RooSpHarmonic(const char* name, const char* title, RooAbsReal& ctheta, RooAbsReal& phi, int l, int m) 
  : RooLegendre(name, title,ctheta,l,m<0?-m:m)
  , _phi("phi", "phi", this, phi)
@@ -83,7 +86,8 @@ RooSpHarmonic::RooSpHarmonic(const char* name, const char* title, RooAbsReal& ct
 {
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooSpHarmonic::RooSpHarmonic(const char* name, const char* title, RooAbsReal& ctheta, RooAbsReal& phi, int l1, int m1, int l2, int m2) 
  : RooLegendre(name, title,ctheta,l1, m1<0?-m1:m1,l2,m2<0?-m2:m2)
  , _phi("phi", "phi", this, phi)
@@ -93,7 +97,8 @@ RooSpHarmonic::RooSpHarmonic(const char* name, const char* title, RooAbsReal& ct
 {
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooSpHarmonic::RooSpHarmonic(const RooSpHarmonic& other, const char* name) 
  : RooLegendre(other, name)
  , _phi("phi", this,other._phi)
@@ -103,7 +108,8 @@ RooSpHarmonic::RooSpHarmonic(const RooSpHarmonic& other, const char* name)
 {
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooSpHarmonic::evaluate() const 
 {
     double n = _n*N(_l1,_m1)*N(_l2,_m2)*RooLegendre::evaluate();
@@ -118,11 +124,12 @@ namespace {
     }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TODO: check that phi.max - phi.min = 2 pi... ctheta.max = +1, and ctheta.min = -1
+/// we don't support indefinite integrals... maybe one day, when there is a use for it.....
+
 Int_t RooSpHarmonic::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
-  // TODO: check that phi.max - phi.min = 2 pi... ctheta.max = +1, and ctheta.min = -1
-  // we don't support indefinite integrals... maybe one day, when there is a use for it.....
   bool noRange  = ( rangeName == 0 || strlen(rangeName)==0 );
   bool phiOK    = ( noRange || fullRange(_phi,rangeName) );
   bool cthetaOK = ( noRange || fullRange(_ctheta,rangeName) );
@@ -131,7 +138,8 @@ Int_t RooSpHarmonic::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
   return RooLegendre::getAnalyticalIntegral(allVars,analVars,rangeName);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooSpHarmonic::analyticalIntegral(Int_t code, const char* range) const 
 {
   if (code==3) {

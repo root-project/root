@@ -46,27 +46,30 @@
 
 ClassImp(TMVA::BinaryTree)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor for a yet "empty" tree. Needs to be filled afterwards
+
 TMVA::BinaryTree::BinaryTree( void )
    : fRoot  ( NULL ),
      fNNodes( 0 ),
      fDepth ( 0 )
 {
-   // constructor for a yet "empty" tree. Needs to be filled afterwards
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor (deletes the nodes and "events" if owned by the tree
+
 TMVA::BinaryTree::~BinaryTree( void )
 {
-   //destructor (deletes the nodes and "events" if owned by the tree
    this->DeleteNode( fRoot );
    fRoot=0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// protected, recursive, function used by the class destructor and when Pruning
+
 void TMVA::BinaryTree::DeleteNode( TMVA::Node* node )
 {
-   // protected, recursive, function used by the class destructor and when Pruning
    if (node != NULL) { //If the node is not NULL...
       this->DeleteNode(node->GetLeft());  //Delete its left node.
       this->DeleteNode(node->GetRight()); //Delete its right node.
@@ -75,25 +78,27 @@ void TMVA::BinaryTree::DeleteNode( TMVA::Node* node )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get left daughter node current node "n"
+
 TMVA::Node* TMVA::BinaryTree::GetLeftDaughter( Node *n)
 {
-   // get left daughter node current node "n"
    return (Node*) n->GetLeft();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get right daughter node current node "n"
+
 TMVA::Node* TMVA::BinaryTree::GetRightDaughter( Node *n)
 {
-   // get right daughter node current node "n"
    return (Node*) n->GetRight();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the number of nodes in the tree. (make a new count --> takes time)
+
 UInt_t TMVA::BinaryTree::CountNodes(TMVA::Node *n)
 {
-   // return the number of nodes in the tree. (make a new count --> takes time)
-
    if (n == NULL){ //default, start at the tree top, then descend recursively
       n = (Node*)this->GetRoot();
       if (n == NULL) return 0 ;
@@ -111,28 +116,29 @@ UInt_t TMVA::BinaryTree::CountNodes(TMVA::Node *n)
    return fNNodes = countNodes;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// recursively print the tree
+
 void TMVA::BinaryTree::Print(std::ostream & os) const
 {
-   // recursively print the tree
    this->GetRoot()->PrintRec(os);
    os << "-1" << std::endl;
 }
 
-//_______________________________________________________________________
-void* TMVA::BinaryTree::AddXMLTo(void* parent) const {
-   // add attributes to XML
+////////////////////////////////////////////////////////////////////////////////
+/// add attributes to XML
 
+void* TMVA::BinaryTree::AddXMLTo(void* parent) const {
    void* bdt = gTools().AddChild(parent, "BinaryTree");
    gTools().AddAttr( bdt, "type" , ClassName() );
    this->GetRoot()->AddXMLTo(bdt);
    return bdt;
 }
 
-//_______________________________________________________________________
-void TMVA::BinaryTree::ReadXML(void* node, UInt_t tmva_Version_Code ) {
-   // read attributes from XML
+////////////////////////////////////////////////////////////////////////////////
+/// read attributes from XML
 
+void TMVA::BinaryTree::ReadXML(void* node, UInt_t tmva_Version_Code ) {
    this->DeleteNode( fRoot );
    fRoot= CreateNode();
 
@@ -143,21 +149,22 @@ void TMVA::BinaryTree::ReadXML(void* node, UInt_t tmva_Version_Code ) {
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print the tree recursinvely using the << operator
+
 std::ostream& TMVA::operator<< (std::ostream& os, const TMVA::BinaryTree& tree)
 {
-   // print the tree recursinvely using the << operator
    tree.Print(os);
    return os; // Return the output stream.
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the binary tree from an input stream.
+/// The input stream format depends on the tree type,
+/// it is defined be the node of the tree
+
 void TMVA::BinaryTree::Read(std::istream & istr, UInt_t tmva_Version_Code )
 {
-   // Read the binary tree from an input stream.
-   // The input stream format depends on the tree type,
-   // it is defined be the node of the tree
-
    Node * currentNode = GetRoot();
    Node* parent = 0;
 
@@ -188,19 +195,20 @@ void TMVA::BinaryTree::Read(std::istream & istr, UInt_t tmva_Version_Code )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read the tree from an std::istream
+
 std::istream& TMVA::operator>> (std::istream& istr, TMVA::BinaryTree& tree)
 {
-   // read the tree from an std::istream
    tree.Read(istr);
    return istr;
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// descend a tree to find all its leaf nodes, fill max depth reached in the
+/// tree at the same time.
+
 void TMVA::BinaryTree::SetTotalTreeDepth( Node *n)
 {
-   // descend a tree to find all its leaf nodes, fill max depth reached in the
-   // tree at the same time.
-
    if (n == NULL){ //default, start at the tree top, then descend recursively
       n = (Node*) this->GetRoot();
       if (n == NULL) {
@@ -219,7 +227,8 @@ void TMVA::BinaryTree::SetTotalTreeDepth( Node *n)
    return;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::MsgLogger& TMVA::BinaryTree::Log() const {
   TTHREAD_TLS_DECL_ARG(MsgLogger,logger,"BinaryTree");
   return logger;
