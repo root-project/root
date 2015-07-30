@@ -63,45 +63,40 @@ namespace {
    public:
       ~TSTLReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
-         if (!proxy->Read()){
+         if (!proxy->Read()) {
             fReadStatus = ROOT::TTreeReaderValueBase::kReadError;
             Error("GetCP()", "Read error in TBranchProxy.");
             return 0;
+         }
+         if (!proxy->GetWhere()) {
+            Error("GetCP()", "Logic error, proxy object not set in TBranchProxy.");
+            return 0;
+         }
+         if (proxy->IsaPointer()) {
+            if (proxy->GetWhere() && *(void**)proxy->GetWhere()){
+               ((TGenCollectionProxy*)proxy->GetCollection())->PopProxy();
+               ((TGenCollectionProxy*)proxy->GetCollection())->PushProxy(*(void**)proxy->GetWhere());
+            }
+            else return 0;
          }
          fReadStatus = ROOT::TTreeReaderValueBase::kReadSuccess;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
 
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
-         if (!CheckProxy(proxy)) return -1;
-         if (!proxy->ReadEntries()) return -1;
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          return myCollectionProxy->Size();
       }
 
-      Bool_t CheckProxy(ROOT::TBranchProxy *proxy) {
-         if (!proxy->Read()) return false;
-         if (proxy->IsaPointer()) {
-            if (proxy->GetWhere() && *(void**)proxy->GetWhere()){
-               ((TGenCollectionProxy*)proxy->GetCollection())->PopProxy();
-               ((TGenCollectionProxy*)proxy->GetCollection())->PushProxy(*(void**)proxy->GetWhere());
-            }
-            else return false;
-         }
-         return true;
-      }
-
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
-         if (!CheckProxy(proxy)) return 0;
-         if (!proxy->Read()) return 0;
-         if (!proxy->GetWhere()) return 0;
-
-         if (proxy->GetCollection()->HasPointers()){
-            return *(void**)proxy->GetCollection()->At(idx);
+         TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
+         if (!myCollectionProxy) return 0;
+         if (myCollectionProxy->HasPointers()){
+            return *(void**)myCollectionProxy->At(idx);
          }
          else {
-            return proxy->GetCollection()->At(idx);
+            return myCollectionProxy->At(idx);
          }
       }
    };
@@ -113,9 +108,13 @@ namespace {
       TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : localCollection(proxy) {}
 
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
-         if (!proxy->Read()){
+         if (!proxy->Read()) {
             fReadStatus = ROOT::TTreeReaderValueBase::kReadError;
             Error("GetCP()", "Read error in TBranchProxy.");
+            return 0;
+         }
+         if (!proxy->GetWhere()) {
+            Error("GetCP()", "Logic error, proxy object not set in TBranchProxy.");
             return 0;
          }
          fReadStatus = ROOT::TTreeReaderValueBase::kReadSuccess;
@@ -123,25 +122,19 @@ namespace {
       }
 
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
-         if (!proxy->ReadEntries()) return -1;
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
-         if (!proxy->GetWhere()) return 0;
          TVirtualCollectionProxy::TPushPop ppRaii(myCollectionProxy, proxy->GetWhere());
          return myCollectionProxy->Size();
       }
 
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
-         if (!proxy->Read()) return 0;
-         if (!proxy->GetWhere()) return 0;
-
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          TVirtualCollectionProxy::TPushPop ppRaii(myCollectionProxy, proxy->GetWhere());
          if (myCollectionProxy->HasPointers()){
             return *(void**)myCollectionProxy->At(idx);
-         }
-         else {
+         } else {
             return myCollectionProxy->At(idx);
          }
       }
