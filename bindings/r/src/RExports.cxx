@@ -10,6 +10,9 @@
 #include<TRObject.h>
 #include<TRDataFrame.h>
 #include<Rcpp/Vector.h>
+
+Rcpp::internal::NamedPlaceHolder ROOT::R::Label;
+
 namespace Rcpp {
 //TVectorT
    template<>  SEXP wrap(const TVectorT<Double_t> &v)

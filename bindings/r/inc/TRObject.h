@@ -71,7 +71,14 @@ namespace ROOT {
          template<class T> T operator=(TRObject &obj) {
             return ::Rcpp::as<T>(obj);
          }
+         operator SEXP() {
+	   return fObj;
+	 }
 
+         operator Rcpp::RObject() {
+	   return fObj;
+	 }
+	 
          template <class T> operator T() {
 	     
 	   if(fStatus)

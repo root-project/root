@@ -95,11 +95,13 @@ void Functions(TString type = "Import")
 //      
       ROOT::R::TRObject vector=c(1,2,3,4);
       TVectorF v=vector;
+      TVectorF v2=c(11,22,33,44);
       print(v);
-//      ROOT::R::TRDataFrame obj=read("training.csv");
+      print(v2);
+     ROOT::R::TRDataFrame obj=read("training.csv");
       
 //      ROOT::R::TRDataFrame df(obj.As<ROOT::R::TRDataFrame>());
-//      print(head(obj));
+     print(head(obj));
 //      print(vector);
       x11();
       plot(sin,0,6,ROOT::R::Label["type"]="s");

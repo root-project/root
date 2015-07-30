@@ -140,6 +140,7 @@ namespace Rcpp {
 #define R_Version(v,p,s) ((v * 65536) + (p * 256) + (s))
 #endif
 #include<Rcpp.h>//this headers should be called after templates definitions
+#include<Rcpp/Named.h>
 #undef HAVE_UINTPTR_T
 #include<RInside.h>
 
@@ -158,8 +159,11 @@ namespace ROOT {
          //template function required to create modules using the macro ROOTR_MODULE
          Rcpp::function(name_, fun, docstring);
       }
+
+      extern Rcpp::internal::NamedPlaceHolder Label;
    }
 }
+
 
 //macros redifined to be accord with the namespace
 #define ROOTR_MODULE RCPP_MODULE

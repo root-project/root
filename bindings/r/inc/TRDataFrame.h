@@ -35,7 +35,6 @@
 namespace ROOT {
 namespace R {
 
-static Rcpp::internal::NamedPlaceHolder Label;
 
 class TRDataFrame: public TObject {
     friend class TRInterface;
