@@ -96,6 +96,7 @@ void* TNetXNGSystem::OpenDirectory(const char *dir)
    using namespace XrdCl;
 
    DirectoryInfo *dirInfo = new DirectoryInfo(dir);
+   fDirPtrs.insert( (void*)dirInfo );
    return (void *) dirInfo;
 }
 
@@ -126,6 +127,7 @@ void TNetXNGSystem::FreeDirectory(void *dirp)
    //
    // param dirp: the pointer to the directory to be freed
 
+   fDirPtrs.erase( dirp );
    delete (DirectoryInfo *) dirp;
 }
 
@@ -226,27 +228,32 @@ Bool_t TNetXNGSystem::ConsistentWith(const char *path, void *dirptr)
 
    using namespace XrdCl;
 
-   // Standard check: only the protocol part of 'path' is required to match
-   Bool_t checkstd = TSystem::ConsistentWith(path, dirptr);
-   if (!checkstd)
-      return kFALSE;
+   if( path )
+   {
+      URL url(path);
 
-   URL url(path);
-   Bool_t checknet = path ? kFALSE : kTRUE;
+      if( gDebug > 1 )
+         Info("ConsistentWith", "Protocol: '%s' (%s), Username: '%s' (%s), "
+              "Password: '%s' (%s), Hostname: '%s' (%s), Port: %d (%d)",
+               fUrl->GetProtocol().c_str(), url.GetProtocol().c_str(),
+               fUrl->GetUserName().c_str(), url.GetUserName().c_str(),
+               fUrl->GetPassword().c_str(), url.GetPassword().c_str(),
+               fUrl->GetHostName().c_str(), url.GetHostName().c_str(),
+               fUrl->GetPort(), url.GetPort());
 
-   if (gDebug > 1)
-      Info("ConsistentWith", "fUser:'%s' (%s), fHost:'%s' (%s), fPort:%d (%d)",
-            fUrl->GetUserName().c_str(), url.GetUserName().c_str(),
-            fUrl->GetHostName().c_str(), url.GetHostName().c_str(),
-            fUrl->GetPort(), url.GetPort());
+      // Require match of protocol, user, password, host and port
+      if( fUrl->GetProtocol() == url.GetProtocol() &&
+          fUrl->GetUserName() == url.GetUserName() &&
+          fUrl->GetPassword() == url.GetPassword() &&
+          fUrl->GetHostName() == url.GetHostName() &&
+          fUrl->GetPort() == url.GetPort())
+         return kTRUE;
+   }
 
-   // Require match of 'user' and 'host'
-   if (fUrl->GetUserName() == url.GetUserName()
-       && fUrl->GetHostName() == url.GetHostName()
-       && fUrl->GetPort() == url.GetPort())
-      checknet = kTRUE;
+   if( dirptr )
+      return fDirPtrs.find( dirptr ) != fDirPtrs.end();
 
-   return (checkstd && checknet);
+   return kFALSE;
 }
 
 //______________________________________________________________________________

@@ -619,7 +619,8 @@ if(builtin_xrootd)
     XROOTD
     URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+    CMAKE_ARGS -DENABLE_PERL=FALSE
+               -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}

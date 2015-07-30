@@ -23,6 +23,7 @@
 
 #include "TSystem.h"
 #include "TCollection.h"
+#include <set>
 
 #ifndef __CINT__
 #include <XrdCl/XrdClXRootDResponses.hh>
@@ -38,6 +39,7 @@ namespace XrdCl {
 class TNetXNGSystem: public TSystem {
 
 private:
+   std::set<void *>   fDirPtrs;
 #ifndef __CINT__
 private:
    XrdCl::URL        *fUrl;        // URL of this TSystem
