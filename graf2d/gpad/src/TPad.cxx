@@ -1491,10 +1491,15 @@ void TPad::DrawCrosshair()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Draw a pad frame
+///  Draw an empty pad frame with X and Y axis.
 ///
-///  Compute real pad range taking into account all margins
-///  Use services of TH1F class
+///   \param[in] xmin      X axis lower limit
+///   \param[in] xmax      X axis upper limit
+///   \param[in] ymin      Y axis lower limit
+///   \param[in] ymax      Y axis upper limit
+///   \param[in] title :   Pad title.If title is of the form "stringt;stringx;stringy"
+///                        the pad title is set to stringt, the x axis title to
+///                        stringx, the y axis title to stringy.
 
 TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title)
 {
