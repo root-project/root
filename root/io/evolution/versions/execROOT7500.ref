@@ -1,8 +1,3 @@
 
 Processing execROOT7500.cxx+...
-Warning in <CreateReadMemberWiseActions>:    The StreamerInfo of class Derived read from file file7500.root
-   has the same version (=1) as the active class but a different checksum.
-   You should update the version to ClassDef(Derived,2).
-   The objects on this file might not be readable because:
-   The in-memory layout version 1 for class 'Derived' has a base class (Base) with checksum 213cd568 but the on-file layout version 1 recorded the checksum value 85a36aab for this base class (Base).
 (int) 0
