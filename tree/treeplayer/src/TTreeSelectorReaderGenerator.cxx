@@ -454,24 +454,23 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                TClass *cl = element->GetClassPointer();
                R__ASSERT(cl);
                dataType = cl->GetName();
-               readerType = TTreeReaderDescriptor::ReaderType::kValue;
                // Check for containers
                if (cl == TClonesArray::Class()) { // TClonesArray
                   isclones = kClones;
-                  readerType = TTreeReaderDescriptor::ReaderType::kArray;
                   containerName = "TClonesArray";
                   if (outer_isclones) { // If the parent is already a collection
                      dataType = "TClonesArray";
                   } else {
+                     readerType = TTreeReaderDescriptor::ReaderType::kArray;
                      dataType = GetContainedClassName(branch, element, ispointer);
                   }
                } else if (cl->GetCollectionProxy()) { // STL collection
                   isclones = kSTL;
                   containerName = cl->GetName();
-                  readerType = TTreeReaderDescriptor::ReaderType::kArray;
                   if (outer_isclones) { // If the parent is already a collection
                      dataType = cl->GetName();
                   } else {
+                     readerType = TTreeReaderDescriptor::ReaderType::kArray;
                      TClass *valueClass = cl->GetCollectionProxy()->GetValueClass();
                      if (valueClass) { // Get class inside container
                         dataType = valueClass->GetName();
@@ -598,10 +597,14 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             if (desc) {
                dataMemberName.Form("%s_%s", desc->fFullBranchName.Data(), element->GetName());
             }
-            if (outer_isclones != kOut || isclones != kOut) {
-               readerType = TTreeReaderDescriptor::ReaderType::kArray;
+            if (outer_isclones != kOut && readerType == TTreeReaderDescriptor::ReaderType::kArray) {
+               Error("AnalyzeBranch", "Arrays inside collections are not supported yet (branch: %s).", branch->GetName());
+            } else {
+               if (outer_isclones != kOut || isclones != kOut) {
+                  readerType = TTreeReaderDescriptor::ReaderType::kArray;
+               }
+               AddReader(readerType, dataType, dataMemberName, branch->GetName());
             }
-            AddReader(readerType, dataType, dataMemberName, branch->GetName());
          }
 
          // If the branch was used, jump to the next
