@@ -215,7 +215,7 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Up:
       if (opaque) {
-         if (ndcsav) {
+         if (ndcsav && !this->TestBit(kMarkerNDC)) {
             this->SetX((fX - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
             this->SetY((fY - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
             this->SetNDC();

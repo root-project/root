@@ -290,7 +290,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
       }
       if (opaque) {
-         if (ndcsav) {
+         if (ndcsav && !this->TestBit(kLineNDC)) {
             this->SetX1((fX1 - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
             this->SetX2((fX2 - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
             this->SetY1((fY1 - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
