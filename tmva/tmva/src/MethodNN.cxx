@@ -163,7 +163,7 @@ void TMVA::MethodNN::DeclareOptions()
    AddPreDefVal(TString("LAYERSIZE"));
 
 
-   DeclareOptionRef(fTrainingStrategy="LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,Renormalize=L2,DropConfig=0.0,DropRepetitions=5|LearningRate=1e-4,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=20,TestRepetitions=7,WeightDecay=0.001,Renormalize=L2,DropFraction=0.0,DropRepetitions=5",    "TrainingStrategy",    "defines the training strategies");
+   DeclareOptionRef(fTrainingStrategy="LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,Renormalize=L2,DropConfig=0.0,DropRepetitions=5|LearningRate=1e-4,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=20,TestRepetitions=7,WeightDecay=0.001,Renormalize=L2,DropConfig=0.0+0.5+0.5,DropRepetitions=5,Multithreading=True",    "TrainingStrategy",    "defines the training strategies");
 
    DeclareOptionRef(fSumOfSigWeights_test=1000.0,    "SignalWeightsSum",    "Sum of weights of signal; Is used to compute the significance on the fly");
    DeclareOptionRef(fSumOfBkgWeights_test=1000.0,    "BackgroundWeightsSum",    "Sum of weights of background; Is used to compute the significance on the fly");
@@ -516,7 +516,7 @@ void TMVA::MethodNN::Train()
         const std::vector<Float_t>& values  = event->GetValues  ();
         if (fAnalysisType == Types::kClassification)
         {
-            double outputValue = event->GetClass () == 0 ? 0.1 : 0.9;
+            double outputValue = event->GetClass () == 1 ? 0.1 : 0.9;
             trainPattern.push_back (Pattern (values.begin  (), values.end (), outputValue, event->GetWeight ()));
             trainPattern.back ().addInput (1.0); // bias node
         }
@@ -956,51 +956,116 @@ void TMVA::MethodNN::GetHelpMessage() const
    Log() << Endl;
    Log() << col << "--- Short description:" << colres << Endl;
    Log() << Endl;
-   Log() << "The MLP artificial neural network (ANN) is a traditional feed-" << Endl;
-   Log() << "forward multilayer perceptron impementation. The MLP has a user-" << Endl;
-   Log() << "defined hidden layer architecture, while the number of input (output)" << Endl;
+   Log() << "The NN neural network is a feedforward" << Endl;
+   Log() << "multilayer perceptron impementation. The NN has a user-" << Endl;
+   Log() << "defined hidden layer architecture, where the number of input (output)" << Endl;
    Log() << "nodes is determined by the input variables (output classes, i.e., " << Endl;
-   Log() << "signal and one background). " << Endl;
+   Log() << "signal and one background, regression or multiclass). " << Endl;
    Log() << Endl;
    Log() << col << "--- Performance optimisation:" << colres << Endl;
    Log() << Endl;
-   Log() << "Neural networks are stable and performing for a large variety of " << Endl;
-   Log() << "linear and non-linear classification problems. However, in contrast" << Endl;
-   Log() << "to (e.g.) boosted decision trees, the user is advised to reduce the " << Endl;
-   Log() << "number of input variables that have only little discrimination power. " << Endl;
-   Log() << "" << Endl;
-   Log() << "In the tests we have carried out so far, the MLP and ROOT networks" << Endl;
-   Log() << "(TMlpANN, interfaced via TMVA) performed equally well, with however" << Endl;
-   Log() << "a clear speed advantage for the MLP. The Clermont-Ferrand neural " << Endl;
-   Log() << "net (CFMlpANN) exhibited worse classification performance in these" << Endl;
-   Log() << "tests, which is partly due to the slow convergence of its training" << Endl;
-   Log() << "(at least 10k training cycles are required to achieve approximately" << Endl;
-   Log() << "competitive results)." << Endl;
-   Log() << Endl;
-   Log() << col << "Overtraining: " << colres
-         << "only the TMlpANN performs an explicit separation of the" << Endl;
-   Log() << "full training sample into independent training and validation samples." << Endl;
-   Log() << "We have found that in most high-energy physics applications the " << Endl;
-   Log() << "avaliable degrees of freedom (training events) are sufficient to " << Endl;
-   Log() << "constrain the weights of the relatively simple architectures required" << Endl;
-   Log() << "to achieve good performance. Hence no overtraining should occur, and " << Endl;
-   Log() << "the use of validation samples would only reduce the available training" << Endl;
-   Log() << "information. However, if the perrormance on the training sample is " << Endl;
-   Log() << "found to be significantly better than the one found with the inde-" << Endl;
-   Log() << "pendent test sample, caution is needed. The results for these samples " << Endl;
-   Log() << "are printed to standard output at the end of each training job." << Endl;
-   Log() << Endl;
-   Log() << col << "--- Performance tuning via configuration options:" << colres << Endl;
-   Log() << Endl;
-   Log() << "The hidden layer architecture for all ANNs is defined by the option" << Endl;
-   Log() << "\"HiddenLayers=N+1,N,...\", where here the first hidden layer has N+1" << Endl;
-   Log() << "neurons and the second N neurons (and so on), and where N is the number  " << Endl;
-   Log() << "of input variables. Excessive numbers of hidden layers should be avoided," << Endl;
-   Log() << "in favour of more neurons in the first hidden layer." << Endl;
-   Log() << "" << Endl;
-   Log() << "The number of cycles should be above 500. As said, if the number of" << Endl;
-   Log() << "adjustable weights is small compared to the training sample size," << Endl;
-   Log() << "using a large number of training samples should not lead to overtraining." << Endl;
+
+   const char* txt = "The NN supports various options to improve performance in terms of training speed and \n \
+reduction of overfitting: \n \
+\n \
+      - different training settings can be stacked. Such that the initial training  \n\
+        is done with a large learning rate and a large drop out fraction whilst \n \
+        in a later stage learning rate and drop out can be reduced. \n \
+      - drop out  \n \
+        [recommended: \n \
+         initial training stage: 0.0 for the first layer, 0.5 for later layers. \n \
+         later training stage: 0.1 or 0.0 for all layers \n \
+         final training stage: 0.0] \n \
+        Drop out is a technique where a at each training cycle a fraction of arbitrary  \n \
+        nodes is disabled. This reduces co-adaptation of weights and thus reduces overfitting. \n \
+      - L1 and L2 regularization are available \n \
+      - Minibatches  \n \
+        [recommended 10 - 150] \n \
+        Arbitrary mini-batch sizes can be chosen. \n \
+      - Multithreading \n \
+        [recommended: True] \n \
+        Multithreading can be turned on. The minibatches are distributed to the available \n \
+        cores. The algorithm is lock-free (\"Hogwild!\"-style) for each cycle. \n \
+ \n \
+      Options: \n \
+      \"Layout\": \n \
+          - example: \"TANH|(N+30)*2,TANH|(N+30),LINEAR\" \n \
+          - meaning:  \n \
+              . two hidden layers (separated by \",\") \n \
+              . the activation function is TANH (other options: RELU, SOFTSIGN, LINEAR) \n \
+              . the activation function for the output layer is LINEAR \n \
+              . the first hidden layer has (N+30)*2 nodes where N is the number of input neurons \n \
+              . the second hidden layer has N+30 nodes, where N is the number of input neurons \n \
+              . the number of nodes in the output layer is determined by the number of output nodes \n \
+                and can therefore not be chosen freely.  \n \
+ \n \
+       \"ErrorStrategy\": \n \
+           - SUMOFSQUARES \n \
+             The error of the neural net is determined by a sum-of-squares error function \n \
+             For regression, this is the only possible choice.  \n \
+           - CROSSENTROPY \n \
+             The error of the neural net is determined by a cross entropy function. The \n \
+             output values are automatically (internally) transformed into probabilities \n \
+             using a sigmoid function. \n \
+             For signal/background classification this is the default choice.  \n \
+             For multiclass using cross entropy more than one or no output classes  \n \
+             can be equally true or false (e.g. Event 0: A and B are true, Event 1:  \n \
+             A and C is true, Event 2: C is true, ...) \n \
+           - MUTUALEXCLUSIVE \n \
+             In multiclass settings, exactly one of the output classes can be true (e.g. either A or B or C) \n \
+ \n \
+        \"WeightInitialization\" \n \
+           - XAVIER \n \
+             [recommended] \n \
+             \"Xavier Glorot & Yoshua Bengio\"-style of initializing the weights. The weights are chosen randomly \n \
+             such that the variance of the values of the nodes is preserved for each layer.  \n \
+           - XAVIERUNIFORM \n \
+             The same as XAVIER, but with uniformly distributed weights instead of gaussian weights \n \
+           - LAYERSIZE \n \
+             Random values scaled by the layer size \n \
+ \n \
+         \"TrainingStrategy\" \n \
+           - example: \"LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,Renormalize=L2,DropConfig=0.0,DropRepetitions=5|LearningRate=1e-4,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=20,TestRepetitions=7,WeightDecay=0.001,Renormalize=L2,DropFraction=0.0,DropRepetitions=5\" \n \
+           - explanation: two stacked training settings separated by \"|\" \n \
+             . first training setting: \"LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,Renormalize=L2,DropConfig=0.0,DropRepetitions=5\" \n \
+             . second training setting : \"LearningRate=1e-4,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=20,TestRepetitions=7,WeightDecay=0.001,Renormalize=L2,DropFractions=0.0,DropRepetitions=5\" \n \
+             . LearningRate :  \n \
+               - recommended for classification: 0.1 initially, 1e-4 later \n \
+               - recommended for regression: 1e-4 and less \n \
+             . Momentum : \n \
+               preserve a fraction of the momentum for the next training batch [fraction = 0.0 - 1.0] \n \
+             . Repetitions : \n \
+               train \"Repetitions\" repetitions with the same minibatch before switching to the next one \n \
+             . ConvergenceSteps :  \n \
+               Assume that convergence is reached after \"ConvergenceSteps\" cycles where no improvement \n \
+               of the error on the test samples has been found. (Mind that only at each \"TestRepetitions\"  \n \
+               cycle the test sampes are evaluated and thus the convergence is checked) \n \
+             . BatchSize \n \
+               Size of the mini-batches.  \n \
+             . TestRepetitions \n \
+               Perform testing the neural net on the test samples each \"TestRepetitions\" cycle \n \
+             . WeightDecay \n \
+               If \"Renormalize\" is set to L1 or L2, \"WeightDecay\" provides the renormalization factor \n \
+             . Renormalize \n \
+               NONE, L1 (|w|) or L2 (w^2) \n \
+             . DropConfig \n \
+               Drop a fraction of arbitrary nodes of each of the layers according to the values given \n \
+               in the DropConfig.  \n \
+               [example: DropConfig=0.0+0.5+0.3 \n \
+                meaning: drop no nodes in layer 0 (input layer), half of the nodes in layer 1 and 30% of the nodes \n \
+                in layer 2 \n \
+                recommended: leave all the nodes turned on for the input layer (layer 0) \n \
+                turn off half of the nodes in later layers for the initial training; leave all nodes \n \
+                turned on (0.0) in later training stages] \n \
+             . DropRepetitions \n \
+               Each \"DropRepetitions\" cycle the configuration of which nodes are dropped is changed \n \
+               [recommended : 1] \n \
+             . Multithreading \n \
+               turn on multithreading [recommended: True] \n \
+               \n";
+          
+   Log () << txt << Endl;
+   
 }
 
 
