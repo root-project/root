@@ -772,7 +772,7 @@ previously it was interpreting a null pointer as a request to *not* change the c
 directory - this behavior is now implement by the default constructor.
 
 ### I/O
- - Fix the issue described at [ROOT-7500]: crash due to change in base class which versioned derived class.
+ - Fix the issue described at [ROOT-7500] : crash due to change in base class which versioned derived class.
 
 ### Proof
  - Add support for aliases [ROOT-7392]
