@@ -2601,7 +2601,9 @@ Double_t TLatex::GetYsize()
    fError = 0 ;
 
    const Char_t *text = newText.Data() ;
+   Double_t angsav = fTextAngle;
    TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
+   fTextAngle = angsav;
    delete[] fTabSize;
    return TMath::Abs(gPad->AbsPixeltoY(Int_t(fs.Height())) - gPad->AbsPixeltoY(0));
 }
