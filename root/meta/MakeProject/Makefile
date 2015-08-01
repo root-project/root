@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) cms310 small_aod aliceesd stl_example.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) cms310 small_aod aliceesd stl_example.root teststl stltest2
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -118,7 +118,7 @@ stltest.log: runstltest.C stl_example.root
 	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) | grep -v 'WARNING: IO rule for class' | grep -v -e 'unused class rule' -e 'no dictionary for class pair' > $@
 
 stltest2.log: runstltest2.C | stl_example.root runstltest2_C.$(DllSuf)
-	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $<+ 2>&1 | $(RemoveLeadingDirs) | grep -v 'WARNING: IO rule for class' | grep -v -e 'unused class rule' -e 'no dictionary for class pair' > $@
+	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) | grep -v 'WARNING: IO rule for class' | grep -v -e 'unused class rule' -e 'no dictionary for class pair' > $@
 
 teststl: stltest.log
 	$(TestDiff)

@@ -1,6 +1,4 @@
-#if defined(R__MACOSX)
 R__LOAD_LIBRARY(stltest/stltest.so)
-#endif
 
 #include "stltest/SillyStlEvent.h"
 #include "TTree.h"

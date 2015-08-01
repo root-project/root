@@ -1,4 +1,4 @@
-//R__LOAD_LIBRARY(stl_makeproject_test)
+R__LOAD_LIBRARY(stl_makeproject_test)
 
 #include "stl_makeproject_test.h"
 
