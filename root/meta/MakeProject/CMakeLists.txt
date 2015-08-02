@@ -16,7 +16,7 @@ ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-runaliceesd
                   OUTCNV aliceesd_convert.sh
                   OUTREF aliceesd.ref)
 
-ROOTTEST_GENERATE_DICTIONARY(stltest_makeproject_test LINKDEF stl_makeproject_test.h stl_makeproject_test_linkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(stl_makeproject_test LINKDEF stl_makeproject_test.h stl_makeproject_test_linkdef.h)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-stltest-create-examples
                   COPY_TO_BUILDDIR stl_makeproject_test.h
