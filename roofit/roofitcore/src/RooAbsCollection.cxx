@@ -28,14 +28,14 @@
 //
 //
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
 #include <iomanip>
 #include <fstream>
 #include <vector>
 #include <string>
+#include <sstream>
+#include <algorithm>
+
+#include "Riostream.h"
 #include "TClass.h"
 #include "TStopwatch.h"
 #include "TRegexp.h"
@@ -52,8 +52,6 @@
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
-#include <string>
-#include <sstream>
 using namespace std ;
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
@@ -141,35 +139,33 @@ void RooAbsCollection::safeDeleteList()
   // is deleted before a server is deleted
 
   // Handle trivial case here
-  if (getSize()==1) {
-    _list.Delete() ;
-    return ;
-  }
-  
-  RooAbsArg* arg ;
-  Bool_t working = kTRUE ;
+  if (_list.GetSize() > 1) {
+    std::vector<RooAbsArg*> tmp;
+    tmp.reserve(_list.GetSize());
+    do {
+      tmp.clear();
+      RooFIter it = _list.fwdIterator();
+      RooAbsArg* arg;
+      while ((arg = it.next())) {
+	// Check if arg depends on remainder of list      
+	if (!arg->dependsOn(*this, arg)) tmp.push_back(arg);
+      }
+      // sort and uniquify, in case some elements occur more than once
+      std::sort(tmp.begin(), tmp.end());
+      // okay, can remove and delete what's in tmp
+      for (std::vector<RooAbsArg*>::iterator it = tmp.begin(),
+	  end = std::unique(tmp.begin(), tmp.end()); end != it; ++it) {
+	while (_list.Remove(*it)) { };
+	delete *it;
+      }
+    } while (!tmp.empty() && _list.GetSize() > 1);
 
-  while(working) {
-    RooFIter iter = fwdIterator() ;
-    working = kFALSE ;
-    while((arg=iter.next())) {
-
-      // Check if arg depends on remainder of list      
-      if (!arg->dependsOn(*this,arg)) {
-	// Otherwise leave it our and delete it	
-	remove(*arg) ;
-	delete arg ;
-	working = kTRUE ;
-      } 
+    // Check if there are any remaining elements
+    if (_list.GetSize() > 1) {
+      coutW(ObjectHandling) << "RooAbsCollection::safeDeleteList(" << GetName() 
+	<< ") WARNING: unable to delete following elements in client-server order " ;
+      Print("1") ;
     }
-    if (_list.GetSize()<2) break ;
-  }
-
-  // Check if there are any remaining elements
-  if (getSize()>1) {    
-    coutW(ObjectHandling) << "RooAbsCollection::safeDeleteList(" << GetName() 
-			  << ") WARNING: unable to delete following elements in client-server order " ;
-    Print("1") ;
   }
 
   // Built-in delete remaining elements
@@ -561,23 +557,16 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   // is var1 already in this list?
   const char *name= var1.GetName();
 
-  Bool_t foundVar1(kFALSE) ;
-  RooFIter iter = fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
-    if (arg==&var1) foundVar1=kTRUE ;
-  }
-  if (!foundVar1) {
+  if (!_list.FindObject(&var1)) {
     coutE(ObjectHandling) << "RooAbsCollection: variable \"" << name << "\" is not in the list"
 	 << " and cannot be replaced" << endl;
     return kFALSE;
   }
 
-  RooAbsArg *other ;
 
   // is var2's name already in this list?
   if (dynamic_cast<RooArgSet*>(this)) {
-    other= find(var2);
+    RooAbsArg *other = find(var2);
     if(other != 0 && other != &var1) {
       coutE(ObjectHandling) << "RooAbsCollection: cannot replace \"" << name
 	   << "\" with already existing \"" << var2.GetName() << "\"" << endl;
@@ -611,24 +600,17 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
   TString name(var.GetName()) ;
   Bool_t anyFound(kFALSE) ;
 
-  RooFIter iter = fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
-    if ((&var)==arg) {
-      _list.Remove(arg) ;
-      anyFound=kTRUE ;
-    } else if (matchByNameOnly) {
-      //if (!name.CompareTo(arg->GetName())) {
-      if (var.namePtr()==arg->namePtr()) {
-	TObject* contObj = _list.FindObject(arg) ;	  
-	_list.Remove(arg) ;
-	anyFound=kTRUE ;
-	if (_ownCont && contObj) {
-	  //cout << "RooAbsCollection::remove() deleting instance " << contObj << " named " << contObj->GetName() << endl ;
-	  delete contObj ;
-	}
+  RooAbsArg* arg;
+  while ((arg = (RooAbsArg*) _list.FindObject(&var))) {
+    anyFound = kTRUE;
+    _list.Remove(arg);
+  }
+  if (matchByNameOnly) {
+      while ((arg = (RooAbsArg*) _list.FindObject(name.Data()))) {
+	  anyFound = kTRUE;
+	  _list.Remove(arg);
+	  if (_ownCont) delete arg;
       }
-    }
   }
   
   return anyFound ;
