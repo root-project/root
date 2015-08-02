@@ -17,6 +17,7 @@
 
 //________________________________________________________________________________________________________
 /**
+
 This is a class to get ROOT's objects from R's objects
 <center><h2>TRObject class</h2></center>
 
@@ -28,7 +29,7 @@ A simple example<br>
 <p>
 
 </p>
-<hr>
+
 \code{.cpp}
 #include<TRInterface.h>
 void Proxy()
@@ -52,38 +53,38 @@ namespace ROOT {
          Bool_t fStatus;//status tell if is a valid object
       public:
 	 /**
-         Construct and TRObject 
+         Construct a TRObject 
          */
          TRObject(): TObject() {};
 	 /**
-         Construct and TRObject given a R base object 
-         \@param robj raw R object
+         Construct a TRObject given a R base object 
+         \param robj raw R object
          */
          TRObject(SEXP robj);
 	 /**
-         Construct and TRObject given a R base object 
-         \@param robj raw R object
-         \@param status if the raw object is valid obj
+         Construct a TRObject given a R base object 
+         \param robj raw R object
+         \param status if the raw object is valid obj
          */
          TRObject(SEXP robj, Bool_t status);
 	 
 	 /**
           TRObject is a current valid object?
-         \@param status if the current object is valid obj
+         \param status if the current object is valid obj
          */
 	 void SetStatus(Bool_t status){ fStatus = status;}
          
 	 /**
           TRObject is a current valid object?
-         \@return status if the current object
+         \return status if the current object
          */
          Bool_t GetStatus() { return fStatus;}
          
 	 /**
           The R objects can to have associate attributes
           with this method you can added attribute to TRObject given an object in the template argument.
-         \@param name attribute name
-         \@param obj  object associated to the attribute name in the current TRObject
+         \param name attribute name
+         \param obj  object associated to the attribute name in the current TRObject
          */
          template<class T> void SetAttribute(const TString name,T obj)
          {
@@ -93,8 +94,8 @@ namespace ROOT {
 	 /**
           The R objects can to have associate attributes
           with this method you can added attribute to TRObject given an object in the template argument.
-         \@param name attribute name
-         \@return object associated to the attribute name in the current TRObject
+         \param name attribute name
+         \return object associated to the attribute name in the current TRObject
          */
          TRObject GetAttribute(const TString name)
          {
@@ -106,8 +107,8 @@ namespace ROOT {
 	 /**
 	  Some datatypes of ROOT or c++ can be wrapped in to a TRObject,
 	  this method lets you wrap those datatypes
-         \@param obj template object to be wrapped
-         \@return TRObject reference of wrapped object
+         \param obj template object to be wrapped
+         \return TRObject reference of wrapped object
          */
 	 template<class T> TRObject& Wrap(T obj) {
             fObj=::Rcpp::wrap(obj);
@@ -117,8 +118,8 @@ namespace ROOT {
 	 /**
 	  Some datatypes of ROOT or c++ can be wrapped in to a TRObject,
 	  this method lets you unwrap those datatypes encapsulate into this TRObject.
-	 \note If the current TRObject is not a valid object it will return and empty object and print and error message
-         \@return template return with the require datatype
+	 \note If the current TRObject is not a valid object it will return and empty object and it will print an error message
+         \return template return with the require datatype
          */
          template<class T> T As() {
 	   if(fStatus)
