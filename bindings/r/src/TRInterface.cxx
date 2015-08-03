@@ -22,10 +22,6 @@ ClassImp(TRInterface)
 static ROOT::R::TRInterface *gR = NULL;
 static Bool_t statusEventLoop;
 
-////////////////////////////////////////////////////////////////////////////////
-/// The command line arguments are by deafult argc=0 and argv=NULL,
-/// The verbose mode is by default disabled but you can enable it to show procedures information in stdout/stderr
-
 TRInterface::TRInterface(const int argc, const char *argv[], const bool loadRcpp, const bool verbose, const bool interactive): TObject()
 {
    if (RInside::instancePtr()) throw std::runtime_error("Can only have one TRInterface instance");
@@ -69,9 +65,7 @@ Int_t  TRInterface::Eval(const TString &code, TRObject  &ans)
    return rc;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Execute R code.
-
+//______________________________________________________________________________
 void TRInterface::Execute(const TString &code)
 {
   try{ 
@@ -114,8 +108,7 @@ void TRInterface::SetVerbose(Bool_t status)
    fR->setVerbose(status);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
+//______________________________________________________________________________
 TRInterface::Binding TRInterface::operator[](const TString &name)
 {
    return Binding(this, name);
@@ -148,9 +141,7 @@ void TRInterface::Interactive()
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-///return a pointer to TRInterface.
-
+//______________________________________________________________________________
 TRInterface *TRInterface::InstancePtr()
 {
    if (!gR) {
@@ -161,26 +152,27 @@ TRInterface *TRInterface::InstancePtr()
    return gR;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-///return a reference object of TRInterface.
-
+//______________________________________________________________________________
 TRInterface &TRInterface::Instance()
 {
    return  *TRInterface::InstancePtr();
 }
 
+//______________________________________________________________________________
 Bool_t TRInterface::IsInstalled(TString pkg)
 {
     TString cmd="is.element('"+pkg+"', installed.packages()[,1])";
     return fR->parseEval(cmd.Data());
 }
 
+//______________________________________________________________________________
 Bool_t TRInterface::Require(TString pkg)
 {
     TString cmd="require('"+pkg+"',quiet=TRUE)";
     return fR->parseEval(cmd.Data());
 }
 
+//______________________________________________________________________________
 Bool_t TRInterface::Install(TString pkg,TString repos)
 {
     TString cmd="install.packages('"+pkg+"',repos='"+repos+"',dependencies=TRUE)";
@@ -192,9 +184,7 @@ Bool_t TRInterface::Install(TString pkg,TString repos)
 #undef _POSIX_C_SOURCE
 #include <R_ext/eventloop.h>
 
-////////////////////////////////////////////////////////////////////////////////
-///run the R's eventloop to process graphics events
-
+//______________________________________________________________________________
 void TRInterface::ProcessEventsLoop()
 {
    if (!statusEventLoop) {

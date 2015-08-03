@@ -32,14 +32,15 @@
 #include<TThread.h>
 #endif
 
-
+/**
+ @namespace ROOT::R
+ namespace associated R package for ROOT.
+ @defgroup R R Interface for Statistical Computing
+ */
 namespace ROOT {
    namespace R {
 /**
-   @defgroup R R Interface for Statistical Computing
- */
-     
-/**
+\class TRInterface
    ROOT R was implemented using the
    <A HREF="http://www.r-project.org/">R Project</A> library and the modules
    <A HREF="http://cran.r-project.org/web/packages/Rcpp/index.html">Rcpp</A> and
@@ -48,7 +49,7 @@ namespace ROOT {
    <a href="http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide"> http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide</a><br>
    <a href="https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface"> https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface</a>
 
-   @ingroup R
+   \ingroup R
  */
 
 
@@ -202,6 +203,15 @@ the known function and the fitted function.
             TString fName;
          };
       private:
+         /**
+         The command line arguments are by deafult argc=0 and argv=NULL, 
+	 The verbose mode is by default disabled but you can enable it to show procedures information in stdout/stderr         \note some time can produce so much noise in the output
+         \param argc default 0
+         \param args default null
+         \param loadRcpp default true
+         \param verbose default false
+         \param interactive default true
+         */
          TRInterface(const int argc = 0, const char *argv[] = NULL, const bool loadRcpp = true, const bool verbose = false, const bool interactive = true);
       public:
          ~TRInterface();

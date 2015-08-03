@@ -68,7 +68,7 @@ namespace ROOT {
       <a href="http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide"> http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide</a><br>
       <a href="https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface"> https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface</a>
 
-         @ingroup R
+      @ingroup R
       */
       class TRObject: public TObject {
          friend SEXP Rcpp::wrap<TRObject>(const TRObject &f);

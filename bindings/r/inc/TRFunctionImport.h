@@ -30,6 +30,7 @@ namespace ROOT {
    namespace R {
 
       /**
+      \class TRFunctionImport
       This is a class to pass functions from ROOT to R
 
       <center><h2>TRFunctionImport class</h2></center>

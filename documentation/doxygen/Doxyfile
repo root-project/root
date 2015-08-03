@@ -753,8 +753,7 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../../bindings/r/  \
-                         ../../core/base/ \
+INPUT                  = ../../core/base/ \
                          ../../core/cont/ \
                          ../../core/meta/ \
                          ../../core/metautils/ \
@@ -801,7 +800,8 @@ INPUT                  = ../../bindings/r/  \
                          ../../tree \
                          ../../sql/ \
                          ../../gui/gui/ \
-                         ../../gui/fitpanel/ 
+                         ../../gui/fitpanel/ \
+                         ../../bindings/r/ 
 #                         ../../gui/ged/ \
 
 
@@ -934,7 +934,7 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             =
+IMAGE_PATH             = ../../bindings/r/doc/users-guide/img/
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program

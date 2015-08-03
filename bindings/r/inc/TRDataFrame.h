@@ -29,7 +29,8 @@ namespace ROOT {
    namespace R {
 
       /**
-
+      \class TRDataFrame
+      
       This is a class to create DataFrames from ROOT to R
       <center><h2>TRDataFrame class</h2></center>
 

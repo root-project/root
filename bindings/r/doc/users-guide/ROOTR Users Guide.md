@@ -1,4 +1,4 @@
-<center>![](img/logo.jpeg)</center>
+![](img/logo.jpeg)
 # ROOTR Users Guide
 
 
@@ -606,7 +606,7 @@ TCanvas *SimpleFitting(){
 ~~~
 In the first image you can see the blue dots wichi are the function `x^3` with gaussian noise, the red dots correspond to
 the original function and the green ones correspond to the fitted function.
-<center> ![](img/simplefit.gif) </center>
+![](img/simplefit.gif) 
 
 ## Global Minimization in R using the package DEoptim
 DEoptim is a R package for Differential Evolution Minimization that lets you do global
@@ -720,7 +720,7 @@ void GlobalMinimization()
 ~~~
 In the image you can see the convergence plots of the functions and their minimum.
 For RosenBrock is (1,1,1) and for Rastrigin is (0,0,0).
-<center>![](img/minimization.jpeg) </center>
+![](img/minimization.jpeg)
 
 ## Interpolation (Plotting in R)
 This example shows an interpolation using the function aproxfun and how to make a plot with R's
@@ -780,7 +780,7 @@ r<<"plot(approxfun(x, y, rule = 2:1), 0, 11,col = 'tomato', add = TRUE, lty = 3,
 }
 ~~~
 The image shows the interpolated function plotted within R
-<center> ![](img/interpolation.png) </center>
+![](img/interpolation.png) 
 
 ## Integration (Passing vectorized function to R)
 Numerical integration using R passing the function from ROOT
@@ -840,5 +840,8 @@ void Integration()
 }
 ~~~
 
+## Users Guide Sites
+- http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide
+- https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface
 
 

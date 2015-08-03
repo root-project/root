@@ -21,6 +21,7 @@ namespace ROOT {
    namespace R {
 
       /**
+      \class TRFunctionExport
        
       This is a class to pass functions from ROOT to R
       <center><h2>TRFunctionExport class</h2></center>
@@ -161,7 +162,6 @@ namespace ROOT {
          */
          template<class T> TRFunctionExport(T fun)
          {
-            //
             f = new TRInternalFunction(fun);
          }
 
