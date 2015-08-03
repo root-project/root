@@ -21,7 +21,8 @@ namespace ROOT {
    namespace R {
 
       /**
-         This is a class to pass functions from ROOT to R
+       
+      This is a class to pass functions from ROOT to R
       <center><h2>TRFunctionExport class</h2></center>
       <p>
       The TRFunctionExport class lets you pass ROOT's functions to R's environment<br>
@@ -36,7 +37,7 @@ namespace ROOT {
 
       </p>
 
-      Let \f$ f(x,y)=(x-1)^{2} + 100(y-x^{2})^{2} \f$, which is called the Rosenbrock
+      Let \f$ f(x,y)=(x-1)^{2} + 100(y-x^{2})^{2} \f$ , which is called the Rosenbrock
       function.
 
       It's known that this function has a minimum when \f$ y = x^{2}\f$ , and \f$ x = 1.\f$
@@ -150,29 +151,27 @@ namespace ROOT {
          TRFunctionExport();
          /**
          TRFunctionExport copy constructor
-              \param fun other TRFunctionExport
-              */
+         \param fun other TRFunctionExport
+         */
          TRFunctionExport(const TRFunctionExport &fun);
 
          /**
-         TRFunctionExport template constructor
-              \param fun supported function to be wrapped by Rcpp
-              */
+         TRFunctionExport template constructor that supports a lot of function's prototypes
+         \param fun supported function to be wrapped by Rcpp
+         */
          template<class T> TRFunctionExport(T fun)
          {
-            //template constructor that supports a lot
-            // of function's prototypes
+            //
             f = new TRInternalFunction(fun);
          }
 
          /**
-         function to assign function to export
-              \param fun supported function to be wrapped by Rcpp
-              */
+         function to assign function to export,
+         template method that supports a lot of function's prototypes
+         \param fun supported function to be wrapped by Rcpp
+         */
          template<class T> void SetFunction(T fun)
          {
-            //template method that supports a lot
-            // of function's prototypes
             f = new TRInternalFunction(fun);
          }
 
