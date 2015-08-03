@@ -32,19 +32,7 @@
 #include<TThread.h>
 #endif
 
-/**
-   @defgroup R R Interface for Statistical Computing
-   \ref ROOTR was implemented using the
-   <A HREF="http://www.r-project.org/">R Project</A> library and the modules
-   <A HREF="http://cran.r-project.org/web/packages/Rcpp/index.html">Rcpp</A> and
-   <A HREF="http://cran.r-project.org/web/packages/RInside/index.html">RInside</A>
-   @ingroup R
- */
 
-/**
-   @defgroup R R Interface for Statistical Computing
-   @ingroup R
- */
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -56,6 +44,21 @@
 
 namespace ROOT {
    namespace R {
+/**
+   @defgroup R R Interface for Statistical Computing
+ */
+     
+/**
+   ROOT R was implemented using the
+   <A HREF="http://www.r-project.org/">R Project</A> library and the modules
+   <A HREF="http://cran.r-project.org/web/packages/Rcpp/index.html">Rcpp</A> and
+   <A HREF="http://cran.r-project.org/web/packages/RInside/index.html">RInside</A>
+   <h2>Users Guide </h2>
+   <a href="http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide"> http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide</a><br>
+   <a href="https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface"> https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface</a>
+
+   @ingroup R
+ */
       class TRInterface: public TObject {
       protected:
          RInside *fR;

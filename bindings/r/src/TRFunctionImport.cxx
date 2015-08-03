@@ -14,11 +14,6 @@
 
 //______________________________________________________________________________
 /* Begin_Html
-<center><h2>TRFunctionImport class</h2></center>
-
-<p>
-The TRFunctionImport class lets you call R's functions to ROOT's environment<br>
-</p>
 End_Html
 */
 
