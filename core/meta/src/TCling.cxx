@@ -1091,7 +1091,7 @@ TCling::TCling(const char *name, const char *title)
       TCling::AddIncludePath((interpInclude.substr(2) + "/cling").c_str());
 
       // Add the current path to the include path
-      TCling::AddIncludePath(".");
+      // TCling::AddIncludePath(".");
 
       // Add the root include directory and etc/ to list searched by default.
       TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());

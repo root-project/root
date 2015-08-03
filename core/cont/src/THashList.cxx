@@ -234,7 +234,7 @@ TObject *THashList::FindObject(const TObject *obj) const
 /// Return the THashTable's list (bucket) in which obj can be found based on
 /// its hash; see THashTable::GetListForObject().
 
-TList *THashList::GetListForObject(const char *name) const
+const TList *THashList::GetListForObject(const char *name) const
 {
    return fTable->GetListForObject(name);
 }
@@ -243,7 +243,7 @@ TList *THashList::GetListForObject(const char *name) const
 /// Return the THashTable's list (bucket) in which obj can be found based on
 /// its hash; see THashTable::GetListForObject().
 
-TList *THashList::GetListForObject(const TObject *obj) const
+const TList *THashList::GetListForObject(const TObject *obj) const
 {
    return fTable->GetListForObject(obj);
 }

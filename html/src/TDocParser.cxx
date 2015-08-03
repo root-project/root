@@ -2263,7 +2263,7 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
    // Collect overload candidates
    TList candidates;
    for (int access = 0; access < 3; ++access) {
-      TList* methList = fMethods[access].GetListForObject(name);
+      const TList* methList = fMethods[access].GetListForObject(name);
       if (!methList) continue;
 
       TIter nextMethod(methList);

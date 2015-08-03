@@ -406,7 +406,7 @@ static void GetCurrentDirectory(std::string &output)
 /// If that's not what the caller wants, she should pass -I to rootcling and a
 /// different relative path to the header files.
 
-static std::string GetRelocatableHeaderName(const char *header, const std::string &currentDirectory)
+static std::string GetRelocatableHeaderName(const std::string &header, const std::string &currentDirectory)
 {
    std::string result(header);
 
@@ -3962,7 +3962,7 @@ int RootCling(int argc,
 
    std::vector<std::string> clingArgs;
    clingArgs.push_back(argv[0]);
-   clingArgs.push_back("-I.");
+   clingArgs.push_back("-iquote.");
 
    // Is this needed at all or just historical?
    if (! IsPointerTClassCopy<std::vector<int>::iterator>::kVal) {
@@ -4273,16 +4273,25 @@ int RootCling(int argc,
 
             bool isSelectionFile = IsSelectionFile(argv[i]);
 
-            std::string header(isSelectionFile ? argv[i] : GetRelocatableHeaderName(argv[i], currentDirectory));
+            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
+            std::string fullheader(argv[i]);
             // Strip any trailing + which is only used by GeneratedLinkdef.h which currently
             // use directly argv.
-            if (header[header.length() - 1] == '+') {
-               header.erase(header.length() - 1);
+            if (fullheader[fullheader.length() - 1] == '+') {
+               fullheader.erase(fullheader.length() - 1);
             }
+            std::string header(isSelectionFile ? fullheader : GetRelocatableHeaderName(fullheader, currentDirectory));
 
             interpPragmaSource += std::string("#include \"") + header + "\"\n";
             if (!isSelectionFile) {
-               includeForSource += std::string("#include \"") + header + "\"\n";
+               // In order to not have to add the equivelent to -I${PWD} to the
+               // command line, include the complete file name, even if it is a
+               // full pathname, when we write it down in the dictionary.
+               // Note: have -I${PWD} means in that (at least in the case of
+               // ACLiC) we inadvertently pick local file that have the same
+               // name as system header (e.g. new or list) and -iquote has not
+               // equivalent on some platforms.
+               includeForSource += std::string("#include \"") + fullheader + "\"\n";
                pcmArgs.push_back(header);
             } else if (!IsSelectionXml(argv[i])) {
                interpreterDeclarations += std::string("#include \"") + header + "\"\n";
