@@ -753,7 +753,8 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../../core/base/ \
+INPUT                  = ../../bindings/r/  \
+                         ../../core/base/ \
                          ../../core/cont/ \
                          ../../core/meta/ \
                          ../../core/metautils/ \
@@ -800,7 +801,7 @@ INPUT                  = ../../core/base/ \
                          ../../tree \
                          ../../sql/ \
                          ../../gui/gui/ \
-                         ../../gui/fitpanel/
+                         ../../gui/fitpanel/ 
 #                         ../../gui/ged/ \
 
 

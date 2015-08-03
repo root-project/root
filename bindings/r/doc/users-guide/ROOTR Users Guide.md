@@ -36,36 +36,36 @@ To install ROOTR please read first.
 
 To compile with cmake added into ~/.profile
 
-``` {.sh}
+~~~{.sh}
 export PATH=$PATH:/Applications/CMake.app/Contents/bin/
-```
+~~~
 and
 
-``` {.sh}
+~~~{.sh}
 source ~/.profile
-```
+~~~
 
 Install needed R packages, open R and in the prompt type
 
-``` {.sh}
+~~~{.sh}
 install.packages(c('Rcpp','RInside'))
-```
+~~~
 select a mirror and install.
 
 Download code from git repo
 
-``` {.sh}
+~~~{.sh}
 git clone -b master-root-R  https://github.com/lmoneta/root.git
-```
+~~~
 
 To compile ROOTR lets to create a compilation directory and to activate it use cmake -Dr=ON ..
 
-``` {.sh}
+~~~{.sh}
 mkdir compile
 cd compile
 cmake -Dr=ON ..
 make -j n
-```
+~~~
 This is a basic video using ROOTR on
 
 ![ROOTR Mac](http://img.youtube.com/vi/tvhuEen8t7c/0.jpg)](http://www.youtube.com/watch?v=tvhuEen8t7c)
@@ -77,29 +77,29 @@ This is a basic video using ROOTR on
 install
 (For debian-based distros)
 
-``` {.sh}
+~~~{.sh}
 apt-get install r-base r-base-dev
-```
+~~~
 Install needed R packages, open R and in the prompt type
 
-``` {.sh}
+~~~{.sh}
 install.packages(c('Rcpp','RInside'))
-```
+~~~
 select a mirror and install.
 Download code from git repo
 
-``` {.sh}
+~~~{.sh}
 git clone -b master-root-R  https://github.com/lmoneta/root.git
-```
+~~~
 
 To compile ROOTR lets to create a compilation directory and to activate it use cmake -Dr=ON ..
 
-``` {.sh}
+~~~{.sh}
 mkdir compile
 cd compile
 cmake -Dr=ON ..
 make -j n
-```
+~~~
 This is a basic video using ROOTR on
 
 ![ROOTR Gnu/Linux](http://img.youtube.com/vi/FkrmM2xCPoM/0.jpg)](http://www.youtube.com/watch?v=FkrmM2xCPoM)
@@ -111,16 +111,16 @@ of making calls to R to give and obtein data. This class has a series of overcha
 and code from R to C++ and vice versa. To create an object of this class the user must use the static methods `ROOT::R::TRInterface::Instance`
 and `ROOT::R::TRInterface::InstancePtr` which return a reference object and a pointer object respectively.
 
-``` {.cpp}
+~~~{.cxx}
 #include<TRInterface.h>
 ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
-```
+~~~
 
 ## Running R code and passing/getting variables.
 We have different ways to run R code and pass/obtain data to/from R environment: using the methods Execute(code) and
 Eval(code).
 
-``` {.cpp}
+~~~{.cxx}
 #include<TRInterface.h>
  
 //creating an instance
@@ -143,12 +143,12 @@ std::vector<Double_t> vd(3);
 r["seq(0,1,0.5)"]>>vd;
 std::cout<<vd[0]<<" "<<vd[1]<<" "<<vd[2]<<std::endl;
  
-std::vector<Int_t> v(3);
-v[0]=0;
-v[1]=1;
-v[2]=2;
+std::vector<Int_t> v1(3);
+v1[0]=0;
+v1[1]=1;
+v1[2]=2;
  
-r["v1"]<<v;
+r["v1"]<<v1;
 r<<"print(v1)";
  
 TMatrixD m(2,2);
@@ -157,7 +157,7 @@ TMatrixD m(2,2);
 r<<"mat<-matrix(c(0.1,0.2,0.3,0.4),nrow=2)";
 r["mat"]>>m;
 m.Print();
-```
+~~~
 So, working with ROOTR is like working with flows of data to pass, obtain and process data.
 
 ## Passing functions from ROOT to R
@@ -166,7 +166,7 @@ So instead of using `*Double_t` you must use `std::vector` and instead of `*Char
 
 For this example we need to create a macro, so save it as fun.C
 
-``` {.cpp}
+~~~{.cxx}
 #include<TRInterface.h>
 #include<TMath.h>
  
@@ -183,14 +183,14 @@ Double_t myfun2(std::vector<Double_t> x) //use std::vector<Double_t> instead Dou
 void fun()
 {
 ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
-r["dilog"]<<ROOT::R::TRFunction(TMath::DiLog);
+r["dilog"]<<ROOT::R::TRFunctionExport(TMath::DiLog);
 r["myfun"]<<myfun;
 r["myfun2"]<<myfun2;
 r<<"print(dilog(0))";
 r<<"print(myfun(0))";
 r<<"print(myfun2(c(0,4)))";
 }
-```
+~~~
 
 **IMPORTANT**
 - For overloaded functions you should pass the function with a explicit cast to the wanted function.
@@ -198,7 +198,7 @@ r<<"print(myfun2(c(0,4)))";
 - If you pass a function without the explicit cast you will get a very ugly traceback.
 - A lot of common standard functions for example from math.h like sin, cos etc.. are overloaded, take care passing it.
 
-``` {.cpp}
+~~~{.cxx}
 #include<TRInterface.h>
  
 Double_t myfun(Double_t x)
@@ -220,7 +220,7 @@ r["myfuni"]<<(Int_t (*)(Int_t))myfun;
 r<<"print(myfund(0.0))";
 r<<"print(myfuni(1))";
 }
-```
+~~~
 
 ## Wrapping a class
 You can wrap a class and expose it in R environment using only a pair of macrodefinitions and the template class
@@ -240,7 +240,7 @@ Example:
 
 Lets to create need data to play with dataframe features
 
-``` {.cpp}
+~~~{.cxx}
 ////////////////////////
 //creating variables//
 ////////////////////////
@@ -265,11 +265,11 @@ names.push_back("v2");
 names.push_back("v3");
  
 ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
-```
+~~~
 In R the dataframe have associate to every column a label, in ROOTR you can have the same label using the class ROOT::R::Label to create a TRDataFrame where you data
 have a label associate.
 
-``` {.cpp}
+~~~{.cxx}
 /////////////////////////////////////////////////
 //creating dataframe object with its labels//
 /////////////////////////////////////////////////
@@ -282,18 +282,18 @@ ROOT::R::TRDataFrame  df1(ROOT::R::Label["var1"]=v1,ROOT::R::Label["var2"]=v2,RO
  
 r["df1"]<<df1;
 r<<"print(df1)";
-```
+~~~
 Output
 
-``` {.sh}
+~~~{.sh}
 var1  var2 var3 strings
 1    1 0.101    1      v1
 2    2 0.202    2      v2
 3    3 0.303    3      v3
-```
+~~~
 Manipulating data between dataframes
 
-``` {.cpp}
+~~~{.cxx}
 ////////////////////////////////
 //Adding colunms to dataframe //
 ////////////////////////////////
@@ -307,19 +307,19 @@ df1["var4"]=v4;
 r["df1"]<<df1;
 //printing df1
 r<<"print(df1)";
-```
+~~~
 Output
 
-``` {.sh}
+~~~{.sh}
 var1  var2 var3 strings var4
 1    1 0.101    1      v1   -1
 2    2 0.202    2      v2   -2
 3    3 0.303    3      v3   -3
-``` 
+~~~ 
 
 Getting data frames from R's environment
 
-``` {.cpp}
+~~~{.cxx}
 //////////////////////////////////////////
 //Getting dataframe from R's environment//
 //////////////////////////////////////////
@@ -334,11 +334,11 @@ v.Print();
  
 df2["v2"]>>v;
 v.Print();
-```
+~~~
 
 Output
 
-``` {.sh}
+~~~{.sh}
 Vector (3)  is as follows
  
      |        1  |
@@ -354,9 +354,9 @@ Vector (3)  is as follows
    0 |3 
    1 |2 
    2 |1
-```
+~~~
 
-``` {.cpp}
+~~~{.cxx}
 ///////////////////////////////////////////
 //Working with colunms between dataframes//
 ///////////////////////////////////////////
@@ -366,17 +366,17 @@ df2["v3"]<<df1["strings"];
 //updating df2 in R's environment
 r["df2"]<<df2;
 r<<"print(df2)";
-```
+~~~
 Output
 
-``` {.sh}
+~~~{.sh}
 v1 v2 v3
 1 0.1  3 v1
 2 0.2  2 v2
 3 0.3  1 v3
-```
+~~~
 
-``` {.cpp}
+~~~{.cxx}
 ///////////////////////////////////////////
 //Working with colunms between dataframes//
 ///////////////////////////////////////////
@@ -386,16 +386,16 @@ df2["v3"]>>df1["var1"];
 //updating df1 in R's environment
 r["df1"]<<df1;
 r<<"print(df1)";
-```
+~~~
 
 Output
 
-``` {.sh}
+~~~{.sh}
 var1  var2 var3 strings var4
 1   v1 0.101    1      v1   -1
 2   v2 0.202    2      v2   -2
 3   v3 0.303    3      v3   -3
-```
+~~~
 
 ## Plotting with R's graphical system.
 ROOTR supports an eventloop for R's graphical system which allows plotting using the R functions to the
@@ -407,7 +407,7 @@ The interactive mode lets you get the R's command line within ROOT's command lin
 The variables created in the interactive mode can be passed to ROOT with TRObjectProxy and the method ParseEval?.
 To initialize the interactive mode just call Interactive() method and type ".q" to exit from R's prompt and to go to the ROOT's prompt again.
 
-``` {.cpp}
+~~~{.cxx}
 [omazapa] [tuxhome] [~]$ root -l
 root [0] #include<TRInterface.h>
 root [1] ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
@@ -434,7 +434,7 @@ Vector (9)  is as follows
    8 |5 
  
 root [4]
-``` 
+~~~ 
 
 ## EXAMPLES
 The examples can also be found in `$ROOTSYS/tutorials/r`
@@ -445,7 +445,7 @@ associated to that function are needed.
 In this example I show how to give support to a custom class to be used in R's environment,
 which at the same time is a functor.
 
-``` {.cpp}
+~~~{.cxx}
 #include<TRInterface.h>
 #include<TMath.h>
  
@@ -521,7 +521,7 @@ void Functor()
    r<<"print(sprintf('value in R = %f',functor$doEval( 1 )))";
    std::cout<<"value in ROOT = "<<TMath::Erf(1)<<std::endl;
 }
-```
+~~~
 
 ## Simple fitting in R and plot in ROOT
 The next example creates an exponential fit.
@@ -530,7 +530,7 @@ pass them to R and fit the data to `x^3`,
 get the fitted coefficient(power) and plot the data,
 the known function and the fitted function using ROOT's classes.
 
-``` {.cpp}
+~~~{.cxx}
 #include<TRInterface.h>
 #include<TRandom.h>
  
@@ -603,7 +603,7 @@ TCanvas *SimpleFitting(){
    c1->Update();
    return c1;
 }
-```
+~~~
 In the first image you can see the blue dots wichi are the function `x^3` with gaussian noise, the red dots correspond to
 the original function and the green ones correspond to the fitted function.
 <center> ![](img/simplefit.gif) </center>
@@ -613,15 +613,15 @@ DEoptim is a R package for Differential Evolution Minimization that lets you do 
 Minimization.
 To install this package you just need to run:
 
-``` {.cpp}
+~~~{.cxx}
 #include<TRInterface.h>
 ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
 r<<"install.packages('DEoptim',repos='http://cran.rstudio.com/')";
-```
+~~~
 
 Then create a macro named GlobalMinimization.C with the next code.
 
-``` {.cpp}
+~~~{.cxx}
 #include<TRInterface.h>
 #include<TBenchmark.h>
 #include<math.h>
@@ -717,7 +717,7 @@ void GlobalMinimization()
  r<<"dev.new(title='Rastrigin Convergence')";
  r<<"plot(result2,type='o',pch='.')";
 }
-```
+~~~
 In the image you can see the convergence plots of the functions and their minimum.
 For RosenBrock is (1,1,1) and for Rastrigin is (0,0,0).
 <center>![](img/minimization.jpeg) </center>
@@ -729,7 +729,7 @@ graphical functions.
 More Information on R interpolation at
 [http://stat.ethz.ch/R-manual/R-patched/library/stats/html/approxfun.html](http://stat.ethz.ch/R-manual/R-patched/library/stats/html/approxfun.html)
 
-``` {.cpp}
+~~~{.cxx}
 #include<TRInterface.h>
 #include<TRandom.h>
 #include<vector>
@@ -778,14 +778,14 @@ r<<"curve(fc(x), 0, 10, col = 'darkblue', add = TRUE)";
 // different interpolation on left and right side :
 r<<"plot(approxfun(x, y, rule = 2:1), 0, 11,col = 'tomato', add = TRUE, lty = 3, lwd = 2)";
 }
-```
+~~~
 The image shows the interpolated function plotted within R
 <center> ![](img/interpolation.png) </center>
 
 ## Integration (Passing vectorized function to R)
 Numerical integration using R passing the function from ROOT
 
-``` {.cpp}
+~~~{.cxx}
 #include<TMath.h>
 #include<TRInterface.h>
 #include<Math/Integrator.h>
@@ -838,7 +838,7 @@ void Integration()
   std::cout<<"Integral of BreitWigner Function in the interval [-Inf, Inf] R    = "<<value<<std::endl;
  
 }
-```
+~~~
 
 
 
