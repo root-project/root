@@ -39,13 +39,12 @@
 //
 //
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <iomanip>
 #include <fstream>
 #include <list>
 #include "TClass.h"
+#include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooStreamParser.h"
 #include "RooFormula.h"
@@ -488,18 +487,18 @@ Bool_t RooArgSet::checkForDup(const RooAbsArg& var, Bool_t silent) const
 {
   // Check if element with var's name is already in set
 
-  RooAbsArg *other = 0;
-  if((other= find(var))) {
-    if(other != &var) {
-      if (!silent)
+  RooAbsArg *other = find(var);
+  if (other) {
+    if (other != &var) {
+      if (!silent) {
 	// print a warning if this variable is not the same one we
 	// already have
 	coutE(InputArguments) << "RooArgSet::checkForDup: ERROR argument with name " << var.GetName() << " is already in this set" << endl;
+      }
     }
     // don't add duplicates
     return kTRUE;
   }
-
   return kFALSE ;
 }
 

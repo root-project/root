@@ -17,9 +17,6 @@
 #define ROO_ARG_SET
 
 #include "RooAbsCollection.h"
-#include "RooErrorHandler.h"
-#include <map>
-#include <iostream>
 
 class RooArgList ;
 
@@ -85,21 +82,12 @@ public:
   virtual TObject* create(const char* newname) const { return new RooArgSet(newname); }
   RooArgSet& operator=(const RooArgSet& other) { RooAbsCollection::operator=(other) ; return *this ;}
 
+  using RooAbsCollection::add;
+  using RooAbsCollection::addOwned;
+  using RooAbsCollection::addClone;
   virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;
-  virtual Bool_t add(const RooAbsCollection& list, Bool_t silent=kFALSE) {
-    // Add all elements in list to collection
-    return RooAbsCollection::add(list,silent) ; 
-  }
   virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE);
-  virtual Bool_t addOwned(const RooAbsCollection& list, Bool_t silent=kFALSE) { 
-    // Add all elements in list as owned components to collection
-    return RooAbsCollection::addOwned(list,silent) ; 
-  }
   virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;
-  virtual void addClone(const RooAbsCollection& list, Bool_t silent=kFALSE) { 
-    // Add owned clone of all elements of list to collection
-    RooAbsCollection::addClone(list,silent) ; 
-  }
 
   RooAbsArg& operator[](const char* name) const ;   
 
