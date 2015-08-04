@@ -115,7 +115,7 @@ public:
    virtual Int_t     MakeProxy(const char *classname,
                                const char *macrofilename = 0, const char *cutfilename = 0,
                                const char *option = 0, Int_t maxUnrolling = 3);
-   virtual Int_t     MakeSelectorReader(const char *classname);
+   virtual Int_t     MakeReader(const char *classname, Option_t *option);
    TPrincipal       *Principal(const char *varexp, const char *selection, Option_t *option
                                ,Long64_t nentries, Long64_t firstentry);
    virtual Long64_t  Process(const char *filename,Option_t *option, Long64_t nentries, Long64_t firstentry);

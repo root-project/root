@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TTreeSelectorReaderGenerator.h"
+#include "TTreeReaderGenerator.h"
 #include <stdio.h>
 
 #include "TBranchElement.h"
@@ -35,9 +35,8 @@ namespace ROOT {
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor. Analyzes the tree and writes selector.
 
-   TTreeSelectorReaderGenerator::TTreeSelectorReaderGenerator(TTree* tree, const char *classname) :
-      fTree(tree),
-      fClassname(classname)
+   TTreeReaderGenerator::TTreeReaderGenerator(TTree* tree, const char *classname, Option_t *option) :
+      fTree(tree), fClassname(classname), fOptions(option)
    {
       AnalyzeTree(fTree);
       WriteSelector();
@@ -139,7 +138,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    /// Add a header inclusion request. If the header is already included it will
    /// not be included again.
 
-   void TTreeSelectorReaderGenerator::AddHeader(TClass *cl)
+   void TTreeReaderGenerator::AddHeader(TClass *cl)
    {
       if (cl==0) return;
 
@@ -244,7 +243,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    ////////////////////////////////////////////////////////////////////////////////
    /// Add a reader to the generated code.
 
-   void TTreeSelectorReaderGenerator::AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name, TString branchName)
+   void TTreeReaderGenerator::AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name, TString branchName)
    {
       fListOfReaders.Add( new TTreeReaderDescriptor(type, dataType, name, branchName) );
       printf("Added reader: TTreeReader%s<%s> %s (branch: %s)\n", type == TTreeReaderDescriptor::ReaderType::kValue ? "Value" : "Array",
@@ -256,7 +255,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    ////////////////////////////////////////////////////////////////////////////////
    /// Analyse sub-branches of 'branch' recursively and extract readers.
 
-   UInt_t TTreeSelectorReaderGenerator::AnalyzeBranches(TBranchDescriptor *desc, TBranchElement *branch, TVirtualStreamerInfo *info)
+   UInt_t TTreeReaderGenerator::AnalyzeBranches(TBranchDescriptor *desc, TBranchElement *branch, TVirtualStreamerInfo *info)
    {
       if (info==0) info = branch->GetInfo();
 
@@ -268,7 +267,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    ////////////////////////////////////////////////////////////////////////////////
    /// Analyse sub-branches 'branches' recursively and extract readers.
 
-   UInt_t TTreeSelectorReaderGenerator::AnalyzeBranches(TBranchDescriptor *desc, TIter &branches, TVirtualStreamerInfo *info)
+   UInt_t TTreeReaderGenerator::AnalyzeBranches(TBranchDescriptor *desc, TIter &branches, TVirtualStreamerInfo *info)
    {
       UInt_t lookedAt = 0;     // Number of sub-branches analyzed
       ELocation outer_isclones = kOut; // Is the parent branch a container
@@ -621,7 +620,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    /// Analyze branch and add the variables found. The number of analyzed
    /// sub-branches is returned.
 
-   UInt_t TTreeSelectorReaderGenerator::AnalyzeOldBranch(TBranch *branch)
+   UInt_t TTreeReaderGenerator::AnalyzeOldBranch(TBranch *branch)
    {
       UInt_t extraLookedAt = 0;
       TString prefix;
@@ -643,7 +642,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    ////////////////////////////////////////////////////////////////////////////////
    /// Analyze the leaf and add the variables found.
 
-   UInt_t TTreeSelectorReaderGenerator::AnalyzeOldLeaf(TLeaf *leaf, Int_t nleaves)
+   UInt_t TTreeReaderGenerator::AnalyzeOldLeaf(TLeaf *leaf, Int_t nleaves)
    {
       if (leaf->IsA()==TLeafObject::Class()) {
          Error("AnalyzeOldLeaf","TLeafObject not supported yet");
@@ -750,7 +749,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    ////////////////////////////////////////////////////////////////////////////////
    /// Analyze tree and extract readers.
 
-   void TTreeSelectorReaderGenerator::AnalyzeTree(TTree *tree)
+   void TTreeReaderGenerator::AnalyzeTree(TTree *tree)
    {
       TIter next(tree->GetListOfBranches());
       TBranch *branch;
@@ -874,7 +873,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    ////////////////////////////////////////////////////////////////////////////////
    /// Generate code for selector class.
 
-   void TTreeSelectorReaderGenerator::WriteSelector()
+   void TTreeReaderGenerator::WriteSelector()
    {
       // If no name is given, set to default (name of the tree)
       if (!fClassname) fClassname = fTree->GetName();

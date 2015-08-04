@@ -70,7 +70,7 @@
 #include "TPluginManager.h"
 #include "TObjString.h"
 #include "TTreeProxyGenerator.h"
-#include "TTreeSelectorReaderGenerator.h"
+#include "TTreeReaderGenerator.h"
 #include "TTreeIndex.h"
 #include "TChainIndex.h"
 #include "TRefProxy.h"
@@ -1930,11 +1930,11 @@ Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
 /// and myselect.h, myselect.C the name of the files created by this function.
 /// In a ROOT session, you can do:
 ///    root > T->Process("myselect.C")
-Int_t TTreePlayer::MakeSelectorReader(const char *classname)
+Int_t TTreePlayer::MakeReader(const char *classname, Option_t *option)
 {
    if (!classname) classname = fTree->GetName();   
 
-   TTreeSelectorReaderGenerator gsr(fTree, classname);
+   TTreeReaderGenerator gsr(fTree, classname, option);
 
    return 0;
 }

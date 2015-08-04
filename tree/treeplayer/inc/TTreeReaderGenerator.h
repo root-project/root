@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TTreeSelectorReaderGenerator
-#define ROOT_TTreeSelectorReaderGenerator
+#ifndef ROOT_TTreeReaderGenerator
+#define ROOT_TTreeReaderGenerator
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TTreeSelectorReaderGenerator                                         //
+// TTreeReaderGenerator                                                 //
 //                                                                      //
-// Generate a Selector using TTreeReaderValues and TTreeReaderArrays to //
-// access the data in the tree.                                         //
+// Generate a Selector using the TTreeReader interface                  //
+// (TTreeReaderValue, TTreeReaderArray) to access the data in the tree. //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -85,12 +85,13 @@ namespace ROOT {
       Bool_t IsSTL() const { return fIsClones == kSTL; }
    };
 
-   class TTreeSelectorReaderGenerator
+   class TTreeReaderGenerator
    {
       TTree   *fTree;          // Pointer to the tree
       TString  fClassname;     // Class name of the selector
       TList    fListOfHeaders; // List of included headers
       TList    fListOfReaders; // List of readers
+      TString  fOptions;       // User options as a string
 
       void   AddHeader(TClass *cl);
       void   AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name, TString branchName);
@@ -103,10 +104,10 @@ namespace ROOT {
       void   WriteSelector();
 
    public:
-      TTreeSelectorReaderGenerator(TTree* tree, const char *classname);
+      TTreeReaderGenerator(TTree* tree, const char *classname, Option_t *option);
    };
 }
 
-using ROOT::TTreeSelectorReaderGenerator;
+using ROOT::TTreeReaderGenerator;
 
 #endif
