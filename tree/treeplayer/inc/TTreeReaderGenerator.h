@@ -63,16 +63,18 @@ namespace ROOT {
       TString               fBranchName;     // Short name of the branch
       TString               fFullBranchName; // Full name of the branch
       TVirtualStreamerInfo *fInfo;           // Streamer info
+      TBranchDescriptor    *fParent;         // Descriptor of the parent branch (NULL for topmost)
 
       TBranchDescriptor(const char *type, TVirtualStreamerInfo *info,
                         const char *branchname, ELocation isclones,
-                        const TString &containerName, const char *prefix = 0) :
+                        const TString &containerName, const char *prefix = 0, TBranchDescriptor *parent = 0) :
          TNamed(type,type),
          fIsClones(isclones),
          fContainerName(containerName),
          fBranchName(branchname),
          fFullBranchName(branchname),
-         fInfo(info)
+         fInfo(info),
+         fParent(parent)
          {
             // If there is a prefix, append to the beginning
             if (prefix) {
