@@ -36,8 +36,10 @@ namespace ROOT {
    /// Constructor. Analyzes the tree and writes selector.
 
    TTreeReaderGenerator::TTreeReaderGenerator(TTree* tree, const char *classname, Option_t *option) :
-      fTree(tree), fClassname(classname), fOptions(option)
+      fTree(tree), fClassname(classname), fOptions(option),
+      fIncludeAllLeaves(kFALSE), fIncludeAllTopmost(kFALSE)
    {
+      ParseOptions();
       AnalyzeTree(fTree);
       WriteSelector();
    }
@@ -744,6 +746,36 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       AddReader(type, dataType, leaf->GetName(), branchName);
 
       return 0;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Parse the user options.
+
+   void TTreeReaderGenerator::ParseOptions() {
+      if (fOptions.EqualTo("")) {
+         fIncludeAllLeaves = kTRUE;
+      } else if (fOptions.EqualTo("@")) {
+         fIncludeAllTopmost = kTRUE;
+      } else {
+         TObjArray *tokens = fOptions.Tokenize(TString(";"));
+         for (Int_t i = 0; i < tokens->GetEntries(); ++i) {
+            TString token = ((TObjString*)tokens->At(i))->GetString();
+            if ( token.Length() == 0 || (token.Length() == 1 && token[0] == '@') ) {
+               Warning("ParseOptions", "Ignored empty branch name in option string.");
+            } else if (token[0] == '@') {
+               fIncludeStruct.push_back(token);
+            } else {
+               fIncludeLeaves.push_back(token);
+            }
+         }
+         delete tokens;
+      }
+
+      printf("Parsed options: ");
+      if(fIncludeAllLeaves) printf("Include all leaves\n");
+      if(fIncludeAllTopmost) printf("Include all topmost\n");
+      if(fIncludeStruct.size()>0) { printf("Struct: "); for(TString s : fIncludeStruct) printf("%s ", s.Data()); printf("\n"); }
+      if(fIncludeStruct.size()>0) { printf("Leaves: "); for(TString s : fIncludeLeaves) printf("%s ", s.Data()); printf("\n"); }
    }
 
    ////////////////////////////////////////////////////////////////////////////////
