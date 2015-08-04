@@ -44,6 +44,14 @@ namespace ROOT {
       WriteSelector();
    }
 
+static Bool_t FindStringInVector(TString const& string, std::vector<TString> vec)
+{
+   for (TString const& s : vec) {
+      if (string.EqualTo(s)) return kTRUE;
+   }
+   return kFALSE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if element is a base class and if yes, return the base class.
 
@@ -245,13 +253,16 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    ////////////////////////////////////////////////////////////////////////////////
    /// Add a reader to the generated code.
 
-   void TTreeReaderGenerator::AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name, TString branchName)
+   void TTreeReaderGenerator::AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name,
+                                        TString branchName, TBranchDescriptor *parent, Bool_t isLeaf)
    {
-      fListOfReaders.Add( new TTreeReaderDescriptor(type, dataType, name, branchName) );
-      printf("Added reader: TTreeReader%s<%s> %s (branch: %s)\n", type == TTreeReaderDescriptor::ReaderType::kValue ? "Value" : "Array",
-                                                                  dataType.Data(),
-                                                                  name.Data(),
-                                                                  branchName.Data());
+      if(BranchNeedsReader(branchName, parent, isLeaf)) {
+         fListOfReaders.Add( new TTreeReaderDescriptor(type, dataType, name, branchName) );
+         printf("Added reader: TTreeReader%s<%s> %s (branch: %s)\n", type == TTreeReaderDescriptor::ReaderType::kValue ? "Value" : "Array",
+                                                                     dataType.Data(),
+                                                                     name.Data(),
+                                                                     branchName.Data());
+      }
    }
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -743,9 +754,25 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          branchName.Form("%s.%s", leaf->GetBranch()->GetName(), leaf->GetName());
       }
 
-      AddReader(type, dataType, leaf->GetName(), branchName);
+      AddReader(type, dataType, leaf->GetName(), branchName, 0, kTRUE);
 
       return 0;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Check whether a branch should have a corresponding reader added, depending
+   /// on the options provided by the user.
+
+   Bool_t TTreeReaderGenerator::BranchNeedsReader(TString branchName, TBranchDescriptor *parent, Bool_t isLeaf)
+   {
+      if (isLeaf) { // Branch is a leaf
+         if (fIncludeAllLeaves) return kTRUE;
+         if (FindStringInVector(branchName, fIncludeLeaves)) return kTRUE;
+         if (FindStringInVector(branchName, fIncludeStruct)) return kTRUE;
+      } else {      // Branch is not a leaf (has sub-branches)
+         
+      }
+      return false;
    }
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -763,7 +790,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             if ( token.Length() == 0 || (token.Length() == 1 && token[0] == '@') ) {
                Warning("ParseOptions", "Ignored empty branch name in option string.");
             } else if (token[0] == '@') {
-               fIncludeStruct.push_back(token);
+               fIncludeStruct.push_back(TString(token.Data()+1));
             } else {
                fIncludeLeaves.push_back(token);
             }
