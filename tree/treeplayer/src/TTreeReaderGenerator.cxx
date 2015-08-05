@@ -258,10 +258,6 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    {
       if(BranchNeedsReader(branchName, parent, isLeaf)) {
          fListOfReaders.Add( new TTreeReaderDescriptor(type, dataType, name, branchName) );
-         printf("Added reader: TTreeReader%s<%s> %s (branch: %s)\n", type == TTreeReaderDescriptor::ReaderType::kValue ? "Value" : "Array",
-                                                                     dataType.Data(),
-                                                                     name.Data(),
-                                                                     branchName.Data());
       }
    }
 
@@ -826,12 +822,6 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          }
          delete tokens;
       }
-
-      printf("Parsed options: ");
-      if(fIncludeAllLeaves) printf("Include all leaves\n");
-      if(fIncludeAllTopmost) printf("Include all topmost\n");
-      if(fIncludeStruct.size()>0) { printf("Struct: "); for(TString s : fIncludeStruct) printf("%s ", s.Data()); printf("\n"); }
-      if(fIncludeLeaves.size()>0) { printf("Leaves: "); for(TString s : fIncludeLeaves) printf("%s ", s.Data()); printf("\n"); }
    }
 
    ////////////////////////////////////////////////////////////////////////////////
