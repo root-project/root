@@ -1032,24 +1032,22 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       fprintf(fp,"class %s : public TSelector {\n", fClassname.Data());
       fprintf(fp,"public :\n");
       fprintf(fp,"   TTreeReader     fReader;  //!the tree reader\n");
-      fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
+      fprintf(fp,"   TTree          *fChain = 0;   //!pointer to the analyzed TTree or TChain\n");
       // Generate TTreeReaderValues and Arrays
       fprintf(fp,"\n   // Readers to access the data (delete the ones you do not need).\n");
       next = &fListOfReaders;
       TTreeReaderDescriptor *descriptor;
       while ( ( descriptor = (TTreeReaderDescriptor*)next() ) ) {
-         fprintf(fp, "   TTreeReader%s<%s> %s;\n", descriptor->fType == TTreeReaderDescriptor::ReaderType::kValue ? "Value" : "Array",
-                                                   descriptor->fDataType.Data(),
-                                                   descriptor->fName.Data() );
+         fprintf(fp, "   TTreeReader%s<%s> %s = {fReader, \"%s\"};\n",
+                     descriptor->fType == TTreeReaderDescriptor::ReaderType::kValue ? "Value" : "Array",
+                     descriptor->fDataType.Data(),
+                     descriptor->fName.Data(),
+                     descriptor->fBranchName.Data() );
       }
       fprintf(fp, "\n\n");
       // Generate class member functions prototypes
       next.Reset();
-      fprintf(fp,"   %s(TTree * /*tree*/ =0) : fChain(0)", fClassname.Data());
-      while ( ( descriptor = (TTreeReaderDescriptor*)next() ) ) {
-         fprintf(fp, ",\n            %s(fReader, \"%s\")", descriptor->fName.Data(), descriptor->fBranchName.Data());
-      }
-      fprintf(fp," { }\n");
+      fprintf(fp,"   %s(TTree * /*tree*/ =0) { }\n", fClassname.Data());
       fprintf(fp,"   virtual ~%s() { }\n", fClassname.Data());
       fprintf(fp,"   virtual Int_t   Version() const { return 2; }\n");
       fprintf(fp,"   virtual void    Begin(TTree *tree);\n");
