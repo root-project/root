@@ -351,7 +351,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          if (branch==0) {
             if (desc) {
                Error("AnalyzeBranches","Ran out of branches when looking in branch %s, class %s",
-                     desc->fBranchName, info->GetName());
+                     desc->fBranchName.Data(), info->GetName());
             } else {
                Error("AnalyzeBranches","Ran out of branches when looking in class %s, element %s",
                      info->GetName(), element->GetName());
@@ -815,9 +815,13 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             if ( token.Length() == 0 || (token.Length() == 1 && token[0] == '@') ) {
                Warning("ParseOptions", "Ignored empty branch name in option string.");
             } else if (token[0] == '@') {
-               fIncludeStruct.push_back(TString(token.Data()+1));
+               token = TString(token.Data()+1);
+               fIncludeStruct.push_back(token);
             } else {
                fIncludeLeaves.push_back(token);
+            }
+            if (!fTree->GetBranch(token)) {
+               Warning("ParseOptions", "Tree %s does not contain a branch named %s.", fTree->GetName(), token.Data());
             }
          }
          delete tokens;
