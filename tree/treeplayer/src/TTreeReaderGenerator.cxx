@@ -1034,7 +1034,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       fprintf(fp,"   TTreeReader     fReader;  //!the tree reader\n");
       fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
       // Generate TTreeReaderValues and Arrays
-      fprintf(fp,"\n   // Variables used to access and store the data\n");
+      fprintf(fp,"\n   // Readers to access the data (delete the ones you do not need).\n");
       next = &fListOfReaders;
       TTreeReaderDescriptor *descriptor;
       while ( ( descriptor = (TTreeReaderDescriptor*)next() ) ) {
@@ -1078,7 +1078,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                  "   // code, but the routine can be extended by the user if needed.\n"
                  "   // Init() will be called many times when running on PROOF\n"
                  "   // (once per file to be processed).\n\n");
-      fprintf(fp,"   fReader.SetTree(tree);");
+      fprintf(fp,"   fReader.SetTree(tree);\n");
       fprintf(fp,"}\n\n");
 
       fprintf(fp,"Bool_t %s::Notify()\n", fClassname.Data());
