@@ -28,7 +28,7 @@
 #include "RooFit.h"
 #include "TClass.h"
 #include "RooClassFactory.h"
-#include "RooClassFactory.h"
+#include "RooErrorHandler.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooArgList.h"
