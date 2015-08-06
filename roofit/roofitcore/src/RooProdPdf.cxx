@@ -41,7 +41,6 @@
 // END_HTML
 //
 
-#include "RooFit.h"
 #include "Riostream.h"
 #include "TClass.h"
 
