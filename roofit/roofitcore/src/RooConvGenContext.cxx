@@ -25,9 +25,8 @@
 // END_HTML
 //
 
-#include "RooFit.h"
-
 #include "RooMsgService.h"
+#include "RooErrorHandler.h"
 #include "RooConvGenContext.h"
 #include "RooAbsAnaConvPdf.h"
 #include "RooNumConvPdf.h"
