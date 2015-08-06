@@ -257,7 +257,11 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                                         TString branchName, TBranchDescriptor *parent, Bool_t isLeaf)
    {
       if(BranchNeedsReader(branchName, parent, isLeaf)) {
-         name.ReplaceAll('.', '_');
+         name.ReplaceAll('.', '_'); // Replace dots with underscore
+         // Remove array dimensions from name
+         while (name.Index('[') >= 0 && name.Index(']') >= 0 && name.Index(']') > name.Index('[')) {
+            name.Remove(name.Index('['), name.Index(']') - name.Index('[') + 1);
+         }
          fListOfReaders.Add( new TTreeReaderDescriptor(type, dataType, name, branchName) );
       }
    }
