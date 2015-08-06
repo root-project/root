@@ -60,25 +60,24 @@ namespace ROOT {
    public:
       ELocation             fIsClones;       // Type of container
       TString               fContainerName;  // Name of the container
-      TString               fBranchName;     // Short name of the branch
-      TString               fFullBranchName; // Full name of the branch
+      TString               fBranchName;     // Name of the branch
+      TString               fSubBranchPrefix;// Prefix (e.g. if the branch name is "A." the prefix is "A"
       TVirtualStreamerInfo *fInfo;           // Streamer info
       TBranchDescriptor    *fParent;         // Descriptor of the parent branch (NULL for topmost)
 
       TBranchDescriptor(const char *type, TVirtualStreamerInfo *info,
-                        const char *branchname, ELocation isclones,
-                        const TString &containerName, const char *prefix = 0, TBranchDescriptor *parent = 0) :
+                        const char *branchname, const char *subBranchPrefix, ELocation isclones,
+                        const TString &containerName, TBranchDescriptor *parent = 0) :
          TNamed(type,type),
          fIsClones(isclones),
          fContainerName(containerName),
          fBranchName(branchname),
-         fFullBranchName(branchname),
+         fSubBranchPrefix(subBranchPrefix),
          fInfo(info),
          fParent(parent)
          {
-            // If there is a prefix, append to the beginning
-            if (prefix) {
-               fFullBranchName.Form("%s_%s", prefix, branchname);
+            if (fSubBranchPrefix.Length() && fSubBranchPrefix[fSubBranchPrefix.Length() - 1] == '.') {
+               fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
             }
          }
 
