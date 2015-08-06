@@ -21,6 +21,7 @@
 #include "TRootGuiFactory.h"
 #include "TRootApplication.h"
 #include "TRootCanvas.h"
+#include "TRootBrowser.h"
 #include "TRootBrowserLite.h"
 #include "TRootContextMenu.h"
 #include "TRootControlBar.h"
@@ -90,7 +91,10 @@ TBrowserImp *TRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title,
          height, browserOptions.Data());
       if (imp) return imp;
    }
-   return new TRootBrowserLite(b, title, width, height);
+   if (browserVersion.Contains("Lite", TString::kIgnoreCase))
+      return new TRootBrowserLite(b, title, width, height);
+   else
+      return new TRootBrowser(b, title, width, height, browserOptions.Data());
 }
 
 //______________________________________________________________________________
@@ -114,7 +118,10 @@ TBrowserImp *TRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title,
          height, browserOptions.Data());
       if (imp) return imp;
    }
-   return new TRootBrowserLite(b, title, x, y, width, height);
+   if (browserVersion.Contains("Lite", TString::kIgnoreCase))
+      return new TRootBrowserLite(b, title, x, y, width, height);
+   else
+      return new TRootBrowser(b, title, x, y, width, height, browserOptions.Data());
 }
 
 //______________________________________________________________________________
