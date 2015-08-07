@@ -5981,6 +5981,19 @@ Int_t TTree::MakeProxy(const char* proxyClassname, const char* macrofilename, co
 ///
 /// The following files are produced: selector.h and selector.C.
 /// If selector is 0, the selector will be called "nameoftree".
+/// The option can be used to specify the branches that will have a data member.
+///    - If option is "=legacy", a pre-ROOT6 selector will be generated (data
+///      members and branch pointers instead of TTreeReaders).
+///    - If option is empty, readers will be generated for each leaf.
+///    - If option is "@", readers will be generated for the topmost branches.
+///    - Individual branches can also be picked by their name:
+///       - "X" generates readers for leaves of X.
+///       - "@X" generates a reader for X as a whole.
+///       - "@X;Y" generates a reader for X as a whole and also readers for the
+///         leaves of Y.
+///    - For further examples see the figure below.
+///
+/// \image html images\ttree_makeselector_option_examples.png
 ///
 /// The generated code in selector.h includes the following:
 ///    - Identification of the original Tree and Input file name

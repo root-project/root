@@ -44,6 +44,9 @@ namespace ROOT {
       WriteSelector();
    }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Helper function to find a TString in a vector.
+
 static Bool_t FindStringInVector(TString const& string, std::vector<TString> vec)
 {
    for (TString const& s : vec) {
@@ -791,13 +794,14 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    Bool_t TTreeReaderGenerator::BranchNeedsReader(TString branchName, TBranchDescriptor *parent, Bool_t isLeaf)
    {
       if (isLeaf) { // Branch is a leaf
+         // Include if all leaves should be included or it is contained in any of the lists.
          if (fIncludeAllLeaves) return kTRUE;
          if (FindStringInVector(branchName, fIncludeLeaves)) return kTRUE;
          if (FindStringInVector(branchName, fIncludeStruct)) return kTRUE;
          if (!parent) { // Branch is topmost (top-level leaf)
             if (fIncludeAllTopmost) return kTRUE;
          } else {       // Branch is not topmost
-            while (parent) {
+            while (parent) { // Check if any parent is in the list of "include as leaves"
                if (FindStringInVector(parent->fBranchName, fIncludeLeaves)) {
                   return kTRUE;
                }
@@ -808,8 +812,6 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          if (FindStringInVector(branchName, fIncludeStruct)) return kTRUE;
          if (!parent) { // Branch is topmost
             if (fIncludeAllTopmost) return kTRUE;
-         } else {       // Branch is not topmost
-            
          }
       }
       return false;
@@ -819,23 +821,23 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
    /// Parse the user options.
 
    void TTreeReaderGenerator::ParseOptions() {
-      if (fOptions.EqualTo("")) {
+      if (fOptions.EqualTo("")) { // Empty -> include all leaves
          fIncludeAllLeaves = kTRUE;
-      } else if (fOptions.EqualTo("@")) {
+      } else if (fOptions.EqualTo("@")) { // "@" -> include all topmost
          fIncludeAllTopmost = kTRUE;
-      } else {
+      } else { // Otherwise split at ";" to get names
          TObjArray *tokens = fOptions.Tokenize(TString(";"));
          for (Int_t i = 0; i < tokens->GetEntries(); ++i) {
             TString token = ((TObjString*)tokens->At(i))->GetString();
             if ( token.Length() == 0 || (token.Length() == 1 && token[0] == '@') ) {
                Warning("ParseOptions", "Ignored empty branch name in option string.");
-            } else if (token[0] == '@') {
+            } else if (token[0] == '@') { // "@X" means include X as a whole
                token = TString(token.Data()+1);
                fIncludeStruct.push_back(token);
-            } else {
+            } else {                      // "X"  means include leaves of X
                fIncludeLeaves.push_back(token);
             }
-            if (!fTree->GetBranch(token)) {
+            if (!fTree->GetBranch(token)) { // Display a warning for non-existing branch names
                Warning("ParseOptions", "Tree %s does not contain a branch named %s.", fTree->GetName(), token.Data());
             }
          }
@@ -1170,10 +1172,8 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       fprintf(fpc,"   // The Process() function is called for each entry in the tree (or possibly\n"
                   "   // keyed object in the case of PROOF) to be processed. The entry argument\n"
                   "   // specifies which entry in the currently loaded tree is to be processed.\n"
-                  "   // It can be passed to either %s::GetEntry() or TBranch::GetEntry()\n"
-                  "   // to read either all or the required parts of the data. When processing\n"
-                  "   // keyed objects with PROOF, the object is already loaded and is available\n"
-                  "   // via the fObject pointer.\n"
+                  "   // When processing keyed objects with PROOF, the object is already loaded\n"
+                  "   // and is available via the fObject pointer.\n"
                   "   //\n"
                   "   // This function should contain the \"body\" of the analysis. It can contain\n"
                   "   // simple or elaborate selection criteria, run algorithms on the data\n"
