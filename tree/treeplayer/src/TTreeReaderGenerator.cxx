@@ -257,6 +257,22 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                                         TString branchName, TBranchDescriptor *parent, Bool_t isLeaf)
    {
       if(BranchNeedsReader(branchName, parent, isLeaf)) {
+         // Ignore unknown types
+         if (dataType.EqualTo("")) {
+            Warning("AddReader", "Ingored branch %s because type is unknown.", branchName.Data());
+            return;
+         }
+         // Loop through existing readers to check duplicate branch names
+         TIter next(&fListOfReaders);
+         TTreeReaderDescriptor *descriptor;
+         while ( ( descriptor = (TTreeReaderDescriptor*)next() ) ) {
+            if (descriptor->fBranchName.EqualTo(branchName)) {
+               Warning("AddReader", "Ignored branch %s because a branch with the same name already exists. "
+                                    "TTreeReader requires an unique name for the branches. You may need to "
+                                    "put a dot at the end of the name of top-level branches.", branchName.Data());
+               return;
+            }
+         }
          name.ReplaceAll('.', '_'); // Replace dots with underscore
          // Remove array dimensions from name
          while (name.Index('[') >= 0 && name.Index(']') >= 0 && name.Index(']') > name.Index('[')) {
@@ -458,6 +474,8 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             // set as pointers and fall through to the next switches
                ispointer = true;
             case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kObject:
+               // This means an array of objects, but then fall through
+               readerType = TTreeReaderDescriptor::ReaderType::kArray;
             case TVirtualStreamerInfo::kObject:
             case TVirtualStreamerInfo::kTString:
             case TVirtualStreamerInfo::kTNamed:
