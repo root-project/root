@@ -740,7 +740,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
          dim = 1; // For C style strings
       }
 
-      TTreeReaderDescriptor::ReaderType type;
+      TTreeReaderDescriptor::ReaderType type = TTreeReaderDescriptor::ReaderType::kValue;
       TString dataType;
       switch (dim) {
          case 0: {
@@ -1183,7 +1183,7 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
                   "   //\n"
                   "   // Use fStatus to set the return value of TTree::Process().\n"
                   "   //\n"
-                  "   // The return value is currently not used.\n\n", fClassname.Data());
+                  "   // The return value is currently not used.\n\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   fReader.SetEntry(entry);\n\n\n");
       fprintf(fpc,"   return kTRUE;\n");
