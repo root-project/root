@@ -132,6 +132,10 @@ the problem:
 
 The angle of a `TLatex` object was set to 0 if the `GetYsize` method was called.
 
+### TMultiGraph
+
+Ignore empty graphs when computing the multi-graph range at painting time.
+
 ## 3D Graphics Libraries
 
 
