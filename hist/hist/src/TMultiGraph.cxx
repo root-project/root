@@ -1083,18 +1083,20 @@ void TMultiGraph::Paint(Option_t *option)
          uxmin   = gPad->PadtoX(rwxmin);
          uxmax   = gPad->PadtoX(rwxmax);
       } else {
-         g = (TGraph*) next();
-         if (g) {
-            g->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
-            if (g->GetN() > npt) npt = g->GetN();
-         }
+         Bool_t initialrangeset = kFALSE;
          while ((g = (TGraph*) next())) {
-            Double_t rx1,ry1,rx2,ry2;
-            g->ComputeRange(rx1, ry1, rx2, ry2);
-            if (rx1 < rwxmin) rwxmin = rx1;
-            if (ry1 < rwymin) rwymin = ry1;
-            if (rx2 > rwxmax) rwxmax = rx2;
-            if (ry2 > rwymax) rwymax = ry2;
+            if (g->GetN() <= 0) continue;
+            if (initialrangeset) {
+               Double_t rx1,ry1,rx2,ry2;
+               g->ComputeRange(rx1, ry1, rx2, ry2);
+               if (rx1 < rwxmin) rwxmin = rx1;
+               if (ry1 < rwymin) rwymin = ry1;
+               if (rx2 > rwxmax) rwxmax = rx2;
+               if (ry2 > rwymax) rwymax = ry2;
+            } else {
+               g->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
+               initialrangeset = kTRUE;
+            }
             if (g->GetN() > npt) npt = g->GetN();
          }
          if (rwxmin == rwxmax) rwxmax += 1.;
