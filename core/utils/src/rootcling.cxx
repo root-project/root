@@ -4771,8 +4771,9 @@ int RootCling(int argc,
    std::string rootmapLibName = std::accumulate(rootmapLibNames.begin(),
                                 rootmapLibNames.end(),
                                 std::string(),
-   [](const std::string & a, const std::string & b) {
-      return a + " " + b;
+   [](const std::string & a, const std::string & b) -> std::string {
+      if (a.empty()) return b;
+      else return a + " " + b;
    });
 
    bool rootMapNeeded = !rootmapFileName.empty() || !rootmapLibName.empty();
