@@ -13,14 +13,12 @@
 #define ROOT_TGeoToOCC
 
 //Cascade
-//Cascade
+#include <Standard_Version.hxx>
+
 #define Printf Printf_opencascade
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Wire.hxx>
 #undef Printf
-
-#include <TopoDS_Shape.hxx>
-#include <TopoDS_Wire.hxx>
 
 //Root
 #ifndef ROOT_TGeoXtru
