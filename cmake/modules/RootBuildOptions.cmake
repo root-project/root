@@ -118,7 +118,7 @@ ROOT_BUILD_OPTION(builtin_xrootd OFF "Built the XROOTD internally (downloading t
 ROOT_BUILD_OPTION(builtin_llvm ON "Built the LLVM internally")
 ROOT_BUILD_OPTION(builtin_tbb OFF "Built the TBB internally")
 ROOT_BUILD_OPTION(cxx11 ON "Build using C++11 compatible mode, requires gcc > 4.7.x or clang")
-ROOT_BUILD_OPTION(cxx14 OFF "Build using C++14 compatible mode, requires gcc > 4.9.x or clang")
+ROOT_BUILD_OPTION(cxx14 OFF "Build using C++14 compatible mode, requires gcc > 5.1.x or clang")
 ROOT_BUILD_OPTION(libcxx OFF "Build using libc++, requires cxx11 option (MacOS X only, for the time being)")
 ROOT_BUILD_OPTION(castor ON "CASTOR support, requires libshift from CASTOR >= 1.5.2")
 ROOT_BUILD_OPTION(ccache OFF "Enable ccache usage for speeding up builds")

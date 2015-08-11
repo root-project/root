@@ -742,6 +742,7 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 ### Build System
 - Fix generation of PCH with CXX flags with spaces [ROOT-7478]
 - Implemented option 'geocad' with CMake making use of the OpenCASCADE software package.
+- Option 'cxx14' requires GCC > 5.1 
 
 ### Core
 - Fix the location of include files in ROOTINCDIR/include instead of ROOTINCDIR [ROOT-7537]
