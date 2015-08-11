@@ -153,6 +153,12 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
       PrintLogo(lite);
    }
 
+   // Explicitly load libMathCore as CINT will not auto load it when using one
+   // of its globals. Once moved to Cling, which should work correctly, we
+   // can remove this statement.
+   if (!gClassTable->GetDict("TRandom"))
+      gSystem->Load("libMathCore");
+
    // Load some frequently used includes
    Int_t includes = gEnv->GetValue("Rint.Includes", 1);
    // When the interactive ROOT starts, it can automatically load some frequently
