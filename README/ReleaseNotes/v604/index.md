@@ -749,6 +749,13 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 ### Geom
 - Fix missing OCC header file for the version [ROOT-7536]
 
+### Tree
+- TTreeReader: fix reading of data members of type `BasicType[42]`
+
+### Interpreter
+- Fix redirection [ROOT-7053]
+- Take the language and target options from the PCH [ROOT-7478] [ROOT-6966]
+
 Changes will be part of the future v6.04/04.
 
 ## Release v6.04/02
