@@ -472,6 +472,9 @@ function(ROOT_OBJECT_LIBRARY library)
     add_dependencies(${library} move_headers)
   endif()
 
+  #--- Only for building shared libraries
+  set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE 1)
+
   #--- Fill the property OBJECTS with all the object files
   #    This is needed becuase the generator expression $<TARGET_OBJECTS:target>
   #    does not get expanded when used in custom command dependencies
