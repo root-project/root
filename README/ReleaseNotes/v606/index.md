@@ -210,4 +210,6 @@ If host has several network interfaces, one could select one for binding:
 
 ## Build, Configuration and Testing Infrastructure
 
+- The option cxx14 requires GCC > 5.1 becuase std::string_view needs member to_string 
+
 
