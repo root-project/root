@@ -743,6 +743,12 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 - Fix generation of PCH with CXX flags with spaces [ROOT-7478]
 - Implemented option 'geocad' with CMake making use of the OpenCASCADE software package.
 
+### Core
+- Fix the location of include files in ROOTINCDIR/include instead of ROOTINCDIR [ROOT-7537]
+
+### Geom
+- Fix missing OCC header file for the version [ROOT-7536]
+
 Changes will be part of the future v6.04/04.
 
 ## Release v6.04/02
