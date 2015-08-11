@@ -2510,11 +2510,12 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    }
    builddep += " -Y -- ";
 #ifndef ROOTINCDIR
-   TString rootsys = gSystem->Getenv("ROOTSYS");
+   TString rootsysInclude = gSystem->Getenv("ROOTSYS");
+   rootsysInclude += "/include";
 #else
-   TString rootsys = ROOTINCDIR;
+   TString rootsysInclude = ROOTINCDIR;
 #endif
-   builddep += " \"-I"+rootsys+"/include\" "; // cflags
+   builddep += " \"-I"+rootsysInclude+"\" "; // cflags
    builddep += includes;
    builddep += defines;
    builddep += " -- \"";
@@ -2553,7 +2554,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
          adddictdep += " ";
          delete [] clingdictversion;
       } else {
-         R__AddPath(adddictdep,rootsys+"/include/clingdictversion.h ");
+         R__AddPath(adddictdep,rootsysInclude+"/clingdictversion.h ");
       }
    }
 #endif
@@ -2563,8 +2564,6 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
        "TMemberInspector.h","TError.h","RtypesImp.h","TIsAProxy.h",
        "TFileMergeInfo.h","TCollectionProxyInfo.h"};
 
-      TString rootsysInclude(rootsys);
-      rootsysInclude += "/include/";
       for (unsigned int h=0; h < sizeof(dictHeaders)/sizeof(dictHeaders[0]); ++h)
       {
          char *rootVersion = gSystem->Which(incPath,dictHeaders[h]);
@@ -2573,7 +2572,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
             adddictdep += " ";
             delete [] rootVersion;
          } else {
-            R__AddPath(adddictdep,rootsysInclude + dictHeaders[h]);
+            R__AddPath(adddictdep,rootsysInclude + "/" + dictHeaders[h]);
          }
       }
    }
