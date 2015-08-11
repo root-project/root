@@ -514,6 +514,10 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
             else if (branchElement->GetType() == TBranchElement::kClonesMemberNode){
                fImpl = new TBasicTypeClonesReader(element->GetOffset());
             }
+            else {
+               fImpl = new TArrayFixedSizeReader(element->GetArrayLength());
+               ((TObjectArrayReader*)fImpl)->SetBasicTypeSize(((TDataType*)fDict)->Size());
+            }
          }
          else if (element->IsA() == TStreamerBase::Class()){
             fImpl = new TClonesReader();
@@ -689,6 +693,10 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
             }
             else {
                dict = brElement->GetCurrentClass();
+               if (!dict) {
+                  TDictionary *myDataType = TDictionary::GetDictionary(brElement->GetTypeName());
+                  dict = TDataType::GetDataType((EDataType)((TDataType*)myDataType)->GetType());
+               }
                contentTypeName = brElement->GetTypeName();
                return 0;
             }
