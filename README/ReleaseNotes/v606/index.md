@@ -132,6 +132,14 @@ the problem:
 
 The angle of a `TLatex` object was set to 0 if the `GetYsize` method was called.
 
+### TColor
+
+New palette `kViridis`. It was presented at SciPy2015 by Stéfan van der Walt and
+Nathaniel Smith. It is now matplotlib's current default color map.
+
+![Viridis](palette_112.png)
+
+
 ### TMultiGraph
 
 Ignore empty graphs when computing the multi-graph range at painting time.

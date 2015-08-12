@@ -96,5 +96,6 @@ void palettes() {
    draw_palette(kCool, "Cool");
    draw_palette(kCopper, "Copper");
    draw_palette(kGistEarth, "Gist Earth");
+   draw_palette(kViridis, "Viridis");
 }
 

@@ -1777,6 +1777,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    if ncolors = 109 and colors=0, a Cool palette is used.
    if ncolors = 110 and colors=0, a Copper palette is used.
    if ncolors = 111 and colors=0, a Gist Earth palette is used.
+   if ncolors = 112 and colors=0, a Viridis palette is used.
    </pre>
    These palettes can also be accessed by names:
    <pre>
@@ -1800,7 +1801,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    kStarryNight=102,     kSunset=103,      kTemperatureMap=104,
    kThermometer=105,     kValentine=106,   kVisibleSpectrum=107,
    kWaterMelon=108,      kCool=109,        kCopper=110,
-   kGistEarth=111
+   kGistEarth=111        kViridis=112
    </pre>
    For example:
    <pre>
@@ -2458,6 +2459,16 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
             Double_t red[9]   = { 0./255., 13./255.,  30./255.,  44./255.,  72./255., 120./255., 156./255., 200./255., 247./255.};
             Double_t green[9] = { 0./255., 36./255.,  84./255., 117./255., 141./255., 153./255., 151./255., 158./255., 247./255.};
             Double_t blue[9]  = { 0./255., 94./255., 100./255.,  82./255.,  56./255.,  66./255.,  76./255., 131./255., 247./255.};
+            TColor::CreateGradientColorTable(9, stops, red, green, blue, 255, alpha);
+         }
+         break;
+
+      // Viridis
+      case 112:
+         {
+            Double_t red[9]   = { 26./255., 51./255.,  43./255.,  33./255.,  28./255.,  35./255.,  74./255., 144./255., 246./255.};
+            Double_t green[9] = {  9./255., 24./255.,  55./255.,  87./255., 118./255., 150./255., 180./255., 200./255., 222./255.};
+            Double_t blue[9]  = { 30./255., 96./255., 112./255., 114./255., 112./255., 101./255.,  72./255.,  35./255.,   0./255.};
             TColor::CreateGradientColorTable(9, stops, red, green, blue, 255, alpha);
          }
          break;
