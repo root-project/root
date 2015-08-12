@@ -206,7 +206,18 @@ void TCling__DEBUG__printName(clang::Decl* D) {
       printf("%s\n", name.c_str());
    }
 }
-
+//______________________________________________________________________________
+// These functions are helpers for testing issues directly rather than
+// relying on side effects.
+// This is used for the test for ROOT-7462/ROOT-6070
+bool TCling__TEST_isInvalidDecl(clang::Decl* D) {
+   return D->isInvalidDecl();
+}
+bool TCling__TEST_isInvalidDecl(ClassInfo_t *input) {
+   TClingClassInfo *info( (TClingClassInfo*) input);
+   assert(info && info->IsValid());
+   return info->GetDecl()->isInvalidDecl();
+}
 
 using namespace std;
 using namespace clang;
