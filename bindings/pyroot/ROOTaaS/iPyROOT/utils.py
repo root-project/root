@@ -45,21 +45,18 @@ _jsCode = """
 </div>
 
 <script>
-require(['{jsROOTSourceDir}scripts/JSRootCore.js'],
-        function() {{
-            require(['{jsROOTSourceDir}scripts/d3.v3.min.js'],
-                function() {{
-                    require(['{jsROOTSourceDir}scripts/JSRootPainter.js'],
-                        function() {{
-define.amd = null;
-JSROOT.source_dir = "{jsROOTSourceDir}";
-JSROOT.loadScript("{jsROOTSourceDir}style/JSRootPainter.min.css");
-var obj = JSROOT.parse('{jsonContent}');
-JSROOT.draw("{jsDivId}", obj, "{jsDrawOptions}");
-                        }}
-                    );
-                }}
-            );
+requirejs.config(
+{{
+  paths: {{
+    'JSRootCore'    : '{jsROOTSourceDir}/scripts/JSRootCore',
+    'JSRootPainter' : '{jsROOTSourceDir}/scripts/JSRootPainter',
+  }}
+}}
+);
+require(['JSRootCore', 'JSRootPainter'],
+        function(Core, Painter) {{
+          var obj = Core.parse('{jsonContent}');
+          Painter.draw("{jsDivId}", obj, "{jsDrawOptions}");
         }}
 );
 </script>
