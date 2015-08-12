@@ -966,7 +966,12 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
             TIter subnext( branch->GetListOfBranches() );
             if (desc) {
                // Analyze sub-branches and extract readers
-               AnalyzeBranches(desc, dynamic_cast<TBranchElement*>(branch), info);
+               TBranchElement *branchElem = dynamic_cast<TBranchElement*>(branch);
+               if (branchElem) {
+                  AnalyzeBranches(desc, branchElem, info);
+               } else {
+                  Error("AnalyzeTree", "Cannot analyze branch %s because it is not a TBranchElement.", branchName);
+               }
                // Also add a reader for the whole branch
                AddReader(isclones == kOut ?
                               TTreeReaderDescriptor::ReaderType::kValue
@@ -1112,7 +1117,6 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       FILE *fpc = fopen(tcimp, "w");
       if (!fpc) {
          Error("WriteSelector","cannot open output file %s", tcimp.Data());
-         fclose(fp);
          return;
       }
 
