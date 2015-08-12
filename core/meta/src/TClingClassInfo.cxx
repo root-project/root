@@ -129,6 +129,11 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
    }
    fDecl = decl;
    fType = type;
+   if (decl && decl->isInvalidDecl()) {
+      Error("TClingClassInfo", "Found an invalid decl for %s.",name);
+      fDecl = nullptr;
+      fType = nullptr;
+   }
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
@@ -967,6 +972,9 @@ int TClingClassInfo::InternalNext()
          fDecl = *fIter;
          fType = 0;
          if (fDecl) {
+            if (fDecl->isInvalidDecl()) {
+               Warning("TClingClassInfo::Next()","Reached an invalid decl.");
+            }
             if (const RecordDecl *RD =
                   llvm::dyn_cast<RecordDecl>(fDecl)) {
                fType = RD->getASTContext().getRecordType(RD).getTypePtr();
