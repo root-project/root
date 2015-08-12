@@ -802,6 +802,7 @@ directory - this behavior is now implement by the default constructor.
  - Fix parsing of definition for forward declared enums [ROOT-7419]
  - Pass CXXFLAGS to the PCH generator, to ensure platform consistency.
  - Work around linker assert when building with GCC on OS X (PR #68)
+ - Properly recover from a template instantiation failure when looking up a class in the interpreter [ROOT-7462]
 
 ### PyROOT
  - Fix lookup of templated classes in namespace with arguments that have 'std::' in their name [ROOT-7448]
