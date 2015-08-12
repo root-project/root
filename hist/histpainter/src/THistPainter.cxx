@@ -389,7 +389,7 @@ some combinations must be use with care.
 #### <a name="HP060a"></a> Limitations
 
 - It does not work when combined with the `LEGO` and `SURF` options unless the
-  histogram plotted with the option `SAME` has <u>exactly</u> the same
+  histogram plotted with the option `SAME` has exactly the same
   ranges on the X, Y and Z axis as the currently drawn histogram. To superimpose
   lego plots [histograms' stacks](#HP26) should be used.</li>
 
@@ -928,7 +928,7 @@ Combined with the option `COL`, the option `Z` allows to
 display the color palette defined by `gStyle->SetPalette()`.
 
 In the following example, the histogram has only positive bins; the empty
-bins (containing 0) <u>are not drawn</u>.
+bins (containing 0) are not drawn.
 
 Begin_Macro(source)
 {
@@ -939,27 +939,34 @@ Begin_Macro(source)
       gRandom->Rannor(px,py);
       hcol1->Fill(px,5*py);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hcol1->Draw("COLZ");
    return c1;
 }
 End_Macro
 
-In the following example, the histogram has some negative bins; the empty
-bins (containing 0) <u>are drawn</u>.
+In the first plot of following example, the histogram has some negative bins;
+the empty bins (containing 0) are drawn. In some cases one wants to not draw
+empty bins (containing 0) of histograms having a negative minimum. The option
+`1`, used to produce the second plot in the following picture, allows to do that.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *hcol2 = new TH2F("hcol2","Option COLor example ",40,-4,4,40,-20,20);
+   TCanvas *c1 = new TCanvas("c1","c1",600,600);
+   c1->Divide(1,2);
+   TH2F *hcol23 = new TH2F("hcol2","Option COLZ example ",40,-4,4,40,-20,20);
+   TH2F *hcol24 = new TH2F("hcol2","Option COLZ1 example ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
-      hcol2->Fill(px,5*py);
+      hcol23->Fill(px,5*py);
+      hcol24->Fill(px,5*py);
    }
-   hcol2->Fill(0.,0.,-200.);
-   gStyle->SetPalette(57);
-   hcol2->Draw("COLZ");
+   hcol23->Fill(0.,0.,-200.);
+   hcol24->Fill(0.,0.,-200.);
+   gStyle->SetPalette(kBird);
+   c1->cd(1); hcol23->Draw("COLZ");
+   c1->cd(2); hcol24->Draw("COLZ1");
    return c1;
 }
 End_Macro
@@ -988,7 +995,7 @@ Begin_Macro(source)
    }
    hcol21->SetBit(TH1::kNoStats);
    hcol22->SetBit(TH1::kNoStats);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    c1->cd(1); hcol21->Draw("COLZ");
    c1->cd(2); hcol22->Draw("COLZ0");
    hcol22->SetMaximum(100);
@@ -1008,7 +1015,7 @@ Begin_Macro(source)
       gRandom->Rannor(px,py);
       hcol1->Fill(px,py);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hcol1->Draw("COLZPOL");
    return c1;
 }
@@ -1204,7 +1211,7 @@ Begin_Macro(source)
       hcontz->Fill(px-1,5*py);
       hcontz->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hcontz->Draw("CONTZ");
    return c1;
 }
@@ -1226,7 +1233,7 @@ Begin_Macro(source)
       hcont1->Fill(px-1,5*py);
       hcont1->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hcont1->Draw("CONT1Z");
    return c1;
 }
@@ -1286,7 +1293,7 @@ Begin_Macro(source)
       hcont4->Fill(px-1,5*py);
       hcont4->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hcont4->Draw("CONT4Z");
    return c1;
 }
@@ -1446,7 +1453,7 @@ Begin_Macro(source)
       hlego2->Fill(px-1,5*py);
       hlego2->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hlego2->Draw("LEGO2Z");
    return c2;
 }
@@ -1503,7 +1510,7 @@ the option `Z` allows to display the color palette defined by
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    TH2F *hsurf1 = new TH2F("hsurf1","Option SURF1 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -1525,7 +1532,7 @@ to show the cell contents. Combined with the option `SURF2`, the option
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    TH2F *hsurf2 = new TH2F("hsurf2","Option SURF2 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -1547,7 +1554,7 @@ to display the color palette defined by `gStyle->SetPalette()`.
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    TH2F *hsurf3 = new TH2F("hsurf3","Option SURF3 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -1587,7 +1594,7 @@ The following example shows a 2D histogram plotted with the option
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    TH2F *hsurf5 = new TH2F("hsurf4","Option SURF5 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -1610,7 +1617,7 @@ to display the color palette defined by `gStyle->SetPalette()`.
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    TH2F *hsurf7 = new TH2F("hsurf3","Option SURF7 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -1640,7 +1647,7 @@ Begin_Macro(source)
          hsc->SetBinContent(bx, by, exp(-x*x)*exp(-y*y));
       }
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hsc->Draw("surf2");
    hsc->Draw("CONT1 SAME");
    return c20;
@@ -1705,7 +1712,7 @@ Begin_Macro(source)
       hscc->Fill(px-1,5*py);
       hscc->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    c4->cd(1); hscc->Draw("SURF1 CYL");
    c4->cd(2); TH2F *hspc = (TH2F*) hscc->DrawClone("SURF1 POL");
    hspc->SetTitle("Polar coordinates");
@@ -1846,7 +1853,7 @@ Begin_Macro(source)
    Double_t fy[] = {0.01, -0.5, -0.5, 3};
    Double_t fw[] = {3, 1, 1, 1.5};
    h2p->FillN(4, fx, fy, fw);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    h2p->Draw("col");
    return ch2p1;
 }
@@ -1916,7 +1923,7 @@ Begin_Macro(source)
    for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    p->Draw("COLZ L");
    return ch2p2;
 }
@@ -3334,10 +3341,11 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (l) {
       strncpy(l,"    ",4);
       if (hdim>1) {
-         Hoption.Color  = 2;
+         Hoption.Color  = 1;
          Hoption.Scat   = 0;
          Hoption.Zscale = 1;
-         l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
+         l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  strncpy(l," ",1); }
+         l = strstr(chopt,"1");  if (l) { Hoption.Color = 2;  strncpy(l," ",1); }
       } else {
          Hoption.Hist = 1;
       }
@@ -3348,7 +3356,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (hdim>1) {
          Hoption.Color = 1;
          Hoption.Scat  = 0;
-         l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
+         l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  strncpy(l," ",1); }
+         l = strstr(chopt,"1");  if (l) { Hoption.Color = 2;  strncpy(l," ",1); }
       } else {
          Hoption.Hist = 1;
       }
@@ -4673,7 +4682,10 @@ void THistPainter::PaintColorLevels(Option_t *)
          } else {
             // don't draw the empty bins for non-profile histograms
             // with positive content
-            if (z == 0 && (zmin >= 0 || Hoption.Logz)) continue;
+            if (z == 0) {
+               if (zmin >= 0 || Hoption.Logz) continue;
+               if (Hoption.Color == 2) continue;
+            }
          }
 
          if (Hoption.Logz) {
