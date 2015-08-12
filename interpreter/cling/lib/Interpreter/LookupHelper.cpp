@@ -486,7 +486,8 @@ namespace cling {
                       } else {
                         // NOTE: We cannot instantiate the scope: not a valid decl.
                         // Need to rollback transaction.
-                        TransactionUnloader U(&S, /*CodeGenerator*/0);
+                         TransactionUnloader U(&S, /*CodeGenerator*/0,
+                                               /*ExecutionEngine*/0);
                         U.UnloadDecl(TD);
                         *setResultType = nullptr;
                         return 0;
