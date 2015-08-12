@@ -230,18 +230,22 @@ if(testing)
     execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                     OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if(GIT_BRANCH STREQUAL HEAD)
-      string(REPLACE "origin/" "" GIT_BRANCH "$ENV{GIT_BRANCH}")  # Comming from Jenkins checkout
-    endif()
+    #---Is the roottest source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-      execute_process(COMMAND ${GIT_EXECUTABLE} clean -xfdq WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-      execute_process(COMMAND ${GIT_EXECUTABLE} checkout ${GIT_BRANCH} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-      execute_process(COMMAND ${GIT_EXECUTABLE} fetch origin WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-      execute_process(COMMAND ${GIT_EXECUTABLE} rebase origin/${GIT_BRANCH} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-      file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
-      add_subdirectory(roottest)
+      set(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
     elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../roottest)
-      add_subdirectory(../roottest roottest)
+      get_filename_component(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/../roottest ABSOLUTE)
+    endif()
+    if(roottestdir)
+      #---Ensure the correspondance between branches in root and roottest
+      if(NOT GIT_BRANCH STREQUAL HEAD)
+        message("-- Ensuring that branch in roottest matches ROOT sources branch [${GIT_BRANCH}]")
+        execute_process(COMMAND ${GIT_EXECUTABLE} checkout ${GIT_BRANCH} WORKING_DIRECTORY ${roottestdir})
+        execute_process(COMMAND ${GIT_EXECUTABLE} fetch origin WORKING_DIRECTORY ${roottestdir})
+        execute_process(COMMAND ${GIT_EXECUTABLE} rebase origin/${GIT_BRANCH} WORKING_DIRECTORY ${roottestdir})
+      endif()
+      file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
+      add_subdirectory(${roottestdir} roottest)
     else()
       message("-- Could not find roottest directory! Cloning from the repository...")
       execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} http://root.cern.ch/git/roottest.git
