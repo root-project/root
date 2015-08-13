@@ -111,10 +111,4 @@ inline Bool_t operator> (const TDatime &d1, const TDatime &d2)
 inline Bool_t operator>=(const TDatime &d1, const TDatime &d2)
    { return d1.fDatime >= d2.fDatime; }
 
-namespace cling {
-   class Value;
-   std::string printValue(const TDatime* const p, const TDatime* const u,
-                          const Value& V);
-}
-
 #endif
