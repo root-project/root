@@ -1,3 +1,5 @@
+if (NOT ROOT_CLASSIC_BUILD) # Do not run with classic build
+
 configure_file(test.root . COPYONLY)
 
 ############################## PATTERN TESTS ############################
@@ -15,7 +17,7 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimplePattern3
                   OUTREF SimplePattern3.ref)
 #########################################################################
 
-set(TOOLS_PREFIX ${PYTHON_EXECUTABLE} ${ROOT_BINARY_DIR}/)
+set(TOOLS_PREFIX ${PYTHON_EXECUTABLE} ${ROOTSYS}/bin)
 
 ############################## ROOLS TESTS ##############################
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRools1
@@ -168,3 +170,5 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir4Clean
                   COMMAND ${TOOLS_PREFIX}/roorm target4.root
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoomkdir4CheckOutput)
 #########################################################################
+
+endif() # these tests are not run with the classic build

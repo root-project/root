@@ -57,6 +57,7 @@ else()# testing using an installation
   find_package(ROOT REQUIRED COMPONENTS RIO Net Hist Gpad Tree Rint Matrix MathCore)
   include(${ROOT_USE_FILE})
   if(DEFINED ROOT_CONFIG_EXECUTABLE) #---If ROOT was built with the classic configure/make---
+    set(ROOT_CLASSIC_BUILD TRUE)
     find_program(ROOT_root_CMD root.exe PATHS ${ROOTSYS}/bin)
     find_program(ROOT_genreflex_CMD genreflex PATHS ${ROOTSYS}/bin)
     find_program(ROOT_rootcint_CMD rootcint PATHS ${ROOTSYS}/bin)
