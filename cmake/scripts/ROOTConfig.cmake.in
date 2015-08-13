@@ -90,7 +90,7 @@ endforeach()
 
 #----------------------------------------------------------------------------
 # Locate the tools
-set(ROOT_ALL_TOOLS genreflex genmap root rootcint)
+set(ROOT_ALL_TOOLS genreflex genmap root rootcint rootcling hadd rools roorm roomv roomkdir roocp roodraw roobrowse)
 foreach(_cpt ${ROOT_ALL_TOOLS})
   if(NOT ROOT_${_cpt}_CMD)
     find_program(ROOT_${_cpt}_CMD ${_cpt} HINTS ${ROOT_BINARY_DIR})
