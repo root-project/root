@@ -617,7 +617,7 @@ if(xrootd)
 endif()
 if(builtin_xrootd)
   set(xrootd_version 4.2.2)
-  set(xrootd_versionnum 400020001)
+  set(xrootd_versionnum 400020002)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   ExternalProject_Add(
     XROOTD
@@ -628,7 +628,7 @@ if(builtin_xrootd)
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_CXX_FLAGS=${__cxxflags}
+               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
   )
