@@ -443,3 +443,11 @@ void TDatime::GetDateTime(UInt_t datetime, Int_t &date, Int_t &time)
    date         =  10000*(year+1995) + 100*month + day;
    time         =  10000*hour + 100*min + sec;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TDatime at the prompt.
+
+std::string cling::printValue(const TDatime &val) {
+   char buf[30];
+   return std::string(val.AsString(buf));
+}

@@ -2617,3 +2617,19 @@ int strncasecmp(const char *str1, const char *str2, Ssiz_t n)
    return 0;
 }
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TString in the cling interpreter:
+
+std::string cling::printValue(const TString &val) {
+   TString s = TString::Format("\"%s\"[%d]", val.Data(), (int)val.Length());
+   return s.Data();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TString in the cling interpreter:
+
+std::string cling::printValue(const TSubString &val) {
+   TString s = TString::Format("\"%.*s\"[%d]", (int)val.Length(), val.Data(), (int)val.Length());
+   return s.Data();
+}

@@ -781,4 +781,9 @@ namespace llvm {
    class raw_ostream;
 }
 
+namespace cling {
+  std::string printValue(const TString &val);
+  std::string printValue(const TSubString &val);
+}
+
 #endif
