@@ -4,7 +4,7 @@ RootmapContent:
 { decls }
 namespace ns {  }
 
-[libnestedClasses_dictrflx.so ]
+[ libnestedClasses_dictrflx.so ]
 # List of selected classes
 class A
 class B
