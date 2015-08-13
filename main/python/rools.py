@@ -77,7 +77,7 @@ def roolsPrintLongLs(keyList,optDict,indent):
             "timeWidth":maxCharTime+2, \
             "nameWidth":maxCharName+2, \
             "titleWidth":1}
-    date = ROOT.Long(0)  
+    date = ROOT.Long(0)
     for key in keyList:
         time = ROOT.Long(0)
         key.GetDatime().GetDateTime(key.GetDatime().Get(),date,time)
@@ -181,7 +181,7 @@ def _get_terminal_size_linux():
 # End of getTerminalSize code
 ##
 
-def roolsPrintSimpleLs(keyList,indent):
+def roolsPrintSimpleLs(keyList,indent, oneColumn):
     """Print list of strings in columns
     - blue for directories
     - green for trees"""
@@ -200,13 +200,15 @@ def roolsPrintSimpleLs(keyList,indent):
     else:
         # Start with max possible number of columns and reduce until it fits
         ncol = min( len(keyList), term_width / min_element_width  )
-        while True:
-            col_widths = \
-                [ max( len(key.GetName()) + min_chars_between \
-                for j, key in enumerate(keyList) if j % ncol == i ) \
-                for i in range(ncol) ]
-            if sum( col_widths ) <= term_width: break
-            else: ncol -= 1
+        if oneColumn: ncol =1
+        else:
+         while True:
+               col_widths = \
+                  [ max( len(key.GetName()) + min_chars_between \
+                  for j, key in enumerate(keyList) if j % ncol == i ) \
+                  for i in range(ncol) ]
+               if sum( col_widths ) <= term_width: break
+               else: ncol -= 1
     for i, key in enumerate(keyList):
         if i%ncol == 0: write("",indent) # indentation
         # Don't add spaces after the last element of the line or of the list
@@ -232,7 +234,9 @@ def roolsPrint(keyList,optDict,indent=0):
     style choosen with optDict"""
     if optDict['long'] or optDict['tree']: \
        roolsPrintLongLs(keyList,optDict,indent)
-    else: roolsPrintSimpleLs(keyList,indent)
+    else:
+       oneColumn = True if optDict['one'] else False
+       roolsPrintSimpleLs(keyList,indent, oneColumn)
 
 # Help strings
 COMMAND_HELP = \
@@ -250,6 +254,7 @@ parser = argparse.ArgumentParser(description=COMMAND_HELP)
 parser.add_argument("sourcePatternList", help=SOURCES_HELP, nargs='+')
 parser.add_argument("-l", "--long", help=LONG_PRINT_HELP, action="store_true")
 parser.add_argument("-t", "--tree", help=TREE_PRINT_HELP, action="store_true")
+parser.add_argument("-1", "--one", help="Print content in one column", action="store_true")
 args = parser.parse_args()
 
 # Create a list of tuples that contain source ROOT file names
