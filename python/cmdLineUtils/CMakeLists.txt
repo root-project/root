@@ -1,6 +1,7 @@
 if (NOT ROOT_CLASSIC_BUILD) # Do not run with classic build
 
 configure_file(test.root . COPYONLY)
+configure_file(simpleTree.root . COPYONLY)
 
 ############################## PATTERN TESTS ############################
 set (TESTPATTERN_EXE ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
@@ -59,6 +60,11 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-WebRools1
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-WebRools2
                   COMMAND ${TOOLS_PREFIX}/rools -l http://root.cern.ch/files/pippa.root
                   OUTREF WebRools2.ref)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-TreeRools1
+                  COMMAND ${TOOLS_PREFIX}/rools -t simpleTree.root
+                  OUTREF TreeRooLs.ref)
+
 #########################################################################
 
 

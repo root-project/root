@@ -1,0 +1,7 @@
+TTree  Aug 13 14:56  events  "Fake events"
+  tracks  "tracks_"   131
+    tracks.fCoordinates.fX  "fX[tracks_]"  24003
+    tracks.fCoordinates.fY  "fY[tracks_]"  24003
+    tracks.fCoordinates.fZ  "fZ[tracks_]"  24003
+    tracks.fCoordinates.fT  "fT[tracks_]"  24003
+  evtNum  "evtNum/I"  99
