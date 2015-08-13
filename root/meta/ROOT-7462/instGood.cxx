@@ -2,6 +2,7 @@
 #define instGood_cxx
 
 #include "instHeader.h"
+#include <memory>
 
 template <> class Inner<int> { public: int fValue; };
 
