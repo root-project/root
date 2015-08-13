@@ -114,6 +114,7 @@ foreach(file  Interpreter/DynamicExprInfo.h
               Interpreter/Interpreter.h
               Interpreter/InvocationOptions.h
               Interpreter/RuntimeException.h
+              Interpreter/RuntimePrintValue.h
               Interpreter/RuntimeUniverse.h
               Interpreter/Value.h)
   get_filename_component(path ${file} PATH)
