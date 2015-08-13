@@ -25,15 +25,15 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRools1
                   OUTREF SimpleRools.ref)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRools2
-                  COMMAND ${TOOLS_PREFIX}/rools test.root:*
+                  COMMAND ${TOOLS_PREFIX}/rools -1 test.root:*
                   OUTREF SimpleRools2.ref)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRools3
-                  COMMAND ${TOOLS_PREFIX}/rools test.root:tof
+                  COMMAND ${TOOLS_PREFIX}/rools -1 test.root:tof
                   OUTREF SimpleRools3.ref)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRools4
-                  COMMAND ${TOOLS_PREFIX}/rools test.root:tof/*
+                  COMMAND ${TOOLS_PREFIX}/rools -1 test.root:tof/*
                   OUTREF SimpleRools4.ref)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-LongRools1
@@ -89,7 +89,7 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoorm2
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoorm2PrepareInput)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoorm2CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rools victim2.root:tof
+                  COMMAND ${TOOLS_PREFIX}/rools -1 victim2.root:tof
                   OUTREF SimpleRoorm2.ref
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoorm2)
 
