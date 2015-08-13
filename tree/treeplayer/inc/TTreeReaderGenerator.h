@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Tlist
-#include "TList.h"
-#endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
+#include "TTreeGeneratorBase.h"
+
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
@@ -34,7 +30,6 @@
 class TBranch;
 class TBranchElement;
 class TLeaf;
-class TTree;
 
 namespace ROOT {
    // 0 for the general case, 1 when this a split clases inside a TClonesArray,
@@ -86,19 +81,15 @@ namespace ROOT {
       Bool_t IsSTL() const { return fIsClones == kSTL; }
    };
 
-   class TTreeReaderGenerator
+   class TTreeReaderGenerator : public TTreeGeneratorBase
    {
-      TTree                *fTree;              // Pointer to the tree
       TString               fClassname;         // Class name of the selector
-      TList                 fListOfHeaders;     // List of included headers
       TList                 fListOfReaders;     // List of readers
-      TString               fOptions;           // User options as a string
       Bool_t                fIncludeAllLeaves;  // Should all leaves be included
       Bool_t                fIncludeAllTopmost; // Should all topmost branches be included
       std::vector<TString>  fIncludeLeaves;     // Branches whose leaves should be included
       std::vector<TString>  fIncludeStruct;     // Branches whom should be included
 
-      void   AddHeader(TClass *cl);
       void   AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name,
                        TString branchName, TBranchDescriptor *parent = 0, Bool_t isLeaf = kTRUE);
       UInt_t AnalyzeBranches(TBranchDescriptor *desc, TBranchElement *branch, TVirtualStreamerInfo *info);
