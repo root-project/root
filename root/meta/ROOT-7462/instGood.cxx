@@ -2,7 +2,6 @@
 #define instGood_cxx
 
 #include "instHeader.h"
-#include <memory>
 
 template <> class Inner<int> { public: int fValue; };
 
@@ -10,6 +9,8 @@ template <> class Inner<int> { public: int fValue; };
 void func2() {
    std::pair<string,Inner<int>> p;
 }
+
+
 
 #include <map>
 
@@ -25,6 +26,8 @@ public:
    }
 };
 
+
+
 #if 0
 #ifdef __ROOTCLING__
 #pragma link C++ class Outer+;
@@ -32,8 +35,10 @@ public:
 #endif
 #endif
 
-#include "TFile.h"
 
+
+#include "TFile.h"
+#include <memory>
 
 void writeFile(const char *filename = "inst.root")
 {
