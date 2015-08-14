@@ -1,4 +1,4 @@
-if (NOT ROOT_CLASSIC_BUILD) # Do not run with classic build
+if (ROOT_python_FOUND AND NOT ROOT_CLASSIC_BUILD) # Do not run with classic build
 
 configure_file(test.root . COPYONLY)
 configure_file(simpleTree.root . COPYONLY)
