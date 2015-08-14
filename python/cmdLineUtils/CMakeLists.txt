@@ -70,7 +70,7 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-TreeRools1
 
 ############################## ROORM TESTS ##############################
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoorm1PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/roocp test.root victim1.root)
+                  COMMAND ${TOOLS_PREFIX}/roocp -r test.root victim1.root)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoorm1
                   COMMAND ${TOOLS_PREFIX}/roorm victim1.root:hpx
@@ -82,16 +82,16 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoorm1CheckOutput
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoorm1)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoorm1Clean
-                  COMMAND ${TOOLS_PREFIX}/roorm victim1.root
+                  COMMAND ${TOOLS_PREFIX}/roorm -r victim1.root
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoorm1CheckOutput)
 
 
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoorm2PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/roocp test.root victim2.root)
+                  COMMAND ${TOOLS_PREFIX}/roocp -r test.root victim2.root)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoorm2
-                  COMMAND ${TOOLS_PREFIX}/roorm victim2.root:tof/plane0
+                  COMMAND ${TOOLS_PREFIX}/roorm -r victim2.root:tof/plane0
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoorm2PrepareInput)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoorm2CheckOutput
@@ -100,14 +100,14 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoorm2CheckOutput
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoorm2)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoorm2Clean
-                  COMMAND ${TOOLS_PREFIX}/roorm victim2.root
+                  COMMAND ${TOOLS_PREFIX}/roorm -r victim2.root
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoorm2CheckOutput)
 
 #########################################################################
 
 ############################# ROOMKDIR TESTS ############################
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir1PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/roocp test.root target1.root)
+                  COMMAND ${TOOLS_PREFIX}/roocp -r test.root target1.root)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir1
                   COMMAND ${TOOLS_PREFIX}/roomkdir target1.root:new_directory
@@ -119,13 +119,13 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir1CheckOutput
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoomkdir1)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir1Clean
-                  COMMAND ${TOOLS_PREFIX}/roorm target1.root
+                  COMMAND ${TOOLS_PREFIX}/roorm -r target1.root
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoomkdir1CheckOutput)
 
 
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir2PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/roocp test.root target2.root)
+                  COMMAND ${TOOLS_PREFIX}/roocp -r test.root target2.root)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir2
                   COMMAND ${TOOLS_PREFIX}/roomkdir target2.root:new_directory
@@ -137,13 +137,13 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir2CheckOutput
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoomkdir2)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir2Clean
-                  COMMAND ${TOOLS_PREFIX}/roorm target2.root
+                  COMMAND ${TOOLS_PREFIX}/roorm -r target2.root
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoomkdir2CheckOutput)
 
 
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir3PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/roocp test.root target3.root)
+                  COMMAND ${TOOLS_PREFIX}/roocp -r test.root target3.root)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir3
                   COMMAND ${TOOLS_PREFIX}/roomkdir target3.root:new_directory
@@ -155,13 +155,13 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir3CheckOutput
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoomkdir3)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir3Clean
-                  COMMAND ${TOOLS_PREFIX}/roorm target3.root
+                  COMMAND ${TOOLS_PREFIX}/roorm -r target3.root
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoomkdir3CheckOutput)
 
 
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir4PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/roocp test.root target4.root)
+                  COMMAND ${TOOLS_PREFIX}/roocp -r test.root target4.root)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir4
                   COMMAND ${TOOLS_PREFIX}/roomkdir target4.root:new_directory
@@ -173,7 +173,7 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir4CheckOutput
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoomkdir4)
 
 ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomkdir4Clean
-                  COMMAND ${TOOLS_PREFIX}/roorm target4.root
+                  COMMAND ${TOOLS_PREFIX}/roorm -r target4.root
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoomkdir4CheckOutput)
 #########################################################################
 
