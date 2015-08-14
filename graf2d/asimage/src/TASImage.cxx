@@ -1796,6 +1796,11 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             if ( TMath::Abs(pxl - pxt) < 5 || TMath::Abs(pyl - pyt) < 5)
                return;
 
+            pxl = 0;
+            pxt = 0;
+            pyl = 0;
+            pyt = 0;
+
             Double_t xfact = (fScaledImage) ? (Double_t)fScaledImage->fImage->width  / fZoomWidth  : 1;
             Double_t yfact = (fScaledImage) ? (Double_t)fScaledImage->fImage->height / fZoomHeight : 1;
 

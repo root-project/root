@@ -148,6 +148,10 @@ Nathaniel Smith. It is now matplotlib's current default color map.
 
 Ignore empty graphs when computing the multi-graph range at painting time.
 
+### TASImage
+
+A left click on a image produced a one pixel zoom.
+
 ## 3D Graphics Libraries
 
 
