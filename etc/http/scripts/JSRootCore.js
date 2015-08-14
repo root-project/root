@@ -33,14 +33,17 @@
           'THREE'           : 'helvetiker_regular.typeface'
        },
        shim: {
-          helvetiker_bold: {
+          'touch-punch': {
+             deps: ['jquery']
+          },
+          'helvetiker_bold': {
              deps: ['three.min']
           },
-          THREE: {
+          'THREE': {
              deps: ['helvetiker_bold']
           },
-          MathJax: {
-             exports: "MathJax",
+          'MathJax': {
+             exports: 'MathJax',
              init: function () {
                 MathJax.Hub.Config({ TeX: { extensions: ["color.js"] }});
                 MathJax.Hub.Register.StartupHook("SVG Jax Ready",function () {
