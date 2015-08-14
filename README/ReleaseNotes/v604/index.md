@@ -756,6 +756,7 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 ### Interpreter
 - Fix redirection [ROOT-7053]
 - Take the language and target options from the PCH [ROOT-7478] [ROOT-6966]
+- Properly recover from a template instantiation failure when looking up a class in the interpreter [ROOT-7462]
 
 Changes will be part of the future v6.04/04.
 
@@ -802,7 +803,6 @@ directory - this behavior is now implement by the default constructor.
  - Fix parsing of definition for forward declared enums [ROOT-7419]
  - Pass CXXFLAGS to the PCH generator, to ensure platform consistency.
  - Work around linker assert when building with GCC on OS X (PR #68)
- - Properly recover from a template instantiation failure when looking up a class in the interpreter [ROOT-7462]
 
 ### PyROOT
  - Fix lookup of templated classes in namespace with arguments that have 'std::' in their name [ROOT-7448]
