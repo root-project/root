@@ -1,94 +1,104 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
+# ROOT command line tools: rooeventselector
+# Author: Julien Ripoche
+# Mail: julien.ripoche@u-psud.fr
+# Date: 13/08/15
 
 """Command line to copy subsets of trees from source
 ROOT files to new trees on a destination ROOT file"""
 
-from cmdLineUtils import *
-
-def copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,optDict):
-    """Copy a subset of the tree from (sourceFile,sourcePathSplit)
-    to (destFile,destPathSplit) according to options in optDict"""
-    changeDirectory(sourceFile,sourcePathSplit[:-1])
-    bigTree = ROOT.gDirectory.Get(sourcePathSplit[-1])
-    nbrEntries = bigTree.GetEntries()
-    # changeDirectory for the small tree not to be memory-resident
-    changeDirectory(destFile,destPathSplit)
-    smallTree = bigTree.CloneTree(0)
-    firstEvent = \
-        optDict["first"] \
-        if optDict["first"] != None \
-        else 0
-    lastEvent = \
-        optDict["last"] \
-        if optDict["last"] != None and optDict["last"] < nbrEntries-1 \
-        else nbrEntries-1
-    for i in range(nbrEntries):
-        if i >= firstEvent and i <= lastEvent:
-            bigTree.GetEntry(i)
-            smallTree.Fill()
-    smallTree.Write()
+import sys
+import cmdLineUtils
 
 # Help strings
-COMMAND_HELP = \
-    "Copy subsets of trees from source ROOT files " + \
-    "to new trees on a destination ROOT file " + \
-    "(for more informations please look at the man page)."
-FIRST_EVENT_HELP = \
-    "specify the first event to copy."
-LAST_EVENT_HELP = \
-    "specify the last event to copy."
+COMMAND_HELP = "Copy subsets of trees from source ROOT files"
 
-##### Beginning of the main code #####
+EPILOG="""Examples:
+- rooeventselector source.root:tree dest.root
+  Copy the tree 'tree' from 'source.root' to 'dest.root'.
 
-# Collect arguments with the module argparse
-parser = argparse.ArgumentParser(description=COMMAND_HELP)
-parser.add_argument("sourcePatternList", help=SOURCES_HELP, nargs='+')
-parser.add_argument("destPattern", help=DEST_HELP)
-parser.add_argument("-c","--compress", type=int, help=COMPRESS_HELP)
-parser.add_argument("--recreate", help=RECREATE_HELP, action="store_true")
-parser.add_argument("-f","--first", type=int, help=FIRST_EVENT_HELP)
-parser.add_argument("-l","--last", type=int, help=LAST_EVENT_HELP)
-args = parser.parse_args()
+- rooeventselector -f 101 source.root:tree dest.root
+  Copy a subset of the tree 'tree' from 'source.root' to 'dest.root'. The new tree contains events from the old tree except the first hundred.
 
-# Create a list of tuples that contain source ROOT file names
-# and lists of path in these files
-sourceList = \
-    [tup for pattern in args.sourcePatternList \
-    for tup in patternToFileNameAndPathSplitList(pattern)]
+- rooeventselector -l 100 source.root:tree dest.root
+  Copy a subset of the tree  'tree' from 'source.root' to 'dest.root'. The new tree contains the first hundred events from the old tree.
 
-# Create a tuple that contain a destination ROOT file name
-# and a path in this file
-destList = \
-    patternToFileNameAndPathSplitList( \
-    args.destPattern,wildcards=False)
-destFileName,destPathSplitList = destList[0]
-destPathSplit = destPathSplitList[0]
+- rooeventselector --recreate source.root:tree dest.root
+  Recreate the destination file 'dest.root' and copy the tree 'tree' from 'source.root' to 'dest.root'.
 
-# Create a dictionnary with options
-optDict = vars(args)
+- rooeventselector -c 1 source.root:tree dest.root
+  Change the compression factor of the destination file 'dest.root' and  copy the tree 'tree' from 'source.root' to 'dest.root'. For more information about compression settings of ROOT file, please look at the reference guide available on the ROOT site.
+"""
 
-# Change the compression settings only on non existing file
-if optDict["compress"] and os.path.isfile(destFileName):
-    logging.error("can't change compression settings on existing file")
-    sys.exit()
+FIRST_EVENT_HELP = "specify the first event to copy"
+LAST_EVENT_HELP = "specify the last event to copy"
 
-# Creation of destination file (changing of the compression settings)
-with stderrRedirected(): destFile = \
-    ROOT.TFile.Open(destFileName,"recreate") \
-    if optDict["recreate"] else \
-    ROOT.TFile.Open(destFileName,"update")
-if optDict["compress"]: destFile.SetCompressionSettings(optDict["compress"])
 
-# Loop on the root file
-for sourceFileName, sourcePathSplitList in sourceList:
-    with stderrRedirected(): sourceFile = \
-        ROOT.TFile.Open(sourceFileName) \
-        if sourceFileName != destFileName else \
-        destFile
-    for sourcePathSplit in sourcePathSplitList:
-        if isTree(sourceFile,sourcePathSplit): copyTreeSubset( \
-            sourceFile,sourcePathSplit, \
-            destFile,destPathSplit,optDict)
-    if sourceFileName != destFileName:
-        sourceFile.Close()
-destFile.Close()
+def copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent,lastEvent):
+    """Copy a subset of the tree from (sourceFile,sourcePathSplit)
+    to (destFile,destPathSplit) according to options in optDict"""
+    cmdLineUtils.changeDirectory(sourceFile,sourcePathSplit[:-1])
+    bigTree = cmdLineUtils.getFromDirectory(sourcePathSplit[-1])
+    nbrEntries = bigTree.GetEntries()
+    # changeDirectory for the small tree not to be memory-resident
+    cmdLineUtils.changeDirectory(destFile,destPathSplit)
+    smallTree = bigTree.CloneTree(0)
+    if lastEvent == -1:
+        lastEvent = nbrEntries-1
+
+    for i in xrange(firstEvent, lastEvent+1):
+        bigTree.GetEntry(i)
+        smallTree.Fill()
+
+    smallTree.Write()
+
+def execute():
+    parser = cmdLineUtils.getParserSourceDest(COMMAND_HELP, EPILOG)
+    parser.add_argument("-c","--compress", type=int, help=cmdLineUtils.COMPRESS_HELP)
+    parser.add_argument("--recreate", help=cmdLineUtils.RECREATE_HELP, action="store_true")
+    parser.add_argument("-f","--first", type=int, default=0,help=FIRST_EVENT_HELP)
+    parser.add_argument("-l","--last", type=int, default=-1, help=LAST_EVENT_HELP)
+
+    sourceList, destFileName, destPathSplit, optDict = cmdLineUtils.getSourceDestListOptDict(parser)
+    compressOptionValue = optDict["compress"]
+
+    retcode = 0
+
+    # Change the compression settings only on non existing file
+    if compressOptionValue != None and os.path.isfile(destFileName):
+        logging.error("can't change compression settings on existing file")
+        return 1
+
+    # Creation of destination file (changing of the compression settings)
+    mode = "recreate" if optDict["recreate"] else "update"
+
+    with cmdLineUtils.stderrRedirected():
+        destFile = cmdLineUtils.openROOTFile(destFileName,mode)
+
+    if not destfile: return 1
+
+    if compressOptionValue != None: destFile.SetCompressionSettings(compressOptionValue)
+
+    # Loop on the root file
+    for sourceFileName, sourcePathSplitList in sourceList:
+        with cmdLineUtils.stderrRedirected(): sourceFile = \
+            cmdLineUtils.openROOTFile(sourceFileName) \
+            if sourceFileName != destFileName else \
+            destFile
+
+        if not sourceFile:
+            retcode += 1
+            continue
+
+        for sourcePathSplit in sourcePathSplitList:
+            if cmdLineUtils.isTree(sourceFile,sourcePathSplit): copyTreeSubset( \
+                sourceFile,sourcePathSplit, \
+                destFile,destPathSplit,optDict["first"],optDict["last"])
+        if sourceFileName != destFileName:
+            sourceFile.Close()
+    destFile.Close()
+
+    return retcode
+
+sys.exit(execute())

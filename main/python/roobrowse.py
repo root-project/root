@@ -1,27 +1,32 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
+# ROOT command line tools: roobrowse
+# Author: Julien Ripoche
+# Mail: julien.ripoche@u-psud.fr
+# Date: 13/08/15
 
 """Command line to open a ROOT file on a TBrowser"""
 
-from cmdLineUtils import *
+import sys
+import cmdLineUtils
 
 # Help strings
-COMMAND_HELP = \
-    "Open a ROOT file on a TBrowser " + \
-    "(for more informations please look at the man page)."
+COMMAND_HELP = "Open a ROOT file in a TBrowser"
 
-##### Beginning of the main code #####
+def execute():
+    # Collect arguments with the module argparse
+    parser = cmdLineUtils.getParserFile(COMMAND_HELP)
+    sourceList, args = cmdLineUtils.getSourceListArgs(parser)
 
-# Collect arguments with the module argparse
-parser = argparse.ArgumentParser(description=COMMAND_HELP)
-parser.add_argument("sourceName", nargs='?', help=SOURCE_HELP)
-args = parser.parse_args()
+    if args.FILE:
+        with cmdLineUtils.stderrRedirected():
+            rootFile = cmdLineUtils.openROOTFile(args.FILE)
+        if not rootfile:
+            return 1
+        cmdLineUtils.openBrowser(rootFile)
+        rootFile.Close()
+    else :
+        cmdLineUtils.openBrowser()
+    return 0
 
-if args.sourceName:
-    with stderrRedirected():
-        rootFile = ROOT.TFile.Open(args.sourceName)
-    rootFile.Browse(ROOT.TBrowser())
-    ROOT.PyROOT.TPyROOTApplication.Run(ROOT.gApplication)
-    rootFile.Close()
-else :
-    browser = ROOT.TBrowser()
-    ROOT.PyROOT.TPyROOTApplication.Run(ROOT.gApplication)
+sys.exit(execute())

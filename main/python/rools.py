@@ -1,27 +1,42 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
+# ROOT command line tools: rools
+# Author: Julien Ripoche
+# Mail: julien.ripoche@u-psud.fr
+# Date: 13/08/15
 
 """Command line to dump ROOT files contents to terminal"""
 
 from cmdLineUtils import *
 
+# Ansi characters
 ANSI_BOLD = "\x1B[1m"
 ANSI_BLUE = "\x1B[34m"
 ANSI_GREEN = "\x1B[32m"
 ANSI_END = "\x1B[0m"
 
-def isTerminal():
-    """Return True if the output is a terminal"""
-    return sys.stdout.isatty()
+# Needed for column width calculation
+ANSI_BOLD_LENGTH = len(ANSI_BOLD+ANSI_END)
+ANSI_BLUE_LENGTH = len(ANSI_BLUE+ANSI_END)
+ANSI_GREEN_LENGTH = len(ANSI_GREEN+ANSI_END)
 
-def isWin32():
-    """Return True if the platform is Windows"""
-    return sys.platform == 'win32'
+# Terminal and platform booleans
+IS_TERMINAL = sys.stdout.isatty()
+IS_WIN32 = sys.platform == 'win32'
 
 def isSpecial(ansiCode,string):
     """Use ansi code on 'string' if the output is the
     terminal of a not Windows platform"""
-    if isTerminal() and not isWin32(): return ansiCode+string+ANSI_END
+    if IS_TERMINAL and not IS_WIN32: return ansiCode+string+ANSI_END
     else: return string
+
+def keyListSort(keyList):
+    """Sort list of TKey by their names ignoring the case"""
+    keyList.sort(key=lambda y: y.GetName().lower())
+
+def tupleListSort(tupleList):
+    """Sort list of tuple by their first elements ignoring the case"""
+    tupleList.sort(key=lambda y: y[0].lower())
 
 def write(string,indent=0,end=""):
     """Use sys.stdout.write to write the string with an indentation
@@ -94,7 +109,8 @@ def roolsPrintLongLs(keyList,optDict,indent):
             recursifTreePrinter(tree,indent+2)
 
 ##
-# The code of the getTerminalSize function can be found here : https://gist.github.com/jtriley/1108174
+# The code of the getTerminalSize function can be found here :
+# https://gist.github.com/jtriley/1108174
 # Thanks jtriley !!
 
 import os
@@ -181,7 +197,7 @@ def _get_terminal_size_linux():
 # End of getTerminalSize code
 ##
 
-def roolsPrintSimpleLs(keyList,indent, oneColumn):
+def roolsPrintSimpleLs(keyList,indent,oneColumn):
     """Print list of strings in columns
     - blue for directories
     - green for trees"""
@@ -199,33 +215,34 @@ def roolsPrintSimpleLs(keyList,indent, oneColumn):
     if max_element_width >= term_width: ncol,col_widths = 1,[1]
     else:
         # Start with max possible number of columns and reduce until it fits
-        ncol = min( len(keyList), term_width / min_element_width  )
-        if oneColumn: ncol =1
-        else:
-         while True:
-               col_widths = \
-                  [ max( len(key.GetName()) + min_chars_between \
-                  for j, key in enumerate(keyList) if j % ncol == i ) \
-                  for i in range(ncol) ]
-               if sum( col_widths ) <= term_width: break
-               else: ncol -= 1
+        ncol = 1 if oneColumn else min( len(keyList), term_width / min_element_width  )
+        while True:
+            col_widths = \
+                [ max( len(key.GetName()) + min_chars_between \
+                for j, key in enumerate(keyList) if j % ncol == i ) \
+                for i in range(ncol) ]
+            if sum( col_widths ) <= term_width: break
+            else: ncol -= 1
+
     for i, key in enumerate(keyList):
         if i%ncol == 0: write("",indent) # indentation
         # Don't add spaces after the last element of the line or of the list
         if (i+1)%ncol != 0 and i != len(keyList)-1:
-            if not isTerminal(): write( \
+            if not IS_TERMINAL: write( \
                 key.GetName().ljust(col_widths[i%ncol]))
             elif isDirectoryKey(keyList[i]): write( \
-                isSpecial(ANSI_BLUE,key.GetName()).ljust(col_widths[i%ncol] + 9))
-                # len(ANSI_BLUE+ANSI_END) = len("\x1B[34m"+"\x1B[0m") = 9
+                isSpecial(ANSI_BLUE,key.GetName()).ljust( \
+                    col_widths[i%ncol] + ANSI_BLUE_LENGTH))
             elif isTreeKey(keyList[i]): write( \
-                isSpecial(ANSI_GREEN,key.GetName()).ljust(col_widths[i%ncol] + 9))
-                # len(ANSI_GREEN+ANSI_END) = len("\x1B[32m"+"\x1B[0m") = 9
+                isSpecial(ANSI_GREEN,key.GetName()).ljust( \
+                    col_widths[i%ncol] + ANSI_GREEN_LENGTH))
             else: write(key.GetName().ljust(col_widths[i%ncol]))
         else: # No spaces after the last element of the line or of the list
-            if not isTerminal(): write(key.GetName())
-            elif isDirectoryKey(keyList[i]): write(isSpecial(ANSI_BLUE,key.GetName()))
-            elif isTreeKey(keyList[i]): write(isSpecial(ANSI_GREEN,key.GetName()))
+            if not IS_TERMINAL: write(key.GetName())
+            elif isDirectoryKey(keyList[i]):
+                write(isSpecial(ANSI_BLUE, key.GetName()))
+            elif isTreeKey(keyList[i]):
+                write(isSpecial(ANSI_GREEN, key.GetName()))
             else: write(key.GetName())
             write('\n')
 
@@ -240,12 +257,35 @@ def roolsPrint(keyList,optDict,indent=0):
 
 # Help strings
 COMMAND_HELP = \
-    "Display ROOT files contents in the terminal " + \
-    "(for more informations please look at the man page)."
+"""Display ROOT files contents in the terminal. Examples:
+- rools example.root
+  Display contents of the ROOT file 'example.root'.
+
+- rools example.root:dir
+  Display contents of the directory 'dir' from the ROOT file 'example.root'.
+
+- rools example.root:*
+  Display contents of the ROOT file 'example.root' and his subdirectories.
+
+- rools file1.root file2.root
+  Display contents of ROOT files 'file1.root' and 'file2.root'.
+
+- rools *.root
+  Display contents of ROOT files whose name ends with '.root'.
+
+- rools -l example.root
+  Display contents of the ROOT file 'example.root' and use a long listing format.
+
+- rools -t example.root
+  Display contents of the ROOT file 'example.root', use a long listing format and print trees recursively.
+"""
+
 LONG_PRINT_HELP = \
     "use a long listing format."
 TREE_PRINT_HELP = \
     "print tree recursively and use a long listing format."
+
+
 
 ##### Beginning of the main code #####
 
@@ -253,8 +293,8 @@ TREE_PRINT_HELP = \
 parser = argparse.ArgumentParser(description=COMMAND_HELP)
 parser.add_argument("sourcePatternList", help=SOURCES_HELP, nargs='+')
 parser.add_argument("-l", "--long", help=LONG_PRINT_HELP, action="store_true")
-parser.add_argument("-t", "--tree", help=TREE_PRINT_HELP, action="store_true")
 parser.add_argument("-1", "--one", help="Print content in one column", action="store_true")
+parser.add_argument("-t", "--tree", help=TREE_PRINT_HELP, action="store_true")
 args = parser.parse_args()
 
 # Create a list of tuples that contain source ROOT file names
@@ -272,13 +312,15 @@ indent = 2 if manySources else 0
 
 # Loop on the ROOT files
 first_round_file = True
+tupleListSort(sourceList)
+
 for fileName, pathSplitList in sourceList:
     with stderrRedirected():
-        rootFile = ROOT.TFile.Open(fileName)
+        rootFile = openROOTFile(fileName)
     objList,dirList = keyClassSpliter(rootFile,pathSplitList)
     keyList = [getKey(rootFile,pathSplit) for pathSplit in objList]
-    keyList.sort()
-    dirList.sort()
+    keyListSort(keyList)
+    dirList.sort() # need improvement to ignore the case
 
     # Paths of file
     if manySources: write("{0} :".format(fileName)+"\n")
@@ -293,7 +335,7 @@ for fileName, pathSplitList in sourceList:
     # Loop on the directories
     for pathSplit in dirList:
         keyList = getKeyList(rootFile,pathSplit)
-        keyList.sort()
+        keyListSort(keyList)
 
         # Paths of object
         if manyPathSplits:
