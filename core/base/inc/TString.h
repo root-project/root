@@ -784,6 +784,7 @@ namespace llvm {
 namespace cling {
   std::string printValue(const TString &val);
   std::string printValue(const TSubString &val);
+  std::string printValue(const std::string_view &val);
 }
 
 #endif
