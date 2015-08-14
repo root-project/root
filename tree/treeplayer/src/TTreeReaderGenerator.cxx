@@ -12,6 +12,7 @@
 #include "TTreeReaderGenerator.h"
 #include <algorithm>
 #include <stdio.h>
+#include <fstream>
 
 #include "TBranchElement.h"
 #include "TChain.h"
@@ -799,210 +800,220 @@ namespace ROOT {
       //======================Generate classname.h=====================
       TString thead;
       thead.Form("%s.h", fClassname.Data());
-      FILE *fp = fopen(thead, "w");
-      if (!fp) {
+      std::ofstream ofs (thead, std::ofstream::out);
+      if (!ofs) {
          Error("WriteSelector","cannot open output file %s", thead.Data());
          return;
       }
       // Print header
       TDatime td;
-      fprintf(fp,"//////////////////////////////////////////////////////////\n");
-      fprintf(fp,"// This class has been automatically generated on\n");
-      fprintf(fp,"// %s by ROOT version %s\n", td.AsString(), gROOT->GetVersion());
+      ofs <<
+R"CODE(//////////////////////////////////////////////////////////
+// This class has been automatically generated on
+// )CODE" << td.AsString() << R"CODE( by ROOT version )CODE" << gROOT->GetVersion() << std::endl;
       if (!ischain) {
-         fprintf(fp,"// from TTree %s/%s\n", fTree->GetName(), fTree->GetTitle());
-         fprintf(fp,"// found on file: %s\n", treefile.Data());
+         ofs << "// from TTree " << fTree->GetName() << "/" << fTree->GetTitle() << std::endl
+             << "// found on file: " << treefile << std::endl;
       } else {
-         fprintf(fp,"// from TChain %s/%s\n", fTree->GetName(), fTree->GetTitle());
+         ofs << "// from TChain " << fTree->GetName() << "/" << fTree->GetTitle() << std::endl;
       }
-      fprintf(fp,"//////////////////////////////////////////////////////////\n");
-      fprintf(fp,"\n");
-      fprintf(fp,"#ifndef %s_h\n", fClassname.Data());
-      fprintf(fp,"#define %s_h\n", fClassname.Data());
-      fprintf(fp,"\n");
-      fprintf(fp,"#include <TROOT.h>\n");
-      fprintf(fp,"#include <TChain.h>\n");
-      fprintf(fp,"#include <TFile.h>\n");
-      if (isHbook) fprintf(fp, "#include <THbookFile.h>\n");
-      fprintf(fp,"#include <TSelector.h>\n");
-      fprintf(fp,"#include <TTreeReader.h>\n");
-      fprintf(fp,"#include <TTreeReaderValue.h>\n"); // TODO: optimization: only if there are leaf values
-      fprintf(fp,"#include <TTreeReaderArray.h>\n"); // TODO: optimization: only if there are leaf arrays
+      ofs <<
+R"CODE(//////////////////////////////////////////////////////////
 
-      // Add headers for user classes
-      fprintf(fp,"\n\n");
-      fprintf(fp,"// Headers needed by this particular selector\n");
+#ifndef )CODE" << fClassname << R"CODE(_h
+#define )CODE" << fClassname << R"CODE(_h
+
+#include <TROOT.h>
+#include <TChain.h>
+#include <TFile.h>
+)CODE";
+      if (isHbook) ofs << "#include <THbookFile.h>" << std::endl;
+      ofs <<
+R"CODE(#include <TSelector.h>
+#include <TTreeReader.h>
+#include <TTreeReaderValue.h>
+#include <TTreeReaderArray.h>
+
+// Headers needed by this particular selector
+)CODE";
+
       TIter next(&fListOfHeaders);
       TObject *header;
       while ( (header = next()) ) {
-         fprintf(fp, "%s", header->GetTitle());
+         ofs << header->GetTitle() << std::endl;
       }
-      fprintf(fp, "\n\n");
+      ofs << std::endl << std::endl;
 
-      // Generate class declaration
-      fprintf(fp,"class %s : public TSelector {\n", fClassname.Data());
-      fprintf(fp,"public :\n");
-      fprintf(fp,"   TTreeReader     fReader;  //!the tree reader\n");
-      fprintf(fp,"   TTree          *fChain = 0;   //!pointer to the analyzed TTree or TChain\n");
-      // Generate TTreeReaderValues and Arrays
-      fprintf(fp,"\n   // Readers to access the data (delete the ones you do not need).\n");
+      // Generate class declaration with TTreeReaderValues and Arrays
+      ofs <<
+R"CODE(class )CODE" << fClassname << R"CODE( : public TSelector {
+public :
+   TTreeReader     fReader;  //!the tree reader
+   TTree          *fChain = 0;   //!pointer to the analyzed TTree or TChain
+
+   // Readers to access the data (delete the ones you do not need).
+)CODE";
       next = &fListOfReaders;
       TTreeReaderDescriptor *descriptor;
       while ( ( descriptor = (TTreeReaderDescriptor*)next() ) ) {
-         fprintf(fp, "   TTreeReader%s<%s> %s = {fReader, \"%s\"};\n",
-                     descriptor->fType == TTreeReaderDescriptor::ReaderType::kValue ? "Value" : "Array",
-                     descriptor->fDataType.Data(),
-                     descriptor->fName.Data(),
-                     descriptor->fBranchName.Data() );
+         ofs << "   TTreeReader" << (descriptor->fType == TTreeReaderDescriptor::ReaderType::kValue ? "Value" : "Array")
+                                 << "<" << descriptor->fDataType
+                                 << "> " << descriptor->fName
+                                 << " = {fReader, \"" << descriptor->fBranchName << "\"};" << std::endl;
       }
-      fprintf(fp, "\n\n");
       // Generate class member functions prototypes
-      next.Reset();
-      fprintf(fp,"   %s(TTree * /*tree*/ =0) { }\n", fClassname.Data());
-      fprintf(fp,"   virtual ~%s() { }\n", fClassname.Data());
-      fprintf(fp,"   virtual Int_t   Version() const { return 2; }\n");
-      fprintf(fp,"   virtual void    Begin(TTree *tree);\n");
-      fprintf(fp,"   virtual void    SlaveBegin(TTree *tree);\n");
-      fprintf(fp,"   virtual void    Init(TTree *tree);\n");
-      fprintf(fp,"   virtual Bool_t  Notify();\n");
-      fprintf(fp,"   virtual Bool_t  Process(Long64_t entry);\n");
-      fprintf(fp,"   virtual Int_t   GetEntry(Long64_t entry, Int_t getall = 0) { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }\n");
-      fprintf(fp,"   virtual void    SetOption(const char *option) { fOption = option; }\n");
-      fprintf(fp,"   virtual void    SetObject(TObject *obj) { fObject = obj; }\n");
-      fprintf(fp,"   virtual void    SetInputList(TList *input) { fInput = input; }\n");
-      fprintf(fp,"   virtual TList  *GetOutputList() const { return fOutput; }\n");
-      fprintf(fp,"   virtual void    SlaveTerminate();\n");
-      fprintf(fp,"   virtual void    Terminate();\n\n");
-      fprintf(fp,"   ClassDef(%s,0);\n", fClassname.Data());
-      fprintf(fp,"};\n");
-      fprintf(fp,"\n");
-      fprintf(fp,"#endif\n\n");
-      // Generate code for Init and Notify
-      fprintf(fp,"#ifdef %s_cxx\n", fClassname.Data());
-      fprintf(fp,"void %s::Init(TTree *tree)\n", fClassname.Data());
-      fprintf(fp,"{\n");
-      fprintf(fp,"   // The Init() function is called when the selector needs to initialize\n"
-                 "   // a new tree or chain. Typically here the reader is initialized.\n"
-                 "   // It is normally not necessary to make changes to the generated\n"
-                 "   // code, but the routine can be extended by the user if needed.\n"
-                 "   // Init() will be called many times when running on PROOF\n"
-                 "   // (once per file to be processed).\n\n");
-      fprintf(fp,"   fReader.SetTree(tree);\n");
-      fprintf(fp,"}\n\n");
+      ofs <<
+R"CODE(
 
-      fprintf(fp,"Bool_t %s::Notify()\n", fClassname.Data());
-      fprintf(fp,"{\n");
-      fprintf(fp,"   // The Notify() function is called when a new file is opened. This\n"
-                 "   // can be either for a new TTree in a TChain or when when a new TTree\n"
-                 "   // is started when using PROOF. It is normally not necessary to make changes\n"
-                 "   // to the generated code, but the routine can be extended by the\n"
-                 "   // user if needed. The return value is currently not used.\n\n");
-      fprintf(fp,"   return kTRUE;\n");
-      fprintf(fp,"}\n\n");
-      fprintf(fp,"#endif // #ifdef %s_cxx\n", fClassname.Data());
-      fclose(fp);
+   )CODE" << fClassname << R"CODE((TTree * /*tree*/ =0) { }
+   virtual ~)CODE" << fClassname << R"CODE(() { }
+   virtual Int_t   Version() const { return 2; }
+   virtual void    Begin(TTree *tree);
+   virtual void    SlaveBegin(TTree *tree);
+   virtual void    Init(TTree *tree);
+   virtual Bool_t  Notify();
+   virtual Bool_t  Process(Long64_t entry);
+   virtual Int_t   GetEntry(Long64_t entry, Int_t getall = 0) { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }
+   virtual void    SetOption(const char *option) { fOption = option; }
+   virtual void    SetObject(TObject *obj) { fObject = obj; }
+   virtual void    SetInputList(TList *input) { fInput = input; }
+   virtual TList  *GetOutputList() const { return fOutput; }
+   virtual void    SlaveTerminate();
+   virtual void    Terminate();
+
+   ClassDef()CODE" << fClassname << R"CODE(,0);
+
+};
+
+#endif
+
+#ifdef )CODE" << fClassname << R"CODE(_cxx
+void )CODE" << fClassname << R"CODE(::Init(TTree *tree)
+{
+   // The Init() function is called when the selector needs to initialize
+   // a new tree or chain. Typically here the reader is initialized.
+   // It is normally not necessary to make changes to the generated
+   // code, but the routine can be extended by the user if needed.
+   // Init() will be called many times when running on PROOF
+   // (once per file to be processed).
+
+   fReader.SetTree(tree);
+}
+
+Bool_t )CODE" << fClassname << R"CODE(::Notify()
+{
+   // The Notify() function is called when a new file is opened. This
+   // can be either for a new TTree in a TChain or when when a new TTree
+   // is started when using PROOF. It is normally not necessary to make changes
+   // to the generated code, but the routine can be extended by the
+   // user if needed. The return value is currently not used.
+
+   return kTRUE;
+}
+
+
+#endif // #ifdef )CODE" << fClassname << R"CODE(_cxx
+)CODE";
+      ofs.close();
 
       //======================Generate classname.C=====================
       TString tcimp;
       tcimp.Form("%s.C", fClassname.Data());
-      FILE *fpc = fopen(tcimp, "w");
-      if (!fpc) {
+      std::ofstream ofsc (tcimp, std::ofstream::out);
+      if (!ofsc) {
          Error("WriteSelector","cannot open output file %s", tcimp.Data());
          return;
       }
 
-      fprintf(fpc,"#define %s_cxx\n", fClassname.Data());
-      fprintf(fpc,"// The class definition in %s.h has been generated automatically\n", fClassname.Data());
-      fprintf(fpc,"// by the ROOT utility TTree::MakeSelector(). This class is derived\n");
-      fprintf(fpc,"// from the ROOT class TSelector. For more information on the TSelector\n"
-                  "// framework see $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.\n\n");
-      fprintf(fpc,"// The following methods are defined in this file:\n");
-      fprintf(fpc,"//    Begin():        called every time a loop on the tree starts,\n");
-      fprintf(fpc,"//                    a convenient place to create your histograms.\n");
-      fprintf(fpc,"//    SlaveBegin():   called after Begin(), when on PROOF called only on the\n"
-                  "//                    slave servers.\n");
-      fprintf(fpc,"//    Process():      called for each event, in this function you decide what\n");
-      fprintf(fpc,"//                    to read and fill your histograms.\n");
-      fprintf(fpc,"//    SlaveTerminate: called at the end of the loop on the tree, when on PROOF\n"
-                  "//                    called only on the slave servers.\n");
-      fprintf(fpc,"//    Terminate():    called at the end of the loop on the tree,\n");
-      fprintf(fpc,"//                    a convenient place to draw/fit your histograms.\n");
-      fprintf(fpc,"//\n");
-      fprintf(fpc,"// To use this file, try the following session on your Tree T:\n");
-      fprintf(fpc,"//\n");
-      fprintf(fpc,"// root> T->Process(\"%s.C\")\n", fClassname.Data());
-      fprintf(fpc,"// root> T->Process(\"%s.C\",\"some options\")\n", fClassname.Data());
-      fprintf(fpc,"// root> T->Process(\"%s.C+\")\n", fClassname.Data());
-      fprintf(fpc,"//\n\n");
-      fprintf(fpc,"#include \"%s\"\n",thead.Data());
-      fprintf(fpc,"#include <TH2.h>\n");
-      fprintf(fpc,"#include <TStyle.h>\n");
-      fprintf(fpc,"\n");
-      // generate code for class member function Begin
-      fprintf(fpc,"\n");
-      fprintf(fpc,"void %s::Begin(TTree * /*tree*/)\n", fClassname.Data());
-      fprintf(fpc,"{\n");
-      fprintf(fpc,"   // The Begin() function is called at the start of the query.\n");
-      fprintf(fpc,"   // When running with PROOF Begin() is only called on the client.\n");
-      fprintf(fpc,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
-      fprintf(fpc,"\n");
-      fprintf(fpc,"   TString option = GetOption();\n");
-      fprintf(fpc,"\n");
-      fprintf(fpc,"}\n");
-      // generate code for class member function SlaveBegin
-      fprintf(fpc,"\n");
-      fprintf(fpc,"void %s::SlaveBegin(TTree * /*tree*/)\n", fClassname.Data());
-      fprintf(fpc,"{\n");
-      fprintf(fpc,"   // The SlaveBegin() function is called after the Begin() function.\n");
-      fprintf(fpc,"   // When running with PROOF SlaveBegin() is called on each slave server.\n");
-      fprintf(fpc,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
-      fprintf(fpc,"\n");
-      fprintf(fpc,"   TString option = GetOption();\n");
-      fprintf(fpc,"\n");
-      fprintf(fpc,"}\n");
-      // generate code for class member function Process
-      fprintf(fpc,"\n");
-      fprintf(fpc,"Bool_t %s::Process(Long64_t entry)\n", fClassname.Data());
-      fprintf(fpc,"{\n");
-      fprintf(fpc,"   // The Process() function is called for each entry in the tree (or possibly\n"
-                  "   // keyed object in the case of PROOF) to be processed. The entry argument\n"
-                  "   // specifies which entry in the currently loaded tree is to be processed.\n"
-                  "   // When processing keyed objects with PROOF, the object is already loaded\n"
-                  "   // and is available via the fObject pointer.\n"
-                  "   //\n"
-                  "   // This function should contain the \"body\" of the analysis. It can contain\n"
-                  "   // simple or elaborate selection criteria, run algorithms on the data\n"
-                  "   // of the event and typically fill histograms.\n"
-                  "   //\n"
-                  "   // The processing can be stopped by calling Abort().\n"
-                  "   //\n"
-                  "   // Use fStatus to set the return value of TTree::Process().\n"
-                  "   //\n"
-                  "   // The return value is currently not used.\n\n");
-      fprintf(fpc,"\n");
-      fprintf(fpc,"   fReader.SetEntry(entry);\n\n\n");
-      fprintf(fpc,"   return kTRUE;\n");
-      fprintf(fpc,"}\n");
-      // generate code for class member function SlaveTerminate
-      fprintf(fpc,"\n");
-      fprintf(fpc,"void %s::SlaveTerminate()\n", fClassname.Data());
-      fprintf(fpc,"{\n");
-      fprintf(fpc,"   // The SlaveTerminate() function is called after all entries or objects\n"
-                  "   // have been processed. When running with PROOF SlaveTerminate() is called\n"
-                  "   // on each slave server.");
-      fprintf(fpc,"\n");
-      fprintf(fpc,"\n");
-      fprintf(fpc,"}\n");
-      // generate code for class member function Terminate
-      fprintf(fpc,"\n");
-      fprintf(fpc,"void %s::Terminate()\n", fClassname.Data());
-      fprintf(fpc,"{\n");
-      fprintf(fpc,"   // The Terminate() function is the last function to be called during\n"
-                  "   // a query. It always runs on the client, it can be used to present\n"
-                  "   // the results graphically or save the results to file.");
-      fprintf(fpc,"\n");
-      fprintf(fpc,"\n");
-      fprintf(fpc,"}\n");
-      fclose(fpc);
+      ofsc <<
+R"CODE(#define )CODE" << fClassname << R"CODE(_cxx
+// The class definition in )CODE" << fClassname << R"CODE(.h has been generated automatically
+// by the ROOT utility TTree::MakeSelector(). This class is derived
+// from the ROOT class TSelector. For more information on the TSelector
+// framework see $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.
+
+
+// The following methods are defined in this file:
+//    Begin():        called every time a loop on the tree starts,
+//                    a convenient place to create your histograms.
+//    SlaveBegin():   called after Begin(), when on PROOF called only on the
+//                    slave servers.
+//    Process():      called for each event, in this function you decide what
+//                    to read and fill your histograms.
+//    SlaveTerminate: called at the end of the loop on the tree, when on PROOF
+//                    called only on the slave servers.
+//    Terminate():    called at the end of the loop on the tree,
+//                    a convenient place to draw/fit your histograms.
+//
+// To use this file, try the following session on your Tree T:
+//
+// root> T->Process(")CODE" << fClassname << R"CODE(.C")
+// root> T->Process(")CODE" << fClassname << R"CODE(.C","some options")
+// root> T->Process(")CODE" << fClassname << R"CODE(.C+")
+//
+
+
+#include ")CODE" << thead << R"CODE("
+#include <TH2.h>
+#include <TStyle.h>
+
+void )CODE" << fClassname << R"CODE(::Begin(TTree * /*tree*/)
+{
+   // The Begin() function is called at the start of the query.
+   // When running with PROOF Begin() is only called on the client.
+   // The tree argument is deprecated (on PROOF 0 is passed).
+
+   TString option = GetOption();
+}
+
+void )CODE" << fClassname << R"CODE(::SlaveBegin(TTree * /*tree*/)
+{
+   // The SlaveBegin() function is called after the Begin() function.
+   // When running with PROOF SlaveBegin() is called on each slave server.
+   // The tree argument is deprecated (on PROOF 0 is passed).
+
+   TString option = GetOption();
+
+}
+
+Bool_t )CODE" << fClassname << R"CODE(::Process(Long64_t entry)
+{
+   // The Process() function is called for each entry in the tree (or possibly
+   // keyed object in the case of PROOF) to be processed. The entry argument
+   // specifies which entry in the currently loaded tree is to be processed.
+   // When processing keyed objects with PROOF, the object is already loaded
+   // and is available via the fObject pointer.
+   //
+   // This function should contain the \"body\" of the analysis. It can contain
+   // simple or elaborate selection criteria, run algorithms on the data
+   // of the event and typically fill histograms.
+   //
+   // The processing can be stopped by calling Abort().
+   //
+   // Use fStatus to set the return value of TTree::Process().
+   //
+   // The return value is currently not used.
+
+   fReader.SetEntry(entry);
+
+   return kTRUE;
+}
+
+void )CODE" << fClassname << R"CODE(::SlaveTerminate()
+{
+   // The SlaveTerminate() function is called after all entries or objects
+   // have been processed. When running with PROOF SlaveTerminate() is called
+   // on each slave server.
+
+}
+
+void )CODE" << fClassname << R"CODE(::Terminate()
+{
+   // The Terminate() function is the last function to be called during
+   // a query. It always runs on the client, it can be used to present
+   // the results graphically or save the results to file.
+
+})CODE";
+      ofsc.close();
    }
 }
