@@ -2621,36 +2621,15 @@ int strncasecmp(const char *str1, const char *str2, Ssiz_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a TString in the cling interpreter:
 
-std::string cling::printValue(const TString* const /*p*/, const TString* const u,
-                              const cling::Value& /*VPI*/) {
-   TString s = TString::Format("\"%s\"[%d]", u->Data(), (int)u->Length());
+std::string cling::printValue(const TString &val) {
+   TString s = TString::Format("\"%s\"[%d]", val.Data(), (int)val.Length());
    return s.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a TString in the cling interpreter:
 
-std::string cling::printValue(const TSubString* const /*p*/, const TSubString* const u,
-                              const cling::Value& /*VPI*/) {
-   TString s = TString::Format("\"%.*s\"[%d]", (int)u->Length(), u->Data(), (int)u->Length());
-   return s.Data();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print a TString in the cling interpreter:
-
-std::string cling::printValue(const std::string* const /*p*/, const std::string* const u,
-                              const cling::Value& /*VPI*/) {
-   TString s = TString::Format("\"%s\"[%d]", u->c_str(), (int)u->length());
-   return s.Data();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print a TString in the cling interpreter:
-
-std::string cling::printValue(const std::string_view* const /*p*/, const std::string_view* const u,
-                              const cling::Value& /*VPI*/) {
-   std::string val(*u);
-   TString s = TString::Format("\"%s\"[%d]", val.c_str(), (int)u->length());
+std::string cling::printValue(const TSubString &val) {
+   TString s = TString::Format("\"%.*s\"[%d]", (int)val.Length(), val.Data(), (int)val.Length());
    return s.Data();
 }
