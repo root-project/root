@@ -2691,7 +2691,7 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
          }
          rootmapFile << "\n";
       }
-      rootmapFile << "[" << rootmapLibName << " ]\n";
+      rootmapFile << "[ " << rootmapLibName << " ]\n";
 
       // Loop on selected classes and insert them in the rootmap
       if (!classesNames.empty()) {
