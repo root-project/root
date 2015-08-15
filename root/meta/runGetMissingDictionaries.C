@@ -158,7 +158,7 @@ int runGetMissingDictionaries()
    expectedResult.Add(TClass::GetClass("TypedefExample"));
    expectedResult.Add(TClass::GetClass("BasicTests::TestAll"));
 
-   cout<<"No recursion:"<<endl;
+   cerr<<"No recursion:"<<endl; // Write on the same stream of the errors below
    THashTable missingDictClassesNoRecursion;
    // Assert GetMissingDictionaries without recursion.
    myClass->GetMissingDictionaries(missingDictClassesNoRecursion, false);
@@ -218,7 +218,7 @@ int runGetMissingDictionaries()
    expectedResult.Add(TClass::GetClass("BasicTests::HasVecDouble32"));
    expectedResult.Add(TClass::GetClass("map<unsigned short,Double32_t>"));
 
-   cout<<"With recursion:"<<endl;
+   cerr<<"With recursion:"<<endl; // Write on the same stream of the errors below
    THashTable missingDictClassesRecursion;
    myClass->GetMissingDictionaries(missingDictClassesRecursion, true);
    //missingDictClassesRecursion.Print();
