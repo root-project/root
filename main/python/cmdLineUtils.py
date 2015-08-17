@@ -74,10 +74,12 @@ import logging
 
 ##
 # redirect output (escape characters during ROOT importation...)
-osEnviron = os.environ["TERM"]
-os.environ["TERM"] = "vt100"
-import ROOT
-os.environ["TERM"] = osEnviron
+#osEnviron = os.environ["TERM"]
+#os.environ["TERM"] = "vt100"
+#import ROOT
+#os.environ["TERM"] = osEnviron
+with stdoutRedirected():
+    import ROOT
 
 # The end of imports
 ##########
