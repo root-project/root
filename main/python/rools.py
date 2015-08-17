@@ -7,7 +7,42 @@
 
 """Command line to dump ROOT files contents to terminal"""
 
-from cmdLineUtils import *
+import sys
+import ROOT
+import cmdLineUtils
+
+# Help strings
+COMMAND_HELP = """Display ROOT files contents in the terminal."""
+
+ONE_HELP = "Print content in one column"
+LONG_PRINT_HELP = "use a long listing format."
+TREE_PRINT_HELP = "print tree recursively and use a long listing format."
+
+EPILOG = """Examples:
+- rools example.root
+  Display contents of the ROOT file 'example.root'.
+
+- rools example.root:dir
+  Display contents of the directory 'dir' from the ROOT file 'example.root'.
+
+- rools example.root:*
+  Display contents of the ROOT file 'example.root' and his subdirectories.
+
+- rools file1.root file2.root
+  Display contents of ROOT files 'file1.root' and 'file2.root'.
+
+- rools *.root
+  Display contents of ROOT files whose name ends with '.root'.
+
+- rools -1 example.root
+  Display contents of the ROOT file 'example.root' in one column.
+  
+- rools -l example.root
+  Display contents of the ROOT file 'example.root' and use a long listing format.
+
+- rools -t example.root
+  Display contents of the ROOT file 'example.root', use a long listing format and print trees recursively.
+"""
 
 # Ansi characters
 ANSI_BOLD = "\x1B[1m"
@@ -29,14 +64,6 @@ def isSpecial(ansiCode,string):
     terminal of a not Windows platform"""
     if IS_TERMINAL and not IS_WIN32: return ansiCode+string+ANSI_END
     else: return string
-
-def keyListSort(keyList):
-    """Sort list of TKey by their names ignoring the case"""
-    keyList.sort(key=lambda y: y.GetName().lower())
-
-def tupleListSort(tupleList):
-    """Sort list of tuple by their first elements ignoring the case"""
-    tupleList.sort(key=lambda y: y[0].lower())
 
 def write(string,indent=0,end=""):
     """Use sys.stdout.write to write the string with an indentation
@@ -95,7 +122,8 @@ def roolsPrintLongLs(keyList,optDict,indent):
     date = ROOT.Long(0)
     for key in keyList:
         time = ROOT.Long(0)
-        key.GetDatime().GetDateTime(key.GetDatime().Get(),date,time)
+        datime = key.GetDatime()
+        datime.GetDateTime(datime.Get(),date,time)
         time = prepareTime(time)
         rec = \
             [key.GetClassName(), \
@@ -104,7 +132,7 @@ def roolsPrintLongLs(keyList,optDict,indent):
             key.GetName(), \
             "\""+key.GetTitle()+"\""]
         write(LONG_TEMPLATE.format(*rec,**dic),indent,end="\n")
-        if optDict['tree'] and isTreeKey(key):
+        if optDict['tree'] and cmdLineUtils.isTreeKey(key):
             tree = key.ReadObj()
             recursifTreePrinter(tree,indent+2)
 
@@ -230,18 +258,18 @@ def roolsPrintSimpleLs(keyList,indent,oneColumn):
         if (i+1)%ncol != 0 and i != len(keyList)-1:
             if not IS_TERMINAL: write( \
                 key.GetName().ljust(col_widths[i%ncol]))
-            elif isDirectoryKey(keyList[i]): write( \
+            elif cmdLineUtils.isDirectoryKey(keyList[i]): write( \
                 isSpecial(ANSI_BLUE,key.GetName()).ljust( \
                     col_widths[i%ncol] + ANSI_BLUE_LENGTH))
-            elif isTreeKey(keyList[i]): write( \
+            elif cmdLineUtils.isTreeKey(keyList[i]): write( \
                 isSpecial(ANSI_GREEN,key.GetName()).ljust( \
                     col_widths[i%ncol] + ANSI_GREEN_LENGTH))
             else: write(key.GetName().ljust(col_widths[i%ncol]))
         else: # No spaces after the last element of the line or of the list
             if not IS_TERMINAL: write(key.GetName())
-            elif isDirectoryKey(keyList[i]):
+            elif cmdLineUtils.isDirectoryKey(keyList[i]):
                 write(isSpecial(ANSI_BLUE, key.GetName()))
-            elif isTreeKey(keyList[i]):
+            elif cmdLineUtils.isTreeKey(keyList[i]):
                 write(isSpecial(ANSI_GREEN, key.GetName()))
             else: write(key.GetName())
             write('\n')
@@ -255,93 +283,45 @@ def roolsPrint(keyList,optDict,indent=0):
        oneColumn = True if optDict['one'] else False
        roolsPrintSimpleLs(keyList,indent, oneColumn)
 
-# Help strings
-COMMAND_HELP = \
-"""Display ROOT files contents in the terminal. Examples:
-- rools example.root
-  Display contents of the ROOT file 'example.root'.
-
-- rools example.root:dir
-  Display contents of the directory 'dir' from the ROOT file 'example.root'.
-
-- rools example.root:*
-  Display contents of the ROOT file 'example.root' and his subdirectories.
-
-- rools file1.root file2.root
-  Display contents of ROOT files 'file1.root' and 'file2.root'.
-
-- rools *.root
-  Display contents of ROOT files whose name ends with '.root'.
-
-- rools -l example.root
-  Display contents of the ROOT file 'example.root' and use a long listing format.
-
-- rools -t example.root
-  Display contents of the ROOT file 'example.root', use a long listing format and print trees recursively.
-"""
-
-LONG_PRINT_HELP = \
-    "use a long listing format."
-TREE_PRINT_HELP = \
-    "print tree recursively and use a long listing format."
-
-
-
-##### Beginning of the main code #####
-
-# Collect arguments with the module argparse
-parser = argparse.ArgumentParser(description=COMMAND_HELP)
-parser.add_argument("sourcePatternList", help=SOURCES_HELP, nargs='+')
-parser.add_argument("-l", "--long", help=LONG_PRINT_HELP, action="store_true")
-parser.add_argument("-1", "--one", help="Print content in one column", action="store_true")
-parser.add_argument("-t", "--tree", help=TREE_PRINT_HELP, action="store_true")
-args = parser.parse_args()
-
-# Create a list of tuples that contain source ROOT file names
-# and lists of path in these files
-sourceList = \
-    [tup for pattern in args.sourcePatternList \
-    for tup in patternToFileNameAndPathSplitList(pattern)]
-
-# Create a dictionnary with options
-optDict = vars(args)
-
-# Initialize a boolean and indent level
-manySources = len(sourceList) > 1
-indent = 2 if manySources else 0
-
-# Loop on the ROOT files
-first_round_file = True
-tupleListSort(sourceList)
-
-for fileName, pathSplitList in sourceList:
-    with stderrRedirected():
-        rootFile = openROOTFile(fileName)
-    objList,dirList = keyClassSpliter(rootFile,pathSplitList)
-    keyList = [getKey(rootFile,pathSplit) for pathSplit in objList]
-    keyListSort(keyList)
-    dirList.sort() # need improvement to ignore the case
-
-    # Paths of file
+def processFile(fileName, pathSplitList, optDict, manySources, indent):
+    retcode = 0
+    rootFile = cmdLineUtils.openROOTFile(fileName)
+    if not rootFile: return 1
+    
+    keyList,dirList = cmdLineUtils.keyClassSpliter(rootFile,pathSplitList)
     if manySources: write("{0} :".format(fileName)+"\n")
-
-    # Print with the rools style
     roolsPrint(keyList,optDict,indent)
 
-    # Initialize a boolean and indent directory level
+    # Loop on the directories
     manyPathSplits = len(pathSplitList) > 1
     indentDir = 2 if manyPathSplits else 0
-
-    # Loop on the directories
     for pathSplit in dirList:
-        keyList = getKeyList(rootFile,pathSplit)
-        keyListSort(keyList)
-
-        # Paths of object
-        if manyPathSplits:
-            write("{0} :".format("/".join(pathSplit)),indent,end="\n")
-
-        # Print with the rools style
+        keyList = cmdLineUtils.getKeyList(rootFile,pathSplit)
+        cmdLineUtils.keyListSort(keyList)
+        if manyPathSplits: write("{0} :".format("/".join(pathSplit)),indent,end="\n")
         roolsPrint(keyList,optDict,indent+indentDir)
-
+        
     rootFile.Close()
+    return retcode
+    
+def execute():
+    # Collect arguments with the module argparse
+    parser = cmdLineUtils.getParserFile(COMMAND_HELP, EPILOG)
+    parser.add_argument("-1", "--one", help=ONE_HELP, action="store_true")
+    parser.add_argument("-l", "--long", help=LONG_PRINT_HELP, action="store_true")
+    parser.add_argument("-t", "--tree", help=TREE_PRINT_HELP, action="store_true")
+    
+    # Put arguments in shape
+    sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
+    if sourceList == []: return 1
+    cmdLineUtils.tupleListSort(sourceList)
+    
+    # Loop on the ROOT files
+    retcode = 0
+    manySources = len(sourceList) > 1
+    indent = 2 if manySources else 0
+    for fileName, pathSplitList in sourceList:
+        retcode += processFile(fileName, pathSplitList, optDict, manySources, indent)
+    return retcode
+
+sys.exit(execute())

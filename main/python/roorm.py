@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# ROOT command line tools: rooeventselector
+# ROOT command line tools: roorm
 # Author: Julien Ripoche
 # Mail: julien.ripoche@u-psud.fr
 # Date: 13/08/15
@@ -27,32 +27,29 @@ EPILOG = """Examples:
   Display a confirmation request before deleting: 'remove 'hist' from 'example.root' ? (y/n) :'
 """
 
-I_HELP = "prompt before every removal."
-
 def removeObjects(fileName, pathSplitList, optDict):
-   with cmdLineUtils.stderrRedirected():
-      rootFile = cmdLineUtils.openROOTFile(fileName,"update")
-   if not rootFile:
-      return 1
-   for pathSplit in pathSplitList:
-      cmdLineUtils.deleteRootObject(rootFile,pathSplit,optDict)
-   rootFile.Close()
-   return 0
+    retcode = 0
+    rootFile = cmdLineUtils.openROOTFile(fileName,"update")
+    if not rootFile: return 1
+    for pathSplit in pathSplitList:
+        retcode += cmdLineUtils.deleteRootObject(rootFile,pathSplit,optDict)
+    rootFile.Close()
+    return retcode
 
 def execute():
-   # Collect arguments with the module argparse
-   parser = cmdLineUtils.getParserFile(COMMAND_HELP, EPILOG)
-   parser.add_argument("-i","--interactive", help=I_HELP, action="store_true")
-   parser.add_argument("-r","--recursive", help=cmdLineUtils.RECURSIVE_HELP, action="store_true")
+    # Collect arguments with the module argparse
+    parser = cmdLineUtils.getParserFile(COMMAND_HELP, EPILOG)
+    parser.add_argument("-i","--interactive", help=cmdLineUtils.INTERACTIVE_HELP, action="store_true")
+    parser.add_argument("-r","--recursive", help=cmdLineUtils.RECURSIVE_HELP, action="store_true")
 
-   sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
+    # Put arguments in shape
+    sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
+    if sourceList == []: return 1
 
-   # Loop on the ROOT files
-   retcode = 0
-   for fileName, pathSplitList in sourceList:
-      retcode += removeObjects(fileName, pathSplitList,optDict)
-
-   return retcode
-
+    # Loop on the root files
+    retcode = 0
+    for fileName, pathSplitList in sourceList:
+        retcode += removeObjects(fileName, pathSplitList,optDict)
+    return retcode
 
 sys.exit(execute())
