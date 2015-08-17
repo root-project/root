@@ -67,21 +67,17 @@ def stderrRedirected():
 ##########
 # Imports
 
-##
-# redirect output (escape characters during ROOT importation...)
-# can also be done :
-# osEnviron = os.environ["TERM"]
-# os.environ["TERM"] = "vt100"
-# import ROOT
-# os.environ["TERM"] = osEnviron
-
-with stdoutRedirected():
-    import ROOT
-
 import argparse
 import glob
 import fnmatch
 import logging
+
+##
+# redirect output (escape characters during ROOT importation...)
+osEnviron = os.environ["TERM"]
+os.environ["TERM"] = "vt100"
+import ROOT
+os.environ["TERM"] = osEnviron
 
 # The end of imports
 ##########
@@ -130,6 +126,13 @@ def getParserSourceDest(theHelp, theEpilog=""):
 
 ##########
 # Several utils
+
+@contextmanager
+def _setIgnoreLevel(level):
+    originalLevel = ROOT.gErrorIgnoreLevel
+    ROOT.gErrorIgnoreLevel = level
+    yield
+    ROOT.gErrorIgnoreLevel = originalLevel
 
 def changeDirectory(rootFile,pathSplit):
     """
@@ -230,7 +233,7 @@ def dirListSort(dirList):
     Sort list of directories by their names ignoring the case
     """
     dirList.sort(key=lambda x: [n.lower() for n in x])
-        
+
 def keyClassSpliter(rootFile,pathSplitList):
     """
     Return a list of directories and a list of keys corresponding
@@ -251,7 +254,8 @@ def openROOTFile(fileName, mode="read"):
     Open the ROOT file corresponding to fileName in the corresponding mode,
     redirecting the output not to see missing dictionnaries
     """
-    with stderrRedirected():
+    #with stderrRedirected():
+    with _setIgnoreLevel(ROOT.kError):
         theFile = ROOT.TFile.Open(fileName, mode)
     if not theFile:
         logging.warning("File %s does not exist", fileName)
@@ -313,14 +317,14 @@ def patternToPathSplitList(fileName,pattern):
                     for key in ROOT.gDirectory.GetListOfKeys() \
                     if fnmatch.fnmatch(key.GetName(),patternPiece)])
         pathSplitList = newPathSplitList
-        
+
     # No match
     if pathSplitList == []:
         logging.warning("can't find {0} in {1}".format(pattern,fileName))
 
     # Same match (remove double occurences from the list)
     manyOccurenceRemove(pathSplitList,fileName)
-        
+
     return pathSplitList
 
 def fileNameListMatch(filePattern,wildcards):
