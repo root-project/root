@@ -160,6 +160,11 @@ namespace ROOT {
          \param obj raw R object
          */
          TRFunctionImport(SEXP obj);
+         /**
+         TRFunctionImport  constructor
+         \param obj  TRObject object
+         */
+         TRFunctionImport(TRObject &obj);
 
          ~TRFunctionImport()
          {
@@ -172,6 +177,11 @@ namespace ROOT {
 #include<TRFunctionImport__oprtr.h>
          ClassDef(TRFunctionImport, 0) //
       };
+      
+      template<> inline TRObject::operator TRFunctionImport()
+      {
+	return (SEXP)fObj;
+      }
    }
 }
 

@@ -39,6 +39,15 @@ TRInterface::TRInterface(const int argc, const char *argv[], const bool loadRcpp
    RComp_retrieveCompsSym = Rf_install(".retrieveCompletions");
    rl_attempted_completion_function = R_custom_completion;
    statusEventLoop = kFALSE;
+   std::string osname=Eval("Sys.info()['sysname']");
+   //only for linux/mac windows is not supported by ROOT yet.
+   if(osname=="Linux")
+   {
+      Execute("options(device='x11')");
+   }else{
+      Execute("options(device='quartz')");     
+  }
+   
 }
 
 TRInterface::~TRInterface()

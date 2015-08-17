@@ -42,6 +42,12 @@ TRFunctionImport::TRFunctionImport(const TString& name, const TString& ns)
 }
 
 //______________________________________________________________________________
+TRFunctionImport::TRFunctionImport(TRObject &obj):TObject(obj)
+{
+  f=new Rcpp::Function((SEXP)obj);
+}
+
+//______________________________________________________________________________
 TRFunctionImport::TRFunctionImport(SEXP obj)
 {
     f=new Rcpp::Function(obj);  
