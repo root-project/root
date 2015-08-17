@@ -22,10 +22,17 @@ if(CMAKE_Fortran_COMPILER)
 endif()
 
 if(python)
-  file(GLOB utils RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} python/roo*)
-  foreach(util ${utils})
-    install(FILES ${util} DESTINATION ${CMAKE_INSTALL_BINDIR}/${CMAKE_INSTALL_BINDIR} RENAME ${utilFileName})
-    file(COPY ${util} DESTINATION ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
+  file(GLOB utils RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} python/root*)
+  foreach(rawUtilName ${utils})
+    get_filename_component(utilName ${rawUtilName} NAME)
+    if(NOT WIN32)
+      # We need the .py only on Windows
+      string(REPLACE ".py" "" utilName ${utilName})
+    endif()
+
+    install(FILES ${utilName} DESTINATION ${CMAKE_INSTALL_BINDIR}/${CMAKE_INSTALL_BINDIR} RENAME ${utilName})
+    execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                    COMMAND ${CMAKE_COMMAND} -E copy ${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName})
   endforeach()
 
   set(cmdLineUtilsModule "python/cmdLineUtils.py")

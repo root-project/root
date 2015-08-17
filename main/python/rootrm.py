@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# ROOT command line tools: roorm
+# ROOT command line tools: rootrm
 # Author: Julien Ripoche
 # Mail: julien.ripoche@u-psud.fr
 # Date: 13/08/15

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# ROOT command line tools: roobrowse
+# ROOT command line tools: rootbrowse
 # Author: Julien Ripoche
 # Mail: julien.ripoche@u-psud.fr
 # Date: 13/08/15
@@ -16,7 +16,7 @@ COMMAND_HELP = "Open a ROOT file in a TBrowser"
 EPILOG = """Examples:
 - roobrowse
   Open a TBrowser
-  
+
 - roobrowse file.root
   Open the ROOT file 'file.root' in a TBrowser
 """

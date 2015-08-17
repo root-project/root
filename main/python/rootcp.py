@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# ROOT command line tools: roocp
+# ROOT command line tools: rootcp
 # Author: Julien Ripoche
 # Mail: julien.ripoche@u-psud.fr
 # Date: 13/08/15
@@ -59,12 +59,12 @@ def execute():
     if optDict["recreate"] and destFileName in [n[0] for n in sourceList]:
         logging.error("cannot recreate destination file if this is also a source file")
         return 1
-    
+
     # Open destination file
     destFile = cmdLineUtils.openROOTFileCompress(destFileName,optDict)
     if not destFile: return 1
     ROOT.gROOT.GetListOfFiles().Remove(destFile) # Fast copy necessity
-    
+
     # Loop on the root files
     retcode = 0
     for fileName, pathSplitList in sourceList:

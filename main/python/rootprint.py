@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# ROOT command line tools: rooprint
+# ROOT command line tools: rootprint
 # Author: Julien Ripoche
 # Mail: julien.ripoche@u-psud.fr
 # Date: 13/08/15
@@ -43,7 +43,7 @@ def keyListExtended(rootFile,pathSplitList):
     keyList = [key for key in keyList if not cmdLineUtils.isDirectoryKey(key)]
     cmdLineUtils.keyListSort(keyList)
     return keyList
-    
+
 def execute():
     # Collect arguments with the module argparse
     parser = cmdLineUtils.getParserFile(COMMAND_HELP, EPILOG)
@@ -58,7 +58,7 @@ def execute():
     sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
     if sourceList == []: return 1
     cmdLineUtils.tupleListSort(sourceList)
-    
+
     # Option values
     directoryOptionValue = optDict["directory"]
     drawOptionValue = optDict["draw"]

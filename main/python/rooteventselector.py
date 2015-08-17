@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# ROOT command line tools: rooeventselector
+# ROOT command line tools: rooteventselector
 # Author: Julien Ripoche
 # Mail: julien.ripoche@u-psud.fr
 # Date: 13/08/15
@@ -52,7 +52,7 @@ def copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent,
         smallTree.Fill()
     smallTree.Write()
     return retcode
-    
+
 def copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, optDict):
     retcode = 0
     destFileName = destFile.GetName()
@@ -74,16 +74,16 @@ def execute():
     parser.add_argument("--recreate", help=cmdLineUtils.RECREATE_HELP, action="store_true")
     parser.add_argument("-f","--first", type=int, default=0,help=FIRST_EVENT_HELP)
     parser.add_argument("-l","--last", type=int, default=-1, help=LAST_EVENT_HELP)
-    
+
     # Put arguments in shape
     sourceList, destFileName, destPathSplit, optDict = cmdLineUtils.getSourceDestListOptDict(parser)
     if sourceList == [] or destFileName == "": return 1
     if optDict["recreate"] and destFileName in sourceList:
         logging.error("cannot recreate destination file if this is also a source file")
         return 1
-        
+
     # Open destination file
-    destFile = cmdLineUtils.openROOTFileCompress(destFileName,optDict)    
+    destFile = cmdLineUtils.openROOTFileCompress(destFileName,optDict)
     if not destFile: return 1
 
     # Loop on the root file

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# ROOT command line tools: rools
+# ROOT command line tools: rootls
 # Author: Julien Ripoche
 # Mail: julien.ripoche@u-psud.fr
 # Date: 13/08/15
@@ -36,7 +36,7 @@ EPILOG = """Examples:
 
 - rools -1 example.root
   Display contents of the ROOT file 'example.root' in one column.
-  
+
 - rools -l example.root
   Display contents of the ROOT file 'example.root' and use a long listing format.
 
@@ -287,7 +287,7 @@ def processFile(fileName, pathSplitList, optDict, manySources, indent):
     retcode = 0
     rootFile = cmdLineUtils.openROOTFile(fileName)
     if not rootFile: return 1
-    
+
     keyList,dirList = cmdLineUtils.keyClassSpliter(rootFile,pathSplitList)
     if manySources: write("{0} :".format(fileName)+"\n")
     roolsPrint(keyList,optDict,indent)
@@ -300,22 +300,22 @@ def processFile(fileName, pathSplitList, optDict, manySources, indent):
         cmdLineUtils.keyListSort(keyList)
         if manyPathSplits: write("{0} :".format("/".join(pathSplit)),indent,end="\n")
         roolsPrint(keyList,optDict,indent+indentDir)
-        
+
     rootFile.Close()
     return retcode
-    
+
 def execute():
     # Collect arguments with the module argparse
     parser = cmdLineUtils.getParserFile(COMMAND_HELP, EPILOG)
     parser.add_argument("-1", "--one", help=ONE_HELP, action="store_true")
     parser.add_argument("-l", "--long", help=LONG_PRINT_HELP, action="store_true")
     parser.add_argument("-t", "--tree", help=TREE_PRINT_HELP, action="store_true")
-    
+
     # Put arguments in shape
     sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
     if sourceList == []: return 1
     cmdLineUtils.tupleListSort(sourceList)
-    
+
     # Loop on the ROOT files
     retcode = 0
     manySources = len(sourceList) > 1
