@@ -213,22 +213,22 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoocp2Clean
 
 
 
-#ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoocp3PrepareInput
-#                 COMMAND ${TOOLS_PREFIX}/roocp -r test.root copy3.root)
-#
-# ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoocp3
-#                  COMMAND ${TOOLS_PREFIX}/roocp --replace copy3.root:hpx copy3.root:hpxpy
-#                  DEPENDS roottest-python-cmdLineUtils-SimpleRoocp3PrepareInput)
-#
-# ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoocp3CheckOutput
-#                  COMMAND ${TOOLS_PREFIX}/rools -1 copy3.root
-#                  OUTREF SimpleRoocp3.ref
-#                  DEPENDS roottest-python-cmdLineUtils-SimpleRoocp3)
-#
-# ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoocp3Clean
-#                  COMMAND ${TOOLS_PREFIX}/roorm -r copy3.root
-#                  DEPENDS
-#                  roottest-python-cmdLineUtils-SimpleRoocp3CheckOutput)
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoocp3PrepareInput
+                  COMMAND ${TOOLS_PREFIX}/roocp -r test.root copy3.root)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoocp3
+                  COMMAND ${TOOLS_PREFIX}/roocp --replace copy3.root:hpx copy3.root:hpxpy
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoocp3PrepareInput)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoocp3CheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rools -1 copy3.root
+                  OUTREF SimpleRoocp3.ref
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoocp3)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoocp3Clean
+                  COMMAND ${TOOLS_PREFIX}/roorm -r copy3.root
+                  DEPENDS
+                  roottest-python-cmdLineUtils-SimpleRoocp3CheckOutput)
 
 
 
@@ -268,5 +268,96 @@ ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoocp5Clean
                   DEPENDS roottest-python-cmdLineUtils-SimpleRoocp5CheckOutput)
 #########################################################################
 
+############################# ROOMV TESTS ############################
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv1PrepareInput
+                  COMMAND ${TOOLS_PREFIX}/roocp -r test.root move1.root)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv1
+                  COMMAND ${TOOLS_PREFIX}/roomv move1.root:hpx move1.root:histo
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv1PrepareInput)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv1CheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rools -1 move1.root
+                  OUTREF SimpleRoomv.ref
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv1)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv1Clean
+                  COMMAND ${TOOLS_PREFIX}/roorm -r move1.root
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv1CheckOutput)
+
+
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv2PrepareInput
+                  COMMAND ${TOOLS_PREFIX}/roocp -r test.root move2.root)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv2
+                  COMMAND ${TOOLS_PREFIX}/roomv move2.root:tof move2.root:fot
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv2PrepareInput)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv2CheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rools -1 move2.root
+                  OUTREF SimpleRoomv2.ref
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv2)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv2Clean
+                  COMMAND ${TOOLS_PREFIX}/roorm -r move2.root
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv2CheckOutput)
+
+
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv3PrepareInput
+                  COMMAND ${TOOLS_PREFIX}/roocp -r test.root move3.root)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv3
+                  COMMAND ${TOOLS_PREFIX}/roomv move3.root:hpx move3.root:hpxpy
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv3PrepareInput)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv3CheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rools -1 move3.root
+                  OUTREF SimpleRoomv3.ref
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv3)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv3Clean
+                  COMMAND ${TOOLS_PREFIX}/roorm -r move3.root
+                  DEPENDS
+                  roottest-python-cmdLineUtils-SimpleRoomv3CheckOutput)
+
+
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv4PrepareInput
+                  COMMAND ${TOOLS_PREFIX}/roocp -r test.root move4.root)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv4
+                  COMMAND ${TOOLS_PREFIX}/roomv move4.root:hpx move4.root:dir
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv4PrepareInput)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv4CheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rools -1 move4.root:*
+                  OUTREF SimpleRoomv4.ref
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv4)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv4Clean
+                  COMMAND ${TOOLS_PREFIX}/roorm -r move4.root
+                  DEPENDS
+                  roottest-python-cmdLineUtils-SimpleRoomv4CheckOutput)
+
+
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv5PrepareInput
+                  COMMAND ${TOOLS_PREFIX}/roocp -r test.root move5.root)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv5
+                  COMMAND ${TOOLS_PREFIX}/roomv move5.root:tof move5.root:dir
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv5PrepareInput)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv5CheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rools -1 move5.root:*
+                  OUTREF SimpleRoomv5.ref
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv5)
+
+ROOTTEST_ADD_TEST(roottest-python-cmdLineUtils-SimpleRoomv5Clean
+                  COMMAND ${TOOLS_PREFIX}/roorm -r move5.root
+                  DEPENDS roottest-python-cmdLineUtils-SimpleRoomv5CheckOutput)
+#########################################################################
 
 endif() # these tests are not run with the classic build
