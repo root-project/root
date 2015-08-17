@@ -67,7 +67,14 @@ def stderrRedirected():
 ##########
 # Imports
 
+##
 # redirect output (escape characters during ROOT importation...)
+# can also be done :
+# osEnviron = os.environ["TERM"]
+# os.environ["TERM"] = "vt100"
+# import ROOT
+# os.environ["TERM"] = osEnviron
+
 with stdoutRedirected():
     import ROOT
 
@@ -563,19 +570,22 @@ def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,op
             newT.Write()
         else:
             obj = key.ReadObj()
-            if replaceOption and isExisting(destFile,destPathSplit+[obj.GetName()]):
+            if replaceOption and isExisting(destFile,destPathSplit+[setName]):
                 changeDirectory(destFile,destPathSplit)
-                otherObj = getFromDirectory(obj.GetName())
+                otherObj = getFromDirectory(setName)
                 if not otherObj == obj:
-                    retcodeTemp = deleteObject(destFile,destPathSplit+[obj.GetName()])
+                    retcodeTemp = deleteObject(destFile,destPathSplit+[setName])
                     if retcodeTemp:
                         retcode += retcodeTemp
                         continue
                     else:
-                        if setName != "":
-                            obj.SetName(setName)
+                        obj.SetName(setName)
                         changeDirectory(destFile,destPathSplit)
                         obj.Write()
+                else:
+                    obj.SetName(setName)
+                    changeDirectory(destFile,destPathSplit)
+                    obj.Write()
             else:
                 if setName != "":
                     obj.SetName(setName)

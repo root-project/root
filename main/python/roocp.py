@@ -56,6 +56,9 @@ def execute():
     # Put arguments in shape
     sourceList, destFileName, destPathSplit, optDict = cmdLineUtils.getSourceDestListOptDict(parser)
     if sourceList == [] or destFileName == "": return 1
+    if optDict["recreate"] and destFileName in [n[0] for n in sourceList]:
+        logging.error("cannot recreate destination file if this is also a source file")
+        return 1
     
     # Open destination file
     destFile = cmdLineUtils.openROOTFileCompress(destFileName,optDict)
