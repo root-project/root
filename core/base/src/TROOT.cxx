@@ -453,13 +453,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // Initialize Operating System interface
    InitSystem();
 
-#ifndef ROOTPREFIX
-   if (!gSystem->Getenv("ROOTSYS")) {
-      fprintf(stderr, "Fatal in <TROOT::TROOT>: ROOTSYS not set. Set it before trying to run.\n");
-      exit(1);
-   }
-#endif
-
    TDirectory::Build();
 
    // Initialize interface to CINT C++ interpreter
