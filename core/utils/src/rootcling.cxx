@@ -5709,8 +5709,8 @@ int GenReflex(int argc, char **argv)
       if (!ROOT::TMetaUtils::EndsWith(targetLibName, gLibraryExtension)) {
          ROOT::TMetaUtils::Error("",
                                  "Invalid target library extension: filename is %s and extension %s is expected!\n",
-                                 gLibraryExtension.c_str(),
-                                 targetLibName.c_str());
+                                 targetLibName.c_str(),
+                                 gLibraryExtension.c_str());
       }
       // Target lib has precedence over rootmap lib
       if (options[ROOTMAP]) {
