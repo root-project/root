@@ -2633,3 +2633,12 @@ std::string cling::printValue(const TSubString &val) {
    TString s = TString::Format("\"%.*s\"[%d]", (int)val.Length(), val.Data(), (int)val.Length());
    return s.Data();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TString in the cling interpreter:
+
+std::string cling::printValue(const std::string_view &val) {
+   std::string str(val);
+   TString s = TString::Format("\"%s\"[%d]", str.c_str(), (int)val.length());
+   return s.Data();
+}
