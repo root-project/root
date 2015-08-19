@@ -10,41 +10,38 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
+/*! \class TEntryListBlock
 
-/* Begin_Html
-<center><h2>TEntryListBlock: Used by TEntryList to store the entry numbers</h2></center>
- There are 2 ways to represent entry numbers in a TEntryListBlock:
-<ol>
- <li> as bits, where passing entry numbers are assigned 1, not passing - 0
- <li> as a simple array of entry numbers
-<ul>
-<li> storing the numbers of entries that pass
-<li> storing the numbers of entries that don't pass
-</ul>
- </ol>
- In both cases, a UShort_t* is used. The second option is better in case
- less than 1/16 or more than 15/16 of entries pass the selection, and the representation can be
- changed by calling OptimizeStorage() function.
- When the block is being filled, it's always stored as bits, and the OptimizeStorage()
- function is called by TEntryList when it starts filling the next block. If
- Enter() or Remove() is called after OptimizeStorage(), representation is
- again changed to 1).
-End_Html
+Used by TEntryList to store the entry numbers.
+
+There are 2 ways to represent entry numbers in a TEntryListBlock:
+
+ 1. as bits, where passing entry numbers are assigned 1, not passing - 0
+ 2. as a simple array of entry numbers
+  - storing the numbers of entries that pass
+  - storing the numbers of entries that don't pass
+
+In both cases, a UShort_t* is used. The second option is better in case
+less than 1/16 or more than 15/16 of entries pass the selection, and the representation can be
+changed by calling OptimizeStorage() function.
+When the block is being filled, it's always stored as bits, and the OptimizeStorage()
+function is called by TEntryList when it starts filling the next block. If
+Enter() or Remove() is called after OptimizeStorage(), representation is
+again changed to 1).
+
 Begin_Macro(source)
 entrylistblock_figure1.C
 End_Macro
 
-Begin_Html
- <h4>Operations on blocks (see also function comments)</h4>
-<ul>
- <li> <b>Merge</b>() - adds all entries from one block to the other. If the first block
+## Operations on blocks (see also function comments)
+
+ - __Merge__() - adds all entries from one block to the other. If the first block
              uses array representation, it's changed to bits representation only
              if the total number of passing entries is still less than kBlockSize
- <li> <b>GetEntry(n)</b> - returns n-th non-zero entry.
- <li> <b>Next</b>()      - return next non-zero entry. In case of representation 1), Next()
+ - __GetEntry(n)__ - returns n-th non-zero entry.
+ - __Next__()      - return next non-zero entry. In case of representation 1), Next()
                  is faster than GetEntry()
-</ul>
-End_Html */
+*/
 
 
 #include "TEntryListBlock.h"
@@ -53,7 +50,7 @@ End_Html */
 ClassImp(TEntryListBlock)
 
 ////////////////////////////////////////////////////////////////////////////////
-///default c-tor
+/// Default c-tor
 
 TEntryListBlock::TEntryListBlock()
 {
@@ -68,7 +65,7 @@ TEntryListBlock::TEntryListBlock()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy c-tor
+/// Copy c-tor
 
 TEntryListBlock::TEntryListBlock(const TEntryListBlock &eblock) : TObject(eblock)
 {
@@ -90,7 +87,7 @@ TEntryListBlock::TEntryListBlock(const TEntryListBlock &eblock) : TObject(eblock
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///destructor
+/// Destructor
 
 TEntryListBlock::~TEntryListBlock()
 {
@@ -126,9 +123,9 @@ TEntryListBlock &TEntryListBlock::operator=(const TEntryListBlock &eblock)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///If the block has already been optimized and the entries
-///are stored as a list and not as bits, trying to enter a new entry
-///will make the block switch to bits representation
+/// If the block has already been optimized and the entries
+/// are stored as a list and not as bits, trying to enter a new entry
+/// will make the block switch to bits representation
 
 Bool_t TEntryListBlock::Enter(Int_t entry)
 {
@@ -163,10 +160,10 @@ Bool_t TEntryListBlock::Enter(Int_t entry)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Remove entry #entry
-///If the block has already been optimized and the entries
-///are stored as a list and not as bits, trying to remove a new entry
-///will make the block switch to bits representation
+/// Remove entry #entry
+/// If the block has already been optimized and the entries
+/// are stored as a list and not as bits, trying to remove a new entry
+/// will make the block switch to bits representation
 
 Bool_t TEntryListBlock::Remove(Int_t entry)
 {
@@ -193,7 +190,7 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
    //return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////
-///true if the block contains entry #entry
+/// True if the block contains entry #entry
 
 Int_t TEntryListBlock::Contains(Int_t entry)
 {
@@ -241,8 +238,8 @@ Int_t TEntryListBlock::Contains(Int_t entry)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Merge with the other block
-///Returns the resulting number of entries in the block
+/// Merge with the other block
+/// Returns the resulting number of entries in the block
 
 Int_t TEntryListBlock::Merge(TEntryListBlock *block)
 {
@@ -368,8 +365,8 @@ Int_t TEntryListBlock::Merge(TEntryListBlock *block)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the number of entries, passing the selection.
-///In case, when the block stores entries that pass (fPassing=1) returns fNPassed
+/// Returns the number of entries, passing the selection.
+/// In case, when the block stores entries that pass (fPassing=1) returns fNPassed
 
 Int_t TEntryListBlock::GetNPassed()
 {
@@ -380,8 +377,8 @@ Int_t TEntryListBlock::GetNPassed()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Return entry #entry
-///See also Next()
+/// Return entry #entry.
+/// See also Next()
 
 Int_t TEntryListBlock::GetEntry(Int_t entry)
 {
@@ -445,8 +442,8 @@ Int_t TEntryListBlock::GetEntry(Int_t entry)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Return the next non-zero entry
-///Faster than GetEntry() function
+/// Return the next non-zero entry
+/// Faster than GetEntry() function
 
 Int_t TEntryListBlock::Next()
 {
@@ -492,7 +489,7 @@ Int_t TEntryListBlock::Next()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Print the entries in this block
+/// Print the entries in this block
 
 void TEntryListBlock::Print(const Option_t *option) const
 {
@@ -502,8 +499,8 @@ void TEntryListBlock::Print(const Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///print the indices of this block + shift (used from TEntryList::Print()) to
-///print the corrent values
+/// Print the indices of this block + shift (used from TEntryList::Print()) to
+/// print the corrent values
 
 void TEntryListBlock::PrintWithShift(Int_t shift) const
 {
@@ -546,7 +543,8 @@ void TEntryListBlock::PrintWithShift(Int_t shift) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///if there are < kBlockSize or >kBlockSize*15 entries, change to an array representation
+/// If there are < kBlockSize or >kBlockSize*15 entries, change to an array
+/// representation
 
 void TEntryListBlock::OptimizeStorage()
 {
@@ -562,9 +560,9 @@ void TEntryListBlock::OptimizeStorage()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///Transform the existing fIndices
-///dir=0 - transform from bits to a list
-///dir=1 - tranform from a list to bits
+/// Transform the existing fIndices
+/// - dir=0 - transform from bits to a list
+/// - dir=1 - tranform from a list to bits
 
 void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
 {
