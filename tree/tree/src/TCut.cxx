@@ -10,8 +10,7 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-///
-/// TCut
+/// \class TCut
 ///
 ///  A specialized string object used for TTree selections.
 ///  A TCut object has a name and a title. It does not add any data
