@@ -226,7 +226,7 @@ set(tree-cernstaff-depends  tutorial-tree-cernbuild)
 set(hist-hbars-depends  tutorial-tree-cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-fit-fit1
-                       tutorial-fit-myfit 
+                       tutorial-fit-myfit
                        tutorial-hist-h1draw
                        tutorial-geom-na49view
                        tutorial-tree-ntuple1
@@ -270,12 +270,23 @@ foreach(t ${tutorials})
   endif()
   string(REPLACE ".C" "" tname ${t})
   string(REPLACE "/" "-" tname ${tname})
+
+   # These tests on ARM64 need much more than 20 minutes - increase the timeout
+   if (${tname} STREQUAL "tmva-TMVAClassification" OR
+       ${tname} STREQUAL "tmva-TMVARegression" OR
+       ${tname} STREQUAL "tmva-TMVAMulticlass")
+     set(thisTestTimeout 3600) # 1h
+   else()
+     set(thisTestTimeout 1200) # 20m
+   endif()
+
   ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}
-                ENVIRONMENT ${ROOT_environ})
+                ENVIRONMENT ${ROOT_environ}
+                TIMEOUT ${thisTestTimeout})
 endforeach()
 
 
@@ -310,12 +321,14 @@ if(ROOT_python_FOUND)
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)
     if(index EQUAL -1)
-       set(rc 0)
+      set(rc 0)
     else()
-       set(rc 1)
+      set(rc 1)
     endif()
+
     string(REPLACE ".py" "" tname ${t})
     string(REPLACE "/" "-" tname ${tname})
+
     ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t} -b
                 PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
