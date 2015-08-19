@@ -238,9 +238,7 @@ class CanvasCapture(object):
 
     def _display(self):
        if _enableJSVisDebug:
-          print "Vanilla Visualisation"
           self._pngDisplay()
-          print "JS Visualisation"
           self._jsDisplay()
        else:
          if self._canJsDisplay():
