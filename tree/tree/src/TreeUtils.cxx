@@ -239,7 +239,7 @@ template Long64_t FillNtupleFromStream<Double_t, TNtupleD>(std::istream &, TNtup
 //newline-character:
 // '\r' | '\n'
 ////////////////////////////////////////////////////////////////////////////////
-///Skips everything from '#' to (including) '\r' or '\n'.
+///Skips everything from '#' to (including) '\\r' or '\\n'.
 
 void SkipComment(std::istream &input)
 {
@@ -279,7 +279,7 @@ void SkipEmptyLines(std::istream &input)
 //ws-sequence:
 //    c such that isspace(c) and c is not a newline-character.
 ////////////////////////////////////////////////////////////////////////////////
-///Skip whitespace characters, but not newline-characters we support ('\r' or '\n').
+///Skip whitespace characters, but not newline-characters we support ('\\r' or '\\n').
 
 void SkipWSCharacters(std::istream &input)
 {
@@ -297,7 +297,7 @@ void SkipWSCharacters(std::istream &input)
 //Next character is either newline-character, eof or we have some problems reading
 //the next symbol.
 ////////////////////////////////////////////////////////////////////////////////
-///Either '\r' | '\n' or eof of some problem.
+///Either '\\r' | '\\n' or eof of some problem.
 
 bool NextCharacterIsEOL(std::istream &input)
 {

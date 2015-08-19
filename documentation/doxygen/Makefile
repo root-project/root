@@ -27,3 +27,5 @@ doxygen:
 clean:
 	rm -r $(DOXYGEN_OUTPUT_DIRECTORY)
 	rm filter
+	rm doxygen_errors.log
+

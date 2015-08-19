@@ -1301,9 +1301,9 @@ TEntryList operator||(TEntryList &elist1, TEntryList &elist2)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Relocate the file paths.
-/// If 'oldroot' is defined, replace 'oldroot' with 'newroot' in all file names,
-/// i.e. <oldroot>/re/st/of/the/path will become <newroot>/re/st/of/the/path .
-/// If 'oldroot' is null, the new path will be just <newroot>/path .
+/// If `oldroot` is defined, replace `oldroot` with `newroot` in all file names,
+/// i.e. `oldroot/re/st/of/the/path` will become `newroot`/re/st/of/the/path`.
+/// If `oldroot` is null, the new path will be just `newroot/path`.
 /// Relocation is mandatory to use the entry-list with the same dataset at a different
 /// location (i.e. on a different cluster, machine or disks).
 

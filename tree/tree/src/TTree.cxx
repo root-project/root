@@ -12,7 +12,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! \class TTree
-\brief A TTree object has a header with a name and a title.
+A TTree object has a header with a name and a title.
 
 It consists of a list of independent branches (TBranch). Each branch has its own
 definition and list of buffers. Branch buffers may be automatically written to
