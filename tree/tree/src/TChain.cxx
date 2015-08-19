@@ -9,22 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TChain                                                               //
-//                                                                      //
-// A chain is a collection of files containg TTree objects.             //
-// When the chain is created, the first parameter is the default name   //
-// for the Tree to be processed later on.                               //
-//                                                                      //
-// Enter a new element in the chain via the TChain::Add function.       //
-// Once a chain is defined, one can use the normal TTree functions      //
-// to Draw,Scan,etc.                                                    //
-//                                                                      //
-// Use TChain::SetBranchStatus to activate one or more branches for all //
-// the trees in the chain.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \class TChain
+///
+/// A chain is a collection of files containg TTree objects.
+/// When the chain is created, the first parameter is the default name
+/// for the Tree to be processed later on.
+///
+/// Enter a new element in the chain via the TChain::Add function.
+/// Once a chain is defined, one can use the normal TTree functions
+/// to Draw,Scan,etc.
+///
+/// Use TChain::SetBranchStatus to activate one or more branches for all
+/// the trees in the chain.
+
 
 #include "TChain.h"
 
@@ -60,8 +58,9 @@ const Long64_t theBigNumber = Long64_t(1234567890)<<28;
 
 ClassImp(TChain)
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Default constructor.
+/// Default constructor.
 
 TChain::TChain()
 : TTree()
@@ -96,40 +95,45 @@ TChain::TChain()
    gROOT->GetListOfCleanups()->Add(this);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Create a chain.
+/// Create a chain.
 ///
-///   A TChain is a collection of TFile objects.
-///    the first parameter "name" is the name of the TTree object
-///    in the files added with Add.
-///   Use TChain::Add to add a new element to this chain.
+/// A TChain is a collection of TFile objects.
+/// the first parameter "name" is the name of the TTree object
+/// in the files added with Add.
+/// Use TChain::Add to add a new element to this chain.
 ///
-///   In case the Tree is in a subdirectory, do, eg:
+/// In case the Tree is in a subdirectory, do, eg:
+///
 ///     TChain ch("subdir/treename");
 ///
-///    Example:
+/// Example:
 ///  Suppose we have 3 files f1.root, f2.root and f3.root. Each file
 ///  contains a TTree object named "T".
+///
 ///     TChain ch("T");  creates a chain to process a Tree called "T"
 ///     ch.Add("f1.root");
 ///     ch.Add("f2.root");
 ///     ch.Add("f3.root");
 ///     ch.Draw("x");
-///       The Draw function above will process the variable "x" in Tree "T"
-///       reading sequentially the 3 files in the chain ch.
 ///
-///   The TChain data structure
-///       Each TChainElement has a name equal to the tree name of this TChain
-///       and a title equal to the file name. So, to loop over the
-///       TFiles that have been added to this chain:
+/// The Draw function above will process the variable "x" in Tree "T"
+/// reading sequentially the 3 files in the chain ch.
 ///
-///         TObjArray *fileElements=chain->GetListOfFiles();
-///         TIter next(fileElements);
-///         TChainElement *chEl=0;
-///         while (( chEl=(TChainElement*)next() )) {
-///            TFile f(chEl->GetTitle());
-///            ... do something with f ...
-///         }
+/// The TChain data structure:
+///
+/// Each TChainElement has a name equal to the tree name of this TChain
+/// and a title equal to the file name. So, to loop over the
+/// TFiles that have been added to this chain:
+///
+///     TObjArray *fileElements=chain->GetListOfFiles();
+///     TIter next(fileElements);
+///     TChainElement *chEl=0;
+///     while (( chEl=(TChainElement*)next() )) {
+///        TFile f(chEl->GetTitle());
+///        ... do something with f ...
+///     }
 
 TChain::TChain(const char* name, const char* title)
 :TTree(name, title)
@@ -167,8 +171,9 @@ TChain::TChain(const char* name, const char* title)
    gROOT->GetListOfCleanups()->Add(this);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Destructor.
+/// Destructor.
 
 TChain::~TChain()
 {
@@ -204,8 +209,9 @@ TChain::~TChain()
    fDirectory = 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Add all files referenced by the passed chain to this chain.
+/// Add all files referenced by the passed chain to this chain.
 /// The function returns the total number of files connected.
 
 Int_t TChain::Add(TChain* chain)
@@ -248,11 +254,13 @@ Int_t TChain::Add(TChain* chain)
    return nf;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Add a new file to this chain.
+/// Add a new file to this chain.
 ///
 /// Argument name may have either of two formats. The first:
-///   [//machine]/path/file_name.root[/tree_name]
+///
+///     [//machine]/path/file_name.root[/tree_name]
 ///
 /// If tree_name is missing the chain name will be assumed.
 /// Wildcard treatment is triggered by the any of the special characters []*?
@@ -260,9 +268,10 @@ Int_t TChain::Add(TChain* chain)
 /// all files starting with xxx in the current file system directory.
 ///
 /// Alternatively name may have the format of a url, eg.
-///     root://machine/path/file_name.root
-/// or  root://machine/path/file_name.root/tree_name
-/// or  root://machine/path/file_name.root/tree_name?query
+///
+///         root://machine/path/file_name.root
+///     or  root://machine/path/file_name.root/tree_name
+///     or  root://machine/path/file_name.root/tree_name?query
 ///
 /// where "query" is to be interpreted by the remote server. Wildcards may be
 /// supported in urls, depending on the protocol plugin and the remote server.
@@ -273,54 +282,53 @@ Int_t TChain::Add(TChain* chain)
 ///
 /// NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
 ///
-///    A- if nentries <= 0, the file is connected and the tree header read
-///       in memory to get the number of entries.
+/// A. if nentries <= 0, the file is connected and the tree header read
+///    in memory to get the number of entries.
 ///
-///    B- if (nentries > 0, the file is not connected, nentries is assumed to be
-///       the number of entries in the file. In this case, no check is made that
-///       the file exists and the Tree existing in the file. This second mode
-///       is interesting in case the number of entries in the file is already stored
-///       in a run data base for example.
+/// B. if (nentries > 0, the file is not connected, nentries is assumed to be
+///    the number of entries in the file. In this case, no check is made that
+///    the file exists and the Tree existing in the file. This second mode
+///    is interesting in case the number of entries in the file is already stored
+///    in a run data base for example.
 ///
-///    C- if (nentries == kBigNumber) (default), the file is not connected.
-///       the number of entries in each file will be read only when the file
-///       will need to be connected to read an entry.
-///       This option is the default and very efficient if one process
-///       the chain sequentially. Note that in case TChain::GetEntry(entry)
-///       is called and entry refers to an entry in the 3rd file, for example,
-///       this forces the Tree headers in the first and second file
-///       to be read to find the number of entries in these files.
-///       Note that if one calls TChain::GetEntriesFast() after having created
-///       a chain with this default, GetEntriesFast will return kBigNumber!
-///       TChain::GetEntries will force of the Tree headers in the chain to be
-///       read to read the number of entries in each Tree.
+/// C. if (nentries == kBigNumber) (default), the file is not connected.
+///    the number of entries in each file will be read only when the file
+///    will need to be connected to read an entry.
+///    This option is the default and very efficient if one process
+///    the chain sequentially. Note that in case TChain::GetEntry(entry)
+///    is called and entry refers to an entry in the 3rd file, for example,
+///    this forces the Tree headers in the first and second file
+///    to be read to find the number of entries in these files.
+///    Note that if one calls TChain::GetEntriesFast() after having created
+///    a chain with this default, GetEntriesFast will return kBigNumber!
+///    TChain::GetEntries will force of the Tree headers in the chain to be
+///    read to read the number of entries in each Tree.
 ///
+/// D. The TChain data structure
+///    Each TChainElement has a name equal to the tree name of this TChain
+///    and a title equal to the file name. So, to loop over the
+///    TFiles that have been added to this chain:
 ///
-///    D- The TChain data structure
-///       Each TChainElement has a name equal to the tree name of this TChain
-///       and a title equal to the file name. So, to loop over the
-///       TFiles that have been added to this chain:
-///
-///         TObjArray *fileElements=chain->GetListOfFiles();
-///         TIter next(fileElements);
-///         TChainElement *chEl=0;
-///         while (( chEl=(TChainElement*)next() )) {
-///            TFile f(chEl->GetTitle());
-///            ... do something with f ...
-///         }
+///        TObjArray *fileElements=chain->GetListOfFiles();
+///        TIter next(fileElements);
+///        TChainElement *chEl=0;
+///        while (( chEl=(TChainElement*)next() )) {
+///           TFile f(chEl->GetTitle());
+///           ... do something with f ...
+///        }
 ///
 /// Return value:
 ///
-/// If nentries>0 (including the default of kBigNumber) and no
-/// wildcarding is used, ALWAYS returns 1 without regard to whether
-/// the file exists or contains the correct tree.
+/// - If nentries>0 (including the default of kBigNumber) and no
+///   wildcarding is used, ALWAYS returns 1 without regard to whether
+///   the file exists or contains the correct tree.
 ///
-/// If wildcarding is used, regardless of the value of nentries,
-/// returns the number of files matching the name without regard to
-/// whether they contain the correct tree.
+/// - If wildcarding is used, regardless of the value of nentries,
+///   returns the number of files matching the name without regard to
+///   whether they contain the correct tree.
 ///
-/// If nentries<=0 and wildcarding is not used, return 1 if the file
-/// exists and contains the correct tree and 0 otherwise.
+/// - If nentries<=0 and wildcarding is not used, return 1 if the file
+///  exists and contains the correct tree and 0 otherwise.
 
 Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
 {
@@ -376,21 +384,23 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
    return nf;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Add a new file to this chain.
+/// Add a new file to this chain.
 ///
-///    Filename formats are similar to TChain::Add. Wildcards are not
-///    applied. urls may also contain query and fragment identifiers
-///    where the tree name can be specified in the url fragment.
+/// Filename formats are similar to TChain::Add. Wildcards are not
+/// applied. urls may also contain query and fragment identifiers
+/// where the tree name can be specified in the url fragment.
 ///
-///    eg.
-///    root://machine/path/file_name.root?query#tree_name
+/// eg.
 ///
-///    If tree_name is given as a part of the file name it is used to
-///    as the name of the tree to load from the file. Otherwise if tname
-///    argument is specified the chain will load the tree named tname from
-///    the file, otherwise the original treename specified in the TChain
-///    constructor will be used.
+///     root://machine/path/file_name.root?query#tree_name
+///
+/// If tree_name is given as a part of the file name it is used to
+/// as the name of the tree to load from the file. Otherwise if tname
+/// argument is specified the chain will load the tree named tname from
+/// the file, otherwise the original treename specified in the TChain
+/// constructor will be used.
 ///
 /// A. If nentries <= 0, the file is opened and the tree header read
 ///    into memory to get the number of entries.
@@ -419,13 +429,13 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
 ///    and a title equal to the file name. So, to loop over the
 ///    TFiles that have been added to this chain:
 ///
-///      TObjArray *fileElements=chain->GetListOfFiles();
-///      TIter next(fileElements);
-///      TChainElement *chEl=0;
-///      while (( chEl=(TChainElement*)next() )) {
-///         TFile f(chEl->GetTitle());
-///         ... do something with f ...
-///      }
+///         TObjArray *fileElements=chain->GetListOfFiles();
+///         TIter next(fileElements);
+///         TChainElement *chEl=0;
+///         while (( chEl=(TChainElement*)next() )) {
+///            TFile f(chEl->GetTitle());
+///            ... do something with f ...
+///         }
 ///
 /// The function returns 1 if the file is successfully connected, 0 otherwise.
 
@@ -521,6 +531,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    return 1;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Add all files referenced in the list to the chain. The object type in the
 /// list must be either TFileInfo or TObjString or TUrl .
@@ -569,56 +580,56 @@ Int_t TChain::AddFileInfoList(TCollection* filelist, Long64_t nfiles /* = kBigNu
    return 1;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Add a TFriendElement to the list of friends of this chain.
+/// Add a TFriendElement to the list of friends of this chain.
 ///
 /// A TChain has a list of friends similar to a tree (see TTree::AddFriend).
 /// You can add a friend to a chain with the TChain::AddFriend method, and you
 /// can retrieve the list of friends with TChain::GetListOfFriends.
 /// This example has four chains each has 20 ROOT trees from 20 ROOT files.
 ///
-/// TChain ch("t"); // a chain with 20 trees from 20 files
-/// TChain ch1("t1");
-/// TChain ch2("t2");
-/// TChain ch3("t3");
+///     TChain ch("t"); // a chain with 20 trees from 20 files
+///     TChain ch1("t1");
+///     TChain ch2("t2");
+///     TChain ch3("t3");
+///
 /// Now we can add the friends to the first chain.
 ///
-/// ch.AddFriend("t1")
-/// ch.AddFriend("t2")
-/// ch.AddFriend("t3")
+///     ch.AddFriend("t1")
+///     ch.AddFriend("t2")
+///     ch.AddFriend("t3")
 ///
-///Begin_Html
+/// \image html tchain_friend.png
+///
+///
+/// The parameter is the name of friend chain (the name of a chain is always
+/// the name of the tree from which it was created).
+/// The original chain has access to all variable in its friends.
+/// We can use the TChain::Draw method as if the values in the friends were
+/// in the original chain.
+/// To specify the chain to use in the Draw method, use the syntax:
+///
+///     <chainname>.<branchname>.<varname>
+///
+/// If the variable name is enough to uniquely identify the variable, you can
+/// leave out the chain and/or branch name.
+/// For example, this generates a 3-d scatter plot of variable "var" in the
+/// TChain ch versus variable v1 in TChain t1 versus variable v2 in TChain t2.
+///
+///     ch.Draw("var:t1.v1:t2.v2");
+///
+/// When a TChain::Draw is executed, an automatic call to TTree::AddFriend
+/// connects the trees in the chain. When a chain is deleted, its friend
+/// elements are also deleted.
+///
+/// The number of entries in the friend must be equal or greater to the number
+/// of entries of the original chain. If the friend has fewer entries a warning
+/// is given and the resulting histogram will have missing entries.
+/// For additional information see TTree::AddFriend.
 
 TFriendElement* TChain::AddFriend(const char* chain, const char* dummy /* = "" */)
 {
-   /*
-   <img src="gif/chain_friend.gif">
-   */
-   //End_Html
-   //
-   // The parameter is the name of friend chain (the name of a chain is always
-   // the name of the tree from which it was created).
-   // The original chain has access to all variable in its friends.
-   // We can use the TChain::Draw method as if the values in the friends were
-   // in the original chain.
-   // To specify the chain to use in the Draw method, use the syntax:
-   //
-   // <chainname>.<branchname>.<varname>
-   // If the variable name is enough to uniquely identify the variable, you can
-   // leave out the chain and/or branch name.
-   // For example, this generates a 3-d scatter plot of variable "var" in the
-   // TChain ch versus variable v1 in TChain t1 versus variable v2 in TChain t2.
-   //
-   // ch.Draw("var:t1.v1:t2.v2");
-   // When a TChain::Draw is executed, an automatic call to TTree::AddFriend
-   // connects the trees in the chain. When a chain is deleted, its friend
-   // elements are also deleted.
-   //
-   // The number of entries in the friend must be equal or greater to the number
-   // of entries of the original chain. If the friend has fewer entries a warning
-   // is given and the resulting histogram will have missing entries.
-   // For additional information see TTree::AddFriend.
-
    if (!fFriends) {
       fFriends = new TList();
    }
@@ -643,8 +654,9 @@ TFriendElement* TChain::AddFriend(const char* chain, const char* dummy /* = "" *
    return fe;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Add the whole chain or tree as a friend of this chain.
+/// Add the whole chain or tree as a friend of this chain.
 
 TFriendElement* TChain::AddFriend(const char* chain, TFile* dummy)
 {
@@ -670,8 +682,9 @@ TFriendElement* TChain::AddFriend(const char* chain, TFile* dummy)
    return fe;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Add the whole chain or tree as a friend of this chain.
+/// Add the whole chain or tree as a friend of this chain.
 
 TFriendElement* TChain::AddFriend(TTree* chain, const char* alias, Bool_t /* warn = kFALSE */)
 {
@@ -696,13 +709,15 @@ TFriendElement* TChain::AddFriend(TTree* chain, const char* alias, Bool_t /* war
    return fe;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Browse the contents of the chain.
+/// Browse the contents of the chain.
 
 void TChain::Browse(TBrowser* b)
 {
    TTree::Browse(b);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// When closing a file during the chain processing, the file
@@ -722,8 +737,9 @@ void TChain::CanDeleteRefs(Bool_t flag /* = kTRUE */)
    fCanDeleteRefs = flag;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Initialize the packet descriptor string.
+/// Initialize the packet descriptor string.
 
 void TChain::CreatePackets()
 {
@@ -734,6 +750,7 @@ void TChain::CreatePackets()
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Override the TTree::DirectoryAutoAdd behavior:
 /// we never auto add.
@@ -741,6 +758,7 @@ void TChain::CreatePackets()
 void TChain::DirectoryAutoAdd(TDirectory * /* dir */)
 {
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw expression varexp for selected entries.
@@ -766,6 +784,7 @@ Long64_t TChain::Draw(const char* varexp, const TCut& selection,
    return TChain::Draw(varexp, selection.GetTitle(), option, nentries, firstentry);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Process all entries in this chain and draw histogram corresponding to
 /// expression varexp.
@@ -787,8 +806,9 @@ Long64_t TChain::Draw(const char* varexp, const char* selection,
    return TTree::Draw(varexp,selection,option,nentries,firstentry);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- See TTree::GetReadEntry().
+/// See TTree::GetReadEntry().
 
 TBranch* TChain::FindBranch(const char* branchname)
 {
@@ -808,8 +828,9 @@ TBranch* TChain::FindBranch(const char* branchname)
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- See TTree::GetReadEntry().
+/// See TTree::GetReadEntry().
 
 TLeaf* TChain::FindLeaf(const char* searchname)
 {
@@ -829,8 +850,9 @@ TLeaf* TChain::FindLeaf(const char* searchname)
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Returns the expanded value of the alias.  Search in the friends if any.
+/// Returns the expanded value of the alias.  Search in the friends if any.
 
 const char* TChain::GetAlias(const char* aliasName) const
 {
@@ -848,8 +870,9 @@ const char* TChain::GetAlias(const char* aliasName) const
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return pointer to the branch name in the current tree.
+/// Return pointer to the branch name in the current tree.
 
 TBranch* TChain::GetBranch(const char* name)
 {
@@ -869,8 +892,9 @@ TBranch* TChain::GetBranch(const char* name)
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- See TTree::GetReadEntry().
+/// See TTree::GetReadEntry().
 
 Bool_t TChain::GetBranchStatus(const char* branchname) const
 {
@@ -884,11 +908,11 @@ Bool_t TChain::GetBranchStatus(const char* branchname) const
    return TTree::GetBranchStatus(branchname);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return an iterator over the cluster of baskets starting at firstentry.
 ///
 /// This iterator is not yet supported for TChain object.
-///
 
 TTree::TClusterIterator TChain::GetClusterIterator(Long64_t /* firstentry */)
 {
@@ -896,8 +920,9 @@ TTree::TClusterIterator TChain::GetClusterIterator(Long64_t /* firstentry */)
    return TTree::GetClusterIterator(-1);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return absolute entry number in the chain.
+/// Return absolute entry number in the chain.
 /// The input parameter entry is the entry number in
 /// the current tree of this chain.
 
@@ -906,8 +931,9 @@ Long64_t TChain::GetChainEntryNumber(Long64_t entry) const
    return entry + fTreeOffset[fTreeNumber];
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return the total number of entries in the chain.
+/// Return the total number of entries in the chain.
 /// In case the number of entries in each tree is not yet known,
 /// the offset table is computed.
 
@@ -926,11 +952,12 @@ Long64_t TChain::GetEntries() const
    return fEntries;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Get entry from the file to memory.
+/// Get entry from the file to memory.
 ///
-///     getall = 0 : get only active branches
-///     getall = 1 : get all branches
+/// - getall = 0 : get only active branches
+/// - getall = 1 : get all branches
 ///
 /// Return the total number of bytes read,
 /// 0 bytes read indicates a failure.
@@ -947,8 +974,9 @@ Int_t TChain::GetEntry(Long64_t entry, Int_t getall)
    return fTree->GetEntry(treeReadEntry, getall);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return entry number corresponding to entry.
+/// Return entry number corresponding to entry.
 ///
 /// if no TEntryList set returns entry
 /// else returns entry #entry from this entry list and
@@ -978,14 +1006,15 @@ Long64_t TChain::GetEntryNumber(Long64_t entry) const
    return entry;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return entry corresponding to major and minor number.
+/// Return entry corresponding to major and minor number.
 ///
-///  The function returns the total number of bytes read.
-///  If the Tree has friend trees, the corresponding entry with
-///  the index values (major,minor) is read. Note that the master Tree
-///  and its friend may have different entry serial numbers corresponding
-///  to (major,minor).
+/// The function returns the total number of bytes read.
+/// If the Tree has friend trees, the corresponding entry with
+/// the index values (major,minor) is read. Note that the master Tree
+/// and its friend may have different entry serial numbers corresponding
+/// to (major,minor).
 
 Int_t TChain::GetEntryWithIndex(Int_t major, Int_t minor)
 {
@@ -994,8 +1023,9 @@ Int_t TChain::GetEntryWithIndex(Int_t major, Int_t minor)
    return GetEntry(serial);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return a pointer to the current file.
+/// Return a pointer to the current file.
 /// If no file is connected, the first file is automatically loaded.
 
 TFile* TChain::GetFile() const
@@ -1008,8 +1038,9 @@ TFile* TChain::GetFile() const
    return fFile;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return a pointer to the leaf name in the current tree.
+/// Return a pointer to the leaf name in the current tree.
 
 TLeaf* TChain::GetLeaf(const char* branchname, const char *leafname)
 {
@@ -1029,8 +1060,9 @@ TLeaf* TChain::GetLeaf(const char* branchname, const char *leafname)
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return a pointer to the leaf name in the current tree.
+/// Return a pointer to the leaf name in the current tree.
 
 TLeaf* TChain::GetLeaf(const char* name)
 {
@@ -1050,11 +1082,12 @@ TLeaf* TChain::GetLeaf(const char* name)
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return a pointer to the list of branches of the current tree.
+/// Return a pointer to the list of branches of the current tree.
 ///
 /// Warning: If there is no current TTree yet, this routine will open the
-///     first in the chain.
+/// first in the chain.
 ///
 /// Returns 0 on failure.
 
@@ -1076,11 +1109,11 @@ TObjArray* TChain::GetListOfBranches()
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return a pointer to the list of leaves of the current tree.
+/// Return a pointer to the list of leaves of the current tree.
 ///
 /// Warning: May set the current tree!
-///
 
 TObjArray* TChain::GetListOfLeaves()
 {
@@ -1100,8 +1133,9 @@ TObjArray* TChain::GetListOfLeaves()
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return maximum of column with name columname.
+/// Return maximum of column with name columname.
 
 Double_t TChain::GetMaximum(const char* columname)
 {
@@ -1117,8 +1151,9 @@ Double_t TChain::GetMaximum(const char* columname)
    return theMax;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return minimum of column with name columname.
+/// Return minimum of column with name columname.
 
 Double_t TChain::GetMinimum(const char* columname)
 {
@@ -1134,11 +1169,11 @@ Double_t TChain::GetMinimum(const char* columname)
    return theMin;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return the number of branches of the current tree.
+/// Return the number of branches of the current tree.
 ///
 /// Warning: May set the current tree!
-///
 
 Int_t TChain::GetNbranches()
 {
@@ -1152,8 +1187,9 @@ Int_t TChain::GetNbranches()
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- See TTree::GetReadEntry().
+/// See TTree::GetReadEntry().
 
 Long64_t TChain::GetReadEntry() const
 {
@@ -1167,15 +1203,15 @@ Long64_t TChain::GetReadEntry() const
    return TTree::GetReadEntry();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return the chain weight.
+/// Return the chain weight.
 ///
 /// By default the weight is the weight of the current tree.
 /// However, if the weight has been set in TChain::SetWeight()
 /// with the option "global", then that weight will be returned.
 ///
 /// Warning: May set the current tree!
-///
 
 Double_t TChain::GetWeight() const
 {
@@ -1197,17 +1233,17 @@ Double_t TChain::GetWeight() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the TTree to be reloaded as soon as possible.  In particular this
 /// is needed when adding a Friend.
+///
+/// If the tree has clones, copy them into the chain
+/// clone list so we can change their branch addresses
+/// when necessary.
+///
+/// This is to support the syntax:
+///
+///     TTree* clone = chain->GetTree()->CloneTree(0);
 
 void TChain::InvalidateCurrentTree()
 {
-   // If the tree has clones, copy them into the chain
-   // clone list so we can change their branch addresses
-   // when necessary.
-   //
-   // This is to support the syntax:
-   //
-   //      TTree* clone = chain->GetTree()->CloneTree(0);
-   //
    if (fTree && fTree->GetListOfClones()) {
       for (TObjLink* lnk = fTree->GetListOfClones()->FirstLink(); lnk; lnk = lnk->Next()) {
          TTree* clone = (TTree*) lnk->GetObject();
@@ -1218,8 +1254,9 @@ void TChain::InvalidateCurrentTree()
    fTree = 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Dummy function.
+/// Dummy function.
 /// It could be implemented and load all baskets of all trees in the chain.
 /// For the time being use TChain::Merge and TTree::LoadBasket
 /// on the resulting tree.
@@ -1230,24 +1267,24 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Find the tree which contains entry, and set it as the current tree.
+/// Find the tree which contains entry, and set it as the current tree.
 ///
 /// Returns the entry number in that tree.
 ///
 /// The input argument entry is the entry serial number in the whole chain.
 ///
 /// In case of error, LoadTree returns a negative number:
-///   -1: The chain is empty.
-///   -2: The requested entry number of less than zero or too large for the chain.
+///   1. The chain is empty.
+///   2. The requested entry number of less than zero or too large for the chain.
 ///       or too large for the large TTree.
-///   -3: The file corresponding to the entry could not be correctly open
-///   -4: The TChainElement corresponding to the entry is missing or
+///   3. The file corresponding to the entry could not be correctly open
+///   4. The TChainElement corresponding to the entry is missing or
 ///       the TTree is missing from the file.
 ///
 /// Note: This is the only routine which sets the value of fTree to
 ///       a non-zero pointer.
-///
 
 Long64_t TChain::LoadTree(Long64_t entry)
 {
@@ -1635,6 +1672,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    return treeReadEntry;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check / locate the files in the chain.
 /// By default only the files not yet looked up are checked.
@@ -1707,8 +1745,9 @@ void TChain::Lookup(Bool_t force)
    SafeDelete(stg);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Loop on nentries of this chain starting at firstentry.  (NOT IMPLEMENTED)
+/// Loop on nentries of this chain starting at firstentry.  (NOT IMPLEMENTED)
 
 void TChain::Loop(Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
@@ -1751,8 +1790,9 @@ void TChain::Loop(Option_t* option, Long64_t nentries, Long64_t firstentry)
 #endif
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- List the chain.
+/// List the chain.
 
 void TChain::ls(Option_t* option) const
 {
@@ -1766,6 +1806,7 @@ void TChain::ls(Option_t* option) const
    TROOT::DecreaseDirLevel();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Merge all the entries in the chain into a new tree in a new file.
 ///
@@ -1776,22 +1817,22 @@ void TChain::ls(Option_t* option) const
 ///
 /// So in a case where we have:
 ///
-///      TChain ch("mydir/mytree");
-///      ch.Merge("newfile.root");
+///     TChain ch("mydir/mytree");
+///     ch.Merge("newfile.root");
 ///
 /// The resulting file will have not subdirectory. To recreate
 /// the directory structure do:
 ///
-///      TFile* file = TFile::Open("newfile.root", "RECREATE");
-///      file->mkdir("mydir")->cd();
-///      ch.Merge(file);
-///
+///     TFile* file = TFile::Open("newfile.root", "RECREATE");
+///     file->mkdir("mydir")->cd();
+///     ch.Merge(file);
 
 Long64_t TChain::Merge(const char* name, Option_t* option)
 {
    TFile *file = TFile::Open(name, "recreate", "chain files", 1);
    return Merge(file, 0, option);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Merge all chains in the collection.  (NOT IMPLEMENTED)
@@ -1802,6 +1843,7 @@ Long64_t TChain::Merge(TCollection* /* list */, Option_t* /* option */ )
    return -1;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Merge all chains in the collection.  (NOT IMPLEMENTED)
 
@@ -1810,6 +1852,7 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
    Error("Merge", "not implemented");
    return -1;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Merge all the entries in the chain into a new tree in the current file.
@@ -1830,26 +1873,26 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 /// Example using the file generated in $ROOTSYS/test/Event
 /// merge two copies of Event.root
 ///
-///        gSystem.Load("libEvent");
-///        TChain ch("T");
-///        ch.Add("Event1.root");
-///        ch.Add("Event2.root");
-///        ch.Merge("all.root");
+///     gSystem.Load("libEvent");
+///     TChain ch("T");
+///     ch.Add("Event1.root");
+///     ch.Add("Event2.root");
+///     ch.Merge("all.root");
 ///
 /// If the chain is expecting the input tree inside a directory,
 /// this directory is NOT created by this routine.
 ///
 /// So if you do:
 ///
-///      TChain ch("mydir/mytree");
-///      ch.Merge("newfile.root");
+///     TChain ch("mydir/mytree");
+///     ch.Merge("newfile.root");
 ///
 /// The resulting file will not have subdirectories.  In order to
 /// preserve the directory structure do the following instead:
 ///
-///      TFile* file = TFile::Open("newfile.root", "RECREATE");
-///      file->mkdir("mydir")->cd();
-///      ch.Merge(file);
+///     TFile* file = TFile::Open("newfile.root", "RECREATE");
+///     file->mkdir("mydir")->cd();
+///     ch.Merge(file);
 ///
 /// If 'option' contains the word 'fast' the merge will be done without
 /// unzipping or unstreaming the baskets (i.e., a direct copy of the raw
@@ -1859,9 +1902,10 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 /// sorting order for the baskets in the output file.
 ///
 /// There is currently 3 supported sorting order:
-///    SortBasketsByOffset (the default)
-///    SortBasketsByBranch
-///    SortBasketsByEntry
+///
+///     SortBasketsByOffset (the default)
+///     SortBasketsByBranch
+///     SortBasketsByEntry
 ///
 /// When using SortBasketsByOffset the baskets are written in
 /// the output file in the same order as in the original file
@@ -1884,8 +1928,8 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 /// in which they will be needed when reading the whole tree
 /// sequentially.
 ///
-/// IMPORTANT Note 1: AUTOMATIC FILE OVERFLOW
-/// -----------------------------------------
+/// ## IMPORTANT Note 1: AUTOMATIC FILE OVERFLOW
+///
 /// When merging many files, it may happen that the resulting file
 /// reaches a size > TTree::fgMaxTreeSize (default = 1.9 GBytes).
 /// In this case the current file is automatically closed and a new
@@ -1896,8 +1940,8 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 /// When in fast mode, the check and switch is only done in between each
 /// input file.
 ///
-/// IMPORTANT Note 2: The output file is automatically closed and deleted.
-/// ----------------------------------------------------------------------
+/// ## IMPORTANT Note 2: The output file is automatically closed and deleted.
+///
 /// This is required because in general the automatic file overflow described
 /// above may happen during the merge.
 /// If only the current file is produced (the file passed as first argument),
@@ -1906,9 +1950,10 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 ///
 /// The function returns the total number of files produced.
 /// To check that all files have been merged use something like:
-///    if (newchain->GetEntries()!=oldchain->GetEntries()) {
-///      ... not all the file have been copied ...
-///    }
+///
+///     if (newchain->GetEntries()!=oldchain->GetEntries()) {
+///        ... not all the file have been copied ...
+///     }
 
 Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 {
@@ -2009,36 +2054,35 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
    return nfiles;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Get the tree url or filename and other information from the name
+/// Get the tree url or filename and other information from the name
 ///
-///    A treename and a url's query section is split off from name. The
-///    splitting depends on whether the resulting filename is to be
-///    subsequently treated for wildcards or not, since the question mark is
-///    both the url query identifier and a wildcard. Wildcard matching is not
-///    done in this method itself.
+/// A treename and a url's query section is split off from name. The
+/// splitting depends on whether the resulting filename is to be
+/// subsequently treated for wildcards or not, since the question mark is
+/// both the url query identifier and a wildcard. Wildcard matching is not
+/// done in this method itself.
 ///
-///    /a/path/file.root[/treename]
-///    xxx://a/path/file.root[/treename][?query]
-///    xxx://a/path/file.root[?query[#treename]]
+///     /a/path/file.root[/treename]
+///     xxx://a/path/file.root[/treename][?query]
+///     xxx://a/path/file.root[?query[#treename]]
 ///
-///   Inputs:
-///   name      - is the original name
-///   wildcards - indicates if the resulting filename will be treated for
-///               wildcards. For backwards compatibility, with most protocols
-///               this flag suppresses the search for the url fragment
-///               identifier and limits the query identifier search to cases
-///               where the tree name is given as a trailing slash-separated
-///               string at the end of the file name.
-///   Outpus:
-///   filename  - the url or filename to be opened or matched
-///   treename  - the treename, which may be found as a trailing part of the
-///               name or in a url fragment section. If not found this will
-///               be empty.
-///   query     - is the url query section, including the leading question
-///               mark. If not found or the query section is only followed by
-///               a fragment this will be empty.
-///   suffix    - the portion of name which was removed to form filename.
+/// \param[in] name        is the original name
+/// \param[in] wildcards   indicates if the resulting filename will be treated for
+///                        wildcards. For backwards compatibility, with most protocols
+///                        this flag suppresses the search for the url fragment
+///                        identifier and limits the query identifier search to cases
+///                        where the tree name is given as a trailing slash-separated
+///                        string at the end of the file name.
+/// \param[out] filename   the url or filename to be opened or matched
+/// \param[out] treename   the treename, which may be found as a trailing part of the
+///                        name or in a url fragment section. If not found this will
+///                        be empty.
+/// \param[out] query      is the url query section, including the leading question
+///                        mark. If not found or the query section is only followed by
+///                        a fragment this will be empty.
+/// \param[out] suffix     the portion of name which was removed to form filename.
 
 void TChain::ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix, Bool_t wildcards) const
 {
@@ -2114,8 +2158,9 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Print the header information of each tree in the chain.
+/// Print the header information of each tree in the chain.
 /// See TTree::Print for a list of options.
 
 void TChain::Print(Option_t *option) const
@@ -2134,6 +2179,7 @@ void TChain::Print(Option_t *option) const
       delete file;
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process all entries in this chain, calling functions in filename.
@@ -2158,6 +2204,7 @@ Long64_t TChain::Process(const char *filename, Option_t *option, Long64_t nentri
    return TTree::Process(filename, option, nentries, firstentry);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Process this chain executing the code in selector.
 /// The return value is -1 in case of error and TSelector::GetStatus() in
@@ -2176,6 +2223,7 @@ Long64_t TChain::Process(TSelector* selector, Option_t* option, Long64_t nentrie
 
    return TTree::Process(selector, option, nentries, firstentry);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make sure that obj (which is being deleted or will soon be) is no
@@ -2196,6 +2244,7 @@ void TChain::RecursiveRemove(TObject *obj)
       fTree = 0;
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a friend from the list of friends.
@@ -2220,6 +2269,7 @@ void TChain::RemoveFriend(TTree* oldFriend)
    InvalidateCurrentTree();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Resets the state of this chain.
 
@@ -2241,6 +2291,7 @@ void TChain::Reset(Option_t*)
    TTree::Reset();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Resets the state of this chain after a merge (keep the customization but
 /// forget the data).
@@ -2257,11 +2308,12 @@ void TChain::ResetAfterMerge(TFileMergeInfo *info)
    TTree::ResetAfterMerge(info);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Loop on tree and print entries passing selection.
-/// If varexp is 0 (or "") then print only first 8 columns.
-/// If varexp = "*" print all columns.
-/// Otherwise a columns selection can be made using "var1:var2:var3".
+/// Loop on tree and print entries passing selection.
+/// - If varexp is 0 (or "") then print only first 8 columns.
+/// - If varexp = "*" print all columns.
+/// - Otherwise a columns selection can be made using "var1:var2:var3".
 /// See TTreePlayer::Scan for more information.
 
 Long64_t TChain::Scan(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
@@ -2272,12 +2324,13 @@ Long64_t TChain::Scan(const char* varexp, const char* selection, Option_t* optio
    return TTree::Scan(varexp, selection, option, nentries, firstentry);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Set the global branch kAutoDelete bit.
+/// Set the global branch kAutoDelete bit.
 ///
-///  When LoadTree loads a new Tree, the branches for which
-///  the address is set will have the option AutoDelete set
-///  For more details on AutoDelete, see TBranch::SetAutoDelete.
+/// When LoadTree loads a new Tree, the branches for which
+/// the address is set will have the option AutoDelete set
+/// For more details on AutoDelete, see TBranch::SetAutoDelete.
 
 void TChain::SetAutoDelete(Bool_t autodelete)
 {
@@ -2310,8 +2363,9 @@ Int_t TChain::SetCacheSize(Long64_t cacheSize)
    return res;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Reset the addresses of the branch.
+/// Reset the addresses of the branch.
 
 void TChain::ResetBranchAddress(TBranch *branch)
 {
@@ -2323,6 +2377,7 @@ void TChain::ResetBranchAddress(TBranch *branch)
       fTree->ResetBranchAddress(branch);
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the addresses of the branches.
@@ -2339,16 +2394,18 @@ void TChain::ResetBranchAddresses()
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set branch address.
 ///
-///      bname is the name of a branch.
-///      add is the address of the branch.
+/// \param[in] bname    is the name of a branch.
+/// \param[in] add      is the address of the branch.
 ///
-///    Note: See the comments in TBranchElement::SetAddress() for a more
-///          detailed discussion of the meaning of the add parameter.
+/// Note: See the comments in TBranchElement::SetAddress() for a more
+/// detailed discussion of the meaning of the add parameter.
 ///
 /// IMPORTANT REMARK:
+///
 /// In case TChain::SetBranchStatus is called, it must be called
 /// BEFORE calling this function.
 ///
@@ -2400,26 +2457,26 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
    return res;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if bname is already in the status list, and if not, create a TChainElement object and set its address.
 /// See TTree::CheckBranchAddressType for the semantic of the return value.
 ///
-///    Note: See the comments in TBranchElement::SetAddress() for a more
-///          detailed discussion of the meaning of the add parameter.
-///
+/// Note: See the comments in TBranchElement::SetAddress() for a more
+/// detailed discussion of the meaning of the add parameter.
 
 Int_t TChain::SetBranchAddress(const char* bname, void* add, TClass* realClass, EDataType datatype, Bool_t isptr)
 {
    return SetBranchAddress(bname, add, 0, realClass, datatype, isptr);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if bname is already in the status list, and if not, create a TChainElement object and set its address.
 /// See TTree::CheckBranchAddressType for the semantic of the return value.
 ///
-///    Note: See the comments in TBranchElement::SetAddress() for a more
-///          detailed discussion of the meaning of the add parameter.
-///
+/// Note: See the comments in TBranchElement::SetAddress() for a more
+/// detailed discussion of the meaning of the add parameter.
 
 Int_t TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TClass* realClass, EDataType datatype, Bool_t isptr)
 {
@@ -2437,12 +2494,14 @@ Int_t TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TCla
    return SetBranchAddress(bname, add, ptr);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Set branch status to Process or DoNotProcess
+/// Set branch status to Process or DoNotProcess
 ///
-///      bname is the name of a branch. if bname="*", apply to all branches.
-///      status = 1  branch will be processed
-///             = 0  branch will not be processed
+/// \param[in] bname     is the name of a branch. if bname="*", apply to all branches.
+/// \param[in] status    = 1  branch will be processed,
+///                      = 0  branch will not be processed
+///
 ///  See IMPORTANT REMARKS in TTree::SetBranchStatus and TChain::SetBranchAddress
 ///
 ///  If found is not 0, the number of branch(es) found matching the regular
@@ -2471,6 +2530,7 @@ void TChain::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove reference to this chain from current directory and add
 /// reference to new directory dir. dir can be 0 in which case the chain
@@ -2489,14 +2549,15 @@ void TChain::SetDirectory(TDirectory* dir)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-///Set the input entry list (processing the entries of the chain will then be
-///limited to the entries in the list)
-///This function finds correspondance between the sub-lists of the TEntryList
-///and the trees of the TChain
-///By default (opt=""), both the file names of the chain elements and
-///the file names of the TEntryList sublists are expanded to full path name.
-///If opt = "ne", the file names are taken as they are and not expanded
+/// Set the input entry list (processing the entries of the chain will then be
+/// limited to the entries in the list)
+/// This function finds correspondance between the sub-lists of the TEntryList
+/// and the trees of the TChain
+/// By default (opt=""), both the file names of the chain elements and
+/// the file names of the TEntryList sublists are expanded to full path name.
+/// If opt = "ne", the file names are taken as they are and not expanded
 
 void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
 {
@@ -2571,6 +2632,7 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
 
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the input entry list (processing the entries of the chain will then be
 /// limited to the entries in the list). This function creates a special kind
@@ -2581,9 +2643,11 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
 /// next file is loaded
 ///
 /// File naming convention:
+///
 /// - by default, filename_elist.root is used, where filename is the
 ///   name of the chain element
 /// - xxx$xxx.root - $ sign is replaced by the name of the chain element
+///
 /// If the list name is not specified (by passing filename_elist.root/listname to
 /// the TChain::SetEntryList() function, the first object of class TEntryList
 /// in the file is taken.
@@ -2627,16 +2691,16 @@ void TChain::SetEntryListFile(const char *filename, Option_t * /*opt*/)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///This function transfroms the given TEventList into a TEntryList
+/// This function transfroms the given TEventList into a TEntryList
 ///
-///NOTE, that this function loads all tree headers, because the entry numbers
-///in the TEventList are global and have to be recomputed, taking into account
-///the number of entries in each tree.
+/// NOTE, that this function loads all tree headers, because the entry numbers
+/// in the TEventList are global and have to be recomputed, taking into account
+/// the number of entries in each tree.
 ///
-///The new TEntryList is owned by the TChain and gets deleted when the chain
-///is deleted. This TEntryList is returned by GetEntryList() function, and after
-///GetEntryList() function is called, the TEntryList is not owned by the chain
-///any more and will not be deleted with it.
+/// The new TEntryList is owned by the TChain and gets deleted when the chain
+/// is deleted. This TEntryList is returned by GetEntryList() function, and after
+/// GetEntryList() function is called, the TEntryList is not owned by the chain
+/// any more and will not be deleted with it.
 
 void TChain::SetEventList(TEventList *evlist)
 {
@@ -2710,8 +2774,9 @@ void TChain::SetEventList(TEventList *evlist)
    SetEntryList(enlist);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Set number of entries per packet for parallel root.
+/// Set number of entries per packet for parallel root.
 
 void TChain::SetPacketSize(Int_t size)
 {
@@ -2722,6 +2787,7 @@ void TChain::SetPacketSize(Int_t size)
       element->SetPacketSize(size);
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Enable/Disable PROOF processing on the current default Proof (gProof).
@@ -2762,21 +2828,25 @@ void TChain::SetProof(Bool_t on, Bool_t refresh, Bool_t gettreeheader)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Set chain weight.
+/// Set chain weight.
 ///
 /// The weight is used by TTree::Draw to automatically weight each
 /// selected entry in the resulting histogram.
-///  For example the equivalent of
+/// For example the equivalent of
+///
 ///     chain.Draw("x","w")
-///  is
+///
+/// is
+///
 ///     chain.SetWeight(w,"global");
 ///     chain.Draw("x");
 ///
-///  By default the weight used will be the weight
-///  of each Tree in the TChain. However, one can force the individual
-///  weights to be ignored by specifying the option "global".
-///  In this case, the TChain global weight will be used for all Trees.
+/// By default the weight used will be the weight
+/// of each Tree in the TChain. However, one can force the individual
+/// weights to be ignored by specifying the option "global".
+/// In this case, the TChain global weight will be used for all Trees.
 
 void TChain::SetWeight(Double_t w, Option_t* option)
 {
@@ -2789,8 +2859,9 @@ void TChain::SetWeight(Double_t w, Option_t* option)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Stream a class object.
+/// Stream a class object.
 
 void TChain::Streamer(TBuffer& b)
 {
@@ -2824,8 +2895,9 @@ void TChain::Streamer(TBuffer& b)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Dummy function kept for back compatibility.
+/// Dummy function kept for back compatibility.
 /// The cache is now activated automatically when processing TTrees/TChain.
 
 void TChain::UseCache(Int_t /* maxCacheSize */, Int_t /* pageSize */)
