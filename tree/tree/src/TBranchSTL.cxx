@@ -1,14 +1,11 @@
 // @(#)root/tree:$Id$
 // Author Lukasz Janyst <ljanyst@cern.ch>  23/01/2008
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBranchSTL                                                           //
-//                                                                      //
-// A Branch handling STL collection of pointers (vectors, lists, queues,//
-// sets and multisets) while storing them in split mode                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \class TBranchSTL
+///
+/// A Branch handling STL collection of pointers (vectors, lists, queues,
+/// sets and multisets) while storing them in split mode.
 
 
 #include "TBranchSTL.h"
@@ -23,6 +20,7 @@
 #include "TError.h"
 
 ClassImp(TBranchSTL)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -43,6 +41,7 @@ TBranchSTL::TBranchSTL():
    fReadLeaves = (ReadLeaves_t)&TBranchSTL::ReadLeavesImpl;
    fFillLeaves = (FillLeaves_t)&TBranchSTL::FillLeavesImpl;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor, called from TTree.
@@ -86,6 +85,7 @@ TBranchSTL::TBranchSTL( TTree *tree, const char *name,
    }
 
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor, called from another branch.
@@ -133,8 +133,9 @@ TBranchSTL::TBranchSTL( TBranch* parent, const char* name,
 
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-///destructor
+/// Destructor.
 
 TBranchSTL::~TBranchSTL()
 {
@@ -145,8 +146,9 @@ TBranchSTL::~TBranchSTL()
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-///browse a STL branch
+/// Browse a STL branch.
 
 void TBranchSTL::Browse( TBrowser *b )
 {
@@ -161,10 +163,9 @@ void TBranchSTL::Browse( TBrowser *b )
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-///---------------------------------------------------------------------------
-/// Cleanup after revious fill
-///---------------------------------------------------------------------------
+/// Cleanup after revious fill.
 
 Int_t TBranchSTL::Fill()
 {
@@ -357,10 +358,9 @@ Int_t TBranchSTL::Fill()
    return totalBytes;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-///---------------------------------------------------------------------------
-/// Check if we should be doing this at all
-///---------------------------------------------------------------------------
+/// Check if we should be doing this at all.
 
 Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
 {
@@ -570,10 +570,9 @@ Int_t TBranchSTL::GetExpectedType(TClass *&expectedClass,EDataType &expectedType
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-///---------------------------------------------------------------------------
-/// Check if we don't have the streamer info
-///---------------------------------------------------------------------------
+/// Check if we don't have the streamer info.
 
 TStreamerInfo* TBranchSTL::GetInfo() const
 {
@@ -618,8 +617,9 @@ TStreamerInfo* TBranchSTL::GetInfo() const
    return fInfo;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-///branch declared folder if at least one entry
+/// Branch declared folder if at least one entry.
 
 Bool_t TBranchSTL::IsFolder() const
 {
@@ -627,6 +627,7 @@ Bool_t TBranchSTL::IsFolder() const
       return kTRUE;
    return kFALSE;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the branch parameters.
@@ -670,8 +671,9 @@ void TBranchSTL::Print(const char *option) const
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-///TO BE DOCUMENTED
+/// Read leaves.
 
 void TBranchSTL::ReadLeavesImpl( TBuffer& b )
 {
@@ -679,17 +681,16 @@ void TBranchSTL::ReadLeavesImpl( TBuffer& b )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///TO BE DOCUMENTED
+/// Fill leaves.
 
 void TBranchSTL::FillLeavesImpl( TBuffer& b )
 {
    b.WriteClassBuffer( fIndArrayCl, &fInd );
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-///---------------------------------------------------------------------------
-/// We are the top level branch
-///---------------------------------------------------------------------------
+/// We are the top level branch.
 
 void TBranchSTL::SetAddress( void* addr )
 {
