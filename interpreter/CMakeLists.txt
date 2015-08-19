@@ -58,6 +58,11 @@ set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
 #--- Do not build cling as part of llvm.
 set(LLVM_NOCLING "YES")
 
+set(CLANG_ENABLE_STATIC_ANALYZER "NO")
+set(CLANG_ENABLE_ARCMT "NO")
+set(CLANG_ENABLE_COMPILER "NO")
+set(CLANG_ENABLE_FORMAT "NO")
+
 #---Add the sub-directory excluding all the targets from all-----------------------------------------
 if(CMAKE_GENERATOR MATCHES "Xcode")
   add_subdirectory(llvm/src)
