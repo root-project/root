@@ -9,13 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBranchObject                                                        //
-//                                                                      //
-// A Branch for the case of an object                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \class TBranchObject
+///
+/// A Branch for the case of an object.
+
 
 #include "TBranchObject.h"
 
@@ -35,6 +33,7 @@
 
 ClassImp(TBranchObject)
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for BranchObject.
 
@@ -45,6 +44,7 @@ TBranchObject::TBranchObject()
    fOldObject = 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a BranchObject.
 
@@ -54,6 +54,7 @@ TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classnam
    Init(tree,0,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a BranchObject.
 
@@ -62,6 +63,7 @@ TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* clas
 {
    Init(0,parent,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialization routine (run from the constructor so do not make this function virtual)
@@ -145,6 +147,7 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
 
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor for a BranchObject.
 
@@ -152,6 +155,7 @@ TBranchObject::~TBranchObject()
 {
    fBranches.Delete();
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse the branch content.
@@ -166,6 +170,7 @@ void TBranchObject::Browse(TBrowser* b)
       GetBrowsables()->Browse(b);
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop on all leaves of this branch to fill Basket buffer.
@@ -193,15 +198,17 @@ Int_t TBranchObject::Fill()
    return nbytes;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Read all branches of a BranchObject and return total number of bytes.
 ///
-///   If entry = 0 take current entry number + 1
-///   If entry < 0 reset entry number to 0
+/// - If entry = 0 take current entry number + 1
+/// - If entry < 0 reset entry number to 0
 ///
-///  The function returns the number of bytes read from the input buffer.
-///  If entry does not exist  the function returns 0.
-///  If an I/O error occurs,  the function returns -1.
+/// The function returns the number of bytes read from the input buffer.
+///
+/// - If entry does not exist  the function returns 0.
+/// - If an I/O error occurs,  the function returns -1.
 
 Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
 {
@@ -233,6 +240,7 @@ Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
    return nbytes;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill expectedClass and expectedType with information on the data type of the
 /// object/values contained in this branch (and thus the type of pointers
@@ -252,6 +260,7 @@ Int_t TBranchObject::GetExpectedType(TClass *&expectedClass,EDataType &expectedT
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return TRUE if more than one leaf or if fBrowsables, FALSE otherwise.
 
@@ -267,6 +276,7 @@ Bool_t TBranchObject::IsFolder() const
 
    return browsables && browsables->GetSize();
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print TBranch parameters.
@@ -289,11 +299,12 @@ void TBranchObject::Print(Option_t* option) const
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset a branch.
 ///
-/// Existing buffers are deleted.
-/// Entries, max and min are reset.
+/// - Existing buffers are deleted.
+/// - Entries, max and min are reset.
 
 void TBranchObject::Reset(Option_t* option)
 {
@@ -320,6 +331,7 @@ void TBranchObject::ResetAfterMerge(TFileMergeInfo *info)
       branch->ResetAfterMerge(info);
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set address of this branch.
@@ -496,26 +508,26 @@ void TBranchObject::SetAddress(void* add)
    delete[] fullname;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the AutoDelete bit.
 ///
-///  This function can be used to instruct Root in TBranchObject::ReadBasket
-///  to not delete the object referenced by a branchobject before reading a
-///  new entry. By default, the object is deleted.
-///  If autodel is kTRUE, this existing object will be deleted, a new object
-///    created by the default constructor, then object->Streamer called.
-///  If autodel is kFALSE, the existing object is not deleted. Root assumes
-///    that the user is taking care of deleting any internal object or array
-///    This can be done in Streamer itself.
-///  If this branch has sub-branches, the function sets autodel for these
-///  branches as well.
-///  We STRONGLY suggest to activate this option by default when you create
-///  the top level branch. This will make the read phase more efficient
-///  because it minimizes the numbers of new/delete operations.
-///  Once this option has been set and the Tree is written to a file, it is
-///  not necessary to specify the option again when reading, unless you
-///  want to set the opposite mode.
-///
+/// This function can be used to instruct Root in TBranchObject::ReadBasket
+/// to not delete the object referenced by a branchobject before reading a
+/// new entry. By default, the object is deleted.
+/// - If autodel is kTRUE, this existing object will be deleted, a new object
+///     created by the default constructor, then object->Streamer called.
+/// - If autodel is kFALSE, the existing object is not deleted. Root assumes
+///     that the user is taking care of deleting any internal object or array
+///     This can be done in Streamer itself.
+/// - If this branch has sub-branches, the function sets autodel for these
+/// branches as well.
+/// We STRONGLY suggest to activate this option by default when you create
+/// the top level branch. This will make the read phase more efficient
+/// because it minimizes the numbers of new/delete operations.
+/// Once this option has been set and the Tree is written to a file, it is
+/// not necessary to specify the option again when reading, unless you
+/// want to set the opposite mode.
 
 void TBranchObject::SetAutoDelete(Bool_t autodel)
 {
@@ -527,6 +539,7 @@ void TBranchObject::SetAutoDelete(Bool_t autodel)
       branch->SetAutoDelete(autodel);
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset basket size for all subbranches of this branch.
@@ -541,6 +554,7 @@ void TBranchObject::SetBasketSize(Int_t buffsize)
       branch->SetBasketSize(fBasketSize);
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TBranchObject.
@@ -586,6 +600,7 @@ void TBranchObject::Streamer(TBuffer& R__b)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// -- If the branch address is not set,  we set all addresses starting with
 /// the top level parent branch.  This is required to be done in order for
@@ -608,6 +623,7 @@ void TBranchObject::SetupAddresses()
       }
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update branch addresses if a new object was created.
