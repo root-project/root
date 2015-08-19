@@ -62,8 +62,8 @@ require(['JSRootCore', 'JSRootPainter'],
 </script>
 """
 
-_enableJSVis = True
-_enableJSVisDebug = True
+_enableJSVis = False
+_enableJSVisDebug = False
 def enableJSVis():
     global _enableJSVis
     _enableJSVis = True
