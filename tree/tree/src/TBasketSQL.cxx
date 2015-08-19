@@ -9,13 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBasketSQL                                                           //
-//                                                                      //
-// Implement TBasket for a SQL backend                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #ifndef TBASKETSQL_CXX
 #define TBASKETSQL_CXX
@@ -36,11 +29,17 @@ ClassImp(TBasketSQL)
 namespace std {} using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \class TBasketSQL
+/// Implement TBasket for a SQL backend.
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
 TBasketSQL::TBasketSQL() : TBasket(), fResultPtr(0), fRowPtr(0), fInsertQuery(0)
 {
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Regular constructor.
@@ -76,12 +75,14 @@ TBasketSQL::TBasketSQL(const char *name, const char *title, TBranch *branch,
 
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 TBasketSQL::~TBasketSQL()
 {
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TSQLBuffer for this basket.
@@ -116,6 +117,7 @@ void TBasketSQL::CreateBuffer(const char *name, TString title,
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Prepare the basket for the next entry.
 
@@ -126,6 +128,7 @@ void TBasketSQL::PrepareBasket(Long64_t entry)
    fBufferRef->Reset();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// See TBasket::ReadBasketBytes.  This is not implemented in TBasketSQL.
 
@@ -135,6 +138,7 @@ Int_t TBasketSQL::ReadBasketBytes(Long64_t , TFile *)
    return 0;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// See TBasket::ReadBasketBuffers.  This is not implemented in TBasketSQL.
 
@@ -143,6 +147,7 @@ Int_t TBasketSQL::ReadBasketBuffers(Long64_t , Int_t, TFile *)
    Error("ReadBasketBuffers","This member function should not be called!");
    return 0;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// See TBasket::Reset
