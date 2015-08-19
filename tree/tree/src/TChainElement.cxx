@@ -10,10 +10,9 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TChainElement describes a component of a TChain.                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/// \class TChainElement
+/// A TChainElement describes a component of a TChain.
+
 
 #include "TTree.h"
 #include "TChainElement.h"
@@ -21,6 +20,7 @@
 #include "TROOT.h"
 
 ClassImp(TChainElement)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for a chain element.
@@ -35,6 +35,7 @@ TChainElement::TChainElement() : TNamed(),fBaddress(0),fBaddressType(0),
    fStatus     = -1;
    ResetBit(kHasBeenLookedUp);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a chain element.
@@ -51,6 +52,7 @@ TChainElement::TChainElement(const char *name, const char *title)
    ResetBit(kHasBeenLookedUp);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Default destructor for a chain element.
 
@@ -58,6 +60,7 @@ TChainElement::~TChainElement()
 {
    delete [] fPackets;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the packet descriptor string.
@@ -72,6 +75,7 @@ void TChainElement::CreatePackets()
 
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// List files in the chain.
 
@@ -81,6 +85,7 @@ void TChainElement::ls(Option_t *) const
    std::cout << GetTitle() << "tree:" << GetName() << " entries=" << fEntries << '\n';
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set number of entries per packet for parallel root.
 
@@ -88,6 +93,7 @@ void TChainElement::SetPacketSize(Int_t size)
 {
    fPacketSize = size;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set/Reset the looked-up bit
