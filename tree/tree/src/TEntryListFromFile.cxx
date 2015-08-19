@@ -10,25 +10,25 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
-// TEntryListFromFile
-//
-// Manages entry lists from different files, when they are not loaded
-// in memory at the same time.
-//
-// This entry list should only be used when processing a TChain (see
-// TChain::SetEntryList() function). File naming convention:
-// - by default, filename_elist.root is used, where filename is the
-//   name of the chain element.
-// - xxx$xxx.root - $ sign is replaced by the name of the chain element
-// If the list name is not specified (by passing filename_elist.root/listname to
-// the TChain::SetEntryList() function, the first object of class TEntryList
-// in the file is taken.
-// It is assumed that there are as many lists, as there are chain elements,
-// and they are in the same order.
-//
-// If one of the list files can't be opened, or there is an error reading a list
-// from the file, this list is skipped and the entry loop continues on the next
-// list.
+/// \class TEntryListFromFile
+///
+/// Manages entry lists from different files, when they are not loaded
+/// in memory at the same time.
+///
+/// This entry list should only be used when processing a TChain (see
+/// TChain::SetEntryList() function). File naming convention:
+/// - by default, filename_elist.root is used, where filename is the
+///   name of the chain element.
+/// - xxx$xxx.root - $ sign is replaced by the name of the chain element
+/// If the list name is not specified (by passing filename_elist.root/listname to
+/// the TChain::SetEntryList() function, the first object of class TEntryList
+/// in the file is taken.
+/// It is assumed that there are as many lists, as there are chain elements,
+/// and they are in the same order.
+///
+/// If one of the list files can't be opened, or there is an error reading a list
+/// from the file, this list is skipped and the entry loop continues on the next
+/// list.
 
 
 #include "TEntryListFromFile.h"
@@ -51,10 +51,13 @@ TEntryListFromFile::TEntryListFromFile(): TEntryList(),
 /// - by default, filename_elist.root is used, where filename is the
 ///   name of the chain element
 /// - xxx$xxx.root - $ sign is replaced by the name of the chain element
+///
 /// The TObjArray of chain elements is set by the TEntryListFromFile::SetFileNames()
 /// function.
+///
 /// If the list name is not specified, the first object of class TEntryList
 /// in the file is taken.
+///
 /// nfiles is the total number of files to process
 
 TEntryListFromFile::TEntryListFromFile(const char *filename, const char *listname, Int_t nfiles) : TEntryList(),
@@ -80,8 +83,8 @@ TEntryListFromFile::~TEntryListFromFile()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///returns entry #index
-///See also Next() for a faster alternative
+/// Returns entry #index
+/// See also Next() for a faster alternative
 
 Long64_t TEntryListFromFile::GetEntry(Int_t index)
 {
@@ -145,8 +148,8 @@ Long64_t TEntryListFromFile::GetEntry(Int_t index)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///return the entry corresponding to the index parameter and the
-///number of the tree, where this entry is
+/// Return the entry corresponding to the index parameter and the
+/// number of the tree, where this entry is
 
 Long64_t TEntryListFromFile::GetEntryAndTree(Int_t index, Int_t &treenum)
 {
@@ -156,8 +159,8 @@ Long64_t TEntryListFromFile::GetEntryAndTree(Int_t index, Int_t &treenum)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the total number of entries in the list.
-///If some lists have not been loaded, loads them.
+/// Returns the total number of entries in the list.
+/// If some lists have not been loaded, loads them.
 
 Long64_t TEntryListFromFile::GetEntries()
 {
@@ -174,8 +177,8 @@ Long64_t TEntryListFromFile::GetEntries()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the next entry in the list.
-///Faster than GetEntry()
+/// Returns the next entry in the list.
+/// Faster than GetEntry()
 
 Long64_t TEntryListFromFile::Next()
 {
@@ -221,8 +224,8 @@ Long64_t TEntryListFromFile::Next()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Loads the list #listnumber
-///This is the only function that can modify fCurrent and fFile data members
+/// Loads the list #listnumber
+/// This is the only function that can modify fCurrent and fFile data members
 
 Int_t TEntryListFromFile::LoadList(Int_t listnumber)
 {
@@ -296,7 +299,7 @@ Int_t TEntryListFromFile::LoadList(Int_t listnumber)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Print info about this list
+/// Print info about this list
 
 void TEntryListFromFile::Print(const Option_t* option) const
 {
