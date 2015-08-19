@@ -9,13 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBufferSQL                                                           //
-//                                                                      //
-// Implement TBuffer for a SQL backend                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \class TBufferSQL
+///
+/// Implement TBuffer for a SQL backend.
+
 
 #include <stdio.h>
 #include "Riostream.h"
@@ -29,6 +27,7 @@
 
 ClassImp(TBufferSQL);
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
@@ -40,6 +39,7 @@ TBufferSQL::TBufferSQL(TBuffer::EMode mode, std::vector<Int_t> *vc,
    fIter = fColumnVec->begin();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
@@ -50,6 +50,7 @@ TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc
 {
    fIter = fColumnVec->begin();
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -63,6 +64,7 @@ TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc
    fIter = fColumnVec->begin();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
@@ -70,13 +72,15 @@ TBufferSQL::TBufferSQL() : TBufferFile(), fColumnVec(0),fInsertQuery(0),fRowPtr(
 {
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructo.
+/// Destructor.
 
 TBufferSQL::~TBufferSQL()
 {
    delete fColumnVec;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
@@ -88,6 +92,7 @@ void TBufferSQL::ReadBool(Bool_t &b)
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
 
@@ -97,6 +102,7 @@ void TBufferSQL::ReadChar(Char_t &c)
 
    if (fIter != fColumnVec->end()) ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
@@ -108,6 +114,7 @@ void TBufferSQL::ReadShort(Short_t &h)
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
 
@@ -117,6 +124,7 @@ void TBufferSQL::ReadInt(Int_t &i)
 
    if (fIter != fColumnVec->end()) ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
@@ -128,6 +136,7 @@ void TBufferSQL::ReadFloat(Float_t &f)
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
 
@@ -137,6 +146,7 @@ void TBufferSQL::ReadLong(Long_t &l)
 
    if (fIter != fColumnVec->end()) ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
@@ -149,6 +159,7 @@ void TBufferSQL::ReadDouble(Double_t &d)
 }
 
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
 
@@ -158,6 +169,7 @@ void TBufferSQL::WriteBool(Bool_t    b)
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
@@ -169,6 +181,7 @@ void TBufferSQL::WriteChar(Char_t    c)
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
 
@@ -178,6 +191,7 @@ void TBufferSQL::WriteShort(Short_t   h)
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
@@ -189,6 +203,7 @@ void TBufferSQL::WriteInt(Int_t     i)
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
 
@@ -198,6 +213,7 @@ void TBufferSQL::WriteLong(Long_t    l)
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
@@ -209,6 +225,7 @@ void TBufferSQL::WriteFloat(Float_t   f)
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
 
@@ -218,6 +235,7 @@ void TBufferSQL::WriteDouble(Double_t  d)
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
@@ -229,6 +247,7 @@ void TBufferSQL::ReadUChar(UChar_t& uc)
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
 
@@ -238,6 +257,7 @@ void TBufferSQL::ReadUShort(UShort_t& us)
 
    if (fIter != fColumnVec->end()) ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
@@ -251,6 +271,7 @@ void TBufferSQL::ReadUInt(UInt_t& ui)
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
 
@@ -262,6 +283,7 @@ void TBufferSQL::ReadULong(ULong_t& ul)
 
    if (fIter != fColumnVec->end()) ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
@@ -275,6 +297,7 @@ void TBufferSQL::ReadLong64(Long64_t &ll)
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
 
@@ -287,6 +310,7 @@ void TBufferSQL::ReadULong64(ULong64_t &ull)
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator>>
 
@@ -296,6 +320,7 @@ void TBufferSQL::ReadCharP(Char_t *str)
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Read a TString
 
@@ -303,6 +328,7 @@ void TBufferSQL::ReadTString(TString   &s)
 {
    TBufferFile::ReadTString(s);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a TString
@@ -312,6 +338,7 @@ void TBufferSQL::WriteTString(const TString   &s)
    TBufferFile::WriteTString(s);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Read a std::string
 
@@ -319,6 +346,7 @@ void TBufferSQL::ReadStdString(std::string &s)
 {
    TBufferFile::ReadStdString(s);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a std::string
@@ -330,6 +358,7 @@ void TBufferSQL::WriteStdString(const std::string &s)
 
 // Method to send to database.
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
 
@@ -339,6 +368,7 @@ void TBufferSQL::WriteUChar(UChar_t uc)
    (*fInsertQuery) += ",";
    ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
@@ -350,6 +380,7 @@ void TBufferSQL::WriteUShort(UShort_t us)
    ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
 
@@ -359,6 +390,7 @@ void TBufferSQL::WriteUInt(UInt_t ui)
    (*fInsertQuery) += ",";
    ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
@@ -370,6 +402,7 @@ void TBufferSQL::WriteULong(ULong_t ul)
    ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
 
@@ -379,6 +412,7 @@ void TBufferSQL::WriteLong64(Long64_t ll)
    (*fInsertQuery) += ",";
    ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
@@ -390,6 +424,7 @@ void TBufferSQL::WriteULong64(ULong64_t ull)
    ++fIter;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
 
@@ -400,6 +435,7 @@ void TBufferSQL::WriteCharP(const Char_t *str)
    (*fInsertQuery) += "\",";
    ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
@@ -413,6 +449,7 @@ void TBufferSQL::WriteFastArray(const Bool_t *b, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
@@ -425,6 +462,7 @@ void TBufferSQL::WriteFastArray(const Char_t *c, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
@@ -435,6 +473,7 @@ void TBufferSQL::WriteFastArrayString(const Char_t *c, Int_t /* n */)
    (*fInsertQuery) += "\",";
    ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
@@ -448,6 +487,7 @@ void TBufferSQL::WriteFastArray(const UChar_t *uc, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
@@ -460,6 +500,7 @@ void TBufferSQL::WriteFastArray(const Short_t *h, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
@@ -471,6 +512,7 @@ void TBufferSQL::WriteFastArray(const UShort_t *us, Int_t n)
       ++fIter;
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
@@ -485,6 +527,7 @@ void TBufferSQL::WriteFastArray(const Int_t     *ii, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
@@ -496,6 +539,7 @@ void TBufferSQL::WriteFastArray(const UInt_t *ui, Int_t n)
       ++fIter;
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
@@ -509,6 +553,7 @@ void TBufferSQL::WriteFastArray(const Long_t    *l, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
@@ -520,6 +565,7 @@ void TBufferSQL::WriteFastArray(const ULong_t   *ul, Int_t n)
       ++fIter;
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
@@ -533,6 +579,7 @@ void TBufferSQL::WriteFastArray(const Long64_t  *l, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
@@ -544,6 +591,7 @@ void TBufferSQL::WriteFastArray(const ULong64_t *ul, Int_t n)
       ++fIter;
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
@@ -557,6 +605,7 @@ void TBufferSQL::WriteFastArray(const Float_t   *f, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
@@ -569,6 +618,7 @@ void TBufferSQL::WriteFastArray(const Double_t  *d, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
 
@@ -576,6 +626,7 @@ void TBufferSQL::WriteFastArray(void*, const TClass*, Int_t, TMemberStreamer *)
 {
    Fatal("riteFastArray(void*, const TClass*, Int_t, TMemberStreamer *)","Not implemented yet");
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WriteFastArray SQL implementation.
@@ -585,6 +636,7 @@ Int_t TBufferSQL::WriteFastArray(void **, const TClass*, Int_t, Bool_t, TMemberS
    Fatal("WriteFastArray(void **, const TClass*, Int_t, Bool_t, TMemberStreamer*)","Not implemented yet");
    return 0;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
@@ -597,6 +649,7 @@ void TBufferSQL::ReadFastArray(Bool_t *b, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
@@ -608,6 +661,7 @@ void TBufferSQL::ReadFastArray(Char_t *c, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
@@ -616,6 +670,7 @@ void TBufferSQL::ReadFastArrayString(Char_t *c, Int_t /* n */)
    strcpy(c,((*fRowPtr)->GetField(*fIter)));
    ++fIter;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
@@ -628,6 +683,7 @@ void TBufferSQL::ReadFastArray(UChar_t *uc, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
@@ -638,6 +694,7 @@ void TBufferSQL::ReadFastArray(Short_t *s, Int_t n)
       ++fIter;
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
@@ -650,6 +707,7 @@ void TBufferSQL::ReadFastArray(UShort_t *us, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
@@ -660,6 +718,7 @@ void     TBufferSQL::ReadFastArray(Int_t *in, Int_t n)
       ++fIter;
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
@@ -672,6 +731,7 @@ void     TBufferSQL::ReadFastArray(UInt_t *ui, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
@@ -683,6 +743,7 @@ void TBufferSQL::ReadFastArray(Long_t *l, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
@@ -692,6 +753,7 @@ void TBufferSQL::ReadFastArray(ULong_t   *ul, Int_t n)
       (*this) >> ul[i];
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
@@ -703,6 +765,7 @@ void TBufferSQL::ReadFastArray(Long64_t  *ll, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
@@ -712,6 +775,7 @@ void TBufferSQL::ReadFastArray(ULong64_t *ull, Int_t n)
       (*this) >> ull[i];
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
@@ -724,6 +788,7 @@ void TBufferSQL::ReadFastArray(Float_t   *f, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
@@ -735,6 +800,7 @@ void TBufferSQL::ReadFastArray(Double_t *d, Int_t n)
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
@@ -743,36 +809,42 @@ void     TBufferSQL::ReadFastArrayFloat16(Float_t  *, Int_t , TStreamerElement *
    Fatal("ReadFastArrayFloat16(Float_t  *, Int_t , TStreamerElement *)","Not implemented yet");
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Float16_t from buffer
+/// Read array of Float16_t from buffer
 
 void TBufferSQL::ReadFastArrayWithFactor(Float_t  *, Int_t , Double_t /* factor */, Double_t /* minvalue */)
 {
    Fatal("ReadFastArrayWithFactor(Float_t  *, Int_t, Double_t, Double_t)","Not implemented yet");
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Float16_t from buffer
+/// Read array of Float16_t from buffer
 
 void TBufferSQL::ReadFastArrayWithNbits(Float_t  *, Int_t , Int_t /*nbits*/)
 {
    Fatal("ReadFastArrayWithNbits(Float_t  *, Int_t , Int_t )","Not implemented yet");
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Double32_t from buffer
+/// Read array of Double32_t from buffer
 
 void TBufferSQL::ReadFastArrayWithFactor(Double_t  *, Int_t , Double_t /* factor */, Double_t /* minvalue */)
 {
    Fatal("ReadFastArrayWithFactor(Double_t  *, Int_t, Double_t, Double_t)","Not implemented yet");
 }
+
+
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Double32_t from buffer
+/// Read array of Double32_t from buffer
 
 void TBufferSQL::ReadFastArrayWithNbits(Double_t  *, Int_t , Int_t /*nbits*/)
 {
    Fatal("ReadFastArrayWithNbits(Double_t  *, Int_t , Int_t )","Not implemented yet");
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
@@ -782,6 +854,7 @@ void     TBufferSQL::ReadFastArrayDouble32(Double_t  *, Int_t , TStreamerElement
    Fatal("ReadFastArrayDouble32(Double_t  *, Int_t , TStreamerElement *)","Not implemented yet");
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
@@ -789,6 +862,7 @@ void     TBufferSQL::ReadFastArray(void  *, const TClass *, Int_t, TMemberStream
 {
    Fatal("ReadFastArray(void  *, const TClass *, Int_t, TMemberStreamer *, const TClass *)","Not implemented yet");
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
@@ -798,6 +872,7 @@ void     TBufferSQL::ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemb
    Fatal("ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemberStreamer *, const TClass *)","Not implemented yet");
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset Offset.
 
@@ -805,6 +880,7 @@ void TBufferSQL::ResetOffset()
 {
    fIter = fColumnVec->begin();
 }
+
 
 #if 0
 ////////////////////////////////////////////////////////////////////////////////
