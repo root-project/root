@@ -65,11 +65,11 @@ void rs101_limitexample()
   // The Model building stage
   /////////////////////////////////////////
   RooWorkspace* wspace = new RooWorkspace();
-  wspace->factory("Poisson::countingModel(obs[150,0,300], sum(s[50,0,120]*ratioSigEff[1.,0,2.],b[100,0,300]*ratioBkgEff[1.,0.,2.]))"); // counting model
+  wspace->factory("Poisson::countingModel(obs[150,0,300], sum(s[50,0,120]*ratioSigEff[1.,0,3.],b[100]*ratioBkgEff[1.,0.,3.]))"); // counting model
   //  wspace->factory("Gaussian::sigConstraint(ratioSigEff,1,0.05)"); // 5% signal efficiency uncertainty
   //  wspace->factory("Gaussian::bkgConstraint(ratioBkgEff,1,0.1)"); // 10% background efficiency uncertainty
-  wspace->factory("Gaussian::sigConstraint(1,ratioSigEff,0.05)"); // 5% signal efficiency uncertainty
-  wspace->factory("Gaussian::bkgConstraint(1,ratioBkgEff,0.1)"); // 10% background efficiency uncertainty
+  wspace->factory("Gaussian::sigConstraint(gSigEff[1,0,3],ratioSigEff,0.05)"); // 5% signal efficiency uncertainty
+  wspace->factory("Gaussian::bkgConstraint(gSigBkg[1,0,3],ratioBkgEff,0.2)"); // 10% background efficiency uncertainty
   wspace->factory("PROD::modelWithConstraints(countingModel,sigConstraint,bkgConstraint)"); // product of terms
   wspace->Print();
 
@@ -78,9 +78,15 @@ void rs101_limitexample()
   RooRealVar* s = wspace->var("s"); // get the signal we care about
   RooRealVar* b = wspace->var("b"); // get the background and set it to a constant.  Uncertainty included in ratioBkgEff
   b->setConstant();
+  
   RooRealVar* ratioSigEff = wspace->var("ratioSigEff"); // get uncertaint parameter to constrain
   RooRealVar* ratioBkgEff = wspace->var("ratioBkgEff"); // get uncertaint parameter to constrain
   RooArgSet constrainedParams(*ratioSigEff, *ratioBkgEff); // need to constrain these in the fit (should change default behavior)
+
+  RooRealVar * gSigEff = wspace->var("gSigEff");     // global observables for signal efficiency
+  RooRealVar * gSigBkg = wspace->var("gSigBkg");  // global obs for background efficiency
+  gSigEff->setConstant();
+  gSigBkg->setConstant();
 
   // Create an example dataset with 160 observed events
   obs->setVal(160.);
@@ -95,9 +101,18 @@ void rs101_limitexample()
   // Now let's make some confidence intervals for s, our parameter of interest
   RooArgSet paramOfInterest(*s);
 
-  ModelConfig modelConfig(new RooWorkspace());
+  ModelConfig modelConfig(wspace);
   modelConfig.SetPdf(*modelWithConstraints);
   modelConfig.SetParametersOfInterest(paramOfInterest);
+  modelConfig.SetNuisanceParameters(constrainedParams);
+  modelConfig.SetObservables(*obs);
+  modelConfig.SetGlobalObservables( RooArgSet(*gSigEff,*gSigBkg));
+  modelConfig.SetName("ModelConfig");
+  wspace->import(modelConfig);
+  wspace->import(*data); 
+  wspace->SetName("w");
+  wspace->writeToFile("rs101_ws.root");
+  
 
 
   // First, let's use a Calculator based on the Profile Likelihood Ratio
@@ -212,6 +227,7 @@ void rs101_limitexample()
   gr->SetMarkerStyle(24);
   gr->Draw("P SAME");
 
+  
   delete wspace;
   delete lrint;
   delete mcInt;
