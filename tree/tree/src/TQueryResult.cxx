@@ -9,13 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TQueryResult                                                         //
-//                                                                      //
-// A container class for query results.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \class TQueryResult
+///
+/// A container class for query results.
+
 #include <string.h>
 
 #include "TBrowser.h"
