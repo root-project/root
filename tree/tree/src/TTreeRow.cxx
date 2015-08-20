@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTreeRow                                                             //
-//                                                                      //
-// Class defining interface to a row of a TTree query result.           //
-// Objects of this class are created by TTreeResult methods.            //
-//                                                                      //
-// Related classes are TTreeResult.                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTreeRow
+Class defining interface to a row of a TTree query result.
+Objects of this class are created by TTreeResult methods.
+
+Related classes are TTreeResult.
+*/
 
 #include "TTreeRow.h"
 #include "TObjArray.h"

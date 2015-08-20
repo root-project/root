@@ -9,17 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTreeResult                                                          //
-//                                                                      //
-// Class defining interface to a TTree query result with the same       //
-// interface as for SQL databases. A TTreeResult is returned by         //
-// TTree::Query() (actually TTreePlayer::Query()).                      //
-//                                                                      //
-// Related classes are TTreeRow.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTreeResult
+Class defining interface to a TTree query result with the same
+interface as for SQL databases. A TTreeResult is returned by
+TTree::Query() (actually TTreePlayer::Query()).
+
+Related classes are TTreeRow.
+*/
 
 #include "TTreeResult.h"
 #include "TTreeRow.h"

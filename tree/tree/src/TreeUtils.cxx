@@ -9,14 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TreeUtils                                                            //
-//                                                                      //
-// Different standalone functions to work with trees and tuples,        //
-// not reqiuired to be a member of any class.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TreeUtils
+Different standalone functions to work with trees and tuples,
+not reqiuired to be a member of any class.
+*/
 
 #include <istream>
 #include <cassert>
@@ -237,7 +233,7 @@ template Long64_t FillNtupleFromStream<Double_t, TNtupleD>(std::istream &, TNtup
 //newline-character:
 // '\r' | '\n'
 ////////////////////////////////////////////////////////////////////////////////
-///Skips everything from '#' to (including) '\\r' or '\\n'.
+/// Skips everything from '#' to (including) '\\r' or '\\n'.
 
 void SkipComment(std::istream &input)
 {
@@ -256,7 +252,7 @@ void SkipComment(std::istream &input)
 //    ws-sequence newline-character
 //    ws-sequence comment
 ////////////////////////////////////////////////////////////////////////////////
-///Skips empty lines (newline-characters), ws-lines (consisting only of whitespace characters + newline-characters).
+/// Skips empty lines (newline-characters), ws-lines (consisting only of whitespace characters + newline-characters).
 
 void SkipEmptyLines(std::istream &input)
 {
@@ -277,7 +273,7 @@ void SkipEmptyLines(std::istream &input)
 //ws-sequence:
 //    c such that isspace(c) and c is not a newline-character.
 ////////////////////////////////////////////////////////////////////////////////
-///Skip whitespace characters, but not newline-characters we support ('\\r' or '\\n').
+/// Skip whitespace characters, but not newline-characters we support ('\\r' or '\\n').
 
 void SkipWSCharacters(std::istream &input)
 {
@@ -295,7 +291,7 @@ void SkipWSCharacters(std::istream &input)
 //Next character is either newline-character, eof or we have some problems reading
 //the next symbol.
 ////////////////////////////////////////////////////////////////////////////////
-///Either '\\r' | '\\n' or eof of some problem.
+/// Either '\\r' | '\\n' or eof of some problem.
 
 bool NextCharacterIsEOL(std::istream &input)
 {
