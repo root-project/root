@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #include "TNtupleD.h"
 #include "TTree.h"
 #include "TBranch.h"
@@ -21,21 +20,20 @@
 
 ClassImp(TNtupleD)
 
-////////////////////////////////////////////////////////////////////////////////
-///! \class TNtupleD
-/// A simple TTree restricted to a list of double variables only.
-///
-/// Each variable goes to a separate branch.
-///
-/// A Ntuple is created via
-///
-///     TNtupleD(name,title,varlist,bufsize)
-///
-/// It is filled via:
-///
-///     TNtupleD::Fill(*x)  or
-///     TNtupleD::Fill(v1,v2,v3.....)
+/** \class TNtupleD
+A simple TTree restricted to a list of double variables only.
 
+Each variable goes to a separate branch.
+
+A Ntuple is created via
+
+    TNtupleD(name,title,varlist,bufsize)
+
+It is filled via:
+
+    TNtupleD::Fill(*x)  or
+    TNtupleD::Fill(v1,v2,v3.....)
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for Ntuple.
@@ -45,7 +43,6 @@ TNtupleD::TNtupleD(): TTree()
    fNvar = 0;
    fArgs = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an Ntuple.
@@ -97,7 +94,6 @@ TNtupleD::TNtupleD(const char *name, const char *title, const char *varlist, Int
    delete [] pvars;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default destructor for an Ntuple.
 
@@ -106,7 +102,6 @@ TNtupleD::~TNtupleD()
    delete [] fArgs;
    fArgs = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the branch addresses to the internal fArgs array. Use this
@@ -122,7 +117,6 @@ void TNtupleD::ResetBranchAddress(TBranch *branch)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the branch addresses to the internal fArgs array. Use this
 /// method when the addresses were changed via calls to SetBranchAddress().
@@ -135,7 +129,6 @@ void TNtupleD::ResetBranchAddresses()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse content.
 
@@ -143,7 +136,6 @@ void TNtupleD::Browse(TBrowser *b)
 {
    fLeaves.Browse( b );
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill a Ntuple with current values in fArgs.
@@ -155,7 +147,6 @@ Int_t TNtupleD::Fill()
 {
    return TTree::Fill();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill a Ntuple with an array of floats.
@@ -169,7 +160,6 @@ Int_t TNtupleD::Fill(const Double_t *x)
 
    return TTree::Fill();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill a Ntuple: Each Ntuple item is an argument.
@@ -196,7 +186,6 @@ Int_t TNtupleD::Fill(Double_t x0,Double_t x1,Double_t x2,Double_t x3,Double_t x4
 
    return TTree::Fill();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read from filename as many columns as variables in the ntuple
@@ -229,7 +218,6 @@ Long64_t TNtupleD::ReadStream(std::istream &inputStream, const char * /*branchDe
    //The last argument - true == strict mode.
    return ROOT::TreeUtils::FillNtupleFromStream<Double_t, TNtupleD>(inputStream, *this, delimiter, true);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream a class object.
