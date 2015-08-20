@@ -425,6 +425,7 @@ static char DataTypeToChar(EDataType datatype)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \class TTree::TFriendLock
 /// Helper class to prevent infinite recursion in the usage of TTree Friends.
 
 
@@ -485,7 +486,7 @@ TTree::TFriendLock::~TFriendLock()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TClusterIterator
+/// \class TTree::TClusterIterator
 /// Helper class to iterate over cluster of baskets.
 
 

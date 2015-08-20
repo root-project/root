@@ -9,12 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// This class is a special version of TSelector for user interpreted    //
-// classes.                                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \class TSelectorCint
+/// This class is a special version of TSelector for user interpreted
+/// classes.
 
 #include "TROOT.h"
 #include "TTree.h"
@@ -55,7 +53,7 @@ TSelectorCint::TSelectorCint() : TSelector(),
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// destructor for a Selector.
+/// Destructor for a Selector.
 
 TSelectorCint::~TSelectorCint()
 {
