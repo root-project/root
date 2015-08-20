@@ -11,7 +11,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TLeafB
-/// A TLeaf for an 8 bit Integer data type. \f$(x_1,y_1)\f$
+/// A TLeaf for an 8 bit Integer data type.
 
 #include "TLeafB.h"
 #include "TBranch.h"
