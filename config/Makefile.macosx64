@@ -155,3 +155,9 @@ showld:
 showf77:
 	@echo "$(F77ORG)"
 endif
+
+ifneq ($(CXX:%clang++=),$(CXX))
+ifneq ($(CXXMODULES),)
+  CXXFLAGS += -fmodules
+endif
+endif
