@@ -67,19 +67,20 @@ def stderrRedirected():
 ##########
 # Imports
 
+##
+# redirect output (escape characters during ROOT importation...)
+# The gymnastic with sys argv  is necessary to workaround for ROOT-7577
+argvTmp = sys.argv[:]
+sys.argv = []
+with stdoutRedirected():
+    import ROOT
+ROOT.gROOT.GetVersion()
+sys.argv = argvTmp
+
 import argparse
 import glob
 import fnmatch
 import logging
-
-##
-# redirect output (escape characters during ROOT importation...)
-#osEnviron = os.environ["TERM"]
-#os.environ["TERM"] = "vt100"
-#import ROOT
-#os.environ["TERM"] = osEnviron
-with stdoutRedirected():
-    import ROOT
 
 # The end of imports
 ##########
@@ -351,42 +352,54 @@ def patternToFileNameAndPathSplitList(pattern,wildcards = True):
     Use unix wildcards by default
     """
     rootFilePattern = "*.root"
-    rootObjPattern = "*.root:*"
-    webRootFilePattern = "*:*.root"
-    webRootObjPattern = "*:*.root:*"
+    rootObjPattern = rootFilePattern+":*"
+    httpRootFilePattern = "htt*://*.root"
+    httpRootObjPattern = httpRootFilePattern+":*"
+    xrootdRootFilePattern = "root://*.root"
+    xrootdRootObjPattern = xrootdRootFilePattern+":*"
+    s3RootFilePattern = "s3://*.root"
+    s3RootObjPattern = s3RootFilePattern+":*"
+    gsRootFilePattern = "gs://*.root"
+    gsRootObjPattern = gsRootFilePattern+":*"
+    rfioRootFilePattern = "rfio://*.root"
+    rfioRootObjPattern = rfioRootFilePattern+":*"
     pcmFilePattern = "*.pcm"
-    pcmObjPattern = "*.pcm:*"
-    webPcmFilePattern = "*:*.pcm"
-    webPcmObjPattern = "*:*.pcm:*"
+    pcmObjPattern = pcmFilePattern+":*"
 
-    if fnmatch.fnmatch(pattern,webRootFilePattern) \
-      or fnmatch.fnmatch(pattern,webPcmFilePattern):
-        fileName = pattern
-        pathSplitList = [[]]
-        return [(fileName,pathSplitList)]
-
-    if fnmatch.fnmatch(pattern,webRootObjPattern) \
-      or fnmatch.fnmatch(pattern,webPcmObjPattern):
+    if fnmatch.fnmatch(pattern,httpRootObjPattern) or \
+       fnmatch.fnmatch(pattern,xrootdRootObjPattern) or \
+       fnmatch.fnmatch(pattern,s3RootObjPattern) or \
+       fnmatch.fnmatch(pattern,gsRootObjPattern) or \
+       fnmatch.fnmatch(pattern,rfioRootObjPattern):
         patternSplit = pattern.rsplit(":", 1)
         fileName = patternSplit[0]
         objPattern = patternSplit[1]
         pathSplitList = pathSplitListMatch(fileName,objPattern,wildcards)
         return [(fileName,pathSplitList)]
 
-    if fnmatch.fnmatch(pattern,rootFilePattern) \
-      or fnmatch.fnmatch(pattern,pcmFilePattern):
-        filePattern = pattern
-        fileNameList = fileNameListMatch(filePattern,wildcards)
+    if fnmatch.fnmatch(pattern,httpRootFilePattern) or \
+       fnmatch.fnmatch(pattern,xrootdRootFilePattern) or \
+       fnmatch.fnmatch(pattern,s3RootFilePattern) or \
+       fnmatch.fnmatch(pattern,gsRootFilePattern) or \
+       fnmatch.fnmatch(pattern,rfioRootFilePattern):
+        fileName = pattern
         pathSplitList = [[]]
-        return [(fileName,pathSplitList) for fileName in fileNameList]
+        return [(fileName,pathSplitList)]
 
-    if fnmatch.fnmatch(pattern,rootObjPattern) \
-      or fnmatch.fnmatch(pattern,pcmObjPattern):
+    if fnmatch.fnmatch(pattern,rootObjPattern) or \
+       fnmatch.fnmatch(pattern,pcmObjPattern):
         patternSplit = pattern.split(":")
         filePattern = patternSplit[0]
         objPattern = patternSplit[1]
         fileNameList = fileNameListMatch(filePattern,wildcards)
         return [(fileName,pathSplitListMatch(fileName,objPattern,wildcards)) for fileName in fileNameList]
+
+    if fnmatch.fnmatch(pattern,rootFilePattern) or \
+       fnmatch.fnmatch(pattern,pcmFilePattern):
+        filePattern = pattern
+        fileNameList = fileNameListMatch(filePattern,wildcards)
+        pathSplitList = [[]]
+        return [(fileName,pathSplitList) for fileName in fileNameList]
 
     logging.warning("{0}: No such file (or extension not supported)".format(pattern))
     return []
