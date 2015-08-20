@@ -32,6 +32,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <sstream>
 
 #include "Varargs.h"
 #include "Riostream.h"
@@ -1053,6 +1054,15 @@ void TObject::operator delete[](void *ptr)
       TStorage::ObjectDealloc(ptr);
    else
       fgDtorOnly = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print value overload
+
+std::string cling::printValue(TObject *val) {
+   std::ostringstream strm;
+   strm << "Name: " << val->GetName() << " Title: " << val->GetTitle();
+   return strm.str();
 }
 
 #ifdef R__PLACEMENTDELETE

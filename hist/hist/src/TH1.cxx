@@ -13,6 +13,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <sstream>
 
 #include "Riostream.h"
 #include "TROOT.h"
@@ -8792,6 +8793,15 @@ Double_t TH1::RetrieveBinContent(Int_t) const
 void TH1::UpdateBinContent(Int_t, Double_t)
 {
    AbstractMethod("UpdateBinContent");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print value overload
+
+std::string cling::printValue(TH1 *val) {
+  std::ostringstream strm;
+  strm << cling::printValue((TObject*)val) << " NbinsX: " << val->GetNbinsX();
+  return strm.str();
 }
 
 
