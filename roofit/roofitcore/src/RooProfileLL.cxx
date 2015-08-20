@@ -224,7 +224,7 @@ Double_t RooProfileLL::evaluate() const
   // Restore original values and constant status of observables
   TIterator* iter = obsSetOrig->createIterator() ;
   RooRealVar* var ;
-  while((var=(RooRealVar*)iter->Next())) {
+  while((var=dynamic_cast<RooRealVar*>(iter->Next()) ) )  {
     RooRealVar* target = (RooRealVar*) _obs.find(var->GetName()) ;
     target->setVal(var->getVal()) ;
     target->setConstant(var->isConstant()) ;
