@@ -386,6 +386,8 @@ module core_base {
   requires cplusplus
   export *
 
+  //header "RWrap_libcpp_string_view.h"
+
   header "TCanvasImp.h"
   header "Buttons.h"
   header "TAttFill.h"
