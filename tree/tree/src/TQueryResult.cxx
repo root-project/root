@@ -9,10 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TQueryResult
-///
-/// A container class for query results.
+/** \class TQueryResult
+A container class for query results.
+*/
 
 #include <string.h>
 
@@ -26,7 +25,6 @@
 #include "TSelector.h"
 #include "TSystem.h"
 #include "TTimeStamp.h"
-
 
 ClassImp(TQueryResult)
 
