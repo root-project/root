@@ -626,7 +626,7 @@ fWeight(kDefWeight)
 ///constructor using two existing histograms as input
 ///
 ///Input: passed - contains the events fullfilling some criteria
-      total  - contains all investigated events
+///       total  - contains all investigated events
 ///
 ///Notes: - both histograms have to fullfill the conditions of CheckConsistency (with option 'w')
 ///       - dimension of the resulating efficiency object depends
