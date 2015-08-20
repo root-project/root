@@ -9,10 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TSelectorCint
-/// This class is a special version of TSelector for user interpreted
-/// classes.
+/** \class TSelectorCint
+This class is a special version of TSelector for user interpreted classes.
+*/
 
 #include "TROOT.h"
 #include "TTree.h"
@@ -45,7 +44,6 @@ TSelectorCint::TSelectorCint() : TSelector(),
    fFuncResetAbort (0),
    fFuncGetStat    (0),
    fIntSelector(0),fIsOwner(kFALSE)
-
 
 {
    // Default constructor for a Selector.
