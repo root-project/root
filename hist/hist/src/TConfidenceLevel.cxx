@@ -1,13 +1,10 @@
 // @(#)root/hist:$Id$
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
-///////////////////////////////////////////////////////////////////////////
-//
-// TConfidenceLevel
-//
-// Class to compute 95% CL limits
-//
-///////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TConfidenceLevel
+    \brief Class to compute 95% CL limits
+*///////////////////////////////////////////////////////////////////////////////
 
 /*************************************************************************
  * C.Delaere                                                             *
@@ -58,9 +55,9 @@ TConfidenceLevel::TConfidenceLevel()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// a constructor that fix some conventions:
-/// mc is the number of Monte Carlo experiments
-/// while onesided specifies if the intervals are one-sided or not.
+/// Constructor that fix some conventions
+/// \param mc is the number of Monte Carlo experiments
+/// \param onesided specifies if the intervals are one-sided or not.
 
 TConfidenceLevel::TConfidenceLevel(Int_t mc, bool onesided)
 {
@@ -407,8 +404,10 @@ Double_t TConfidenceLevel::Get5sProbability() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Display sort of a "canonical" -2lnQ plot.
 /// This results in a plot with 2 elements:
+///
 /// - The histogram of -2lnQ for background hypothesis (full)
 /// - The histogram of -2lnQ for signal and background hypothesis (dashed)
+///
 /// The 2 histograms are respectively named b_hist and sb_hist.
 
 void  TConfidenceLevel::Draw(const Option_t*)

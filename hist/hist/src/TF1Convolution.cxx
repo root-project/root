@@ -32,20 +32,21 @@
 #include "TVirtualFFT.h"
 #include "TClass.h"
 
-//________________________________________________________________________
-//***********************************************************************
-// (f*g)(t) = int(f(x)g(x-t)dx)   *
-//*********************************
-// class wrapping convolution of two function : evaluation of TF1(t) * TF1(x-t)
-//
-// The convolution is performed by default using FFTW if it is available .
-// One can pass optionally the range of the convolution (by default the first function range is used).
-// Note that when using Discrete Fouriere Transform (as FFTW), it is a circular transform, so the functions should be
-// approximatly zero at the end of the range. If they are significantly different than zero on one side (e.g. the left side)
-// a spill over will occur on the other side (e.g right side).
-// If no function range is given by default the function1 range + 10% is used 
-// One shoud use also a not too small number of points for the DFT (a minimum of 1000).  By default 10000 points are used . 
-//
+////////////////////////////////////////////////////////////////////////////////
+/*! \class TF1Convolution
+    \brief Class wrapping convolution of two functions
+
+Class wrapping convolution of two functions: evaluation of \f$\int f(x)g(x-t)dx\f$
+
+The convolution is performed by default using FFTW if it is available .
+One can pass optionally the range of the convolution (by default the first function range is used).
+Note that when using Discrete Fouriere Transform (as FFTW), it is a circular transform, so the functions should be
+approximatly zero at the end of the range. If they are significantly different than zero on one side (e.g. the left side)
+a spill over will occur on the other side (e.g right side).
+If no function range is given by default the function1 range + 10% is used
+One shoud use also a not too small number of points for the DFT (a minimum of 1000).  By default 10000 points are used.
+*/////////////////////////////////////////////////////////////////////////////////
+
 class TF1Convolution_EvalWrapper
 {
    std::shared_ptr < TF1 > fFunction1;
