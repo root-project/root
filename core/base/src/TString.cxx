@@ -603,7 +603,6 @@ UInt_t TString::Hash(ECaseCompare cmp) const
    return (cmp == kExact) ? HashCase() : HashFoldCase();
 }
 
-namespace {
    // MurmurHash3 - a blazingly fast public domain hash!
    // See http://code.google.com/p/smhasher/
    // There are two versions, one optimized for 32 bit and one for 64 bit.
@@ -659,6 +658,8 @@ namespace {
 #define ROTL64(x,y)     rotl64(x,y)
 #define BIG_CONSTANT(x) (x##LLU)
 #endif // !defined(_MSC_VER)
+
+namespace {
 
    /////////////////////////////////////////////////////////////////////////////
    /// Block read - if your platform needs to do endian-swapping or can only
