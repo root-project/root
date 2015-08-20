@@ -9,9 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/*! \class TEntryListBlock
-
+/** \class TEntryListBlock
 Used by TEntryList to store the entry numbers.
 
 There are 2 ways to represent entry numbers in a TEntryListBlock:
@@ -42,7 +40,6 @@ End_Macro
  - __Next__()      - return next non-zero entry. In case of representation 1), Next()
                  is faster than GetEntry()
 */
-
 
 #include "TEntryListBlock.h"
 #include "TString.h"
@@ -84,7 +81,6 @@ TEntryListBlock::TEntryListBlock(const TEntryListBlock &eblock) : TObject(eblock
    fLastIndexReturned = -1;
    fLastIndexQueried = -1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
@@ -189,6 +185,7 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
    return Remove(entry);
    //return 0;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// True if the block contains entry #entry
 
@@ -541,7 +538,6 @@ void TEntryListBlock::PrintWithShift(Int_t shift) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// If there are < kBlockSize or >kBlockSize*15 entries, change to an array
 /// representation
@@ -557,7 +553,6 @@ void TEntryListBlock::OptimizeStorage()
       Transform(0, indexnew);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Transform the existing fIndices
@@ -594,7 +589,6 @@ void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
       fN = fNPassed;
       return;
    }
-
 
    if (fPassing){
       for (i=0; i<kBlockSize; i++)

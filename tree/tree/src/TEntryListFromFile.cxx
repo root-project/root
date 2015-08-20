@@ -9,27 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TEntryListFromFile
-///
-/// Manages entry lists from different files, when they are not loaded
-/// in memory at the same time.
-///
-/// This entry list should only be used when processing a TChain (see
-/// TChain::SetEntryList() function). File naming convention:
-/// - by default, filename_elist.root is used, where filename is the
-///   name of the chain element.
-/// - xxx$xxx.root - $ sign is replaced by the name of the chain element
-/// If the list name is not specified (by passing filename_elist.root/listname to
-/// the TChain::SetEntryList() function, the first object of class TEntryList
-/// in the file is taken.
-/// It is assumed that there are as many lists, as there are chain elements,
-/// and they are in the same order.
-///
-/// If one of the list files can't be opened, or there is an error reading a list
-/// from the file, this list is skipped and the entry loop continues on the next
-/// list.
+/** \class TEntryListFromFile
+Manages entry lists from different files, when they are not loaded
+in memory at the same time.
 
+This entry list should only be used when processing a TChain (see
+TChain::SetEntryList() function). File naming convention:
+- by default, filename_elist.root is used, where filename is the
+  name of the chain element.
+- xxx$xxx.root - $ sign is replaced by the name of the chain element
+If the list name is not specified (by passing filename_elist.root/listname to
+the TChain::SetEntryList() function, the first object of class TEntryList
+in the file is taken.
+It is assumed that there are as many lists, as there are chain elements,
+and they are in the same order.
+
+If one of the list files can't be opened, or there is an error reading a list
+from the file, this list is skipped and the entry loop continues on the next
+list.
+*/
 
 #include "TEntryListFromFile.h"
 #include "TObjArray.h"

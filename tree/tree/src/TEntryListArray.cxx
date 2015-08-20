@@ -9,9 +9,7 @@
 * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/*! \class TEntryListArray
-
+/** \class TEntryListArray
 A list of entries and subentries in a TTree or TChain.
 
 TEntryListArray is an extension of TEntryList, used to hold selected entries and
@@ -67,7 +65,6 @@ TEntryListArray's:
   - RemoveSubListForEntry: to remove the sublist corresponding to the given entry
   - SetEntry: to get / set a sublist for the given entry
 */
-
 
 #include "TEntryListArray.h"
 #include "TEntryListBlock.h"
@@ -139,7 +136,6 @@ TEntryListArray::TEntryListArray(const TEntryListArray &elist) : TEntryList(), f
 TEntryListArray::TEntryListArray(const TEntryList& elist) : TEntryList(elist), fSubLists(0), fEntry(-1), fLastSubListQueried(0), fSubListIter(0)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// d-tor

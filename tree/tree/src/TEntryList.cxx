@@ -9,9 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/*! \class TEntryList
-\brief A List of entry numbers in a TTree or TChain.
+/** \class TEntryList
+A List of entry numbers in a TTree or TChain.
 
 There are two types of entry lists:
 
@@ -140,7 +139,6 @@ TTreeFormula expressions.
 TTree::SetEventList() and TChain::SetEventList() transform a TEventList into a TEntryList
 See comments to those functions for more details
 */
-
 
 #include "TEntryList.h"
 #include "TEntryListBlock.h"
@@ -314,7 +312,6 @@ TEntryList::TEntryList(const TEntryList &elist) : TNamed(elist)
    fDirectory  = 0;
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -508,7 +505,6 @@ void TEntryList::Add(const TEntryList *elist)
    }
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// - When tree = 0, returns from the current list
@@ -969,7 +965,6 @@ Long64_t TEntryList::Next()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Checks if the array representation is more economical and if so, switches to it
 
@@ -983,7 +978,6 @@ void TEntryList::OptimizeStorage()
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print this list
@@ -1270,8 +1264,6 @@ void TEntryList::Subtract(const TEntryList *elist)
       }
    }
    return;
-
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
