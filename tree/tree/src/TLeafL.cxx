@@ -9,10 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TLeaf for a 64 bit Integer data type.                              //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \class TLeafL
+/// A TLeaf for a 64 bit Integer data type.
 
 #include "TLeafL.h"
 #include "TBranch.h"
@@ -22,8 +21,7 @@
 ClassImp(TLeafL)
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Default constructor for LeafI*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*        ============================
+/// Default constructor for LeafL.
 
 TLeafL::TLeafL(): TLeaf()
 {
@@ -35,9 +33,7 @@ TLeafL::TLeafL(): TLeaf()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafL*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                      ==============
-///*-*
+/// Create a LeafL.
 
 TLeafL::TLeafL(TBranch *parent, const char *name, const char *type)
    :TLeaf(parent, name,type)
@@ -50,18 +46,15 @@ TLeafL::TLeafL(TBranch *parent, const char *name, const char *type)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Default destructor for a LeafL*-*-*-*-*-*-*-*-*-*-*-*
-///*-*        ===============================
+/// Default destructor for a LeafL.
 
 TLeafL::~TLeafL()
 {
    if (ResetAddress(0,kTRUE)) delete [] fValue;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Export element from local leaf buffer to ClonesArray*-*-*-*-*
-///*-*        ======================================================
+/// Export element from local leaf buffer to ClonesArray.
 
 void TLeafL::Export(TClonesArray *list, Int_t n)
 {
@@ -77,8 +70,7 @@ void TLeafL::Export(TClonesArray *list, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
-///*-*                  =========================================
+/// Pack leaf elements in Basket output buffer.
 
 void TLeafL::FillBasket(TBuffer &b)
 {
@@ -96,8 +88,7 @@ void TLeafL::FillBasket(TBuffer &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Returns name of leaf type*-*-*-*-*-*-*-*-*-*-*-*
-///*-*            =========================
+/// Returns name of leaf type.
 
 const char *TLeafL::GetTypeName() const
 {
@@ -105,11 +96,10 @@ const char *TLeafL::GetTypeName() const
    return "Long64_t";
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns current value of leaf
-/// if leaf is a simple type, i must be set to 0
-/// if leaf is an array, i is the array element number to be returned
+/// Returns current value of leaf.
+/// - if leaf is a simple type, i must be set to 0
+/// - if leaf is an array, i is the array element number to be returned
 
 Double_t TLeafL::GetValue(Int_t i) const
 {
@@ -117,11 +107,10 @@ Double_t TLeafL::GetValue(Int_t i) const
    return fValue[i];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns current value of leaf
-/// if leaf is a simple type, i must be set to 0
-/// if leaf is an array, i is the array element number to be returned
+/// - if leaf is a simple type, i must be set to 0
+/// - if leaf is an array, i is the array element number to be returned
 
 LongDouble_t TLeafL::GetValueLongDouble(Int_t i) const
 {
@@ -129,11 +118,8 @@ LongDouble_t TLeafL::GetValueLongDouble(Int_t i) const
    return fValue[i];
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Import element from ClonesArray into local leaf buffer*-*-*-*-*
-///*-*        ======================================================
+/// Import element from ClonesArray into local leaf buffer.
 
 void TLeafL::Import(TClonesArray *list, Int_t n)
 {
@@ -149,7 +135,7 @@ void TLeafL::Import(TClonesArray *list, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Prints leaf value
+/// Prints leaf value.
 
 void TLeafL::PrintValue(Int_t l) const
 {
@@ -163,8 +149,7 @@ void TLeafL::PrintValue(Int_t l) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-///*-*                  ===========================================
+/// Read leaf elements from Basket input buffer.
 
 void TLeafL::ReadBasket(TBuffer &b)
 {
@@ -190,8 +175,8 @@ void TLeafL::ReadBasket(TBuffer &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-///  and export buffer to TClonesArray objects
+/// Read leaf elements from Basket input buffer and export buffer to
+/// TClonesArray objects.
 
 void TLeafL::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 {
@@ -212,7 +197,7 @@ void TLeafL::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read a long integer from std::istream s and store it into the branch buffer
+/// Read a long integer from std::istream s and store it into the branch buffer.
 
 void TLeafL::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 {
@@ -230,8 +215,7 @@ void TLeafL::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
-///*-*                  ============================
+/// Set leaf buffer data address.
 
 void TLeafL::SetAddress(void *add)
 {

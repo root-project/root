@@ -9,10 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TLeaf for a variable length string.                                //
-//////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+/// \class TLeafC
+/// A TLeaf for a variable length string.
 
 #include "TLeafC.h"
 #include "TBranch.h"
@@ -24,8 +23,7 @@
 ClassImp(TLeafC)
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Default constructor for LeafC*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*        ============================
+/// Default constructor for LeafC.
 
 TLeafC::TLeafC(): TLeaf()
 {
@@ -37,9 +35,7 @@ TLeafC::TLeafC(): TLeaf()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafC*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                      ==============
-///*-*
+/// Create a LeafC.
 
 TLeafC::TLeafC(TBranch *parent, const char *name, const char *type)
    :TLeaf(parent, name,type)
@@ -52,18 +48,15 @@ TLeafC::TLeafC(TBranch *parent, const char *name, const char *type)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Default destructor for a LeafC*-*-*-*-*-*-*-*-*-*-*-*
-///*-*        ===============================
+/// Default destructor for a LeafC.
 
 TLeafC::~TLeafC()
 {
    if (ResetAddress(0,kTRUE)) delete [] fValue;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Export element from local leaf buffer to ClonesArray*-*-*-*-*
-///*-*        ====================================================
+/// Export element from local leaf buffer to ClonesArray.
 
 void TLeafC::Export(TClonesArray *list, Int_t n)
 {
@@ -74,10 +67,8 @@ void TLeafC::Export(TClonesArray *list, Int_t n)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
-///*-*                  ==========================================
+/// Pack leaf elements in Basket output buffer.
 
 void TLeafC::FillBasket(TBuffer &b)
 {
@@ -89,8 +80,7 @@ void TLeafC::FillBasket(TBuffer &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Returns name of leaf type*-*-*-*-*-*-*-*-*-*-*-*
-///*-*            =========================
+/// Returns name of leaf type.
 
 const char *TLeafC::GetTypeName() const
 {
@@ -98,10 +88,8 @@ const char *TLeafC::GetTypeName() const
    return "Char_t";
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Import element from ClonesArray into local leaf buffer*-*-*-*-*
-///*-*        ======================================================
+/// Import element from ClonesArray into local leaf buffer.
 
 void TLeafC::Import(TClonesArray *list, Int_t n)
 {
@@ -161,8 +149,8 @@ void TLeafC::ReadBasket(TBuffer &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read leaf elements from Basket input buffer
-/// and export buffer to TClonesArray objects.
+/// Read leaf elements from Basket input buffer and export buffer to
+/// TClonesArray objects.
 
 void TLeafC::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 {
@@ -206,8 +194,7 @@ void TLeafC::ReadValue(std::istream &s, Char_t delim /*= ' '*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
-///*-*                  ============================
+/// Set leaf buffer data address.
 
 void TLeafC::SetAddress(void *add)
 {

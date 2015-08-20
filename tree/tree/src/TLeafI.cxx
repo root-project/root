@@ -9,10 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TLeaf for an Integer data type.                                    //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \class TLeafI
+/// A TLeaf for an Integer data type.
 
 #include "TLeafI.h"
 #include "TBranch.h"
@@ -22,8 +21,7 @@
 ClassImp(TLeafI)
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Default constructor for LeafI*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*        ============================
+/// Default constructor for LeafI.
 
 TLeafI::TLeafI(): TLeaf()
 {
@@ -35,9 +33,7 @@ TLeafI::TLeafI(): TLeaf()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafI*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                      ==============
-///*-*
+/// Create a LeafI.
 
 TLeafI::TLeafI(TBranch *parent, const char *name, const char *type)
    :TLeaf(parent, name,type)
@@ -50,8 +46,7 @@ TLeafI::TLeafI(TBranch *parent, const char *name, const char *type)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Default destructor for a LeafI*-*-*-*-*-*-*-*-*-*-*-*
-///*-*        ===============================
+/// Default destructor for a LeafI.
 
 TLeafI::~TLeafI()
 {
@@ -60,8 +55,7 @@ TLeafI::~TLeafI()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Export element from local leaf buffer to ClonesArray*-*-*-*-*
-///*-*        ======================================================
+/// Export element from local leaf buffer to ClonesArray.
 
 void TLeafI::Export(TClonesArray *list, Int_t n)
 {
@@ -77,8 +71,7 @@ void TLeafI::Export(TClonesArray *list, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
-///*-*                  =========================================
+/// Pack leaf elements in Basket output buffer.
 
 void TLeafI::FillBasket(TBuffer &b)
 {
@@ -96,8 +89,7 @@ void TLeafI::FillBasket(TBuffer &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Returns name of leaf type*-*-*-*-*-*-*-*-*-*-*-*
-///*-*            =========================
+/// Returns name of leaf type.
 
 const char *TLeafI::GetTypeName() const
 {
@@ -105,11 +97,10 @@ const char *TLeafI::GetTypeName() const
    return "Int_t";
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns current value of leaf
-/// if leaf is a simple type, i must be set to 0
-/// if leaf is an array, i is the array element number to be returned
+/// - if leaf is a simple type, i must be set to 0
+/// - if leaf is an array, i is the array element number to be returned
 
 Double_t TLeafI::GetValue(Int_t i) const
 {
@@ -117,11 +108,8 @@ Double_t TLeafI::GetValue(Int_t i) const
    return fValue[i];
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Import element from ClonesArray into local leaf buffer*-*-*-*-*
-///*-*        ======================================================
+/// Import element from ClonesArray into local leaf buffer.
 
 void TLeafI::Import(TClonesArray *list, Int_t n)
 {
@@ -137,7 +125,7 @@ void TLeafI::Import(TClonesArray *list, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Prints leaf value
+/// Prints leaf value.
 
 void TLeafI::PrintValue(Int_t l) const
 {
@@ -151,8 +139,7 @@ void TLeafI::PrintValue(Int_t l) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-///*-*                  ===========================================
+/// Read leaf elements from Basket input buffer.
 
 void TLeafI::ReadBasket(TBuffer &b)
 {
@@ -178,8 +165,8 @@ void TLeafI::ReadBasket(TBuffer &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-///  and export buffer to TClonesArray objects
+/// Read leaf elements from Basket input buffer and export buffer to
+/// TClonesArray objects.
 
 void TLeafI::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 {
@@ -200,7 +187,7 @@ void TLeafI::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read an integer from std::istream s and store it into the branch buffer
+/// Read an integer from std::istream s and store it into the branch buffer.
 
 void TLeafI::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 {
@@ -214,8 +201,7 @@ void TLeafI::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
-///*-*                  ============================
+/// Set leaf buffer data address.
 
 void TLeafI::SetAddress(void *add)
 {

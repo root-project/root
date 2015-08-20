@@ -9,10 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TLeaf for an 8 bit Integer data type.                              //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \class TLeafB
+/// A TLeaf for an 8 bit Integer data type. \f$(x_1,y_1)\f$
 
 #include "TLeafB.h"
 #include "TBranch.h"
@@ -22,7 +21,7 @@
 ClassImp(TLeafB)
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Default constructor.
+/// Default constructor.
 
 TLeafB::TLeafB()
 : TLeaf()
@@ -35,7 +34,7 @@ TLeafB::TLeafB()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Create a LeafB.
+/// Create a LeafB.
 
 TLeafB::TLeafB(TBranch *parent, const char* name, const char* type)
    : TLeaf(parent, name, type)
@@ -48,7 +47,7 @@ TLeafB::TLeafB(TBranch *parent, const char* name, const char* type)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Destructor.
+/// Destructor.
 
 TLeafB::~TLeafB()
 {
@@ -61,7 +60,7 @@ TLeafB::~TLeafB()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Export element from local leaf buffer to a ClonesArray.
+/// Export element from local leaf buffer to a ClonesArray.
 
 void TLeafB::Export(TClonesArray* list, Int_t n)
 {
@@ -71,7 +70,7 @@ void TLeafB::Export(TClonesArray* list, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Pack leaf elements into Basket output buffer.
+/// Pack leaf elements into Basket output buffer.
 
 void TLeafB::FillBasket(TBuffer& b)
 {
@@ -94,7 +93,7 @@ void TLeafB::FillBasket(TBuffer& b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Returns name of leaf type.
+/// Returns name of leaf type.
 
 const char *TLeafB::GetTypeName() const
 {
@@ -105,7 +104,7 @@ const char *TLeafB::GetTypeName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Import element from ClonesArray into local leaf buffer.
+/// Import element from ClonesArray into local leaf buffer.
 
 void TLeafB::Import(TClonesArray *list, Int_t n)
 {
@@ -115,7 +114,7 @@ void TLeafB::Import(TClonesArray *list, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Prints leaf value.
+/// Prints leaf value.
 
 void TLeafB::PrintValue(Int_t l) const
 {
@@ -129,7 +128,7 @@ void TLeafB::PrintValue(Int_t l) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Read leaf elements from Basket input buffer.
+/// Read leaf elements from Basket input buffer.
 
 void TLeafB::ReadBasket(TBuffer &b)
 {
@@ -155,7 +154,8 @@ void TLeafB::ReadBasket(TBuffer &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Read leaf elements from Basket input buffer and export buffer to TClonesArray objects.
+/// Read leaf elements from Basket input buffer and export buffer to
+/// TClonesArray objects.
 
 void TLeafB::ReadBasketExport(TBuffer& b, TClonesArray* list, Int_t n)
 {
@@ -167,7 +167,7 @@ void TLeafB::ReadBasketExport(TBuffer& b, TClonesArray* list, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Read a 8 bit integer from std::istream s and store it into the branch buffer.
+/// Read a 8 bit integer from std::istream s and store it into the branch buffer.
 
 void TLeafB::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 {
@@ -189,7 +189,7 @@ void TLeafB::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Set value buffer address.
+/// Set value buffer address.
 
 void TLeafB::SetAddress(void *addr)
 {

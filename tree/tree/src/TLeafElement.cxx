@@ -9,11 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TLeaf for the general case when using the branches created via     //
-// a TStreamerInfo (i.e. using TBranchElement).                         //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// \class TLeafElement
+/// A TLeaf for the general case when using the branches created via
+/// a TStreamerInfo (i.e. using TBranchElement).
 
 #include "TLeafElement.h"
 //#include "TMethodCall.h"
@@ -58,7 +57,6 @@ TMethodCall *TLeafElement::GetMethodCall(const char * /*name*/)
 {
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if this leaf is does not have any sub-branch/leaf.
