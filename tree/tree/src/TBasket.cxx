@@ -38,11 +38,11 @@ const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest
 
 ClassImp(TBasket)
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TBasket
-///  Manages buffers for branches of a Tree.
-///  See picture in TTree.
+/** \class TBasket
+Manages buffers for branches of a Tree.
 
+See picture in TTree.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default contructor.
@@ -61,7 +61,6 @@ TBasket::TBasket() : fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLa
    fBranch        = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor used during reading.
 
@@ -78,7 +77,6 @@ TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0
    fLast          = 0;
    fBranch        = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Basket normal constructor, used during writing.
@@ -125,7 +123,6 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Basket destructor.
 
@@ -145,7 +142,6 @@ TBasket::~TBasket()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Increase the size of the current fBuffer up to newsize.
 
@@ -160,7 +156,6 @@ void TBasket::AdjustSize(Int_t newsize)
    fBranch->GetTree()->IncrementTotalBuffers(newsize-fBufferSize);
    fBufferSize  = newsize;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy the basket of this branch onto the file to.
@@ -180,7 +175,6 @@ Long64_t TBasket::CopyTo(TFile *to)
    return nBytes>0 ? nBytes : -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///  Delete fEntryOffset array.
 
@@ -190,7 +184,6 @@ void TBasket::DeleteEntryOffset()
    fEntryOffset = 0;
    fNevBufSize  = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Drop buffers of this basket if it is not the current basket.
@@ -212,7 +205,6 @@ Int_t TBasket::DropBuffers()
    return fBufferSize;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get pointer to buffer for internal entry.
 
@@ -224,7 +216,6 @@ Int_t TBasket::GetEntryPointer(Int_t entry)
    fBufferRef->SetBufferOffset(offset);
    return offset;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Load basket buffers in memory without unziping.
@@ -292,7 +283,6 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tr
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove the first dentries of this basket, moving entries at
 /// dentries to the start of the buffer.
@@ -339,7 +329,6 @@ void TBasket::MoveEntries(Int_t dentries)
    fNevBuf -= dentries;
 }
 
-
 #define OLD_CASE_EXPRESSION fObjlen==fNbytes-fKeylen && GetBranch()->GetCompressionLevel()!=0 && file->GetVersion()<=30401
 ////////////////////////////////////////////////////////////////////////////////
 /// By-passing buffer unzipping has been requested and is
@@ -363,7 +352,6 @@ Int_t TBasket::ReadBasketBuffersUncompressedCase()
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// We always create the TBuffer for the basket but it hold the buffer from the cache.
@@ -395,7 +383,6 @@ Int_t TBasket::ReadBasketBuffersUnzip(char* buffer, Int_t size, Bool_t mustFree,
    return fObjlen+fKeylen;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a buffer for reading if it is not already initialized
 
@@ -418,7 +405,6 @@ static inline TBuffer* R__InitializeReadBasketBuffer(TBuffer* bufferRef, Int_t l
    return result;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the compressed buffer; either from the TTree or create a local one.
 
@@ -430,7 +416,6 @@ void inline TBasket::InitializeCompressedBuffer(Int_t len, TFile* file)
       fOwnsCompressedBuffer = kTRUE;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read basket buffers in memory and cleanup.
@@ -651,7 +636,6 @@ AfterBuffer:
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read basket buffers in memory and cleanup
 ///
@@ -667,7 +651,6 @@ Int_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
    fKeylen = keylen;
    return fNbytes;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the basket to the starting state. i.e. as it was after calling
@@ -756,7 +739,6 @@ void TBasket::Reset()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set read mode of basket.
 
@@ -766,7 +748,6 @@ void TBasket::SetReadMode()
    fBufferRef->SetReadMode();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set write mode of basket.
 
@@ -775,7 +756,6 @@ void TBasket::SetWriteMode()
    fBufferRef->SetWriteMode();
    fBufferRef->SetBufferOffset(fLast);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream a class object.
@@ -891,7 +871,6 @@ void TBasket::Streamer(TBuffer &b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Update basket header and EntryOffset table.
 
@@ -929,7 +908,6 @@ void TBasket::Update(Int_t offset, Int_t skipped)
 
    fNevBuf++;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write buffer of this basket on the current file.
