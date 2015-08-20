@@ -1,12 +1,10 @@
 // @(#)root/tree:$Id$
 // Author Lukasz Janyst <ljanyst@cern.ch>  23/01/2008
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TBranchSTL
-///
-/// A Branch handling STL collection of pointers (vectors, lists, queues,
-/// sets and multisets) while storing them in split mode.
-
+/** \class TBranchSTL
+A Branch handling STL collection of pointers (vectors, lists, queues,
+sets and multisets) while storing them in split mode.
+*/
 
 #include "TBranchSTL.h"
 #include "TList.h"
@@ -20,7 +18,6 @@
 #include "TError.h"
 
 ClassImp(TBranchSTL)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -41,7 +38,6 @@ TBranchSTL::TBranchSTL():
    fReadLeaves = (ReadLeaves_t)&TBranchSTL::ReadLeavesImpl;
    fFillLeaves = (FillLeaves_t)&TBranchSTL::FillLeavesImpl;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor, called from TTree.
@@ -85,7 +81,6 @@ TBranchSTL::TBranchSTL( TTree *tree, const char *name,
    }
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor, called from another branch.
@@ -133,7 +128,6 @@ TBranchSTL::TBranchSTL( TBranch* parent, const char* name,
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -145,7 +139,6 @@ TBranchSTL::~TBranchSTL()
       delete (*brIter).second.fPointers;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse a STL branch.
@@ -162,7 +155,6 @@ void TBranchSTL::Browse( TBrowser *b )
       persistentBranches.Browse( b );
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup after revious fill.
@@ -298,7 +290,6 @@ Int_t TBranchSTL::Fill()
          elID = maxID++;
          elBranch->SetFirstEntry( fEntryNumber );
 
-
          fBranches.Add( elBranch );
 
          bHelper.fId         = elID;
@@ -357,7 +348,6 @@ Int_t TBranchSTL::Fill()
 
    return totalBytes;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if we should be doing this at all.
@@ -537,7 +527,6 @@ Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
    return totalBytes;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill expectedClass and expectedType with information on the data type of the
 /// object/values contained in this branch (and thus the type of pointers
@@ -569,7 +558,6 @@ Int_t TBranchSTL::GetExpectedType(TClass *&expectedClass,EDataType &expectedType
    }
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if we don't have the streamer info.
@@ -617,7 +605,6 @@ TStreamerInfo* TBranchSTL::GetInfo() const
    return fInfo;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Branch declared folder if at least one entry.
 
@@ -627,7 +614,6 @@ Bool_t TBranchSTL::IsFolder() const
       return kTRUE;
    return kFALSE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the branch parameters.
@@ -671,7 +657,6 @@ void TBranchSTL::Print(const char *option) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaves.
 
@@ -687,7 +672,6 @@ void TBranchSTL::FillLeavesImpl( TBuffer& b )
 {
    b.WriteClassBuffer( fIndArrayCl, &fInd );
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// We are the top level branch.

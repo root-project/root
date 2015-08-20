@@ -58,23 +58,21 @@ Int_t TBranch::fgCount = 0;
   #define R__likely(expr) expr
 #endif
 
+/** \class TBranch
+A TTree is a list of TBranches
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TBranch
-/// A TTree is a list of TBranches
-///
-/// A TBranch supports:
-///  - The list of TLeaf describing this branch.
-///  - The list of TBasket (branch buffers).
-///
-/// See TBranch structure in TTree.
-///
-/// See also specialized branches:
-///  - TBranchObject in case the branch is one object
-///  - TBranchClones in case the branch is an array of clone objects
+A TBranch supports:
+ - The list of TLeaf describing this branch.
+ - The list of TBasket (branch buffers).
+
+See TBranch structure in TTree.
+
+See also specialized branches:
+ - TBranchObject in case the branch is one object
+ - TBranchClones in case the branch is an array of clone objects
+*/
 
 ClassImp(TBranch)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.  Used for I/O by default.
@@ -223,7 +221,6 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
 {
    Init(name,leaflist,compress);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a Branch as a child of another Branch
@@ -407,7 +404,6 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -473,7 +469,6 @@ TBranch::~TBranch()
    fTree = 0;
    fDirectory = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add the basket to this branch.
@@ -587,7 +582,6 @@ void TBranch::Browse(TBrowser* b)
    }
 }
 
-
  ///////////////////////////////////////////////////////////////////////////////
  /// Loop on all branch baskets. If the file where branch buffers reside is
  /// writable, free the disk space associated to the baskets of the branch,
@@ -622,7 +616,6 @@ void TBranch::DeleteBaskets(Option_t* option)
    DropBaskets("all");
    Reset();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop on all branch baskets. Drop all baskets from memory except readbasket.
@@ -694,7 +687,6 @@ void TBranch::DropBaskets(Option_t* options)
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Increase BasketEntry buffer of a minimum of 10 locations
 /// and a maximum of 50 per cent of current size.
@@ -718,7 +710,6 @@ void TBranch::ExpandBasketArrays()
       fBasketSeek[i]  = 0;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop on all leaves of this branch to fill Basket buffer.
@@ -796,7 +787,6 @@ Int_t TBranch::Fill()
    }
    return nbytes;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy the data from fEntryBuffer into the current basket.
@@ -897,7 +887,6 @@ Int_t TBranch::FillEntryBuffer(TBasket* basket, TBuffer* buf, Int_t& lnew)
    return nbytes;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find the immediate sub-branch with passed name.
 
@@ -943,7 +932,6 @@ TBranch* TBranch::FindBranch(const char* name)
    }
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find the leaf corresponding to the name 'searchname'.
@@ -999,7 +987,6 @@ TLeaf* TBranch::FindLeaf(const char* searchname)
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Flush to disk all the baskets of this branch and any of subbranches.
 /// Return the number of bytes written or -1 in case of write error.
@@ -1045,7 +1032,6 @@ Int_t TBranch::FlushBaskets()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// If we have a write basket in memory and it contains some entries and
 /// has not yet been written to disk, we write it and delete it from memory.
@@ -1088,7 +1074,6 @@ Int_t TBranch::FlushOneBasket(UInt_t ibasket)
    }
    return nbytes;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to basket basketnumber in this Branch
@@ -1152,7 +1137,6 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    return basket;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return address of basket in the file
 
@@ -1161,7 +1145,6 @@ Long64_t TBranch::GetBasketSeek(Int_t basketnumber) const
    if (basketnumber <0 || basketnumber > fWriteBasket) return 0;
    return fBasketSeek[basketnumber];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns (and, if 0, creates) browsable objects for this branch
@@ -1174,7 +1157,6 @@ TList* TBranch::GetBrowsables() {
    return fBrowsables;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the name of the user class whose content is stored in this branch,
 /// if any.  If this branch was created using the 'leaflist' technique, this
@@ -1184,7 +1166,6 @@ const char * TBranch::GetClassName() const
 {
    return "";
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return icon name depending on type of branch.
@@ -1196,7 +1177,6 @@ const char* TBranch::GetIconName() const
    else
       return "TBranchElement-leaf";
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read all leaves of entry and return total number of bytes read.
@@ -1302,7 +1282,6 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    return buf->Length() - bufbegin;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read all leaves of an entry and export buffers to real objects in a TClonesArray list.
 ///
@@ -1374,7 +1353,6 @@ Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/, TClonesArray* li
    return nbytes;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill expectedClass and expectedType with information on the data type of the
 /// object/values contained in this branch (and thus the type of pointers
@@ -1394,7 +1372,6 @@ Int_t TBranch::GetExpectedType(TClass *&expectedClass,EDataType &expectedType)
       return 1;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the file where branch buffers reside, returns 0
@@ -1431,7 +1408,6 @@ TFile* TBranch::GetFile(Int_t mode)
    fDirectory = (TDirectory*)file;
    return file;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a fresh basket by either resusing an existing basket that needs
@@ -1477,7 +1453,6 @@ TBasket* TBranch::GetFreshBasket()
    return basket;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the 1st Leaf named name in thisBranch
 
@@ -1490,7 +1465,6 @@ TLeaf* TBranch::GetLeaf(const char* name) const
    }
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get real file name
@@ -1532,7 +1506,6 @@ TString TBranch::GetRealFileName() const
    return bFileName;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return all elements of one row unpacked in internal array fValues
 /// [Actually just returns 1 (?)]
@@ -1541,7 +1514,6 @@ Int_t TBranch::GetRow(Int_t)
 {
    return 1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return whether this branch is in a mode where the object are decomposed
@@ -1553,7 +1525,6 @@ Bool_t TBranch::GetMakeClass() const
 
    return kFALSE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get our top-level parent branch in the tree.
@@ -1574,7 +1545,6 @@ TBranch* TBranch::GetMother() const
    }
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find the parent branch of child.
@@ -1615,7 +1585,6 @@ TBranch* TBranch::GetSubBranch(const TBranch* child) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return total number of bytes in the branch (including current buffer)
 
@@ -1641,7 +1610,6 @@ Long64_t TBranch::GetTotalSize(Option_t * /*option*/) const
    return totbytes + b.Length();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return total number of bytes in the branch (excluding current buffer)
 /// if option ="*" includes all sub-branches of this branch too
@@ -1659,7 +1627,6 @@ Long64_t TBranch::GetTotBytes(Option_t *option) const
    }
    return totbytes;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return total number of zip bytes in the branch
@@ -1679,7 +1646,6 @@ Long64_t TBranch::GetZipBytes(Option_t *option) const
    return zipbytes;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if an existing object in a TBranchObject must be deleted.
 
@@ -1687,7 +1653,6 @@ Bool_t TBranch::IsAutoDelete() const
 {
    return TestBit(kAutoDelete);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if more than one leaf or browsables, kFALSE otherwise.
@@ -1700,7 +1665,6 @@ Bool_t TBranch::IsFolder() const
    TList* browsables = const_cast<TBranch*>(this)->GetBrowsables();
    return browsables && browsables->GetSize();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// keep a maximum of fMaxEntries in memory
@@ -1719,7 +1683,6 @@ void TBranch::KeepCircular(Long64_t maxEntries)
       branch->KeepCircular(maxEntries);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Baskets associated to this branch are forced to be in memory.
@@ -1756,7 +1719,6 @@ Int_t TBranch::LoadBaskets()
    }
    return nimported;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print TBranch parameters
@@ -1851,7 +1813,6 @@ void TBranch::Print(Option_t*) const
    fgCount++;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop on all leaves of this branch to read Basket buffer.
 
@@ -1859,7 +1820,6 @@ void TBranch::ReadBasket(TBuffer&)
 {
    //   fLeaves->ReadBasket(basket);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop on all leaves of this branch to read Basket buffer.
@@ -1872,14 +1832,12 @@ void TBranch::ReadLeavesImpl(TBuffer& b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read zero leaves without the overhead of a loop.
 
 void TBranch::ReadLeaves0Impl(TBuffer&)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read one leaf without the overhead of a loop.
@@ -1889,7 +1847,6 @@ void TBranch::ReadLeaves1Impl(TBuffer& b)
    ((TLeaf*) fLeaves.UncheckedAt(0))->ReadBasket(b);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read two leaves without the overhead of a loop.
 
@@ -1898,7 +1855,6 @@ void TBranch::ReadLeaves2Impl(TBuffer& b)
    ((TLeaf*) fLeaves.UncheckedAt(0))->ReadBasket(b);
    ((TLeaf*) fLeaves.UncheckedAt(1))->ReadBasket(b);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop on all leaves of this branch to fill Basket buffer.
@@ -1910,7 +1866,6 @@ void TBranch::FillLeavesImpl(TBuffer& b)
       leaf->FillBasket(b);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Refresh this branch using new information in b
@@ -1959,7 +1914,6 @@ void TBranch::Refresh(TBranch* b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset a Branch.
 ///
@@ -2000,7 +1954,6 @@ void TBranch::Reset(Option_t*)
    fBaskets.Delete();
    fNBaskets = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset a Branch.
@@ -2058,7 +2011,6 @@ void TBranch::ResetAfterMerge(TFileMergeInfo *)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the address of the branch.
 
@@ -2082,7 +2034,6 @@ void TBranch::ResetAddress()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function resetting fgCount
 
@@ -2090,7 +2041,6 @@ void TBranch::ResetCount()
 {
    fgCount = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set address of this branch.
@@ -2115,7 +2065,6 @@ void TBranch::SetAddress(void* addr)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the automatic delete bit.
 ///
@@ -2139,7 +2088,6 @@ void TBranch::SetAutoDelete(Bool_t autodel)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the basket size
 /// The function makes sure that the basket size is greater than fEntryOffsetlen
@@ -2154,7 +2102,6 @@ void TBranch::SetBasketSize(Int_t buffsize)
       basket->AdjustSize(fBasketSize);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set address of this branch directly from a TBuffer to avoid streaming.
@@ -2176,7 +2123,6 @@ void TBranch::SetBufferAddress(TBuffer* buf)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set compression algorithm.
 
@@ -2196,7 +2142,6 @@ void TBranch::SetCompressionAlgorithm(Int_t algorithm)
       branch->SetCompressionAlgorithm(algorithm);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set compression level.
@@ -2220,7 +2165,6 @@ void TBranch::SetCompressionLevel(Int_t level)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set compression settings.
 
@@ -2234,7 +2178,6 @@ void TBranch::SetCompressionSettings(Int_t settings)
       branch->SetCompressionSettings(settings);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update the default value for the branch's fEntryOffsetLen if and only if
@@ -2255,7 +2198,6 @@ void TBranch::SetEntryOffsetLen(Int_t newdefault, Bool_t updateExisting)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the number of entries in this branch.
 
@@ -2264,7 +2206,6 @@ void TBranch::SetEntries(Long64_t entries)
    fEntries = entries;
    fEntryNumber = entries;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set file where this branch writes/reads its buffers.
@@ -2311,7 +2252,6 @@ void TBranch::SetFile(TFile* file)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set file where this branch writes/reads its buffers.
 /// By default the branch buffers reside in the file where the
@@ -2344,7 +2284,6 @@ void TBranch::SetFile(const char* fname)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the branch in a mode where the object are decomposed
 /// (Also known as MakeClass mode).
@@ -2357,7 +2296,6 @@ Bool_t TBranch::SetMakeClass(Bool_t /* decomposeObj */)
    return kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set object this branch is pointing to.
 
@@ -2369,7 +2307,6 @@ void TBranch::SetObject(void * /* obj */)
    Warning("SetObject","is not supported in TBranch objects");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set branch status to Process or DoNotProcess.
 
@@ -2378,7 +2315,6 @@ void TBranch::SetStatus(Bool_t status)
    if (status) ResetBit(kDoNotProcess);
    else        SetBit(kDoNotProcess);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream a class object
@@ -2614,7 +2550,6 @@ void TBranch::Streamer(TBuffer& b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the current basket to disk and return the number of bytes
 /// written to the file.
@@ -2677,7 +2612,6 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
    return nout;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///set the first entry number (case of TBranchSTL)
 
@@ -2692,7 +2626,6 @@ void TBranch::SetFirstEntry(Long64_t entry)
       ((TBranch*)fBranches[i])->SetFirstEntry( entry );
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// If the branch address is not set,  we set all addresses starting with
 /// the top level parent branch.
@@ -2701,7 +2634,6 @@ void TBranch::SetupAddresses()
 {
    // Nothing to do for regular branch, the TLeaf already did it.
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Refresh the value of fDirectory (i.e. where this branch writes/reads its buffers)

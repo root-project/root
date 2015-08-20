@@ -9,11 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// \class TBranchElement
-///
-/// A Branch for the case of an object.
+/** \class TBranchElement
+A Branch for the case of an object.
+*/
 
 #include "TBranchElement.h"
 
@@ -62,7 +60,6 @@ ClassImp(TBranchElement)
 #define R__likely(expr) expr
 #endif
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
@@ -90,7 +87,6 @@ namespace {
    };
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Modify the container type of the branches
 
@@ -112,7 +108,6 @@ void TBranchElement::SwitchContainer(TObjArray* branches) {
       SwitchContainer(br->GetListOfBranches());
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,7 +134,6 @@ namespace {
       return kFALSE;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default and I/O constructor.
@@ -183,7 +177,6 @@ TBranchElement::TBranchElement()
    fFillLeaves = (FillLeaves_t)&TBranchElement::FillLeavesImpl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor when the branch object is not a TClonesArray nor an STL container.
 ///
@@ -226,7 +219,6 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TStreamerInfo* si
    Init(tree, 0, bname,sinfo,id,pointer,basketsize,splitlevel,btype);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor when the branch object is not a TClonesArray nor an STL container.
 ///
@@ -268,7 +260,6 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TStreamerInfo
 {
    Init(parent ? parent->GetTree() : 0, parent, bname,sinfo,id,pointer,basketsize,splitlevel,btype);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Init when the branch object is not a TClonesArray nor an STL container.
@@ -346,7 +337,6 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
       basketsize = 100 + fEntryOffsetLen;
    }
    fBasketSize = basketsize;
-
 
    //
    // Allocate and initialize the basket control arrays.
@@ -655,7 +645,6 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
    SetFillLeavesPtr();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor when the branch object is a TClonesArray.
 ///
@@ -680,7 +669,6 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TClonesArray* clo
    Init(tree, 0, bname, clones, basketsize, splitlevel, compress);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor when the branch object is a TClonesArray.
 ///
@@ -704,7 +692,6 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TClonesArray*
 {
    Init(parent ? parent->GetTree() : 0, parent, bname, clones, basketsize, splitlevel, compress);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Init when the branch object is a TClonesArray.
@@ -802,7 +789,6 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
    SetFillLeavesPtr();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor when the branch object is an STL collection.
 ///
@@ -826,7 +812,6 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TVirtualCollectio
    Init(tree, 0, bname, cont, basketsize, splitlevel, compress);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor when the branch object is an STL collection.
 ///
@@ -849,7 +834,6 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TVirtualColle
 {
    Init(parent ? parent->GetTree() : 0, parent, bname, cont, basketsize, splitlevel, compress);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Init when the branch object is an STL collection.
@@ -959,7 +943,6 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirt
    SetFillLeavesPtr();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -993,7 +976,6 @@ TBranchElement::~TBranchElement()
    delete fPtrIterators;
 }
 
-
 //
 // This function is located here to allow inlining by the optimizer.
 //
@@ -1010,7 +992,6 @@ inline TStreamerInfo* TBranchElement::GetInfoImp() const
    return fInfo;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get streamer info for the branch class.
 
@@ -1018,7 +999,6 @@ TStreamerInfo* TBranchElement::GetInfo() const
 {
    return GetInfoImp();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse the branch content.
@@ -1132,7 +1112,6 @@ void TBranchElement::Browse(TBrowser* b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set branch and leaf name and title in the case of a container sub-branch.
 
@@ -1202,7 +1181,6 @@ void TBranchElement::BuildTitle(const char* name)
       bre->SetFillLeavesPtr();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop on all leaves of this branch to fill the basket buffer.
@@ -1300,7 +1278,6 @@ Int_t TBranchElement::Fill()
 
    return nbytes;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write leaves into i/o buffers for this branch.
@@ -1408,7 +1385,6 @@ void TBranchElement::FillLeavesMakeClass(TBuffer& b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write leaves into i/o buffers for this branch.
 /// Case of a collection (fType == 4).
@@ -1452,7 +1428,6 @@ void TBranchElement::FillLeavesCollection(TBuffer& b)
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write leaves into i/o buffers for this branch.
 /// Case of a data member within a collection (fType == 41).
@@ -1482,7 +1457,6 @@ void TBranchElement::FillLeavesCollectionSplitVectorPtrMember(TBuffer& b)
    R__ASSERT(0!=iter);
    b.ApplySequenceVecPtr(*fFillActionSequence,iter->fBegin,iter->fEnd);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write leaves into i/o buffers for this branch.
@@ -1515,7 +1489,6 @@ void TBranchElement::FillLeavesCollectionSplitPtrMember(TBuffer& b)
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write leaves into i/o buffers for this branch.
 /// Case of a data member within a collection (fType == 41).
@@ -1546,7 +1519,6 @@ void TBranchElement::FillLeavesCollectionMember(TBuffer& b)
    b.ApplySequence(*fFillActionSequence,iter->fBegin,iter->fEnd);
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write leaves into i/o buffers for this branch.
@@ -1579,7 +1551,6 @@ void TBranchElement::FillLeavesAssociativeCollectionMember(TBuffer& b)
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write leaves into i/o buffers for this branch.
 /// Case of a TClonesArray (fType == 3).
@@ -1604,7 +1575,6 @@ void TBranchElement::FillLeavesClones(TBuffer& b)
    }
    b << n;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write leaves into i/o buffers for this branch.
@@ -1635,7 +1605,6 @@ void TBranchElement::FillLeavesClonesMember(TBuffer& b)
    b.ApplySequenceVecPtr(*fFillActionSequence,arr,end);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write leaves into i/o buffers for this branch.
 /// Case of a non  TObject, non collection class with a custom streamer
@@ -1662,10 +1631,8 @@ void TBranchElement::FillLeavesCustomStreamer(TBuffer& b)
       b.MapObject(fObject, fBranchClass);
    }
 
-
    fBranchClass->Streamer(fObject,b);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write leaves into i/o buffers for this branch.
@@ -1687,7 +1654,6 @@ void TBranchElement::FillLeavesMemberBranchCount(TBuffer& b)
     }
     */
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write leaves into i/o buffers for this branch.
@@ -1725,7 +1691,6 @@ void TBranchElement::FillLeavesMemberCounter(TBuffer& b)
    }
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write leaves into i/o buffers for this branch.
@@ -1765,8 +1730,6 @@ void TBranchElement::FillLeavesMember(TBuffer& b)
 
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove trailing dimensions and make sure
 /// there is a trailing dot.
@@ -1783,7 +1746,6 @@ static void R__CleanName(std::string &name)
       name += '.';
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find the immediate sub-branch with passed name.
@@ -1870,7 +1832,6 @@ TBranch* TBranchElement::FindBranch(const char *name)
    return result;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find the leaf corresponding to the name 'searchname'.
 
@@ -1910,7 +1871,6 @@ TLeaf* TBranchElement::FindLeaf(const char *name)
    return leaf;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the branch address.
 ///
@@ -1932,9 +1892,9 @@ char* TBranchElement::GetAddress() const
    return fAddress;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Init the streamer info for the branch class, try to compensate for class code unload/reload and schema evolution.
+/// Init the streamer info for the branch class, try to compensate for class
+/// code unload/reload and schema evolution.
 
 void TBranchElement::InitInfo()
 {
@@ -2158,7 +2118,6 @@ void TBranchElement::InitInfo()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the collection proxy describing the branch content, if any.
 
@@ -2226,7 +2185,6 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
    return fCollProxy;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to the current type of the data member corresponding to branch element.
 
@@ -2282,7 +2240,6 @@ TClass* TBranchElement::GetCurrentClass()
    }
    return cl;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read all branches of a BranchElement and return total number of bytes.
@@ -2382,7 +2339,6 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
    return nbytes;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill expectedClass and expectedType with information on the data type of the
 /// object/values contained in this branch (and thus the type of pointers
@@ -2421,7 +2377,6 @@ Int_t TBranchElement::GetExpectedType(TClass *&expectedClass,EDataType &expected
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return icon name depending on type of branch element.
 
@@ -2434,7 +2389,6 @@ const char* TBranchElement::GetIconName() const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return whether this branch is in a mode where the object are decomposed
 /// or not (Also known as MakeClass mode).
@@ -2443,7 +2397,6 @@ Bool_t TBranchElement::GetMakeClass() const
 {
    return TestBit(kDecomposedObj); // Same as TestBit(kMakeClass)
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return maximum count value of the branchcount if any.
@@ -2456,7 +2409,6 @@ Int_t TBranchElement::GetMaximum() const
    return fMaximum;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to our object.
 
@@ -2466,7 +2418,6 @@ char* TBranchElement::GetObject() const
    return fObject;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to the parent class of the branch element.
 
@@ -2474,7 +2425,6 @@ TClass* TBranchElement::GetParentClass()
 {
    return fParentClass.GetClass();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return type name of element in the branch.
@@ -2521,7 +2471,6 @@ const char* TBranchElement::GetTypeName() const
    Int_t itype = fStreamerType % 20;
    return types[itype];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2628,7 +2577,6 @@ T TBranchElement::GetTypedValue(Int_t j, Int_t len, Bool_t subarr) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns pointer to first data element of this branch.
 /// Currently used only for members of type character.
@@ -2698,7 +2646,6 @@ void* TBranchElement::GetValuePointer() const
       return *val;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the base class subobjects offsets of our sub-branches and set fOffset if we are a container sub-branch.
@@ -3314,7 +3261,6 @@ void TBranchElement::InitializeOffsets()
    fInitOffsets = kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if more than one leaf, kFALSE otherwise.
 
@@ -3327,7 +3273,6 @@ Bool_t TBranchElement::IsFolder() const
    TList* browsables = const_cast<TBranchElement*>(this)->GetBrowsables();
    return browsables && browsables->GetSize();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Detect a collection written using a zero pointer in old versions of root.
@@ -3373,7 +3318,6 @@ Bool_t TBranchElement::IsMissingCollection() const
    }
    return ismissing;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print branch parameters.
@@ -3446,7 +3390,6 @@ void TBranchElement::Print(Option_t* option) const
       TBranch::Print(option);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Prints values of leaves.
@@ -3534,7 +3477,6 @@ void TBranchElement::PrintValue(Int_t lenmax) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Unconfiguration Read Leave function.
 
@@ -3542,7 +3484,6 @@ void  TBranchElement::ReadLeavesImpl(TBuffer&)
 {
    Fatal("ReadLeaves","The ReadLeaves function has not been configured for %s",GetName());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaves into i/o buffers for this branch.
@@ -3788,7 +3729,6 @@ void TBranchElement::ReadLeavesMakeClass(TBuffer& b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaves into i/o buffers for this branch.
 /// Case of a collection (fType == 4).
@@ -3887,7 +3827,6 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    proxy->Commit(alternate);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaves into i/o buffers for this branch.
 /// Case of a data member within a collection (fType == 41).
@@ -3930,7 +3869,6 @@ void TBranchElement::ReadLeavesCollectionSplitPtrMember(TBuffer& b)
    //   }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaves into i/o buffers for this branch.
 /// Case of a data member within a collection (fType == 41).
@@ -3961,7 +3899,6 @@ void TBranchElement::ReadLeavesCollectionSplitVectorPtrMember(TBuffer& b)
    TVirtualCollectionIterators *iter = fBranchCount->fIterators;
    b.ApplySequenceVecPtr(*fReadActionSequence,iter->fBegin,iter->fEnd);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaves into i/o buffers for this branch.
@@ -3995,7 +3932,6 @@ void TBranchElement::ReadLeavesCollectionMember(TBuffer& b)
    TVirtualCollectionIterators *iter = fBranchCount->fIterators;
    b.ApplySequence(*fReadActionSequence,iter->fBegin,iter->fEnd);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaves into i/o buffers for this branch.
@@ -4034,7 +3970,6 @@ void TBranchElement::ReadLeavesClones(TBuffer& b)
    clones->ExpandCreateFast(fNdata);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaves into i/o buffers for this branch.
 /// Case of a data member within a TClonesArray (fType == 31).
@@ -4070,7 +4005,6 @@ void TBranchElement::ReadLeavesClonesMember(TBuffer& b)
    char **end = arr + fNdata;
    b.ApplySequenceVecPtr(*fReadActionSequence,arr,end);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaves into i/o buffers for this branch.
@@ -4110,7 +4044,6 @@ void TBranchElement::ReadLeavesMember(TBuffer& b)
    b.ApplySequence(*fReadActionSequence, fObject);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaves into i/o buffers for this branch.
 /// For split-class branch, base class branch, data member branch, or top-level branch.
@@ -4147,7 +4080,6 @@ void TBranchElement::ReadLeavesMemberBranchCount(TBuffer& b)
                                                                  // Since info is not null, fReadActionSequence is not null either.
    b.ApplySequence(*fReadActionSequence, fObject);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaves into i/o buffers for this branch.
@@ -4186,7 +4118,6 @@ void TBranchElement::ReadLeavesMemberCounter(TBuffer& b)
    fNdata = (Int_t) GetValue(0, 0);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaves into i/o buffers for this branch.
 /// Non TObject, Non collection classes with a custom streamer.
@@ -4205,7 +4136,6 @@ void TBranchElement::ReadLeavesCustomStreamer(TBuffer& b)
    fBranchClass->Streamer(fObject,b);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Unconfiguration Fill Leave function.
 
@@ -4213,7 +4143,6 @@ void  TBranchElement::FillLeavesImpl(TBuffer&)
 {
    Fatal("FillLeaves","The FillLeaves function has not been configured for %s",GetName());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete any object we may have allocated on a previous call to SetAddress.
@@ -4291,7 +4220,6 @@ void TBranchElement::ReleaseObject()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset a Branch.
 ///
@@ -4310,7 +4238,6 @@ void TBranchElement::Reset(Option_t* option)
    TBranch::Reset(option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset a Branch after a Merge operation (drop data but keep customizations)
 ///
@@ -4324,7 +4251,6 @@ void TBranchElement::ResetAfterMerge(TFileMergeInfo *info)
    }
    TBranch::ResetAfterMerge(info);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set branch address to zero and free all allocated memory.
@@ -4357,7 +4283,6 @@ void TBranchElement::ResetAddress()
    fObject = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Release ownership of any allocated objects.
 ///
@@ -4375,7 +4300,6 @@ void TBranchElement::ResetDeleteObject()
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Point this branch at an object.
@@ -5015,7 +4939,6 @@ void TBranchElement::SetAddress(void* addr)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the basket size for all sub-branches of this branch element.
 
@@ -5028,7 +4951,6 @@ void TBranchElement::SetBasketSize(Int_t buffsize)
       branch->SetBasketSize(fBasketSize);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the branch counter for this branch.
@@ -5051,7 +4973,6 @@ void TBranchElement::SetBranchCount(TBranchElement* brOfCounter)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the branch in a mode where the object are decomposed
@@ -5077,7 +4998,6 @@ Bool_t TBranchElement::SetMakeClass(Bool_t decomposeObj)
    return kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set object this branch is pointing to.
 
@@ -5089,7 +5009,6 @@ void TBranchElement::SetObject(void* obj)
    fObject = (char*)obj;
    SetAddress( &fObject );
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set offset of the object (to which the data member represented by this
@@ -5108,7 +5027,6 @@ void TBranchElement::SetOffset(Int_t offset)
    }
    fOffset = offset;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the sequence of actions needed to read the data out of the buffer.
@@ -5156,7 +5074,6 @@ void TBranchElement::SetReadActionSequence()
    delete transient;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the ReadLeaves pointer to execute the expected operations.
 
@@ -5197,7 +5114,6 @@ void TBranchElement::SetReadLeavesPtr()
 
    SetReadActionSequence();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the sequence of actions needed to write the data out from the buffer.
@@ -5246,7 +5162,6 @@ void TBranchElement::SetFillActionSequence()
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the FillLeaves pointer to execute the expected operations.
 
@@ -5290,7 +5205,6 @@ void TBranchElement::SetFillLeavesPtr()
    SetFillActionSequence();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the name of the class of the in-memory object into which the data will
 /// loaded.
@@ -5327,7 +5241,6 @@ void TBranchElement::SetTargetClass(const char *name)
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// If the branch address is not set,  we set all addresses starting with
 /// the top level parent branch.  This is required to be done in order for
@@ -5344,7 +5257,6 @@ void TBranchElement::SetupAddresses()
    }
    SetupAddressesImpl();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If the branch address is not set,  we set all addresses starting with
@@ -5402,7 +5314,6 @@ void TBranchElement::SetupAddressesImpl()
       mother->SetBit(kDoNotProcess, motherStatus);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TBranchElement.
@@ -5513,7 +5424,6 @@ void TBranchElement::Streamer(TBuffer& R__b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Split class cl into sub-branches of this branch.
 ///
@@ -5556,7 +5466,6 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
 
    Int_t splitSTLP = splitlevel - (splitlevel%TTree::kSplitCollectionOfPointers);
    splitlevel %= TTree::kSplitCollectionOfPointers;
-
 
    TString branchname;
 
@@ -5747,7 +5656,6 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
 
    return 1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Refresh the value of fDirectory (i.e. where this branch writes/reads its buffers)
