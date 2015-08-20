@@ -722,10 +722,13 @@ module core_clib [extern_c] {
   header "Demangle.h"
   header "snprintf.h"
   header "strlcpy.h"
-  textual header "mmconfig.h"
-  textual header "mmalloc.h" // enabling this leads to clashing macro PTR with Clang's Expr.h
-  textual header "mmprivate.h" // enabling this + enabling TMapFile leads to clashing macro BLOCK with Clang's DeclNode.inc
+  header "mmconfig.h"
 }
+module mmprivate [extern_c] {
+  header "mmprivate.h"  // enabling this + enabling TMapFile leads to clashing macro BLOCK with Clang's DeclNode.inc
+  header "mmalloc.h" // enabling this leads to clashing macro PTR with Clang's Expr.h
+}
+
 module bindings_pyroot {
   export *
   header "TPySelector.h"
