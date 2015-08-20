@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TLeafL
-/// A TLeaf for a 64 bit Integer data type.
+/** \class TLeafL
+A TLeaf for a 64 bit Integer data type.
+*/
 
 #include "TLeafL.h"
 #include "TBranch.h"

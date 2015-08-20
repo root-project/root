@@ -9,16 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TLeafObject
-/// A TLeaf for a general object derived from TObject.
+/** \class TLeafObject
+A TLeaf for a general object derived from TObject.
+*/
 
 #include "TLeafObject.h"
 #include "TBranch.h"
 #include "TClass.h"
 #include "TMethodCall.h"
 #include "TDataType.h"
-
 
 ClassImp(TLeafObject)
 

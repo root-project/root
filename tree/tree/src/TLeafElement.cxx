@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TLeafElement
-/// A TLeaf for the general case when using the branches created via
-/// a TStreamerInfo (i.e. using TBranchElement).
+/** \class TLeafElement
+A TLeaf for the general case when using the branches created via
+a TStreamerInfo (i.e. using TBranchElement).
+*/
 
 #include "TLeafElement.h"
 //#include "TMethodCall.h"
-
 
 ClassImp(TLeafElement)
 

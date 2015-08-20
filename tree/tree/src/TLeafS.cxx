@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TLeafS
-/// A TLeaf for a 16 bit Integer data type.
+/** \class TLeafS
+A TLeaf for a 16 bit Integer data type.
+*/
 
 #include "TLeafS.h"
 #include "TBranch.h"
@@ -52,7 +52,6 @@ TLeafS::~TLeafS()
 {
    if (ResetAddress(0,kTRUE)) delete [] fValue;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Export element from local leaf buffer to ClonesArray.

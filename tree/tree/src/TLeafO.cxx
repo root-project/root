@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TLeafO
-/// A TLeaf for a bool data type.
+/** \class TLeafO
+A TLeaf for a bool data type.
+*/
 
 #include "TLeafO.h"
 #include "TBranch.h"
@@ -86,7 +86,6 @@ const char *TLeafO::GetTypeName() const
    return "Bool_t";
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Import element from ClonesArray into local leaf buffer.
 
@@ -107,7 +106,6 @@ void TLeafO::PrintValue(Int_t l) const
    char *value = (char*)GetValuePointer();
    printf("%d",(Int_t)value[l]);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read leaf elements from Basket input buffer.

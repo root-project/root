@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TLeafF
-/// A TLeaf for a 32 bit floating point data type.
+/** \class TLeafF
+A TLeaf for a 32 bit floating point data type.
+*/
 
 #include "TLeafF.h"
 #include "TBranch.h"

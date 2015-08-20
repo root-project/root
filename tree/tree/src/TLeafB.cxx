@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TLeafB
-/// A TLeaf for an 8 bit Integer data type.
+/** \class TLeafB
+A TLeaf for an 8 bit Integer data type.
+*/
 
 #include "TLeafB.h"
 #include "TBranch.h"

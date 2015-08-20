@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-/// \class TLeaf
-/// A TLeaf describes individual elements of a TBranch
-/// See TBranch structure in TTree.
+/** \class TLeaf
+A TLeaf describes individual elements of a TBranch
+See TBranch structure in TTree.
+*/
 
 #include "TLeaf.h"
 #include "TBranch.h"

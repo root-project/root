@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/////////////////////////////////////////////////////////////////////////////////
-/// \class TLeafC
-/// A TLeaf for a variable length string.
+/** \class TLeafC
+A TLeaf for a variable length string.
+*/
 
 #include "TLeafC.h"
 #include "TBranch.h"
