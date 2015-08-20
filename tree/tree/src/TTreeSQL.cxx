@@ -800,5 +800,3 @@ void TTreeSQL::ResetQuery()
 {
    fInsertQuery = "INSERT INTO " + fTable + " VALUES (";
 }
-
-

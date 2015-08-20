@@ -9,9 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
-////////////////////////////////////////////////////////////////////////////////
-/*! \class TTree
+/** \class TTree
 A TTree object has a header with a name and a title.
 
 It consists of a list of independent branches (TBranch). Each branch has its own
@@ -311,7 +309,6 @@ We encourage you to use TTree::AddFriend rather than adding a branch manually.
 </pre>
 */
 
-
 #include "RConfig.h"
 #include "TTree.h"
 
@@ -383,11 +380,9 @@ Long64_t TTree::fgMaxTreeSize = 100000000000LL;
 
 ClassImp(TTree)
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-
 
 static char DataTypeToChar(EDataType datatype)
 {
@@ -423,11 +418,9 @@ static char DataTypeToChar(EDataType datatype)
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TTree::TFriendLock
 /// Helper class to prevent infinite recursion in the usage of TTree Friends.
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Record in tree that it has been used while recursively looks through the friends.
@@ -446,7 +439,6 @@ TTree::TFriendLock::TFriendLock(TTree* tree, UInt_t methodbit)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
@@ -456,7 +448,6 @@ TTree::TFriendLock::TFriendLock(const TFriendLock& tfl) :
   fPrevious(tfl.fPrevious)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator.
@@ -471,7 +462,6 @@ TTree::TFriendLock& TTree::TFriendLock::operator=(const TTree::TFriendLock& tfl)
    return *this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Restore the state of tree the same as before we set the lock.
 
@@ -484,11 +474,9 @@ TTree::TFriendLock::~TFriendLock()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TTree::TClusterIterator
 /// Helper class to iterate over cluster of baskets.
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Regular constructor.
@@ -532,7 +520,6 @@ TTree::TClusterIterator::TClusterIterator(TTree *tree, Long64_t firstEntry) : fT
    fNextEntry = fStartEntry; // Position correctly for the first call to Next()
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// In the case where the cluster size was not fixed (old files and
 /// case where autoflush was explicitly set to zero, we need estimate
@@ -564,7 +551,6 @@ Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
       return clusterEstimate;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Move on to the next cluster and return the starting entry
@@ -611,11 +597,9 @@ Long64_t TTree::TClusterIterator::Next()
    return fStartEntry;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor and I/O constructor.
@@ -688,7 +672,6 @@ TTree::TTree()
 
    fBranches.SetOwner(kTRUE);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal tree constructor.
@@ -796,7 +779,6 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -886,7 +868,6 @@ TTree::~TTree()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the transient buffer currently used by this TTree for reading/writing baskets.
 
@@ -901,7 +882,6 @@ TBuffer* TTree::GetTransientBuffer(Int_t size)
    fTransientBuffer = new TBufferFile(TBuffer::kRead, size);
    return fTransientBuffer;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add branch with name bname to the Tree cache.
@@ -942,7 +922,6 @@ Int_t TTree::AddBranchToCache(const char*bname, Bool_t subbranches)
    }
    return tc->AddBranch(bname,subbranches);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add branch b to the Tree cache.
@@ -987,7 +966,6 @@ Int_t TTree::AddBranchToCache(TBranch *b, Bool_t subbranches)
    return tc->AddBranch(b,subbranches);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove the branch with name 'bname' from the Tree cache.
 /// If bname="*" all branches are removed from the cache.
@@ -1027,7 +1005,6 @@ Int_t TTree::DropBranchFromCache(const char*bname, Bool_t subbranches)
    }
    return tc->DropBranch(bname,subbranches);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove the branch b from the Tree cache.
@@ -1072,7 +1049,6 @@ Int_t TTree::DropBranchFromCache(TBranch *b, Bool_t subbranches)
    return tc->DropBranch(b,subbranches);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a cloned tree to our list of trees to be notified whenever we change
 /// our branch addresses or when we are deleted.
@@ -1090,7 +1066,6 @@ void TTree::AddClone(TTree* clone)
       fClones->Add(clone);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a TFriendElement to the list of friends.
@@ -1181,7 +1156,6 @@ TFriendElement* TTree::AddFriend(const char* treename, const char* filename)
    return fe;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a TFriendElement to the list of friends.
 ///
@@ -1210,7 +1184,6 @@ TFriendElement* TTree::AddFriend(const char* treename, TFile* file)
    return fe;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a TFriendElement to the list of friends.
 ///
@@ -1235,7 +1208,6 @@ TFriendElement* TTree::AddFriend(TTree* tree, const char* alias, Bool_t warn)
    }
    return fe;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// AutoSave tree header every fAutoSave bytes.
@@ -1364,7 +1336,6 @@ namespace {
                                       " Please generate the dictionary for this collection (%s) to avoid to write corrupted data.";
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch() with added check that addobj matches className.
 ///
@@ -1415,7 +1386,6 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
    return Branch(branchname, classname, (void*) addobj, bufsize, splitlevel);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch but automatic detection of the class name.
 /// See TTree::Branch for other details.
@@ -1448,7 +1418,6 @@ TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj
    }
    return Branch(branchname, actualClass->GetName(), (void*) addobj, bufsize, splitlevel);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch but automatic detection of the class name.
@@ -1510,7 +1479,6 @@ TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TCla
    return BronchExec(branchname, actualClass->GetName(), (void*) addobj, kFALSE, bufsize, splitlevel);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch but automatic detection of the class name.
 /// See TTree::Branch for other details.
@@ -1548,7 +1516,6 @@ TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType
    return BronchExec(branchname, actualClass->GetName(), (void*) addobj, kFALSE, bufsize, splitlevel);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Deprecated function. Use next function instead.
 
@@ -1556,7 +1523,6 @@ Int_t TTree::Branch(TList* li, Int_t bufsize /* = 32000 */ , Int_t splitlevel /*
 {
    return Branch((TCollection*) li, bufsize, splitlevel);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create one branch for each element in the collection.
@@ -1679,7 +1645,6 @@ Int_t TTree::Branch(TCollection* li, Int_t bufsize /* = 32000 */, Int_t splitlev
    return GetListOfBranches()->GetEntries() - nbranches;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create one branch for each element in the folder.
 /// Returns the total number of branches created.
@@ -1725,7 +1690,6 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
    delete[] curname;
    return GetListOfBranches()->GetEntries() - nbranches;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new TTree Branch.
@@ -1795,7 +1759,6 @@ TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, In
    return branch;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new branch with the object of class classname at address addobj.
 ///
@@ -1830,7 +1793,6 @@ TBranch* TTree::Branch(const char* name, const char* classname, void* addobj, In
       return BranchOld(name, classname, addobj, bufsize, splitlevel);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new TTree BranchObject.
@@ -2116,7 +2078,6 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
    return branch;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Build the optional branch supporting the TRefTable.
 /// This branch will keep all the information to find the branches
@@ -2135,7 +2096,6 @@ TBranch* TTree::BranchRef()
    }
    return fBranchRef;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new TTree BranchElement.
@@ -2209,7 +2169,6 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* addr, Int_
 {
    return BronchExec(name, classname, addr, kTRUE, bufsize, splitlevel);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper function implementing TTree::Bronch and TTree::Branch(const char *name, T &obj);
@@ -2500,7 +2459,6 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    return branch;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse content of the TTree.
 
@@ -2517,7 +2475,6 @@ void TTree::Browse(TBrowser* b)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Build a Tree Index (default is TTreeIndex).
@@ -2540,7 +2497,6 @@ Int_t TTree::BuildIndex(const char* majorname, const char* minorname /* = "0" */
    }
    return fTreeIndex->GetN();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Build StreamerInfo for class cl.
@@ -2569,7 +2525,6 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Boo
    }
    return sinfo;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Called by TTree::Fill() when file has reached its maximum fgMaxTreeSize.
@@ -2715,7 +2670,6 @@ TFile* TTree::ChangeFile(TFile* file)
    fname = 0;
    return newfile;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check whether or not the address described by the last 3 parameters
@@ -2919,7 +2873,6 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
    }
    return kMatch;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a clone of this tree and copy nentries.
@@ -3135,7 +3088,6 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    return newtree;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set branch addresses of passed tree equal to ours.
 /// If undo is true, reset the branch address instead of copying them.
@@ -3312,7 +3264,6 @@ namespace {
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy nentries from given tree to this tree.
 /// This routines assumes that the branches that intended to be copied are
@@ -3464,7 +3415,6 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
    return nbytes;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy a tree with selection.
 ///
@@ -3509,7 +3459,6 @@ TTree* TTree::CopyTree(const char* selection, Option_t* option /* = 0 */, Long64
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a basket for this tree and given branch.
 
@@ -3520,7 +3469,6 @@ TBasket* TTree::CreateBasket(TBranch* branch)
    }
    return new TBasket(branch->GetName(), GetName(), branch);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete this tree from memory or/and disk.
@@ -3623,7 +3571,6 @@ void TTree::DirectoryAutoAdd(TDirectory* dir)
    if (fDirectory) fDirectory->Append(this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw expression varexp for specified entries.
 /// Returns -1 in case of error or number of selected events in case of success.
@@ -3639,7 +3586,6 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 {
    return TTree::Draw(varexp, selection.GetTitle(), option, nentries, firstentry);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw expression varexp for specified entries.
@@ -4254,7 +4200,6 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    return -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove some baskets from memory.
 
@@ -4267,7 +4212,6 @@ void TTree::DropBaskets()
       branch->DropBaskets("all");
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Drop branch buffers to accommodate nbytes below MaxVirtualsize.
@@ -4295,7 +4239,6 @@ void TTree::DropBuffers(Int_t)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill all branches.
@@ -4475,7 +4418,6 @@ Int_t TTree::Fill()
    return nbytes;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Search in the array for a branch matching the branch name,
 /// with the branch possibly expressed as a 'full' path name (with dots).
@@ -4522,7 +4464,6 @@ static TBranch *R__FindBranchHelper(TObjArray *list, const char *branchname) {
    }
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the branch that correspond to the path 'branchname', which can
@@ -4597,7 +4538,6 @@ TBranch* TTree::FindBranch(const char* branchname)
    }
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find leaf..
@@ -4730,7 +4670,6 @@ TLeaf* TTree::FindLeaf(const char* searchname)
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fit  a projected item(s) from a tree.
 ///
@@ -4768,7 +4707,6 @@ Int_t TTree::Fit(const char* funcname, const char* varexp, const char* selection
    return -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write to disk all the basket that have not yet been individually written.
 ///
@@ -4798,7 +4736,6 @@ Int_t TTree::FlushBaskets() const
       return nbytes;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the expanded value of the alias.  Search in the friends if any.
@@ -4840,7 +4777,6 @@ const char* TTree::GetAlias(const char* aliasName) const
    }
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the branch with the given name in this tree or its friends.
@@ -4935,7 +4871,6 @@ TBranch* TTree::GetBranch(const char* name)
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return status of branch with name branchname.
 ///
@@ -4951,7 +4886,6 @@ Bool_t TTree::GetBranchStatus(const char* branchname) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function returning the current branch style.
 ///
@@ -4962,7 +4896,6 @@ Int_t TTree::GetBranchStyle()
 {
    return fgBranchStyle;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Used for automatic sizing of the cache.
@@ -5009,7 +4942,6 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
    return cacheSize;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return an iterator over the cluster of baskets starting at firstentry.
 ///
@@ -5029,7 +4961,6 @@ TTree::TClusterIterator TTree::GetClusterIterator(Long64_t firstentry)
    return TClusterIterator(this,firstentry);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the current file.
 
@@ -5040,7 +4971,6 @@ TFile* TTree::GetCurrentFile() const
    }
    return fDirectory->GetFile();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the number of entries matching the selection.
@@ -5063,7 +4993,6 @@ Long64_t TTree::GetEntries(const char *selection)
    return -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the 1st Leaf named name in any Branch of this Tree or
 /// any branch in the list of friend trees.
@@ -5078,7 +5007,6 @@ Long64_t TTree::GetEntriesFriend() const
    if (t==0) return 0;
    return t->GetEntriesFriend();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read all branches of entry and return total number of bytes read.
@@ -5240,7 +5168,6 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    return nbytes;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///Returns the entry list, set to this tree
 
@@ -5248,7 +5175,6 @@ TEntryList* TTree::GetEntryList()
 {
    return fEntryList;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return entry number corresponding to entry.
@@ -5264,7 +5190,6 @@ Long64_t TTree::GetEntryNumber(Long64_t entry) const
 
    return fEntryList->GetEntry(entry);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return entry number corresponding to major and minor number.
@@ -5290,7 +5215,6 @@ Long64_t TTree::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) cons
    return fTreeIndex->GetEntryNumberWithBestIndex(major, minor);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return entry number corresponding to major and minor number.
 /// Note that this function returns only the entry number, not the data
@@ -5310,7 +5234,6 @@ Long64_t TTree::GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const
    }
    return fTreeIndex->GetEntryNumberWithIndex(major, minor);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read entry corresponding to major and minor number.
@@ -5365,7 +5288,6 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
    return nbytes;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to the TTree friend whose name or alias is 'friendname.
 
@@ -5401,7 +5323,6 @@ TTree* TTree::GetFriend(const char *friendname) const
    }
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If the 'tree' is a friend, this method returns its alias name.
@@ -5467,7 +5388,6 @@ const char* TTree::GetFriendAlias(TTree* tree) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates a new iterator that will go through all the leaves on the tree itself and its friend.
 
@@ -5475,7 +5395,6 @@ TIterator* TTree::GetIteratorOnAllLeaves(Bool_t dir)
 {
    return new TTreeFriendLeafIter(this, dir);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the 1st Leaf named name in any Branch of this
@@ -5567,7 +5486,6 @@ TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the 1st Leaf named name in any Branch of this
 /// Tree or any branch in the list of friend trees.
@@ -5590,7 +5508,6 @@ TLeaf* TTree::GetLeaf(const char* branchname, const char *leafname)
 
    return GetLeafImpl(branchname,leafname);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the 1st Leaf named name in any Branch of this
@@ -5619,7 +5536,6 @@ TLeaf* TTree::GetLeaf(const char* aname)
       return GetLeafImpl(0,aname);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return maximum of column with name columname.
@@ -5652,7 +5568,6 @@ Double_t TTree::GetMaximum(const char* columname)
    return cmax;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function which returns the tree file size limit in bytes.
 
@@ -5660,7 +5575,6 @@ Long64_t TTree::GetMaxTreeSize()
 {
    return fgMaxTreeSize;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return minimum of column with name columname.
@@ -5693,7 +5607,6 @@ Double_t TTree::GetMinimum(const char* columname)
    return cmin;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Load the TTreePlayer (if not already done).
 
@@ -5705,7 +5618,6 @@ TVirtualTreePlayer* TTree::GetPlayer()
    fPlayer = TVirtualTreePlayer::TreePlayer(this);
    return fPlayer;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find and return the TTreeCache registered with the file and which may
@@ -5723,7 +5635,6 @@ TTreeCache *TTree::GetReadCache(TFile *file, Bool_t create /* = kFALSE */ )
    }
    return pe;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to the list containing user objects associated to this tree.
@@ -5746,7 +5657,6 @@ TList* TTree::GetUserInfo()
    }
    return fUserInfo;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Appends the cluster range information stored in 'fromtree' to this tree,
@@ -5791,7 +5701,6 @@ void TTree::ImportClusterRanges(TTree *fromtree)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Keep a maximum of fMaxEntries in memory.
 
@@ -5819,7 +5728,6 @@ void TTree::KeepCircular()
    fReadEntry = -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read in memory all baskets from all branches up to the limit of maxmemory bytes.
 ///
@@ -5844,7 +5752,6 @@ Int_t TTree::LoadBaskets(Long64_t maxmemory)
    }
    return nimported;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set current entry.
@@ -5932,7 +5839,6 @@ Long64_t TTree::LoadTree(Long64_t entry)
    return fReadEntry;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Load entry on behalf of our master tree, we may use an index.
 ///
@@ -5954,7 +5860,6 @@ Long64_t TTree::LoadTreeFriend(Long64_t entry, TTree* masterTree)
    }
    return LoadTree(fTreeIndex->GetEntryNumberFriend(masterTree));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a skeleton analysis class for this tree.
@@ -6007,7 +5912,6 @@ Int_t TTree::MakeClass(const char* classname, Option_t* option)
    return fPlayer->MakeClass(classname, option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a skeleton function for this tree.
 ///
@@ -6040,7 +5944,6 @@ Int_t TTree::MakeCode(const char* filename)
    if (!fPlayer) return 0;
    return fPlayer->MakeCode(filename);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a skeleton analysis class for this Tree using TBranchProxy.
@@ -6168,7 +6071,6 @@ Int_t TTree::MakeProxy(const char* proxyClassname, const char* macrofilename, co
    return fPlayer->MakeProxy(proxyClassname,macrofilename,cutfilename,option,maxUnrolling);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate skeleton selector class for this tree.
 ///
@@ -6227,7 +6129,6 @@ Int_t TTree::MakeSelector(const char* selector, Option_t* option)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if adding nbytes to memory we are still below MaxVirtualsize.
 
@@ -6238,7 +6139,6 @@ Bool_t TTree::MemoryFull(Int_t nbytes)
    }
    return kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function merging the trees in the TList into a new tree.
@@ -6284,7 +6184,6 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
    return newtree;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Merge the trees in the TList into this tree.
 ///
@@ -6321,7 +6220,6 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
    fAutoSave = storeAutoSave;
    return GetEntries();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Merge the trees in the TList into this tree.
@@ -6376,7 +6274,6 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
    return GetEntries();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Move a cache from a file to the current file in dir.
 /// if src is null no operation is done, if dir is null or there is no
@@ -6401,7 +6298,6 @@ void TTree::MoveReadCache(TFile *src, TDirectory *dir)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Function called when loading a new class library.
 
@@ -6415,7 +6311,6 @@ Bool_t TTree::Notify()
    }
    return kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function may be called after having filled some entries in a Tree
@@ -6529,7 +6424,6 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to the Principal Components Analysis class.
 ///
@@ -6564,7 +6458,6 @@ TPrincipal* TTree::Principal(const char* varexp, const char* selection, Option_t
    }
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a summary of the tree contents.
@@ -6680,7 +6573,6 @@ void TTree::Print(Option_t* option) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// print statistics about the TreeCache for this tree, like
 ///
@@ -6698,7 +6590,6 @@ void TTree::PrintCacheStats(Option_t* option) const
    TTreeCache *tc = (TTreeCache*)f->GetCacheRead(const_cast<TTree*>(this));
    if (tc) tc->Print(option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process this tree executing the TSelector code in the specified filename.
@@ -6778,7 +6669,6 @@ Long64_t TTree::Process(const char* filename, Option_t* option, Long64_t nentrie
    return -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Process this tree executing the code in the specified selector.
 /// The return value is -1 in case of error and TSelector::GetStatus() in
@@ -6810,7 +6700,6 @@ Long64_t TTree::Process(TSelector* selector, Option_t* option, Long64_t nentries
    return -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a projection of a tree using selections.
 ///
@@ -6831,7 +6720,6 @@ Long64_t TTree::Project(const char* hname, const char* varexp, const char* selec
    return nsel;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop over entries and return a TSQLResult object containing entries following selection.
 
@@ -6843,7 +6731,6 @@ TSQLResult* TTree::Query(const char* varexp, const char* selection, Option_t* op
    }
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create or simply read branches from filename.
@@ -6901,7 +6788,6 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor, cha
    return ReadStream(in, branchDescriptor, delimiter);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine which newline this file is using.
 /// Return '\\r' for Windows '\\r\\n' as that already terminates.
@@ -6927,7 +6813,6 @@ char TTree::GetNewlineValue(std::istream &inputStream)
    inputStream.seekg(inPos);
    return newline;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create or simply read branches from an input stream.
@@ -7181,7 +7066,6 @@ Long64_t TTree::ReadStream(std::istream& inputStream, const char *branchDescript
    return nGoodLines;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Make sure that obj (which is being deleted or will soon be) is no
 /// longer referenced by this TTree.
@@ -7210,7 +7094,6 @@ void TTree::RecursiveRemove(TObject *obj)
       fFriends->RecursiveRemove(obj);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Refresh contents of this tree and its branches from the current status on disk.
@@ -7254,7 +7137,6 @@ void TTree::Refresh()
    tree = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a friend from the list of friends.
 
@@ -7280,7 +7162,6 @@ void TTree::RemoveFriend(TTree* oldFriend)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset baskets, buffers and entries count in all branches and leaves.
@@ -7312,7 +7193,6 @@ void TTree::Reset(Option_t* option)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Resets the state of this TTree after a merge (keep the customization but
 /// forget the data).
@@ -7343,7 +7223,6 @@ void TTree::ResetAfterMerge(TFileMergeInfo *info)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Tell all of our branches to set their addresses to zero.
 ///
@@ -7355,7 +7234,6 @@ void TTree::ResetBranchAddress(TBranch *br)
       br->ResetAddress();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Tell all of our branches to drop their current objects and allocate new ones.
@@ -7369,7 +7247,6 @@ void TTree::ResetBranchAddresses()
       branch->ResetAddress();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop over tree entries and print entries passing selection.
@@ -7388,7 +7265,6 @@ Long64_t TTree::Scan(const char* varexp, const char* selection, Option_t* option
    }
    return -1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a tree variable alias.
@@ -7443,7 +7319,6 @@ Bool_t TTree::SetAlias(const char* aliasName, const char* aliasFormula)
    fAliases->Add(holder);
    return kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function may be called at the start of a program to change
@@ -7551,7 +7426,6 @@ void TTree::SetAutoFlush(Long64_t autof /* = -30000000 */ )
    fAutoFlush = autof;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This function may be called at the start of a program to change
 /// the default value for fAutoSave (and for SetAutoSave) is -300000000, ie 300 MBytes
@@ -7568,7 +7442,6 @@ void TTree::SetAutoSave(Long64_t autos)
 {
    fAutoSave = autos;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a branch's basket size.
@@ -7601,7 +7474,6 @@ void TTree::SetBasketSize(const char* bname, Int_t buffsize)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change branch address, dealing with clone trees properly.
 /// See TTree::CheckBranchAddressType for the semantic of the return value.
@@ -7620,7 +7492,6 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr)
    return SetBranchAddressImp(branch,addr,ptr);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Verify the validity of the type of addr before calling SetBranchAddress.
 /// See TTree::CheckBranchAddressType for the semantic of the return value.
@@ -7632,7 +7503,6 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TClass* ptrClass, E
 {
    return SetBranchAddress(bname, addr, 0, ptrClass, datatype, isptr);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Verify the validity of the type of addr before calling SetBranchAddress.
@@ -7661,7 +7531,6 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr, TCla
    return res;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change branch address, dealing with clone trees properly.
 /// See TTree::CheckBranchAddressType for the semantic of the return value.
@@ -7689,7 +7558,6 @@ Int_t TTree::SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr)
    branch->SetAddress(addr);
    return kVoidPtr;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set branch status to Process or DoNotProcess.
@@ -7868,7 +7736,6 @@ void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the current branch style.  (static function)
 ///
@@ -7879,7 +7746,6 @@ void TTree::SetBranchStyle(Int_t style)
 {
    fgBranchStyle = style;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set maximum size of the file cache .
@@ -7899,7 +7765,6 @@ Int_t TTree::SetCacheSize(Long64_t cacheSize)
 
    return SetCacheSizeAux(kFALSE, cacheSize);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the size of the file cache and create it if possible.
@@ -8029,7 +7894,6 @@ Int_t TTree::SetCacheSizeAux(Bool_t autocache /* = kTRUE */, Long64_t cacheSize 
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///interface to TTreeCache to set the cache entry range
 ///
@@ -8068,7 +7932,6 @@ Int_t TTree::SetCacheEntryRange(Long64_t first, Long64_t last)
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to TTreeCache to set the number of entries for the learning phase
 
@@ -8076,7 +7939,6 @@ void TTree::SetCacheLearnEntries(Int_t n)
 {
    TTreeCache::SetLearnEntries(n);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Enable/Disable circularity for this tree.
@@ -8129,7 +7991,6 @@ void TTree::SetCircular(Long64_t maxEntries)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the debug level and the debug range.
 ///
@@ -8143,7 +8004,6 @@ void TTree::SetDebug(Int_t level, Long64_t min, Long64_t max)
    fDebugMin = min;
    fDebugMax = max;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update the default value for the branch's fEntryOffsetLen.
@@ -8167,7 +8027,6 @@ void TTree::SetDefaultEntryOffsetLen(Int_t newdefault, Bool_t updateExisting)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the tree's directory.
@@ -8206,7 +8065,6 @@ void TTree::SetDirectory(TDirectory* dir)
       b->SetFile(file);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change number of entries in the tree.
@@ -8252,7 +8110,6 @@ Long64_t TTree::SetEntries(Long64_t n)
    return fEntries;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set an EntryList
 
@@ -8273,7 +8130,6 @@ void TTree::SetEntryList(TEntryList *enlist, Option_t * /*opt*/)
    fEntryList->SetTree(this);
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function transfroms the given TEventList into a TEntryList
@@ -8315,7 +8171,6 @@ void TTree::SetEventList(TEventList *evlist)
    fEntryList->SetBit(kCanDelete, kTRUE);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set number of entries to estimate variable limits.
 /// If n is -1, the estimate is set to be the current maximum
@@ -8336,7 +8191,6 @@ void TTree::SetEstimate(Long64_t n /* = 1000000 */)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set fFileNumber to number.
 /// fFileNumber is used by TTree::Fill to set the file name
@@ -8355,7 +8209,6 @@ void TTree::SetFileNumber(Int_t number)
    fFileNumber = number;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set all the branches in this TTree to be in decomposed object mode
 /// (also known as MakeClass mode).
@@ -8371,7 +8224,6 @@ void TTree::SetMakeClass(Int_t make)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the maximum size in bytes of a Tree file (static function).
 /// The default size is 100000000000LL, ie 100 Gigabytes.
@@ -8385,7 +8237,6 @@ void TTree::SetMaxTreeSize(Long64_t maxsize)
 {
    fgMaxTreeSize = maxsize;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name of this tree.
@@ -8415,7 +8266,6 @@ void TTree::SetName(const char* name)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name and title of this tree.
@@ -8448,7 +8298,6 @@ void TTree::SetObject(const char* name, const char* title)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Enable or disable parallel unzipping of Tree buffers.
 
@@ -8463,7 +8312,6 @@ void TTree::SetParallelUnzip(Bool_t opt, Float_t RelSize)
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set perf stats
 
@@ -8471,7 +8319,6 @@ void TTree::SetPerfStats(TVirtualPerfStats *perf)
 {
    fPerfStats = perf;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The current TreeIndex is replaced by the new index.
@@ -8491,7 +8338,6 @@ void TTree::SetTreeIndex(TVirtualIndex* index)
    }
    fTreeIndex = index;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set tree weight.
@@ -8517,7 +8363,6 @@ void TTree::SetWeight(Double_t w, Option_t*)
 {
    fWeight = w;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print values of all active leaves for entry.
@@ -8593,7 +8438,6 @@ void TTree::Show(Long64_t entry, Int_t lenmax)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Start the TTreeViewer on this tree.
 ///
@@ -8607,7 +8451,6 @@ void TTree::StartViewer()
       fPlayer->StartViewer(600, 400);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stop the cache learning phase
@@ -8647,7 +8490,6 @@ Int_t TTree::StopCacheLearningPhase()
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the fTree member for all branches and sub branches.
 
@@ -8672,7 +8514,6 @@ static void TBranch__SetTree(TTree *tree, TObjArray &branches)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the fTree member for all friend elements.
 
@@ -8687,7 +8528,6 @@ void TFriendElement__SetTree(TTree *tree, TList *frlist)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream a class object.
@@ -8801,7 +8641,6 @@ void TTree::Streamer(TBuffer& b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Unbinned fit of one or more variable(s) from a tree.
 ///
@@ -8872,7 +8711,6 @@ Int_t TTree::UnbinnedFit(const char* funcname, const char* varexp, const char* s
    return -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace current attributes by current style.
 
@@ -8899,7 +8737,6 @@ void TTree::UseCurrentStyle()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write this object to the current directory. For more see TObject::Write
 /// Write calls TTree::FlushBaskets before writing the tree.
@@ -8909,7 +8746,6 @@ Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize) const
    FlushBaskets();
    return TObject::Write(name, option, bufsize);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write this object to the current directory. For more see TObject::Write
@@ -8927,7 +8763,6 @@ Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize)
 
 ClassImp(TTreeFriendLeafIter)
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new iterator. By default the iteration direction
 /// is kIterForward. To go backward use kIterBackward.
@@ -8939,7 +8774,6 @@ TTreeFriendLeafIter::TTreeFriendLeafIter(const TTree* tree, Bool_t dir)
 , fDirection(dir)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.  Does NOT copy the 'cursor' location!
@@ -8953,7 +8787,6 @@ TTreeFriendLeafIter::TTreeFriendLeafIter(const TTreeFriendLeafIter& iter)
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Overridden assignment operator. Does NOT copy the 'cursor' location!
 
@@ -8966,7 +8799,6 @@ TIterator& TTreeFriendLeafIter::operator=(const TIterator& rhs)
    return *this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Overridden assignment operator.  Does NOT copy the 'cursor' location!
 
@@ -8977,7 +8809,6 @@ TTreeFriendLeafIter& TTreeFriendLeafIter::operator=(const TTreeFriendLeafIter& r
    }
    return *this;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Go the next friend element
@@ -9017,7 +8848,6 @@ TObject* TTreeFriendLeafIter::Next()
    }
    return next;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the object option stored in the list.

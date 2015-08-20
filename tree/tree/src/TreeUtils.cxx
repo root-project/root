@@ -228,8 +228,6 @@ template Long64_t FillNtupleFromStream<Double_t, TNtupleD>(std::istream &, TNtup
 //    tuple
 //    empty-line
 
-
-
 //comment:
 // '#' non-newline-character-sequence newline-character
 //
