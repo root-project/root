@@ -140,6 +140,7 @@ int main(int argc, char *argv[])
 
          if (gLineString.Index("/*! \\class") >= 0 ||
              gLineString.Index("/// \\class") >= 0 ||
+             gLineString.Index("/** \\class") >= 0 ||
              gLineString.Index("///! \\class") >= 0) gClass = kTRUE;
 
          if (gLineString.Index("begin_html") >= 0) {
