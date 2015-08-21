@@ -14,7 +14,7 @@ import sys
 COMMAND_HELP = "Print ROOT files contents on ps,pdf or pictures files"
 
 DIRECTORY_HELP = "put output files in a subdirectory named DIRECTORY."
-DIVIDE_HELP = "divide the canvas ont the format 'x'.'y' (ex: 2.2)"
+DIVIDE_HELP = "divide the canvas ont the format 'x','y' (ex: 2,2)"
 DRAW_HELP = "specify draw option"
 FORMAT_HELP = "specify output format (ex: pdf, png)."
 OUTPUT_HELP = "merge files in a file named OUTPUT (only for ps and pdf)."
@@ -40,7 +40,7 @@ def execute():
     # Collect arguments with the module argparse
     parser = cmdLineUtils.getParserFile(COMMAND_HELP, EPILOG)
     parser.add_argument("-d", "--directory", help=DIRECTORY_HELP)
-    parser.add_argument("--divide", help=DIVIDE_HELP)
+    #parser.add_argument("--divide", help=DIVIDE_HELP)
     parser.add_argument("-D", "--draw", default="",  help=DRAW_HELP)
     parser.add_argument("-f", "--outputFormat", help=FORMAT_HELP)
     parser.add_argument("-o", "--output", help=OUTPUT_HELP)
@@ -53,7 +53,8 @@ def execute():
 
     # Process rootPrint
     return cmdLineUtils.rootPrint(sourceList, directory = optDict["directory"], \
-                                  divide = optDict["divide"], draw = optDict["draw"], \
+                                  #divide = optDict["divide"], draw = optDict["draw"], \
+                                  draw = optDict["draw"], \
                                   outputFormat = optDict["outputFormat"], \
                                   output = optDict["output"], size = optDict["size"], \
                                   style = optDict["style"], verbose = optDict["verbose"])
