@@ -41,7 +41,7 @@ const Double_t kDefWeight = 1;
 ClassImp(TEfficiency)
 
 ////////////////////////////////////////////////////////////////////////////////
-/*! \class TEfficiency 
+/** \class TEfficiency
     \brief Class to handle efficiency histograms
 
 ## I. Overview
@@ -402,10 +402,10 @@ calculating weights is
 
 \f{eqnarray*}{
    w &=& \frac{\sigma L}{N_{gen} \epsilon_{trig}} \\
-     &-& \sigma ...\ cross section \\
+     &-& \sigma ...\ cross\ section \\
      &-& L ...\ luminosity \\
-     &-& N_{gen}\ ... number of generated events \\
-     &-& \epsilon_{trig}\ ... (known) trigger efficiency \\
+     &-& N_{gen}\ ... number\ of\ generated\ events \\
+     &-& \epsilon_{trig}\ ...\ (known)\ trigger\ efficiency \\
 \f}
 
 The reason for different weights can therefore be:
@@ -1031,13 +1031,15 @@ TEfficiency::~TEfficiency()
 /// \param bUpper true  - upper boundary is returned
 ///               false - lower boundary is returned
 ///
-/// \f{eqnarray*}{
-///   \alpha &=& 1 - \frac{level}{2} \\
-///   \kappa &=& \Phi^{-1}(1 - \alpha,1)\ ... normal\ quantile\ function\\
-///   mode &=& \frac{passed + \frac{\kappa^{2}}{2}}{total + \kappa^{2}}\\
-///   \Delta &=& \kappa * \sqrt{\frac{mode * (1 - mode)}{total + \kappa^{2}}}\\
-///   return &=&  max(0,mode - \Delta) or min(1,mode + \Delta)
-/// \f}
+/** 
+   \f{eqnarray*}{
+     \alpha &=& 1 - \frac{level}{2} \\
+     \kappa &=& \Phi^{-1}(1 - \alpha,1)\ ... normal\ quantile\ function\\
+     mode &=& \frac{passed + \frac{\kappa^{2}}{2}}{total + \kappa^{2}}\\
+     \Delta &=& \kappa * \sqrt{\frac{mode * (1 - mode)}{total + \kappa^{2}}}\\
+     return &=&  max(0,mode - \Delta)\ or\ min(1,mode + \Delta)
+   \f}
+ **/
 
 Double_t TEfficiency::AgrestiCoull(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
 {
@@ -1061,7 +1063,6 @@ Double_t TEfficiency::AgrestiCoull(Int_t total,Int_t passed,Double_t level,Bool_
 /// \param level confidence level
 /// \param bUpper: true  - upper boundary is returned
 ///                false - lower boundary is returned
-///
 
 Double_t TEfficiency::FeldmanCousins(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
 {
@@ -1095,7 +1096,6 @@ Double_t TEfficiency::FeldmanCousins(Int_t total,Int_t passed,Double_t level,Boo
 ///
 /// Implemented using classes developed by Jordan Tucker and Luca Lista
 /// See File hist/hist/src/TEfficiencyHelper.h
-///
 
 Bool_t TEfficiency::FeldmanCousinsInterval(Int_t total,Int_t passed,Double_t level,Double_t & lower, Double_t & upper)
 {
@@ -1172,6 +1172,7 @@ Double_t TEfficiency::Bayesian(Int_t total,Int_t passed,Double_t level,Double_t 
    else
       return BetaCentralInterval(level, a, b, bUpper);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculates the boundaries for a central confidence interval for a Beta distribution
 ///
@@ -1180,7 +1181,6 @@ Double_t TEfficiency::Bayesian(Int_t total,Int_t passed,Double_t level,Double_t 
 /// \param[in] b  parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta
 /// \param[in] bUpper true  - upper boundary is returned
 ///                   false - lower boundary is returned
-///
 
 Double_t TEfficiency::BetaCentralInterval(Double_t level,Double_t a,Double_t b,Bool_t bUpper)
 {
@@ -1680,27 +1680,29 @@ void TEfficiency::FillHistogram(TH2 * hist ) const
 ///
 /// The lower boundary of the Clopper-Pearson interval is the "exact" inversion
 /// of the test:
-/// \f{eqnarray*}{
-///   P(x \geq passed; total) &=& \frac{1 - level}{2}\\
-///   P(x \geq passed; total) &=& 1 - P(x \leq passed - 1; total)\\
-///   &=& 1 - \frac{1}{norm} * \int_{0}^{1 - \varepsilon} t^{total - passed} (1 - t)^{passed - 1} dt\\
-///   &=& 1 - \frac{1}{norm} * \int_{\varepsilon}^{1} t^{passed - 1} (1 - t)^{total - passed} dt\\
-///   &=& \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed - 1} (1 - t)^{total - passed} dt\\
-///   &=& I_{\varepsilon}(passed,total - passed + 1)
-/// \f}
+/** \f{eqnarray*}{
+      P(x \geq passed; total) &=& \frac{1 - level}{2}\\
+      P(x \geq passed; total) &=& 1 - P(x \leq passed - 1; total)\\
+      &=& 1 - \frac{1}{norm} * \int_{0}^{1 - \varepsilon} t^{total - passed} (1 - t)^{passed - 1} dt\\
+      &=& 1 - \frac{1}{norm} * \int_{\varepsilon}^{1} t^{passed - 1} (1 - t)^{total - passed} dt\\
+      &=& \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed - 1} (1 - t)^{total - passed} dt\\
+      &=& I_{\varepsilon}(passed,total - passed + 1)
+    \f}
+**/
 /// The lower boundary is therfore given by the \f$ \frac{1 - level}{2}\f$ quantile
 /// of the beta distribution.
 ///
 /// The upper boundary of the Clopper-Pearson interval is the "exact" inversion
 /// of the test:
-/// \f{eqnarray*}{
-///   P(x \leq passed; total) &=& \frac{1 - level}{2}\\
-///   P(x \leq passed; total) &=& \frac{1}{norm} * \int_{0}^{1 - \varepsilon} t^{total - passed - 1} (1 - t)^{passed} dt\\
-///   &=& \frac{1}{norm} * \int_{\varepsilon}^{1} t^{passed} (1 - t)^{total - passed - 1} dt\\
-///   &=& 1 - \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed} (1 - t)^{total - passed - 1} dt\\
-///   \Rightarrow 1 - \frac{1 - level}{2} &=& \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed} (1 - t)^{total - passed -1} dt\\
-///   \frac{1 + level}{2} &=& I_{\varepsilon}(passed + 1,total - passed)
-/// \f}
+/** \f{eqnarray*}{
+      P(x \leq passed; total) &=& \frac{1 - level}{2}\\
+      P(x \leq passed; total) &=& \frac{1}{norm} * \int_{0}^{1 - \varepsilon} t^{total - passed - 1} (1 - t)^{passed} dt\\
+      &=& \frac{1}{norm} * \int_{\varepsilon}^{1} t^{passed} (1 - t)^{total - passed - 1} dt\\
+      &=& 1 - \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed} (1 - t)^{total - passed - 1} dt\\
+      \Rightarrow 1 - \frac{1 - level}{2} &=& \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed} (1 - t)^{total - passed -1} dt\\
+      \frac{1 + level}{2} &=& I_{\varepsilon}(passed + 1,total - passed)
+    \f}
+**/
 /// The upper boundary is therfore given by the \f$\frac{1 + level}{2}\f$ quantile
 /// of the beta distribution.
 ///
@@ -1741,11 +1743,12 @@ Double_t TEfficiency::ClopperPearson(Int_t total,Int_t passed,Double_t level,Boo
 ///
 /// The combined posterior distributions is calculated from the Bayes theorem assuming a common prior Beta distribution.
 ///     It is easy to proof that the combined posterior is then:
-/// \f{eqnarray*}{
-///   P_{comb}(\epsilon |{w_{i}}; {k_{i}}; {N_{i}}) &=& B(\epsilon, \sum_{i}{ w_{i} k_{i}} + \alpha, \sum_{i}{ w_{i}(n_{i}-k_{i})}+\beta)\\
-///   w_{i} &=& weight\ for\ each\ sample\ renormalized\ to\ the\ effective\ entries\\
-///   w^{'}_{i} &=&  w_{i} \frac{ \sum_{i} {w_{i} } } { \sum_{i} {w_{i}^{2} } }
-/// \f}
+/** \f{eqnarray*}{
+      P_{comb}(\epsilon |{w_{i}}; {k_{i}}; {N_{i}}) &=& B(\epsilon, \sum_{i}{ w_{i} k_{i}} + \alpha, \sum_{i}{ w_{i}(n_{i}-k_{i})}+\beta)\\
+      w_{i} &=& weight\ for\ each\ sample\ renormalized\ to\ the\ effective\ entries\\
+      w^{'}_{i} &=&  w_{i} \frac{ \sum_{i} {w_{i} } } { \sum_{i} {w_{i}^{2} } }
+    \f}
+**/
 /// The estimated efficiency is the mode (or the mean) of the obtained posterior distribution
 ///
 /// The boundaries of the confidence interval for a confidence level (1 - a)
@@ -2623,11 +2626,12 @@ Long64_t TEfficiency::Merge(TCollection* pList)
 ///                 - false - lower boundary is returned
 ///
 /// Calculation:
-/// \f{eqnarray*}{
-///   \hat{\varepsilon} &=& \frac{passed}{total}\\
-///   \sigma_{\varepsilon} &=& \sqrt{\frac{\hat{\varepsilon} (1 - \hat{\varepsilon})}{total}}\\
-///   \varepsilon_{low} &=& \hat{\varepsilon} \pm \Phi^{-1}(\frac{level}{2},\sigma_{\varepsilon})
-/// \f}
+/** \f{eqnarray*}{
+      \hat{\varepsilon} &=& \frac{passed}{total}\\
+      \sigma_{\varepsilon} &=& \sqrt{\frac{\hat{\varepsilon} (1 - \hat{\varepsilon})}{total}}\\
+      \varepsilon_{low} &=& \hat{\varepsilon} \pm \Phi^{-1}(\frac{level}{2},\sigma_{\varepsilon})
+    \f}
+**/
 
 Double_t TEfficiency::Normal(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
 {
@@ -3509,13 +3513,14 @@ void TEfficiency::SetWeight(Double_t weight)
 ///                 - false - lower boundary is returned
 ///
 /// Calculation:
-/// \f{eqnarray*}{
-///   \alpha &=& 1 - \frac{level}{2}\\
-///   \kappa &=& \Phi^{-1}(1 - \alpha,1) ...\ normal\ quantile\ function\\
-///   mode &=& \frac{passed + \frac{\kappa^{2}}{2}}{total + \kappa^{2}}\\
-///   \Delta &=& \frac{\kappa}{total + \kappa^{2}} * \sqrt{passed (1 - \frac{passed}{total}) + \frac{\kappa^{2}}{4}}\\
-///   return &=& max(0,mode - \Delta) or min(1,mode + \Delta)
-/// \f}
+/** \f{eqnarray*}{
+      \alpha &=& 1 - \frac{level}{2}\\
+      \kappa &=& \Phi^{-1}(1 - \alpha,1) ...\ normal\ quantile\ function\\
+      mode &=& \frac{passed + \frac{\kappa^{2}}{2}}{total + \kappa^{2}}\\
+      \Delta &=& \frac{\kappa}{total + \kappa^{2}} * \sqrt{passed (1 - \frac{passed}{total}) + \frac{\kappa^{2}}{4}}\\
+      return &=& max(0,mode - \Delta)\ or\ min(1,mode + \Delta)
+     \f}
+**/ 
 
 Double_t TEfficiency::Wilson(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
 {

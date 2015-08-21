@@ -140,7 +140,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/*! \class TF1
+/** \class TF1
     \brief 1-Dim function class
 <h2>TF1: 1-Dim function class</h2>
 A TF1 object is a 1-Dim function defined between a lower and upper limit.
@@ -3458,11 +3458,11 @@ TGraph *TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t eps)
 /// n-point quadrature formula.
 ///
 /// Gauss-Legendre:
-/// \f[
-///       W(x)=1  -1<x<1 \\
-///       (j+1)P_{j+1} = (2j+1)xP_j-jP_{j-1}
-/// \f]
-///
+/** \f[
+          W(x)=1  -1<x<1 \\
+          (j+1)P_{j+1} = (2j+1)xP_j-jP_{j-1}
+    \f] 
+**/
 /// num is the number of sampling points (>0)
 /// x and w are arrays of size num
 /// eps is the relative precision

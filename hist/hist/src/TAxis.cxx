@@ -28,7 +28,7 @@
 ClassImp(TAxis)
 
 ////////////////////////////////////////////////////////////////////////////////
-/*! \class TAxis
+/** \class TAxis
     \brief Class to manage histogram axis
 
 This class manages histogram axis. It is referenced by TH1 and TGraph.

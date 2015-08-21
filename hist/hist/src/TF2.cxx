@@ -23,27 +23,21 @@
 
 ClassImp(TF2)
 
-//______________________________________________________________________________
-//
-// a 2-Dim function with parameters
-// TF2 graphics function is via the TH1 drawing functions.
-//
-//      Example of a function
-//
-//   TF2 *f2 = new TF2("f2","sin(x)*sin(y)/(x*y)",0,5,0,5);
-//   f2->Draw();
-//Begin_Html
-/*
-<img src="gif/function2.gif">
+/** \class TF2
+A 2-Dim function with parameters
+
+TF2 graphics function is via the TH1 drawing functions.
+Example of a function
+
+    TF2 *f2 = new TF2("f2","sin(x)*sin(y)/(x*y)",0,5,0,5);
+    f2->Draw();
+
+\image html tf2_function2.png
+See TF1 class for the list of functions formats
 */
-//End_Html
-//
-//      See TF1 class for the list of functions formats
-//
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*F2 default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ======================
+/// TF2 default constructor
 
 TF2::TF2(): TF1(),fYmin(0),fYmax(0),fNpy(100)
 {
@@ -53,11 +47,11 @@ TF2::TF2(): TF1(),fYmin(0),fYmax(0),fNpy(100)
 ////////////////////////////////////////////////////////////////////////////////
 /// F2 constructor using a formula definition
 ///
-///  See TFormula constructor for explanation of the formula syntax.
+/// See TFormula constructor for explanation of the formula syntax.
 ///
-///  if formula has the form "fffffff;xxxx;yyyy", it is assumed that
-///  the formula string is "fffffff" and "xxxx" and "yyyy" are the
-///  titles for the X and Y axis respectively.
+/// If formula has the form "fffffff;xxxx;yyyy", it is assumed that
+/// the formula string is "fffffff" and "xxxx" and "yyyy" are the
+/// titles for the X and Y axis respectively.
 
 TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax)
       :TF1(name,formula,xmax,xmin)
@@ -80,17 +74,14 @@ TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*F2 constructor using a pointer to a compiled function*-*-*-*-*
-///*-*          =====================================================
-///*-*
-///*-*   npar is the number of free parameters used by the function
-///*-*
-///*-*   This constructor creates a function of type C when invoked
-///*-*   with the normal C++ compiler.
-///*-*
-///*-* WARNING! A function created with this constructor cannot be Cloned.
-///*-*
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// F2 constructor using a pointer to a compiled function
+///
+/// npar is the number of free parameters used by the function
+///
+/// This constructor creates a function of type C when invoked
+/// with the normal C++ compiler.
+///
+/// WARNING! A function created with this constructor cannot be Cloned.
 
 TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim)
       : TF1(name, fcn, xmin, xmax, npar,ndim)
@@ -104,17 +95,14 @@ TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*F2 constructor using a pointer to a compiled function*-*-*-*-*
-///*-*          =====================================================
-///*-*
-///*-*   npar is the number of free parameters used by the function
-///*-*
-///*-*   This constructor creates a function of type C when invoked
-///*-*   with the normal C++ compiler.
-///*-*
-///*-* WARNING! A function created with this constructor cannot be Cloned.
-///*-*
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// F2 constructor using a pointer to a compiled function
+///
+/// npar is the number of free parameters used by the function
+///
+/// This constructor creates a function of type C when invoked
+/// with the normal C++ compiler.
+///
+/// WARNING! A function created with this constructor cannot be Cloned.
 
 TF2::TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim)
       : TF1(name, fcn, xmin, xmax, npar,ndim)
@@ -128,13 +116,12 @@ TF2::TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*F2 constructor using a ParamFunctor, 
-///*-*          a functor class implementing operator() (double *, double *)  
-///*-*
-///*-*   npar is the number of free parameters used by the function
-///*-*
-///*-* WARNING! A function created with this constructor cannot be Cloned.
-///*-*
+/// F2 constructor using a ParamFunctor,
+///          a functor class implementing operator() (double *, double *)  
+///
+/// npar is the number of free parameters used by the function
+///
+/// WARNING! A function created with this constructor cannot be Cloned.
 
 TF2::TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim)
       : TF1(name, f, xmin, xmax, npar,ndim)
@@ -159,8 +146,7 @@ TF2& TF2::operator=(const TF2 &rhs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*F2 default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  =====================
+/// F2 default destructor
 
 TF2::~TF2()
 {
@@ -175,8 +161,7 @@ TF2::TF2(const TF2 &f2) : TF1()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Copy this F2 to a new F2*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ========================
+/// Copy this F2 to a new F2
 
 void TF2::Copy(TObject &obj) const
 {
@@ -188,15 +173,13 @@ void TF2::Copy(TObject &obj) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a function*-*-*-*-*
-///*-*                  ===============================================
-///*-*  Compute the closest distance of approach from point px,py to this function.
-///*-*  The distance is computed in pixels units.
-///*-*
-///*-*  Algorithm:
-///*-*
-///*-*
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Compute distance from point px,py to a function
+///
+/// \param[in] px x position
+/// \param[in] py y position
+///
+/// Compute the closest distance of approach from point px,py to this function.
+/// The distance is computed in pixels units.
 
 Int_t TF2::DistancetoPrimitive(Int_t px, Int_t py)
 {
@@ -224,11 +207,10 @@ Int_t TF2::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Draw this function with its current attributes*-*-*-*-*
-///*-*                  ==============================================
-///*-* NB. You must use DrawCopy if you want to draw several times the same
-///*-*     function in the current canvas.
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Draw this function with its current attributes
+///
+/// NB. You must use DrawCopy if you want to draw several times the same
+///     function in the current canvas.
 
 void TF2::Draw(Option_t *option)
 {
@@ -240,21 +222,22 @@ void TF2::Draw(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Draw a copy of this function with its current attributes*-*-*
-///*-*            ========================================================
-///*-*
-///*-*  This function MUST be used instead of Draw when you want to draw
-///*-*  the same function with different parameters settings in the same canvas.
-///*-*
-///*-* Possible option values are:
-///*-*   "SAME"  superimpose on top of existing picture
-///*-*   "L"     connect all computed points with a straight line
-///*-*   "C"     connect all computed points with a smooth curve.
-///*-*
-///*-* Note that the default value is "F". Therefore to draw on top
-///*-* of an existing picture, specify option "SL"
-///*-*
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Draw a copy of this function with its current attributes-*
+///
+/// This function MUST be used instead of Draw when you want to draw
+/// the same function with different parameters settings in the same canvas.
+///
+/// Possible option values are:
+///
+/// option   | description
+/// ---------|------------
+///   "SAME" | superimpose on top of existing picture
+///   "L"    | connect all computed points with a straight line
+///   "C"    | connect all computed points with a smooth curve.
+///
+/// Note that the default value is "F". Therefore to draw on top
+/// of an existing picture, specify option "SL"
+
 
 TF1 *TF2::DrawCopy(Option_t *option) const
 {
@@ -269,9 +252,9 @@ TF1 *TF2::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 // void TF2::DrawF2(const char *formula, Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, Option_t *option)
 // {
-// //*-*-*-*-*-*-*-*-*-*Draw formula between xmin,ymin and xmax,ymax*-*-*-*-*-*-*-*
-// //*-*                ============================================
-// //*-*
+// //----Draw formula between xmin,ymin and xmax,ymax---
+// //                ============================================
+// //
 
 //    //if (Compile((char*)formula)) return;
 
@@ -282,11 +265,9 @@ TF1 *TF2::DrawCopy(Option_t *option) const
 // }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-///*-*                  =========================================
-///*-*  This member function is called when a F2 is clicked with the locator
-///*-*
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Execute action corresponding to one event
+///
+/// This member function is called when a F2 is clicked with the locator
 
 void TF2::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
@@ -294,12 +275,9 @@ void TF2::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Return contour values into array levels*-*-*-*-*-*-*-*-*-*
-///*-*            =======================================
-///*-*
-///*-*  The number of contour levels can be returned by getContourLevel
-///*-*
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Return contour values into array levels
+///
+/// The number of contour levels can be returned by getContourLevel
 
 Int_t TF2::GetContour(Double_t *levels)
 {
@@ -311,8 +289,7 @@ Int_t TF2::GetContour(Double_t *levels)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Return the number of contour levels*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*            ===================================
+/// Return the number of contour levels
 
 Double_t TF2::GetContourLevel(Int_t level) const
 {
@@ -323,17 +300,20 @@ Double_t TF2::GetContourLevel(Int_t level) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return minimum/maximum value of the function
-/// To find the minimum on a range, first set this range via the SetRange function
+/// Return minimum/maximum value of the function
+///
+/// To find the minimum on a range, first set this range via the SetRange function.
 /// If a vector x of coordinate is passed it will be used as starting point for the minimum. 
 /// In addition on exit x will contain the coordinate values at the minimuma
+///
 /// If x is NULL or x is inifinity or NaN, first, a grid search is performed to find the initial estimate of the 
 /// minimum location. The range of the function is divided into fNpx and fNpy
 /// sub-ranges. If the function is "good" (or "bad"), these values can be changed
 /// by SetNpx and SetNpy functions
+///
 /// Then, a minimization is used with starting values found by the grid search
 /// The minimizer algorithm used (by default Minuit) can be changed by callinga
-///  ROOT::Math::Minimizer::SetDefaultMinimizerType("..")
+/// ROOT::Math::Minimizer::SetDefaultMinimizerType("..")
 /// Other option for the minimizer can be set using the static method of the MinimizerOptions class
 
 Double_t TF2::FindMinMax(Double_t *x, Bool_t findmax) const
@@ -382,8 +362,10 @@ Double_t TF2::FindMinMax(Double_t *x, Bool_t findmax) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the X and Y values corresponding to the minimum value of the function
+///
 /// Return the minimum value of the function
 /// To find the minimum on a range, first set this range via the SetRange function
+///
 /// Method:
 ///   First, a grid search is performed to find the initial estimate of the 
 ///   minimum location. The range of the function is divided into fNpx and fNpy
@@ -407,6 +389,7 @@ Double_t TF2::GetMinimumXY(Double_t &x, Double_t &y) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the X and Y values corresponding to the maximum value of the function
+///
 /// Return the maximum value of the function
 ///  See TF2::GetMinimumXY
 
@@ -421,7 +404,8 @@ Double_t TF2::GetMaximumXY(Double_t &x, Double_t &y) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return minimum/maximum value of the function
+/// Return minimum/maximum value of the function
+///
 /// To find the minimum on a range, first set this range via the SetRange function
 /// If a vector x of coordinate is passed it will be used as starting point for the minimum. 
 /// In addition on exit x will contain the coordinate values at the minimuma
@@ -440,7 +424,7 @@ Double_t TF2::GetMinimum(Double_t *x) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return maximum value of the function
+/// Return maximum value of the function
 /// See TF2::GetMinimum
 
 Double_t TF2::GetMaximum(Double_t *x) const
@@ -450,10 +434,10 @@ Double_t TF2::GetMaximum(Double_t *x) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///   Redefines TObject::GetObjectInfo.
-///   Displays the function value
-///   corresponding to cursor position px,py
+/// Redefines TObject::GetObjectInfo.
 ///
+/// Displays the function value
+/// corresponding to cursor position px,py
 
 char *TF2::GetObjectInfo(Int_t px, Int_t py) const
 {
@@ -479,9 +463,7 @@ char *TF2::GetObjectInfo(Int_t px, Int_t py) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Return a random number following this function shape*-*-*-*-*-*-*
-///*-*        ====================================================
-///*-*
+/// Return a random number following this function shape
 
 Double_t TF2::GetRandom()
 {
@@ -490,9 +472,8 @@ Double_t TF2::GetRandom()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Return a random number following this function shape*-*-*-*-*-*-*
-///*-*        ====================================================
-///*-*
+/// Return a random number following this function shape
+
 
 Double_t TF2::GetRandom(Double_t, Double_t)
 {
@@ -501,23 +482,23 @@ Double_t TF2::GetRandom(Double_t, Double_t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Return 2 random numbers following this function shape*-*-*-*-*-*
-///*-*        =====================================================
-///*-*
-///*-*   The distribution contained in this TF2 function is integrated
-///*-*   over the cell contents.
-///*-*   It is normalized to 1.
-///*-*   Getting the two random numbers implies:
-///*-*     - Generating a random number between 0 and 1 (say r1)
-///*-*     - Look in which cell in the normalized integral r1 corresponds to
-///*-*     - make a linear interpolation in the returned cell
-///*-*
-///*-*
-///*-*  IMPORTANT NOTE
-///*-*  The integral of the function is computed at fNpx * fNpy points. 
-///*-*  If the function has sharp peaks, you should increase the number of 
-///*-*  points (SetNpx, SetNpy) such that the peak is correctly tabulated 
-///*-*  at several points.
+/// Return 2 random numbers following this function shape
+///
+///   The distribution contained in this TF2 function is integrated
+///   over the cell contents.
+///   It is normalized to 1.
+///   Getting the two random numbers implies:
+///     - Generating a random number between 0 and 1 (say r1)
+///     - Look in which cell in the normalized integral r1 corresponds to
+///     - make a linear interpolation in the returned cell
+///
+///
+///  IMPORTANT NOTE
+///
+///  The integral of the function is computed at fNpx * fNpy points. 
+///  If the function has sharp peaks, you should increase the number of 
+///  points (SetNpx, SetNpy) such that the peak is correctly tabulated 
+///  at several points.
 
 void TF2::GetRandom2(Double_t &xrandom, Double_t &yrandom)
 {
@@ -567,8 +548,7 @@ void TF2::GetRandom2(Double_t &xrandom, Double_t &yrandom)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Return range of a 2-D function*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ==============================
+/// Return range of a 2-D function
 
 void TF2::GetRange(Double_t &xmin, Double_t &ymin,  Double_t &xmax, Double_t &ymax) const
 {
@@ -579,8 +559,7 @@ void TF2::GetRange(Double_t &xmin, Double_t &ymin,  Double_t &xmax, Double_t &ym
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Return range of function*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ========================
+/// Return range of function
 
 void TF2::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const
 {
@@ -635,7 +614,6 @@ Double_t TF2::GetSave(const Double_t *xx)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return Integral of a 2d function in range [ax,bx],[ay,by]
 /// with desired relative accuracy (default value of eps is 1.e-9)
-///
 
 Double_t TF2::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsrel)
 {
@@ -667,6 +645,7 @@ Bool_t TF2::IsInside(const Double_t *x) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a histogram from function.
+///
 /// always created it, even if it is already existing
 
 TH1* TF2::CreateHistogram()
@@ -712,8 +691,7 @@ TH1* TF2::CreateHistogram()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Paint this 2-D function with its current attributes*-*-*-*-*
-///*-*              ===================================================
+/// Paint this 2-D function with its current attributes
 
 void TF2::Paint(Option_t *option)
 {
@@ -724,7 +702,7 @@ void TF2::Paint(Option_t *option)
    TString opt = option;
    opt.ToLower();
 
-//*-*-  Create a temporary histogram and fill each channel with the function value
+//-  Create a temporary histogram and fill each channel with the function value
    if (!fHistogram) {
       fHistogram = new TH2F("Func",(char*)GetTitle(),fNpx,fXmin,fXmax,fNpy,fYmin,fYmax);
       if (!fHistogram) return;
@@ -743,7 +721,7 @@ void TF2::Paint(Option_t *option)
    }
    ((TH2F*)fHistogram)->Fill(fXmin-1,fYmin-1,0);  //This call to force fNentries non zero
 
-//*-*- Copy Function attributes to histogram attributes
+//- Copy Function attributes to histogram attributes
    Double_t *levels = fContour.GetArray();
    if (levels && levels[0] == -9999) levels = 0;
    fHistogram->SetMinimum(fMinimum);
@@ -759,7 +737,7 @@ void TF2::Paint(Option_t *option)
    fHistogram->SetMarkerSize(GetMarkerSize());
    fHistogram->SetStats(0);
 
-//*-*-  Draw the histogram
+//-  Draw the histogram
    if (!gPad) return;
    if (opt.Length() == 0)  fHistogram->Paint("cont3");
    else if (opt == "same") fHistogram->Paint("cont2same");
@@ -884,13 +862,11 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Set the number and values of contour levels*-*-*-*-*-*-*-*-*
-///*-*            ===========================================
+/// Set the number and values of contour levels
 ///
 ///  By default the number of contour levels is set to 20.
 ///
 ///  if argument levels = 0 or missing, equidistant contours are computed
-///
 
 void TF2::SetContour(Int_t  nlevels, const Double_t *levels)
 {
@@ -901,7 +877,7 @@ void TF2::SetContour(Int_t  nlevels, const Double_t *levels)
    }
    fContour.Set(nlevels);
 
-   //*-*-  Contour levels are specified
+   //-  Contour levels are specified
    if (levels) {
       for (level=0; level<nlevels; level++) fContour.fArray[level] = levels[level];
    } else {
@@ -911,8 +887,7 @@ void TF2::SetContour(Int_t  nlevels, const Double_t *levels)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Set value for one contour level*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ===============================
+/// Set value for one contour level
 
 void TF2::SetContourLevel(Int_t level, Double_t value)
 {
@@ -943,8 +918,7 @@ void TF2::SetNpy(Int_t npy)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Initialize the upper and lower bounds to draw the function*-*-*-*
-///*-*        ==========================================================
+/// Initialize the upper and lower bounds to draw the function-
 
 void TF2::SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 {
@@ -1004,7 +978,7 @@ void TF2::Streamer(TBuffer &R__b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return x^nx * y^ny moment of a 2d function in range [ax,bx],[ay,by]
-///   Author: Gene Van Buren <gene@bnl.gov>
+/// \author Gene Van Buren <gene@bnl.gov>
 
 Double_t TF2::Moment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t epsilon)
 {
@@ -1020,7 +994,7 @@ Double_t TF2::Moment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return x^nx * y^ny central moment of a 2d function in range [ax,bx],[ay,by]
-///   Author: Gene Van Buren <gene@bnl.gov>
+/// \author Gene Van Buren <gene@bnl.gov>
 
 Double_t TF2::CentralMoment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t epsilon)
 {
