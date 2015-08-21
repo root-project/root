@@ -1196,35 +1196,25 @@ def _keyListExtended(rootFile,pathSplitList):
     keyListSort(keyList)
     return keyList
 
-def rootPrint(sourceList, directory = None, divide = None, draw = "", outputFormat = None, \
-              output = None, size = None, style = None, verbose = False):
+def rootPrint(sourceList, directoryOption = None, divideOption = None, drawOption = "", formatOption = None, \
+              outputOption = None, sizeOption = None, styleOption = None, verboseOption = False):
     # Check arguments
     if sourceList == []: return 1
     tupleListSort(sourceList)
 
-    # Option values
-    directoryOptionValue = directory
-    drawOptionValue = draw
-    formatOptionValue = outputFormat
-    outputOptionValue = output
-    sizeOptionValue = size
-    styleOptionValue = style
-
-    # Verbose option
-    if not verbose:
-        ROOT.gErrorIgnoreLevel = 9999
-
     # Don't open windows
     ROOT.gROOT.SetBatch()
 
-    # Style option
-    if styleOptionValue:
-        ROOT.gInterpreter.ProcessLine(".x {0}".format(styleOptionValue))
+    # (Style option)
+    if styleOption: ROOT.gInterpreter.ProcessLine(".x {0}".format(styleOption))
 
-    # Initialize the canvas
-    if sizeOptionValue:
+    # (Verbose option)
+    if not verboseOption: ROOT.gErrorIgnoreLevel = 9999
+
+    # Initialize the canvas (Size option)
+    if sizeOption:
         try:
-            width,height = sizeOptionValue.split("x")
+            width,height = sizeOption.split("x")
             width = int(width)
             height = int(height)
         except ValueError:
@@ -1234,10 +1224,10 @@ def rootPrint(sourceList, directory = None, divide = None, draw = "", outputForm
     else:
         canvas = ROOT.TCanvas("canvas")
 
-    # Divide the canvas
-    if divide:
+    # Divide the canvas (Divide option)
+    if divideOption:
         try:
-            x,y = divide.split(".")
+            x,y = divideOption.split(",")
             x = int(x)
             y = int(y)
         except ValueError:
@@ -1246,109 +1236,92 @@ def rootPrint(sourceList, directory = None, divide = None, draw = "", outputForm
         canvas.Divide(x,y)
         caseNumber = x*y
 
-    # Take the format of the output file (format option)
-    if not formatOptionValue and outputOptionValue:
-        fileName = outputOptionValue
+    # Take the format of the output file (formatOutput option)
+    if not formatOption and outputOption:
+        fileName = outputOption
         fileFormat = fileName.split(".")[-1]
-        formatOptionValue = fileFormat
+        formatOption = fileFormat
 
     # Use pdf as default format
-    if not formatOptionValue: formatOptionValue = "pdf"
+    if not formatOption: formatOption = "pdf"
 
     # Create the output directory (directory option)
-    if directoryOptionValue:
-        if not os.path.isdir(os.path.join(os.getcwd(),directoryOptionValue)):
-            os.mkdir(directoryOptionValue)
+    if directoryOption:
+        if not os.path.isdir(os.path.join(os.getcwd(),directoryOption)):
+            os.mkdir(directoryOption)
 
     # Make the output name, begin to print (output option)
-    if outputOptionValue:
-        if formatOptionValue in ['ps','pdf']:
-            outputFileName = outputOptionValue
-            if directoryOptionValue: outputFileName = \
-                directoryOptionValue + "/" + outputFileName
-            canvas.Print(outputFileName+"[",formatOptionValue)
+    if outputOption:
+        if formatOption in ['ps','pdf']:
+            outputFileName = outputOption
+            if directoryOption: outputFileName = \
+                directoryOption + "/" + outputFileName
+            canvas.Print(outputFileName+"[",formatOption)
         else:
             logging.warning("can't merge pictures, only postscript or pdf files")
-            outputOptionValue = None
+            return 1
 
     # Loop on the root files
     retcode = 0
     objDrawnNumber = 0
+    openRootFiles = []
     for fileName, pathSplitList in sourceList:
         rootFile = openROOTFile(fileName)
         if not rootFile:
             retcode += 1
             continue
-
+        openRootFiles.append(rootFile)
         # Fill the key list (almost the same as in rools)
         keyList = _keyListExtended(rootFile,pathSplitList)
         for key in keyList:
             if isTreeKey(key):
                 pass
-                #obj = key.ReadObj()
-                #for branch in obj.GetListOfBranches():
-                #    if not outputOptionValue:
-                #        outputFileName = \
-                #            key.GetName() + "_" + branch.GetName() + "." +formatOptionValue
-                #        if directoryOptionValue:
-                #            outputFileName = os.path.join( \
-                #                directoryOptionValue,outputFileName)
-                #    if divide:
-                #        canvas.cd(objDrawnNumber%caseNumber + 1)
-                #        objDrawnNumber += 1
-                #    branch.Draw(drawOptionValue)
-                #    if divide:
-                #        if objDrawnNumber%caseNumber == 0:
-                #            outputFileName = str(objDrawnNumber//caseNumber)+"."+formatOptionValue
-                #            if directoryOptionValue:
-                #                outputFileName = os.path.join( \
-                #                    directoryOptionValue,outputFileName)
-                #            canvas.Print(outputFileName,formatOptionValue)
-                #            canvas.Clear()
-                #            canvas.Divide(x,y)
-                #    elif (outputOptionValue or formatOptionValue == 'pdf') and not divide:
-                #        objTitle = "Title:"+branch.GetName()+" : "+branch.GetTitle()
-                #        canvas.Print(outputFileName,objTitle)
-                #    else:
-                #        canvas.Print(outputFileName,formatOptionValue)
             else:
-                if not outputOptionValue:
-                    outputFileName = key.GetName() + "." +formatOptionValue
-                    if directoryOptionValue:
-                        outputFileName = os.path.join( \
-                            directoryOptionValue,outputFileName)
-                obj = key.ReadObj()
-                if divide:
+                if divideOption:
                     canvas.cd(objDrawnNumber%caseNumber + 1)
                     objDrawnNumber += 1
-                obj.Draw(drawOptionValue)
-                if divide:
+                obj = key.ReadObj()
+                obj.Draw(drawOption)
+                if divideOption:
                     if objDrawnNumber%caseNumber == 0:
-                        outputFileName = str(objDrawnNumber//caseNumber)+"."+formatOptionValue
-                        if directoryOptionValue:
-                            outputFileName = os.path.join( \
-                                directoryOptionValue,outputFileName)
-                        canvas.Print(outputFileName,formatOptionValue)
+                        if not outputOption:
+                            outputFileName = str(objDrawnNumber//caseNumber)+"."+formatOption
+                            if directoryOption:
+                                outputFileName = os.path.join( \
+                                    directoryOption,outputFileName)
+                        canvas.Print(outputFileName,formatOption)
                         canvas.Clear()
                         canvas.Divide(x,y)
-                elif outputOptionValue or formatOptionValue == 'pdf':
-                    objTitle = "Title:"+key.GetClassName()+" : "+key.GetTitle()
-                    canvas.Print(outputFileName,objTitle)
                 else:
-                    canvas.Print(outputFileName,formatOptionValue)
-        rootFile.Close()
+                    if not outputOption:
+                        outputFileName = key.GetName() + "." +formatOption
+                        if directoryOption:
+                            outputFileName = os.path.join( \
+                                directoryOption,outputFileName)
+                    if outputOption or formatOption == 'pdf':
+                        objTitle = "Title:"+key.GetClassName()+" : "+key.GetTitle()
+                        canvas.Print(outputFileName,objTitle)
+                    else:
+                        canvas.Print(outputFileName,formatOption)
 
-    ## End to print (divide option)
-    #if divide:
-    #    if objDrawnNumber%caseNumber != 0:
-    #        outputFileName = str(objDrawnNumber//caseNumber + 1)+"."+formatOptionValue
-    #        if directoryOptionValue:
-    #            outputFileName = os.path.join(directoryOptionValue,outputFileName)
-    #        canvas.Print(outputFileName,formatOptionValue)
+    # Last page (divideOption)
+    if divideOption:
+        if objDrawnNumber%caseNumber != 0:
+            if not outputOption:
+                outputFileName = str(objDrawnNumber//caseNumber + 1)+"."+formatOption
+                if directoryOption:
+                    outputFileName = os.path.join(directoryOption,outputFileName)
+            canvas.Print(outputFileName,formatOption)
 
     # End to print (output option)
-    if outputOptionValue:
-        canvas.Print(outputFileName+"]",objTitle)
+    if outputOption:
+        if not divideOption:
+            canvas.Print(outputFileName+"]",objTitle)
+        else:
+            canvas.Print(outputFileName+"]")
+
+    # Close ROOT files
+    map(lambda rootFile: rootFile.Close(),openRootFiles)
 
     return retcode
 

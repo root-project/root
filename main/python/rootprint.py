@@ -40,9 +40,9 @@ def execute():
     # Collect arguments with the module argparse
     parser = cmdLineUtils.getParserFile(COMMAND_HELP, EPILOG)
     parser.add_argument("-d", "--directory", help=DIRECTORY_HELP)
-    #parser.add_argument("--divide", help=DIVIDE_HELP)
+    parser.add_argument("--divide", help=DIVIDE_HELP)
     parser.add_argument("-D", "--draw", default="",  help=DRAW_HELP)
-    parser.add_argument("-f", "--outputFormat", help=FORMAT_HELP)
+    parser.add_argument("-f", "--format", help=FORMAT_HELP)
     parser.add_argument("-o", "--output", help=OUTPUT_HELP)
     parser.add_argument("-s", "--size", help=SIZE_HELP)
     parser.add_argument("-S", "--style", help=STYLE_HELP)
@@ -52,11 +52,10 @@ def execute():
     sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
 
     # Process rootPrint
-    return cmdLineUtils.rootPrint(sourceList, directory = optDict["directory"], \
-                                  #divide = optDict["divide"], draw = optDict["draw"], \
-                                  draw = optDict["draw"], \
-                                  outputFormat = optDict["outputFormat"], \
-                                  output = optDict["output"], size = optDict["size"], \
-                                  style = optDict["style"], verbose = optDict["verbose"])
+    return cmdLineUtils.rootPrint(sourceList, directoryOption = optDict["directory"], \
+                                  divideOption = optDict["divide"], drawOption = optDict["draw"], \
+                                  formatOption = optDict["format"], \
+                                  outputOption = optDict["output"], sizeOption = optDict["size"], \
+                                  styleOption = optDict["style"], verboseOption = optDict["verbose"])
 
 sys.exit(execute())
