@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # ROOT command line tools module: cmdLineUtils
 # Author: Julien Ripoche
 # Mail: julien.ripoche@u-psud.fr
-# Date: 13/08/15
+# Date: 20/08/15
 
 """Contain utils for ROOT command line tools"""
 
@@ -240,7 +240,7 @@ def dirListSort(dirList):
 def keyClassSpliter(rootFile,pathSplitList):
     """
     Return a list of directories and a list of keys corresponding
-    to the other objects, for rools and rooprint use
+    to the other objects, for rootLs and rooprint use
     """
     keyList = []
     dirList = []
@@ -264,18 +264,17 @@ def openROOTFile(fileName, mode="read"):
         logging.warning("File %s does not exist", fileName)
     return theFile
 
-def openROOTFileCompress(fileName, optDict):
+def openROOTFileCompress(fileName, compress, recreate):
     """
     Open a ROOT file (like openROOTFile) with the possibility
     to change compression settings
     """
-    compressOptionValue = optDict["compress"]
-    if compressOptionValue != None and os.path.isfile(fileName):
+    if compress != None and os.path.isfile(fileName):
         logging.warning("can't change compression settings on existing file")
         return None
-    mode = "recreate" if optDict["recreate"] else "update"
+    mode = "recreate" if recreate else "update"
     theFile = openROOTFile(fileName, mode)
-    if compressOptionValue != None: theFile.SetCompressionSettings(compressOptionValue)
+    if compress != None: theFile.SetCompressionSettings(compress)
     return theFile
 
 def joinPathSplit(pathSplit):
@@ -467,13 +466,13 @@ OMITTING_FILE_ERROR = "omitting file '{0}'"
 OMITTING_DIRECTORY_ERROR = "omitting directory '{0}'"
 OVERWRITE_ERROR = "cannot overwrite non-directory '{0}' with directory '{1}'"
 
-def copyRootObject(sourceFile,sourcePathSplit,destFile,destPathSplit,optDict,oneSource=False):
+def copyRootObject(sourceFile,sourcePathSplit,destFile,destPathSplit,oneSource,recursive,replace):
     """
     Initialize the recursive function 'copyRootObjectRecursive', written to be as unix-like as possible
     """
     retcode = 0
     isMultipleInput = not (oneSource and sourcePathSplit != [])
-    recursiveOption = optDict["recursive"]
+    recursiveOption = recursive
     # Multiple input and unexisting or non-directory destination
     # TARGET_ERROR
     if isMultipleInput and destPathSplit != [] \
@@ -496,7 +495,7 @@ def copyRootObject(sourceFile,sourcePathSplit,destFile,destPathSplit,optDict,one
     # to follow the unix copy behaviour
     if sourcePathSplit == []:
         retcode += copyRootObjectRecursive(sourceFile,sourcePathSplit, \
-            destFile,destPathSplit,optDict)
+            destFile,destPathSplit,replace)
     else:
         setName = ""
         if not isMultipleInput and (destPathSplit != [] \
@@ -507,13 +506,13 @@ def copyRootObject(sourceFile,sourcePathSplit,destFile,destPathSplit,optDict,one
             if setName != "":
                 createDirectory(destFile,destPathSplit[:-1]+[setName])
                 retcode += copyRootObjectRecursive(sourceFile,sourcePathSplit, \
-                    destFile,destPathSplit[:-1]+[setName],optDict)
+                    destFile,destPathSplit[:-1]+[setName],replace)
             elif isDirectory(destFile,destPathSplit):
                 if not isExisting(destFile,destPathSplit+[objectName]):
                     createDirectory(destFile,destPathSplit+[objectName])
                 if isDirectory(destFile,destPathSplit+[objectName]):
                     retcode += copyRootObjectRecursive(sourceFile,sourcePathSplit, \
-                        destFile,destPathSplit+[objectName],optDict)
+                        destFile,destPathSplit+[objectName],replace)
                 else:
                     logging.warning(OVERWRITE_ERROR.format( \
                         objectName,objectName))
@@ -525,14 +524,14 @@ def copyRootObject(sourceFile,sourcePathSplit,destFile,destPathSplit,optDict,one
         else:
             if setName != "":
                 retcode += copyRootObjectRecursive(sourceFile,sourcePathSplit, \
-                    destFile,destPathSplit[:-1],optDict,setName)
+                    destFile,destPathSplit[:-1],replace,setName)
             elif isDirectory(destFile,destPathSplit):
                 retcode += copyRootObjectRecursive(sourceFile,sourcePathSplit, \
-                    destFile,destPathSplit,optDict)
+                    destFile,destPathSplit,replace)
             else:
                 setName = destPathSplit[-1]
                 retcode += copyRootObjectRecursive(sourceFile,sourcePathSplit, \
-                    destFile,destPathSplit[:-1],optDict,setName)
+                    destFile,destPathSplit[:-1],replace,setName)
     return retcode
 
 DELETE_ERROR = "object {0} was not existing, so it is not deleted"
@@ -551,7 +550,7 @@ def deleteObject(rootFile,pathSplit):
             retcode += 1
     return retcode
 
-def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,optDict,setName=""):
+def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,replace,setName=""):
     """
     Copy objects from a file or directory (sourceFile,sourcePathSplit)
     to an other file or directory (destFile,destPathSplit)
@@ -561,7 +560,7 @@ def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,op
       $ROOTSYS/tutorials/io/copyFiles.C
     """
     retcode = 0
-    replaceOption = optDict["replace"]
+    replaceOption = replace
     for key in getKeyList(sourceFile,sourcePathSplit):
         objectName = key.GetName()
         if isDirectoryKey(key):
@@ -570,7 +569,7 @@ def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,op
             if isDirectory(destFile,destPathSplit+[objectName]):
                 retcode +=copyRootObjectRecursive(sourceFile, \
                     sourcePathSplit+[objectName], \
-                    destFile,destPathSplit+[objectName],optDict)
+                    destFile,destPathSplit+[objectName],replace)
             else:
                 logging.warning(OVERWRITE_ERROR.format( \
                     objectName,objectName))
@@ -620,14 +619,14 @@ DIRECTORY_REMOVE_ERROR = "cannot remove '{0}': Is a directory"
 ASK_FILE_REMOVE = "remove '{0}' ? (y/n) : "
 ASK_OBJECT_REMOVE = "remove '{0}' from '{1}' ? (y/n) : "
 
-def deleteRootObject(rootFile,pathSplit,optDict):
+def deleteRootObject(rootFile, pathSplit, interactive, recursive):
     """
     Remove the object (rootFile,pathSplit)
     -interactive : prompt before every removal
     -recursive : allow directory, and ROOT file, removal
     """
     retcode = 0
-    if not optDict["recursive"] and isDirectory(rootFile,pathSplit):
+    if not recursive and isDirectory(rootFile,pathSplit):
         if pathSplit == []:
             logging.warning(FILE_REMOVE_ERROR.format(rootFile.GetName()))
             retcode += 1
@@ -635,7 +634,7 @@ def deleteRootObject(rootFile,pathSplit,optDict):
             logging.warning(DIRECTORY_REMOVE_ERROR.format(pathSplit[-1]))
             retcode += 1
     else:
-        if optDict['interactive']:
+        if interactive:
             if pathSplit != []:
                 answer = raw_input(ASK_OBJECT_REMOVE \
                     .format("/".join(pathSplit),rootFile.GetName()))
@@ -674,4 +673,709 @@ RECURSIVE_HELP = "recurse inside directories"
 REPLACE_HELP = "replace object if already existing"
 
 # End of help strings
+##########
+
+##########
+# ROOTBROWSE
+
+def _openBrowser(rootFile=None):
+    browser = ROOT.TBrowser()
+    if rootFile: rootFile.Browse(browser)
+    ROOT.PyROOT.TPyROOTApplication.Run(ROOT.gApplication)
+
+def rootBrowse(fileName=None):
+    if fileName:
+        rootFile = openROOTFile(fileName)
+        if not rootFile: return 1
+        _openBrowser(rootFile)
+        rootFile.Close()
+    else:
+        _openBrowser()
+    return 0
+
+# End of ROOTBROWSE
+##########
+
+##########
+# ROOTCP
+
+def _copyObjects(fileName, pathSplitList, destFile, destPathSplit, oneFile, \
+                 recursive, replace):
+    retcode = 0
+    destFileName = destFile.GetName()
+    rootFile = openROOTFile(fileName) \
+        if fileName != destFileName else \
+        destFile
+    if not rootFile: return 1
+    ROOT.gROOT.GetListOfFiles().Remove(rootFile) # Fast copy necessity
+    for pathSplit in pathSplitList:
+        oneSource = oneFile and len(pathSplitList)==1
+        retcode += copyRootObject(rootFile, pathSplit, destFile, destPathSplit, \
+                                  oneSource, recursive, replace)
+    if fileName != destFileName: rootFile.Close()
+    return retcode
+
+def rootCp(sourceList, destFileName, destPathSplit, \
+           compress=None, recreate=False, recursive=False, replace=False):
+    # Check arguments
+    if sourceList == [] or destFileName == "": return 1
+    if recreate and destFileName in [n[0] for n in sourceList]:
+        logging.error("cannot recreate destination file if this is also a source file")
+        return 1
+
+    # Open destination file
+    destFile = openROOTFileCompress(destFileName, compress, recreate)
+    if not destFile: return 1
+    ROOT.gROOT.GetListOfFiles().Remove(destFile) # Fast copy necessity
+
+    # Loop on the root files
+    retcode = 0
+    for fileName, pathSplitList in sourceList:
+        retcode += _copyObjects(fileName, pathSplitList, destFile, destPathSplit, \
+                                len(sourceList)==1, recursive, replace)
+    destFile.Close()
+    return retcode
+
+# End of ROOTCP
+##########
+
+##########
+# ROOTEVENTSELECTOR
+
+def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent,lastEvent):
+    """Copy a subset of the tree from (sourceFile,sourcePathSplit)
+    to (destFile,destPathSplit) according to options in optDict"""
+    retcode = changeDirectory(sourceFile,sourcePathSplit[:-1])
+    if retcode != 0: return retcode
+    bigTree = getFromDirectory(sourcePathSplit[-1])
+    nbrEntries = bigTree.GetEntries()
+    # changeDirectory for the small tree not to be memory-resident
+    retcode = changeDirectory(destFile,destPathSplit)
+    if retcode != 0: return retcode
+    smallTree = bigTree.CloneTree(0)
+    if lastEvent == -1:
+        lastEvent = nbrEntries-1
+    for i in xrange(firstEvent, lastEvent+1):
+        bigTree.GetEntry(i)
+        smallTree.Fill()
+    smallTree.Write()
+    return retcode
+
+def _copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, first, last):
+    retcode = 0
+    destFileName = destFile.GetName()
+    rootFile = openROOTFile(fileName) \
+        if fileName != destFileName else \
+        destFile
+    if not rootFile: return 1
+    for pathSplit in pathSplitList:
+        if isTree(rootFile,pathSplit):
+            retcode += _copyTreeSubset(rootFile,pathSplit, \
+            destFile,destPathSplit,first,last)
+    if fileName != destFileName: rootFile.Close()
+    return retcode
+
+def rootEventselector(sourceList, destFileName, destPathSplit, \
+                      compress=None, recreate=False, first=0, last=-1):
+    # Check arguments
+    if sourceList == [] or destFileName == "": return 1
+    if recreate and destFileName in sourceList:
+        logging.error("cannot recreate destination file if this is also a source file")
+        return 1
+
+    # Open destination file
+    destFile = openROOTFileCompress(destFileName, compress, recreate)
+    if not destFile: return 1
+
+    # Loop on the root file
+    retcode = 0
+    for fileName, pathSplitList in sourceList:
+        retcode += _copyTreeSubsets(fileName, pathSplitList, destFile, destPathSplit, \
+                                    first, last)
+    destFile.Close()
+    return retcode
+
+# End of ROOTEVENTSELECTOR
+##########
+
+##########
+# ROOTLS
+
+# Ansi characters
+ANSI_BOLD = "\x1B[1m"
+ANSI_BLUE = "\x1B[34m"
+ANSI_GREEN = "\x1B[32m"
+ANSI_END = "\x1B[0m"
+
+# Needed for column width calculation
+ANSI_BOLD_LENGTH = len(ANSI_BOLD+ANSI_END)
+ANSI_BLUE_LENGTH = len(ANSI_BLUE+ANSI_END)
+ANSI_GREEN_LENGTH = len(ANSI_GREEN+ANSI_END)
+
+# Terminal and platform booleans
+IS_TERMINAL = sys.stdout.isatty()
+IS_WIN32 = sys.platform == 'win32'
+
+def isSpecial(ansiCode,string):
+    """Use ansi code on 'string' if the output is the
+    terminal of a not Windows platform"""
+    if IS_TERMINAL and not IS_WIN32: return ansiCode+string+ANSI_END
+    else: return string
+
+def write(string,indent=0,end=""):
+    """Use sys.stdout.write to write the string with an indentation
+    equal to indent and specifying the end character"""
+    sys.stdout.write(" "*indent+string+end)
+
+TREE_TEMPLATE = "{0:{nameWidth}}"+"{1:{titleWidth}}{2:{memoryWidth}}"
+
+def _recursifTreePrinter(tree,indent):
+    """Print recursively tree informations"""
+    listOfBranches = tree.GetListOfBranches()
+    if len(listOfBranches) > 0: # Width informations
+        maxCharName = max([len(branch.GetName()) \
+            for branch in listOfBranches])
+        maxCharTitle = max([len(branch.GetTitle()) \
+            for branch in listOfBranches])
+        dic = { \
+            "nameWidth":maxCharName+2, \
+            "titleWidth":maxCharTitle+4, \
+            "memoryWidth":1}
+    for branch in listOfBranches: # Print loop
+        rec = \
+            [branch.GetName(), \
+            "\""+branch.GetTitle()+"\"", \
+            str(branch.GetTotBytes())]
+        write(TREE_TEMPLATE.format(*rec,**dic),indent,end="\n")
+        _recursifTreePrinter(branch,indent+2)
+
+def _prepareTime(time):
+    """Get time in the proper shape
+    ex : 174512 for 17h 45m 12s
+    ex : 094023 for 09h 40m 23s"""
+    time = str(time)
+    time = '000000'+time
+    time = time[len(time)-6:]
+    return time
+
+MONTH = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun', \
+         7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'}
+LONG_TEMPLATE = \
+    isSpecial(ANSI_BOLD,"{0:{classWidth}}")+"{1:{timeWidth}}" + \
+    "{2:{nameWidth}}{3:{titleWidth}}"
+
+def _rootLsPrintLongLs(keyList,indent,treeListing):
+    """Print a list of Tkey in columns
+    pattern : classname, datetime, name and title"""
+    if len(keyList) > 0: # Width informations
+        maxCharClass = max([len(key.GetClassName()) for key in keyList])
+        maxCharTime = 12
+        maxCharName = max([len(key.GetName()) for key in keyList])
+        dic = { \
+            "classWidth":maxCharClass+2, \
+            "timeWidth":maxCharTime+2, \
+            "nameWidth":maxCharName+2, \
+            "titleWidth":1}
+    date = ROOT.Long(0)
+    for key in keyList:
+        time = ROOT.Long(0)
+        datime = key.GetDatime()
+        datime.GetDateTime(datime.Get(),date,time)
+        time = _prepareTime(time)
+        rec = \
+            [key.GetClassName(), \
+            MONTH[int(str(date)[4:6])]+" " +str(date)[6:]+ \
+            " "+time[:2]+":"+time[2:4], \
+            key.GetName(), \
+            "\""+key.GetTitle()+"\""]
+        write(LONG_TEMPLATE.format(*rec,**dic),indent,end="\n")
+        if treeListing and isTreeKey(key):
+            tree = key.ReadObj()
+            _recursifTreePrinter(tree,indent+2)
+
+##
+# The code of the getTerminalSize function can be found here :
+# https://gist.github.com/jtriley/1108174
+# Thanks jtriley !!
+
+import os
+import shlex
+import struct
+import platform
+import subprocess
+
+def getTerminalSize():
+    """ getTerminalSize()
+     - get width and height of console
+     - works on linux,os x,windows,cygwin(windows)
+     originally retrieved from:
+     http://stackoverflow.com/questions/566746/how-to-get-console-window-width-in-python"""
+    current_os = platform.system()
+    tuple_xy = None
+    if current_os == 'Windows':
+        tuple_xy = _get_terminal_size_windows()
+        if tuple_xy is None:
+            tuple_xy = _get_terminal_size_tput()
+            # needed for window's python in cygwin's xterm!
+    if current_os in ['Linux', 'Darwin'] or current_os.startswith('CYGWIN'):
+        tuple_xy = _get_terminal_size_linux()
+    if tuple_xy is None:
+        #print "default"
+        #_get_terminal_size_windows() or _get_terminal_size_tput don't work
+        tuple_xy = (80, 25)      # default value
+    return tuple_xy
+
+def _get_terminal_size_windows():
+    try:
+        from ctypes import windll, create_string_buffer
+        # stdin handle is -10
+        # stdout handle is -11
+        # stderr handle is -12
+        h = windll.kernel32.GetStdHandle(-12)
+        csbi = create_string_buffer(22)
+        res = windll.kernel32.GetConsoleScreenBufferInfo(h, csbi)
+        if res:
+            (bufx, bufy, curx, cury, wattr,
+             left, top, right, bottom,
+             maxx, maxy) = struct.unpack("hhhhHhhhhhh", csbi.raw)
+            sizex = right - left + 1
+            sizey = bottom - top + 1
+            return sizex, sizey
+    except:
+        pass
+
+def _get_terminal_size_tput():
+    # get terminal width
+    # src: http://stackoverflow.com/questions/263890/how-do-i-find-the-width-height-of-a-terminal-window
+    try:
+        cols = int(subprocess.check_call(shlex.split('tput cols')))
+        rows = int(subprocess.check_call(shlex.split('tput lines')))
+        return (cols, rows)
+    except:
+        pass
+
+def _get_terminal_size_linux():
+    def ioctl_GWINSZ(fd):
+        try:
+            import fcntl
+            import termios
+            cr = struct.unpack('hh',
+                               fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
+            return cr
+        except:
+            pass
+    cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
+    if not cr:
+        try:
+            fd = os.open(os.ctermid(), os.O_RDONLY)
+            cr = ioctl_GWINSZ(fd)
+            os.close(fd)
+        except:
+            pass
+    if not cr:
+        try:
+            cr = (os.environ['LINES'], os.environ['COLUMNS'])
+        except:
+            return None
+    return int(cr[1]), int(cr[0])
+
+# End of getTerminalSize code
+##
+
+def _rootLsPrintSimpleLs(keyList,indent,oneColumn):
+    """Print list of strings in columns
+    - blue for directories
+    - green for trees"""
+    # This code is adaptated from the pprint_list function here :
+    # http://stackoverflow.com/questions/25026556/output-list-like-ls
+    # Thanks hawkjo !!
+    if len(keyList) == 0: return
+    (term_width, term_height) = getTerminalSize()
+    term_width = term_width - indent
+    min_chars_between = 2
+    min_element_width = min( len(key.GetName()) for key in keyList ) \
+                        + min_chars_between
+    max_element_width = max( len(key.GetName()) for key in keyList ) \
+                        + min_chars_between
+    if max_element_width >= term_width: ncol,col_widths = 1,[1]
+    else:
+        # Start with max possible number of columns and reduce until it fits
+        ncol = 1 if oneColumn else min( len(keyList), term_width / min_element_width  )
+        while True:
+            col_widths = \
+                [ max( len(key.GetName()) + min_chars_between \
+                for j, key in enumerate(keyList) if j % ncol == i ) \
+                for i in range(ncol) ]
+            if sum( col_widths ) <= term_width: break
+            else: ncol -= 1
+
+    for i, key in enumerate(keyList):
+        if i%ncol == 0: write("",indent) # indentation
+        # Don't add spaces after the last element of the line or of the list
+        if (i+1)%ncol != 0 and i != len(keyList)-1:
+            if not IS_TERMINAL: write( \
+                key.GetName().ljust(col_widths[i%ncol]))
+            elif isDirectoryKey(keyList[i]): write( \
+                isSpecial(ANSI_BLUE,key.GetName()).ljust( \
+                    col_widths[i%ncol] + ANSI_BLUE_LENGTH))
+            elif isTreeKey(keyList[i]): write( \
+                isSpecial(ANSI_GREEN,key.GetName()).ljust( \
+                    col_widths[i%ncol] + ANSI_GREEN_LENGTH))
+            else: write(key.GetName().ljust(col_widths[i%ncol]))
+        else: # No spaces after the last element of the line or of the list
+            if not IS_TERMINAL: write(key.GetName())
+            elif isDirectoryKey(keyList[i]):
+                write(isSpecial(ANSI_BLUE, key.GetName()))
+            elif isTreeKey(keyList[i]):
+                write(isSpecial(ANSI_GREEN, key.GetName()))
+            else: write(key.GetName())
+            write('\n')
+
+def _rootLsPrint(keyList, indent, oneColumn, \
+                 longListing, treeListing):
+    """Print informations given by keyList with a rootLs
+    style choosen with the options"""
+    if longListing or treeListing: \
+       _rootLsPrintLongLs(keyList, indent, treeListing)
+    else:
+       _rootLsPrintSimpleLs(keyList, indent, oneColumn)
+
+def _rootLsProcessFile(fileName, pathSplitList, manySources, indent, \
+                       oneColumn, longListing, treeListing):
+    retcode = 0
+    rootFile = openROOTFile(fileName)
+    if not rootFile: return 1
+
+    keyList,dirList = keyClassSpliter(rootFile,pathSplitList)
+    if manySources: write("{0} :".format(fileName)+"\n")
+    _rootLsPrint(keyList, indent, oneColumn, longListing, treeListing)
+
+    # Loop on the directories
+    manyPathSplits = len(pathSplitList) > 1
+    indentDir = 2 if manyPathSplits else 0
+    for pathSplit in dirList:
+        keyList = getKeyList(rootFile,pathSplit)
+        keyListSort(keyList)
+        if manyPathSplits: write("{0} :".format("/".join(pathSplit)),indent,end="\n")
+        _rootLsPrint(keyList, indent+indentDir, oneColumn, longListing, treeListing)
+
+    rootFile.Close()
+    return retcode
+
+def rootLs(sourceList, oneColumn=False, longListing=False, treeListing=False):
+    # Check arguments
+    if sourceList == []: return 1
+    tupleListSort(sourceList)
+
+    # Loop on the ROOT files
+    retcode = 0
+    manySources = len(sourceList) > 1
+    indent = 2 if manySources else 0
+    for fileName, pathSplitList in sourceList:
+        retcode += _rootLsProcessFile(fileName, pathSplitList, manySources, indent, \
+                                      oneColumn, longListing, treeListing)
+    return retcode
+
+# End of ROOTLS
+##########
+
+##########
+# ROOTMKDIR
+
+MKDIR_ERROR = "cannot create directory '{0}'"
+
+def _createDirectories(rootFile,pathSplit,parents):
+    """Same behaviour as createDirectory but allows the possibility
+    to build an whole path recursively with the option \"parents\" """
+    retcode = 0
+    lenPathSplit = len(pathSplit)
+    if lenPathSplit == 0:
+        pass
+    elif parents:
+        for i in xrange(lenPathSplit):
+            currentPathSplit = pathSplit[:i+1]
+            if not (isExisting(rootFile,currentPathSplit) \
+                and isDirectory(rootFile,currentPathSplit)):
+                retcode += createDirectory(rootFile,currentPathSplit)
+    else:
+        doMkdir = True
+        for i in xrange(lenPathSplit-1):
+            currentPathSplit = pathSplit[:i+1]
+            if not (isExisting(rootFile,currentPathSplit) \
+                and isDirectory(rootFile,currentPathSplit)):
+                doMkdir = False
+                break
+        if doMkdir:
+            retcode += createDirectory(rootFile,pathSplit)
+        else:
+            logging.warning(MKDIR_ERROR.format("/".join(pathSplit)))
+            retcode += 1
+    return retcode
+
+def _rootMkdirProcessFile(fileName, pathSplitList, parents):
+    retcode = 0
+    rootFile = openROOTFile(fileName,"update")
+    if not rootFile: return 1
+    for pathSplit in pathSplitList:
+        retcode+=_createDirectories(rootFile,pathSplit,parents)
+    rootFile.Close()
+    return retcode
+
+def rootMkdir(sourceList, parents=False):
+    # Check arguments
+    if sourceList == []: return 1
+
+    # Loop on the ROOT files
+    retcode = 0
+    for fileName, pathSplitList in sourceList:
+        retcode += _rootMkdirProcessFile(fileName, pathSplitList, parents)
+    return retcode
+
+# End of ROOTMKDIR
+##########
+
+##########
+# ROOTMV
+
+MOVE_ERROR = "error during copy of {0}, it is not removed from {1}"
+
+def _moveObjects(fileName, pathSplitList, destFile, destPathSplit, \
+                 oneFile, interactive):
+    retcode = 0
+    recursive = True
+    replace = True
+    destFileName = destFile.GetName()
+    rootFile = openROOTFile(fileName,"update") \
+        if fileName != destFileName else \
+        destFile
+    if not rootFile: return 1
+    ROOT.gROOT.GetListOfFiles().Remove(rootFile) # Fast copy necessity
+    for pathSplit in pathSplitList:
+        oneSource = oneFile and len(pathSplitList)==1
+        retcodeTemp = copyRootObject(rootFile,pathSplit, \
+            destFile,destPathSplit,oneSource,recursive,replace)
+        if not retcodeTemp:
+            retcode += deleteRootObject(rootFile, pathSplit, interactive, recursive)
+        else:
+            logging.warning(MOVE_ERROR.format("/".join(pathSplit),rootFile.GetName()))
+            retcode += retcodeTemp
+    if fileName != destFileName: rootFile.Close()
+    return retcode
+
+def rootMv(sourceList, destFileName, destPathSplit, compress=None, \
+           interactive=False, recreate=False):
+    # Check arguments
+    if sourceList == [] or destFileName == "": return 1
+    if recreate and destFileName in sourceList:
+        logging.error("cannot recreate destination file if this is also a source file")
+        return 1
+
+    # Open destination file
+    destFile = openROOTFileCompress(destFileName,compress,recreate)
+    if not destFile: return 1
+    ROOT.gROOT.GetListOfFiles().Remove(destFile) # Fast copy necessity
+
+    # Loop on the root files
+    retcode = 0
+    for fileName, pathSplitList in sourceList:
+        retcode += _moveObjects(fileName, pathSplitList, destFile, destPathSplit, \
+                                len(sourceList)==1, interactive)
+    destFile.Close()
+    return retcode
+
+# End of ROOTMV
+##########
+
+##########
+# ROOTPRINT
+
+def _keyListExtended(rootFile,pathSplitList):
+    keyList,dirList = keyClassSpliter(rootFile,pathSplitList)
+    for pathSplit in dirList: keyList.extend(getKeyList(rootFile,pathSplit))
+    keyList = [key for key in keyList if not isDirectoryKey(key)]
+    keyListSort(keyList)
+    return keyList
+
+def rootPrint(sourceList, directory = None, divide = None, draw = "", outputFormat = None, \
+              output = None, size = None, style = None, verbose = False):
+    # Check arguments
+    if sourceList == []: return 1
+    tupleListSort(sourceList)
+
+    # Option values
+    directoryOptionValue = directory
+    drawOptionValue = draw
+    formatOptionValue = outputFormat
+    outputOptionValue = output
+    sizeOptionValue = size
+    styleOptionValue = style
+
+    # Verbose option
+    if not verbose:
+        ROOT.gErrorIgnoreLevel = 9999
+
+    # Don't open windows
+    ROOT.gROOT.SetBatch()
+
+    # Style option
+    if styleOptionValue:
+        ROOT.gInterpreter.ProcessLine(".x {0}".format(styleOptionValue))
+
+    # Initialize the canvas
+    if sizeOptionValue:
+        try:
+            width,height = sizeOptionValue.split("x")
+            width = int(width)
+            height = int(height)
+        except ValueError:
+            logging.warning("canvas size is on a wrong format")
+            return 1
+        canvas = ROOT.TCanvas("canvas","canvas",width,height)
+    else:
+        canvas = ROOT.TCanvas("canvas")
+
+    # Divide the canvas
+    if divide:
+        try:
+            x,y = divide.split(".")
+            x = int(x)
+            y = int(y)
+        except ValueError:
+            logging.warning("divide is on a wrong format")
+            return 1
+        canvas.Divide(x,y)
+        caseNumber = x*y
+
+    # Take the format of the output file (format option)
+    if not formatOptionValue and outputOptionValue:
+        fileName = outputOptionValue
+        fileFormat = fileName.split(".")[-1]
+        formatOptionValue = fileFormat
+
+    # Use pdf as default format
+    if not formatOptionValue: formatOptionValue = "pdf"
+
+    # Create the output directory (directory option)
+    if directoryOptionValue:
+        if not os.path.isdir(os.path.join(os.getcwd(),directoryOptionValue)):
+            os.mkdir(directoryOptionValue)
+
+    # Make the output name, begin to print (output option)
+    if outputOptionValue:
+        if formatOptionValue in ['ps','pdf']:
+            outputFileName = outputOptionValue
+            if directoryOptionValue: outputFileName = \
+                directoryOptionValue + "/" + outputFileName
+            canvas.Print(outputFileName+"[",formatOptionValue)
+        else:
+            logging.warning("can't merge pictures, only postscript or pdf files")
+            outputOptionValue = None
+
+    # Loop on the root files
+    retcode = 0
+    objDrawnNumber = 0
+    for fileName, pathSplitList in sourceList:
+        rootFile = openROOTFile(fileName)
+        if not rootFile:
+            retcode += 1
+            continue
+
+        # Fill the key list (almost the same as in rools)
+        keyList = _keyListExtended(rootFile,pathSplitList)
+        for key in keyList:
+            if isTreeKey(key):
+                pass
+                #obj = key.ReadObj()
+                #for branch in obj.GetListOfBranches():
+                #    if not outputOptionValue:
+                #        outputFileName = \
+                #            key.GetName() + "_" + branch.GetName() + "." +formatOptionValue
+                #        if directoryOptionValue:
+                #            outputFileName = os.path.join( \
+                #                directoryOptionValue,outputFileName)
+                #    if divide:
+                #        canvas.cd(objDrawnNumber%caseNumber + 1)
+                #        objDrawnNumber += 1
+                #    branch.Draw(drawOptionValue)
+                #    if divide:
+                #        if objDrawnNumber%caseNumber == 0:
+                #            outputFileName = str(objDrawnNumber//caseNumber)+"."+formatOptionValue
+                #            if directoryOptionValue:
+                #                outputFileName = os.path.join( \
+                #                    directoryOptionValue,outputFileName)
+                #            canvas.Print(outputFileName,formatOptionValue)
+                #            canvas.Clear()
+                #            canvas.Divide(x,y)
+                #    elif (outputOptionValue or formatOptionValue == 'pdf') and not divide:
+                #        objTitle = "Title:"+branch.GetName()+" : "+branch.GetTitle()
+                #        canvas.Print(outputFileName,objTitle)
+                #    else:
+                #        canvas.Print(outputFileName,formatOptionValue)
+            else:
+                if not outputOptionValue:
+                    outputFileName = key.GetName() + "." +formatOptionValue
+                    if directoryOptionValue:
+                        outputFileName = os.path.join( \
+                            directoryOptionValue,outputFileName)
+                obj = key.ReadObj()
+                if divide:
+                    canvas.cd(objDrawnNumber%caseNumber + 1)
+                    objDrawnNumber += 1
+                obj.Draw(drawOptionValue)
+                if divide:
+                    if objDrawnNumber%caseNumber == 0:
+                        outputFileName = str(objDrawnNumber//caseNumber)+"."+formatOptionValue
+                        if directoryOptionValue:
+                            outputFileName = os.path.join( \
+                                directoryOptionValue,outputFileName)
+                        canvas.Print(outputFileName,formatOptionValue)
+                        canvas.Clear()
+                        canvas.Divide(x,y)
+                elif outputOptionValue or formatOptionValue == 'pdf':
+                    objTitle = "Title:"+key.GetClassName()+" : "+key.GetTitle()
+                    canvas.Print(outputFileName,objTitle)
+                else:
+                    canvas.Print(outputFileName,formatOptionValue)
+        rootFile.Close()
+
+    ## End to print (divide option)
+    #if divide:
+    #    if objDrawnNumber%caseNumber != 0:
+    #        outputFileName = str(objDrawnNumber//caseNumber + 1)+"."+formatOptionValue
+    #        if directoryOptionValue:
+    #            outputFileName = os.path.join(directoryOptionValue,outputFileName)
+    #        canvas.Print(outputFileName,formatOptionValue)
+
+    # End to print (output option)
+    if outputOptionValue:
+        canvas.Print(outputFileName+"]",objTitle)
+
+    return retcode
+
+# End of ROOTPRINT
+##########
+
+##########
+# ROOTRM
+
+def _removeObjects(fileName, pathSplitList, interactive=False, recursive=False):
+    retcode = 0
+    rootFile = openROOTFile(fileName,"update")
+    if not rootFile: return 1
+    for pathSplit in pathSplitList:
+        retcode += deleteRootObject(rootFile, pathSplit, interactive, recursive)
+    rootFile.Close()
+    return retcode
+
+def rootRm(sourceList, interactive=False, recursive=False):
+    # Check arguments
+    if sourceList == []: return 1
+
+    # Loop on the root files
+    retcode = 0
+    for fileName, pathSplitList in sourceList:
+        retcode += _removeObjects(fileName, pathSplitList, interactive, recursive)
+    return retcode
+
+# End of ROOTRM
 ##########

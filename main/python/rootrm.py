@@ -3,12 +3,12 @@
 # ROOT command line tools: rootrm
 # Author: Julien Ripoche
 # Mail: julien.ripoche@u-psud.fr
-# Date: 13/08/15
+# Date: 20/08/15
 
 """Command line to remove objects from ROOT files"""
 
-import sys
 import cmdLineUtils
+import sys
 
 # Help strings
 COMMAND_HELP = "Remove objects from ROOT files"
@@ -27,15 +27,6 @@ EPILOG = """Examples:
   Display a confirmation request before deleting: 'remove 'hist' from 'example.root' ? (y/n) :'
 """
 
-def removeObjects(fileName, pathSplitList, optDict):
-    retcode = 0
-    rootFile = cmdLineUtils.openROOTFile(fileName,"update")
-    if not rootFile: return 1
-    for pathSplit in pathSplitList:
-        retcode += cmdLineUtils.deleteRootObject(rootFile,pathSplit,optDict)
-    rootFile.Close()
-    return retcode
-
 def execute():
     # Collect arguments with the module argparse
     parser = cmdLineUtils.getParserFile(COMMAND_HELP, EPILOG)
@@ -44,12 +35,9 @@ def execute():
 
     # Put arguments in shape
     sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
-    if sourceList == []: return 1
 
-    # Loop on the root files
-    retcode = 0
-    for fileName, pathSplitList in sourceList:
-        retcode += removeObjects(fileName, pathSplitList,optDict)
-    return retcode
+    # Process rootRm
+    return cmdLineUtils.rootRm(sourceList, interactive=optDict["interactive"], \
+                               recursive=optDict["recursive"])
 
 sys.exit(execute())

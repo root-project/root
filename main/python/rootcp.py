@@ -3,15 +3,12 @@
 # ROOT command line tools: rootcp
 # Author: Julien Ripoche
 # Mail: julien.ripoche@u-psud.fr
-# Date: 13/08/15
+# Date: 20/08/15
 
 """Command line to copy objects from ROOT files into an other"""
 
-import sys
-import os
-import logging
-import ROOT
 import cmdLineUtils
+import sys
 
 # Help strings
 COMMAND_HELP = "Copy objects from ROOT files into an other"
@@ -30,21 +27,6 @@ EPILOG = """Examples:
   Change the compression factor of the destination file 'dest.root' if not existing and copy the histogram named 'hist' from 'source.root' into it.
 """
 
-def copyObjects(fileName, pathSplitList, destFile, destPathSplit, optDict, oneFile):
-    retcode = 0
-    destFileName = destFile.GetName()
-    rootFile = cmdLineUtils.openROOTFile(fileName) \
-        if fileName != destFileName else \
-        destFile
-    if not rootFile: return 1
-    ROOT.gROOT.GetListOfFiles().Remove(rootFile) # Fast copy necessity
-    for pathSplit in pathSplitList:
-        oneSource = oneFile and len(pathSplitList)==1
-        retcode += cmdLineUtils.copyRootObject(rootFile,pathSplit, \
-            destFile,destPathSplit,optDict,oneSource)
-    if fileName != destFileName: rootFile.Close()
-    return retcode
-
 def execute():
     # Collect arguments with the module argparse
     parser = cmdLineUtils.getParserSourceDest(COMMAND_HELP, EPILOG)
@@ -55,22 +37,10 @@ def execute():
 
     # Put arguments in shape
     sourceList, destFileName, destPathSplit, optDict = cmdLineUtils.getSourceDestListOptDict(parser)
-    if sourceList == [] or destFileName == "": return 1
-    if optDict["recreate"] and destFileName in [n[0] for n in sourceList]:
-        logging.error("cannot recreate destination file if this is also a source file")
-        return 1
 
-    # Open destination file
-    destFile = cmdLineUtils.openROOTFileCompress(destFileName,optDict)
-    if not destFile: return 1
-    ROOT.gROOT.GetListOfFiles().Remove(destFile) # Fast copy necessity
-
-    # Loop on the root files
-    retcode = 0
-    for fileName, pathSplitList in sourceList:
-        retcode += copyObjects(fileName, pathSplitList, destFile, \
-                               destPathSplit, optDict, len(sourceList)==1)
-    destFile.Close()
-    return retcode
+    # Process rootCp
+    return cmdLineUtils.rootCp(sourceList, destFileName, destPathSplit, \
+                               compress=optDict["compress"], recreate=optDict["recreate"], \
+                               recursive=optDict["recursive"], replace=optDict["replace"])
 
 sys.exit(execute())

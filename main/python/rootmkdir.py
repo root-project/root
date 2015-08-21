@@ -3,13 +3,12 @@
 # ROOT command line tools: rootmkdir
 # Author: Julien Ripoche
 # Mail: julien.ripoche@u-psud.fr
-# Date: 13/08/15
+# Date: 20/08/15
 
 """Command line to add directories in ROOT files"""
 
-import sys
-import logging
 import cmdLineUtils
+import sys
 
 # Help strings
 COMMAND_HELP = "Add directories in ROOT files"
@@ -30,45 +29,6 @@ EPILOG="""Examples:
   Create an empty ROOT file named 'example.root'
 """
 
-MKDIR_ERROR = "cannot create directory '{0}'"
-
-def createDirectories(rootFile,pathSplit,optDict):
-    """Same behaviour as createDirectory but allows the possibility
-    to build an whole path recursively with opt_dict["parents"]"""
-    retcode = 0
-    lenPathSplit = len(pathSplit)
-    if lenPathSplit == 0:
-        pass
-    elif optDict["parents"]:
-        for i in xrange(lenPathSplit):
-            currentPathSplit = pathSplit[:i+1]
-            if not (cmdLineUtils.isExisting(rootFile,currentPathSplit) \
-                and cmdLineUtils.isDirectory(rootFile,currentPathSplit)):
-                retcode += cmdLineUtils.createDirectory(rootFile,currentPathSplit)
-    else:
-        doMkdir = True
-        for i in xrange(lenPathSplit-1):
-            currentPathSplit = pathSplit[:i+1]
-            if not (cmdLineUtils.isExisting(rootFile,currentPathSplit) \
-                and cmdLineUtils.isDirectory(rootFile,currentPathSplit)):
-                doMkdir = False
-                break
-        if doMkdir:
-            retcode += cmdLineUtils.createDirectory(rootFile,pathSplit)
-        else:
-            logging.warning(MKDIR_ERROR.format("/".join(pathSplit)))
-            retcode += 1
-    return retcode
-
-def processFile(fileName, pathSplitList, optDict):
-    retcode = 0
-    rootFile = cmdLineUtils.openROOTFile(fileName,"update")
-    if not rootFile: return 1
-    for pathSplit in pathSplitList:
-        retcode+=createDirectories(rootFile,pathSplit,optDict)
-    rootFile.Close()
-    return retcode
-
 def execute():
     # Collect arguments with the module argparse
     parser = cmdLineUtils.getParserFile(COMMAND_HELP, EPILOG)
@@ -76,12 +36,8 @@ def execute():
 
     # Put arguments in shape
     sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser, wildcards = False)
-    if sourceList == []: return 1
 
-    # Loop on the ROOT files
-    retcode = 0
-    for fileName, pathSplitList in sourceList:
-        retcode += processFile(fileName, pathSplitList,optDict)
-    return retcode
+    # Process rootMkdir
+    return cmdLineUtils.rootMkdir(sourceList, parents=optDict["parents"])
 
 sys.exit(execute())
