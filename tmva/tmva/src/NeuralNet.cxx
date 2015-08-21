@@ -243,6 +243,9 @@ double studenttDouble (double distributionParameter)
         , fMomentum (_momentum)
         , fRepetitions (_repetitions)
         , fMinimizerType (_eMinimizerType)
+        , m_convergenceCount (0)
+        , m_maxConvergenceCount (0)
+        , m_minError (1e10)
         , m_useMultithreading (_useMultithreading)
         , fMonitoring (NULL)
     {
@@ -454,6 +457,29 @@ void ClassificationSettings::startTestCycle ()
         }
 
 	m_cutValue = bestCutSignificance;
+    }
+
+
+    bool Settings::hasConverged (double testError)
+    {
+//        std::cout << "check convergence; minError " << m_minError << "  current " << testError
+//                  << "  current convergence count " << m_convergenceCount << std::endl;
+        if (testError < m_minError*0.999)
+        {
+            m_convergenceCount = 0;
+            m_minError = testError;
+        }
+        else
+        {
+            ++m_convergenceCount;
+            m_maxConvergenceCount = std::max (m_convergenceCount, m_maxConvergenceCount);
+        }
+
+
+        if (m_convergenceCount >= convergenceSteps () || testError <= 0)
+            return true;
+
+        return false;
     }
 
 
