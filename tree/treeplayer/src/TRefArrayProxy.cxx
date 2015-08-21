@@ -13,10 +13,10 @@
 #include "TRefArrayProxy.h"
 #include "TFormLeafInfoReference.h"
 
-//______________________________________________________________________________
-//
-// TRefArrayProxy is a container proxy, which allows to access references stored
-// in a TRefArray from TTree::Draw
+/** \class TRefArrayProxy
+A container proxy, which allows to access references stored
+in a TRefArray from TTree::Draw
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Access referenced object(-data)
