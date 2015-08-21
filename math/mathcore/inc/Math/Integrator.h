@@ -107,7 +107,7 @@ public:
        NOTE: When the default values are passed, the values used are taken from the default defined in ROOT::Math::IntegratorOneDimOptions
     */
     explicit
-    IntegratorOneDim(IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = 0, double relTol = 0, unsigned int size = 0, unsigned int rule = 0) :
+    IntegratorOneDim(IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int size = 0, unsigned int rule = 0) :
        fIntegrator(0), fFunc(0)
    {
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule);

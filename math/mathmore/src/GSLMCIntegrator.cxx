@@ -75,8 +75,8 @@ GSLMCIntegrator::GSLMCIntegrator(MCIntegration::Type type, double absTol, double
    fType(type),
    fDim(0),
    fCalls((calls > 0)  ? calls : IntegratorMultiDimOptions::DefaultNCalls()),
-   fAbsTol((absTol >0) ? absTol : IntegratorMultiDimOptions::DefaultAbsTolerance() ),
-   fRelTol((relTol >0) ? relTol : IntegratorMultiDimOptions::DefaultRelTolerance() ),
+   fAbsTol((absTol >= 0) ? absTol : IntegratorMultiDimOptions::DefaultAbsTolerance() ),
+   fRelTol((relTol >= 0) ? relTol : IntegratorMultiDimOptions::DefaultRelTolerance() ),
    fResult(0),fError(0),fStatus(-1),
    fWorkspace(0),
    fFunction(0)
@@ -444,13 +444,10 @@ double GSLMCIntegrator::ChiSqr()
 bool GSLMCIntegrator::CheckFunction()
 {
    // internal method to check validity of GSL function pointer
-   return true;
-   /*
-   // check if a function has been previously set.
-   if (fFunction->IsValid()) return true;
-   fStatus = -1; fResult = 0; fError = 0;
-   std::cerr << "GS:Integrator - Error : Function has not been specified " << std::endl;
-   return false; */
+
+   if (fFunction && fFunction->GetFunc() ) return true; 
+   MATH_ERROR_MSG("GSLMCIntegrator::CheckFunction","Function has not been specified");
+   return false;
 }
 
 const char * GSLMCIntegrator::GetTypeName() const {
