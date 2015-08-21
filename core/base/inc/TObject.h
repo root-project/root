@@ -39,7 +39,9 @@
 #ifndef ROOT_Riosfwd
 #include "Riosfwd.h"
 #endif
+
 #include <stdarg.h>
+#include <string>
 
 #ifdef WIN32
 #undef RemoveDirectory
