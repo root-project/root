@@ -755,9 +755,13 @@ def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent
     smallTree = bigTree.CloneTree(0)
     if lastEvent == -1:
         lastEvent = nbrEntries-1
+    isNtuple = bigTree.InheritsFrom(ROOT.TNtuple.Class())
     for i in xrange(firstEvent, lastEvent+1):
         bigTree.GetEntry(i)
-        smallTree.Fill()
+        if isNtuple:
+            super(ROOT.TNtuple,smallTree).Fill()
+        else:
+            smallTree.Fill()
     smallTree.Write()
     return retcode
 
