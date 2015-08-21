@@ -722,10 +722,6 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
         settings.create ("trainErrors", 100, 0, 100, 100, 0,1);
         settings.create ("testErrors", 100, 0, 100, 100, 0,1);
 
-        size_t convergenceCount = 0;
-        size_t maxConvergenceCount = 0;
-        double minError = 1e10;
-
         size_t cycleCount = 0;
         size_t testCycleCount = 0;
         double testError = 1e20;
@@ -775,6 +771,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	    
 
 	    // check if we execute a test
+            bool hasConverged = false;
             if (testCycleCount % settings.testRepetitions () == 0)
             {
                 if (isWeightsForDrop)
@@ -807,7 +804,8 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 
 		settings.computeResult (*this, weights);
 
-                if (!isWeightsForDrop)
+                hasConverged = settings.hasConverged (testError);
+                if (!hasConverged && !isWeightsForDrop)
                 {
                     dropOutWeightFactor (weights, dropFractions, true); // inverse
                     isWeightsForDrop = true;
@@ -827,38 +825,22 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 
 
 
-//	(*this).print (std::cout);
-//            std::cout << "check convergence; minError " << minError << "  current " << testError << "  current convergence count " << convergenceCount << std::endl;
-            if (testError < minError)
-            {
-                convergenceCount = 0;
-                minError = testError;
-            }
-            else
-            {
-                ++convergenceCount;
-                maxConvergenceCount = std::max (convergenceCount, maxConvergenceCount);
-            }
+            if (hasConverged)
+                break;
 
 
-	    if (convergenceCount >= settings.convergenceSteps () || testError <= 0)
-	    {
-                if (isWeightsForDrop)
-                {
-                    dropOutWeightFactor (weights, dropFractions);
-                    isWeightsForDrop = false;
-                }
-		break;
-	    }
-
-
-            TString convText = Form( "<D^2> (train/test/epoch/conv/maxConv): %.4g/%.4g/%d/%d/%d", trainError, testError, (int)cycleCount, (int)convergenceCount, (int)maxConvergenceCount);
-            double progress = 100*(double)maxConvergenceCount /(double)settings.convergenceSteps ();
+            TString convText = Form( "<D^2> (train/test/epoch/conv/maxConv): %.4g/%.4g/%d/%d/%d",
+                                     trainError,
+                                     testError,
+                                     (int)cycleCount,
+                                     (int)settings.convergenceCount (),
+                                     (int)settings.maxConvergenceCount ());
+            double progress = 100*(double)settings.maxConvergenceCount () /(double)settings.convergenceSteps ();
             settings.cycle (progress, convText);
         }
 	while (true);
         TString convText = Form( "<D^2> (train/test/epoch): %.4g/%.4g/%d", trainError, testError, (int)cycleCount);
-        double progress = 100*(double)maxConvergenceCount /(double)settings.convergenceSteps ();
+        double progress = 100*(double)settings.maxConvergenceCount() /(double)settings.convergenceSteps ();
         settings.cycle (progress, convText);
 
         return testError;

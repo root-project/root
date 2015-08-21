@@ -529,7 +529,12 @@ public:
 
 
     virtual void testSample (double /*error*/, double /*output*/, double /*target*/, double /*weight*/) {}
-    virtual void startTrainCycle () {}
+    virtual void startTrainCycle ()
+    {
+        m_convergenceCount = 0;
+        m_maxConvergenceCount= 0;
+        m_minError = 1e10;
+    }
     virtual void endTrainCycle (double /*error*/) {}
 
     virtual void setProgressLimits (double minProgress = 0, double maxProgress = 100) 
@@ -553,6 +558,7 @@ public:
 
     virtual void computeResult (const Net& /* net */, std::vector<double>& /* weights */) {}
 
+    virtual bool hasConverged (double testError);
 
     EnumRegularization regularization () const { return m_regularization; }
 
@@ -568,6 +574,10 @@ public:
     void clear (std::string histoName) { if (fMonitoring) fMonitoring->clear (histoName); }
     bool exists (std::string histoName) { if (fMonitoring) return fMonitoring->exists (histoName); return false; }
 
+    size_t convergenceCount () const { return m_convergenceCount; }
+    size_t maxConvergenceCount () const { return m_maxConvergenceCount; }
+    size_t minError () const { return m_minError; }
+    
 public:
     Timer  m_timer;
     double m_minProgress;
@@ -593,6 +603,11 @@ public:
     double fMomentum;
     int fRepetitions;
     MinimizerType fMinimizerType;
+
+    size_t m_convergenceCount;
+    size_t m_maxConvergenceCount;
+    double m_minError;
+
 
 protected:
     bool m_useMultithreading;
