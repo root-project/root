@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TBranchProxyDirector                                                   //
-//                                                                        //
-// This class is used to 'drive' and hold a serie of TBranchProxy objects //
-// which represent and give access to the content of TTree object.        //
-// This is intended to be used as part of a generate Selector class       //
-// which will hold the directory and its associate                        //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
+/** TBranchProxyDirector
+This class is used to 'drive' and hold a serie of TBranchProxy objects
+which represent and give access to the content of TTree object.
+This is intended to be used as part of a generate Selector class
+which will hold the directory and its associate
+*/
 
 #include "TBranchProxyDirector.h"
 #include "TBranchProxy.h"
