@@ -15,10 +15,10 @@
 #include "TVirtualRefProxy.h"
 #include "TFormLeafInfoReference.h"
 
-//______________________________________________________________________________
-//
-// TFormLeafInfoReference is a small helper class to implement the following
-// of reference objects stored in a TTree
+/** \class TFormLeafInfoReference
+A small helper class to implement the following
+of reference objects stored in a TTree
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
