@@ -2,9 +2,6 @@
 # CMakeLists.txt file for building ROOT net/globusauth package
 ############################################################################
 
-ROOT_USE_PACKAGE(net/net)
-ROOT_USE_PACKAGE(net/auth)
-
 include_directories(${GLOBUS_INCLUDE_DIRS})
 if(ssl)
   include_directories(${OPENSSL_INCLUDE_DIR})

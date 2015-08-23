@@ -3,10 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(tree/tree)
-ROOT_USE_PACKAGE(core/rint)
-
 if(NOT WIN32)
   ROOT_EXECUTABLE(rootn.exe rmain.cxx LIBRARIES New Core MathCore Rint)
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore)

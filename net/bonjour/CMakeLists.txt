@@ -3,8 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(net/net)
-ROOT_USE_PACKAGE(io/io)
 include_directories(${BONJOUR_INCLUDE_DIR})
 
 ROOT_GENERATE_DICTIONARY(G__BONJ *.h MODULE Bonjour LINKDEF LinkDef.h)

@@ -3,8 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(gui/gui)
-
 include(${QT_USE_FILE})
 add_definitions(-DQT3_SUPPORT= -DQT3_SUPPORT_CONSTRUCTOR= -DQT_DLL -DQT_THREAD_SUPPORT)
 include_directories(${QT_QT3SUPPORT_INCLUDE_DIR})

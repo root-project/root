@@ -3,9 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(graf2d/graf)
-ROOT_USE_PACKAGE(hist/hist)
-
 include_directories(${CFITSIO_INCLUDE_DIR})
 
 ROOT_GENERATE_DICTIONARY(G__FITSIO *.h MODULE FITSIO LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")

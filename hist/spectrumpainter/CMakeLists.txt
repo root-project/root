@@ -4,9 +4,6 @@
 
 set(libname SpectrumPainter)
 
-ROOT_USE_PACKAGE(hist/hist)
-
-
 ROOT_GENERATE_DICTIONARY(G__Spectrum2Painter *.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 

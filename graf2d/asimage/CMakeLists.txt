@@ -19,9 +19,6 @@ if(cocoa)  # Not needed to locate PNG, JPG, TIFF libraries
 endif()
 
 #---Build ASImage/ASImageGui libraries---------------------------------------
-ROOT_USE_PACKAGE(graf2d/graf)
-ROOT_USE_PACKAGE(graf2d/x11)
-ROOT_USE_PACKAGE(gui/gui)
 include_directories(${CMAKE_SOURCE_DIR}/hist/hist/inc)  # This is to avoid a circular dependency graf <--> hist
 
 include_directories(${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} ${X11_INCLUDE_DIR})

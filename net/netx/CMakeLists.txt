@@ -3,9 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(net/net)
-ROOT_USE_PACKAGE(proof/proofd)
-
 include_directories(${XROOTD_INCLUDE_DIRS})
 add_definitions(${XROOTD_CFLAGS})
 #---------------------------------------------------------------------------

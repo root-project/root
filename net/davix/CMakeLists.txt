@@ -3,10 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(core)
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(net/net)
-
 include_directories(${DAVIX_INCLUDE_DIRS})
 
 # Workaround for defects in davix 0.3.1: https://its.cern.ch/jira/browse/DMC-577

@@ -3,8 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(io/xmlparser)
-
 ROOT_GENERATE_DICTIONARY(G__HistFactory RooStats/HistFactory/*.h MODULE HistFactory LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 

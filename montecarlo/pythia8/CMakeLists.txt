@@ -3,8 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(montecarlo/eg)
-ROOT_USE_PACKAGE(math/physics)
 include_directories(${PYTHIA8_INCLUDE_DIR})
 
 ROOT_GENERATE_DICTIONARY(G__Pythia8 *.h MODULE EGPythia8 LINKDEF LinkDef.h)

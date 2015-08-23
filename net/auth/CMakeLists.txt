@@ -3,9 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(net/net)
-ROOT_USE_PACKAGE(io/io)
-
 ROOT_GLOB_HEADERS(headers inc/*.h)
 list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDefAFS.h
                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDefRoot.h

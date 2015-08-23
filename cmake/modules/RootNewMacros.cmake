@@ -521,12 +521,6 @@ function(ROOT_MODULE_LIBRARY library)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_USE_PACKAGE( package )
-#---------------------------------------------------------------------------------------------------
-macro( ROOT_USE_PACKAGE package )
-endmacro()
-
-#---------------------------------------------------------------------------------------------------
 #---ROOT_GENERATE_ROOTMAP( library LINKDEF linkdef LIBRRARY lib DEPENDENCIES lib1 lib2 )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_ROOTMAP library)

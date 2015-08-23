@@ -2,7 +2,6 @@
 # CMakeLists.txt file for building ROOT io/io package
 ############################################################################
 
-ROOT_USE_PACKAGE(core)
 include_directories(${CMAKE_SOURCE_DIR}/hist/hist/inc)  # Explicit to avoid circular dependencies mathcore <--> hist :-(
 
 set(MATHCORE_HEADERS TRandom.h

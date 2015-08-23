@@ -1,10 +1,6 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT graf3d/gl package
 ############################################################################
-ROOT_USE_PACKAGE(gui/ged)
-if(builtin_glew)
-  ROOT_USE_PACKAGE(graf3d/glew)
-endif()
 
 include_directories(${OPENGL_INCLUDE_DIR} ${FTGL_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIRS})
 

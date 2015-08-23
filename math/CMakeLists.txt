@@ -1,6 +1,3 @@
-ROOT_USE_PACKAGE(math/mathcore)
-ROOT_USE_PACKAGE(math/matrix)
-
 add_subdirectory(mathcore)
 if(mathmore)
   add_subdirectory(mathmore)

@@ -2,8 +2,6 @@
 # CMakeLists.txt file for building ROOT io/castor package
 ############################################################################
 
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(net/net)
 include_directories(${CASTOR_INCLUDE_DIR})
 
 if(CASTOR_VERSION VERSION_GREATER "2.0.0")

@@ -2,9 +2,6 @@
 # CMakeLists.txt file for building ROOT sql/oracle package
 ############################################################################
 
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(net/net)
-
 include_directories(${ORACLE_INCLUDE_DIR})
 add_definitions(${ORACLE_DEFINITIONS})
 

@@ -1,7 +1,6 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT core/thread package
 ############################################################################
-ROOT_USE_PACKAGE(core)
 
 set(headers TCondition.h TConditionImp.h TMutex.h TMutexImp.h
             TRWLock.h TSemaphore.h TThread.h TThreadFactory.h
