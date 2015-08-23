@@ -3,10 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(montecarlo/eg)
-ROOT_USE_PACKAGE(montecarlo/vmc)
-ROOT_USE_PACKAGE(math/physics)
-
 ROOT_GENERATE_DICTIONARY(G__Pythia6 *.h  MODULE EGPythia6 LINKDEF LinkDef.h)
 
 if(pythia6_nolink)

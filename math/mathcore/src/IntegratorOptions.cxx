@@ -47,7 +47,9 @@ namespace IntegOneDim {
 namespace IntegMultiDim {
 
    static int gDefaultIntegrator = IntegrationMultiDim::kADAPTIVE;
-   static double gDefaultAbsTolerance = 1.E-09;
+   // by default do not use absolute tolerance in AdaptiveIntegration multidim.
+   // If an absolute tolerance is given integration of shar peaks often failed
+   static double gDefaultAbsTolerance = 0.0;  
    static double gDefaultRelTolerance = 1.E-09;
    static unsigned int gDefaultWKSize = 100000;
    static unsigned int gDefaultNCalls = 100000;
@@ -221,7 +223,9 @@ void IntegratorOneDimOptions::PrintDefault(const char * name, std::ostream & os)
 void IntegratorOneDimOptions::SetDefaultIntegrator(const char * algo ) {
    // set the default 1D integrator
    if (!algo) return;
-   IntegOneDim::gDefaultIntegrator = (int) IntegratorOneDim::GetType(algo);
+   IntegrationOneDim::Type type =  IntegratorOneDim::GetType(algo);
+   if (type == IntegrationOneDim::kDEFAULT) return;  // this is possible only when invalid name was specified
+   IntegOneDim::gDefaultIntegrator = (int) type;
    if (IntegOneDim::gDefaultIntegrator == IntegrationOneDim::kLEGENDRE)
       IntegOneDim::gDefaultNPoints = IntegOneDim::gDefaultNPointsLegendre;
    if (IntegOneDim::gDefaultIntegrator == IntegrationOneDim::kADAPTIVE)
@@ -324,7 +328,10 @@ void IntegratorMultiDimOptions::PrintDefault(const char * name, std::ostream & o
 void IntegratorMultiDimOptions::SetDefaultIntegrator(const char * algo ) {
    // set the default integrator
    if (!algo) return;
-   IntegMultiDim::gDefaultIntegrator = (int) IntegratorMultiDim::GetType(algo);
+   // check if type is correct
+   IntegrationMultiDim::Type type =  IntegratorMultiDim::GetType(algo);
+   if (type == IntegrationMultiDim::kDEFAULT) return;  // this is possible only when invalid name was specified
+   IntegMultiDim::gDefaultIntegrator = (int) type;
 }
 
 

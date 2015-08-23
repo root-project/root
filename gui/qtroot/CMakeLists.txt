@@ -3,9 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(gui/gui)
-ROOT_USE_PACKAGE(graf2d/qt)
-
 include(${QT_USE_FILE})
 
 if(CMAKE_COMPILER_IS_GNUCXX)

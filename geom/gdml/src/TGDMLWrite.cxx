@@ -502,7 +502,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
          }
 
          //create physvol for main volume/assembly node
-         childN = CreatePhysVolN(nodevolname.Data(), posname.Data(), rotname.Data(), scaleN);
+         childN = CreatePhysVolN(geoNode->GetName(), geoNode->GetNumber(), nodevolname.Data(), posname.Data(), rotname.Data(), scaleN);
          fGdmlE->AddChild(volumeN, childN);
       }
       nCnt++;
@@ -1603,12 +1603,14 @@ XMLNodePointer_t TGDMLWrite::StartAssemblyN(const char * name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates "physvol" node for GDML
 
-XMLNodePointer_t TGDMLWrite::CreatePhysVolN(const char * volref, const char * posref, const char * rotref, XMLNodePointer_t scaleN)
+XMLNodePointer_t TGDMLWrite::CreatePhysVolN(const char *name, Int_t copyno, const char * volref, const char * posref, const char * rotref, XMLNodePointer_t scaleN)
 {
    fPhysVolCnt++;
    XMLNodePointer_t childN;
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "physvol", 0);
-
+   fGdmlE->NewAttr(mainN, 0, "name", name);   
+   fGdmlE->NewAttr(mainN, 0, "copynumber", TString::Format("%d",copyno));
+   
    childN = fGdmlE->NewChild(0, 0, "volumeref", 0);
    fGdmlE->NewAttr(childN, 0, "ref", volref);
    fGdmlE->AddChild(mainN, childN);

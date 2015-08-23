@@ -38,7 +38,6 @@ The following people have contributed to this new version:
  Matevz Tadel, UCSD/CMS, Eve, \
  Vassil Vassilev, CERN/SFT \
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
- Yue Shi Lai, MIT,\
  Maciej Zimnoch
 
 
@@ -99,6 +98,11 @@ New options:
 Improve the algorithm to compute the lower limit of an axis in log scale when its
 real lower limit is 0. The problem was reported in ROOT-7414.
 
+Using the `COL` option with histograms having some negative bins; the empty bins
+(containing 0) are drawn. In some cases one wants to not draw empty bins
+(containing 0) of histograms having a negative minimum. The option `1`, used with
+the option `COL`, allows to do that.
+
 ### TTeXDump
 
 From Dmitry Kalinkin (via github): Fix file corruption in TTeXDump::DrawPolyMarker`
@@ -132,6 +136,22 @@ the problem:
 
 The angle of a `TLatex` object was set to 0 if the `GetYsize` method was called.
 
+### TColor
+
+New palette `kViridis`. It was presented at SciPy2015 by Stéfan van der Walt and
+Nathaniel Smith. It is now matplotlib's current default color map.
+
+![Viridis](palette_112.png)
+
+
+### TMultiGraph
+
+Ignore empty graphs when computing the multi-graph range at painting time.
+
+### TASImage
+
+A left click on a image produced a one pixel zoom.
+
 ## 3D Graphics Libraries
 
 
@@ -146,7 +166,7 @@ The angle of a `TLatex` object was set to 0 if the `GetYsize` method was called.
 ### THttpServer
 
 Support of POST HTTP requests. For example, ROOT objects can be send with POST request and used as arguments of
-objects method execution in exe.bin and exe.json requests. Request and response HTTP headers are now directely accessible in THttpCallArg class
+objects method execution in exe.bin and exe.json requests. Request and response HTTP headers are now directly accessible in THttpCallArg class
 
 When command is registered with THttpServer::RegisterCommand() method,
 one could configure additional arguments which should be submitted when
@@ -205,5 +225,7 @@ If host has several network interfaces, one could select one for binding:
 
 
 ## Build, Configuration and Testing Infrastructure
+
+- The option cxx14 requires GCC > 5.1 because std::string_view needs member to_string
 
 

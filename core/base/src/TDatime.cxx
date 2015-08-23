@@ -447,9 +447,7 @@ void TDatime::GetDateTime(UInt_t datetime, Int_t &date, Int_t &time)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a TDatime at the prompt.
 
-std::string cling::printValue(const TDatime* const p, const TDatime* const /*u*/,
-                              const Value& /*V*/)
-{
+std::string cling::printValue(const TDatime &val) {
    char buf[30];
-   return std::string(p->AsString(buf));
+   return std::string(val.AsString(buf));
 }

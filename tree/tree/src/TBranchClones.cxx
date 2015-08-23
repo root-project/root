@@ -9,14 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A Branch for the case of an array of clone objects                   //
-//                                                                      //
-// See TTree.                                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TBranchClones.h"
 
 #include "TBasket.h"
@@ -33,8 +25,14 @@
 
 ClassImp(TBranchClones)
 
+/** \class TBranchClones
+A Branch for the case of an array of clone objects.
+
+See TTree.
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Default and i/o constructor.
+/// Default and i/o constructor.
 
 TBranchClones::TBranchClones()
 : TBranch()
@@ -47,7 +45,7 @@ TBranchClones::TBranchClones()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Constructor.
+/// Constructor.
 
 TBranchClones::TBranchClones(TTree *tree, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
 : TBranch()
@@ -61,7 +59,7 @@ TBranchClones::TBranchClones(TTree *tree, const char* name, void* pointer, Int_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Constructor.
+/// Constructor.
 
 TBranchClones::TBranchClones(TBranch *parent, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
 : TBranch()
@@ -199,7 +197,7 @@ void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* p
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Destructor.
+/// Destructor.
 
 TBranchClones::~TBranchClones()
 {
@@ -211,7 +209,7 @@ TBranchClones::~TBranchClones()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Browse this branch.
+/// Browse this branch.
 
 void TBranchClones::Browse(TBrowser* b)
 {
@@ -219,7 +217,7 @@ void TBranchClones::Browse(TBrowser* b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Loop on all branches and fill Basket buffer.
+/// Loop on all branches and fill Basket buffer.
 
 Int_t TBranchClones::Fill()
 {
@@ -258,7 +256,7 @@ Int_t TBranchClones::Fill()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Read all branches and return total number of bytes read.
+/// Read all branches and return total number of bytes read.
 
 Int_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
 {
@@ -297,7 +295,7 @@ Int_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Print branch parameters.
+/// Print branch parameters.
 
 void TBranchClones::Print(Option_t *option) const
 {
@@ -310,11 +308,10 @@ void TBranchClones::Print(Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Reset branch.
+/// Reset branch.
 ///
-///    Existing buffers are deleted
-///    Entries, max and min are reset
-///
+/// - Existing buffers are deleted
+/// - Entries, max and min are reset
 
 void TBranchClones::Reset(Option_t* option)
 {
@@ -330,11 +327,10 @@ void TBranchClones::Reset(Option_t* option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Reset branch after a merge.
+/// Reset branch after a merge.
 ///
-///    Existing buffers are deleted
-///    Entries, max and min are reset
-///
+/// - Existing buffers are deleted
+/// - Entries, max and min are reset
 
 void TBranchClones::ResetAfterMerge(TFileMergeInfo *info)
 {
@@ -350,7 +346,7 @@ void TBranchClones::ResetAfterMerge(TFileMergeInfo *info)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Set address of this branch.
+/// Set address of this branch.
 
 void TBranchClones::SetAddress(void* addr)
 {
@@ -369,7 +365,7 @@ void TBranchClones::SetAddress(void* addr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Reset basket size for all sub-branches.
+/// Reset basket size for all sub-branches.
 
 void TBranchClones::SetBasketSize(Int_t buffsize)
 {
@@ -383,7 +379,7 @@ void TBranchClones::SetBasketSize(Int_t buffsize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Serialize/Deserialize from a buffer.
+/// Serialize/Deserialize from a buffer.
 
 void TBranchClones::Streamer(TBuffer& b)
 {

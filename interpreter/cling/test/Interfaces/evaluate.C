@@ -33,10 +33,10 @@ gCling->evaluate("cond = false; if (cond) return \"true\"; else return 0;", V);
 V // CHECK-NEXT: (cling::Value &) boxes [(int) 0]
 
 gCling->evaluate("bool a = [](){return true;};", V);
-V // CHECK-NEXT: (cling::Value &) boxes [(bool) 1]
+V // CHECK-NEXT: (cling::Value &) boxes [(bool) true]
 
 gCling->evaluate("auto a = 12.3; a;", V);
-V // CHECK: (cling::Value &) boxes [(double) 1.230000e+01]
+V // CHECK: (cling::Value &) boxes [(double) 12.3000]
 
 long LongV = 17;
 gCling->evaluate("LongV;", V);
@@ -44,21 +44,21 @@ V // CHECK: (cling::Value &) boxes [(long) 17]
 
 int* IntP = (int*)0x12;
 gCling->evaluate("IntP;", V);
-V // CHECK: (cling::Value &) boxes [(int *) 0x12]
+V // CHECK: (cling::Value &) boxes [(int *) 0x12 <invalid memory address>]
 
 cling::Value Result;
 gCling->evaluate("V", Result);
 // Here we check what happens for record type like cling::Value; they are returned by reference.
-Result // CHECK: (cling::Value &) boxes [(cling::Value &) boxes [(int *) 0x12]]
-V // CHECK: (cling::Value &) boxes [(int *) 0x12]
+Result // CHECK: (cling::Value &) boxes [(cling::Value &) boxes [(int *) 0x12 <invalid memory address>]]
+V // CHECK: (cling::Value &) boxes [(int *) 0x12 <invalid memory address>]
 
 // Savannah #96277
 gCling->evaluate("gCling->declare(\"double sin(double);\"); double one = sin(3.141/2);", V);
-V // CHECK: (cling::Value &) boxes [(double) 1.000000e+00]
+V // CHECK: (cling::Value &) boxes [(double) 1.00000]
 
 gCling->process("double one = sin(3.141/2);", &V);
-V // CHECK: (cling::Value &) boxes [(double) 1.000000e+00]
-one // CHECK: (double) 1.000
+V // CHECK: (cling::Value &) boxes [(double) 1.00000]
+one // CHECK: (double) 1
 int one; // expected-error {{redefinition of 'one' with a different type: 'int' vs 'double'}} expected-note {{previous definition is here}}
 
 // Make sure that PR#98434 doesn't get reintroduced.
@@ -94,7 +94,7 @@ WithDtor::fgCount //CHECK: (int) 0
 // Check destructor call for templates
 VOnHeap = new cling::Value();
 gCling->evaluate("getWithDtorVec()", *VOnHeap);
-*VOnHeap //CHECK: (cling::Value &) boxes [(std::vector<WithDtor>) @0x{{.*}}]
+*VOnHeap //CHECK: (cling::Value &) boxes [(std::vector<WithDtor>) {{{ (@0x.*, )*@0x.* }}}]
 WithDtor::fgCount //CHECK: (int) 7
 delete VOnHeap;
 WithDtor::fgCount //CHECK: (int) 0

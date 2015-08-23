@@ -9,11 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Abstract interface for Tree Index                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TVirtualIndex
+Abstract interface for Tree Index
+*/
 
 #include "TVirtualIndex.h"
 #include "TTree.h"

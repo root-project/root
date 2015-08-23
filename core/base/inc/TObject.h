@@ -39,7 +39,9 @@
 #ifndef ROOT_Riosfwd
 #include "Riosfwd.h"
 #endif
+
 #include <stdarg.h>
+#include <string>
 
 #ifdef WIN32
 #undef RemoveDirectory
@@ -227,6 +229,10 @@ enum EObjBits {
    kNoContextMenu    = TObject::kNoContextMenu,
    kInvalidObject    = TObject::kInvalidObject
 };
+
+namespace cling {
+   std::string printValue(TObject *val);
+}
 
 #ifndef ROOT_TBuffer
 #include "TBuffer.h"

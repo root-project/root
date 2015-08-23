@@ -314,6 +314,7 @@
 
       // three.js 3D drawing
       var scene = new THREE.Scene();
+      //scene.fog = new THREE.Fog(0xffffff, 500, 3000);
 
       var toplevel = new THREE.Object3D();
       toplevel.rotation.x = 30 * Math.PI / 180;
@@ -342,9 +343,11 @@
       toplevel.add(box);
 
       var textMaterial = new THREE.MeshBasicMaterial({ color : 0x000000 });
+      var lineMaterial = new THREE.LineBasicMaterial({ color : 0x000000 });
 
       // add the calibration vectors and texts
-      var geometry = new THREE.Geometry();
+      var geometry;
+      var ticks = new Array();
       var imax, istep, len = 3, plen, sin45 = Math.sin(45);
       var text3d, text;
       var xmajors = tx.ticks(8);
@@ -371,10 +374,16 @@
          }
          if (is_major || is_minor) {
             ++k;
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(i, 0, size));
             geometry.vertices.push(new THREE.Vector3(i, -plen, size + plen));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(i, 0, -size));
             geometry.vertices.push(new THREE.Vector3(i, -plen, -size - plen));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
          }
       }
       var ymajors = ty.ticks(8);
@@ -402,10 +411,16 @@
          }
          if (is_major || is_minor) {
             ++k;
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(size, 0, i));
             geometry.vertices.push(new THREE.Vector3(size + plen, -plen, i));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(-size, 0, i));
             geometry.vertices.push(new THREE.Vector3(-size - plen, -plen, i));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
          }
       }
       var zmajors = tz.ticks(8);
@@ -443,36 +458,49 @@
          }
          if (is_major || is_minor) {
             ++k;
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(size, i, size));
             geometry.vertices.push(new THREE.Vector3(size + plen, i, size + plen));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(size, i, -size));
             geometry.vertices.push(new THREE.Vector3(size + plen, i, -size - plen));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(-size, i, size));
             geometry.vertices.push(new THREE.Vector3(-size - plen, i, size + plen));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(-size, i, -size));
             geometry.vertices.push(new THREE.Vector3(-size - plen, i, -size - plen));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
          }
       }
-
-      // add the calibration lines
-      var lineMaterial = new THREE.LineBasicMaterial({ color : 0x000000 });
-      var line = new THREE.Line(geometry, lineMaterial);
-      line.type = THREE.LinePieces;
-      toplevel.add(line);
-
+      var t = 0;
+      while (ticks[t]) {
+         ticks[t].dispose();
+         t++;
+      }
       // create the bin cubes
-
       var fillcolor = new THREE.Color(0xDDDDDD);
       fillcolor.setRGB(fcolor.r / 255, fcolor.g / 255, fcolor.b / 255);
-      var bin, wei, hh;
+      var bin, mesh, wei, hh;
 
       for (var i = 0; i < local_bins.length; ++i) {
          hh = local_bins[i];
          wei = tz(hh.z);
 
-         bin = THREE.SceneUtils.createMultiMaterialObject(
-               new THREE.BoxGeometry(2 * size / painter.nbinsx, wei, 2 * size / painter.nbinsy),
-               [ new THREE.MeshLambertMaterial({ color : fillcolor.getHex(), shading : THREE.NoShading }), wireMaterial ]);
+         // create a new mesh with cube geometry
+         bin = new THREE.Mesh(new THREE.BoxGeometry(2 * size / painter.nbinsx, wei, 2 * size / painter.nbinsy),
+                               new THREE.MeshLambertMaterial({ color : fillcolor.getHex(), shading : THREE.NoShading }));
+         helper = new THREE.BoxHelper(bin);
+         helper.material.color.set(0x000000);
+         helper.material.linewidth = 1.0;
+
          bin.position.x = tx(hh.x);
          bin.position.y = wei / 2;
          bin.position.z = -(ty(hh.y));
@@ -480,25 +508,19 @@
          if (JSROOT.gStyle.Tooltip)
             bin.name = hh.tip;
          toplevel.add(bin);
+         scene.add(helper);
       }
 
       delete local_bins;
       local_bins = null;
 
-      // create a point light
+      var camera = new THREE.PerspectiveCamera(45, w / h, 1, 4000);
       var pointLight = new THREE.PointLight(0xcfcfcf);
-      pointLight.position.set(0, 50, 250);
-      scene.add(pointLight);
-
-      // var directionalLight = new THREE.DirectionalLight(
-            // 0x7f7f7f );
-      // directionalLight.position.set( 0, -70, 100
-      // ).normalize();
-      // scene.add( directionalLight );
-
-      var camera = new THREE.PerspectiveCamera(45, w / h, 1, 1000);
+      camera.add( pointLight );
+      pointLight.position.set( 10, 10, 10 );
       camera.position.set(0, size / 2, 500);
       camera.lookat = cube;
+      scene.add( camera );
 
       /**
        * @author alteredq / http://alteredqualia.com/
@@ -612,6 +634,7 @@
 
       // three.js 3D drawing
       var scene = new THREE.Scene();
+      //scene.fog = new THREE.Fog(0xffffff, 500, 3000);
 
       var toplevel = new THREE.Object3D();
       toplevel.rotation.x = 30 * Math.PI / 180;
@@ -635,9 +658,11 @@
       toplevel.add(helper);
 
       var textMaterial = new THREE.MeshBasicMaterial({ color : 0x000000 });
+      var lineMaterial = new THREE.LineBasicMaterial({ color : 0x000000 });
 
       // add the calibration vectors and texts
-      var geometry = new THREE.Geometry();
+      var geometry;
+      var ticks = new Array();
       var imax, istep, len = 3, plen, sin45 = Math.sin(45);
       var text3d, text;
       var xmajors = tx.ticks(5);
@@ -664,10 +689,16 @@
          }
          if (is_major || is_minor) {
             ++k;
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(i, -size, size));
             geometry.vertices.push(new THREE.Vector3(i, -size - plen, size + plen));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(i, -size, -size));
             geometry.vertices.push(new THREE.Vector3(i, -size - plen, -size - plen));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
          }
       }
       var ymajors = ty.ticks(5);
@@ -695,10 +726,16 @@
          }
          if (is_major || is_minor) {
             ++k;
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(size, -size, i));
             geometry.vertices.push(new THREE.Vector3(size + plen, -size - plen, i));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(-size, -size, i));
             geometry.vertices.push(new THREE.Vector3(-size - plen, -size - plen, i));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
          }
       }
       var zmajors = tz.ticks(5);
@@ -736,23 +773,33 @@
          }
          if (is_major || is_minor) {
             ++k;
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(size, i, size));
             geometry.vertices.push(new THREE.Vector3(size + plen, i, size + plen));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(size, i, -size));
             geometry.vertices.push(new THREE.Vector3(size + plen, i, -size - plen));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(-size, i, size));
             geometry.vertices.push(new THREE.Vector3(-size - plen, i, size + plen));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
+            geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(-size, i, -size));
             geometry.vertices.push(new THREE.Vector3(-size - plen, i, -size - plen));
+            toplevel.add(new THREE.Line(geometry, lineMaterial));
+            ticks.push(geometry);
          }
       }
-
-      // add the calibration lines
-      var lineMaterial = new THREE.LineBasicMaterial({ color : 0x000000 });
-      var line = new THREE.Line(geometry, lineMaterial);
-      line.type = THREE.LinePieces;
-      toplevel.add(line);
-
+      var t = 0;
+      while (ticks[t]) {
+         ticks[t].dispose();
+         t++;
+      }
       // create the bin cubes
       var constx = (size * 2 / histo['fXaxis']['fNbins']) / maxbin;
       var consty = (size * 2 / histo['fYaxis']['fNbins']) / maxbin;
@@ -762,16 +809,21 @@
       var fcolor = d3.rgb(JSROOT.Painter.root_colors[histo['fFillColor']]);
       var fillcolor = new THREE.Color(0xDDDDDD);
       fillcolor.setRGB(fcolor.r / 255, fcolor.g / 255,  fcolor.b / 255);
-      var bin, wei;
+      var bin, mesh, wei;
       for (var i = 0; i < bins.length; ++i) {
          wei = (optFlag ? maxbin : bins[i].n);
          if (opt.indexOf('box1') != -1) {
-            bin = new THREE.Mesh(new THREE.SphereGeometry(0.5 * wei * constx /* , 16, 16 */),
-                  new THREE.MeshPhongMaterial({  color : fillcolor.getHex(), specular : 0xbfbfbf/* , shading: THREE.NoShading */}));
+            bin = new THREE.Mesh(new THREE.SphereGeometry(0.5 * wei * constx /*, 16, 16 */),
+                  new THREE.MeshPhongMaterial({ color : fillcolor.getHex(), specular : 0x4f4f4f /*, shading: THREE.NoShading */}));
          } else {
-            bin = THREE.SceneUtils.createMultiMaterialObject(
-                  new THREE.BoxGeometry(wei * constx, wei * constz, wei * consty),
-                  [ new THREE.MeshLambertMaterial({ color : fillcolor.getHex(), shading : THREE.NoShading }), wireMaterial ]);
+            // create a new mesh with cube geometry
+            bin = new THREE.Mesh(new THREE.BoxGeometry(wei * constx, wei * constz, wei * consty),
+                                 new THREE.MeshLambertMaterial({ color : fillcolor.getHex(),
+                                                                 shading : THREE.NoShading }));
+            helper = new THREE.BoxHelper(bin);
+            helper.material.color.set(0x000000);
+            helper.material.linewidth = 1.0;
+            scene.add(helper);
          }
          bin.position.x = tx(bins[i].x - (scalex / 2));
          bin.position.y = tz(bins[i].z - (scalez / 2));
@@ -785,18 +837,14 @@
                    + "entries: " + bins[i].n.toFixed();
          toplevel.add(bin);
       }
-      // create a point light
-      var pointLight = new THREE.PointLight(0xcfcfcf);
-      pointLight.position.set(0, 50, 250);
-      scene.add(pointLight);
 
-      // var directionalLight = new THREE.DirectionalLight( 0x7f7f7f );
-      // directionalLight.position.set( 0, -70, 100).normalize();
-      // scene.add( directionalLight );
-
-      var camera = new THREE.PerspectiveCamera(45, w / h, 1, 1000);
+      var camera = new THREE.PerspectiveCamera(45, w / h, 1, 4000);
+      var pointLight = new THREE.PointLight(0xefefef);
+      camera.add( pointLight );
+      pointLight.position.set( 10, 10, 10 );
       camera.position.set(0, 0, 500);
       camera.lookat = cube;
+      scene.add( camera );
 
       /**
        * @author alteredq / http://alteredqualia.com/

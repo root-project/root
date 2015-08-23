@@ -3,10 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(proof/proof)
-ROOT_USE_PACKAGE(net/rpdutils)
-ROOT_USE_PACKAGE(net/auth)
-
 include_directories(${XROOTD_INCLUDE_DIRS})
 add_definitions(${XROOTD_CFLAGS})
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-undefined-bool-conversion)

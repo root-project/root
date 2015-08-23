@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTreeSQL                                                             //
-//                                                                      //
-// Implement TTree for a SQL backend                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTreeSQL
+Implement TTree for a SQL backend
+*/
 
 #include <Riostream.h>
 #include <vector>
@@ -800,5 +796,3 @@ void TTreeSQL::ResetQuery()
 {
    fInsertQuery = "INSERT INTO " + fTable + " VALUES (";
 }
-
-

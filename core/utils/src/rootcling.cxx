@@ -2691,7 +2691,7 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
          }
          rootmapFile << "\n";
       }
-      rootmapFile << "[" << rootmapLibName << " ]\n";
+      rootmapFile << "[ " << rootmapLibName << " ]\n";
 
       // Loop on selected classes and insert them in the rootmap
       if (!classesNames.empty()) {
@@ -4771,8 +4771,9 @@ int RootCling(int argc,
    std::string rootmapLibName = std::accumulate(rootmapLibNames.begin(),
                                 rootmapLibNames.end(),
                                 std::string(),
-   [](const std::string & a, const std::string & b) {
-      return a + " " + b;
+   [](const std::string & a, const std::string & b) -> std::string {
+      if (a.empty()) return b;
+      else return a + " " + b;
    });
 
    bool rootMapNeeded = !rootmapFileName.empty() || !rootmapLibName.empty();
@@ -5708,8 +5709,8 @@ int GenReflex(int argc, char **argv)
       if (!ROOT::TMetaUtils::EndsWith(targetLibName, gLibraryExtension)) {
          ROOT::TMetaUtils::Error("",
                                  "Invalid target library extension: filename is %s and extension %s is expected!\n",
-                                 gLibraryExtension.c_str(),
-                                 targetLibName.c_str());
+                                 targetLibName.c_str(),
+                                 gLibraryExtension.c_str());
       }
       // Target lib has precedence over rootmap lib
       if (options[ROOTMAP]) {

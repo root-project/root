@@ -27,17 +27,16 @@
 
 ClassImp(TAxis)
 
-//______________________________________________________________________________
-//
-// This class manages histogram axis. It is referenced by TH1 and TGraph.
-// To make a graphical representation of an histogram axis, this class
-// references the TGaxis class.
-//
-// TAxis supports axis with fixed or variable bin sizes.
-// Labels may be associated to individual bins.
-//
-//    see examples of various axis representations drawn by class TGaxis.
-//
+////////////////////////////////////////////////////////////////////////////////
+/** \class TAxis
+    \brief Class to manage histogram axis
+
+This class manages histogram axis. It is referenced by TH1 and TGraph.
+To make a graphical representation of an histogram axis, this class
+references the TGaxis class. TAxis supports axis with fixed or variable bin sizes.
+Labels may be associated to individual bins.
+See examples of various axis representations drawn by class TGaxis.
+*///////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -241,8 +240,7 @@ Int_t TAxis::DistancetoPrimitive(Int_t, Int_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event
 ///
-///  This member function is called when an axis is clicked with the locator
-///
+///  This member function is called when an axis is clicked with the locator.
 ///  The axis range is set between the position where the mouse is pressed
 ///  and the position where it is released.
 ///  If the mouse position is outside the current axis range when it is released
@@ -423,9 +421,9 @@ const char *TAxis::GetBinLabel(Int_t bin) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///             return first bin on the axis
-///       ie 1 if no range defined
-///       NOTE: in some cases a zero is returned (see TAxis::SetRange)
+/// Return first bin on the axis
+/// i.e. 1 if no range defined
+/// NOTE: in some cases a zero is returned (see TAxis::SetRange)
 
 Int_t TAxis::GetFirst() const
 {
@@ -434,9 +432,9 @@ Int_t TAxis::GetFirst() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///             return last bin on the axis
-///       ie fNbins if no range defined
-///       NOTE: in some cases a zero is returned (see TAxis::SetRange)
+/// Return last bin on the axis
+/// i.e. fNbins if no range defined
+/// NOTE: in some cases a zero is returned (see TAxis::SetRange)
 
 Int_t TAxis::GetLast() const
 {
@@ -463,9 +461,10 @@ Double_t TAxis::GetBinCenter(Int_t bin) const
 /// Return center of bin in log
 /// With a log-equidistant binning for a bin with low and up edges, the mean is :
 /// 0.5*(ln low + ln up) i.e. sqrt(low*up) in logx (e.g. sqrt(10^0*10^2) = 10).
-///Imagine a bin with low=1 and up=100 :
+/// Imagine a bin with low=1 and up=100 :
 /// - the center in lin is (100-1)/2=50.5
 /// - the center in log would be sqrt(1*100)=10 (!=log(50.5))
+///
 /// NB: if the low edge of the bin is negative, the function returns the bin center
 ///     as computed by TAxis::GetBinCenter
 
@@ -744,6 +743,7 @@ void TAxis::Set(Int_t nbins, const Double_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set axis alphanumeric
 
 void TAxis::SetAlphanumeric(Bool_t alphanumeric)
 {
@@ -783,7 +783,7 @@ void TAxis::SetDefaults()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set label for bin
+/// Set label for bin.
 /// If no label list exists, it is created. If all the bins have labels, the
 /// axis becomes alphanumeric and extendable.
 /// New labels will not be added with the Fill method but will end-up in the
@@ -824,7 +824,7 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Set the viewing range for the axis from bin first to last
+///  Set the viewing range for the axis from bin first to last.
 ///  To set a range using the axis coordinates, use TAxis::SetRangeUser.
 
 void TAxis::SetRange(Int_t first, Int_t last)
@@ -862,7 +862,7 @@ void TAxis::SetRange(Int_t first, Int_t last)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Set the viewing range for the axis from ufirst to ulast (in user coordinates)
+///  Set the viewing range for the axis from ufirst to ulast (in user coordinates).
 ///  To set a range using the axis bin numbers, use TAxis::SetRange.
 
 void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
@@ -886,7 +886,7 @@ void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  set ticks orientation
+///  Set ticks orientation.
 ///  option = "+"  ticks drawn on the "positive side" (default)
 ///  option = "-"  ticks drawn on the "negative side"
 ///  option = "+-" ticks drawn on both sides
@@ -902,37 +902,39 @@ void TAxis::SetTicks(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the format used for time plotting
 ///
-///  The format string for date and time use the same options as the one used
-///  in the standard strftime C function, i.e. :
-///    for date :
-///      %a abbreviated weekday name
-///      %b abbreviated month name
-///      %d day of the month (01-31)
-///      %m month (01-12)
-///      %y year without century
+/// The format string for date and time use the same options as the one used
+/// in the standard strftime C function, i.e. :
+/// for date :
 ///
-///    for time :
-///      %H hour (24-hour clock)
-///      %I hour (12-hour clock)
-///      %p local equivalent of AM or PM
-///      %M minute (00-59)
-///      %S seconds (00-61)
-///      %% %
+///          %a abbreviated weekday name
+///          %b abbreviated month name
+///          %d day of the month (01-31)
+///          %m month (01-12)
+///          %y year without century
 ///
-///    This function allows also to define the time offset. It is done via %F
-///    which should be appended at the end of the format string. The time
-///    offset has the following format: 'yyyy-mm-dd hh:mm:ss'
-///    Example:
+/// for time :
+///
+///          %H hour (24-hour clock)
+///          %I hour (12-hour clock)
+///          %p local equivalent of AM or PM
+///          %M minute (00-59)
+///          %S seconds (00-61)
+///          %% %
+///
+/// This function allows also to define the time offset. It is done via %F
+/// which should be appended at the end of the format string. The time
+/// offset has the following format: 'yyyy-mm-dd hh:mm:ss'
+/// Example:
 ///
 ///          h = new TH1F("Test","h",3000,0.,200000.);
 ///          h->GetXaxis()->SetTimeDisplay(1);
 ///          h->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F2000-02-28 13:00:01");
 ///
-///    This defines the time format being "dd/mm/yy" and the time offset as the
-///    February 28th 2003 at 13:00:01
+/// This defines the time format being "dd/mm/yy" and the time offset as the
+/// February 28th 2003 at 13:00:01
 ///
-///    If %F is not specified, the time offset used will be the one defined by:
-///    gStyle->SetTimeOffset. For example like that:
+/// If %F is not specified, the time offset used will be the one defined by:
+/// gStyle->SetTimeOffset. For example like that:
 ///
 ///          TDatime da(2003,02,28,12,00,00);
 ///          gStyle->SetTimeOffset(da.Convert());

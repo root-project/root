@@ -1,8 +1,6 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT bindings/pyroot package
 ############################################################################
-ROOT_USE_PACKAGE(math/mathcore)
-ROOT_USE_PACKAGE(tree/tree)
 include_directories(${PYTHON_INCLUDE_DIRS})
 
 ROOT_GENERATE_DICTIONARY(G__PyROOT *.h MODULE PyROOT LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")

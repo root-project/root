@@ -407,7 +407,7 @@ void GSLIntegrator::SetIntegrationRule(Integration::GKRule rule){ this->fRule = 
 
 bool GSLIntegrator::CheckFunction() {
    // check if a function has been previously set.
-   if (fFunction->IsValid()) return true;
+   if (fFunction && fFunction->IsValid()) return true;
    fStatus = -1; fResult = 0; fError = 0;
    std::cerr << "GSLIntegrator - Error : Function has not been specified " << std::endl;
    return false;

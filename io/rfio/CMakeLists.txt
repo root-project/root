@@ -2,8 +2,6 @@
 # CMakeLists.txt file for building ROOT io/rfio package
 ############################################################################
 
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(net/net)
 include_directories(${CASTOR_INCLUDE_DIR})
 
 ROOT_GENERATE_DICTIONARY(G__RFIO *.h MODULE RFIO  LINKDEF LinkDef.h)

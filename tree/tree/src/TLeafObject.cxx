@@ -9,10 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TLeaf for a general object derived from TObject.                   //
-//////////////////////////////////////////////////////////////////////////
+/** \class TLeafObject
+A TLeaf for a general object derived from TObject.
+*/
 
 #include "TLeafObject.h"
 #include "TBranch.h"
@@ -20,12 +19,10 @@
 #include "TMethodCall.h"
 #include "TDataType.h"
 
-
 ClassImp(TLeafObject)
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Default constructor for LeafObject*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*        =================================
+/// Default constructor for LeafObject.
 
 TLeafObject::TLeafObject(): TLeaf()
 {
@@ -35,9 +32,7 @@ TLeafObject::TLeafObject(): TLeaf()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafObject*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                      ==================
-///*-*
+/// Create a LeafObject.
 
 TLeafObject::TLeafObject(TBranch *parent, const char *name, const char *type)
    :TLeaf(parent, name,type)
@@ -49,17 +44,14 @@ TLeafObject::TLeafObject(TBranch *parent, const char *name, const char *type)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Default destructor for a LeafObject*-*-*-*-*-*-*-*-*-*-*-*
-///*-*        ==================================
+/// Default destructor for a LeafObject.
 
 TLeafObject::~TLeafObject()
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
-///*-*                  =========================================
+/// Pack leaf elements in Basket output buffer.
 
 void TLeafObject::FillBasket(TBuffer &b)
 {
@@ -88,12 +80,10 @@ void TLeafObject::FillBasket(TBuffer &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Returns pointer to method corresponding to name*-*-*-*-*-*-*
-///*-*            ============================================
-///*-*
-///*-*    name is a string with the general form  "method(list of params)"
-///*-*   If list of params is omitted, () is assumed;
-///*-*
+/// Returns pointer to method corresponding to name.
+///
+/// name is a string with the general form  "method(list of params)"
+/// If list of params is omitted, () is assumed;
 
 TMethodCall *TLeafObject::GetMethodCall(const char *name)
 {
@@ -113,8 +103,7 @@ TMethodCall *TLeafObject::GetMethodCall(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Returns name of leaf type*-*-*-*-*-*-*-*-*-*-*-*
-///*-*            =========================
+/// Returns name of leaf type.
 
 const char *TLeafObject::GetTypeName() const
 {
@@ -131,7 +120,7 @@ Bool_t TLeafObject::Notify()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Prints leaf value
+/// Prints leaf value.
 
 void TLeafObject::PrintValue(Int_t) const
 {
@@ -139,8 +128,7 @@ void TLeafObject::PrintValue(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-///*-*                  ===========================================
+/// Read leaf elements from Basket input buffer.
 
 void TLeafObject::ReadBasket(TBuffer &b)
 {
@@ -188,8 +176,7 @@ void TLeafObject::ReadBasket(TBuffer &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
-///*-*                  ============================
+/// Set leaf buffer data address.
 
 void TLeafObject::SetAddress(void *add)
 {

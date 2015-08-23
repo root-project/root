@@ -233,7 +233,7 @@ private:
    XMLNodePointer_t CreateCommonBoolN(TGeoCompositeShape *geoShape);
 
    //1.3 Volume sub methods
-   XMLNodePointer_t CreatePhysVolN(const char * volref, const char * posref, const char * rotref, XMLNodePointer_t scaleN);
+   XMLNodePointer_t CreatePhysVolN(const char * name, Int_t copyno, const char * volref, const char * posref, const char * rotref, XMLNodePointer_t scaleN);
    XMLNodePointer_t CreateDivisionN(Double_t offset, Double_t width, Int_t number, const char * axis, const char * unit, const char * volref);
 
    XMLNodePointer_t CreateSetupN(const char * topVolName , const char * name = "default", const char * version = "1.0");

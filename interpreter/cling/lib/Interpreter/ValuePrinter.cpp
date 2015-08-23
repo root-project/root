@@ -46,10 +46,17 @@
 //#endif
 #endif
 
+// For address validation
+#ifdef LLVM_ON_WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
+
 using namespace cling;
 
 // Implements the CValuePrinter interface.
-extern "C" void cling_PrintValue(void* /*cling::Value**/ V) {
+extern "C" void cling_PrintValue(void * /*cling::Value**/ V) {
   //Value* value = (Value*)V;
 
   // We need stream that doesn't close its file descriptor, thus we are not
@@ -57,108 +64,217 @@ extern "C" void cling_PrintValue(void* /*cling::Value**/ V) {
   // the results in pipes (Savannah #99234).
   //llvm::raw_fd_ostream outs (STDOUT_FILENO, /*ShouldClose*/false);
 
-  //std::string typeStr = printType(value->getPtr(), value->getPtr(), *value);
-  //std::string valueStr = printValue(value->getPtr(), value->getPtr(), *value);
+  //std::string typeStr = printTypeInternal(*value);
+  //std::string valueStr = printValueInternal(*value);
 }
 
+// Checking whether the pointer points to a valid memory location
+// Used for checking of void* output
+// Should be moved to earlier stages (ex. IR) in the future
+static bool isAddressValid(const void *P) {
+  if (!P || P == (void *) -1)
+    return false;
 
-static void StreamValue(llvm::raw_ostream& o, const void* V, clang::QualType QT,
-                        cling::Interpreter& interp);
-
-static void StreamChar(llvm::raw_ostream& o, const char v) {
-  if (isprint(v))
-    o << '\'' << v << '\'';
-  else {
-    o << "\\0x";
-    o.write_hex(v);
+#ifdef LLVM_ON_WIN32
+  MEMORY_BASIC_INFORMATION MBI;
+  if (!VirtualQuery(P, &MBI, sizeof(MBI)))
+    return false;
+  if (MBI.State != MEM_COMMIT)
+    return false;
+  return true;
+#else
+  // There is a POSIX way of finding whether an address can be accessed for
+  // reading: write() will return EFAULT if not.
+  int FD[2];
+  if (pipe(FD))
+    return false; // error in pipe()? Be conservative...
+  int NBytes = write(FD[1], P, 1/*byte*/);
+  close(FD[0]);
+  close(FD[1]);
+  if (NBytes != 1) {
+    assert(errno == EFAULT && "unexpected pipe write error");
+    return false;
   }
+  return true;
+#endif
 }
 
-static void StreamCharPtr(llvm::raw_ostream& o, const char* const v) {
-  if (!v) {
-    o << "<<<NULL>>>";
-    return;
-  }
-  o << '"';
-  const char* p = v;
-  for (;*p && p - v < 128; ++p) {
-    o << *p;
-  }
-  if (*p) o << "\"...";
-  else o << "\"";
-}
 
-static void StreamRef(llvm::raw_ostream& o, const void** V, clang::QualType Ty,
-                       cling::Interpreter& interp){
-  const clang::ReferenceType* RTy = llvm::dyn_cast<clang::ReferenceType>(Ty);
-  StreamValue(o, *V, RTy->getPointeeTypeAsWritten(), interp);
-}
+static std::string getTypeString(const Value &V) {
+  std::ostringstream strm;
+  clang::ASTContext &C = V.getASTContext();
+  clang::QualType Ty = V.getType().getDesugaredType(C).getNonReferenceType();
+  std::string type = cling::utils::TypeName::GetFullyQualifiedName(Ty, C);
+  std::ostringstream typeWithOptDeref;
 
-static void StreamPtr(llvm::raw_ostream& o, const void* v) {
-  o << v;
-}
-
-static void StreamArr(llvm::raw_ostream& o, const void* V, clang::QualType Ty,
-                      cling::Interpreter& interp) {
-  clang::ASTContext& C = interp.getCI()->getASTContext();
-  const clang::ArrayType* ArrTy = Ty->getAsArrayTypeUnsafe();
-  clang::QualType ElementTy = ArrTy->getElementType();
-  if (ElementTy->isCharType())
-    StreamCharPtr(o, (const char*)V);
-  else if (Ty->isConstantArrayType()) {
-    // Stream a constant array by streaming up to 5 elements.
-    const clang::ConstantArrayType* CArrTy
-      = C.getAsConstantArrayType(Ty);
-    const llvm::APInt& APSize = CArrTy->getSize();
-    size_t ElBytes = C.getTypeSize(ElementTy) / C.getCharWidth();
-    size_t Size = (size_t)APSize.getZExtValue();
-    o << "{ ";
-    for (size_t i = 0; i < Size; ++i) {
-      // Handle the case of constant size array of pointers. Eg. const char*[]
-      if (ElementTy->isPointerType())
-        StreamValue(o, *(const char* const *)V + i * ElBytes, ElementTy, interp);
-      else
-        StreamValue(o, (const char*)V + i * ElBytes, ElementTy, interp);
-
-      if (i + 1 < Size) {
-        if (i == 4) {
-          o << "...";
-          break;
-        }
-        else o << ", ";
-      }
+  if (llvm::dyn_cast<clang::BuiltinType>(Ty.getCanonicalType())) {
+    typeWithOptDeref << "(" << type << "*)";
+  } else if (Ty->isPointerType()) {
+    if (Ty->getPointeeType()->isCharType()) {
+      // Print char pointers as strings.
+      typeWithOptDeref << "(" << type << "*)";
+    } else {
+      // Fallback to void pointer for other pointers and print the address.
+      typeWithOptDeref << "(const void**)";
     }
-    o << " }";
-  } else
-    StreamPtr(o, V);
+  }
+  else if (Ty->isArrayType()) {
+    const clang::ArrayType *ArrTy = Ty->getAsArrayTypeUnsafe();
+    clang::QualType ElementTy = ArrTy->getElementType();
+    // In case of char ElementTy, printing as string
+    if (ElementTy->isCharType()) {
+      typeWithOptDeref << "(const char **)";
+    } else if (Ty->isConstantArrayType()) {
+      const clang::ConstantArrayType *CArrTy = C.getAsConstantArrayType(Ty);
+      const llvm::APInt &APSize = CArrTy->getSize();
+      size_t size = (size_t) APSize.getZExtValue();
+
+      // typeWithOptDeref example for int[40] array: "((int(*)[40])*(void**)0x5c8f260)"
+      typeWithOptDeref << "(" << cling::utils::TypeName::GetFullyQualifiedName(ElementTy, C) << "(*)[" << size << "])*(void**)";
+    } else {
+      typeWithOptDeref << "(void**)";
+    }
+  }
+  else {
+    // In other cases, dereference the address of the object.
+    // If no overload or specific template matches,
+    // the general template will be used which only prints the address.
+    typeWithOptDeref << "*(" << type << "**)";
+  }
+
+  strm << typeWithOptDeref.str();
+  return strm.str();
 }
 
-static void StreamFunction(llvm::raw_ostream& o, const void* V,
-                           clang::QualType QT, cling::Interpreter& Interp) {
-  o << "Function @" << V << '\n';
+template<typename T>
+static std::string executePrintValue(const Value &V, const T &val) {
+  Interpreter *Interp = V.getInterpreter();
+  std::stringstream printValueSS;
+  printValueSS << "cling::printValue(";
+  printValueSS << getTypeString(V);
+  printValueSS << (const void *) &val;
+  printValueSS << ");";
+  Value printValueV;
+  Interp->evaluate(printValueSS.str(), printValueV);
+  assert(printValueV.isValid() && "Must return valid value.");
+  return *(std::string *) printValueV.getPtr();
+}
 
-  clang::ASTContext& C = Interp.getCI()->getASTContext();
-  const Transaction* T = Interp.getLastTransaction();
+static std::string invokePrintValueOverload(const Value &V) {
+  clang::ASTContext &C = V.getASTContext();
+  clang::QualType Ty = V.getType().getDesugaredType(C);
+  if (const clang::BuiltinType *BT
+      = llvm::dyn_cast<clang::BuiltinType>(Ty.getCanonicalType())) {
+    switch (BT->getKind()) {
+      case clang::BuiltinType::Bool:
+        return executePrintValue<bool>(V, V.getLL());
+
+      case clang::BuiltinType::Char_S:
+        return executePrintValue<signed char>(V, V.getLL());
+      case clang::BuiltinType::SChar:
+        return executePrintValue<signed char>(V, V.getLL());
+      case clang::BuiltinType::Short:
+        return executePrintValue<short>(V, V.getLL());
+      case clang::BuiltinType::Int:
+        return executePrintValue<int>(V, V.getLL());
+      case clang::BuiltinType::Long:
+        return executePrintValue<long>(V, V.getLL());
+      case clang::BuiltinType::LongLong:
+        return executePrintValue<long long>(V, V.getLL());
+
+      case clang::BuiltinType::Char_U:
+        return executePrintValue<unsigned char>(V, V.getULL());
+      case clang::BuiltinType::UChar:
+        return executePrintValue<unsigned char>(V, V.getULL());
+      case clang::BuiltinType::UShort:
+        return executePrintValue<unsigned short>(V, V.getULL());
+      case clang::BuiltinType::UInt:
+        return executePrintValue<unsigned int>(V, V.getULL());
+      case clang::BuiltinType::ULong:
+        return executePrintValue<unsigned long>(V, V.getULL());
+      case clang::BuiltinType::ULongLong:
+        return executePrintValue<unsigned long long>(V, V.getULL());
+
+      case clang::BuiltinType::Float:
+        return executePrintValue<float>(V, V.getFloat());
+      case clang::BuiltinType::Double:
+        return executePrintValue<double>(V, V.getDouble());
+      case clang::BuiltinType::LongDouble:
+        return executePrintValue<long double>(V, V.getLongDouble());
+
+      default:
+        return executePrintValue<void *>(V, V.getPtr());
+    }
+  }
+  else if (Ty->isIntegralOrEnumerationType()) {
+    return executePrintValue<long long>(V, V.getLL());
+  }
+  else if (Ty->isFunctionType()) {
+    return executePrintValue<const void *>(V, &V);
+  }
+  else if (Ty->isPointerType()
+           || Ty->isReferenceType()
+           || Ty->isArrayType()) {
+    return executePrintValue<void *>(V, V.getPtr());
+  }
+  else {
+    // struct case.
+    return executePrintValue<void *>(V, V.getPtr());
+  }
+}
+
+static std::string printEnumValue(const Value &V) {
+  std::stringstream enumString;
+  clang::ASTContext &C = V.getASTContext();
+  clang::QualType Ty = V.getType().getDesugaredType(C);
+  const clang::EnumType *EnumTy = Ty.getNonReferenceType()->getAs<clang::EnumType>();
+  assert(EnumTy && "ValuePrinter.cpp: ERROR, printEnumValue invoked for a non enum type.");
+  clang::EnumDecl *ED = EnumTy->getDecl();
+  uint64_t value = *(const uint64_t *) &V;
+  bool IsFirst = true;
+  llvm::APSInt ValAsAPSInt = C.MakeIntValue(value, Ty);
+  for (clang::EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
+           E = ED->enumerator_end(); I != E; ++I) {
+    if (I->getInitVal() == ValAsAPSInt) {
+      if (!IsFirst) {
+        enumString << " ? ";
+      }
+      enumString << "(" << I->getQualifiedNameAsString() << ")";
+      IsFirst = false;
+    }
+  }
+  enumString << " : (int) " << ValAsAPSInt.toString(/*Radix = */10);
+  return enumString.str();
+}
+
+static std::string printFunctionValue(const Value &V, const void *ptr, clang::QualType Ty) {
+  std::string functionString;
+  llvm::raw_string_ostream o(functionString);
+  o << "Function @" << ptr << '\n';
+
+  clang::ASTContext &C = V.getASTContext();
+  Interpreter &Interp = *const_cast<Interpreter *>(V.getInterpreter());
+  const Transaction *T = Interp.getLastTransaction();
   assert(T->getWrapperFD() && "Must have a wrapper.");
-  clang::FunctionDecl* WrapperFD = T->getWrapperFD();
+  clang::FunctionDecl *WrapperFD = T->getWrapperFD();
 
-  const clang::FunctionDecl* FD = 0;
+  const clang::FunctionDecl *FD = 0;
   // CE should be the setValueNoAlloc call expr.
-  if (const clang::CallExpr* CallE
-    = llvm::dyn_cast_or_null<clang::CallExpr>(
-                                  utils::Analyze::GetOrCreateLastExpr(WrapperFD,
-                                                                /*foundAtPos*/0,
-                                                                /*omitDS*/false,
-                                                          &Interp.getSema()))) {
-    if (const clang::FunctionDecl* FDsetValue
-        = llvm::dyn_cast_or_null<clang::FunctionDecl>(CallE->getCalleeDecl())){
+  if (const clang::CallExpr *CallE
+      = llvm::dyn_cast_or_null<clang::CallExpr>(
+          utils::Analyze::GetOrCreateLastExpr(WrapperFD,
+              /*foundAtPos*/0,
+              /*omitDS*/false,
+                                              &Interp.getSema()))) {
+    if (const clang::FunctionDecl *FDsetValue
+        = llvm::dyn_cast_or_null<clang::FunctionDecl>(CallE->getCalleeDecl())) {
       if (FDsetValue->getNameAsString() == "setValueNoAlloc" &&
           CallE->getNumArgs() == 5) {
-        const clang::Expr* Arg4 = CallE->getArg(4);
-        while (const clang::CastExpr* CastE
-               = clang::dyn_cast<clang::CastExpr>(Arg4))
+        const clang::Expr *Arg4 = CallE->getArg(4);
+        while (const clang::CastExpr *CastE
+            = clang::dyn_cast<clang::CastExpr>(Arg4))
           Arg4 = CastE->getSubExpr();
-        if (const clang::DeclRefExpr* DeclRefExp
+        if (const clang::DeclRefExpr *DeclRefExp
             = llvm::dyn_cast<clang::DeclRefExpr>(Arg4))
           FD = llvm::dyn_cast<clang::FunctionDecl>(DeclRefExp->getDecl());
       }
@@ -167,11 +283,11 @@ static void StreamFunction(llvm::raw_ostream& o, const void* V,
 
   if (FD) {
     clang::SourceRange SRange = FD->getSourceRange();
-    const char* cBegin = 0;
-    const char* cEnd = 0;
+    const char *cBegin = 0;
+    const char *cEnd = 0;
     bool Invalid;
     if (SRange.isValid()) {
-      clang::SourceManager& SM = C.getSourceManager();
+      clang::SourceManager &SM = C.getSourceManager();
       clang::SourceLocation LocBegin = SRange.getBegin();
       LocBegin = SM.getExpansionRange(LocBegin).first;
       o << "  at " << SM.getFilename(LocBegin);
@@ -194,7 +310,7 @@ static void StreamFunction(llvm::raw_ostream& o, const void* V,
     if (cBegin && cEnd && cEnd > cBegin && cEnd - cBegin < 16 * 1024) {
       o << llvm::StringRef(cBegin, cEnd - cBegin + 1);
     } else {
-      const clang::FunctionDecl* FDef;
+      const clang::FunctionDecl *FDef;
       if (FD->hasBody(FDef))
         FD = FDef;
       FD->print(o);
@@ -205,229 +321,254 @@ static void StreamFunction(llvm::raw_ostream& o, const void* V,
   // type-based print() never and decl-based print() sometimes does not include
   // a final newline:
   o << '\n';
+  functionString = o.str();
+  return functionString;
 }
 
-static void StreamLongDouble(llvm::raw_ostream& o, const Value* value,
-                             clang::ASTContext& C) {
-  std::stringstream sstr;
-  sstr << value->simplisticCastAs<long double>();
-  o << sstr.str() << 'L';
-}
+static std::string printUnpackedClingValue(const Value &V) {
+  std::stringstream strm;
 
-static void StreamClingValue(llvm::raw_ostream& o, const Value* value) {
-  if (!value || !value->isValid()) {
-    o << "<<<invalid>>> @" << value;
+  clang::ASTContext &C = V.getASTContext();
+  clang::QualType QT = V.getType();
+  clang::QualType Ty = QT.getDesugaredType(C).getNonReferenceType();
+
+  if (Ty->isNullPtrType()) {
+    // special case nullptr_t
+    strm << "nullptr_t";
+  } else if (Ty->isEnumeralType()) {
+    // special case enum printing, using compiled information
+    strm << printEnumValue(V);
+  } else if (Ty->isFunctionType()) {
+    // special case function printing, using compiled information
+    strm << printFunctionValue(V, &V, Ty);
+  } else if ((Ty->isPointerType() || Ty->isMemberPointerType()) && Ty->getPointeeType()->isFunctionProtoType()) {
+    // special case function printing, using compiled information
+    strm << printFunctionValue(V, V.getPtr(), Ty->getPointeeType());
+  } else if (clang::CXXRecordDecl *CXXRD = Ty->getAsCXXRecordDecl()) {
+    if (CXXRD->isLambda()) {
+      strm << "@" << V.getPtr();
+    } else {
+      // default case, modular printing using cling::printValue
+      strm << invokePrintValueOverload(V);
+    }
   } else {
-    clang::ASTContext& C = value->getASTContext();
-    clang::QualType QT = value->getType();
-    o << "boxes [";
-    o << "("
-      << QT.getAsString(C.getPrintingPolicy())
-      << ") ";
-    clang::QualType valType = QT.getDesugaredType(C).getNonReferenceType();
-    if (C.hasSameType(valType, C.LongDoubleTy))
-      StreamLongDouble(o, value, C);
-    else if (valType->isFloatingType())
-      o << value->simplisticCastAs<double>();
-    else if (valType->isIntegerType()) {
-      if (valType->hasSignedIntegerRepresentation())
-        o << value->simplisticCastAs<long long>();
-      else
-        o << value->simplisticCastAs<unsigned long long>();
-    } else if (valType->isBooleanType())
-      o << (value->simplisticCastAs<bool>() ? "true" : "false");
-    else if (!valType->isVoidType())
-      StreamValue(o, value->getPtr(), valType,
-                  *const_cast<Interpreter*>(value->getInterpreter()));
-    o << "]";
+    // default case, modular printing using cling::printValue
+    strm << invokePrintValueOverload(V);
   }
-}
 
-static void StreamObj(llvm::raw_ostream& o, const void* V, clang::QualType Ty) {
-  if (clang::CXXRecordDecl* CXXRD = Ty->getAsCXXRecordDecl()) {
-    std::string QualName = CXXRD->getQualifiedNameAsString();
-    if (QualName == "cling::Value"){
-      StreamClingValue(o, (const cling::Value*)V);
-      return;
-    }
-  } // if CXXRecordDecl
-
-  // TODO: Print the object members.
-  o << "@" << V;
-}
-
-static void StreamValue(llvm::raw_ostream& o, const void* V,
-                        clang::QualType Ty, cling::Interpreter& Interp) {
-  clang::ASTContext& C = Interp.getCI()->getASTContext();
-  if (const clang::BuiltinType *BT
-           = llvm::dyn_cast<clang::BuiltinType>(Ty.getCanonicalType())) {
-    switch (BT->getKind()) {
-    case clang::BuiltinType::Bool:
-      if (*(const bool*)V)
-        o << "true";
-      else
-        o << "false";
-      break;
-    case clang::BuiltinType::Char_U: // intentional fall through
-    case clang::BuiltinType::UChar: // intentional fall through
-    case clang::BuiltinType::Char_S: // intentional fall through
-    case clang::BuiltinType::SChar:
-      StreamChar(o, *(const char*)V); break;
-    case clang::BuiltinType::Short:
-      o << *(const short*)V; break;
-    case clang::BuiltinType::UShort:
-      o << *(const unsigned short*)V; break;
-    case clang::BuiltinType::Int:
-      o << *(const int*)V; break;
-    case clang::BuiltinType::UInt:
-      o << *(const unsigned int*)V; break;
-    case clang::BuiltinType::Long:
-      o << *(const long*)V; break;
-    case clang::BuiltinType::ULong:
-      o << *(const unsigned long*)V; break;
-    case clang::BuiltinType::LongLong:
-      o << *(const long long*)V; break;
-    case clang::BuiltinType::ULongLong:
-      o << *(const unsigned long long*)V; break;
-    case clang::BuiltinType::Float:
-      o << *(const float*)V; break;
-    case clang::BuiltinType::Double:
-      o << *(const double*)V; break;
-    case clang::BuiltinType::LongDouble: {
-      std::stringstream ssLD;
-      ssLD << *(const long double*)V;
-      o << ssLD.str() << 'L'; break;
-    }
-    default:
-      StreamObj(o, V, Ty);
-    }
-  }
-  else if (Ty.getAsString().compare("std::string") == 0) {
-    StreamObj(o, V, Ty);
-    o << " "; // force a space
-    o <<"c_str: ";
-    StreamCharPtr(o, ((const char*) (*(const std::string*)V).c_str()));
-  }
-  else if (Ty->isEnumeralType()) {
-    clang::EnumDecl* ED = Ty->getAs<clang::EnumType>()->getDecl();
-    uint64_t value = *(const uint64_t*)V;
-    bool IsFirst = true;
-    llvm::APSInt ValAsAPSInt = C.MakeIntValue(value, Ty);
-    for (clang::EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
-           E = ED->enumerator_end(); I != E; ++I) {
-      if (I->getInitVal() == ValAsAPSInt) {
-        if (!IsFirst) {
-          o << " ? ";
-        }
-        o << "(" << I->getQualifiedNameAsString() << ")";
-        IsFirst = false;
-      }
-    }
-    o << " : (int) " << ValAsAPSInt.toString(/*Radix = */10);
-  }
-  else if (Ty->isReferenceType())
-    StreamRef(o, (const void**)&V, Ty, Interp);
-  else if (Ty->isPointerType()) {
-    clang::QualType PointeeTy = Ty->getPointeeType();
-    if (PointeeTy->isCharType())
-      StreamCharPtr(o, (const char*)V);
-    else if (PointeeTy->isFunctionProtoType())
-      StreamFunction(o, V, PointeeTy, Interp);
-    else
-      StreamPtr(o, V);
-  }
-  else if (Ty->isArrayType())
-    StreamArr(o, V, Ty, Interp);
-  else if (Ty->isFunctionType())
-    StreamFunction(o, V, Ty, Interp);
-  else
-    StreamObj(o, V, Ty);
+  return strm.str();
 }
 
 namespace cling {
-namespace valuePrinterInternal {
-  void printValue_Default(llvm::raw_ostream& o, const Value& V) {
-    clang::ASTContext& C = V.getASTContext();
-    clang::QualType Ty = V.getType().getDesugaredType(C);
-    Interpreter& Interp = *const_cast<Interpreter*>(V.getInterpreter());
-    if (const clang::BuiltinType *BT
-        = llvm::dyn_cast<clang::BuiltinType>(Ty.getCanonicalType())) {
-      switch (BT->getKind()) {
-      case clang::BuiltinType::Bool: // intentional fall through
-      case clang::BuiltinType::Char_U: // intentional fall through
-      case clang::BuiltinType::Char_S: // intentional fall through
-      case clang::BuiltinType::SChar: // intentional fall through
-      case clang::BuiltinType::Short: // intentional fall through
-      case clang::BuiltinType::Int: // intentional fall through
-      case clang::BuiltinType::Long: // intentional fall through
-      case clang::BuiltinType::LongLong: {
-        long long res = V.getLL();
-        StreamValue(o, (const void*)&res, Ty, Interp);
-      }
-        break;
-      case clang::BuiltinType::UChar: // intentional fall through
-      case clang::BuiltinType::UShort: // intentional fall through
-      case clang::BuiltinType::UInt: // intentional fall through
-      case clang::BuiltinType::ULong: // intentional fall through
-      case clang::BuiltinType::ULongLong: {
-        unsigned long long res = V.getULL();
-        StreamValue(o, (const void*)&res, Ty, Interp);
-      }
-        break;
-      case clang::BuiltinType::Float: {
-        float res = V.getFloat();
-        StreamValue(o, (const void*)&res, Ty, Interp);
-      }
-        break;
-      case clang::BuiltinType::Double: {
-        double res = V.getDouble();
-        StreamValue(o, (const void*)&res, Ty, Interp);
-      }
-        break;
-      case clang::BuiltinType::LongDouble: {
-        long double res = V.getLongDouble();
-        StreamValue(o, (const void*)&res, Ty, Interp);
-      }
-        break;
-      default:
-        StreamValue(o, V.getPtr(), Ty, Interp);
-        break;
-      }
-    }
-    else if (Ty->isIntegralOrEnumerationType()) {
-      long long res = V.getLL();
-      StreamValue(o, &res, Ty, Interp);
-    }
-    else if (Ty->isFunctionType())
-      StreamValue(o, &V, Ty, Interp);
-    else if (Ty->isPointerType() || Ty->isReferenceType()
-              || Ty->isArrayType())
-      StreamValue(o, V.getPtr(), Ty, Interp);
-    else {
-      // struct case.
-      StreamValue(o, V.getPtr(), Ty, Interp);
+
+  // General fallback - prints the address
+  std::string printValue(const void *ptr) {
+    if (!ptr) {
+      return "nullptr";
+    } else {
+      std::ostringstream strm;
+      strm << "@" << ptr;
+      if (!isAddressValid(ptr))
+        strm << " <invalid memory address>";
+      return strm.str();
     }
   }
 
-  void printType_Default(llvm::raw_ostream& o, const Value& V) {
-    using namespace clang;
-    QualType QT = V.getType().getNonReferenceType();
-    std::string ValueTyStr;
-    if (const TypedefType* TDTy = dyn_cast<TypedefType>(QT))
-      ValueTyStr = TDTy->getDecl()->getQualifiedNameAsString();
-    else if (const TagType* TTy = dyn_cast<TagType>(QT))
-      ValueTyStr = TTy->getDecl()->getQualifiedNameAsString();
-
-    if (ValueTyStr.empty())
-      ValueTyStr = QT.getAsString();
-    else if (QT.hasQualifiers())
-      ValueTyStr = QT.getQualifiers().getAsString() + " " + ValueTyStr;
-
-    o << "(";
-    o << ValueTyStr;
-    if (V.getType()->isReferenceType())
-      o << " &";
-    o << ") ";
+  // void pointer
+  std::string printValue(const void **ptr) {
+    if (!*ptr) {
+      return "nullptr";
+    } else {
+      std::ostringstream strm;
+      strm << *ptr;
+      if (!isAddressValid(*ptr))
+        strm << " <invalid memory address>";
+      return strm.str();
+    }
   }
-} // end namespace valuePrinterInternal
+
+  // Bool
+  std::string printValue(const bool *val) {
+    return *val ? "true" : "false";
+  }
+
+  // Chars
+  static std::string printChar(signed char val, bool apostrophe) {
+    std::ostringstream strm;
+    if (val > 0x1F && val < 0x7F) {
+      if (apostrophe)
+        strm << "'";
+      strm << val;
+      if (apostrophe)
+        strm << "'";
+    } else {
+      strm << "0x" << std::hex << (int) val;
+    }
+    return strm.str();
+  }
+
+  std::string printValue(const char *val) {
+    return printChar(*val, true);
+  }
+
+  std::string printValue(const signed char *val) {
+    return printChar(*val, true);
+  }
+
+  std::string printValue(const unsigned char *val) {
+    return printChar(*val, true);
+  }
+
+  // Ints
+  std::string printValue(const short *val) {
+    std::ostringstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const unsigned short *val) {
+    std::ostringstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const int *val) {
+    std::ostringstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const unsigned int *val) {
+    std::ostringstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const long *val) {
+    std::ostringstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const unsigned long *val) {
+    std::ostringstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const long long *val) {
+    std::ostringstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const unsigned long long *val) {
+    std::ostringstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  // Reals
+  std::string printValue(const float *val) {
+    std::ostringstream strm;
+    strm << std::showpoint << *val << "f";
+    return strm.str();
+  }
+
+  std::string printValue(const double *val) {
+    std::ostringstream strm;
+    strm << std::showpoint << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const long double *val) {
+    std::ostringstream strm;
+    strm << *val << "L";
+    return strm.str();
+  }
+
+  // Char pointers
+  std::string printValue(const char *const *val) {
+    if (!*val) {
+      return "nullptr";
+    } else {
+      std::ostringstream strm;
+      strm << "\"";
+      // 10000 limit to prevent potential printing of the whole RAM / inf loop
+      for (const char *cobj = *val; *cobj != 0 && cobj - *val < 10000; ++cobj) {
+        strm << printChar(*cobj, false);
+      }
+      strm << "\"";
+      return strm.str();
+    }
+  }
+
+  std::string printValue(const char **val) {
+    return printValue((const char *const *) val);
+  }
+
+  // std::string
+  std::string printValue(const std::string *val) {
+    return "\"" + *val + "\"";
+  }
+
+  // cling::Value
+  std::string printValue(const Value *value) {
+    std::ostringstream strm;
+
+    if (!value->isValid()) {
+      strm << "<<<invalid>>> @" << value;
+    } else {
+      clang::ASTContext &C = value->getASTContext();
+      clang::QualType QT = value->getType();
+      strm << "boxes [";
+      strm << "("
+      << cling::utils::TypeName::GetFullyQualifiedName(QT, C)
+      << ") ";
+      if (!QT->isVoidType()) {
+        strm << printUnpackedClingValue(*value);
+      }
+      strm << "]";
+    }
+
+    return strm.str();
+  }
+
+  namespace valuePrinterInternal {
+
+    std::string printTypeInternal(const Value &V) {
+      using namespace clang;
+      std::ostringstream strm;
+      clang::ASTContext &C = V.getASTContext();
+      QualType QT = V.getType().getNonReferenceType();
+      std::string ValueTyStr;
+      if (const TypedefType *TDTy = dyn_cast<TypedefType>(QT))
+        ValueTyStr = TDTy->getDecl()->getQualifiedNameAsString();
+      else if (const TagType *TTy = dyn_cast<TagType>(QT))
+        ValueTyStr = TTy->getDecl()->getQualifiedNameAsString();
+
+      if (ValueTyStr.empty())
+        ValueTyStr = cling::utils::TypeName::GetFullyQualifiedName(QT, C);
+      else if (QT.hasQualifiers())
+        ValueTyStr = QT.getQualifiers().getAsString() + " " + ValueTyStr;
+
+      strm << "(";
+      strm << ValueTyStr;
+      if (V.getType()->isReferenceType())
+        strm << " &";
+      strm << ")";
+      return strm.str();
+    }
+
+    std::string printValueInternal(const Value &V) {
+      static bool includedRuntimePrintValue = false; // initialized only once as a static function variable
+      // Include "RuntimePrintValue.h" only on the first printing.
+      // This keeps the interpreter lightweight and reduces the startup time.
+      if (!includedRuntimePrintValue) {
+        V.getInterpreter()->declare("#include \"cling/Interpreter/RuntimePrintValue.h\"");
+        includedRuntimePrintValue = true;
+      }
+      return printUnpackedClingValue(V);
+    }
+  } // end namespace valuePrinterInternal
 } // end namespace cling

@@ -12,17 +12,11 @@
 #ifndef ROOT_TTreeProxyGenerator
 #define ROOT_TTreeProxyGenerator
 
-#ifndef ROOT_Tlist
-#include "TList.h"
-#endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
+#include "TTreeGeneratorBase.h"
 
 class TBranch;
 class TBranchElement;
 class TLeaf;
-class TTree;
 class TStreamerElement;
 
 namespace ROOT {
@@ -31,7 +25,7 @@ namespace ROOT {
    class TBranchProxyDescriptor;
    class TBranchProxyClassDescriptor;
 
-   class TTreeProxyGenerator
+   class TTreeProxyGenerator : public TTreeGeneratorBase
    {
    public:
       enum EContainer { kNone, kClones, kSTL };
@@ -41,11 +35,8 @@ namespace ROOT {
       TString  fCutScript;
       TString  fPrefix;
       TString  fHeaderFileName;
-      TString  fOptionStr;
       UInt_t   fOptions;
       UInt_t   fMaxUnrolling;
-      TTree   *fTree;
-      TList    fListOfHeaders;
       TList    fListOfClasses;
       TList    fListOfFriends;
       TList    fListOfPragmas;
@@ -62,8 +53,6 @@ namespace ROOT {
       void AddForward(TClass *cl);
       void AddForward(const char *classname);
       void AddFriend(TFriendProxyDescriptor *desc);
-      void AddHeader(TClass *cl);
-      void AddHeader(const char *classname);
       void AddMissingClassAsEnum(const char *clname, Bool_t isscope);
       void AddPragma(const char *pragma_text);
       void CheckForMissingClass(const char *clname);

@@ -29,48 +29,54 @@
 
 ClassImp(TVirtualBranchBrowsable);
 
-//______________________________________________________________________________
-//
-// TVirtualBranchBrowsable is a base class (not really abstract, but useless
-// by itself) for helper objects that extend TBranch's browsing support.
-// Each registered derived class's generator method is called, which fills
-// all created helper objects into a list which can then be browsed.
-// For details of what these browser helper objects can do, see e.g.
-// TMethodBrowsable, which allows methods to show up in the TBrowser.
-//
-// Only registered helper objects are created. By default, only
-// TMethodBrowsable, TNonSplitBrowsable, and TCollectionPropertyBrowsable
-// are registered (see RegisterDefaultGenerators). You can prevent any of
-// their objects to show up in the browser by unregistering the generator:
-//   TMethodBrowsable::Unregister()
-// will stop creating browsable method helper objects from that call on.
-// Note that these helper objects are cached (in TBranch::fBrowsables);
-// already created (and thus cached) browsables will still appear in the
-// browser even after unregistering the corresponding generator.
-//
-// You can implement your own browsable objects and thier generator; see
-// e.g. the simple TCollectionPropertyBrowsable. Note that you will have
-// to register your generator just like any other, and that you should
-// implement the following methods for your own class, mainly for
-// consistency reasons:
-//   static void Register() {
-//     TVirtualBranchBrowsable::RegisterGenerator(GetBrowsables); }
-//   static void Unregister() {
-//     TVirtualBranchBrowsable::UnregisterGenerator(GetBrowsables); }
-// where GetBrowsables is a static member function of your class, that
-// creates the browsable helper objects, and has the signature
-//   static Int_t GetBrowsables(TList& list, const TBranch* branch,
-//                              const TVirtualBranchBrowsable* parent=0);
-// It has to return the number of browsable helper objects for parent
-// (or, if NULL, for branch) which are added to the list.
-//______________________________________________________________________________
+/** \class TVirtualBranchBrowsable
+
+TVirtualBranchBrowsable is a base class (not really abstract, but useless
+by itself) for helper objects that extend TBranch's browsing support.
+Each registered derived class's generator method is called, which fills
+all created helper objects into a list which can then be browsed.
+For details of what these browser helper objects can do, see e.g.
+TMethodBrowsable, which allows methods to show up in the TBrowser.
+
+Only registered helper objects are created. By default, only
+TMethodBrowsable, TNonSplitBrowsable, and TCollectionPropertyBrowsable
+are registered (see RegisterDefaultGenerators). You can prevent any of
+their objects to show up in the browser by unregistering the generator:
+
+    TMethodBrowsable::Unregister()
+
+will stop creating browsable method helper objects from that call on.
+Note that these helper objects are cached (in TBranch::fBrowsables);
+already created (and thus cached) browsables will still appear in the
+browser even after unregistering the corresponding generator.
+
+You can implement your own browsable objects and thier generator; see
+e.g. the simple TCollectionPropertyBrowsable. Note that you will have
+to register your generator just like any other, and that you should
+implement the following methods for your own class, mainly for
+consistency reasons:
+
+    static void Register() {
+      TVirtualBranchBrowsable::RegisterGenerator(GetBrowsables); }
+    static void Unregister() {
+      TVirtualBranchBrowsable::UnregisterGenerator(GetBrowsables); }
+
+where GetBrowsables is a static member function of your class, that
+creates the browsable helper objects, and has the signature
+
+    static Int_t GetBrowsables(TList& list, const TBranch* branch,
+                               const TVirtualBranchBrowsable* parent=0);
+
+It has to return the number of browsable helper objects for parent
+(or, if NULL, for branch) which are added to the list.
+*/
 
 std::list<TVirtualBranchBrowsable::MethodCreateListOfBrowsables_t>
    TVirtualBranchBrowsable::fgGenerators;
 Bool_t TVirtualBranchBrowsable::fgGeneratorsSet=kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor setting all members according to parameters.
+/// Constructor setting all members according to parameters.
 
 TVirtualBranchBrowsable::TVirtualBranchBrowsable(const TBranch* branch, TClass* type,
                                                  Bool_t typeIsPointer,
@@ -322,10 +328,11 @@ void TVirtualBranchBrowsable::GetScope(TString & scope) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Adds the default generators. The user can remove any of them as follows:
-///   TMethodBrowsable::Unregister();
+///
+///     TMethodBrowsable::Unregister();
+///
 /// which will cause the browser not to show any methods.
 
 void TVirtualBranchBrowsable::RegisterDefaultGenerators()
@@ -338,50 +345,54 @@ void TVirtualBranchBrowsable::RegisterDefaultGenerators()
    fgGeneratorsSet=kTRUE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a generator to be called when browsing branches.
+/// Called by the Register method, which should be implemented
+/// for all derived classes (see e.g. TMethodBrowsable::Register())
+
 void TVirtualBranchBrowsable::RegisterGenerator(MethodCreateListOfBrowsables_t generator)
 {
-   // Adds a generator to be called when browsing branches.
-   // Called by the Register method, which should be implemented
-   // for all derived classes (see e.g. TMethodBrowsable::Register())
    if (!fgGeneratorsSet) RegisterDefaultGenerators();
    // make sure we're not adding another copy
    fgGenerators.remove(generator);
    fgGenerators.push_back(generator);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Removes a generator from the list of generators to be called when
+/// browsing branches. The user can remove any of the generators as follows:
+///
+///     TMethodBrowsable::Unregister();
+///
+/// which will cause the browser not to show any methods.
+
 void TVirtualBranchBrowsable::UnregisterGenerator(MethodCreateListOfBrowsables_t generator)
 {
-   // Removes a generator from the list of generators to be called when
-   // browsing branches. The user can remove any of the generators as follows:
-   //   TMethodBrowsable::Unregister();
-   // which will cause the browser not to show any methods.
    if (!fgGeneratorsSet) RegisterDefaultGenerators();
    fgGenerators.remove(generator);
 }
 
-
 ClassImp(TMethodBrowsable);
 
-//______________________________________________________________________________
-//
-//  This helper object allows the browsing of methods of objects stored in
-//  branches. They will be depicted by a leaf (or a branch, in case the method
-//  returns an object) with a red exclamation mark. Only a subset of all
-//  methods will be shown in the browser (see IsMethodBrowsable for the
-//  criteria a method has to satisfy).
-//
-//  Obviously, methods are only available if the library is loaded which
-//  contains the dictionary for the class to be browsed!
-//
-//  If a branch contains a collection, TMethodBrowsable tries to find out
-//  what the contained element is (it will only create methods for the
-//  contained elements, but never for the collection). If it fails to extract
-//  the type of the contained elements, or if there is no guarantee that the
-//  type has any other common denominator than TObject (e.g. in the case of
-//  a TObjArray, which can hold any object deriving from TObject) no methods
-//  will be added.
-//______________________________________________________________________________
-
+////////////////////////////////////////////////////////////////////////////////
+/// \class TMethodBrowsable
+///
+/// This helper object allows the browsing of methods of objects stored in
+/// branches. They will be depicted by a leaf (or a branch, in case the method
+/// returns an object) with a red exclamation mark. Only a subset of all
+/// methods will be shown in the browser (see IsMethodBrowsable for the
+/// criteria a method has to satisfy).
+///
+/// Obviously, methods are only available if the library is loaded which
+/// contains the dictionary for the class to be browsed!
+///
+/// If a branch contains a collection, TMethodBrowsable tries to find out
+/// what the contained element is (it will only create methods for the
+/// contained elements, but never for the collection). If it fails to extract
+/// the type of the contained elements, or if there is no guarantee that the
+/// type has any other common denominator than TObject (e.g. in the case of
+/// a TObjArray, which can hold any object deriving from TObject) no methods
+/// will be added.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -475,7 +486,6 @@ void TMethodBrowsable::GetBrowsableMethodsForClass(TClass* cl, TList& li)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This methods fills list with TMethodBrowsables
@@ -581,23 +591,22 @@ void TMethodBrowsable::Unregister()
    TVirtualBranchBrowsable::UnregisterGenerator(GetBrowsables);
 }
 
-
 ClassImp(TNonSplitBrowsable);
 
-//______________________________________________________________________________
-//
-// Allows a TBrowser to browse non-split branches as if they were split. The
-// generator extracts the necessary information from the streamer info in
-// memory (which does not have to be the same as the one on file, in case
-// a library was loaded containing the dictionary for this type), i.e. it
-// also works without loading the class's library.
-//
-// Just as with TMethodBrowsables, if the generator finds a collection it
-// only takes the contained objects into account, not the collections. If
-// it identifies a collection, but cannot extract the contained type, or the
-// contained type can be anything deriving from a TObject (like for TObjArray)
-// or is not limited at all, no browser helper objects are created.
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// \class TNonSplitBrowsable
+///
+/// Allows a TBrowser to browse non-split branches as if they were split. The
+/// generator extracts the necessary information from the streamer info in
+/// memory (which does not have to be the same as the one on file, in case
+/// a library was loaded containing the dictionary for this type), i.e. it
+/// also works without loading the class's library.
+///
+/// Just as with TMethodBrowsables, if the generator finds a collection it
+/// only takes the contained objects into account, not the collections. If
+/// it identifies a collection, but cannot extract the contained type, or the
+/// contained type can be anything deriving from a TObject (like for TObjArray)
+/// or is not limited at all, no browser helper objects are created.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Creates a TNonSplitBrowsable from a TStreamerElement, containing branch
@@ -610,7 +619,6 @@ TNonSplitBrowsable::TNonSplitBrowsable(const TStreamerElement* element, const TB
 {
    SetNameTitle(element->GetName(), element->GetTitle());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Given either a branch "branch" or a "parent" TVirtualBranchBrowsable, we fill
@@ -721,25 +729,23 @@ void TNonSplitBrowsable::Unregister()
    TVirtualBranchBrowsable::UnregisterGenerator(GetBrowsables);
 }
 
-
 ClassImp(TCollectionPropertyBrowsable);
 
-//______________________________________________________________________________
-//
-// A tiny browser helper object (and its generator) for adding a virtual
-// (as in "not actually part of the class", not in C++ virtual) "@size()"
-// method to a collection. For all collections that derive from
-// TCollection, or have a TVirtualCollectionProxy associated with them,
-// a leaf is created that allows access to the number of elements in the
-// collection. For TClonesArrays and types with an associated
-// TVirtualCollectionProxy, this forwards to TTreeFormula's
-// "@branch.size()" functionality. For all other collections, a method call
-// to the appropriate collection's member function is executed when drawing.
-//
-// These objects are of course only created for elements containing a
-// collection; the generator has no effect on any other elements.
-//______________________________________________________________________________
-
+////////////////////////////////////////////////////////////////////////////////
+/// \class TCollectionPropertyBrowsable
+///
+/// A tiny browser helper object (and its generator) for adding a virtual
+/// (as in "not actually part of the class", not in C++ virtual) "@size()"
+/// method to a collection. For all collections that derive from
+/// TCollection, or have a TVirtualCollectionProxy associated with them,
+/// a leaf is created that allows access to the number of elements in the
+/// collection. For TClonesArrays and types with an associated
+/// TVirtualCollectionProxy, this forwards to TTreeFormula's
+/// "@branch.size()" functionality. For all other collections, a method call
+/// to the appropriate collection's member function is executed when drawing.
+///
+/// These objects are of course only created for elements containing a
+/// collection; the generator has no effect on any other elements.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Browses a TCollectionPropertyBrowsable. The only difference to
@@ -870,26 +876,24 @@ void TCollectionPropertyBrowsable::Unregister()
    TVirtualBranchBrowsable::UnregisterGenerator(GetBrowsables);
 }
 
-
 ClassImp(TCollectionMethodBrowsable);
 
-//______________________________________________________________________________
-//
-// TCollectionMethodBrowsable extends TCollectionPropertyBrowsable by showing
-// all methods of the collection itself. If none are available - e.g. for STL
-// classes like std::list, a TVirtualBranchBrowsable object is reated instead.
-// The methods' names will have a "@" prepended, to distinguish them from the
-// contained elements' methods.
-//
-// This browser helper object is not part of the default list of registered
-// generators (see TVirtualBranchBrowsable::RegisterDefaultGenerators()).
-// If you want to use it, you should call
-//   TCollectionMethodBrowsable::Register();
-// As it extends the functionality of TVirtualBranchBrowsable, one might want
-// to unregister the generator of the "@size()" method by calling
-//   TCollectionPropertyBrowsable::Unregister();
-//______________________________________________________________________________
-
+////////////////////////////////////////////////////////////////////////////////
+/// \class TCollectionMethodBrowsable
+///
+/// TCollectionMethodBrowsable extends TCollectionPropertyBrowsable by showing
+/// all methods of the collection itself. If none are available - e.g. for STL
+/// classes like std::list, a TVirtualBranchBrowsable object is reated instead.
+/// The methods' names will have a "@" prepended, to distinguish them from the
+/// contained elements' methods.
+///
+/// This browser helper object is not part of the default list of registered
+/// generators (see TVirtualBranchBrowsable::RegisterDefaultGenerators()).
+/// If you want to use it, you should call
+///   TCollectionMethodBrowsable::Register();
+/// As it extends the functionality of TVirtualBranchBrowsable, one might want
+/// to unregister the generator of the "@size()" method by calling
+///   TCollectionPropertyBrowsable::Unregister();
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Contructor, see TMethodBrowsable's constructor.

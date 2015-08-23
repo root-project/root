@@ -51,8 +51,6 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
   add_definitions(-Wno-parentheses-equality)
 endif()
 
-ROOT_USE_PACKAGE(hist/hist)
-
 include_directories(BEFORE ${UNR_UNTARDIR} ${UNR_UNTARDIR}/src ${UNR_UNTARDIR}/src/utils)
 add_definitions(-DHAVE_CONFIG_H)
 set(unrsources ${UNR_UNTARDIR}/src/utils/*.c

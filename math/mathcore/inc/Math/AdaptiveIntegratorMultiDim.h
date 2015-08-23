@@ -93,13 +93,15 @@ public:
    /**
       construct given optionally tolerance (absolute and relative), maximum number of function evaluation (maxpts)  and
       size of the working array.
+      The integration will stop when the absolute error is less than the absolute tolerance OR when the relative error is less 
+      than the relative tolerance. The absolute tolerance by defult is not used (it is equal to zero). 
       The size of working array represents the number of sub-division used for calculating the integral.
       Higher the dimension, larger sizes are required for getting the same accuracy.
       The size must be larger than  >= (2N + 3) * (1 + MAXPTS/(2**N + 2N(N + 1) + 1))/2). For smaller value passed, the
       minimum allowed will be used
    */
    explicit
-   AdaptiveIntegratorMultiDim(double absTol = 1.E-9, double relTol = 1E-9, unsigned int maxpts = 100000, unsigned int size = 0);
+   AdaptiveIntegratorMultiDim(double absTol = 0.0, double relTol = 1E-9, unsigned int maxpts = 100000, unsigned int size = 0);
 
    /**
       Construct with a reference to the integrand function and given optionally
@@ -107,7 +109,7 @@ public:
       size of the working array.
    */
    explicit
-   AdaptiveIntegratorMultiDim(const IMultiGenFunction &f, double absTol = 1.E-9, double relTol = 1E-9,  unsigned int maxcall = 100000, unsigned int size = 0);
+   AdaptiveIntegratorMultiDim(const IMultiGenFunction &f, double absTol = 0.0, double relTol = 1E-9,  unsigned int maxcall = 100000, unsigned int size = 0);
 
    /**
       destructor (no operations)

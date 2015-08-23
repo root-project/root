@@ -2,8 +2,6 @@
 # CMakeLists.txt file for building ROOT io/xml package
 ############################################################################
 
-ROOT_USE_PACKAGE(io/io)
-
 ROOT_GENERATE_DICTIONARY(G__XML *.h MODULE XMLIO LINKDEF LinkDef.h)
 
 

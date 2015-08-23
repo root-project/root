@@ -1246,138 +1246,115 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          TGeoTranslation* pos = 0;
          TGeoRotation* rot = 0;
          TGeoScale* scl = 0;
+         TString pnodename = gdml->GetAttr(child, "name");
+         TString scopynum = gdml->GetAttr(child, "copynumber");
+         Int_t copynum = (scopynum.IsNull()) ? 0 : (Int_t)Value(scopynum);
 
          subchild = gdml->GetChild(child);
 	 
-         while (subchild != 0) {
-	  
-	   tempattr = gdml->GetNodeName(subchild);
-	   tempattr.ToLower();
+         while (subchild != 0) {	  
+            tempattr = gdml->GetNodeName(subchild);
+	         tempattr.ToLower();
 	   
-	   if (tempattr == "volumeref") {
-	     reftemp = gdml->GetAttr(subchild, "ref");
-	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-	     }
+            if (tempattr == "volumeref") {
+               reftemp = gdml->GetAttr(subchild, "ref");
+               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+               }	     
+               lv = fvolmap[reftemp.Data()];	     
+               volref = reftemp;
+	         }
+            else if (tempattr == "file") {	    
+               const char* filevol;
+               const char* prevfile = fCurrentFile;
 	     
-	     lv = fvolmap[reftemp.Data()];
-	     
-	     volref = reftemp;
-	    
-	   }
-
-
-	   else if (tempattr == "file") {
-	    
- 
-	     const char* filevol;
-	     const char* prevfile = fCurrentFile;
-	     
-	     fCurrentFile = gdml->GetAttr(subchild, "name");
-	     filevol = gdml->GetAttr(subchild, "volname");
+               fCurrentFile = gdml->GetAttr(subchild, "name");
+               filevol = gdml->GetAttr(subchild, "volname");
    
+	            TXMLEngine* gdml2 = new TXMLEngine;
+               gdml2->SetSkipComments(kTRUE);    
+               XMLDocPointer_t filedoc1 = gdml2->ParseFile(fCurrentFile);
+               if (filedoc1 == 0) {
+                  Fatal("VolProcess", "Bad filename given %s", fCurrentFile);
+               }
+               // take access to main node
+               XMLNodePointer_t mainnode2 = gdml2->DocGetRootElement(filedoc1);
+               //increase depth counter + add DOM pointer
+               fFILENO = fFILENO + 1;
+               fFileEngine[fFILENO] = gdml2;     
 
-	     TXMLEngine* gdml2 = new TXMLEngine;
-	     gdml2->SetSkipComments(kTRUE);
+               if (ffilemap.find(fCurrentFile) != ffilemap.end()) {
+                  volref = ffilemap[fCurrentFile];	       
+               } else {
+	               volref = ParseGDML(gdml2, mainnode2);	       
+                  ffilemap[fCurrentFile] = volref;
+               }
 	     
-	     XMLDocPointer_t filedoc1 = gdml2->ParseFile(fCurrentFile);
-	     if (filedoc1 == 0) {
-	       Fatal("VolProcess", "Bad filename given %s", fCurrentFile);
-	     }
-	     // take access to main node
-	     XMLNodePointer_t mainnode2 = gdml2->DocGetRootElement(filedoc1);
-	     //increase depth counter + add DOM pointer
-	     fFILENO = fFILENO + 1;
-	     fFileEngine[fFILENO] = gdml2;
-	     
-	     if (ffilemap.find(fCurrentFile) != ffilemap.end()) {
-	       volref = ffilemap[fCurrentFile];
-	       
-	     } else {
-	       volref = ParseGDML(gdml2, mainnode2);
-	       
-	       ffilemap[fCurrentFile] = volref;
-	     }
-	     
-	     if (filevol) {
-	     
-	     volref = filevol;
-	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-	     	 volref = TString::Format("%s_%s", volref.Data(), fCurrentFile);
-	     }
-	     
-	     }
+               if (filevol) {	     
+                  volref = filevol;
+                  if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+                     volref = TString::Format("%s_%s", volref.Data(), fCurrentFile);
+                  }
+               }
 	    
-	     fFILENO = fFILENO - 1;
-	     gdml = fFileEngine[fFILENO];
-	     fCurrentFile = prevfile;
+               fFILENO = fFILENO - 1;
+               gdml = fFileEngine[fFILENO];
+               fCurrentFile = prevfile;
 	    
-	     lv = fvolmap[volref.Data()];
-	     //File tree complete - Release memory before exit
-	     
-	     
-	     gdml->FreeDoc(filedoc1);
-	     delete gdml2;
-	   } 
-
-
-	   else if (tempattr == "position") {
-
-	     attr = gdml->GetFirstAttr(subchild);
-	     PosProcess(gdml, subchild, attr);
-	     reftemp = gdml->GetAttr(subchild, "name");
-	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-	     }
-	     pos = fposmap[reftemp.Data()];
-	   } else if (tempattr == "positionref") {
-	     
-	     reftemp = gdml->GetAttr(subchild, "ref");
-	     
-	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-	     }
-	     if (fposmap.find(reftemp.Data()) != fposmap.end()) pos = fposmap[reftemp.Data()];
-	     else std::cout << "ERROR! Physvol's position " << reftemp << " not found!" << std::endl;
-	   } else if (tempattr == "rotation") {
-	     
-	     attr = gdml->GetFirstAttr(subchild);
-	     RotProcess(gdml, subchild, attr);
-	     reftemp = gdml->GetAttr(subchild, "name");
-	     
-	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-	     }
-	     rot = frotmap[reftemp.Data()];
-	   } else if (tempattr == "rotationref") {
-	     reftemp = gdml->GetAttr(subchild, "ref");
-	    
-
-	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-	     }
-	     if (frotmap.find(reftemp.Data()) != frotmap.end()) rot = frotmap[reftemp.Data()];
-	     else std::cout << "ERROR! Physvol's rotation " << reftemp << " not found!" << std::endl;
-	   } else if (tempattr == "scale") {
-	    
-	     attr = gdml->GetFirstAttr(subchild);
-	     SclProcess(gdml, subchild, attr);
-	     reftemp = gdml->GetAttr(subchild, "name");
-	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-	     }
-	     scl = fsclmap[reftemp.Data()];
-	   } else if (tempattr == "scaleref") {
-	    
-	     reftemp = gdml->GetAttr(subchild, "ref");
-	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-	     }
-	     if (fsclmap.find(reftemp.Data()) != fsclmap.end()) scl = fsclmap[reftemp.Data()];
-	     else std::cout << "ERROR! Physvol's scale " << reftemp << " not found!" << std::endl;
-	   }
+               lv = fvolmap[volref.Data()];
+               //File tree complete - Release memory before exit
+	     	     
+               gdml->FreeDoc(filedoc1);
+               delete gdml2;
+            }
+            else if (tempattr == "position") {
+               attr = gdml->GetFirstAttr(subchild);
+               PosProcess(gdml, subchild, attr);
+               reftemp = gdml->GetAttr(subchild, "name");
+               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+               }
+               pos = fposmap[reftemp.Data()];
+            } else if (tempattr == "positionref") {	     
+               reftemp = gdml->GetAttr(subchild, "ref");    
+               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+               }
+               if (fposmap.find(reftemp.Data()) != fposmap.end()) pos = fposmap[reftemp.Data()];
+               else std::cout << "ERROR! Physvol's position " << reftemp << " not found!" << std::endl;
+            } else if (tempattr == "rotation") {	     
+               attr = gdml->GetFirstAttr(subchild);
+               RotProcess(gdml, subchild, attr);
+               reftemp = gdml->GetAttr(subchild, "name");
+               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+               }
+               rot = frotmap[reftemp.Data()];
+            } else if (tempattr == "rotationref") {
+               reftemp = gdml->GetAttr(subchild, "ref");
+               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+               }
+               if (frotmap.find(reftemp.Data()) != frotmap.end()) rot = frotmap[reftemp.Data()];
+               else std::cout << "ERROR! Physvol's rotation " << reftemp << " not found!" << std::endl;
+            } else if (tempattr == "scale") {
+               attr = gdml->GetFirstAttr(subchild);
+               SclProcess(gdml, subchild, attr);
+               reftemp = gdml->GetAttr(subchild, "name");
+               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+               }
+               scl = fsclmap[reftemp.Data()];
+            } else if (tempattr == "scaleref") {	    
+               reftemp = gdml->GetAttr(subchild, "ref");
+               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+               }
+               if (fsclmap.find(reftemp.Data()) != fsclmap.end()) scl = fsclmap[reftemp.Data()];
+               else std::cout << "ERROR! Physvol's scale " << reftemp << " not found!" << std::endl;
+            }
 	   
-	   subchild = gdml->GetNext(subchild);
+            subchild = gdml->GetNext(subchild);
          }
 
          //ADD PHYSVOL TO GEOMETRY
@@ -1420,19 +1397,21 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
 // END: reflectedSolid
 
-         vol->AddNode(lv, fVolID, transform);
+         vol->AddNode(lv, copynum, transform);
+         if (!pnodename.IsNull())
+            ((TNamed*)vol->GetNodes()->Last())->SetName(pnodename);
       } else if ((strcmp(gdml->GetNodeName(child), "divisionvol")) == 0) {
 	
-	TString divVolref = "";
-	Int_t axis = 0;
-	TString number = "";
-	TString width = "";
-	TString offset = "";
-	TString lunit = "mm";
+         TString divVolref = "";
+         Int_t axis = 0;
+         TString number = "";
+         TString width = "";
+         TString offset = "";
+         TString lunit = "mm";
+
+         attr = gdml->GetFirstAttr(child);
 	
-	attr = gdml->GetFirstAttr(child);
-	
-	while (attr != 0) {
+         while (attr != 0) {
 	  
             tempattr = gdml->GetAttrName(attr);
             tempattr.ToLower();
@@ -1451,7 +1430,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
             attr = gdml->GetNextAttr(attr);
 
-	}
+         }
 
          subchild = gdml->GetChild(child);
 
@@ -1506,115 +1485,113 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
       else if ((strcmp(gdml->GetNodeName(child), "replicavol")) == 0) {
 	
-	TString divVolref = "";
-	Int_t axis = 0;
-	TString number = "";
-	TString width = "";
-	TString offset = "";
-	TString wunit = "mm";
-	TString ounit = "mm";
-	Double_t wvalue = 0;
-	Double_t ovalue = 0;
+         TString divVolref = "";
+         Int_t axis = 0;
+         TString number = "";
+         TString width = "";
+         TString offset = "";
+         TString wunit = "mm";
+         TString ounit = "mm";
+         Double_t wvalue = 0;
+         Double_t ovalue = 0;
        
 
-	attr = gdml->GetFirstAttr(child);
+         attr = gdml->GetFirstAttr(child);
 	
-	while (attr != 0) {
+         while (attr != 0) {
 	  
             tempattr = gdml->GetAttrName(attr);
             tempattr.ToLower();
 
             if (tempattr == "number") {
-	      number = gdml->GetAttrValue(attr);
-	    }
+               number = gdml->GetAttrValue(attr);
+            }
             attr = gdml->GetNextAttr(attr);
-	}
+         }
 
-	subchild = gdml->GetChild(child);
+         subchild = gdml->GetChild(child);
 
          while (subchild != 0) {
             tempattr = gdml->GetNodeName(subchild);
             tempattr.ToLower();
 
             if (tempattr == "volumeref") {
-	      reftemp = gdml->GetAttr(subchild, "ref");
-	      if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-		reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-	      }
-	      divVolref = reftemp;
-	    }
+               reftemp = gdml->GetAttr(subchild, "ref");
+               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+               }
+               divVolref = reftemp;
+            }
 	    
-	    if (tempattr == "replicate_along_axis") {
-	      subsubchild = gdml->GetChild(subchild);
+            if (tempattr == "replicate_along_axis") {
+               subsubchild = gdml->GetChild(subchild);
 	      
-	      while (subsubchild != 0) {
-		if ((strcmp(gdml->GetNodeName(subsubchild), "width")) == 0) {
-		  attr = gdml->GetFirstAttr(subsubchild);
-		  while (attr != 0) {
-		    tempattr = gdml->GetAttrName(attr);
-		    tempattr.ToLower();
-		    if (tempattr == "value") {
-		      wvalue = Value(gdml->GetAttrValue(attr));
-		    }
-		    else if (tempattr == "unit"){
-		      wunit = gdml->GetAttrValue(attr);
-		    } 
+               while (subsubchild != 0) {
+                  if ((strcmp(gdml->GetNodeName(subsubchild), "width")) == 0) {
+                     attr = gdml->GetFirstAttr(subsubchild);
+                     while (attr != 0) {
+                        tempattr = gdml->GetAttrName(attr);
+                        tempattr.ToLower();
+                        if (tempattr == "value") {
+                           wvalue = Value(gdml->GetAttrValue(attr));
+                        }
+                        else if (tempattr == "unit"){
+                           wunit = gdml->GetAttrValue(attr);
+                        } 
 		    
-		    attr = gdml->GetNextAttr(attr);
-		  }
-		}
-		else if ((strcmp(gdml->GetNodeName(subsubchild), "offset")) == 0) {
-		  attr = gdml->GetFirstAttr(subsubchild);
-		  while (attr != 0) {
-		    tempattr = gdml->GetAttrName(attr);
-		    tempattr.ToLower();
-		    if (tempattr == "value") {
-		      ovalue = Value(gdml->GetAttrValue(attr));
-		    }
-		    else if (tempattr == "unit"){
-		      ounit = gdml->GetAttrValue(attr);
-		    } 
-		    attr = gdml->GetNextAttr(attr);
-		  }
-		}
-		
-		else if ((strcmp(gdml->GetNodeName(subsubchild), "direction")) == 0) {
-		  attr = gdml->GetFirstAttr(subsubchild);
-		  while (attr != 0) {
-		    tempattr = gdml->GetAttrName(attr);
-		    tempattr.ToLower();
-		    if (tempattr == "x") {
-		      axis = 1;
-		    }
-		    else if (tempattr == "y"){
-		      axis = 2;
-		    }
-		    else if (tempattr == "z"){
-		      axis = 3;
-		    }
-		    else if (tempattr == "rho"){
-		      axis = 1;
-		    }
-		    else if (tempattr == "phi"){
-		      axis = 2;
-		    }
+                        attr = gdml->GetNextAttr(attr);
+                     }
+                  }
+                  else if ((strcmp(gdml->GetNodeName(subsubchild), "offset")) == 0) {
+                     attr = gdml->GetFirstAttr(subsubchild);
+                     while (attr != 0) {
+                        tempattr = gdml->GetAttrName(attr);
+                        tempattr.ToLower();
+                        if (tempattr == "value") {
+                           ovalue = Value(gdml->GetAttrValue(attr));
+                        }
+                        else if (tempattr == "unit"){
+                           ounit = gdml->GetAttrValue(attr);
+                        } 
+                        attr = gdml->GetNextAttr(attr);
+                     }
+                  }		
+                  else if ((strcmp(gdml->GetNodeName(subsubchild), "direction")) == 0) {
+                     attr = gdml->GetFirstAttr(subsubchild);
+                     while (attr != 0) {
+                        tempattr = gdml->GetAttrName(attr);
+                        tempattr.ToLower();
+                        if (tempattr == "x") {
+                           axis = 1;
+                        }
+                        else if (tempattr == "y"){
+                           axis = 2;
+                        }
+                        else if (tempattr == "z"){
+                           axis = 3;
+                        }
+                        else if (tempattr == "rho"){
+                           axis = 1;
+                        }
+                        else if (tempattr == "phi"){
+                           axis = 2;
+                        }
 
-		    attr = gdml->GetNextAttr(attr);
-		  }
-		}
-		
-	      subsubchild = gdml->GetNext(subsubchild);
-	      }
+                        attr = gdml->GetNextAttr(attr);
+                     }
+                  }		
 
-	    }
+                  subsubchild = gdml->GetNext(subsubchild);
+               }
 
+            }
 	    
-	    subchild = gdml->GetNext(subchild);
-	 }
+            subchild = gdml->GetNext(subchild);
+         }
       
       
          Double_t retwunit = GetScaleVal(wunit);
-	 Double_t retounit = GetScaleVal(ounit);
+         Double_t retounit = GetScaleVal(ounit);
 
          Double_t numberline = Value(number);
          Double_t widthline = wvalue*retwunit;
@@ -1646,7 +1623,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          }
          fvolmap[NameShort(reftemp)] = divvol;
 
-	 } //End of replicavol
+      } //End of replicavol
       else if (strcmp(gdml->GetNodeName(child), "auxiliary") == 0) {
          if(!auxmap) {
             printf("Auxiliary values for volume %s\n",vol->GetName());
@@ -1867,6 +1844,10 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
    while (child != 0) {
       if ((strcmp(gdml->GetNodeName(child), "physvol")) == 0) {
+         TString pnodename = gdml->GetAttr(child, "name");
+         TString scopynum = gdml->GetAttr(child, "copynumber");
+         Int_t copynum = (scopynum.IsNull()) ? 0 : (Int_t)Value(scopynum);
+
          subchild = gdml->GetChild(child);
          pos = new TGeoTranslation(0, 0, 0);
          rot = new TGeoRotation();
@@ -1921,7 +1902,9 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          //ADD PHYSVOL TO GEOMETRY
          fVolID = fVolID + 1;
          matr = new TGeoCombiTrans(*pos, *rot);
-         assem->AddNode(lv, fVolID, matr);
+         assem->AddNode(lv, copynum, matr);
+         if (!pnodename.IsNull())
+            ((TNamed*)assem->GetNodes()->Last())->SetName(pnodename);
 
       }
       child = gdml->GetNext(child);

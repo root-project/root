@@ -472,6 +472,9 @@ function(ROOT_OBJECT_LIBRARY library)
     add_dependencies(${library} move_headers)
   endif()
 
+  #--- Only for building shared libraries
+  set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE 1)
+
   #--- Fill the property OBJECTS with all the object files
   #    This is needed becuase the generator expression $<TARGET_OBJECTS:target>
   #    does not get expanded when used in custom command dependencies
@@ -516,12 +519,6 @@ function(ROOT_MODULE_LIBRARY library)
                              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
                              ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 endfunction()
-
-#---------------------------------------------------------------------------------------------------
-#---ROOT_USE_PACKAGE( package )
-#---------------------------------------------------------------------------------------------------
-macro( ROOT_USE_PACKAGE package )
-endmacro()
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_GENERATE_ROOTMAP( library LINKDEF linkdef LIBRRARY lib DEPENDENCIES lib1 lib2 )

@@ -2,9 +2,6 @@
 # CMakeLists.txt file for building ROOT sql/pgsql package
 ############################################################################
 
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(net/net)
-
 include_directories(${POSTGRESQL_INCLUDE_DIR})
 
 ROOT_GENERATE_DICTIONARY(G__PgSQL *.h MODULE RPgSQL LINKDEF LinkDef.h)

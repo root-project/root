@@ -1,9 +1,6 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT core/utils package
 ############################################################################
-ROOT_USE_PACKAGE(core/metautils)
-ROOT_USE_PACKAGE(io/io)
-
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/../metautils/src ${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
 if(NOT MSVC)
@@ -114,6 +111,7 @@ foreach(file  Interpreter/DynamicExprInfo.h
               Interpreter/Interpreter.h
               Interpreter/InvocationOptions.h
               Interpreter/RuntimeException.h
+              Interpreter/RuntimePrintValue.h
               Interpreter/RuntimeUniverse.h
               Interpreter/Value.h)
   get_filename_component(path ${file} PATH)

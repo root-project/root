@@ -245,8 +245,8 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 
 void RooNumIntConfig::setEpsAbs(Double_t newEpsAbs)
 {
-  if (newEpsAbs<=0) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsAbs: ERROR: target absolute precision must be greater than zero" << endl ;
+  if (newEpsAbs<0) {
+    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsAbs: ERROR: target absolute precision must be greater or equal than zero" << endl ;
     return ;
   }
   _epsAbs = newEpsAbs ;
@@ -275,8 +275,8 @@ RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) cons
 
 void RooNumIntConfig::setEpsRel(Double_t newEpsRel) 
 {
-  if (newEpsRel<=0) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater than zero" << endl ;
+  if (newEpsRel<0) {
+    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater or equal than zero" << endl ;
     return ;
   }
   _epsRel = newEpsRel ;

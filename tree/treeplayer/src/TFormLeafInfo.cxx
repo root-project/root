@@ -9,37 +9,38 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//
-// TTreeFormula now relies on a variety of TFormLeafInfo classes to handle the
-// reading of the information.  Here is the list of theses classes:
-//   TFormLeafInfo
-//   TFormLeafInfoDirect
-//   TFormLeafInfoNumerical
-//   TFormLeafInfoClones
-//   TFormLeafInfoCollection
-//   TFormLeafInfoPointer
-//   TFormLeafInfoMethod
-//   TFormLeafInfoMultiVarDim
-//   TFormLeafInfoMultiVarDimDirect
-//   TFormLeafInfoCast
-//
-// The following method are available from the TFormLeafInfo interface:
-//
-//  AddOffset(Int_t offset, TStreamerElement* element)
-//  GetCounterValue(TLeaf* leaf) : return the size of the array pointed to.
-//  GetObjectAddress(TLeafElement* leaf) : Returns the the location of the object pointed to.
-//  GetMultiplicity() : Returns info on the variability of the number of elements
-//  GetNdata(TLeaf* leaf) : Returns the number of elements
-//  GetNdata() : Used by GetNdata(TLeaf* leaf)
-//  GetValue(TLeaf *leaf, Int_t instance = 0) : Return the value
-//  GetValuePointer(TLeaf *leaf, Int_t instance = 0) : Returns the address of the value
-//  GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) : Returns the address of the value of 'this' LeafInfo
-//  IsString()
-//  ReadValue(char *where, Int_t instance = 0) : Internal function to interpret the location 'where'
-//  Update() : react to the possible loading of a shared library.
-//
-//
+/** \class TFormLeafInfo
+This class is a small helper class to implement reading a data member
+on an object stored in a TTree.
+
+TTreeFormula now relies on a variety of TFormLeafInfo classes to handle the
+reading of the information. Here is the list of theses classes:
+  - TFormLeafInfo
+  - TFormLeafInfoDirect
+  - TFormLeafInfoNumerical
+  - TFormLeafInfoClones
+  - TFormLeafInfoCollection
+  - TFormLeafInfoPointer
+  - TFormLeafInfoMethod
+  - TFormLeafInfoMultiVarDim
+  - TFormLeafInfoMultiVarDimDirect
+  - TFormLeafInfoCast
+
+The following method are available from the TFormLeafInfo interface:
+
+ -  AddOffset(Int_t offset, TStreamerElement* element)
+ -  GetCounterValue(TLeaf* leaf) : return the size of the array pointed to.
+ -  GetObjectAddress(TLeafElement* leaf) : Returns the the location of the object pointed to.
+ -  GetMultiplicity() : Returns info on the variability of the number of elements
+ -  GetNdata(TLeaf* leaf) : Returns the number of elements
+ -  GetNdata() : Used by GetNdata(TLeaf* leaf)
+ -  GetValue(TLeaf *leaf, Int_t instance = 0) : Return the value
+ -  GetValuePointer(TLeaf *leaf, Int_t instance = 0) : Returns the address of the value
+ -  GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) : Returns the address of the value of 'this' LeafInfo
+ -  IsString()
+ -  ReadValue(char *where, Int_t instance = 0) : Internal function to interpret the location 'where'
+ -  Update() : react to the possible loading of a shared library.
+*/
 
 #include "TFormLeafInfo.h"
 
@@ -65,11 +66,6 @@
    template Double_t CLASS::GetValueImpl<Double_t>(TLeaf*, Int_t); \
    template Long64_t CLASS::GetValueImpl<Long64_t>(TLeaf*, Int_t); \
    template LongDouble_t CLASS::GetValueImpl<LongDouble_t>(TLeaf*, Int_t)  // no semicolon
-
-//______________________________________________________________________________
-//
-// This class is a small helper class to implement reading a data member
-// on an object stored in a TTree.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -141,7 +137,6 @@ TFormLeafInfo::~TFormLeafInfo()
    delete fNext;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Increase the offset of this element.  This intended to be the offset
 /// from the start of the object to which the data member belongs.
@@ -170,7 +165,6 @@ Int_t TFormLeafInfo::GetArrayLength()
    }
    return len;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the class of the underlying data.
@@ -311,10 +305,10 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t& instance)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reminder of the meaning of fMultiplicity:
-///  -1: Only one or 0 element per entry but contains variable length array!
-///   0: Only one element per entry, no variable length array
-///   1: loop over the elements of a variable length array
-///   2: loop over elements of fixed length array (nData is the same for all entry)
+///  - -1: Only one or 0 element per entry but contains variable length array!
+///  -  0: Only one element per entry, no variable length array
+///  -  1: loop over the elements of a variable length array
+///  -  2: loop over elements of fixed length array (nData is the same for all entry)
 
 Int_t TFormLeafInfo::GetMultiplicity()
 {
@@ -505,7 +499,6 @@ void TFormLeafInfo::UpdateSizes(TArrayI *garr)
 {
    if (fNext) fNext->UpdateSizes(garr);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// We reloading all cached information in case the underlying class
@@ -938,10 +931,10 @@ T TFormLeafInfo::ReadValueImpl(char *thisobj, Int_t instance)
    }
 }
 
-//______________________________________________________________________________
-//
-// TFormLeafInfoDirect is a small helper class to implement reading a data
-// member on an object stored in a TTree.
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoDirect
+/// A small helper class to implement reading a data
+/// member on an object stored in a TTree.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -980,7 +973,6 @@ T TFormLeafInfoDirect::GetValueImpl(TLeaf *leaf, Int_t instance)
 
 INSTANTIATE_GETVAL(TFormLeafInfoDirect);
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the address of the underlying value.
 
@@ -1001,10 +993,9 @@ void* TFormLeafInfoDirect::GetLocalValuePointer(char *thisobj, Int_t instance)
    return TFormLeafInfo::GetLocalValuePointer(thisobj,instance);
 }
 
-//______________________________________________________________________________
-//
-// TFormLeafInfoNumerical is a small helper class to implement reading a
-// numerical value inside a collection
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoNumerical
+/// A small helper class to implement reading a numerical value inside a collection
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -1082,6 +1073,7 @@ TFormLeafInfoNumerical::~TFormLeafInfoNumerical()
 {
    delete fElement;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the underlying data is a string
 
@@ -1113,10 +1105,10 @@ namespace {
    }
 }
 
-//______________________________________________________________________________
-//
-// TFormLeafInfoClones is a small helper class to implement reading a data member
-// on a TClonesArray object stored in a TTree.
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoClones
+/// A small helper class to implement reading a data member
+/// on a TClonesArray object stored in a TTree.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -1330,10 +1322,10 @@ void * TFormLeafInfoClones::GetValuePointer(char *where, Int_t instance)
    return clones;
 }
 
-//______________________________________________________________________________
-//
-// TFormLeafInfoCollectionObject is a small helper class to implement reading a data member
-// on a TClonesArray object stored in a TTree.
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoCollectionObject
+/// A small helper class to implement reading a data member
+/// on a TClonesArray object stored in a TTree.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -1429,7 +1421,6 @@ T TFormLeafInfoCollectionObject::GetValueImpl(TLeaf *leaf, Int_t instance)
 
 INSTANTIATE_GETVAL(TFormLeafInfoCollectionObject);
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the pointer to the clonesArray
 
@@ -1453,10 +1444,10 @@ void * TFormLeafInfoCollectionObject::GetValuePointer(char *where, Int_t instanc
    return where;
 }
 
-//______________________________________________________________________________
-//
-// TFormLeafInfoCollection is a small helper class to implement reading a data
-// member on a generic collection object stored in a TTree.
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoCollection
+/// A small helper class to implement reading a data
+/// member on a generic collection object stored in a TTree.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cosntructor.
@@ -1816,11 +1807,9 @@ void * TFormLeafInfoCollection::GetValuePointer(char *where, Int_t instance)
    return collection;
 }
 
-//______________________________________________________________________________
-//
-// TFormLeafInfoCollectionSize is used to return the size of a collection
-//
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoCollectionSize
+/// Used to return the size of a collection
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -1977,11 +1966,10 @@ Double_t  TFormLeafInfoCollectionSize::ReadValue(char *where, Int_t /* instance 
    return (Int_t)fCollProxy->Size();
 }
 
-//______________________________________________________________________________
-//
-// TFormLeafInfoPointer is a small helper class to implement reading a data
-// member by following a pointer inside a branch of TTree.
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoPointer
+/// A small helper class to implement reading a data
+/// member by following a pointer inside a branch of TTree.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -2000,7 +1988,6 @@ TFormLeafInfo* TFormLeafInfoPointer::DeepCopy() const
 {
    return new TFormLeafInfoPointer(*this);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the value of the underlying pointer data member
@@ -2085,12 +2072,10 @@ T  TFormLeafInfoPointer::GetValueImpl(TLeaf *leaf, Int_t instance)
 INSTANTIATE_GETVAL(TFormLeafInfoPointer);
 INSTANTIATE_READVAL(TFormLeafInfoPointer);
 
-
-
-//______________________________________________________________________________
-//
-// TFormLeafInfoMethod is a small helper class to implement executing a method
-// of an object stored in a TTree
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoMethod
+/// Asmall helper class to implement executing a method
+/// of an object stored in a TTree
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -2344,13 +2329,12 @@ T TFormLeafInfoMethod::ReadValueImpl(char *where, Int_t instance)
 
 INSTANTIATE_READVAL(TFormLeafInfoMethod);
 
-
-//______________________________________________________________________________
-//
-// TFormLeafInfoMultiVarDim is a helper class to implement reading a
-// data member on a variable size array inside a TClonesArray object stored in
-// a TTree.  This is the version used when the data member is inside a
-// non-split object.
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoMultiVarDim
+/// A helper class to implement reading a
+/// data member on a variable size array inside a TClonesArray object stored in
+/// a TTree.  This is the version used when the data member is inside a
+/// non-split object.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -2586,12 +2570,11 @@ void TFormLeafInfoMultiVarDim::UpdateSizes(TArrayI *garr)
    }
 }
 
-//______________________________________________________________________________
-//
-// TFormLeafInfoMultiVarDimDirect is a small helper class to implement reading
-// a data member on a variable size array inside a TClonesArray object stored
-// in a TTree.  This is the version used for split access
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoMultiVarDimDirect
+/// A small helper class to implement reading
+/// a data member on a variable size array inside a TClonesArray object stored
+/// in a TTree.  This is the version used for split access
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy the object and all its content.
@@ -2612,7 +2595,6 @@ T TFormLeafInfoMultiVarDimDirect::GetValueImpl(TLeaf *leaf, Int_t instance)
 
 INSTANTIATE_GETVAL(TFormLeafInfoMultiVarDimDirect);
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Not implemented.
 
@@ -2622,11 +2604,11 @@ Double_t TFormLeafInfoMultiVarDimDirect::ReadValue(char * /*where*/, Int_t /*ins
    return 0;
 }
 
-//______________________________________________________________________________
-//
-// TFormLeafInfoMultiVarDimCollection is a small helper class to implement reading
-// a data member on a variable size array inside a TClonesArray object stored
-// in a TTree.  This is the version used for split access
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoMultiVarDimCollection
+/// A small helper class to implement reading
+/// a data member on a variable size array inside a TClonesArray object stored
+/// in a TTree.  This is the version used for split access
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -2732,11 +2714,11 @@ T TFormLeafInfoMultiVarDimCollection::ReadValueImpl(char *where, Int_t instance)
 INSTANTIATE_READVAL(TFormLeafInfoMultiVarDimCollection);
 
 
-//______________________________________________________________________________
-//
-// TFormLeafInfoMultiVarDimClones is a small helper class to implement reading
-// a data member on a variable size array inside a TClonesArray object stored
-// in a TTree.  This is the version used for split access
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoMultiVarDimClones
+/// A small helper class to implement reading
+/// a data member on a variable size array inside a TClonesArray object stored
+/// in a TTree.  This is the version used for split access
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -2844,12 +2826,10 @@ T TFormLeafInfoMultiVarDimClones::ReadValueImpl(char *where, Int_t instance)
 
 INSTANTIATE_READVAL(TFormLeafInfoMultiVarDimClones);
 
-
-//______________________________________________________________________________
-//
-// TFormLeafInfoCast is a small helper class to implement casting an object to
-// a different type (equivalent to dynamic_cast)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoCast
+/// A small helper class to implement casting an object to
+/// a different type (equivalent to dynamic_cast)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -2962,11 +2942,10 @@ Bool_t TFormLeafInfoCast::Update()
    return TFormLeafInfo::Update();
 }
 
-//______________________________________________________________________________
-//
-// TFormLeafTTree is a small helper class to implement reading
-// from the containing TTree object itself.
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFormLeafInfoTTree
+/// A small helper class to implement reading
+/// from the containing TTree object itself.
 
 TFormLeafInfoTTree::TFormLeafInfoTTree(TTree *tree, const char *alias, TTree *current) :
 TFormLeafInfo( TTree::Class(), 0, 0 ), fTree(tree),fCurrent(current),fAlias(alias)

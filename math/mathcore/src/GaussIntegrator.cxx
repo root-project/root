@@ -20,17 +20,16 @@ bool GaussIntegrator::fgAbsValue = false;
 
    GaussIntegrator::GaussIntegrator(double epsabs, double epsrel)
 {
-// Default Constructor. If no relative espsilon is specified assume is equal to the absolute one
+// Default Constructor. If  tolerances are not given use default values from  ROOT::Math::IntegratorOneDimOptions
 
-   if (epsabs <= 0 ) {
-      fEpsAbs = ROOT::Math::IntegratorOneDimOptions::DefaultAbsTolerance();
-      fEpsRel = ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance();
+   if (epsabs < 0 ) fEpsAbs = ROOT::Math::IntegratorOneDimOptions::DefaultAbsTolerance();
+   if (epsrel < 0 || (epsabs == 0 && epsrel == 0))  fEpsRel = ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance();
+   if (std::max(fEpsRel,fEpsAbs)  <=0 ) {
+      fEpsRel = 1.E-9;
+      fEpsAbs = 1.E-9;
+      MATH_WARN_MSG("ROOT::Math::GausIntegrator", "Invalid tolerance given, use values of 1.E-9"); 
    }
-   else {
-      fEpsAbs = epsabs;
-      if (epsrel <= 0 ) fEpsRel = epsabs;   // use relative tiolerance = to abs if it is given only one
-      else fEpsRel = epsrel;
-   }
+
    fLastResult = fLastError = 0;
    fUsedOnce = false;
    fFunction = 0;

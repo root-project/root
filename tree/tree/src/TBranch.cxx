@@ -58,20 +58,19 @@ Int_t TBranch::fgCount = 0;
   #define R__likely(expr) expr
 #endif
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TTree is a list of TBranches                                       //
-//                                                                      //
-// A TBranch supports:                                                  //
-//   - The list of TLeaf describing this branch.                        //
-//   - The list of TBasket (branch buffers).                            //
-//                                                                      //
-//       See TBranch structure in TTree.                                //
-//                                                                      //
-// See also specialized branches:                                       //
-//     TBranchObject in case the branch is one object                   //
-//     TBranchClones in case the branch is an array of clone objects    //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBranch
+A TTree is a list of TBranches
+
+A TBranch supports:
+ - The list of TLeaf describing this branch.
+ - The list of TBasket (branch buffers).
+
+See TBranch structure in TTree.
+
+See also specialized branches:
+ - TBranchObject in case the branch is one object
+ - TBranchClones in case the branch is an array of clone objects
+*/
 
 ClassImp(TBranch)
 
@@ -150,16 +149,16 @@ TBranch::TBranch()
 ///            - O : [the letter 'o', not a zero] a boolean (Bool_t)
 ///
 ///         Arrays of values are supported with the following syntax:
-///         If leaf name has the form var[nelem], where nelem is alphanumeric, then
-///            if nelem is a leaf name, it is used as the variable size of the array,
-///            otherwise return 0.
-///            The leaf referred to by nelem **MUST** be an int (/I),
-///         If leaf name has the form var[nelem], where nelem is a non-negative integers, then
-///            it is used as the fixed size of the array.
-///         If leaf name has the form of a multi dimension array (e.g. var[nelem][nelem2])
-///            where nelem and nelem2 are non-negative integers) then
-///            it is used as a 2 dimensional array of fixed size.
-///         Any of other form is not supported.
+///         - If leaf name has the form var[nelem], where nelem is alphanumeric, then
+///              if nelem is a leaf name, it is used as the variable size of the array,
+///              otherwise return 0.
+///              The leaf referred to by nelem **MUST** be an int (/I),
+///         - If leaf name has the form var[nelem], where nelem is a non-negative integers, then
+///              it is used as the fixed size of the array.
+///         - If leaf name has the form of a multi dimension array (e.g. var[nelem][nelem2])
+///              where nelem and nelem2 are non-negative integers) then
+///              it is used as a 2 dimensional array of fixed size.
+///         - Any of other form is not supported.
 ///
 ///    Note that the TTree will assume that all the item are contiguous in memory.
 ///    On some platform, this is not always true of the member of a struct or a class,
@@ -889,7 +888,7 @@ Int_t TBranch::FillEntryBuffer(TBasket* basket, TBuffer* buf, Int_t& lnew)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Find the immediate sub-branch with passed name.
+/// Find the immediate sub-branch with passed name.
 
 TBranch* TBranch::FindBranch(const char* name)
 {
@@ -935,7 +934,7 @@ TBranch* TBranch::FindBranch(const char* name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Find the leaf corresponding to the name 'searchname'.
+/// Find the leaf corresponding to the name 'searchname'.
 
 TLeaf* TBranch::FindLeaf(const char* searchname)
 {
@@ -987,7 +986,6 @@ TLeaf* TBranch::FindLeaf(const char* searchname)
    }
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Flush to disk all the baskets of this branch and any of subbranches.
@@ -1078,7 +1076,7 @@ Int_t TBranch::FlushOneBasket(UInt_t ibasket)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///         Return pointer to basket basketnumber in this Branch
+/// Return pointer to basket basketnumber in this Branch
 
 TBasket* TBranch::GetBasket(Int_t basketnumber)
 {
@@ -1140,7 +1138,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///         Return address of basket in the file
+/// Return address of basket in the file
 
 Long64_t TBranch::GetBasketSeek(Int_t basketnumber) const
 {
@@ -1196,7 +1194,6 @@ const char* TBranch::GetIconName() const
 /// If an I/O error occurs, the function returns -1.
 ///
 /// See IMPORTANT REMARKS in TTree::GetEntry.
-///
 
 Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
 {
@@ -1457,7 +1454,7 @@ TBasket* TBranch::GetFreshBasket()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///           Return pointer to the 1st Leaf named name in thisBranch
+/// Return pointer to the 1st Leaf named name in thisBranch
 
 TLeaf* TBranch::GetLeaf(const char* name) const
 {
@@ -1470,6 +1467,7 @@ TLeaf* TBranch::GetLeaf(const char* name) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get real file name
 
 TString TBranch::GetRealFileName() const
 {
@@ -1870,8 +1868,8 @@ void TBranch::FillLeavesImpl(TBuffer& b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  refresh this branch using new information in b
-///  This function is called by TTree::Refresh
+/// Refresh this branch using new information in b
+/// This function is called by TTree::Refresh
 
 void TBranch::Refresh(TBranch* b)
 {
@@ -1919,9 +1917,8 @@ void TBranch::Refresh(TBranch* b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset a Branch.
 ///
-/// Existing buffers are deleted.
-/// Entries, max and min are reset.
-///
+/// - Existing buffers are deleted.
+/// - Entries, max and min are reset.
 
 void TBranch::Reset(Option_t*)
 {
@@ -1958,13 +1955,11 @@ void TBranch::Reset(Option_t*)
    fNBaskets = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset a Branch.
 ///
-/// Existing buffers are deleted.
-/// Entries, max and min are reset.
-///
+/// - Existing buffers are deleted.
+/// - Entries, max and min are reset.
 
 void TBranch::ResetAfterMerge(TFileMergeInfo *)
 {
@@ -2109,10 +2104,9 @@ void TBranch::SetBasketSize(Int_t buffsize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Set address of this branch directly from a TBuffer to avoid streaming.
+/// Set address of this branch directly from a TBuffer to avoid streaming.
 ///
 /// Note: We do not take ownership of the buffer.
-///
 
 void TBranch::SetBufferAddress(TBuffer* buf)
 {
@@ -2130,6 +2124,7 @@ void TBranch::SetBufferAddress(TBuffer* buf)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set compression algorithm.
 
 void TBranch::SetCompressionAlgorithm(Int_t algorithm)
 {
@@ -2149,6 +2144,7 @@ void TBranch::SetCompressionAlgorithm(Int_t algorithm)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set compression level.
 
 void TBranch::SetCompressionLevel(Int_t level)
 {
@@ -2170,6 +2166,7 @@ void TBranch::SetCompressionLevel(Int_t level)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set compression settings.
 
 void TBranch::SetCompressionSettings(Int_t settings)
 {
@@ -2630,7 +2627,7 @@ void TBranch::SetFirstEntry(Long64_t entry)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- If the branch address is not set,  we set all addresses starting with
+/// If the branch address is not set,  we set all addresses starting with
 /// the top level parent branch.
 
 void TBranch::SetupAddresses()

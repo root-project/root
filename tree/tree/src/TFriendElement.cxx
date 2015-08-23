@@ -9,21 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFriendElement                                                       //
-//                                                                      //
-// A TFriendElement TF describes a TTree object TF in a file.           //
-// When a TFriendElement TF is added to the the list of friends of an   //
-// existing TTree T, any variable from TF can be referenced in a query  //
-// to T.                                                                //
-//                                                                      //
-// To add a TFriendElement to an existing TTree T, do:                  //
-//       T.AddFriend("friendTreename","friendTreeFile");                //
-//                                                                      //
-//  See TTree::AddFriend for more information.                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TFriendElement
+A TFriendElement TF describes a TTree object TF in a file.
+When a TFriendElement TF is added to the the list of friends of an
+existing TTree T, any variable from TF can be referenced in a query
+to T.
+
+To add a TFriendElement to an existing TTree T, do:
+
+    T.AddFriend("friendTreename","friendTreeFile");
+
+See TTree::AddFriend for more information.
+*/
 
 #include "TTree.h"
 #include "TFriendElement.h"
@@ -33,8 +30,7 @@
 ClassImp(TFriendElement)
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Default constructor for a friend element*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*        =======================================
+/// Default constructor for a friend element.
 
 TFriendElement::TFriendElement() : TNamed()
 {
@@ -45,8 +41,7 @@ TFriendElement::TFriendElement() : TNamed()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*-*Create a friend element*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                      ======================
+/// Create a friend element.
 ///
 /// If treename is of the form "a=b", an alias called "a" is created for
 /// treename = "b" by default the alias name is the name of the tree.
@@ -73,8 +68,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, const char *fi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*-*Create a friend element*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                      ======================
+/// Create a friend element.
 ///
 /// If treename is of the form "a=b", an alias called "a" is created for
 /// treename = "b" by default the alias name is the name of the tree.
@@ -134,6 +128,8 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
          // the filename.
          SetTitle("");
       }
+   } else {
+      MakeZombie(); // ROOT-7007
    }
    if (alias && strlen(alias)) {
       char *temp = Compress(alias);
@@ -186,7 +182,9 @@ TFriendElement::~TFriendElement()
 TTree *TFriendElement::Connect()
 {
    GetFile();
-   return GetTree();
+   auto treePtr = GetTree();
+   if (!treePtr) MakeZombie(); // ROOT-7007
+   return treePtr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +204,6 @@ TTree *TFriendElement::DisConnect()
 TFile *TFriendElement::GetFile()
 {
    if (fFile || IsZombie()) return fFile;
-
 
    if (strlen(GetTitle())) {
       TDirectory::TContext ctxt;

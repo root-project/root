@@ -70,6 +70,7 @@
 #include "TPluginManager.h"
 #include "TObjString.h"
 #include "TTreeProxyGenerator.h"
+#include "TTreeReaderGenerator.h"
 #include "TTreeIndex.h"
 #include "TChainIndex.h"
 #include "TRefProxy.h"
@@ -1897,6 +1898,58 @@ Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
 
    return 0;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Generate skeleton selector class for this tree.
+///
+/// The following files are produced: classname.h and classname.C.
+/// If classname is 0, the selector will be called "nameoftree".
+/// The option can be used to specify the branches that will have a data member.
+///    - If option is empty, readers will be generated for each leaf.
+///    - If option is "@", readers will be generated for the topmost branches.
+///    - Individual branches can also be picked by their name:
+///       - "X" generates readers for leaves of X.
+///       - "@X" generates a reader for X as a whole.
+///       - "@X;Y" generates a reader for X as a whole and also readers for the
+///         leaves of Y.
+///    - For further examples see the figure below.
+///
+/// \image html images\ttree_makeselector_option_examples.png
+///
+/// The generated code in classname.h includes the following:
+///    - Identification of the original Tree and Input file name
+///    - Definition of selector class (data and functions)
+///    - The following class functions:
+///       - constructor and destructor
+///       - void    Begin(TTree *tree)
+///       - void    SlaveBegin(TTree *tree)
+///       - void    Init(TTree *tree)
+///       - Bool_t  Notify()
+///       - Bool_t  Process(Long64_t entry)
+///       - void    Terminate()
+///       - void    SlaveTerminate()
+///
+/// The selector derives from TSelector.
+/// The generated code in classname.C includes empty functions defined above.
+///
+/// To use this function:
+///    - connect your Tree file (eg: TFile f("myfile.root");)
+///    - T->MakeSelector("myselect");
+/// where T is the name of the Tree in file myfile.root
+/// and myselect.h, myselect.C the name of the files created by this function.
+/// In a ROOT session, you can do:
+///    root > T->Process("myselect.C")
+
+Int_t TTreePlayer::MakeReader(const char *classname, Option_t *option)
+{
+   if (!classname) classname = fTree->GetName();   
+
+   TTreeReaderGenerator gsr(fTree, classname, option);
+
+   return 0;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to the Principal Components Analysis class.

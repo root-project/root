@@ -2,9 +2,6 @@
 # CMakeLists.txt file for building ROOT proof/proofbench package
 ############################################################################
 
-ROOT_USE_PACKAGE(proof/proof)
-ROOT_USE_PACKAGE(proof/proofplayer)
-
 ROOT_GLOB_HEADERS(headers inc/TProof*.h)
 ROOT_GLOB_SOURCES(sources src/TProof*.cxx)
 

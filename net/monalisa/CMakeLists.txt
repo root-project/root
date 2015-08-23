@@ -3,9 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(core)
-ROOT_USE_PACKAGE(net/net)
-
 include_directories(${MONALISA_INCLUDE_DIR})
 #set_directory_properties(PROPERTIES COMPILE_DEFINITIONS R__KRB5INIT="${KRB5_INIT}")
 

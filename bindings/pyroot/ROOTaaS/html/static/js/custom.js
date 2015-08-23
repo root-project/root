@@ -34,3 +34,10 @@ require(['base/js/namespace', 'base/js/events', 'codemirror/mode/clike/clike'],
             }
         });
     });
+
+// Terminal button
+$(document).ready(function() {
+    if (document.title == "Home") {
+        $('div#header-container').append("<a href='terminals/1' class='btn btn-default btn-sm navbar-btn pull-right' style='margin-right: 4px; margin-left: 2px;'>Terminal</a>");
+    }
+});

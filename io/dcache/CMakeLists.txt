@@ -2,8 +2,6 @@
 # CMakeLists.txt file for building ROOT io/dcache package
 ############################################################################
 
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(net/net)
 include_directories(${DCAP_INCLUDE_DIRS})
 add_definitions(-pthread)
 

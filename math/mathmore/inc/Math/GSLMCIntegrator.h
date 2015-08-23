@@ -111,14 +111,14 @@ namespace Math {
 
       @param type type of integration. The possible types are defined in the MCIntegration::Type enumeration
                                         Default is VEGAS
-      @param absTol desired absolute Error
-      @param relTol desired relative Error
+      @param absTol desired absolute Error  (this parameter is actually not used and it can be ignored. The tolerance is fixed by the number of given calls)
+      @param relTol desired relative Error  (this parameter is actually not used and it can be ignored. The tolerance is fixed by the number of given calls)
       @param calls maximum number of function calls
 
       NOTE: When the default values are used , the options are taken from teh static method of ROOT::Math::IntegratorMultiDimOptions
       */
       explicit
-      GSLMCIntegrator(MCIntegration::Type type = MCIntegration::kVEGAS, double absTol = 0, double relTol = 0, unsigned int calls = 0 );
+      GSLMCIntegrator(MCIntegration::Type type = MCIntegration::kVEGAS, double absTol = -1, double relTol = -1, unsigned int calls = 0 );
 
       /** constructor of GSL MCIntegrator. VEGAS MC is set as default integration type
 

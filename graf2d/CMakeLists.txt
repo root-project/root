@@ -1,6 +1,3 @@
-ROOT_USE_PACKAGE(graf2d/gpad)
-ROOT_USE_PACKAGE(graf2d/graf)
-
 if(builtin_freetype)
   add_subdirectory(freetype)
 endif()

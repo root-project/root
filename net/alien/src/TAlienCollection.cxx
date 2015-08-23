@@ -1333,9 +1333,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
    filegroups->Reset();
    UInt_t groupcnt = 0;
    while ((nextgroup = (TMap *) filegroups->Next())) {
-      Bool_t isonline;
       Bool_t isselected;
-      isonline = kTRUE;
       isselected = kFALSE;
       TMap *attributes;
       TIterator *nextfile = nextgroup->MakeIterator();
@@ -1348,9 +1346,6 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
                isselected = kTRUE;
             }
 
-            if (!IsOnline(attributes->GetName())) {
-               isonline = kFALSE;
-            }
          }
       }
       if ((!selected) || isselected) {

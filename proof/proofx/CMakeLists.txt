@@ -4,9 +4,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(proof/proofd)
-ROOT_USE_PACKAGE(proof/proofplayer)
-
 if(WIN32)
   set(headers TXProofMgr.h TXSlave.h TXSocket.h TXSocketHandler.h TXHandler.h)
   set(sources TXProofMgr.cxx TXSlave.cxx TXSocket.cxx TXSocketHandler.cxx TXHandler.cxx

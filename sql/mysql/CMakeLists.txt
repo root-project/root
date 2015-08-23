@@ -2,9 +2,6 @@
 # CMakeLists.txt file for building ROOT sql/mysql package
 ############################################################################
 
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(net/net)
-
 include_directories(${MYSQL_INCLUDE_DIR})
 
 ROOT_GENERATE_DICTIONARY(G__MySQL *.h MODULE RMySQL LINKDEF LinkDef.h)

@@ -9,30 +9,29 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBackCompFitter                                                      //
-//                                                                      //
-// Backward compatible implementation of TVirtualFitter using the       //
-// class ROOT::Fit::Fitter. This class is created after fitting an      //
-// histogram (TH1), TGraph or TTree and provides in addition to the     //
-// methods of the TVirtualFitter hooks to access the fit result class   //
-// (ROOT::Fit::FitResult), the fit configuration                        //
-// (ROOT::Fit::FitConfig) or the fit data (ROOT::Fit::FitData) using    //
-/*
- <pre>
- TBackCompFitter * fitter = (TBackCompFitter *) TVirtualFitter::GetFitter();
- ROOT::Fit::FitResult & result = fitter->GetFitResult();
- result.Print(std::cout);
- </pre>
-*/
-// Methods for getting the confidence level or contours are also        //
-// provided. Note that after a new calls to TH1::Fit (or similar) the   //
-// class will be deleted and all reference to the FitResult, FitConfig  //
-// or minimizer will be invalid. One could eventually copying  the      //
-// class before issuing a new fit to avoid deleting this information.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/** \class TBackCompFitter
+    \brief Backward compatible implementation of TVirtualFitter
+
+Backward compatible implementation of TVirtualFitter using the
+class ROOT::Fit::Fitter. This class is created after fitting an
+histogram (TH1), TGraph or TTree and provides in addition to the
+methods of the TVirtualFitter hooks to access the fit result class
+(ROOT::Fit::FitResult), the fit configuration
+(ROOT::Fit::FitConfig) or the fit data (ROOT::Fit::FitData) using
+
+~~~~~~~~{.cpp}
+    TBackCompFitter * fitter = (TBackCompFitter *) TVirtualFitter::GetFitter();
+    ROOT::Fit::FitResult & result = fitter->GetFitResult();
+    result.Print(std::cout);
+~~~~~~~~
+
+Methods for getting the confidence level or contours are also
+provided. Note that after a new calls to TH1::Fit (or similar) the
+class will be deleted and all reference to the FitResult, FitConfig
+or minimizer will be invalid. One could eventually copying the
+class before issuing a new fit to avoid deleting this information.
+*///////////////////////////////////////////////////////////////////////////////
 
 #include "TROOT.h"
 #include "TBackCompFitter.h"
@@ -74,7 +73,7 @@ ClassImp(TBackCompFitter);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructur needed by TVirtualFitter interface. Same behavior as default constructor.
+/// Constructor needed by TVirtualFitter interface. Same behavior as default constructor.
 /// initialize setting name and the global pointer
 
 TBackCompFitter::TBackCompFitter( ) :
@@ -86,7 +85,7 @@ TBackCompFitter::TBackCompFitter( ) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor used after having fit using directly ROOT::Fit::Fitter
+/// Constructor used after having fit using directly ROOT::Fit::Fitter
 /// will create a dummy fitter copying configuration and parameter settings
 
 TBackCompFitter::TBackCompFitter(const std::shared_ptr<ROOT::Fit::Fitter> & fitter, const std::shared_ptr<ROOT::Fit::FitData> & data) :
@@ -100,7 +99,7 @@ TBackCompFitter::TBackCompFitter(const std::shared_ptr<ROOT::Fit::Fitter> & fitt
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// destructor - delete the managed objects
+/// Destructor - delete the managed objects
 
 TBackCompFitter::~TBackCompFitter() {
    if (fMinimizer) delete fMinimizer;
@@ -109,8 +108,8 @@ TBackCompFitter::~TBackCompFitter() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// do chisquare calculations in case of likelihood fits
-/// do evaluation a the minimum only
+/// Do chisquare calculations in case of likelihood fits
+/// Do evaluation a the minimum only
 
 Double_t TBackCompFitter::Chisquare(Int_t npar, Double_t *params) const {
    const std::vector<double> & minpar = fFitter->Result().Parameters();
@@ -127,14 +126,14 @@ Double_t TBackCompFitter::Chisquare(Int_t npar, Double_t *params) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// clear resources for consecutive fits
+/// Clear resources for consecutive fits
 
 void TBackCompFitter::Clear(Option_t*) {
    // need to do something here ??? to be seen
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute the command (Fortran Minuit compatible interface)
+/// Execute the command (Fortran Minuit compatible interface)
 
 Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t nargs) {
 #ifdef DEBUG
@@ -302,7 +301,7 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// check if ipar is a valid parameter index
+/// Check if ipar is a valid parameter index
 
 bool TBackCompFitter::ValidParameterIndex(int ipar) const  {
    int nps  = fFitter->Config().ParamsSettings().size();
@@ -315,8 +314,7 @@ bool TBackCompFitter::ValidParameterIndex(int ipar) const  {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// fix the paramter
-///   std::cout<<"FixParameter"<<std::endl;
+/// Fix the parameter
 
 void TBackCompFitter::FixParameter(Int_t ipar) {
    if (ValidParameterIndex(ipar) )
@@ -324,15 +322,15 @@ void TBackCompFitter::FixParameter(Int_t ipar) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Computes point-by-point confidence intervals for the fitted function
-///Parameters:
-///n - number of points
-///ndim - dimensions of points
-///x - points, at which to compute the intervals, for ndim > 1
-///    should be in order: (x0,y0, x1, y1, ... xn, yn)
-///ci - computed intervals are returned in this array
-///cl - confidence level, default=0.95
-///NOTE, that the intervals are approximate for nonlinear(in parameters) models
+/// Computes point-by-point confidence intervals for the fitted function.
+/// \param n    number of points
+/// \param ndim dimensions of points
+/// \param x    points, at which to compute the intervals, for ndim > 1
+///             should be in order: (x0,y0, x1, y1, ... xn, yn)
+/// \param ci   computed intervals are returned in this array
+/// \param cl   confidence level, default=0.95
+///
+/// NOTE, that the intervals are approximate for nonlinear(in parameters) models
 
 void TBackCompFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl)
 {
@@ -345,26 +343,29 @@ void TBackCompFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Computes confidence intervals at level cl. Default is 0.95
-///The TObject parameter can be a TGraphErrors, a TGraph2DErrors or a TH1,2,3.
-///For Graphs, confidence intervals are computed for each point,
-///the value of the graph at that point is set to the function value at that
-///point, and the graph y-errors (or z-errors) are set to the value of
-///the confidence interval at that point.
-///For Histograms, confidence intervals are computed for each bin center
-///The bin content of this bin is then set to the function value at the bin
-///center, and the bin error is set to the confidence interval value.
-///NOTE: confidence intervals are approximate for nonlinear models!
+/// Computes confidence intervals at level cl. Default is 0.95
+/// The TObject parameter can be a TGraphErrors, a TGraph2DErrors or a TH1,2,3.
+/// For Graphs, confidence intervals are computed for each point,
+/// the value of the graph at that point is set to the function value at that
+/// point, and the graph y-errors (or z-errors) are set to the value of
+/// the confidence interval at that point.
+/// For Histograms, confidence intervals are computed for each bin center
+/// The bin content of this bin is then set to the function value at the bin
+/// center, and the bin error is set to the confidence interval value.
+//
+/// NOTE: confidence intervals are approximate for nonlinear models!
 ///
-///Allowed combinations:
-///Fitted object               Passed object
-///TGraph                      TGraphErrors, TH1
-///TGraphErrors, AsymmErrors   TGraphErrors, TH1
-///TH1                         TGraphErrors, TH1
-///TGraph2D                    TGraph2DErrors, TH2
-///TGraph2DErrors              TGraph2DErrors, TH2
-///TH2                         TGraph2DErrors, TH2
-///TH3                         TH3
+/// Allowed combinations:
+///
+/// Fitted object             | Passed object
+/// --------------------------|------------------
+/// TGraph                    | TGraphErrors, TH1
+/// TGraphErrors, AsymmErrors | TGraphErrors, TH1
+/// TH1                       | TGraphErrors, TH1
+/// TGraph2D                  | TGraph2DErrors, TH2
+/// TGraph2DErrors            | TGraph2DErrors, TH2
+/// TH2                       | TGraph2DErrors, TH2
+/// TH3                       | TH3
 
 void TBackCompFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
 {
@@ -462,7 +463,7 @@ void TBackCompFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get the error matrix in a pointer to a NxN array.
+/// Get the error matrix in a pointer to a NxN array.
 /// excluding the fixed parameters
 
 Double_t* TBackCompFitter::GetCovarianceMatrix() const {
@@ -494,7 +495,7 @@ Double_t* TBackCompFitter::GetCovarianceMatrix() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get error matrix element (return all zero if matrix is not available)
+/// Get error matrix element (return all zero if matrix is not available)
 
 Double_t TBackCompFitter::GetCovarianceMatrixElement(Int_t i, Int_t j) const {
    unsigned int np2 = fCovar.size();
@@ -507,7 +508,7 @@ Double_t TBackCompFitter::GetCovarianceMatrixElement(Int_t i, Int_t j) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get fit errors
+/// Get fit errors
 
 Int_t TBackCompFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const {
    if (!ValidParameterIndex(ipar) )   return -1;
@@ -526,7 +527,7 @@ Int_t TBackCompFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, D
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// number of total parameters
+/// Number of total parameters
 
 Int_t TBackCompFitter::GetNumberTotalParameters() const {
    return fFitter->Result().NTotalParameters();
@@ -537,7 +538,7 @@ Int_t TBackCompFitter::GetNumberFreeParameters() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// parameter error
+/// Parameter error
 
 Double_t TBackCompFitter::GetParError(Int_t ipar) const {
    if (fFitter->Result().IsEmpty() ) {
@@ -548,7 +549,7 @@ Double_t TBackCompFitter::GetParError(Int_t ipar) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// parameter value
+/// Parameter value
 
 Double_t TBackCompFitter::GetParameter(Int_t ipar) const {
    if (fFitter->Result().IsEmpty() ) {
@@ -559,7 +560,7 @@ Double_t TBackCompFitter::GetParameter(Int_t ipar) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get all parameter info (name, value, errors)
+/// Get all parameter info (name, value, errors)
 
 Int_t TBackCompFitter::GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const {
    if (!ValidParameterIndex(ipar) )    {
@@ -586,7 +587,7 @@ Int_t TBackCompFitter::GetParameter(Int_t ipar,char *name,Double_t &value,Double
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   return name of parameter ipar
+/// Return name of parameter ipar
 
 const char *TBackCompFitter::GetParName(Int_t ipar) const {
    if (!ValidParameterIndex(ipar) )    {
@@ -596,7 +597,7 @@ const char *TBackCompFitter::GetParName(Int_t ipar) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get fit statistical information
+/// Get fit statistical information
 
 Int_t TBackCompFitter::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const {
    const ROOT::Fit::FitResult & result = fFitter->Result();
@@ -609,7 +610,7 @@ Int_t TBackCompFitter::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   sum of log . Un-needed
+/// Sum of log (un-needed)
 
 Double_t TBackCompFitter::GetSumLog(Int_t) {
    Warning("GetSumLog","Dummy  method - returned 0");
@@ -617,7 +618,7 @@ Double_t TBackCompFitter::GetSumLog(Int_t) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// query if parameter ipar is fixed
+/// Query if parameter ipar is fixed
 
 Bool_t TBackCompFitter::IsFixed(Int_t ipar) const {
    if (!ValidParameterIndex(ipar) )    {
@@ -627,8 +628,8 @@ Bool_t TBackCompFitter::IsFixed(Int_t ipar) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// print the fit result
-/// use PrintResults function in case of Minuit for old -style printing
+/// Print the fit result.
+/// Use PrintResults function in case of Minuit for old -style printing
 
 void TBackCompFitter::PrintResults(Int_t level, Double_t ) const {
    if (fFitter->GetMinimizer() && fFitter->Config().MinimizerType() == "Minuit")
@@ -641,7 +642,7 @@ void TBackCompFitter::PrintResults(Int_t level, Double_t ) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// release a fit parameter
+/// Release a fit parameter
 
 void TBackCompFitter::ReleaseParameter(Int_t ipar) {
    if (ValidParameterIndex(ipar) )
@@ -649,15 +650,15 @@ void TBackCompFitter::ReleaseParameter(Int_t ipar) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set fit method (i.e. chi2 or likelihood)
-/// according to the method the appropriate FCN function will be created
+/// Set fit method (chi2 or likelihood).
+/// According to the method the appropriate FCN function will be created
 
 void TBackCompFitter::SetFitMethod(const char *) {
    Info("SetFitMethod","non supported method");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set (add) a new fit parameter passing initial value,  step size (verr) and parametr limits
+/// Set (add) a new fit parameter passing initial value, step size (verr) and parameter limits
 /// if vlow > vhigh the parameter is unbounded
 /// if the stepsize (verr) == 0 the parameter is treated as fixed
 
@@ -727,10 +728,8 @@ void TBackCompFitter::ReCreateMinimizer() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// override setFCN to use the Adapter to Minuit2 FCN interface
-///*-*-*-*-*-*-*To set the address of the minimization function*-*-*-*-*-*-*-*
-///*-*          ===============================================
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Override setFCN to use the Adapter to Minuit2 FCN interface
+/// To set the address of the minimization function
 
 void TBackCompFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t))
 {
@@ -740,15 +739,9 @@ void TBackCompFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Doubl
    DoSetDimension();
 }
 
-// need for interactive environment
-
-
-// global functions needed by interpreter
-
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*Static function called when SetFCN is called in interactive mode
-///*-*          ===============================================
+/// Static function called when SetFCN is called in interactive mode
 
 void InteractiveFCNm2(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
@@ -768,10 +761,8 @@ void InteractiveFCNm2(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*To set the address of the minimization function*-*-*-*-*-*-*-*
-///*-*          ===============================================
-///     this function is called by CINT instead of the function above
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Set the address of the minimization function
+/// this function is called by CINT instead of the function above
 
 void TBackCompFitter::SetFCN(void *fcn)
 {
@@ -792,7 +783,7 @@ void TBackCompFitter::SetFCN(void *fcn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set the objective function for fitting
+/// Set the objective function for fitting
 /// Needed if fitting directly using TBackCompFitter class
 /// The class clones a copy of the function and manages it
 
@@ -813,7 +804,7 @@ void TBackCompFitter::DoSetDimension() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return a pointer to the objective function (FCN)
+/// Return a pointer to the objective function (FCN)
 /// If fitting directly using TBackCompFitter the pointer is managed by the class,
 /// which has been set previously when calling SetObjFunction or SetFCN
 /// Otherwise if the class is used in the backward compatible mode (e.g. after having fitted a TH1)
@@ -825,7 +816,7 @@ ROOT::Math::IMultiGenFunction * TBackCompFitter::GetObjFunction( ) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return a pointer to the minimizer.
+/// Return a pointer to the minimizer.
 /// the return pointer will be valid after fitting and as long a new fit will not be done.
 /// For keeping a minimizer pointer the method ReCreateMinimizer() could eventually be used
 
@@ -835,7 +826,7 @@ ROOT::Math::Minimizer * TBackCompFitter::GetMinimizer( ) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return a new copy of the TFitResult object which needs to be deleted later by the user
+/// Return a new copy of the TFitResult object which needs to be deleted later by the user
 
 TFitResult * TBackCompFitter::GetTFitResult( ) const {
    if (!fFitter.get() ) return 0;
@@ -843,10 +834,9 @@ TFitResult * TBackCompFitter::GetTFitResult( ) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///     scan parameter ipar between value of xmin and xmax
-///     a graph must be given which will be on return filled with the scan resul
-///     If the graph size is zero, a default size n = 40 will be used
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///  Scan parameter ipar between value of xmin and xmax
+///  A graph must be given which will be on return filled with the scan resul
+///  If the graph size is zero, a default size n = 40 will be used
 
 bool TBackCompFitter::Scan(unsigned int ipar, TGraph * gr, double xmin, double xmax )
 {
@@ -894,7 +884,7 @@ bool TBackCompFitter::Scan(unsigned int ipar, TGraph * gr, double xmin, double x
 // }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  create a 2D contour around the minimum for the parameter ipar and jpar
+/// Create a 2D contour around the minimum for the parameter ipar and jpar
 /// if a minimum does not exist or is invalid it will return false
 /// on exit a TGraph is filled with the contour points
 /// the number of contur points is determined by the size of the TGraph.

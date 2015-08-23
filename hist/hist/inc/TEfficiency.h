@@ -29,9 +29,6 @@ class TH1;
 class TH2;
 class TList;
 
-//|TEfficiency
-//------------------------
-
 class TEfficiency: public TNamed, public TAttLine, public TAttFill, public TAttMarker
 {
 public:

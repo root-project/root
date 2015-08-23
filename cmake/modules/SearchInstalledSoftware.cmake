@@ -616,25 +616,17 @@ if(xrootd)
   endif()
 endif()
 if(builtin_xrootd)
-  set(xrootd_version 4.2.1)
-  set(xrootd_versionnum 400020001)
+  set(xrootd_version 4.2.2)
+  set(xrootd_versionnum 400020002)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-duplicate-decl-specifier)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-deprecated-declarations)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-conditional-uninitialized)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-unused-result)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-sometimes-uninitialized)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-pointer-bool-conversion)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-format-security)
   ExternalProject_Add(
     XROOTD
     # http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
     URL ${repository_tarfiles}/xrootd-${xrootd_version}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CMAKE_ARGS -DENABLE_PERL=FALSE
-               -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}

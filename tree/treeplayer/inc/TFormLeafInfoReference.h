@@ -21,14 +21,6 @@
 // Forward declarations
 class TVirtualRefProxy;
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFormLeafInfoReference                                               //
-//                                                                      //
-// TFormLeafInfoReference is a small helper class to implement the      //
-// following of reference objects stored in a TTree                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 class TFormLeafInfoReference : public TFormLeafInfo {
    typedef TVirtualRefProxy Proxy;
 public:

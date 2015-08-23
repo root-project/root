@@ -2,19 +2,6 @@
 # CMakeLists.txt file for building ROOT (global) core package
 ############################################################################
 
-ROOT_USE_PACKAGE(core/base)
-ROOT_USE_PACKAGE(core/clib)
-ROOT_USE_PACKAGE(core/cont)
-ROOT_USE_PACKAGE(core/meta)
-ROOT_USE_PACKAGE(core/metautils)
-ROOT_USE_PACKAGE(core/textinput)
-ROOT_USE_PACKAGE(core/thread)
-ROOT_USE_PACKAGE(core/unix)
-ROOT_USE_PACKAGE(core/winnt)
-ROOT_USE_PACKAGE(core/macosx)
-ROOT_USE_PACKAGE(core/zip)
-ROOT_USE_PACKAGE(core/lzma)
-
 if(builtin_pcre)
   add_subdirectory(pcre)
 endif()

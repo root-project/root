@@ -9,66 +9,68 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TBinomialEfficiencyFitter
-//
-// Binomial fitter for the division of two histograms.
-// Use when you need to calculate a selection's efficiency from two histograms,
-// one containing all entries, and one containing the subset of these entries
-// that pass the selection, and when you have a parametrization available for
-// the efficiency as a function of the variable(s) under consideration.
-//
-// A very common problem when estimating efficiencies is that of error estimation:
-// when no other information is available than the total number of events N and
-// the selected number n, the best estimate for the selection efficiency p is n/N.
-// Standard binomial statistics dictates that the uncertainty (this presupposes
-// sufficiently high statistics that an approximation by a normal distribution is
-// reasonable) on p, given N, is
-//Begin_Latex
-//   #sqrt{#frac{p(1-p)}{N}}.
-//End_Latex
-// However, when p is estimated as n/N, fluctuations from the true p to its
-// estimate become important, especially for low numbers of events, and giving
-// rise to biased results.
-//
-// When fitting a parametrized efficiency, these problems can largely be overcome,
-// as a hypothesized true efficiency is available by construction. Even so, simply
-// using the corresponding uncertainty still presupposes that Gaussian errors
-// yields a reasonable approximation. When using, instead of binned efficiency
-// histograms, the original numerator and denominator histograms, a binned maximum
-// likelihood can be constructed as the product of bin-by-bin binomial probabilities
-// to select n out of N events. Assuming that a correct parametrization of the
-// efficiency is provided, this construction in general yields less biased results
-// (and is much less sensitive to binning details).
-//
-// A generic use of this method is given below (note that the method works for 2D
-// and 3D histograms as well):
-//
-// {
-//   TH1* denominator;              // denominator histogram
-//   TH1* numerator;                // corresponding numerator histogram
-//   TF1* eff;                      // efficiency parametrization
-//   ....                           // set step sizes and initial parameter
-//   ....                           //   values for the fit function
-//   ....                           // possibly also set ranges, see TF1::SetRange()
-//   TBinomialEfficiencyFitter* f = new TBinomialEfficiencyFitter(
-//                                      numerator, denominator);
-//   Int_t status = f->Fit(eff, "I");
-//   if (status == 0) {
-//      // if the fit was successful, display bin-by-bin efficiencies
-//      // as well as the result of the fit
-//      numerator->Sumw2();
-//      TH1* hEff = dynamic_cast<TH1*>(numerator->Clone("heff"));
-//      hEff->Divide(hEff, denominator, 1.0, 1.0, "B");
-//      hEff->Draw("E");
-//      eff->Draw("same");
-//   }
-// }
-//
-// Note that this method cannot be expected to yield reliable results when using
-// weighted histograms (because the likelihood computation will be incorrect).
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/** \class TBinomialEfficiencyFitter
+    \brief Binomial fitter for the division of two histograms.
+ 
+Use when you need to calculate a selection's efficiency from two histograms,
+one containing all entries, and one containing the subset of these entries
+that pass the selection, and when you have a parametrization available for
+the efficiency as a function of the variable(s) under consideration.
+
+A very common problem when estimating efficiencies is that of error estimation:
+when no other information is available than the total number of events N and
+the selected number n, the best estimate for the selection efficiency p is n/N.
+Standard binomial statistics dictates that the uncertainty (this presupposes
+sufficiently high statistics that an approximation by a normal distribution is
+reasonable) on p, given N, is
+\f[
+    \sqrt{\frac{p(1-p)}{N}}
+\f]
+However, when p is estimated as n/N, fluctuations from the true p to its
+estimate become important, especially for low numbers of events, and giving
+rise to biased results.
+
+When fitting a parametrized efficiency, these problems can largely be overcome,
+as a hypothesized true efficiency is available by construction. Even so, simply
+using the corresponding uncertainty still presupposes that Gaussian errors
+yields a reasonable approximation. When using, instead of binned efficiency
+histograms, the original numerator and denominator histograms, a binned maximum
+likelihood can be constructed as the product of bin-by-bin binomial probabilities
+to select n out of N events. Assuming that a correct parametrization of the
+efficiency is provided, this construction in general yields less biased results
+(and is much less sensitive to binning details).
+
+A generic use of this method is given below (note that the method works for 2D
+and 3D histograms as well):
+
+~~~~~~~~~~~~~~~{.cpp}
+    {
+        TH1* denominator;              // denominator histogram
+        TH1* numerator;                // corresponding numerator histogram
+        TF1* eff;                      // efficiency parametrization
+        ....                           // set step sizes and initial parameter
+        ....                           //   values for the fit function
+        ....                           // possibly also set ranges, see TF1::SetRange()
+        TBinomialEfficiencyFitter* f = new TBinomialEfficiencyFitter(
+                                     numerator, denominator);
+        Int_t status = f->Fit(eff, "I");
+        if (status == 0) {
+          // if the fit was successful, display bin-by-bin efficiencies
+          // as well as the result of the fit
+          numerator->Sumw2();
+          TH1* hEff = dynamic_cast<TH1*>(numerator->Clone("heff"));
+          hEff->Divide(hEff, denominator, 1.0, 1.0, "B");
+          hEff->Draw("E");
+          eff->Draw("same");
+        }
+    }
+~~~~~~~~~~~~~~~
+
+Note that this method cannot be expected to yield reliable results when using
+weighted histograms (because the likelihood computation will be incorrect).
+
+*///////////////////////////////////////////////////////////////////////////////////
 
 #include "TBinomialEfficiencyFitter.h"
 

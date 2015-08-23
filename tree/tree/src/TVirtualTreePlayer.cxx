@@ -9,15 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualTreePlayer
-//
-// Abstract base class defining the interface for the plugins that
-// implement Draw, Scan, Process, MakeProxy, etc. for a TTree object.
-// See the individual documentations in TTree.
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TVirtualTreePlayer
+Abstract base class defining the interface for the plugins that
+implement Draw, Scan, Process, MakeProxy, etc. for a TTree object.
+See the individual documentations in TTree.
+*/
 
 #include "TROOT.h"
 #include "TVirtualTreePlayer.h"

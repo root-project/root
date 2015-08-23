@@ -9,14 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTreeDrawArgsParser                                                  //
-//                                                                      //
-// A class that parses all parameters for TTree::Draw().                //
-// See TTree::Draw() for the format description.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTreeDrawArgsParser
+A class that parses all parameters for TTree::Draw().
+See TTree::Draw() for the format description.
+*/
 
 #include "TTreeDrawArgsParser.h"
 #include "TDirectory.h"
@@ -35,7 +31,6 @@ TTreeDrawArgsParser::TTreeDrawArgsParser()
 {
    ClearPrevious();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -83,14 +78,17 @@ void TTreeDrawArgsParser::ClearPrevious()
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse expression [var1 [:var2 [:var3] ...]],
 /// number of variables cannot be greater than fgMaxDimension.
+///
 /// A colon which is followed by (or that follows) another semicolon
 /// is not regarded as a separator.
+///
 /// If there are more separating : than fgMaxDimension - 1 then
 /// all characters after (fgMaxDimension - 1)th colon is put into
 /// the last variable.
-/// fDimension := <number of variables>
-/// fVarExp[0] := <first variable string>
-/// fVarExp[1] := <second variable string>
+///
+///  - fDimension := <number of variables>
+///  - fVarExp[0] := <first variable string>
+///  - fVarExp[1] := <second variable string>
 /// ..
 /// Returns kFALSE in case of an error.
 
@@ -121,10 +119,13 @@ Bool_t TTreeDrawArgsParser::SplitVariables(TString variables)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Syntax:
-/// [' '*][[\+][' '*]name[(num1 [, [num2] ] [, [num3] ] ...)]]
+///
+///     [' '*][[\+][' '*]name[(num1 [, [num2] ] [, [num3] ] ...)]]
+///
 /// num's are floating point numbers
 /// sets the fileds fNoParameters, fParameterGiven, fParameters, fAdd, fName
 /// to apropriate values.
+///
 /// Returns kFALSE in case of an error.
 
 Bool_t TTreeDrawArgsParser::ParseName(TString name)
@@ -357,8 +358,8 @@ Double_t TTreeDrawArgsParser::GetParameter(Int_t num) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// num - parameter number
-/// def - default value of the parameter
+///  - num - parameter number
+///  - def - default value of the parameter
 /// returns the value of *num*-th parameter from the brackets in the variable expression
 /// if the parameter of that number wasn't specified returns *def*.
 

@@ -440,6 +440,17 @@ if(CLANG_ENABLE_STATIC_ANALYZER)
   add_definitions(-DCLANG_ENABLE_STATIC_ANALYZER)
 endif()
 
+option(CLANG_ENABLE_FORMAT "Build clang-format." ON)
+if(CLANG_ENABLE_FORMAT)
+  add_definitions(-DCLANG_ENABLE_FORMAT)
+endif()
+
+option(CLANG_ENABLE_COMPILER "Build clang compilers." ON)
+if(CLANG_ENABLE_COMPILER)
+  add_definitions(-DCLANG_ENABLE_COMPILER)
+endif()
+
+
 # Clang version information
 set(CLANG_EXECUTABLE_VERSION
      "${CLANG_VERSION_MAJOR}.${CLANG_VERSION_MINOR}" CACHE STRING

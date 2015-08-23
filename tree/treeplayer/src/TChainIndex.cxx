@@ -9,11 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-// A Chain Index
-//
-//////////////////////////////////////////////////////////////////////////
+/** \class TChainIndex
+A Chain Index.
+A Chain Index with majorname and minorname.
+It uses tree indices of all the trees in the chain instead of building
+a new index.
+The index values from the first tree should be less then
+all the index values from the second tree, and so on.
+If a tree in the chain doesn't have an index the index will be created
+and kept inside this chain index.
+*/
 
 #include "TChainIndex.h"
 #include "TChain.h"
@@ -22,9 +27,9 @@
 #include "TFile.h"
 #include "TError.h"
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
+/// \class TChainIndex::TChainIndexEntry
+/// Holds a description of indices of trees in the chain.
 
 void TChainIndex::TChainIndexEntry::SetMinMaxFrom(const TTreeIndex *index )
 {
@@ -33,8 +38,6 @@ void TChainIndex::TChainIndexEntry::SetMinMaxFrom(const TTreeIndex *index )
    fMaxIndexValue    = index->GetIndexValues()[index->GetN() - 1];
    fMaxIndexValMinor = index->GetIndexValuesMinor()[index->GetN() - 1];
 }
-
-
 
 ClassImp(TChainIndex)
 
@@ -128,7 +131,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// add an index to this chain
+/// Add an index to this chain.
 /// if delaySort is kFALSE (default) check if the indices of different trees are in order.
 
 void TChainIndex::Append(const TVirtualIndex *index, Bool_t delaySort )
@@ -159,7 +162,7 @@ void TChainIndex::Append(const TVirtualIndex *index, Bool_t delaySort )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Delete all the indices which were built by this object
+/// Delete all the indices which were built by this object.
 
 void TChainIndex::DeleteIndices()
 {
@@ -250,7 +253,7 @@ void TChainIndex::ReleaseSubTreeIndex(TVirtualIndex* index, int treeNo) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// see TTreeIndex::GetEntryNumberFriend for description
+/// See TTreeIndex::GetEntryNumberFriend for description
 
 Long64_t TChainIndex::GetEntryNumberFriend(const TTree *parent)
 {
@@ -325,7 +328,7 @@ Long64_t TChainIndex::GetEntryNumberWithIndex(Long64_t major, Long64_t minor) co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return a pointer to the TreeFormula corresponding to the majorname in parent tree T
+/// Return a pointer to the TreeFormula corresponding to the majorname in parent tree T.
 
 TTreeFormula *TChainIndex::GetMajorFormulaParent(const TTree *parent)
 {
@@ -342,7 +345,7 @@ TTreeFormula *TChainIndex::GetMajorFormulaParent(const TTree *parent)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return a pointer to the TreeFormula corresponding to the minorname in parent tree T
+/// Return a pointer to the TreeFormula corresponding to the minorname in parent tree T.
 
 TTreeFormula *TChainIndex::GetMinorFormulaParent(const TTree *parent)
 {
