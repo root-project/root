@@ -117,6 +117,7 @@ namespace cling {
     std::unique_ptr<StreamReader> R(StreamReader::Create());
     std::unique_ptr<TerminalDisplay> D(TerminalDisplay::Create());
     TextInput TI(*R, *D, histfilePath.empty() ? 0 : histfilePath.c_str());
+    m_MetaProcessor->getInterpreter().enableInteractivePrint(D->IsTTY());
 
     TI.SetPrompt("[cling]$ ");
     std::string line;

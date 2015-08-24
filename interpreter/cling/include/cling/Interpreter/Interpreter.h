@@ -170,6 +170,11 @@ namespace cling {
     ///
     bool m_RawInputEnabled;
 
+    ///\brief Flag toggling the interactive print mode on or off.
+    /// Enabled by default if stdin is attached to terminal.
+    ///
+    bool m_InteractivePrintEnabled;
+
     ///\brief Interpreter callbacks.
     ///
     std::unique_ptr<InterpreterCallbacks> m_Callbacks;
@@ -544,6 +549,9 @@ namespace cling {
 
     bool isRawInputEnabled() const { return m_RawInputEnabled; }
     void enableRawInput(bool raw = true) { m_RawInputEnabled = raw; }
+
+    bool isInteractivePrintEnabled() const { return m_InteractivePrintEnabled; }
+    void enableInteractivePrint(bool iprint = true) { m_InteractivePrintEnabled = iprint; }
 
     clang::CompilerInstance* getCI() const;
     clang::Sema& getSema() const;
