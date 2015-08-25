@@ -72,8 +72,6 @@ namespace Math {
       @defgroup MCIntegration Numerical Monte Carlo Integration Classes
       Classes implementing method for Monte Carlo Integration.  
       @ingroup Integration
-   
-   /**
 
     Class for performing numerical integration of a multidimensional function.
     It uses the numerical integration algorithms of GSL, which reimplements the
