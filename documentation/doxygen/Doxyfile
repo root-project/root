@@ -848,6 +848,7 @@ FILE_PATTERNS          = *.c \
                          *.php4 \
                          *.php5 \
                          *.phtml \
+                         *.html \
                          *.inc \
                          *.m \
                          *.markdown \

@@ -23,6 +23,7 @@ namespace ROOT {
 
 /**
    Build (find) function minimum using the Variable Metric method (MIGRAD)
+
  */
 class VariableMetricBuilder : public MinimumBuilder {
 

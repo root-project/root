@@ -9,41 +9,46 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//*-*-*-*-*-*-*-*-*-*-*-*The Minimization package*-*--*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ========================                         *
-//*-*                                                                     *
-//*-*   This package was originally written in Fortran by Fred James      *
-//*-*   and part of PACKLIB (patch D506)                                  *
-//*-*                                                                     *
-//*-*   It has been converted to a C++ class  by R.Brun                   *
-//*-*   The current implementation in C++ is a straightforward conversion *
-//*-*   of the original Fortran version: The main changes are:            *
-//*-*                                                                     *
-//*-*   - The variables in the various Minuit labelled common blocks      *
-//*-*     have been changed to the TMinuit class data members.            *
-//*-*   - The internal arrays with a maximum dimension depending on the   *
-//*-*     maximum number of parameters are now data members arrays with   *
-//*-*     a dynamic dimension such that one can fit very large problems   *
-//*-*     by simply initialising the TMinuit constructor with the maximum *
-//*-*     number of parameters.                                           *
-//*-*   - The include file Minuit.h has been commented as much as possible*
-//*-*     using existing comments in the code or the printed documentation*
-//*-*   - The original Minuit subroutines are now member functions.       *
-//*-*   - Constructors and destructor have been added.                    *
-//*-*   - Instead of passing the FCN  function in the argument            *
-//*-*     list, the addresses of this function is stored as pointer       *
-//*-*     in the data members of the class. This is by far more elegant   *
-//*-*     and flexible in an interactive environment.                     *
-//*-*     The member function SetFCN can be used to define this pointer.  *
-//*-*   - The ROOT static function Printf is provided to replace all      *
-//*-*     format statements and to print on currently defined output file.*
-//*-*   - The functions SetObjectFit(TObject *obj)/GetObjectFit() can be  *
-//*-*     used inside the FCN function to set/get a referenced object     *
-//*-*     instead of using global variables.                              *
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//BEGIN_HTML <!--
-/* -->
+/**
+
+   @defgroup MinuitOld TMinuit 
+   The Minuit Minimization package.
+   Direct C++ implementation of the Minuit minimization package. 
+   This package was originally written in Fortran by Fred James      
+   and part of PACKLIB (patch D506)                                  
+   It has been converted to a C++ class, TMinuit, by R.Brun.                   
+*/
+
+/** 
+    \class TMinuit
+
+   Implementation in C++ of the Minuit package written by F. James. 
+   Thjis is a straightforward conversion 
+   of the original Fortran version.
+   The main changes are:            
+                                                                     
+   - The variables in the various Minuit labelled common blocks      
+     have been changed to the TMinuit class data members.            
+   - The internal arrays with a maximum dimension depending on the   
+     maximum number of parameters are now data members arrays with   
+     a dynamic dimension such that one can fit very large problems   
+     by simply initialising the TMinuit constructor with the maximum 
+     number of parameters.                                           
+   - The include file Minuit.h has been commented as much as possible
+     using existing comments in the code or the printed documentation
+   - The original Minuit subroutines are now member functions.       
+   - Constructors and destructor have been added.                    
+   - Instead of passing the FCN  function in the argument            
+     list, the addresses of this function is stored as pointer       
+     in the data members of the class. This is by far more elegant   
+     and flexible in an interactive environment.                     
+     The member function SetFCN can be used to define this pointer.  
+   - The ROOT static function Printf is provided to replace all      
+     format statements and to print on currently defined output file.
+   - The functions SetObjectFit(TObject * obj)/GetObjectFit() can be  
+     used inside the FCN function to set/get a referenced object     
+     instead of using global variables.                              
+
 <P>
 <H2><A NAME=H2Basic-concepts-of-MINUIT.html>Basic concepts of MINUIT</A></H2>
 <P>
@@ -306,8 +311,9 @@ necessary, and you are sensitive to the difference between the two ways of
 calculating the errors, it is suggested to use Minos errors which take
 into account the non-linearities much more precisely.
 
-<!--*/
-// -->END_HTML
+@ingroup MinuitOld
+
+*/
 
 #include <stdlib.h>
 #include <stdio.h>

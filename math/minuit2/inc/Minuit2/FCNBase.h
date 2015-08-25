@@ -25,8 +25,8 @@ namespace ROOT {
 
 @defgroup Minuit Minuit2 Minimization Library
 
-  Object-oriented implementation of the MINUIT minimization package.
-  More information is available at the home page of the \ref Minuit2 package.
+  New Object-oriented implementation of the MINUIT minimization package.
+  More information is available at the home page of the \ref Minuit2Page package.
 */
 
 

@@ -30,6 +30,12 @@ namespace ROOT {
 namespace Math {
 
 /**
+   @defgroup Functor_int Internal Functor Classes
+   Internal classes for implementing Functor and Functor1D classes
+   @ingroup GenFunc
+ */
+   
+/**
    FunctorImpl is a base class for the functor
    handler implementation class.
    It defines the Copy operator used to clone the functor objects
@@ -370,7 +376,6 @@ private :
 // #endif
 
 
-//_______________________________________________________________________________________________
 /**
    Documentation for class Functor class.
    It is used to wrap in a very simple and convenient way multi-dimensional function objects.
@@ -469,7 +474,6 @@ private :
 
 };
 
-//______________________________________________________________________________________
 /**
    Functor1D class for one-dimensional functions.
    It is used to wrap in a very simple and convenient way:
@@ -564,7 +568,6 @@ private :
 
 };
 
-//_______________________________________________________________________________________________
 /**
    GradFunctor class for Multidimensional gradient functions.
    It is used to wrap in a very C++ callable object to make gradient functions.

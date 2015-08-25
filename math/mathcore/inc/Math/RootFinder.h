@@ -42,7 +42,8 @@
 
 
 /**
-   @defgroup RootFinders One-dimensional Root-Finding algorithms
+   @defgroup RootFinders One-dimensional Root-Finding
+   Classes implementing algorithms for finding the roots of a one-dimensional function.
    Various implementation esists in MathCore and MathMore
    The user interacts with a proxy class ROOT::Math::RootFinder which creates behing
    the chosen algorithms which are implemented using the ROOT::Math::IRootFinderMethod interface

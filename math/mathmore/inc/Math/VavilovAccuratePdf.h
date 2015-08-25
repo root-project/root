@@ -48,9 +48,9 @@ namespace Math {
   \frac{1}{2 \pi i}\int_{c-i\infty}^{c+i\infty} \phi(s) e^{\lambda s} ds\f]
    where \f$\phi(s) = e^{C} e^{\psi(s)}\f$
    with  \f$ C = \kappa (1+\beta^2 \gamma )\f$
-   and \f$\psi(s)&=& s \ln \kappa + (s+\beta^2 \kappa)
+   and \f[\psi(s) = s \ln \kappa + (s+\beta^2 \kappa)
                \cdot \left ( \int \limits_{0}^{1}
-               \frac{1 - e^{\frac{-st}{\kappa}}}{t} \,\der t- \gamma \right )
+               \frac{1 - e^{\frac{-st}{\kappa}}}{t} \, dt- \gamma \right )
                - \kappa \, e^{\frac{-s}{\kappa}}\f$.
    \f$ \gamma = 0.5772156649\dots\f$ is Euler's constant.
 

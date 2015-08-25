@@ -34,8 +34,14 @@
 #include <string>
 #include <vector>
 
+
+
 /**
-   @defgroup Random Random number generators and distributions
+   @defgroup GSLRandom GSL Random number generators and distributions
+
+   Random number classes based on GSL 
+
+   @ingroup Random
 */
 
 

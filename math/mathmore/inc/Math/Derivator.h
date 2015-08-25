@@ -33,10 +33,6 @@
 #ifndef ROOT_Math_Derivator
 #define ROOT_Math_Derivator
 
-/**
-    @defgroup Deriv Numerical Differentiation
-    @ingroup NumAlgo
-*/
 
 #ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"

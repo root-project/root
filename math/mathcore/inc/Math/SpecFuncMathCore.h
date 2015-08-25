@@ -22,6 +22,7 @@ N1687=04-0127, September 10, 2004</A>
 @author Created by Andras Zsenei on Mon Nov 8 2004
 
 @defgroup SpecFunc Special functions
+@ingroup MathCore
 
 */
 
