@@ -20,6 +20,9 @@ def iPythonize():
     ROOT.disableJSVis = utils.disableJSVis
     ROOT.enableJSVisDebug = utils.enableJSVisDebug
     ROOT.disableJSVisDebug = utils.disableJSVisDebug
+    for ROOTClass in (ROOT.TCanvas, ROOT.TPad, ROOT.TVirtualPad):
+      ROOTClass.DrawCpp = ROOT.TCanvas.Draw
+      ROOTClass.Draw = utils._PyDraw
 
     #ROOT.toCpp()
     utils.welcomeMsg()

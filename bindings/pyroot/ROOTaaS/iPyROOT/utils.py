@@ -88,21 +88,10 @@ def _loadLibrary(libName):
    """
    Dl-open a library bypassing the ROOT calling sequence
    """
-   ctypes.cdll.LoadLibrary(libName)
+   return ctypes.cdll.LoadLibrary(libName)
 
 def welcomeMsg():
     print "Welcome to ROOTaas Beta"
-
-def toCpp():
-    '''
-    Change the mode of the notebook to CPP. It is preferred to use cell magic,
-    but this option is handy to set up servers and for debugging purposes.
-    '''
-    cpptransformer.load_ipython_extension(get_ipython())
-    cppcompleter.load_ipython_extension(get_ipython())
-    # Change highlight mode
-    IPython.display.display_javascript(jsDefaultHighlight.format(mimeType = cppMIME), raw=True)
-    print "Notebook is in Cpp mode"
 
 class StreamCapture(object):
     def __init__(self, stream, ip=get_ipython()):
@@ -112,6 +101,7 @@ class StreamCapture(object):
         self.sysStreamFile = stream
         self.sysStreamFileNo = streamsFileNo[stream]
         self.shell = ip
+        self.libc = _loadLibrary("libc.so.6")
 
     def more_data(self):
         r, _, _ = select.select([self.pipe_out], [], [], 0)
@@ -127,7 +117,8 @@ class StreamCapture(object):
             while self.more_data():
                 out += os.read(self.pipe_out, 1024)
 
-        self.sysStreamFile.write(out)
+        self.libc.fflush(None)
+        self.sysStreamFile.write(out) # important to print the value printing output
         return 0
 
     def register(self):
@@ -268,9 +259,118 @@ class CanvasCapture(object):
         self.shell.events.register('pre_execute', self._pre_execute)
         self.shell.events.register('post_execute', self._post_execute)
 
+    def unregister(self):
+        self.shell.events.unregister('pre_execute', self._pre_execute)
+        self.shell.events.unregister('post_execute', self._post_execute)
+
+
 captures = [StreamCapture(sys.stderr),
-            StreamCapture(sys.stdout),
-            CanvasCapture()]
+            StreamCapture(sys.stdout)]
+            #CanvasCapture()]
+
+def toCpp():
+    '''
+    Change the mode of the notebook to CPP. It is preferred to use cell magic,
+    but this option is handy to set up servers and for debugging purposes.
+    '''
+    ip = get_ipython()
+    cpptransformer.load_ipython_extension(ip)
+    cppcompleter.load_ipython_extension(ip)
+    # Change highlight mode
+    IPython.display.display_javascript(jsDefaultHighlight.format(mimeType = cppMIME), raw=True)
+    print "Notebook is in Cpp mode"
+
+class CanvasDrawer(object):
+    '''
+    Capture the canvas which is drawn and decide if it should be displayed using
+    jsROOT.
+    '''
+    def __init__(self, thePad):
+        self.thePad = thePad
+        self.jsUID = 0
+
+    def _getListOfPrimitivesNamesAndTypes(self):
+       """
+       Get the list of primitives in the pad, recursively descending into
+       histograms and graphs looking for fitted functions.
+       """
+       primitives = self.thePad.GetListOfPrimitives()
+       primitivesNames = map(lambda p: p.GetName(), primitives)
+       #primitivesWithFunctions = filter(lambda primitive: hasattr(primitive,"GetListOfFunctions"), primitives)
+       #for primitiveWithFunctions in primitivesWithFunctions:
+       #    for function in primitiveWithFunctions.GetListOfFunctions():
+       #        primitivesNames.append(function.GetName())
+       return sorted(primitivesNames)
+
+    def _canJsDisplay(self):
+        # to be optimised
+        if not _enableJSVis: return False
+        primitivesNamesAndTypes = self._getListOfPrimitivesNamesAndTypes()
+        for jsNotDrawClassName in _jsNotDrawableClassesNames:
+            if jsNotDrawClassName in primitivesNamesAndTypes:
+                print >> sys.stderr, "The canvas contains an object which jsROOT cannot currently handle (%s). Falling back to a static png." %jsNotDrawClassName
+                return False
+        return True
+
+    def _getUID(self):
+        '''
+        Every DIV containing a JavaScript snippet must be unique in the
+        notebook. This methods provides a unique identifier.
+        '''
+        self.jsUID += 1
+        return self.jsUID
+
+    def _jsDisplay(self):
+        # Workaround to have ConvertToJSON work
+        pad = ROOT.gROOT.GetListOfCanvases().FindObject(self.thePad.GetName())
+        json = ROOT.TBufferJSON.ConvertToJSON(pad, 3)
+        #print "JSON:",json
+
+        # Here we could optimise the string manipulation
+        divId = 'root_plot_' + str(self._getUID())
+        thisJsCode = _jsCode.format(jsCanvasWidth = _jsCanvasWidth,
+                                    jsCanvasHeight = _jsCanvasHeight,
+                                    jsROOTSourceDir = _jsROOTSourceDir,
+                                    jsonContent=json.Data(),
+                                    jsDrawOptions="",
+                                    jsDivId = divId)
+
+        # display is the key point of this hook
+        IPython.display.display(HTML(thisJsCode))
+        return 0
+
+    def _pngDisplay(self):
+        ofile = tempfile.NamedTemporaryFile(suffix=".png")
+        self.thePad.SaveAs(ofile.name)
+        img = IPython.display.Image(filename=ofile.name, format='png', embed=True)
+        IPython.display.display(img)
+        return 0
+
+    def _display(self):
+       if _enableJSVisDebug:
+          self._pngDisplay()
+          self._jsDisplay()
+       else:
+         if self._canJsDisplay():
+            self._jsDisplay()
+         else:
+            self._pngDisplay()
+
+
+    def Draw(self):
+        self._display()
+        return 0
+
+
+
+
+def _PyDraw(thePad):
+   """
+   Invoke the draw function and intercept the graphics
+   """
+   drawer = CanvasDrawer(thePad)
+   drawer.Draw()
+
 
 def setStyle():
     style=ROOT.gStyle
@@ -282,7 +382,6 @@ def setStyle():
     style.SetPalette(57)
 
 # Here functions are defined to process C++ code
-
 def processCppCodeImpl(cell):
     ROOT.gInterpreter.ProcessLine(cell)
 
