@@ -55,39 +55,45 @@
 
 const Int_t kMaxLen     = 1024;
 
-ClassImp(TTreeFormula)
+/** \class TTreeFormula
+Used to pass a selection expression to the Tree drawing routine. See TTree::Draw
 
-//______________________________________________________________________________
-//
-// TTreeFormula now relies on a variety of TFormLeafInfo classes to handle the
-// reading of the information.  Here is the list of theses classes:
-//   TFormLeafInfo
-//   TFormLeafInfoDirect
-//   TFormLeafInfoNumerical
-//   TFormLeafInfoClones
-//   TFormLeafInfoCollection
-//   TFormLeafInfoPointer
-//   TFormLeafInfoMethod
-//   TFormLeafInfoMultiVarDim
-//   TFormLeafInfoMultiVarDimDirect
-//   TFormLeafInfoCast
-//
-// The following method are available from the TFormLeafInfo interface:
-//
-//  AddOffset(Int_t offset, TStreamerElement* element)
-//  GetCounterValue(TLeaf* leaf) : return the size of the array pointed to.
-//  GetObjectAddress(TLeafElement* leaf) : Returns the the location of the object pointed to.
-//  GetMultiplicity() : Returns info on the variability of the number of elements
-//  GetNdata(TLeaf* leaf) : Returns the number of elements
-//  GetNdata() : Used by GetNdata(TLeaf* leaf)
-//  GetValue(TLeaf *leaf, Int_t instance = 0) : Return the value
-//  GetValuePointer(TLeaf *leaf, Int_t instance = 0) : Returns the address of the value
-//  GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) : Returns the address of the value of 'this' LeafInfo
-//  IsString()
-//  ReadValue(char *where, Int_t instance = 0) : Internal function to interpret the location 'where'
-//  Update() : react to the possible loading of a shared library.
-//
-//
+A TreeFormula can contain any arithmetic expression including
+standard operators and mathematical functions separated by operators.
+Examples of valid expression:
+
+     "x<y && sqrt(z)>3.2"
+
+TTreeFormula now relies on a variety of TFormLeafInfo classes to handle the
+reading of the information. Here is the list of theses classes:
+  - TFormLeafInfo
+  - TFormLeafInfoDirect
+  - TFormLeafInfoNumerical
+  - TFormLeafInfoClones
+  - TFormLeafInfoCollection
+  - TFormLeafInfoPointer
+  - TFormLeafInfoMethod
+  - TFormLeafInfoMultiVarDim
+  - TFormLeafInfoMultiVarDimDirect
+  - TFormLeafInfoCast
+
+The following method are available from the TFormLeafInfo interface:
+
+ -  AddOffset(Int_t offset, TStreamerElement* element)
+ -  GetCounterValue(TLeaf* leaf) : return the size of the array pointed to.
+ -  GetObjectAddress(TLeafElement* leaf) : Returns the the location of the object pointed to.
+ -  GetMultiplicity() : Returns info on the variability of the number of elements
+ -  GetNdata(TLeaf* leaf) : Returns the number of elements
+ -  GetNdata() : Used by GetNdata(TLeaf* leaf)
+ -  GetValue(TLeaf *leaf, Int_t instance = 0) : Return the value
+ -  GetValuePointer(TLeaf *leaf, Int_t instance = 0) : Returns the address of the value
+ -  GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0) : Returns the address of the value of 'this' LeafInfo
+ -  IsString()
+ -  ReadValue(char *where, Int_t instance = 0) : Internal function to interpret the location 'where'
+ -  Update() : react to the possible loading of a shared library.
+*/
+
+ClassImp(TTreeFormula)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -98,10 +104,11 @@ inline static void R__LoadBranch(TBranch* br, Long64_t entry, Bool_t quickLoad)
    }
 }
 
-//______________________________________________________________________________
-//
-// This class is a small helper class to help in keeping track of the array
-// dimensions encountered in the analysis of the expression.
+////////////////////////////////////////////////////////////////////////////////
+/// \class TDimensionInfo
+/// A small helper class to help in keeping track of the array
+/// dimensions encountered in the analysis of the expression.
+
 class TDimensionInfo : public TObject {
 public:
    Int_t fCode;  // Location of the leaf in TTreeFormula::fCode
@@ -112,17 +119,6 @@ public:
       : fCode(code), fOper(oper), fSize(size), fMultiDim(multiDim) {};
    ~TDimensionInfo() {};
 };
-
-//______________________________________________________________________________
-//
-//     A TreeFormula is used to pass a selection expression
-//     to the Tree drawing routine. See TTree::Draw
-//
-//  A TreeFormula can contain any arithmetic expression including
-//  standard operators and mathematical functions separated by operators.
-//  Examples of valid expression:
-//          "x<y && sqrt(z)>3.2"
-//
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -324,8 +320,7 @@ void TTreeFormula::Init(const char*name, const char* expression)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Tree Formula default destructor*-*-*-*-*-*-*-*-*-*-*
-///*-*                  =================================
+/// Tree Formula default destructor.
 
 TTreeFormula::~TTreeFormula()
 {
@@ -357,7 +352,7 @@ TTreeFormula::~TTreeFormula()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method is used internally to decode the dimensions of the variables
+/// This method is used internally to decode the dimensions of the variables.
 
 void TTreeFormula::DefineDimensions(Int_t code, Int_t size,
                                     TFormLeafInfoMultiVarDim * info,
@@ -399,7 +394,7 @@ void TTreeFormula::DefineDimensions(Int_t code, Int_t size,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method is used internally to decode the dimensions of the variables
+/// This method is used internally to decode the dimensions of the variables.
 
 Int_t TTreeFormula::RegisterDimensions(const char *info, Int_t code)
 {
@@ -447,7 +442,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMult
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method is used internally to decode the dimensions of the variables
+/// This method is used internally to decode the dimensions of the variables.
 
 Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
                                        TFormLeafInfo * /* maininfo */,
@@ -552,7 +547,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method is used internally to decode the dimensions of the variables
+/// This method is used internally to decode the dimensions of the variables.
 
 Int_t TTreeFormula::RegisterDimensions(Int_t code, TBranchElement *branch) {
    TBranchElement * leafcount2 = branch->GetBranchCount2();
@@ -580,7 +575,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TBranchElement *branch) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method is used internally to decode the dimensions of the variables
+/// This method is used internally to decode the dimensions of the variables.
 
 Int_t TTreeFormula::RegisterDimensions(Int_t code, TLeaf *leaf) {
    Int_t numberOfVarDim = 0;
@@ -651,10 +646,10 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TLeaf *leaf) {
 ////////////////////////////////////////////////////////////////////////////////
 /// This method check for treat the case where expression contains $Atl and load up
 /// both fAliases and fExpr.
-/// We return
-///   -1 in case of failure
-///   0 in case we did not find $Alt
-///   the action number in case of success.
+/// We return:
+/// -  -1 in case of failure
+/// -  0 in case we did not find $Alt
+/// -  the action number in case of success.
 
 Int_t TTreeFormula::DefineAlternate(const char *expression)
 {
@@ -758,10 +753,10 @@ Int_t TTreeFormula::DefineAlternate(const char *expression)
 ////////////////////////////////////////////////////////////////////////////////
 /// Decompose 'expression' as pointing to something inside the leaf
 /// Returns:
-///   -2  Error: some information is missing (message already printed)
-///   -1  Error: Syntax is incorrect (message already printed)
-///    0
-///    >0 the value returns is the action code.
+/// -  -2  Error: some information is missing (message already printed)
+/// -  -1  Error: Syntax is incorrect (message already printed)
+/// -  0
+/// -  >0 the value returns is the action code.
 
 Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t final, UInt_t paran_level, TObjArray& castqueue, Bool_t useLeafCollectionObject, const char* fullExpression)
 {
@@ -2150,18 +2145,21 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
 
    return action;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Look for the leaf corresponding to the start of expression.
 /// It returns the corresponding leaf if any.
 /// It also modify the following arguments:
-///   leftover: contain from expression that was not used to determine the leaf
-///   final:
-///   paran_level: number of un-matched open parenthesis
-///   cast_queue: list of cast to be done
-///   aliases: list of aliases used
-/// Return <0 in case of failure
-/// Return 0 if a leaf has been found
-/// Return 2 if info about the TTree itself has been requested.
+///
+/// -  leftover: contain from expression that was not used to determine the leaf
+/// -  final:
+///    * paran_level: number of un-matched open parenthesis
+///    * cast_queue: list of cast to be done
+///    * aliases: list of aliases used
+/// -  Return <0 in case of failure
+///
+/// -  Return 0 if a leaf has been found
+/// -  Return 2 if info about the TTree itself has been requested.
 
 Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, TString& leftover, Bool_t& final, UInt_t& paran_level, TObjArray& castqueue, std::vector<std::string>& aliasUsed, Bool_t& useLeafCollectionObject, const char* fullExpression)
 {
@@ -2638,39 +2636,40 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Check if name is in the list of Tree/Branch leaves*-*-*-*-*
-///*-*        ==================================================
+/// Check if name is in the list of Tree/Branch leaves.
 ///
-///   This member function redefines the function in ROOT::v5::TFormula
-///   If a leaf has a name corresponding to the argument name, then
-///   returns a new code.
-///   A TTreeFormula may contain more than one variable.
-///   For each variable referenced, the pointers to the corresponding
-///   branch and leaf is stored in the object arrays fBranches and fLeaves.
+/// This member function redefines the function in ROOT::v5::TFormula
+/// If a leaf has a name corresponding to the argument name, then
+/// returns a new code.
 ///
-///   name can be :
-///      - Leaf_Name (simple variable or data member of a ClonesArray)
-///      - Branch_Name.Leaf_Name
-///      - Branch_Name.Method_Name
-///      - Leaf_Name[index]
-///      - Branch_Name.Leaf_Name[index]
-///      - Branch_Name.Leaf_Name[index1]
-///      - Branch_Name.Leaf_Name[][index2]
-///      - Branch_Name.Leaf_Name[index1][index2]
-///   New additions:
-///      - Branch_Name.Leaf_Name[OtherLeaf_Name]
-///      - Branch_Name.Datamember_Name
-///      - '.' can be replaced by '->'
+/// A TTreeFormula may contain more than one variable.
+/// For each variable referenced, the pointers to the corresponding
+/// branch and leaf is stored in the object arrays fBranches and fLeaves.
+///
+/// name can be :
+///  - Leaf_Name (simple variable or data member of a ClonesArray)
+///  - Branch_Name.Leaf_Name
+///  - Branch_Name.Method_Name
+///  - Leaf_Name[index]
+///  - Branch_Name.Leaf_Name[index]
+///  - Branch_Name.Leaf_Name[index1]
+///  - Branch_Name.Leaf_Name[][index2]
+///  - Branch_Name.Leaf_Name[index1][index2]
+///
+/// New additions:
+///  - Branch_Name.Leaf_Name[OtherLeaf_Name]
+///  - Branch_Name.Datamember_Name
+///  - '.' can be replaced by '->'
+///
 ///   and
-///      - Branch_Name[index1].Leaf_Name[index2]
-///      - Leaf_name[index].Action().OtherAction(param)
-///      - Leaf_name[index].Action()[val].OtherAction(param)
+///  - Branch_Name[index1].Leaf_Name[index2]
+///  - Leaf_name[index].Action().OtherAction(param)
+///  - Leaf_name[index].Action()[val].OtherAction(param)
 ///
-///   The expected returns values are
-///     -2 :  the name has been recognized but won't be usable
-///     -1 :  the name has not been recognized
-///    >=0 :  the name has been recognized, return the internal code for this name.
-///
+/// The expected returns values are
+/// -  -2 :  the name has been recognized but won't be usable
+/// -  -1 :  the name has not been recognized
+/// -  >=0 :  the name has been recognized, return the internal code for this name.
 
 Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 {
@@ -3035,12 +3034,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the leaf (if any) which contains an object containing
+/// a data member which has the name provided in the arguments.
 
 TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* nextchoice, Long64_t readentry) const
 {
-   // Return the leaf (if any) which contains an object containing
-   // a data member which has the name provided in the arguments.
-
    TClass * cl = 0;
    TIter nextleaf (fTree->GetIteratorOnAllLeaves());
    TFormLeafInfo* clonesinfo = 0;
@@ -3321,6 +3319,7 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char
 /// Now let calculate what physical instance we really need.
 /// Some redundant code is used to speed up the cases where
 /// they are no dimensions.
+///
 /// We know that instance is less that fCumulUsedSize[0] so
 /// we can skip the modulo when virt_dim is 0.
 
@@ -3545,7 +3544,7 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Evaluate the class of this treeformula
+///  Evaluate the class of this treeformula.
 ///
 ///  If the 'value' of this formula is a simple pointer to an object,
 ///  this function returns the TClass corresponding to its type.
@@ -3558,7 +3557,7 @@ TClass* TTreeFormula::EvalClass() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Evaluate the class of the operation oper
+///  Evaluate the class of the operation oper.
 ///
 ///  If the 'value' in the requested operation is a simple pointer to an object,
 ///  this function returns the TClass corresponding to its type.
@@ -3606,8 +3605,7 @@ TClass* TTreeFormula::EvalClass(Int_t oper) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Evaluate this treeformula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  =========================
+/// Evaluate this treeformula.
 ///
 ///  Return the address of the object pointed to by the formula.
 ///  Return 0 if the formula is not a single object
@@ -3909,9 +3907,7 @@ template<> inline LongDouble_t TTreeFormula::GetConstant(Int_t k) {
 template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t)GetConstant<LongDouble_t>(k); }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Evaluate this treeformula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  =========================
-///
+/// Evaluate this treeformula.
 
 template<typename T>
 T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
@@ -4365,8 +4361,7 @@ template long double TTreeFormula::EvalInstance<long double> (int, char const**)
 template long long TTreeFormula::EvalInstance<long long> (int, char const**);
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Return DataMember corresponding to code*-*-*-*-*-*
-///*-*            =======================================
+/// Return DataMember corresponding to code.
 ///
 ///  function called by TLeafObject::GetValue
 ///  with the value of fLookupType computed in TTreeFormula::DefinedVariable
@@ -4378,9 +4373,7 @@ TFormLeafInfo *TTreeFormula::GetLeafInfo(Int_t code) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Return leaf corresponding to serial number n*-*-*-*-*-*
-///*-*            ============================================
-///
+/// Return leaf corresponding to serial number n.
 
 TLeaf *TTreeFormula::GetLeaf(Int_t n) const
 {
@@ -4388,11 +4381,10 @@ TLeaf *TTreeFormula::GetLeaf(Int_t n) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Return methodcall corresponding to code*-*-*-*-*-*
-///*-*            =======================================
+/// Return methodcall corresponding to code.
 ///
-///  function called by TLeafObject::GetValue
-///  with the value of fLookupType computed in TTreeFormula::DefinedVariable
+/// function called by TLeafObject::GetValue
+/// with the value of fLookupType computed in TTreeFormula::DefinedVariable
 
 TMethodCall *TTreeFormula::GetMethodCall(Int_t code) const
 {
@@ -4401,9 +4393,7 @@ TMethodCall *TTreeFormula::GetMethodCall(Int_t code) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Return number of available instances in the formula-*-*-*-*-*-*
-///*-*            ===================================================
-///
+/// Return number of available instances in the formula.
 
 Int_t TTreeFormula::GetNdata()
 {
@@ -4538,7 +4528,7 @@ void* TTreeFormula::GetValuePointerFromMethod(Int_t i, TLeaf* leaf) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return TRUE if the formula corresponds to one single Tree leaf
+/// Return TRUE if the formula corresponds to one single Tree leaf
 /// and this leaf is short, int or unsigned short, int
 /// When a leaf is of type integer or string, the generated histogram is forced
 /// to have an integer bin width
@@ -4593,7 +4583,7 @@ Bool_t TTreeFormula::IsInteger(Bool_t fast) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return TRUE if the leaf corresponding to code is short, int or unsigned
+/// Return TRUE if the leaf corresponding to code is short, int or unsigned
 /// short, int When a leaf is of type integer, the generated histogram is
 /// forced to have an integer bin width
 
@@ -4642,7 +4632,7 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return TRUE if the formula is a string
+/// Return TRUE if the formula is a string
 
 Bool_t TTreeFormula::IsString() const
 {
@@ -4651,13 +4641,11 @@ Bool_t TTreeFormula::IsString() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// (fOper[i]>=105000 && fOper[i]<110000) || fOper[i] == kStrings)
+/// Return true if the expression at the index 'oper' is to be treated as
+/// as string.
 
 Bool_t TTreeFormula::IsString(Int_t oper) const
 {
-   // return true if the expression at the index 'oper' is to be treated as
-   // as string
-
    if (ROOT::v5::TFormula::IsString(oper)) return kTRUE;
    if (GetAction(oper)==kDefinedString) return kTRUE;
    if (GetAction(oper)==kAliasString) return kTRUE;
@@ -4666,7 +4654,7 @@ Bool_t TTreeFormula::IsString(Int_t oper) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return TRUE if the leaf or data member corresponding to code is a string
+/// Return TRUE if the leaf or data member corresponding to code is a string
 
 Bool_t  TTreeFormula::IsLeafString(Int_t code) const
 {
@@ -4742,9 +4730,9 @@ Bool_t  TTreeFormula::IsLeafString(Int_t code) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value of variable as a string
 ///
-///      mode = -2 : Print line with ***
-///      mode = -1 : Print column names
-///      mode = 0  : Print column values
+/// -  mode = -2 : Print line with ***
+/// -  mode = -1 : Print column names
+/// -  mode = 0  : Print column values
 
 char *TTreeFormula::PrintValue(Int_t mode) const
 {
@@ -4754,11 +4742,11 @@ char *TTreeFormula::PrintValue(Int_t mode) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value of variable as a string
 ///
-///      mode = -2 : Print line with ***
-///      mode = -1 : Print column names
-///      mode = 0  : Print column values
-///  decform contains the requested format (with the same convention as printf).
+/// -  mode = -2 : Print line with ***
+/// -  mode = -1 : Print column names
+/// -  mode = 0  : Print column values
 ///
+///  decform contains the requested format (with the same convention as printf).
 
 char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) const
 {
@@ -5009,16 +4997,16 @@ Bool_t TTreeFormula::StringToNumber(Int_t oper)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// this function is called TTreePlayer::UpdateFormulaLeaves, itself
+/// This function is called TTreePlayer::UpdateFormulaLeaves, itself
 /// called by TChain::LoadTree when a new Tree is loaded.
 /// Because Trees in a TChain may have a different list of leaves, one
 /// must update the leaves numbers in the TTreeFormula used by the TreePlayer.
+///
+/// A safer alternative would be to recompile the whole thing .... However
+/// currently compile HAS TO be called from the constructor!
 
 void TTreeFormula::UpdateFormulaLeaves()
 {
-   // A safer alternative would be to recompile the whole thing .... However
-   // currently compile HAS TO be called from the constructor!
-
    Int_t nleaves = fLeafNames.GetEntriesFast();
    ResetBit( kMissingLeaf );
    for (Int_t i=0;i<nleaves;i++) {
@@ -5301,10 +5289,9 @@ void TTreeFormula::LoadBranches()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Calculate the actual dimension for the current entry.
 
 Bool_t TTreeFormula::LoadCurrentDim() {
-   // Calculate the actual dimension for the current entry.
-
    Int_t size;
    Bool_t outofbounds = kFALSE;
 
