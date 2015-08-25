@@ -26,21 +26,10 @@
 #include "TNtuple.h"
 #include <vector>
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// TTreeReaderValue                                                        //
-//                                                                            //
-// Extracts data from a TTree.                                                //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+/** \class TTreeReaderValue
+
+Extracts data from a TTree.
+*/
 
 ClassImp(TTreeReaderValueBase)
 
