@@ -61,9 +61,9 @@ Used to pass a selection expression to the Tree drawing routine. See TTree::Draw
 A TreeFormula can contain any arithmetic expression including
 standard operators and mathematical functions separated by operators.
 Examples of valid expression:
-
+~~~{.cpp}
      "x<y && sqrt(z)>3.2"
-
+~~~
 TTreeFormula now relies on a variety of TFormLeafInfo classes to handle the
 reading of the information. Here is the list of theses classes:
   - TFormLeafInfo
