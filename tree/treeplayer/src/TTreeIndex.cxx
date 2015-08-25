@@ -9,11 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A Tree Index with majorname and minorname.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTreeIndex
+A Tree Index with majorname and minorname.
+*/
 
 #include "TTreeIndex.h"
 #include "TTree.h"
@@ -65,43 +63,49 @@ TTreeIndex::TTreeIndex(): TVirtualIndex()
 /// The index is built with the expressions given in "majorname" and "minorname".
 ///
 /// a Long64_t array fIndexValues is built with:
-///    major = the value of majorname converted to an integer
-///    minor = the value of minorname converted to an integer
-///    fIndexValues[i] = major<<31 + minor
+///
+/// -  major = the value of majorname converted to an integer
+/// -  minor = the value of minorname converted to an integer
+/// -  fIndexValues[i] = major<<31 + minor
+///
 /// This array is sorted. The sorted fIndex[i] contains the serial number
 /// in the Tree corresponding to the pair "major,minor" in fIndexvalues[i].
 ///
 ///  Once the index is computed, one can retrieve one entry via
-///    T->GetEntryWithIndex(majornumber, minornumber)
+/// ~~~{.cpp}
+///     T->GetEntryWithIndex(majornumber, minornumber)
+/// ~~~
 /// Example:
+/// ~~~{.cpp}
 ///  tree.BuildIndex("Run","Event"); //creates an index using leaves Run and Event
-///  tree.GetEntryWithIndex(1234,56789); //reads entry corresponding to
-///                                        Run=1234 and Event=56789
-///
+///  tree.GetEntryWithIndex(1234,56789); // reads entry corresponding to
+///                                      // Run=1234 and Event=56789
+/// ~~~
 /// Note that majorname and minorname may be expressions using original
 /// Tree variables eg: "run-90000", "event +3*xx". However the result
 /// must be integer.
+///
 /// In case an expression is specified, the equivalent expression must be computed
 /// when calling GetEntryWithIndex.
 ///
 /// To build an index with only majorname, specify minorname="0" (default)
 ///
-///    TreeIndex and Friend Trees
-///    ---------------------------
-/// Assuming a parent Tree T and a friend Tree TF, the following cases are supported:
-/// CASE 1: T->GetEntry(entry) is called
-///         In this case, the serial number entry is used to retrieve
-///         the data in both Trees.
-/// CASE 2: T->GetEntry(entry) is called, TF has a TreeIndex
-///         the expressions given in major/minorname of TF are used
-///         to compute the value pair major,minor with the data in T.
-///         TF->GetEntryWithIndex(major,minor) is then called (tricky case!)
-/// CASE 3: T->GetEntryWithIndex(major,minor) is called.
-///         It is assumed that both T and TF have a TreeIndex built using
-///         the same major and minor name.
+/// ## TreeIndex and Friend Trees
 ///
-///    Saving the TreeIndex
-///    --------------------
+/// Assuming a parent Tree T and a friend Tree TF, the following cases are supported:
+/// -  CASE 1: T->GetEntry(entry) is called
+///            In this case, the serial number entry is used to retrieve
+///            the data in both Trees.
+/// -  CASE 2: T->GetEntry(entry) is called, TF has a TreeIndex
+///            the expressions given in major/minorname of TF are used
+///            to compute the value pair major,minor with the data in T.
+///         TF->GetEntryWithIndex(major,minor) is then called (tricky case!)
+/// -  CASE 3: T->GetEntryWithIndex(major,minor) is called.
+///            It is assumed that both T and TF have a TreeIndex built using
+///            the same major and minor name.
+///
+/// ## Saving the TreeIndex
+///
 /// Once the index is built, it can be saved with the TTree object
 /// with tree.Write(); (if the file has been open in "update" mode).
 ///
@@ -492,9 +496,9 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *parent)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the table with : serial number, majorname, minorname.
-/// if option = "10" print only the first 10 entries
-/// if option = "100" print only the first 100 entries
-/// if option = "1000" print only the first 1000 entries
+/// -  if option = "10" print only the first 10 entries
+/// -  if option = "100" print only the first 100 entries
+/// -  if option = "1000" print only the first 1000 entries
 
 void TTreeIndex::Print(Option_t * option) const
 {

@@ -9,13 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TTreePlayer
-//
-// Implement some of the functionality of the class TTree requiring access to
-// extra libraries (Histogram, display, etc).
-//
+/** \class TTreePlayer
+
+Implement some of the functionality of the class TTree requiring access to
+extra libraries (Histogram, display, etc).
+*/
 
 #include <string.h>
 #include <stdio.h>
@@ -93,8 +91,7 @@ TVirtualFitter *tFitter=0;
 ClassImp(TTreePlayer)
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Default Tree constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ========================
+/// Default Tree constructor.
 
 TTreePlayer::TTreePlayer()
 {
@@ -120,8 +117,7 @@ TTreePlayer::TTreePlayer()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Tree destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  =================
+/// Tree destructor.
 
 TTreePlayer::~TTreePlayer()
 {
@@ -152,26 +148,25 @@ TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// copy a Tree with selection
-/// make a clone of this Tree header.
-/// then copy the selected entries
+/// Copy a Tree with selection, make a clone of this Tree header, then copy the
+/// selected entries.
 ///
-/// selection is a standard selection expression (see TTreePlayer::Draw)
-/// option is reserved for possible future use
-/// nentries is the number of entries to process (default is all)
-/// first is the first entry to process (default is 0)
+/// -  selection is a standard selection expression (see TTreePlayer::Draw)
+/// -  option is reserved for possible future use
+/// -  nentries is the number of entries to process (default is all)
+/// -  first is the first entry to process (default is 0)
 ///
 /// IMPORTANT: The copied tree stays connected with this tree until this tree
-///            is deleted.  In particular, any changes in branch addresses
-///            in this tree are forwarded to the clone trees.  Any changes
-///            made to the branch addresses of the copied trees are over-ridden
-///            anytime this tree changes its branch addresses.
-///            Once this tree is deleted, all the addresses of the copied tree
-///            are reset to their default values.
+/// is deleted.  In particular, any changes in branch addresses
+/// in this tree are forwarded to the clone trees.  Any changes
+/// made to the branch addresses of the copied trees are over-ridden
+/// anytime this tree changes its branch addresses.
+/// Once this tree is deleted, all the addresses of the copied tree
+/// are reset to their default values.
 ///
 /// The following example illustrates how to copy some events from the Tree
 /// generated in $ROOTSYS/test/Event
-///
+/// ~~~{.cpp}
 ///   gSystem->Load("libEvent");
 ///   TFile f("Event.root");
 ///   TTree *T = (TTree*)f.Get("T");
@@ -180,6 +175,7 @@ TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, co
 ///   TFile f2("Event2.root","recreate");
 ///   TTree *T2 = T->CopyTree("fNtrack<595");
 ///   T2->Write();
+/// ~~~
 
 TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Long64_t nentries,
                              Long64_t firstentry)
@@ -279,10 +275,13 @@ void TTreePlayer::DeleteSelectorFromFile()
 ///    - & is replaced by rf
 ///
 /// If a cutfilename is specified, for each entry, we execute
+/// ~~~{.cpp}
 ///   if (cutfilename()) htemp->Fill(macrofilename());
+/// ~~~
 /// If no cutfilename is specified, for each entry we execute
+/// ~~~{.cpp}
 ///   htemp(macrofilename());
-///
+/// ~~~
 /// The default for the histogram are the same as for
 /// TTreePlayer::DrawSelect
 
@@ -543,12 +542,12 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 ///  If varexp contains >>hnew , the new histogram created is called hnew
 ///  and it is kept in the current directory.
 ///  Example:
+/// ~~~{.cpp}
 ///    tree.Fit("pol4","sqrt(x)>>hsqrt","y>0")
 ///    will fit sqrt(x) and save the histogram as "hsqrt" in the current
 ///    directory.
+/// ~~~
 ///
-///   Return status
-///   =============
 /// The function returns the status of the histogram fit (see TH1::Fit)
 /// If no entries were selected, the function returns -1;
 ///   (i.e. fitResult is null if the fit is OK)
@@ -611,12 +610,10 @@ Long64_t TTreePlayer::GetEntriesToProcess(Long64_t firstentry, Long64_t nentries
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Return name corresponding to colindex in varexp*-*-*-*-*-*
-///*-*              ===============================================
+/// Return name corresponding to colindex in varexp.
 ///
-///   varexp is a string of names separated by :
-///   index is an array with pointers to the start of name[i] in varexp
-///
+/// -  varexp is a string of names separated by :
+/// -  index is an array with pointers to the start of name[i] in varexp
 
 const char *TTreePlayer::GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex)
 {
@@ -697,16 +694,18 @@ static TString R__GetBranchPointerName(TLeaf *leaf, Bool_t replace = kTRUE)
 /// To use this function:
 ///    - connect your Tree file (eg: TFile f("myfile.root");)
 ///    - T->MakeClass("MyClass");
+///
 /// where T is the name of the Tree in file myfile.root
 /// and MyClass.h, MyClass.C the name of the files created by this function.
 /// In a ROOT session, you can do:
+/// ~~~{.cpp}
 ///    root> .L MyClass.C
 ///    root> MyClass t
 ///    root> t.GetEntry(12); // Fill t data members with entry number 12
 ///    root> t.Show();       // Show values of entry 12
 ///    root> t.Show(16);     // Read and show values of entry 16
 ///    root> t.Loop();       // Loop on all entries
-///
+/// ~~~
 ///  NOTE: Do not use the code generated for one Tree in case of a TChain.
 ///        Maximum dimensions calculated on the basis of one TTree only
 ///        might be too small when processing all the TTrees in one TChain.
@@ -1761,9 +1760,13 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 /// indirect access to the content of the branches of a TTree.
 ///
 /// "proxyClassname" is expected to be of the form:
+/// ~~~{.cpp}
 ///    [path/]fileprefix
+/// ~~~
 /// The skeleton will then be generated in the file:
+/// ~~~{.cpp}
 ///    fileprefix.h
+/// ~~~
 /// located in the current directory or in 'path/' if it is specified.
 /// The class generated will be named 'fileprefix'.
 /// If the fileprefix contains a period, the right side of the period
@@ -1774,11 +1777,12 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 /// to source file which will be included in by the generated skeletong.
 /// Method of the same name as the file(minus the extension and path)
 /// will be called by the generated skeleton's Process method as follow:
+/// ~~~{.cpp}
 ///    [if (cutfilename())] htemp->Fill(macrofilename());
-///
+/// ~~~
 /// "option" can be used select some of the optional features during
 /// the code generation.  The possible options are:
-///    nohist : indicates that the generated ProcessFill should not
+/// -  nohist : indicates that the generated ProcessFill should not
 ///             fill the histogram.
 ///
 /// 'maxUnrolling' controls how deep in the class hierarchy does the
@@ -1788,60 +1792,76 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 ///
 /// The main features of this skeleton are:
 ///
-///    * on-demand loading of branches
-///    * ability to use the 'branchname' as if it was a data member
-///    * protection against array out-of-bound
-///    * ability to use the branch data as object (when the user code is available)
+/// *  on-demand loading of branches
+/// *  ability to use the 'branchname' as if it was a data member
+/// *  protection against array out-of-bound
+/// *  ability to use the branch data as object (when the user code is available)
 ///
 /// For example with Event.root, if
+/// ~~~{.cpp}
 ///    Double_t somepx = fTracks.fPx[2];
+/// ~~~
 /// is executed by one of the method of the skeleton,
 /// somepx will be updated with the current value of fPx of the 3rd track.
 ///
 /// Both macrofilename and the optional cutfilename are expected to be
 /// the name of source files which contain at least a free standing
 /// function with the signature:
+/// ~~~{.cpp}
 ///     x_t macrofilename(); // i.e function with the same name as the file
+/// ~~~
 /// and
+/// ~~~{.cpp}
 ///     y_t cutfilename();   // i.e function with the same name as the file
-///
+/// ~~~
 /// x_t and y_t needs to be types that can convert respectively to a double
 /// and a bool (because the skeleton uses:
+/// ~~~{.cpp}
 ///     if (cutfilename()) htemp->Fill(macrofilename());
-///
+/// ~~~
 /// This 2 functions are run in a context such that the branch names are
 /// available as local variables of the correct (read-only) type.
 ///
 /// Note that if you use the same 'variable' twice, it is more efficient
 /// to 'cache' the value. For example
+/// ~~~{.cpp}
 ///   Int_t n = fEventNumber; // Read fEventNumber
 ///   if (n<10 || n>10) { ... }
+/// ~~~
 /// is more efficient than
+/// ~~~{.cpp}
 ///   if (fEventNumber<10 || fEventNumber>10)
-///
+/// ~~~
 /// Access to TClonesArray.
 ///
 /// If a branch (or member) is a TClonesArray (let's say fTracks), you
 /// can access the TClonesArray itself by using ->:
+/// ~~~{.cpp}
 ///    fTracks->GetLast();
+/// ~~~
 /// However this will load the full TClonesArray object and its content.
 /// To quickly read the size of the TClonesArray use (note the dot):
+/// ~~~{.cpp}
 ///    fTracks.GetEntries();
+/// ~~~
 /// This will read only the size from disk if the TClonesArray has been
 /// split.
 /// To access the content of the TClonesArray, use the [] operator:
+/// ~~~
 ///    float px = fTracks[i].fPx; // fPx of the i-th track
-///
+/// ~~~
 /// Warning:
-///    The variable actually use for access are 'wrapper' around the
+///
+/// The variable actually use for access are 'wrapper' around the
 /// real data type (to add autoload for example) and hence getting to
 /// the data involves the implicit call to a C++ conversion operator.
 /// This conversion is automatic in most case.  However it is not invoked
 /// in a few cases, in particular in variadic function (like printf).
 /// So when using printf you should either explicitly cast the value or
 /// use any intermediary variable:
+/// ~~~{.cpp}
 ///      fprintf(stdout,"trs[%d].a = %d\n",i,(int)trs.a[i]);
-///
+/// ~~~
 /// Also, optionally, the generated selector will also call methods named
 /// macrofilename_methodname in each of 6 main selector methods if the method
 /// macrofilename_methodname exist (Where macrofilename is stripped of its
@@ -1849,13 +1869,13 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 ///
 /// Concretely, with the script named h1analysisProxy.C,
 ///
-/// The method         calls the method (if it exist)
-/// Begin           -> void h1analysisProxy_Begin(TTree*);
-/// SlaveBegin      -> void h1analysisProxy_SlaveBegin(TTree*);
-/// Notify          -> Bool_t h1analysisProxy_Notify();
-/// Process         -> Bool_t h1analysisProxy_Process(Long64_t);
-/// SlaveTerminate  -> void h1analysisProxy_SlaveTerminate();
-/// Terminate       -> void h1analysisProxy_Terminate();
+/// -  The method         calls the method (if it exist)
+/// -  Begin           -> void h1analysisProxy_Begin(TTree*);
+/// -  SlaveBegin      -> void h1analysisProxy_SlaveBegin(TTree*);
+/// -  Notify          -> Bool_t h1analysisProxy_Notify();
+/// -  Process         -> Bool_t h1analysisProxy_Process(Long64_t);
+/// -  SlaveTerminate  -> void h1analysisProxy_SlaveTerminate();
+/// -  Terminate       -> void h1analysisProxy_Terminate();
 ///
 /// If a file name macrofilename.h (or .hh, .hpp, .hxx, .hPP, .hXX) exist
 /// it is included before the declaration of the proxy class.  This can
@@ -1870,18 +1890,19 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 ///
 /// To draw px using the file hsimple.root (generated by the
 /// hsimple.C tutorial), we need a file named hsimple.cxx:
-///
+/// ~~~{.cpp}
 ///     double hsimple() {
 ///        return px;
 ///     }
-///
+/// ~~~
 /// MakeProxy can then be used indirectly via the TTree::Draw interface
 /// as follow:
+/// ~~~{.cpp}
 ///     new TFile("hsimple.root")
 ///     ntuple->Draw("hsimple.cxx");
-///
+/// ~~~
 /// A more complete example is available in the tutorials directory:
-///   h1analysisProxy.cxx , h1analysProxy.h and h1analysisProxyCut.C
+/// h1analysisProxy.cxx , h1analysProxy.h and h1analysisProxyCut.C
 /// which reimplement the selector found in h1analysis.C
 
 Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
@@ -1915,7 +1936,7 @@ Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
 ///         leaves of Y.
 ///    - For further examples see the figure below.
 ///
-/// \image html images\ttree_makeselector_option_examples.png
+/// \image html ttree_makeselector_option_examples.png
 ///
 /// The generated code in classname.h includes the following:
 ///    - Identification of the original Tree and Input file name
@@ -1943,7 +1964,7 @@ Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
 
 Int_t TTreePlayer::MakeReader(const char *classname, Option_t *option)
 {
-   if (!classname) classname = fTree->GetName();   
+   if (!classname) classname = fTree->GetName();
 
    TTreeReaderGenerator gsr(fTree, classname, option);
 
@@ -1954,19 +1975,22 @@ Int_t TTreePlayer::MakeReader(const char *classname, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to the Principal Components Analysis class.
 ///
-///   Create an instance of TPrincipal
-///   Fill it with the selected variables
-///   if option "n" is specified, the TPrincipal object is filled with
-///                 normalized variables.
-///   If option "p" is specified, compute the principal components
-///   If option "p" and "d" print results of analysis
-///   If option "p" and "h" generate standard histograms
-///   If option "p" and "c" generate code of conversion functions
-///   return a pointer to the TPrincipal object. It is the user responsibility
-///   to delete this object.
-///   The option default value is "np"
+/// Create an instance of TPrincipal
+/// Fill it with the selected variables
 ///
-///   See TTreePlayer::DrawSelect for explanation of the other parameters.
+/// -  if option "n" is specified, the TPrincipal object is filled with
+///                 normalized variables.
+/// -  If option "p" is specified, compute the principal components
+/// -  If option "p" and "d" print results of analysis
+/// -  If option "p" and "h" generate standard histograms
+/// -  If option "p" and "c" generate code of conversion functions
+///
+/// return a pointer to the TPrincipal object. It is the user responsibility
+/// to delete this object.
+///
+/// The option default value is "np"
+///
+/// See TTreePlayer::DrawSelect for explanation of the other parameters.
 
 TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
@@ -2094,37 +2118,39 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 /// filename must contain a valid class implementation derived from TSelector,
 /// where TSelector has the following member functions:
 ///
-///    Begin():        called every time a loop on the tree starts,
+/// -  Begin():        called every time a loop on the tree starts,
 ///                    a convenient place to create your histograms.
-///    SlaveBegin():   called after Begin(), when on PROOF called only on the
+/// -  SlaveBegin():   called after Begin(), when on PROOF called only on the
 ///                    slave servers.
-///    Process():      called for each event, in this function you decide what
+/// -  Process():      called for each event, in this function you decide what
 ///                    to read and fill your histograms.
-///    SlaveTerminate: called at the end of the loop on the tree, when on PROOF
+/// -  SlaveTerminate: called at the end of the loop on the tree, when on PROOF
 ///                    called only on the slave servers.
-///    Terminate():    called at the end of the loop on the tree,
+/// -  Terminate():    called at the end of the loop on the tree,
 ///                    a convenient place to draw/fit your histograms.
 ///
 /// If filename is of the form file.C, the file will be interpreted.
 /// If filename is of the form file.C++, the file file.C will be compiled
 /// and dynamically loaded.
+///
 /// If filename is of the form file.C+, the file file.C will be compiled
 /// and dynamically loaded. At next call, if file.C is older than file.o
 /// and file.so, the file.C is not compiled, only file.so is loaded.
 ///
-///  NOTE1
+///  ### NOTE 1
 ///  It may be more interesting to invoke directly the other Process function
 ///  accepting a TSelector* as argument.eg
+/// ~~~{.cpp}
 ///     MySelector *selector = (MySelector*)TSelector::GetSelector(filename);
 ///     selector->CallSomeFunction(..);
 ///     mytree.Process(selector,..);
-///
-///  NOTE2
+/// ~~~
+///  ### NOTE 2
 ///  One should not call this function twice with the same selector file
 ///  in the same script. If this is required, proceed as indicated in NOTE1,
 ///  by getting a pointer to the corresponding TSelector,eg
-///    workaround 1
-///    ------------
+///#### workaround 1
+/// ~~~{.cpp}
 ///void stubs1() {
 ///   TSelector *selector = TSelector::GetSelector("h1test.C");
 ///   TFile *f1 = new TFile("stubs_nood_le1.root");
@@ -2134,9 +2160,10 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 ///   TTree *h2 = (TTree*)f2->Get("h1");
 ///   h2->Process(selector);
 ///}
+/// ~~~
 ///  or use ACLIC to compile the selector
-///   workaround 2
-///   ------------
+///#### workaround 2
+/// ~~~{.cpp}
 ///void stubs2() {
 ///   TFile *f1 = new TFile("stubs_nood_le1.root");
 ///   TTree *h1 = (TTree*)f1->Get("h1");
@@ -2145,6 +2172,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 ///   TTree *h2 = (TTree*)f2->Get("h1");
 ///   h2->Process("h1test.C+");
 ///}
+/// ~~~
 
 Long64_t TTreePlayer::Process(const char *filename,Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
@@ -2171,15 +2199,15 @@ Long64_t TTreePlayer::Process(const char *filename,Option_t *option, Long64_t ne
 ///
 ///   The TSelector class has the following member functions:
 ///
-///    Begin():        called every time a loop on the tree starts,
+/// -  Begin():        called every time a loop on the tree starts,
 ///                    a convenient place to create your histograms.
-///    SlaveBegin():   called after Begin(), when on PROOF called only on the
+/// -  SlaveBegin():   called after Begin(), when on PROOF called only on the
 ///                    slave servers.
-///    Process():      called for each event, in this function you decide what
+/// -  Process():      called for each event, in this function you decide what
 ///                    to read and fill your histograms.
-///    SlaveTerminate: called at the end of the loop on the tree, when on PROOF
+/// -  SlaveTerminate: called at the end of the loop on the tree, when on PROOF
 ///                    called only on the slave servers.
-///    Terminate():    called at the end of the loop on the tree,
+/// -  Terminate():    called at the end of the loop on the tree,
 ///                    a convenient place to draw/fit your histograms.
 ///
 ///  If the Tree (Chain) has an associated EventList, the loop is on the nentries
@@ -2313,19 +2341,24 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 ///
 /// By default 50 rows are shown and you are asked for <CR>
 /// to see the next 50 rows.
+///
 /// You can change the default number of rows to be shown before <CR>
 /// via  mytree->SetScanField(maxrows) where maxrows is 50 by default.
 /// if maxrows is set to 0 all rows of the Tree are shown.
+///
 /// This option is interesting when dumping the contents of a Tree to
 /// an ascii file, eg from the command line
+/// ~~~{.cpp}
 ///   tree->SetScanField(0);
 ///   tree->Scan("*"); >tree.log
+/// ~~~
 ///  will create a file tree.log
 ///
 /// Arrays (within an entry) are printed in their linear forms.
 /// If several arrays with multiple dimensions are printed together,
 /// they will NOT be synchronized.  For example print
 ///   arr1[4][2] and arr2[2][3] will results in a printing similar to:
+/// ~~~{.cpp}
 /// ***********************************************
 /// *    Row   * Instance *      arr1 *      arr2 *
 /// ***********************************************
@@ -2337,35 +2370,39 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 /// *        x *        5 * arr1[2][1]* arr2[1][2]*
 /// *        x *        6 * arr1[3][0]*           *
 /// *        x *        7 * arr1[3][1]*           *
-///
+/// ~~~
 /// However, if there is a selection criterion which is an array, then
 /// all the formulas will be synchronized with the selection criterion
 /// (see TTreePlayer::DrawSelect for more information).
 ///
 /// The options string can contains the following parameters:
-///    lenmax=dd
+///
+/// -  lenmax=dd
 ///       Where 'dd' is the maximum number of elements per array that should
 ///       be printed.  If 'dd' is 0, all elements are printed (this is the
 ///       default)
-///    colsize=ss
+/// -  colsize=ss
 ///       Where 'ss' will be used as the default size for all the column
 ///       If this options is not specified, the default column size is 9
-///    precision=pp
+/// -  precision=pp
 ///       Where 'pp' will be used as the default 'precision' for the
 ///       printing format.
-///    col=xxx
+/// -  col=xxx
 ///       Where 'xxx' is colon (:) delimited list of printing format for
 ///       each column. The format string should follow the printf format
 ///       specification.  The value given will be prefixed by % and, if no
 ///       conversion specifier is given, will be suffixed by the letter g.
 ///       before being passed to fprintf.  If no format is specified for a
 ///       column, the default is used  (aka ${colsize}.${precision}g )
+///
 /// For example:
+/// ~~~{.cpp}
 ///   tree->Scan("a:b:c","","colsize=30 precision=3 col=::20.10:#x:5ld");
+/// ~~~
 /// Will print 3 columns, the first 2 columns will be 30 characters long,
 /// the third columns will be 20 characters long.  The printing format used
 /// for the columns (assuming they are numbers) will be respectively:
-///   %30.3g %30.3g %20.10g %#x %5ld
+/// `%30.3g %30.3g %20.10g %#x %5ld`
 
 Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
                            Option_t * option,
@@ -2878,9 +2915,7 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Set number of entries to estimate variable limits*-*-*-*
-///*-*              ================================================
-///
+/// Set number of entries to estimate variable limits.
 
 void TTreePlayer::SetEstimate(Long64_t n)
 {
@@ -2888,11 +2923,10 @@ void TTreePlayer::SetEstimate(Long64_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Start the TTreeViewer on this TTree*-*-*-*-*-*-*-*-*-*
-///*-*              ===================================
+/// Start the TTreeViewer on this TTree.
 ///
-///  ww is the width of the canvas in pixels
-///  wh is the height of the canvas in pixels
+/// -  ww is the width of the canvas in pixels
+/// -  wh is the height of the canvas in pixels
 
 void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
 {
@@ -2910,71 +2944,78 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
    }
 }
 
-///______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unbinned fit of one or more variable(s) from a Tree.
+///
+/// funcname is a TF1 function.
+///
+/// See TTree::Draw for explanations of the other parameters.
+///
+/// Fit the variable varexp using the function funcname using the
+/// selection cuts given by selection.
+///
+/// The list of fit options is given in parameter option.
+///
+/// -  option = "Q" Quiet mode (minimum printing)
+/// -  option = "V" Verbose mode (default is between Q and V)
+/// -  option = "E" Perform better Errors estimation using Minos technique
+/// -  option = "M" More. Improve fit results
+/// -  option = "D" Draw the projected histogram with the fitted function
+///             normalized to the number of selected rows
+///             and multiplied by the bin width
+///
+/// You can specify boundary limits for some or all parameters via
+/// ~~~{.cpp}
+///        func->SetParLimits(p_number, parmin, parmax);
+/// ~~~
+/// if parmin>=parmax, the parameter is fixed
+///
+/// Note that you are not forced to fix the limits for all parameters.
+/// For example, if you fit a function with 6 parameters, you can do:
+/// ~~~{.cpp}
+///     func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
+///     func->SetParLimits(4,-10,-4);
+///     func->SetParLimits(5, 1,1);
+/// ~~~
+/// With this setup, parameters 0->3 can vary freely
+/// -  Parameter 4 has boundaries [-10,-4] with initial value -8
+/// -  Parameter 5 is fixed to 100.
+///
+///   For the fit to be meaningful, the function must be self-normalized.
+///
+/// i.e. It must have the same integral regardless of the parameter
+/// settings.  Otherwise the fit will effectively just maximize the
+/// area.
+///
+/// It is mandatory to have a normalization variable
+/// which is fixed for the fit.  e.g.
+/// ~~~{.cpp}
+///     TF1* f1 = new TF1("f1", "gaus(0)/sqrt(2*3.14159)/[2]", 0, 5);
+///     f1->SetParameters(1, 3.1, 0.01);
+///     f1->SetParLimits(0, 1, 1); // fix the normalization parameter to 1
+///     data->UnbinnedFit("f1", "jpsimass", "jpsipt>3.0");
+/// ~~~
+///
+/// 1, 2 and 3 Dimensional fits are supported.
+/// See also TTree::Fit
+///
+/// ### Return status
+///
+/// The function return the status of the fit in the following form
+/// ~~~{.cpp}
+///     fitResult = migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
+/// -  The fitResult is 0 is the fit is OK.
+/// -  The fitResult is negative in case of an error not connected with the fit.
+/// -  The number of entries used in the fit can be obtained via
+/// ~~~{.cpp}
+///     mytree.GetSelectedRows();
+/// ~~~
+/// -  If the number of selected entries is null the function returns -1
+///
+/// new implementation using new Fitter classes
+
 Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Long64_t nentries, Long64_t firstentry)
 {
-//*-*-*-*-*-*Unbinned fit of one or more variable(s) from a Tree*-*-*-*-*-*
-//*-*        ===================================================
-//
-//  funcname is a TF1 function.
-//
-//  See TTree::Draw for explanations of the other parameters.
-//
-//   Fit the variable varexp using the function funcname using the
-//   selection cuts given by selection.
-//
-//   The list of fit options is given in parameter option.
-//      option = "Q" Quiet mode (minimum printing)
-//             = "V" Verbose mode (default is between Q and V)
-//             = "E" Perform better Errors estimation using Minos technique
-//             = "M" More. Improve fit results
-//             = "D" Draw the projected histogram with the fitted function
-//                   normalized to the number of selected rows
-//                   and multiplied by the bin width
-//
-//   You can specify boundary limits for some or all parameters via
-//        func->SetParLimits(p_number, parmin, parmax);
-//   if parmin>=parmax, the parameter is fixed
-//   Note that you are not forced to fix the limits for all parameters.
-//   For example, if you fit a function with 6 parameters, you can do:
-//     func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
-//     func->SetParLimits(4,-10,-4);
-//     func->SetParLimits(5, 1,1);
-//   With this setup, parameters 0->3 can vary freely
-//   Parameter 4 has boundaries [-10,-4] with initial value -8
-//   Parameter 5 is fixed to 100.
-//
-//   For the fit to be meaningful, the function must be self-normalized.
-//
-//   i.e. It must have the same integral regardless of the parameter
-//   settings.  Otherwise the fit will effectively just maximize the
-//   area.
-//
-//   It is mandatory to have a normalization variable
-//   which is fixed for the fit.  e.g.
-//
-//     TF1* f1 = new TF1("f1", "gaus(0)/sqrt(2*3.14159)/[2]", 0, 5);
-//     f1->SetParameters(1, 3.1, 0.01);
-//     f1->SetParLimits(0, 1, 1); // fix the normalization parameter to 1
-//     data->UnbinnedFit("f1", "jpsimass", "jpsipt>3.0");
-//   //
-//
-//   1, 2 and 3 Dimensional fits are supported.
-//   See also TTree::Fit
-//
-//    Return status
-//    =============
-//   The function return the status of the fit in the following form
-//     fitResult = migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
-//   The fitResult is 0 is the fit is OK.
-//   The fitResult is negative in case of an error not connected with the fit.
-//   The number of entries used in the fit can be obtained via
-//     mytree.GetSelectedRows();
-//   If the number of selected entries is null the function returns -1
-
-
-// new implementation using new Fitter classes
-
    // function is given by name, find it in gROOT
    TF1* fitfunc = (TF1*)gROOT->GetFunction(funcname);
    if (!fitfunc) { Error("UnbinnedFit", "Unknown function: %s",funcname); return 0; }

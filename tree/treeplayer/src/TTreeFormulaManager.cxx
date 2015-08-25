@@ -19,18 +19,17 @@
 
 ClassImp(TTreeFormulaManager)
 
-//________________________________________________________________________________
-//
-//     A TreeFormulaManager is used to coordinate one or more TTreeFormula objecs
-//
-//  In particular it makes sure that the dimensions and size of all the formulas
-//  is properly coordinated.
-//
+
+/** \class TTreeFormulaManager
+Used to coordinate one or more TTreeFormula objects.
+
+In particular it makes sure that the dimensions and size of all the formulas
+is properly coordinated.
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Tree FormulaManger default constructor*-*-*-*-*-*-*-*-*-*
-///*-*                  ======================================
+/// Tree FormulaManger default constructor.
 
 TTreeFormulaManager::TTreeFormulaManager() : TObject()
 {
@@ -50,8 +49,7 @@ TTreeFormulaManager::TTreeFormulaManager() : TObject()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Tree FormulaManager default destructor*-*-*-*-*-*-*-*-*-*
-///*-*                  ======================================
+/// Tree FormulaManager default destructor.
 
 TTreeFormulaManager::~TTreeFormulaManager()
 {
@@ -126,9 +124,7 @@ void TTreeFormulaManager::EnableMultiVarDims()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*Return number of available instances in the formulas*-*-*-*-*-*
-///*-*            ====================================================
-///
+/// Return number of available instances in the formulas.
 
 Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
 {
@@ -294,7 +290,7 @@ Bool_t TTreeFormulaManager::Sync()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// this function could be called TTreePlayer::UpdateFormulaLeaves, itself
+/// This function could be called TTreePlayer::UpdateFormulaLeaves, itself
 /// called by TChain::LoadTree when a new Tree is loaded.
 /// Because Trees in a TChain may have a different list of leaves, one
 /// must update the leaves numbers in the TTreeFormula used by the TreePlayer.
