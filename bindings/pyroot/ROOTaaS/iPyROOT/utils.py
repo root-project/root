@@ -5,6 +5,7 @@ import time
 import tempfile
 import itertools
 import ctypes
+from contextlib import contextmanager
 from IPython import get_ipython
 from IPython.display import HTML
 import IPython.display
@@ -92,6 +93,13 @@ def _loadLibrary(libName):
 
 def welcomeMsg():
     print "Welcome to ROOTaas Beta"
+
+@contextmanager
+def _setIgnoreLevel(level):
+    originalLevel = ROOT.gErrorIgnoreLevel
+    ROOT.gErrorIgnoreLevel = level
+    yield
+    ROOT.gErrorIgnoreLevel = originalLevel
 
 class StreamCapture(object):
     def __init__(self, stream, ip=get_ipython()):
@@ -341,7 +349,8 @@ class CanvasDrawer(object):
 
     def _pngDisplay(self):
         ofile = tempfile.NamedTemporaryFile(suffix=".png")
-        self.thePad.SaveAs(ofile.name)
+        with _setIgnoreLevel(ROOT.kError):
+            self.thePad.SaveAs(ofile.name)
         img = IPython.display.Image(filename=ofile.name, format='png', embed=True)
         IPython.display.display(img)
         return 0
