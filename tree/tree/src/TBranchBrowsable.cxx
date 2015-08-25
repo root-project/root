@@ -42,9 +42,9 @@ Only registered helper objects are created. By default, only
 TMethodBrowsable, TNonSplitBrowsable, and TCollectionPropertyBrowsable
 are registered (see RegisterDefaultGenerators). You can prevent any of
 their objects to show up in the browser by unregistering the generator:
-
+~~~ {.cpp}
     TMethodBrowsable::Unregister()
-
+~~~
 will stop creating browsable method helper objects from that call on.
 Note that these helper objects are cached (in TBranch::fBrowsables);
 already created (and thus cached) browsables will still appear in the
@@ -55,17 +55,18 @@ e.g. the simple TCollectionPropertyBrowsable. Note that you will have
 to register your generator just like any other, and that you should
 implement the following methods for your own class, mainly for
 consistency reasons:
-
+~~~ {.cpp}
     static void Register() {
       TVirtualBranchBrowsable::RegisterGenerator(GetBrowsables); }
     static void Unregister() {
       TVirtualBranchBrowsable::UnregisterGenerator(GetBrowsables); }
-
+~~~
 where GetBrowsables is a static member function of your class, that
 creates the browsable helper objects, and has the signature
-
+~~~ {.cpp}
     static Int_t GetBrowsables(TList& list, const TBranch* branch,
                                const TVirtualBranchBrowsable* parent=0);
+~~~
 
 It has to return the number of browsable helper objects for parent
 (or, if NULL, for branch) which are added to the list.

@@ -1184,11 +1184,11 @@ const char* TBranch::GetIconName() const
 /// The input argument "entry" is the entry number in the current tree.
 /// In case of a TChain, the entry number in the current Tree must be found
 /// before calling this function. For example:
-///
+///~~~ {.cpp}
 ///     TChain* chain = ...;
 ///     Long64_t localEntry = chain->LoadTree(entry);
 ///     branch->GetEntry(localEntry);
-///
+///~~~
 /// The function returns the number of bytes read from the input buffer.
 /// If entry does not exist, the function returns 0.
 /// If an I/O error occurs, the function returns -1.
