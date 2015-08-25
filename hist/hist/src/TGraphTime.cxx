@@ -18,12 +18,12 @@
 
 ClassImp(TGraphTime)
 
-//______________________________________________________________________________
-//
-// TGraphTime is used to draw a set of objects evolving with nsteps in time between tmin and tmax.
-// each time step has a new list of objects. This list can be identical to
-// the list of objects in the previous steps, but with different attributes.
-//   see example of use in $ROOTSYS/tutorials/graphs/gtime.C
+/** \class TGraphTime
+TGraphTime is used to draw a set of objects evolving with nsteps in time between tmin and tmax.
+Each time step has a new list of objects. This list can be identical to
+the list of objects in the previous steps, but with different attributes.
+see example of use in $ROOTSYS/tutorials/graphs/gtime.C
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor.

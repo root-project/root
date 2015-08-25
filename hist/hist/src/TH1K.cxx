@@ -15,23 +15,20 @@
 #include "TH1K.h"
 #include "TMath.h"
 
-//______________________________________________________________________________
-// The TH1K Class
-//
-//  TH1K class supports the nearest K Neighbours method,
-//       widely used in cluster analysis.
-//       This method is especially useful for small statistics.
-//
-//       In this method :
-//         DensityOfProbability ~ 1/DistanceToNearestKthNeighbour
-//
-//      Ctr TH1K::TH1K(name,title,nbins,xlow,xup,K=0)
-//      differs from TH1F only by "K"
-//      K - is the order of K Neighbours method, usually >=3
-//      K = 0, means default, where K is selected by TH1K in such a way
-//             that DistanceToNearestKthNeighbour > BinWidth and K >=3
-//
-//  This class has been implemented by Victor Perevoztchikov <perev@bnl.gov>
+/** \class TH1K
+TH1K class supports the nearest K Neighbours method, widely used in cluster analysis.
+This method is especially useful for small statistics.
+In this method :
+
+      DensityOfProbability ~ 1/DistanceToNearestKthNeighbour
+      Ctr TH1K::TH1K(name,title,nbins,xlow,xup,K=0)
+      differs from TH1F only by "K"
+      K - is the order of K Neighbours method, usually >=3
+      K = 0, means default, where K is selected by TH1K in such a way
+             that DistanceToNearestKthNeighbour > BinWidth and K >=3
+
+This class has been implemented by Victor Perevoztchikov <perev@bnl.gov>
+*/
 
 ClassImp(TH1K)
 

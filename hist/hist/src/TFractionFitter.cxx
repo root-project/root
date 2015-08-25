@@ -2,139 +2,145 @@
 // Author: Frank Filthaut F.Filthaut@science.ru.nl  20/05/2002
 // with additions by Bram Wijngaarden <dwijngaa@hef.kun.nl>
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Fits MC fractions to data histogram (a la HMCMLL, see R. Barlow and C. Beeston,
-// Comp. Phys. Comm. 77 (1993) 219-228, and http://www.hep.man.ac.uk/~roger/hfrac.f).
-//
-// The virtue of this fit is that it takes into account both data and Monte Carlo
-// statistical uncertainties. The way in which this is done is through a standard
-// likelihood fit using Poisson statistics; however, the template (MC) predictions
-// are also varied within statistics, leading to additional contributions to the
-// overall likelihood. This leads to many more fit parameters (one per bin per
-// template), but the minimisation with respect to these additional parameters is
-// done analytically rather than introducing them as formal fit parameters. Some
-// special care needs to be taken in the case of bins with zero content. For more
-// details please see the original publication cited above.
-//
-// An example application of this fit is given below. For a TH1* histogram
-// ("data") fitted as the sum of three Monte Carlo sources ("mc"):
-//
-// {
-//   TH1F *data;                              //data histogram
-//   TH1F *mc0;                               // first MC histogram
-//   TH1F *mc1;                               // second MC histogram
-//   TH1F *mc2;                               // third MC histogram
-//   ....                                     // retrieve histograms
-//   TObjArray *mc = new TObjArray(3);        // MC histograms are put in this array
-//   mc->Add(mc0);
-//   mc->Add(mc1);
-//   mc->Add(mc2);
-//   TFractionFitter* fit = new TFractionFitter(data, mc); // initialise
-//   fit->Constrain(1,0.0,1.0);               // constrain fraction 1 to be between 0 and 1
-//   fit->SetRangeX(1,15);                    // use only the first 15 bins in the fit
-//   Int_t status = fit->Fit();               // perform the fit
-//   std::cout << "fit status: " << status << std::endl;
-//   if (status == 0) {                       // check on fit status
-//     TH1F* result = (TH1F*) fit->GetPlot();
-//     data->Draw("Ep");
-//     result->Draw("same");
-//   }
-// }
-//
-//
-// Assumptions
-// ===========
-// A few assumptions need to be made for the fit procedure to be carried out:
-//
-// (1) The total number of events in each template is not too small
-//     (so that its Poisson uncertainty can be neglected).
-// (2) The number of events in each bin is much smaller than the total
-//     number of events in each template (so that multinomial
-//     uncertainties can be replaced with Poisson uncertainties).
-//
-// Biased fit uncertainties may result if these conditions are not fulfilled
-// (see e.g. arXiv:0803.2711).
-//
-// Instantiation
-// =============
-// A fit object is instantiated through
-//     TFractionFitter* fit = new TFractionFitter(data, mc);
-// A number of basic checks (intended to ensure that the template histograms
-// represent the same "kind" of distribution as the data one) are carried out.
-// The TVirtualFitter object is then addressed and all fit parameters (the
-// template fractions) declared (initially unbounded).
-//
-// Applying constraints
-// ====================
-// Fit parameters can be constrained through
-//     fit->Constrain(parameter #, lower bound, upper bound);
-// Setting lower bound = upper bound = 0 removes the constraint (a la Minuit);
-// however, a function
-//     fit->Unconstrain(parameter #)
-// is also provided to simplify this.
-//
-// Setting parameter values
-// ========================
-// The function
-//     TVirtualFitter* vFit = fit->GetFitter();
-// is provided for direct access to the TVirtualFitter object. This allows to
-// set and fix parameter values, and set step sizes directly.
-//
-// Restricting the fit range
-// =========================
-// The fit range can be restricted through
-//     fit->SetRangeX(first bin #, last bin #);
-// and freed using
-//     fit->ReleaseRangeX();
-// For 2D histograms the Y range can be similarly restricted using
-//     fit->SetRangeY(first bin #, last bin #);
-//     fit->ReleaseRangeY();
-// and for 3D histograms also
-//     fit->SetRangeZ(first bin #, last bin #);
-//     fit->ReleaseRangeZ();
-// It is also possible to exclude individual bins from the fit through
-//     fit->ExcludeBin(bin #);
-// where the given bin number is assumed to follow the TH1::GetBin() numbering.
-// Any bins excluded in this way can be included again using the corresponding
-//     fit->IncludeBin(bin #);
-//
-// Weights histograms
-// ==================
-// Weights histograms (for a motivation see the above publication) can be specified
-// for the individual MC sources through
-//     fit->SetWeight(parameter #, pointer to weights histogram);
-// and unset by specifying a null pointer.
-//
-// Obtaining fit results
-// =====================
-// The fit is carried out through
-//     Int_t status = fit->Fit();
-// where  status  is the code returned from the "MINIMIZE" command. For fits
-// that converged, parameter values and errors can be obtained through
-//     fit->GetResult(parameter #, value, error);
-// and the histogram corresponding to the total Monte Carlo prediction (which
-// is not the same as a simple weighted sum of the input Monte Carlo distributions)
-// can be obtained by
-//     TH1* result = fit->GetPlot();
-//
-// Using different histograms
-// ==========================
-// It is possible to change the histogram being fitted through
-//     fit->SetData(TH1* data);
-// and to change the template histogram for a given parameter number through
-//     fit->SetMC(parameter #, TH1* MC);
-// This can speed up code in case of multiple data or template histograms;
-// however, it should be done with care as any settings are taken over from
-// the previous fit. In addition, neither the dimensionality nor the numbers of
-// bins of the histograms should change (in that case it is better to instantiate
-// a new TFractionFitter object).
-//
-// Errors
-// ======
-// Any serious inconsistency results in an error.
-//
-///////////////////////////////////////////////////////////////////////////////
+/** \class TFractionFitter
+Fits MC fractions to data histogram. A la HMCMLL, see R. Barlow and C. Beeston,
+Comp. Phys. Comm. 77 (1993) 219-228, and http://www.hep.man.ac.uk/~roger/hfrac.f
+
+The virtue of this fit is that it takes into account both data and Monte Carlo
+statistical uncertainties. The way in which this is done is through a standard
+likelihood fit using Poisson statistics; however, the template (MC) predictions
+are also varied within statistics, leading to additional contributions to the
+overall likelihood. This leads to many more fit parameters (one per bin per
+template), but the minimisation with respect to these additional parameters is
+done analytically rather than introducing them as formal fit parameters. Some
+special care needs to be taken in the case of bins with zero content. For more
+details please see the original publication cited above.
+
+An example application of this fit is given below. For a TH1* histogram
+("data") fitted as the sum of three Monte Carlo sources ("mc"):
+
+~~~{.cpp}
+{
+  TH1F *data;                              //data histogram
+  TH1F *mc0;                               // first MC histogram
+  TH1F *mc1;                               // second MC histogram
+  TH1F *mc2;                               // third MC histogram
+  ....                                     // retrieve histograms
+   TObjArray *mc = new TObjArray(3);        // MC histograms are put in this array
+   mc->Add(mc0);
+   mc->Add(mc1);
+   mc->Add(mc2);
+   TFractionFitter* fit = new TFractionFitter(data, mc); // initialise
+   fit->Constrain(1,0.0,1.0);               // constrain fraction 1 to be between 0 and 1
+   fit->SetRangeX(1,15);                    // use only the first 15 bins in the fit
+   Int_t status = fit->Fit();               // perform the fit
+   std::cout << "fit status: " << status << std::endl;
+   if (status == 0) {                       // check on fit status
+     TH1F* result = (TH1F*) fit->GetPlot();
+     data->Draw("Ep");
+     result->Draw("same");
+   }
+}
+~~~
+
+## Assumptions
+A few assumptions need to be made for the fit procedure to be carried out:
+ 1 The total number of events in each template is not too small
+    (so that its Poisson uncertainty can be neglected).
+ 2 The number of events in each bin is much smaller than the total
+    number of events in each template (so that multinomial
+    uncertainties can be replaced with Poisson uncertainties).
+
+Biased fit uncertainties may result if these conditions are not fulfilled
+(see e.g. arXiv:0803.2711).
+
+## Instantiation
+A fit object is instantiated through
+    TFractionFitter* fit = new TFractionFitter(data, mc);
+A number of basic checks (intended to ensure that the template histograms
+represent the same "kind" of distribution as the data one) are carried out.
+The TVirtualFitter object is then addressed and all fit parameters (the
+template fractions) declared (initially unbounded).
+
+## Applying constraints
+Fit parameters can be constrained through
+
+ fit->Constrain(parameter #, lower bound, upper bound);
+
+Setting lower bound = upper bound = 0 removes the constraint (a la Minuit);
+however, a function
+
+    fit->Unconstrain(parameter #)
+
+is also provided to simplify this.
+
+## Setting parameter values
+The function
+
+    TVirtualFitter* vFit = fit->GetFitter();
+
+is provided for direct access to the TVirtualFitter object. This allows to
+set and fix parameter values, and set step sizes directly.
+
+## Restricting the fit range
+The fit range can be restricted through
+
+    fit->SetRangeX(first bin #, last bin #);
+and freed using
+
+    fit->ReleaseRangeX();
+For 2D histograms the Y range can be similarly restricted using
+
+    fit->SetRangeY(first bin #, last bin #);
+    fit->ReleaseRangeY();
+and for 3D histograms also
+
+    fit->SetRangeZ(first bin #, last bin #);
+    fit->ReleaseRangeZ();
+It is also possible to exclude individual bins from the fit through
+
+    fit->ExcludeBin(bin #);
+where the given bin number is assumed to follow the TH1::GetBin() numbering.
+Any bins excluded in this way can be included again using the corresponding
+
+    fit->IncludeBin(bin #);
+
+## Weights histograms
+Weights histograms (for a motivation see the above publication) can be specified
+for the individual MC sources through
+
+    fit->SetWeight(parameter #, pointer to weights histogram);
+and unset by specifying a null pointer.
+
+## Obtaining fit results
+The fit is carried out through
+
+    Int_t status = fit->Fit();
+where  status  is the code returned from the "MINIMIZE" command. For fits
+that converged, parameter values and errors can be obtained through
+
+    fit->GetResult(parameter #, value, error);
+and the histogram corresponding to the total Monte Carlo prediction (which
+is not the same as a simple weighted sum of the input Monte Carlo distributions)
+can be obtained by
+
+    TH1* result = fit->GetPlot();
+## Using different histograms
+It is possible to change the histogram being fitted through
+
+    fit->SetData(TH1* data);
+and to change the template histogram for a given parameter number through
+
+    fit->SetMC(parameter #, TH1* MC);
+This can speed up code in case of multiple data or template histograms;
+however, it should be done with care as any settings are taken over from
+the previous fit. In addition, neither the dimensionality nor the numbers of
+bins of the histograms should change (in that case it is better to instantiate
+a new TFractionFitter object).
+
+## Errors
+Any serious inconsistency results in an error.
+*/
 
 #include "Riostream.h"
 #include "TH1.h"
@@ -175,13 +181,12 @@ fPlot(0)
 /// consistency checks, default fit range as the whole histogram but without
 /// under- and overflows, and declaration of the fit parameters). Note that
 /// the histograms are not copied, only references are used.
-/// Arguments:
-///     data: histogram to be fitted
-///     MCs:  array of TH1* corresponding template distributions
-///    Option:  can be used to control the print level of the minimization algorithm
-///             option = "Q"  : quite - no message is printed
-///             option = "V"  : verbose - max print out
-///             option = ""   : default: print initial fraction values and result
+/// \param[in] data histogram to be fitted
+/// \param[in] MCs  array of TH1* corresponding template distributions
+/// \param[in] option   can be used to control the print level of the minimization algorithm
+///            - option = "Q"  : quite - no message is printed
+///            - option = "V"  : verbose - max print out
+///            - option = ""   : default: print initial fraction values and result
 
 TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs, Option_t *option) :
 fFitDone(kFALSE), fChisquare(0), fPlot(0)  {
@@ -326,9 +331,8 @@ void TFractionFitter::CheckParNo(Int_t parm) const {
 /// Use ReleaseRangeX() to go back to fitting the full histogram.
 /// The consistency check ensures that no empty fit range occurs (and also
 /// recomputes the bin content integrals).
-/// Arguments:
-///     low:  lower X bin number
-///     high: upper X bin number
+/// \param[in] low lower X bin number
+/// \param[in] high upper X bin number
 
 void TFractionFitter::SetRangeX(Int_t low, Int_t high) {
    fLowLimitX = (low > 0 ) ? low : 1;
@@ -350,9 +354,8 @@ void TFractionFitter::ReleaseRangeX() {
 /// Use ReleaseRangeY() to go back to fitting the full histogram.
 /// The consistency check ensures that no empty fit range occurs (and also
 /// recomputes the bin content integrals).
-/// Arguments:
-///     low:  lower Y bin number
-///     high: upper Y bin number
+/// \param[in] low lower X bin number
+/// \param[in] high upper X bin number
 
 void TFractionFitter::SetRangeY(Int_t low, Int_t high) {
    if (fData->GetDimension() < 2) {
@@ -380,9 +383,8 @@ void TFractionFitter::ReleaseRangeY() {
 /// Use ReleaseRangeY() to go back to fitting the full histogram.
 /// The consistency check ensures that no empty fit range occurs (and also
 /// recomputes the bin content integrals).
-/// Arguments:
-///     low:  lower Y bin number
-///     high: upper Y bin number
+/// \param[in] low lower X bin number
+/// \param[in] high upper X bin number
 
 void TFractionFitter::SetRangeZ(Int_t low, Int_t high) {
    if (fData->GetDimension() < 3) {

@@ -14,43 +14,47 @@
 
 #include <iostream>
 
-/**
-TFitResult extends the ROOT::Fit::Result class with a TNamed inheritance
+/** \class TFitResult
+Extends the ROOT::Fit::Result class with a TNamed inheritance
 providing easy possibility for I/O
-
- */
+*/
 
 ClassImp(TFitResult);
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a ROOT::Fit::FitResult
+/// copy the contained TF1 pointer function if it is
 
 TFitResult::TFitResult(const ROOT::Fit::FitResult& f) : 
    TNamed("TFitResult","TFitResult"),
    ROOT::Fit::FitResult(f) 
 {
-   // constructor from an IFitResult
-   // copy the contained TF1 pointer function if it is 
    ROOT::Math::WrappedMultiTF1 * wfunc = dynamic_cast<ROOT::Math::WrappedMultiTF1 *>(ModelFunction().get() );
    if (wfunc)  wfunc->SetAndCopyFunction();
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Print result of the fit, by default chi2, parameter values and errors.
+/// if option "V" is given print also error matrix and correlation
+
 void TFitResult::Print(Option_t *option) const
 {
-   // print result of the fit, by default chi2, parameter values and errors
-   // if option "V" is given print also error matrix and correlation
-
    TString opt(option);
    opt.ToUpper();
    bool doCovMat = opt.Contains("V");
    ROOT::Fit::FitResult::Print( std::cout, doCovMat);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the covariance matrix from fit
+///
+/// The matrix is a symmetric matrix with a size N equal to
+/// the total number of parameters considered in the fit including the fixed ones
+/// The matrix row and columns corresponding to the fixed parameters will contain only zero's
+
 TMatrixDSym TFitResult::GetCovarianceMatrix()  const
 {
-   // Return the covariance matrix from fit
-   // The matrix is a symmetric matrix with a size N equal to
-   // the total number of parameters considered in the fit including the fixed ones
-   // The matrix row and columns corresponding to the fixed parameters will contain only zero's
-
    if (CovMatrixStatus() == 0) {
       Warning("GetCovarianceMatrix","covariance matrix is not available");
       return TMatrixDSym();
@@ -60,12 +64,15 @@ TMatrixDSym TFitResult::GetCovarianceMatrix()  const
    return mat;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the correlation matrix from fit.
+///
+/// The matrix is a symmetric matrix with a size N equal to
+/// the total number of parameters considered in the fit including the fixed ones
+/// The matrix row and columns corresponding to the fixed parameters will contain only zero's
+
 TMatrixDSym TFitResult::GetCorrelationMatrix()  const
 {
-   // Return the correlation matrix from fit.
-   // The matrix is a symmetric matrix with a size N equal to
-   // the total number of parameters considered in the fit including the fixed ones
-   // The matrix row and columns corresponding to the fixed parameters will contain only zero's
    if (CovMatrixStatus() == 0) {
       Warning("GetCorrelationMatrix","correlation matrix is not available");
       return TMatrixDSym();

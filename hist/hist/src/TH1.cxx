@@ -48,10 +48,16 @@
 #include "Math/QuantFuncMathCore.h"
 
 
-////////////////////////////////////////////////////////////////////////////////
+/// \class TH1C \brief tomato 1-D histogram with a bype per channel (see TH1 documentation)
+/// \class TH1S \brief tomato 1-D histogram with a short per channel (see TH1 documentation)
+/// \class TH1I \brief tomato 1-D histogram with a int per channel (see TH1 documentation)}
+/// \class TH1F \brief tomato 1-D histogram with a float per channel (see TH1 documentation)}
+/// \class TH1D \brief tomato 1-D histogram with a double per channel (see TH1 documentation)}
 
-/* Begin_Html
-<center><h2>The Histogram classes</h2></center>
+////////////////////////////////////////////////////////////////////////////////
+/** \class TH1
+The TH1 histogram class
+<h2>The Histogram classes</h2>
 ROOT supports the following histogram types:
 <ul>
   <li>1-D histograms:
@@ -153,47 +159,48 @@ All histogram classes are derived from the base class TH1
 
 <h4>Fix or variable bin size</h4>
 
-     All histogram types support either fix or variable bin sizes.
-     2-D histograms may have fix size bins along X and variable size bins
-     along Y or vice-versa. The functions to fill, manipulate, draw or access
-     histograms are identical in both cases.
-<p>     Each histogram always contains 3 objects TAxis: fXaxis, fYaxis and fZaxis
-     To access the axis parameters, do:
+ All histogram types support either fix or variable bin sizes.
+ 2-D histograms may have fix size bins along X and variable size bins
+ along Y or vice-versa. The functions to fill, manipulate, draw or access
+ histograms are identical in both cases.
+
+ Each histogram always contains 3 objects TAxis: fXaxis, fYaxis and fZaxis
+ o access the axis parameters, do:
 <pre>
         TAxis *xaxis = h->GetXaxis(); etc.
         Double_t binCenter = xaxis->GetBinCenter(bin), etc.
 </pre>
-     See class TAxis for a description of all the access functions.
-     The axis range is always stored internally in double precision.
+ See class TAxis for a description of all the access functions.
+ The axis range is always stored internally in double precision.
 
 <h4>Convention for numbering bins</h4>
 
-      For all histogram types: nbins, xlow, xup
+ For all histogram types: nbins, xlow, xup
 <pre>
         bin = 0;       underflow bin
         bin = 1;       first bin with low-edge xlow INCLUDED
         bin = nbins;   last bin with upper-edge xup EXCLUDED
         bin = nbins+1; overflow bin
 </pre>
-<p>      In case of 2-D or 3-D histograms, a "global bin" number is defined.
-      For example, assuming a 3-D histogram with (binx, biny, binz), the function
+ In case of 2-D or 3-D histograms, a "global bin" number is defined.
+ For example, assuming a 3-D histogram with (binx, biny, binz), the function
 <pre>
         Int_t gbin = h->GetBin(binx, biny, binz);
 </pre>
-      returns a global/linearized gbin number. This global gbin is useful
-      to access the bin content/error information independently of the dimension.
-      Note that to access the information other than bin content and errors
-      one should use the TAxis object directly with e.g.:
+ returns a global/linearized gbin number. This global gbin is useful
+ to access the bin content/error information independently of the dimension.
+ Note that to access the information other than bin content and errors
+ one should use the TAxis object directly with e.g.:
 <pre>
          Double_t xcenter = h3->GetZaxis()->GetBinCenter(27);
 </pre>
-       returns the center along z of bin number 27 (not the global bin)
-       in the 3-D histogram h3.
+ returns the center along z of bin number 27 (not the global bin)
+ in the 3-D histogram h3.
 
 <h4>Alphanumeric Bin Labels</h4>
 
-     By default, an histogram axis is drawn with its numeric bin labels.
-     One can specify alphanumeric labels instead with:
+ By default, an histogram axis is drawn with its numeric bin labels.
+ One can specify alphanumeric labels instead with:
 <ul>
        <li> call TAxis::SetBinLabel(bin, label);
            This can always be done before or after filling.
@@ -206,7 +213,7 @@ All histogram classes are derived from the base class TH1
            hist2->Fill(somename, y, weight);
            hist2->Fill(somenamex, somenamey, weight);
 </pre>
-           See example in $ROOTSYS/tutorials/hist/hlabels1.C, hlabels2.C
+ See example in $ROOTSYS/tutorials/hist/hlabels1.C, hlabels2.C
        <li> via TTree::Draw.
            see for example $ROOTSYS/tutorials/tree/cernstaff.C
 <pre>
@@ -215,19 +222,19 @@ All histogram classes are derived from the base class TH1
            where "Nation" and "Division" are two branches of a Tree.
 </ul>
 
-<p>     When using the options 2 or 3 above, the labels are automatically
-     added to the list (THashList) of labels for a given axis.
-     By default, an axis is drawn with the order of bins corresponding
-     to the filling sequence. It is possible to reorder the axis
+<p>When using the options 2 or 3 above, the labels are automatically
+ added to the list (THashList) of labels for a given axis.
+ By default, an axis is drawn with the order of bins corresponding
+ to the filling sequence. It is possible to reorder the axis
 
 <ul>
           <li>alphabetically
           <li>by increasing or decreasing values
 </ul>
 
-<p>     The reordering can be triggered via the TAxis context menu by selecting
-     the menu item "LabelsOption" or by calling directly
-        TH1::LabelsOption(option, axis) where
+<p> The reordering can be triggered via the TAxis context menu by selecting
+ the menu item "LabelsOption" or by calling directly
+ TH1::LabelsOption(option, axis) where
 <ul>
           <li>axis may be "X", "Y" or "Z"
           <li>option may be:
@@ -241,29 +248,29 @@ All histogram classes are derived from the base class TH1
              <li>"d" draw labels down (start of label left adjusted)
            </ul>
 </ul>
-<p>     When using the option 2 above, new labels are added by doubling the current
-     number of bins in case one label does not exist yet.
-     When the Filling is terminated, it is possible to trim the number
-     of bins to match the number of active labels by calling
+<p> When using the option 2 above, new labels are added by doubling the current
+ number of bins in case one label does not exist yet.
+ When the Filling is terminated, it is possible to trim the number
+ of bins to match the number of active labels by calling
 <pre>
            TH1::LabelsDeflate(axis) with axis = "X", "Y" or "Z"
 </pre>
-     This operation is automatic when using TTree::Draw.
-     Once bin labels have been created, they become persistent if the histogram
-     is written to a file or when generating the C++ code via SavePrimitive.
+ This operation is automatic when using TTree::Draw.
+ Once bin labels have been created, they become persistent if the histogram
+ is written to a file or when generating the C++ code via SavePrimitive.
 
 <h4>Histograms with automatic bins</h4>
 
-     When an histogram is created with an axis lower limit greater or equal
-     to its upper limit, the SetBuffer is automatically called with an
-     argument fBufferSize equal to fgBufferSize (default value=1000).
-     fgBufferSize may be reset via the static function TH1::SetDefaultBufferSize.
-     The axis limits will be automatically computed when the buffer will
-     be full or when the function BufferEmpty is called.
+ When an histogram is created with an axis lower limit greater or equal
+ to its upper limit, the SetBuffer is automatically called with an
+ argument fBufferSize equal to fgBufferSize (default value=1000).
+ fgBufferSize may be reset via the static function TH1::SetDefaultBufferSize.
+ The axis limits will be automatically computed when the buffer will
+ be full or when the function BufferEmpty is called.
 
 <h4>Filling histograms</h4>
 
-     An histogram is typically filled with statements like:
+ An histogram is typically filled with statements like:
 <pre>
        h1->Fill(x);
        h1->Fill(x, w); //fill with weight
@@ -272,75 +279,71 @@ All histogram classes are derived from the base class TH1
        h3->Fill(x, y, z)
        h3->Fill(x, y, z, w)
 </pre>
-     or via one of the Fill functions accepting names described above.
-     The Fill functions compute the bin number corresponding to the given
-     x, y or z argument and increment this bin by the given weight.
-     The Fill functions return the bin number for 1-D histograms or global
-     bin number for 2-D and 3-D histograms.
-<p>     If TH1::Sumw2 has been called before filling, the sum of squares of
-     weights is also stored.
-     One can also increment directly a bin number via TH1::AddBinContent
-     or replace the existing content via TH1::SetBinContent.
-     To access the bin content of a given bin, do:
+ or via one of the Fill functions accepting names described above.
+ The Fill functions compute the bin number corresponding to the given
+ x, y or z argument and increment this bin by the given weight.
+ The Fill functions return the bin number for 1-D histograms or global
+ bin number for 2-D and 3-D histograms.
+<p> If TH1::Sumw2 has been called before filling, the sum of squares of
+ weights is also stored.
+ One can also increment directly a bin number via TH1::AddBinContent
+ or replace the existing content via TH1::SetBinContent.
+ To access the bin content of a given bin, do:
 <pre>
        Double_t binContent = h->GetBinContent(bin);
 </pre>
 
-<p>     By default, the bin number is computed using the current axis ranges.
-     If the automatic binning option has been set via
+<p> By default, the bin number is computed using the current axis ranges.
+ If the automatic binning option has been set via
 <pre>
        h->SetCanExtend(kAllAxes);
 </pre>
-     then, the Fill Function will automatically extend the axis range to
-     accomodate the new value specified in the Fill argument. The method
-     used is to double the bin size until the new value fits in the range,
-     merging bins two by two. This automatic binning options is extensively
-     used by the TTree::Draw function when histogramming Tree variables
-     with an unknown range.
-<p>     This automatic binning option is supported for 1-D, 2-D and 3-D histograms.
+ then, the Fill Function will automatically extend the axis range to
+ accomodate the new value specified in the Fill argument. The method
+ used is to double the bin size until the new value fits in the range,
+ merging bins two by two. This automatic binning options is extensively
+ used by the TTree::Draw function when histogramming Tree variables
+ with an unknown range.
+<p> This automatic binning option is supported for 1-D, 2-D and 3-D histograms.
 
-     During filling, some statistics parameters are incremented to compute
-     the mean value and Root Mean Square with the maximum precision.
+ During filling, some statistics parameters are incremented to compute
+ the mean value and Root Mean Square with the maximum precision.
 
-<p>     In case of histograms of type TH1C, TH1S, TH2C, TH2S, TH3C, TH3S
-     a check is made that the bin contents do not exceed the maximum positive
-     capacity (127 or 32767). Histograms of all types may have positive
-     or/and negative bin contents.
+<p> In case of histograms of type TH1C, TH1S, TH2C, TH2S, TH3C, TH3S
+ a check is made that the bin contents do not exceed the maximum positive
+ capacity (127 or 32767). Histograms of all types may have positive
+ or/and negative bin contents.
 
 <h4>Rebinning</h4>
-
-     At any time, an histogram can be rebinned via TH1::Rebin. This function
-     returns a new histogram with the rebinned contents.
-     If bin errors were stored, they are recomputed during the rebinning.
+ At any time, an histogram can be rebinned via TH1::Rebin. This function
+ returns a new histogram with the rebinned contents.
+ If bin errors were stored, they are recomputed during the rebinning.
 
 <h4>Associated errors</h4>
-
-     By default, for each bin, the sum of weights is computed at fill time.
-     One can also call TH1::Sumw2 to force the storage and computation
-     of the sum of the square of weights per bin.
-     If Sumw2 has been called, the error per bin is computed as the
-     sqrt(sum of squares of weights), otherwise the error is set equal
-     to the sqrt(bin content).
-     To return the error for a given bin number, do:
+ By default, for each bin, the sum of weights is computed at fill time.
+ One can also call TH1::Sumw2 to force the storage and computation
+ of the sum of the square of weights per bin.
+ If Sumw2 has been called, the error per bin is computed as the
+ sqrt(sum of squares of weights), otherwise the error is set equal
+ to the sqrt(bin content).
+ To return the error for a given bin number, do:
 <pre>
         Double_t error = h->GetBinError(bin);
 </pre>
 
 <h4>Associated functions</h4>
-
-     One or more object (typically a TF1*) can be added to the list
-     of functions (fFunctions) associated to each histogram.
-     When TH1::Fit is invoked, the fitted function is added to this list.
-     Given an histogram h, one can retrieve an associated function
-     with:
+ One or more object (typically a TF1*) can be added to the list
+ of functions (fFunctions) associated to each histogram.
+ When TH1::Fit is invoked, the fitted function is added to this list.
+ Given an histogram h, one can retrieve an associated function
+ with:
 <pre>
         TF1 *myfunc = h->GetFunction("myfunc");
 </pre>
 
 <h4>Operations on histograms</h4>
 
-
-     Many types of operations are supported on histograms or between histograms
+ Many types of operations are supported on histograms or between histograms
 <ul>
      <li> Addition of an histogram to the current histogram.
      <li> Additions of two histograms with coefficients and storage into the current
@@ -349,24 +352,22 @@ All histogram classes are derived from the base class TH1
      <li> The Add, Divide and Multiply functions also exist to add, divide or multiply
        an histogram by a function.
 </ul>
-     If an histogram has associated error bars (TH1::Sumw2 has been called),
-     the resulting error bars are also computed assuming independent histograms.
-     In case of divisions, Binomial errors are also supported.
-     One can mark a histogram to be an "average" histogram by setting its bit kIsAverage via
-       myhist.SetBit(TH1::kIsAverage);
-     When adding (see TH1::Add) average histograms, the histograms are averaged and not summed.
-
-
+ If an histogram has associated error bars (TH1::Sumw2 has been called),
+ the resulting error bars are also computed assuming independent histograms.
+ In case of divisions, Binomial errors are also supported.
+ One can mark a histogram to be an "average" histogram by setting its bit kIsAverage via
+   myhist.SetBit(TH1::kIsAverage);
+ When adding (see TH1::Add) average histograms, the histograms are averaged and not summed.
 
 <h4>Fitting histograms</h4>
 
-     Histograms (1-D, 2-D, 3-D and Profiles) can be fitted with a user
-     specified function via TH1::Fit. When an histogram is fitted, the
-     resulting function with its parameters is added to the list of functions
-     of this histogram. If the histogram is made persistent, the list of
-     associated functions is also persistent. Given a pointer (see above)
-     to an associated function myfunc, one can retrieve the function/fit
-     parameters with calls such as:
+ Histograms (1-D, 2-D, 3-D and Profiles) can be fitted with a user
+ specified function via TH1::Fit. When an histogram is fitted, the
+ resulting function with its parameters is added to the list of functions
+ of this histogram. If the histogram is made persistent, the list of
+ associated functions is also persistent. Given a pointer (see above)
+ to an associated function myfunc, one can retrieve the function/fit
+ parameters with calls such as:
 <pre>
        Double_t chi2 = myfunc->GetChisquare();
        Double_t par0 = myfunc->GetParameter(0); value of 1st parameter
@@ -375,7 +376,7 @@ All histogram classes are derived from the base class TH1
 
 <h4>Projections of histograms</h4>
 
-<p>     One can:
+<p> One can:
 <ul>
       <li> make a 1-D projection of a 2-D histogram or Profile
         see functions TH2::ProjectionX,Y, TH2::ProfileX,Y, TProfile::ProjectionX
@@ -383,128 +384,127 @@ All histogram classes are derived from the base class TH1
         see functions TH3::ProjectionZ, TH3::Project3D.
 </ul>
 
-<p>     One can fit these projections via:
+<p> One can fit these projections via:
 <pre>
       TH2::FitSlicesX,Y, TH3::FitSlicesZ.
 </pre>
 
 <h4>Random Numbers and histograms</h4>
 
-     TH1::FillRandom can be used to randomly fill an histogram using
-                    the contents of an existing TF1 function or another
-                    TH1 histogram (for all dimensions).
-<p>     For example the following two statements create and fill an histogram
-     10000 times with a default gaussian distribution of mean 0 and sigma 1:
+ TH1::FillRandom can be used to randomly fill an histogram using
+ the contents of an existing TF1 function or another
+ TH1 histogram (for all dimensions).
+<p> For example the following two statements create and fill an histogram
+ 10000 times with a default gaussian distribution of mean 0 and sigma 1:
 <pre>
        TH1F h1("h1", "histo from a gaussian", 100, -3, 3);
        h1.FillRandom("gaus", 10000);
 </pre>
-     TH1::GetRandom can be used to return a random number distributed
-                    according the contents of an histogram.
+ TH1::GetRandom can be used to return a random number distributed
+ according the contents of an histogram.
 
 <h4>Making a copy of an histogram</h4>
-
-     Like for any other ROOT object derived from TObject, one can use
-     the Clone() function. This makes an identical copy of the original
-     histogram including all associated errors and functions, e.g.:
+ Like for any other ROOT object derived from TObject, one can use
+ the Clone() function. This makes an identical copy of the original
+ histogram including all associated errors and functions, e.g.:
 <pre>
        TH1F *hnew = (TH1F*)h->Clone("hnew");
 </pre>
 
 <h4>Normalizing histograms</h4>
 
-     One can scale an histogram such that the bins integral is equal to
-     the normalization parameter via TH1::Scale(Double_t norm), where norm
-     is the desired normalization divided by the integral of the histogram.
+ One can scale an histogram such that the bins integral is equal to
+ the normalization parameter via TH1::Scale(Double_t norm), where norm
+ is the desired normalization divided by the integral of the histogram.
 
 <h4>Drawing histograms</h4>
 
-     Histograms are drawn via the THistPainter class. Each histogram has
-     a pointer to its own painter (to be usable in a multithreaded program).
-     Many drawing options are supported.
-     See THistPainter::Paint() for more details.
+ Histograms are drawn via the THistPainter class. Each histogram has
+ a pointer to its own painter (to be usable in a multithreaded program).
+ Many drawing options are supported.
+ See THistPainter::Paint() for more details.
 <p>
-    The same histogram can be drawn with different options in different pads.
-     When an histogram drawn in a pad is deleted, the histogram is
-     automatically removed from the pad or pads where it was drawn.
-     If an histogram is drawn in a pad, then filled again, the new status
-     of the histogram will be automatically shown in the pad next time
-     the pad is updated. One does not need to redraw the histogram.
-     To draw the current version of an histogram in a pad, one can use
+ The same histogram can be drawn with different options in different pads.
+ When an histogram drawn in a pad is deleted, the histogram is
+ automatically removed from the pad or pads where it was drawn.
+ If an histogram is drawn in a pad, then filled again, the new status
+ of the histogram will be automatically shown in the pad next time
+ the pad is updated. One does not need to redraw the histogram.
+ To draw the current version of an histogram in a pad, one can use
 <pre>
         h->DrawCopy();
 </pre>
-     This makes a clone (see Clone below) of the histogram. Once the clone
-     is drawn, the original histogram may be modified or deleted without
-     affecting the aspect of the clone.
+ This makes a clone (see Clone below) of the histogram. Once the clone
+ is drawn, the original histogram may be modified or deleted without
+ affecting the aspect of the clone.
 <p>
-     One can use TH1::SetMaximum() and TH1::SetMinimum() to force a particular
-     value for the maximum or the minimum scale on the plot. (For 1-D
-     histograms this means the y-axis, while for 2-D histograms these
-     functions affect the z-axis).
+ One can use TH1::SetMaximum() and TH1::SetMinimum() to force a particular
+ value for the maximum or the minimum scale on the plot. (For 1-D
+ histograms this means the y-axis, while for 2-D histograms these
+ functions affect the z-axis).
 <p>
-     TH1::UseCurrentStyle() can be used to change all histogram graphics
-     attributes to correspond to the current selected style.
-     This function must be called for each histogram.
-     In case one reads and draws many histograms from a file, one can force
-     the histograms to inherit automatically the current graphics style
-     by calling before gROOT->ForceStyle().
+ TH1::UseCurrentStyle() can be used to change all histogram graphics
+ attributes to correspond to the current selected style.
+ This function must be called for each histogram.
+ In case one reads and draws many histograms from a file, one can force
+ the histograms to inherit automatically the current graphics style
+ by calling before gROOT->ForceStyle().
 
 
 <h4>Setting Drawing histogram contour levels (2-D hists only)</h4>
 
-     By default contours are automatically generated at equidistant
-     intervals. A default value of 20 levels is used. This can be modified
-     via TH1::SetContour() or TH1::SetContourLevel().
-     the contours level info is used by the drawing options "cont", "surf",
-     and "lego".
+ By default contours are automatically generated at equidistant
+ intervals. A default value of 20 levels is used. This can be modified
+ via TH1::SetContour() or TH1::SetContourLevel().
+ the contours level info is used by the drawing options "cont", "surf",
+ and "lego".
 
 <h4>Setting histogram graphics attributes</h4>
 
-     The histogram classes inherit from the attribute classes:
-       TAttLine, TAttFill, and TAttMarker.
-     See the member functions of these classes for the list of options.
+ The histogram classes inherit from the attribute classes:
+ TAttLine, TAttFill, and TAttMarker.
+ See the member functions of these classes for the list of options.
 
 <h4>Giving titles to the X, Y and Z axis</h4>
 <pre>
        h->GetXaxis()->SetTitle("X axis title");
        h->GetYaxis()->SetTitle("Y axis title");
 </pre>
-     The histogram title and the axis titles can be any TLatex string.
-     The titles are part of the persistent histogram.
-     It is also possible to specify the histogram title and the axis
-     titles at creation time. These titles can be given in the "title"
-     parameter. They must be separated by ";":
+ The histogram title and the axis titles can be any TLatex string.
+ The titles are part of the persistent histogram.
+ It is also possible to specify the histogram title and the axis
+ titles at creation time. These titles can be given in the "title"
+ parameter. They must be separated by ";":
 <pre>
         TH1F* h=new TH1F("h", "Histogram title;X Axis;Y Axis;Z Axis", 100, 0, 1);
 </pre>
-     Any title can be omitted:
+ Any title can be omitted:
 <pre>
         TH1F* h=new TH1F("h", "Histogram title;;Y Axis", 100, 0, 1);
         TH1F* h=new TH1F("h", ";;Y Axis", 100, 0, 1);
 </pre>
-     The method SetTitle has the same syntax:
+ The method SetTitle has the same syntax:
 <pre>
 </pre>
         h->SetTitle("Histogram title;Another X title Axis");
 
 <h4>Saving/Reading histograms to/from a ROOT file</h4>
 
-     The following statements create a ROOT file and store an histogram
-     on the file. Because TH1 derives from TNamed, the key identifier on
-     the file is the histogram name:
+ The following statements create a ROOT file and store an histogram
+ on the file. Because TH1 derives from TNamed, the key identifier on
+ the file is the histogram name:
 <pre>
         TFile f("histos.root", "new");
         TH1F h1("hgaus", "histo from a gaussian", 100, -3, 3);
         h1.FillRandom("gaus", 10000);
         h1->Write();
 </pre>
-     To read this histogram in another Root session, do:
+ To read this histogram in another Root session, do:
 <pre>
         TFile f("histos.root");
         TH1F *h = (TH1F*)f.Get("hgaus");
 </pre>
-     One can save all histograms in memory to the file by:
+ One can save all histograms in memory to the file by:
 <pre>
         file->Write();
 </pre>
@@ -521,9 +521,7 @@ All histogram classes are derived from the base class TH1
         TH1::GetEntries() returns the number of entries
         TH1::Reset() resets the bin contents and errors of an histogram
 </pre>
-End_Html */
-
-
+*/
 
 TF1 *gF1=0;  //left for back compatibility (use TVirtualFitter::GetUserFunc instead)
 
@@ -620,23 +618,22 @@ TH1::~TH1()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for fix bin size histograms.
+/// Normal constructor for fix bin size histograms. Creates the main histogram structure.
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form "stringt;stringx;stringy;stringz"
+///        the histogram title is set to stringt,
+///        the x axis title to stringy, the y axis title to stringy, etc.
+/// \param[in] nbins number of bins
+/// \param[in] xlow low edge of first bin
+/// \param[in] xup upper edge of last bin (not included in last bin)
 ///
-///     Creates the main histogram structure:
-///        name   : name of histogram (avoid blanks)
-///        title  : histogram title
-///                 if title is of the form "stringt;stringx;stringy;stringz"
-///                 the histogram title is set to stringt,
-///                 the x axis title to stringy, the y axis title to stringy, etc.
-///        nbins  : number of bins
-///        xlow   : low edge of first bin
-///        xup    : upper edge of last bin (not included in last bin)
+/// When an histogram is created, it is automatically added to the list
+/// of special objects in the current directory.
+/// To find the pointer to this histogram in the current directory
+/// by its name, do:
 ///
-///      When an histogram is created, it is automatically added to the list
-///      of special objects in the current directory.
-///      To find the pointer to this histogram in the current directory
-///      by its name, do:
-///      TH1F *h1 = (TH1F*)gDirectory->FindObject(name);
+///  TH1F *h1 = (TH1F*)gDirectory->FindObject(name);
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -649,17 +646,15 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size histograms.
-///
-///  Creates the main histogram structure:
-///     name   : name of histogram (avoid blanks)
-///     title  : histogram title
-///              if title is of the form "stringt;stringx;stringy;stringz"
-///              the histogram title is set to stringt,
-///              the x axis title to stringx, the y axis title to stringy, etc.
-///     nbins  : number of bins
-///     xbins  : array of low-edges for each bin
-///              This is an array of size nbins+1
+/// Normal constructor for variable bin size histograms. Creates the main histogram structure.
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form "stringt;stringx;stringy;stringz"
+///        the histogram title is set to stringt,
+///        the x axis title to stringy, the y axis title to stringy, etc.
+/// \param[in] nbins number of bins
+/// \param[in] xbins array of low-edges for each bin.
+///        This is an array of size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -675,15 +670,14 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor for variable bin size histograms.
 ///
-///  Creates the main histogram structure:
-///     name   : name of histogram (avoid blanks)
-///     title  : histogram title
-///              if title is of the form "stringt;stringx;stringy;stringz"
-///              the histogram title is set to stringt,
-///              the x axis title to stringx, the y axis title to stringy, etc.
-///     nbins  : number of bins
-///     xbins  : array of low-edges for each bin
-///              This is an array of size nbins+1
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form "stringt;stringx;stringy;stringz"
+///        the histogram title is set to stringt,
+///        the x axis title to stringy, the y axis title to stringy, etc.
+/// \param[in] nbins number of bins
+/// \param[in] xbins array of low-edges for each bin.
+///        This is an array of size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -726,7 +720,7 @@ void TH1::Browse(TBrowser *b)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Creates histogram basic data structure.
+/// Creates histogram basic data structure.
 
 void TH1::Build()
 {
@@ -842,7 +836,7 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: this = this + c1*h1
-/// if errors are defined (see TH1::Sumw2), errors are also recalculated.
+/// If errors are defined (see TH1::Sumw2), errors are also recalculated.
 /// Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
 /// if not already set.
 /// Note also that adding histogram with labels is not supported, histogram will be
@@ -853,7 +847,7 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
 /// For histograms representing averages or efficiencies, one should compute the average
 /// of the two histograms and not the sum. One can mark a histogram to be an average
 /// histogram by setting its bit kIsAverage with
-///    myhist.SetBit(TH1::kIsAverage);
+/// myhist.SetBit(TH1::kIsAverage);
 /// Note that the two histograms must have their kIsAverage bit set
 ///
 /// IMPORTANT NOTE1: If you intend to use the errors of this histogram later
@@ -1002,19 +996,19 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace contents of this histogram by the addition of h1 and h2.
 ///
-///   this = c1*h1 + c2*h2
-///   if errors are defined (see TH1::Sumw2), errors are also recalculated
-///   Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for this
-///   if not already set.
-///   Note also that adding histogram with labels is not supported, histogram will be
-///   added merging them by bin number independently of the labels.
-///   For adding histogram ith labels one should use TH1::Merge
+///this = c1*h1 + c2*h2
+///if errors are defined (see TH1::Sumw2), errors are also recalculated
+///Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for this
+///if not already set.
+///Note also that adding histogram with labels is not supported, histogram will be
+///added merging them by bin number independently of the labels.
+///For adding histogram ith labels one should use TH1::Merge
 ///
 /// SPECIAL CASE (Average/Efficiency histograms)
 /// For histograms representing averages or efficiencies, one should compute the average
 /// of the two histograms and not the sum. One can mark a histogram to be an average
 /// histogram by setting its bit kIsAverage with
-///    myhist.SetBit(TH1::kIsAverage);
+/// myhist.SetBit(TH1::kIsAverage);
 /// Note that the two histograms must have their kIsAverage bit set
 ///
 /// IMPORTANT NOTE: If you intend to use the errors of this histogram later
@@ -1228,8 +1222,8 @@ void TH1::AddBinContent(Int_t, Double_t)
 /// by calling h->SetDirectory(0) or h->SetDirectory(dir) to add it
 /// to the list of objects in the directory dir.
 ///
-///  NOTE that this is a static function. To call it, use;
-///     TH1::AddDirectory
+/// NOTE that this is a static function. To call it, use;
+/// TH1::AddDirectory
 
 void TH1::AddDirectory(Bool_t add)
 {
@@ -1241,14 +1235,14 @@ void TH1::AddDirectory(Bool_t add)
 /// Fill histogram with all entries in the buffer.
 /// action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
 /// action =  0 histogram is reset and filled from the buffer. When the histogram is filled from the
-///             buffer the value fBuffer[0] is set to a negative number (= - number of entries)
-///             When calling with action == 0 the histogram is NOT refilled when fBuffer[0] is < 0
-///             While when calling with action = -1 the histogram is reset and ALWAYS refilled independently if
-///             the histogram was filled before. This is needed when drawing the histogram
+///         buffer the value fBuffer[0] is set to a negative number (= - number of entries)
+///         When calling with action == 0 the histogram is NOT refilled when fBuffer[0] is < 0
+///         While when calling with action = -1 the histogram is reset and ALWAYS refilled independently if
+///         the histogram was filled before. This is needed when drawing the histogram
 ///
 /// action =  1 histogram is filled and buffer is deleted
-///             The buffer is automatically deleted when filling the histogram and the entries is
-///             larger than the buffer size
+///         The buffer is automatically deleted when filling the histogram and the entries is
+///         larger than the buffer size
 ///
 
 Int_t TH1::BufferEmpty(Int_t action)
@@ -1564,293 +1558,290 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Begin_Latex #chi^{2} End_Latex test for comparing weighted and unweighted histograms
+/// chi^{2} test for comparing weighted and unweighted histograms
 ///
-/// Function: Returns p-value. Other return values are specified by the 3rd parameter <br>
+/// Function: Returns p-value. Other return values are specified by the 3rd parameter
 ///
-/// Parameters:
+/// \param[in] h2 the second histogram
+/// \param[in] option
+///   - "UU" = experiment experiment comparison (unweighted-unweighted)
+///   - "UW" = experiment MC comparison (unweighted-weighted). Note that
+///      the first histogram should be unweighted
+///   - "WW" = MC MC comparison (weighted-weighted)
+///   - "NORM" = to be used when one or both of the histograms is scaled
+///              but the histogram originally was unweighted
+///   - by default underflows and overlows are not included:
+///      * "OF" = overflows included
+///      * "UF" = underflows included
+///   - "P" = print chi2, ndf, p_value, igood
+///   - "CHI2" = returns chi2 instead of p-value
+///   - "CHI2/NDF" = returns #chi^{2}/ndf
+/// \param[in] res not empty - computes normalized residuals and returns them in this array
 ///
-///    - h2: the second histogram
-///    - option:
-///       o "UU" = experiment experiment comparison (unweighted-unweighted)
-///       o "UW" = experiment MC comparison (unweighted-weighted). Note that
-///          the first histogram should be unweighted
-///       o "WW" = MC MC comparison (weighted-weighted)
-///       o "NORM" = to be used when one or both of the histograms is scaled
-///                  but the histogram originally was unweighted
-///       o by default underflows and overlows are not included:
-///          * "OF" = overflows included
-///          * "UF" = underflows included
-///       o "P" = print chi2, ndf, p_value, igood
-///       o "CHI2" = returns chi2 instead of p-value
-///       o "CHI2/NDF" = returns Begin_Latex #chi^{2}/ndf End_Latex
-///    - res: not empty - computes normalized residuals and returns them in
-///      this array
-///
-/// The current implementation is based on the papers Begin_Latex #chi^{2} End_Latex test for comparison
+/// The current implementation is based on the papers chi^{2} test for comparison
 /// of weighted and unweighted histograms" in Proceedings of PHYSTAT05 and
 /// "Comparison weighted and unweighted histograms", arXiv:physics/0605123
 /// by N.Gagunashvili. This function has been implemented by Daniel Haertl in August 2006.
 ///
 /// Introduction:
 ///
-///   A frequently used technique in data analysis is the comparison of
-///   histograms. First suggested by Pearson [1] the Begin_Latex #chi^{2} End_Latex test of
-///   homogeneity is used widely for comparing usual (unweighted) histograms.
-///   This paper describes the implementation modified Begin_Latex #chi^{2} End_Latex tests
-///   for comparison of weighted and unweighted  histograms and two weighted
-///   histograms [2] as well as usual Pearson's Begin_Latex #chi^{2} End_Latex test for
-///   comparison two usual (unweighted) histograms.
+/// A frequently used technique in data analysis is the comparison of
+/// histograms. First suggested by Pearson [1] the #chi^{2}  test of
+/// homogeneity is used widely for comparing usual (unweighted) histograms.
+/// This paper describes the implementation modified #chi^{2} tests
+/// for comparison of weighted and unweighted  histograms and two weighted
+/// histograms [2] as well as usual Pearson's #chi^{2} test for
+/// comparison two usual (unweighted) histograms.
 ///
 /// Overview:
 ///
-///   Comparison of two histograms expect hypotheses that two histograms
-///   represent identical distributions. To make a decision p-value should
-///   be calculated. The hypotheses of identity is rejected if the p-value is
-///   lower then some significance level. Traditionally significance levels
-///   0.1, 0.05 and 0.01 are used. The comparison procedure should include an
-///   analysis of the residuals which is often helpful in identifying the
-///   bins of histograms responsible for a significant overall Begin_Latex #chi^{2} End_Latex value.
-///   Residuals are the difference between bin contents and expected bin
-///   contents. Most convenient for analysis are the normalized residuals. If
-///   hypotheses of identity are valid then normalized residuals are
-///   approximately independent and identically distributed random variables
-///   having N(0,1) distribution. Analysis of residuals expect test of above
-///   mentioned properties of residuals. Notice that indirectly the analysis
-///   of residuals increase the power of Begin_Latex #chi^{2} End_Latex test.
+/// Comparison of two histograms expect hypotheses that two histograms
+/// represent identical distributions. To make a decision p-value should
+/// be calculated. The hypotheses of identity is rejected if the p-value is
+/// lower then some significance level. Traditionally significance levels
+/// 0.1, 0.05 and 0.01 are used. The comparison procedure should include an
+/// analysis of the residuals which is often helpful in identifying the
+/// bins of histograms responsible for a significant overall #chi^{2} value.
+/// Residuals are the difference between bin contents and expected bin
+/// contents. Most convenient for analysis are the normalized residuals. If
+/// hypotheses of identity are valid then normalized residuals are
+/// approximately independent and identically distributed random variables
+/// having N(0,1) distribution. Analysis of residuals expect test of above
+/// mentioned properties of residuals. Notice that indirectly the analysis
+/// of residuals increase the power of #chi^{2} test.
 ///
 /// Methods of comparison:
 ///
-///  Begin_Latex #chi^{2} End_Latex test for comparison two (unweighted) histograms:
-///   Let us consider two  histograms with the  same binning and the  number
-///   of bins equal to r. Let us denote the number of events in the ith bin
-///   in the first histogram as ni and as mi in the second one. The total
-///   number of events in the first histogram is equal to:
-///Begin_Latex
-///   N = #sum_{i=1}^{r} n_{i}
-///End_Latex
-///   and
-///Begin_Latex
-///   M = #sum_{i=1}^{r} m_{i}
-///End_Latex
-///   in the second histogram. The hypothesis of identity (homogeneity) [3]
-///   is that the two histograms represent random values with identical
-///   distributions. It is equivalent that there exist r constants p1,...,pr,
-///   such that
-///Begin_Latex
-///   #sum_{i=1}^{r} p_{i}=1
-///End_Latex
-///    and the probability of belonging to the ith bin for some measured value
-///    in both experiments is equal to pi. The number of events in the ith
-///    bin is a random variable with a distribution approximated by a Poisson
-///    probability distribution
-///Begin_Latex
-///   #frac{e^{-Np_{i}}(Np_{i})^{n_{i}}}{n_{i}!}
-///End_Latex
-///   for the first histogram and with distribution
-///Begin_Latex
-///   #frac{e^{-Mp_{i}}(Mp_{i})^{m_{i}}}{m_{i}!}
-///End_Latex
-///   for the second histogram. If the hypothesis of homogeneity is valid,
-///   then the  maximum likelihood estimator of pi, i=1,...,r, is
-///Begin_Latex
-///   #hat{p}_{i}= #frac{n_{i}+m_{i}}{N+M}
-///End_Latex
-///   and then
-///Begin_Latex
-///   X^{2} = #sum_{i=1}^{r}#frac{(n_{i}-N#hat{p}_{i})^{2}}{N#hat{p}_{i}} + #sum_{i=1}^{r}#frac{(m_{i}-M#hat{p}_{i})^{2}}{M#hat{p}_{i}} = #frac{1}{MN} #sum_{i=1}^{r}#frac{(Mn_{i}-Nm_{i})^{2}}{n_{i}+m_{i}}
-///End_Latex
-///   has approximately a Begin_Latex #chi^{2}_{(r-1)} End_Latex distribution [3].
-///   The comparison procedure can include an analysis of the residuals which
-///   is often helpful in identifying the bins of histograms responsible for
-///   a significant overall Begin_Latex #chi^{2} End_Latexvalue. Most convenient for
-///   analysis are the adjusted (normalized) residuals [4]
-///Begin_Latex
-///   r_{i} = #frac{n_{i}-N#hat{p}_{i}}{#sqrt{N#hat{p}_{i}}#sqrt{(1-N/(N+M))(1-(n_{i}+m_{i})/(N+M))}}
-///End_Latex
-///   If hypotheses of  homogeneity are valid then residuals ri are
-///   approximately independent and identically distributed random variables
-///   having N(0,1) distribution. The application of the Begin_Latex #chi^{2} End_latex test has
-///   restrictions related to the value of the expected frequencies Npi,
-///   Mpi, i=1,...,r. A conservative rule formulated in [5] is that all the
-///   expectations must be 1 or greater for both histograms. In practical
-///   cases when expected frequencies are not known the estimated expected
-///   frequencies Begin_Latex M#hat{p}_{i}, N#hat{p}_{i}, i=1,...,r End_Latex  can be used.
+/// #chi^{2} test for comparison two (unweighted) histograms:
+/// Let us consider two  histograms with the  same binning and the  number
+/// of bins equal to r. Let us denote the number of events in the ith bin
+/// in the first histogram as ni and as mi in the second one. The total
+/// number of events in the first histogram is equal to:
+/// \f[
+///  N = \sum_{i=1}^{r} n_{i}
+/// \f]
+/// and
+/// \f[
+///  M = \sum_{i=1}^{r} m_{i}
+/// \f]
+/// in the second histogram. The hypothesis of identity (homogeneity) [3]
+/// is that the two histograms represent random values with identical
+/// distributions. It is equivalent that there exist r constants p1,...,pr,
+/// such that
+/// \f[
+///\sum_{i=1}^{r} p_{i}=1
+/// \f]
+/// and the probability of belonging to the ith bin for some measured value
+/// in both experiments is equal to pi. The number of events in the ith
+/// bin is a random variable with a distribution approximated by a Poisson
+/// probability distribution
+/// \f[
+///\frac{e^{-Np_{i}}(Np_{i})^{n_{i}}}{n_{i}!}
+/// \f]
+///for the first histogram and with distribution
+/// \f[
+///\frac{e^{-Mp_{i}}(Mp_{i})^{m_{i}}}{m_{i}!}
+/// \f]
+/// for the second histogram. If the hypothesis of homogeneity is valid,
+/// then the  maximum likelihood estimator of pi, i=1,...,r, is
+/// \f[
+///\hat{p}_{i}= \frac{n_{i}+m_{i}}{N+M}
+/// \f]
+/// and then
+/// \f[
+///  X^{2} = \sum_{i=1}^{r}\frac{(n_{i}-N\hat{p}_{i})^{2}}{N\hat{p}_{i}} + \sum_{i=1}^{r}\frac{(m_{i}-M\hat{p}_{i})^{2}}{M\hat{p}_{i}} =\frac{1}{MN} \sum_{i=1}^{r}\frac{(Mn_{i}-Nm_{i})^{2}}{n_{i}+m_{i}}
+/// \f]
+/// has approximately a \f$ \chi^{2}_{(r-1)} \f$ distribution [3].
+/// The comparison procedure can include an analysis of the residuals which
+/// is often helpful in identifying the bins of histograms responsible for
+/// a significant overall #chi^{2} value. Most convenient for
+/// analysis are the adjusted (normalized) residuals [4]
+/// \f[
+///  r_{i} = \frac{n_{i}-N\hat{p}_{i}}{\sqrt{N\hat{p}_{i}}\sqrt{(1-N/(N+M))(1-(n_{i}+m_{i})/(N+M))}}
+/// \f]
+/// If hypotheses of  homogeneity are valid then residuals ri are
+/// approximately independent and identically distributed random variables
+/// having N(0,1) distribution. The application of the #chi^{2} test has
+/// restrictions related to the value of the expected frequencies Npi,
+/// Mpi, i=1,...,r. A conservative rule formulated in [5] is that all the
+/// expectations must be 1 or greater for both histograms. In practical
+/// cases when expected frequencies are not known the estimated expected
+/// frequencies \f$ M\hat{p}_{i}, N\hat{p}_{i}, i=1,...,r \f$ can be used.
 ///
 ///  Unweighted and weighted histograms comparison:
 ///
-///   A simple modification of the ideas described above can be used for the
-///   comparison of the usual (unweighted) and weighted histograms. Let us
-///   denote the number of events in the ith bin in the unweighted
-///   histogram as ni and the common weight of events in the ith bin of the
-///   weighted histogram as wi. The total number of events in the
-///   unweighted histogram is equal to
-///Begin_Latex
-///   N = #sum_{i=1}^{r} n_{i}
-///End_Latex
-///   and the total weight of events in the weighted histogram is equal to
-///Begin_Latex
-///   W = #sum_{i=1}^{r} w_{i}
-///End_Latex
-///   Let us formulate the hypothesis of identity of an unweighted histogram
-///   to a weighted histogram so that there exist r constants p1,...,pr, such
-///   that
-///Begin_Latex
-///   #sum_{i=1}^{r} p_{i} = 1
-///End_Latex
-///   for the unweighted histogram. The weight wi is a random variable with a
-///   distribution approximated by the normal probability distribution
-///   Begin_Latex N(Wp_{i},#sigma_{i}^{2}) End_Latex where Begin_Latex #sigma_{i}^{2} End_Latex is the variance of the weight wi.
-///   If we replace the variance Begin_Latex #sigma_{i}^{2} End_Latex
-///   with estimate Begin_Latex s_{i}^{2} End_Latex (sum of squares of weights of
-///   events in the ith bin) and the hypothesis of identity is valid, then the
-///   maximum likelihood estimator of  pi,i=1,...,r, is
-///Begin_Latex
-///   #hat{p}_{i} = #frac{Ww_{i}-Ns_{i}^{2}+#sqrt{(Ww_{i}-Ns_{i}^{2})^{2}+4W^{2}s_{i}^{2}n_{i}}}{2W^{2}}
-///End_Latex
-///   We may then use the test statistic
-///Begin_Latex
-///   X^{2} = #sum_{i=1}^{r} #frac{(n_{i}-N#hat{p}_{i})^{2}}{N#hat{p}_{i}} + #sum_{i=1}^{r} #frac{(w_{i}-W#hat{p}_{i})^{2}}{s_{i}^{2}}
-///End_Latex
-///   and it has approximately a Begin_Latex #chi^{2}_{(r-1)} End_Latex distribution [2]. This test, as well
-///   as the original one [3], has a restriction on the expected frequencies. The
-///   expected frequencies recommended for the weighted histogram is more than 25.
-///   The value of the minimal expected frequency can be decreased down to 10 for
-///   the case when the weights of the events are close to constant. In the case
-///   of a weighted histogram if the number of events is unknown, then we can
-///   apply this recommendation for the equivalent number of events as
-///Begin_Latex
-///   n_{i}^{equiv} = #frac{ w_{i}^{2} }{ s_{i}^{2} }
-///End_Latex
-///   The minimal expected frequency for an unweighted histogram must be 1. Notice
-///   that any usual (unweighted) histogram can be considered as a weighted
-///   histogram with events that have constant weights equal to 1.
-///   The variance Begin_Latex z_{i}^{2} End_Latex of the difference between the weight wi
-///   and the estimated expectation value of the weight is approximately equal to:
-///Begin_Latex
-///   z_{i}^{2} = Var(w_{i}-W#hat{p}_{i}) = N#hat{p}_{i}(1-N#hat{p}_{i})#left(#frac{Ws_{i}^{2}}{#sqrt{(Ns_{i}^{2}-w_{i}W)^{2}+4W^{2}s_{i}^{2}n_{i}}}#right)^{2}+#frac{s_{i}^{2}}{4}#left(1+#frac{Ns_{i}^{2}-w_{i}W}{#sqrt{(Ns_{i}^{2}-w_{i}W)^{2}+4W^{2}s_{i}^{2}n_{i}}}#right)^{2}
-///End_Latex
-///   The  residuals
-///Begin_Latex
-///   r_{i} = #frac{w_{i}-W#hat{p}_{i}}{z_{i}}
-///End_Latex
-///   have approximately a normal distribution with mean equal to 0 and standard
-///   deviation  equal to 1.
+/// A simple modification of the ideas described above can be used for the
+/// comparison of the usual (unweighted) and weighted histograms. Let us
+/// denote the number of events in the ith bin in the unweighted
+/// histogram as ni and the common weight of events in the ith bin of the
+/// weighted histogram as wi. The total number of events in the
+/// unweighted histogram is equal to
+///\f[
+///  N = \sum_{i=1}^{r} n_{i}
+///\f]
+/// and the total weight of events in the weighted histogram is equal to
+///\f[
+///  W = \sum_{i=1}^{r} w_{i}
+///\f]
+/// Let us formulate the hypothesis of identity of an unweighted histogram
+/// to a weighted histogram so that there exist r constants p1,...,pr, such
+/// that
+///\f[
+///  \sum_{i=1}^{r} p_{i} = 1
+///\f]
+/// for the unweighted histogram. The weight wi is a random variable with a
+/// distribution approximated by the normal probability distribution
+/// \f$ N(Wp_{i},\sigma_{i}^{2}) \f$ where \f$ \sigma_{i}^{2} \f$ is the variance of the weight wi.
+/// If we replace the variance \f$ \sigma_{i}^{2} \f$
+/// with estimate \f$ s_{i}^{2} \f$ (sum of squares of weights of
+/// events in the ith bin) and the hypothesis of identity is valid, then the
+/// maximum likelihood estimator of  pi,i=1,...,r, is
+///\f[
+///  \hat{p}_{i} = \frac{Ww_{i}-Ns_{i}^{2}+\sqrt{(Ww_{i}-Ns_{i}^{2})^{2}+4W^{2}s_{i}^{2}n_{i}}}{2W^{2}}
+///\f]
+/// We may then use the test statistic
+///\f[
+///  X^{2} = \sum_{i=1}^{r} \frac{(n_{i}-N\hat{p}_{i})^{2}}{N\hat{p}_{i}} + \sum_{i=1}^{r} \frac{(w_{i}-W\hat{p}_{i})^{2}}{s_{i}^{2}}
+///\f]
+/// and it has approximately a \f$ \sigma^{2}_{(r-1)} \f$ distribution [2]. This test, as well
+/// as the original one [3], has a restriction on the expected frequencies. The
+/// expected frequencies recommended for the weighted histogram is more than 25.
+/// The value of the minimal expected frequency can be decreased down to 10 for
+/// the case when the weights of the events are close to constant. In the case
+/// of a weighted histogram if the number of events is unknown, then we can
+/// apply this recommendation for the equivalent number of events as
+///\f[
+///  n_{i}^{equiv} = \frac{ w_{i}^{2} }{ s_{i}^{2} }
+///\f]
+/// The minimal expected frequency for an unweighted histogram must be 1. Notice
+/// that any usual (unweighted) histogram can be considered as a weighted
+/// histogram with events that have constant weights equal to 1.
+/// The variance \f$ z_{i}^{2} \f$ of the difference between the weight wi
+/// and the estimated expectation value of the weight is approximately equal to:
+///\f[
+///  z_{i}^{2} = Var(w_{i}-W\hat{p}_{i}) = N\hat{p}_{i}(1-N\hat{p}_{i})\left(\frac{Ws_{i}^{2}}{\sqrt{(Ns_{i}^{2}-w_{i}W)^{2}+4W^{2}s_{i}^{2}n_{i}}}\right)^{2}+\frac{s_{i}^{2}}{4}\left(1+\frac{Ns_{i}^{2}-w_{i}W}{\sqrt{(Ns_{i}^{2}-w_{i}W)^{2}+4W^{2}s_{i}^{2}n_{i}}}\right)^{2}
+///\f]
+/// The  residuals
+///\f[
+///  r_{i} = \frac{w_{i}-W\hat{p}_{i}}{z_{i}}
+///\f]
+/// have approximately a normal distribution with mean equal to 0 and standard
+/// deviation  equal to 1.
 ///
-///  Two weighted histograms comparison:
+/// Two weighted histograms comparison:
 ///
-///   Let us denote the common  weight of events of the ith bin in the first
-///   histogram as w1i and as w2i in the second one. The total weight of events
-///   in the first histogram is equal to
-///Begin_Latex
-///   W_{1} = #sum_{i=1}^{r} w_{1i}
-///End_Latex
-///   and
-///Begin_Latex
-///   W_{2} = #sum_{i=1}^{r} w_{2i}
-///End_Latex
-///   in the second histogram. Let us formulate the hypothesis of identity of
-///   weighted histograms so that there exist r constants p1,...,pr, such that
-///Begin_Latex
-///   #sum_{i=1}^{r} p_{i} = 1
-///End_Latex
-///   and also expectation value of weight w1i equal to W1pi and expectation value
-///   of weight w2i equal to W2pi. Weights in both the histograms are random
-///   variables with distributions which can be approximated by a normal
-///   probability distribution Begin_Latex N(W_{1}p_{i},#sigma_{1i}^{2}) End_Latex for the first histogram
-///   and by a distribution Begin_Latex N(W_{2}p_{i},#sigma_{2i}^{2}) End_Latex for the second.
-///   Here Begin_Latex #sigma_{1i}^{2} End_Latex and Begin_Latex #sigma_{2i}^{2} End_Latex are the variances
-///   of w1i and w2i with estimators Begin_Latex s_{1i}^{2} End_Latex and Begin_Latex s_{2i}^{2} End_Latex respectively.
-///   If the hypothesis of identity is valid, then the maximum likelihood and
-///   Least Square Method estimator of pi,i=1,...,r, is
-///Begin_Latex
-///   #hat{p}_{i} = #frac{w_{1i}W_{1}/s_{1i}^{2}+w_{2i}W_{2} /s_{2i}^{2}}{W_{1}^{2}/s_{1i}^{2}+W_{2}^{2}/s_{2i}^{2}}
-///End_Latex
-///   We may then use the test statistic
-///Begin_Latex
-///   X^{2} = #sum_{i=1}^{r} #frac{(w_{1i}-W_{1}#hat{p}_{i})^{2}}{s_{1i}^{2}} + #sum_{i=1}^{r} #frac{(w_{2i}-W_{2}#hat{p}_{i})^{2}}{s_{2i}^{2}} = #sum_{i=1}^{r} #frac{(W_{1}w_{2i}-W_{2}w_{1i})^{2}}{W_{1}^{2}s_{2i}^{2}+W_{2}^{2}s_{1i}^{2}}
-///End_Latex
-///   and it has approximately a Begin_Latex #chi^{2}_{(r-1)} End_Latex distribution [2].
-///   The normalized or studentised residuals [6]
-///Begin_Latex
-///   r_{i} = #frac{w_{1i}-W_{1}#hat{p}_{i}}{s_{1i}#sqrt{1 - #frac{1}{(1+W_{2}^{2}s_{1i}^{2}/W_{1}^{2}s_{2i}^{2})}}}
-///End_Latex
-///   have approximately a normal distribution with mean equal to 0 and standard
-///   deviation 1. A recommended minimal expected frequency is equal to 10 for
-///   the proposed test.
+/// Let us denote the common  weight of events of the ith bin in the first
+/// histogram as w1i and as w2i in the second one. The total weight of events
+/// in the first histogram is equal to
+///\f[
+///  W_{1} = \sum_{i=1}^{r} w_{1i}
+///\f]
+/// and
+///\f[
+///  W_{2} = \sum_{i=1}^{r} w_{2i}
+///\f]
+/// in the second histogram. Let us formulate the hypothesis of identity of
+/// weighted histograms so that there exist r constants p1,...,pr, such that
+///\f[
+///  \sum_{i=1}^{r} p_{i} = 1
+///\f]
+/// and also expectation value of weight w1i equal to W1pi and expectation value
+/// of weight w2i equal to W2pi. Weights in both the histograms are random
+/// variables with distributions which can be approximated by a normal
+/// probability distribution \f$ N(W_{1}p_{i},\sigma_{1i}^{2}) \f$ for the first histogram
+/// and by a distribution \f$ N(W_{2}p_{i},\sigma_{2i}^{2}) \f$ for the second.
+/// Here \f$ \sigma_{1i}^{2} \f$ and \f$ \sigma_{2i}^{2} \f$ are the variances
+/// of w1i and w2i with estimators \f$ s_{1i}^{2} \f$ and \f$ s_{2i}^{2} \f$ respectively.
+/// If the hypothesis of identity is valid, then the maximum likelihood and
+/// Least Square Method estimator of pi,i=1,...,r, is
+///\f[
+///  \hat{p}_{i} = \frac{w_{1i}W_{1}/s_{1i}^{2}+w_{2i}W_{2} /s_{2i}^{2}}{W_{1}^{2}/s_{1i}^{2}+W_{2}^{2}/s_{2i}^{2}}
+///\f]
+/// We may then use the test statistic
+///\f[
+/// X^{2} = \sum_{i=1}^{r} \frac{(w_{1i}-W_{1}\hat{p}_{i})^{2}}{s_{1i}^{2}} + \sum_{i=1}^{r} \frac{(w_{2i}-W_{2}\hat{p}_{i})^{2}}{s_{2i}^{2}} = \sum_{i=1}^{r} \frac{(W_{1}w_{2i}-W_{2}w_{1i})^{2}}{W_{1}^{2}s_{2i}^{2}+W_{2}^{2}s_{1i}^{2}}
+///\f]
+/// and it has approximately a \f$ \chi^{2}_{(r-1)} \f$ distribution [2].
+/// The normalized or studentised residuals [6]
+///\f[
+///  r_{i} = \frac{w_{1i}-W_{1}\hat{p}_{i}}{s_{1i}\sqrt{1 - \frac{1}{(1+W_{2}^{2}s_{1i}^{2}/W_{1}^{2}s_{2i}^{2})}}}
+///\f]
+/// have approximately a normal distribution with mean equal to 0 and standard
+/// deviation 1. A recommended minimal expected frequency is equal to 10 for
+/// the proposed test.
 ///
 /// Numerical examples:
 ///
-///   The method described herein is now illustrated with an example.
-///   We take a distribution
-///Begin_Latex
-///   #phi(x) = #frac{2}{(x-10)^{2}+1} + #frac{1}{(x-14)^{2}+1}       (1)
-///End_Latex
-///   defined on the interval [4,16]. Events distributed according to the formula
-///   (1) are simulated to create the unweighted histogram. Uniformly distributed
-///   events are simulated for the weighted histogram with weights calculated by
-///   formula (1). Each histogram has the same number of bins: 20. Fig.1 shows
-///   the result of comparison of the unweighted histogram with 200 events
-///   (minimal expected frequency equal to one) and the weighted histogram with
-///   500 events (minimal expected frequency equal to 25)
-///Begin_Macro
+/// The method described herein is now illustrated with an example.
+/// We take a distribution
+///\f[
+/// \phi(x) = \frac{2}{(x-10)^{2}+1} + \frac{1}{(x-14)^{2}+1}       (1)
+///\f]
+/// defined on the interval [4,16]. Events distributed according to the formula
+/// (1) are simulated to create the unweighted histogram. Uniformly distributed
+/// events are simulated for the weighted histogram with weights calculated by
+/// formula (1). Each histogram has the same number of bins: 20. Fig.1 shows
+/// the result of comparison of the unweighted histogram with 200 events
+/// (minimal expected frequency equal to one) and the weighted histogram with
+/// 500 events (minimal expected frequency equal to 25)
+/// Begin_Macro
 /// ../../../tutorials/math/chi2test.C
-///End_Macro
-///   Fig 1. An example of comparison of the unweighted histogram with 200 events
-///   and the weighted histogram with 500 events:
-///      a) unweighted histogram;
-///      b) weighted histogram;
-///      c) normalized residuals plot;
-///      d) normal Q-Q plot of residuals.
+/// End_Macro
+/// Fig 1. An example of comparison of the unweighted histogram with 200 events
+/// and the weighted histogram with 500 events:
+///   a) unweighted histogram;
+///   b) weighted histogram;
+///   c) normalized residuals plot;
+///   d) normal Q-Q plot of residuals.
 ///
-///   The value of the test statistic Begin_Latex #chi^{2} End_Latex is equal to
-///   21.09 with p-value equal to 0.33, therefore the hypothesis of identity of
-///   the two histograms can be accepted for 0.05 significant level. The behavior
-///   of the normalized residuals plot (see Fig. 1c) and the normal Q-Q plot
-///   (see Fig. 1d) of residuals are regular and we cannot identify the outliers
-///   or bins with a big influence on Begin_Latex #chi^{2} End_Latex.
+/// The value of the test statistic \f$ \chi^{2} \f$ is equal to
+/// 21.09 with p-value equal to 0.33, therefore the hypothesis of identity of
+/// the two histograms can be accepted for 0.05 significant level. The behavior
+/// of the normalized residuals plot (see Fig. 1c) and the normal Q-Q plot
+/// (see Fig. 1d) of residuals are regular and we cannot identify the outliers
+/// or bins with a big influence on \f$ \chi^{2} \f$.
 ///
-///   The second example presents the same two histograms but 17 events was added
-///   to content of bin number 15 in unweighted histogram. Fig.2 shows the result
-///   of comparison of the unweighted histogram with 217 events (minimal expected
-///   frequency equal to one) and the weighted histogram with 500 events (minimal
-///   expected frequency equal to 25)
+/// The second example presents the same two histograms but 17 events was added
+/// to content of bin number 15 in unweighted histogram. Fig.2 shows the result
+/// of comparison of the unweighted histogram with 217 events (minimal expected
+/// frequency equal to one) and the weighted histogram with 500 events (minimal
+/// expected frequency equal to 25)
 ///Begin_Macro
 /// ../../../tutorials/math/chi2test.C(17)
 ///End_Macro
-///   Fig 2. An example of comparison of the unweighted histogram with 217 events
-///   and the weighted histogram with 500 events:
-///      a) unweighted histogram;
-///      b) weighted histogram;
-///      c) normalized residuals plot;
-///      d) normal Q-Q plot of residuals.
+/// Fig 2. An example of comparison of the unweighted histogram with 217 events
+/// and the weighted histogram with 500 events:
+///   a) unweighted histogram;
+///   b) weighted histogram;
+///   c) normalized residuals plot;
+///   d) normal Q-Q plot of residuals.
 ///
-///   The value of the test statistic Begin_Latex #chi^{2} End_Latex is equal to
-///   32.33 with p-value equal to 0.029, therefore the hypothesis of identity of
-///   the two histograms is rejected for 0.05 significant level. The behavior of
-///   the normalized residuals plot (see Fig. 2c) and the normal Q-Q plot (see
-///   Fig. 2d) of residuals are not regular and we can identify the outlier or
-///   bin with a big influence on Begin_Latex #chi^{2} End_Latex.
+/// The value of the test statistic \f$ \chi^{2} \f$ is equal to
+/// 32.33 with p-value equal to 0.029, therefore the hypothesis of identity of
+/// the two histograms is rejected for 0.05 significant level. The behavior of
+/// the normalized residuals plot (see Fig. 2c) and the normal Q-Q plot (see
+/// Fig. 2d) of residuals are not regular and we can identify the outlier or
+/// bin with a big influence on \f$ \chi^{2} \f$.
 ///
 /// References:
 ///
 /// [1] Pearson, K., 1904. On the Theory of Contingency and Its Relation to
-///     Association and Normal Correlation. Drapers' Co. Memoirs, Biometric
-///     Series No. 1, London.
-/// [2] Gagunashvili, N., 2006. Begin_Latex #chi^{2} End_Latex test for comparison
-///     of weighted and unweighted histograms. Statistical Problems in Particle
-///     Physics, Astrophysics and Cosmology, Proceedings of PHYSTAT05,
-///     Oxford, UK, 12-15 September 2005, Imperial College Press, London, 43-44.
-///     Gagunashvili,N., Comparison of weighted and unweighted histograms,
-///     arXiv:physics/0605123, 2006.
+///  Association and Normal Correlation. Drapers' Co. Memoirs, Biometric
+///  Series No. 1, London.
+/// [2] Gagunashvili, N., 2006. \f$ \sigma^{2} \f$ test for comparison
+///  of weighted and unweighted histograms. Statistical Problems in Particle
+///  Physics, Astrophysics and Cosmology, Proceedings of PHYSTAT05,
+///  Oxford, UK, 12-15 September 2005, Imperial College Press, London, 43-44.
+///  Gagunashvili,N., Comparison of weighted and unweighted histograms,
+///  arXiv:physics/0605123, 2006.
 /// [3] Cramer, H., 1946. Mathematical methods of statistics.
-///     Princeton University Press, Princeton.
+///  Princeton University Press, Princeton.
 /// [4] Haberman, S.J., 1973. The analysis of residuals in cross-classified tables.
-///     Biometrics 29, 205-220.
+///  Biometrics 29, 205-220.
 /// [5] Lewontin, R.C. and Felsenstein, J., 1965. The robustness of homogeneity
-///     test in 2xN tables. Biometrics 21, 19-33.
+///  test in 2xN tables. Biometrics 21, 19-33.
 /// [6] Seber, G.A.F., Lee, A.J., 2003, Linear Regression Analysis.
-///     John Wiley & Sons Inc., New York.
+///  John Wiley & Sons Inc., New York.
 
 Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
 {
@@ -1880,42 +1871,36 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
 ////////////////////////////////////////////////////////////////////////////////
 /// The computation routine of the Chisquare test. For the method description,
 /// see Chi2Test() function.
-/// Returns p-value
-/// parameters:
-///  - h2-second histogram
-///  - option:
-///     "UU" = experiment experiment comparison (unweighted-unweighted)
-///     "UW" = experiment MC comparison (unweighted-weighted). Note that the first
-///           histogram should be unweighted
-///     "WW" = MC MC comparison (weighted-weighted)
-///
-///     "NORM" = if one or both histograms is scaled
-///
-///     "OF" = overflows included
-///     "UF" = underflows included
-///         by default underflows and overflows are not included
-///
-///  - igood:
-///       igood=0 - no problems
-///        For unweighted unweighted  comparison
-///       igood=1'There is a bin in the 1st histogram with less than 1 event'
-///       igood=2'There is a bin in the 2nd histogram with less than 1 event'
-///       igood=3'when the conditions for igood=1 and igood=2 are satisfied'
-///        For  unweighted weighted  comparison
-///       igood=1'There is a bin in the 1st histogram with less then 1 event'
-///       igood=2'There is a bin in the 2nd histogram with less then 10 effective number of events'
-///       igood=3'when the conditions for igood=1 and igood=2 are satisfied'
-///        For  weighted weighted  comparison
-///       igood=1'There is a bin in the 1st  histogram with less then 10 effective
+/// \return p-value
+/// \param[in] h2 the second histogram
+/// \param[in] option
+///  - "UU" = experiment experiment comparison (unweighted-unweighted)
+///  - "UW" = experiment MC comparison (unweighted-weighted). Note that the first
+///        histogram should be unweighted
+///  - "WW" = MC MC comparison (weighted-weighted)
+///  - "NORM" = if one or both histograms is scaled
+///  - "OF" = overflows included
+///  - "UF" = underflows included
+///      by default underflows and overflows are not included
+/// \param[out] igood test output
+///    - igood=0 - no problems
+///    - For unweighted unweighted  comparison
+///      - igood=1'There is a bin in the 1st histogram with less than 1 event'
+///      - igood=2'There is a bin in the 2nd histogram with less than 1 event'
+///      - igood=3'when the conditions for igood=1 and igood=2 are satisfied'
+///    - For  unweighted weighted  comparison
+///      - igood=1'There is a bin in the 1st histogram with less then 1 event'
+///      - igood=2'There is a bin in the 2nd histogram with less then 10 effective number of events'
+///      - igood=3'when the conditions for igood=1 and igood=2 are satisfied'
+///    - For  weighted weighted  comparison
+///      - igood=1'There is a bin in the 1st  histogram with less then 10 effective
 ///        number of events'
-///       igood=2'There is a bin in the 2nd  histogram with less then 10 effective
-///               number of events'
-///       igood=3'when the conditions for igood=1 and igood=2 are satisfied'
-///
-///  - chi2 - chisquare of the test
-///  - ndf  - number of degrees of freedom (important, when both histograms have the same
-///         empty bins)
-///  - res -  normalized residuals for further analysis
+///      - igood=2'There is a bin in the 2nd  histogram with less then 10 effective
+///        number of events'
+///      - igood=3'when the conditions for igood=1 and igood=2 are satisfied'
+/// \param[out] chi2 chisquare of the test
+/// \param[out] ndf number of degrees of freedom (important, when both histograms have the same empty bins)
+/// \param[out] res normalized residuals for further analysis
 
 Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood, Option_t *option,  Double_t *res) const
 {
@@ -2610,13 +2595,13 @@ void TH1::DirectoryAutoAdd(TDirectory *dir)
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a line.
 ///
-///     Compute the closest distance of approach from point px,py to elements
-///     of an histogram.
-///     The distance is computed in pixels units.
+///  Compute the closest distance of approach from point px,py to elements
+///  of an histogram.
+///  The distance is computed in pixels units.
 ///
-///     Algorithm:
-///     Currently, this simple model computes the distance from the mouse
-///     to the histogram contour only.
+///  Algorithm:
+///  Currently, this simple model computes the distance from the mouse
+///  to the histogram contour only.
 
 Int_t TH1::DistancetoPrimitive(Int_t px, Int_t py)
 {
@@ -2691,13 +2676,13 @@ Bool_t TH1::Divide(TF1 *f1, Double_t c1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Divide this histogram by h1.
 ///
-///   this = this/h1
-///   if errors are defined (see TH1::Sumw2), errors are also recalculated.
-///   Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
-///   if not already set.
-///   The resulting errors are calculated assuming uncorrelated histograms.
-///   See the other TH1::Divide that gives the possibility to optionally
-///   compute binomial errors.
+/// this = this/h1
+/// if errors are defined (see TH1::Sumw2), errors are also recalculated.
+/// Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
+/// if not already set.
+/// The resulting errors are calculated assuming uncorrelated histograms.
+/// See the other TH1::Divide that gives the possibility to optionally
+/// compute binomial errors.
 ///
 /// IMPORTANT NOTE: If you intend to use the errors of this histogram later
 /// you should call Sumw2 before making this operation.
@@ -2752,14 +2737,14 @@ Bool_t TH1::Divide(const TH1 *h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace contents of this histogram by the division of h1 by h2.
 ///
-///   this = c1*h1/(c2*h2)
+///  this = c1*h1/(c2*h2)
 ///
-///   if errors are defined (see TH1::Sumw2), errors are also recalculated
-///   Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for this
-///   if not already set.
-///   The resulting errors are calculated assuming uncorrelated histograms.
-///   However, if option ="B" is specified, Binomial errors are computed.
-///   In this case c1 and c2 do not make real sense and they are ignored.
+/// If errors are defined (see TH1::Sumw2), errors are also recalculated
+/// Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for this
+/// if not already set.
+/// The resulting errors are calculated assuming uncorrelated histograms.
+/// However, if option ="B" is specified, Binomial errors are computed.
+/// In this case c1 and c2 do not make real sense and they are ignored.
 ///
 /// IMPORTANT NOTE: If you intend to use the errors of this histogram later
 /// you should call Sumw2 before making this operation.
@@ -2866,7 +2851,7 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
 /// of the histogram will be automatically shown in the pad next time
 /// the pad is updated. One does not need to redraw the histogram.
 /// To draw the current version of an histogram in a pad, one can use
-///      h->DrawCopy();
+///   h->DrawCopy();
 /// This makes a clone of the histogram. Once the clone is drawn, the original
 /// histogram may be modified or deleted without affecting the aspect of the
 /// clone.
@@ -2923,13 +2908,13 @@ void TH1::Draw(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this histogram and Draw in the current pad.
 ///
-///     Once the histogram is drawn into the pad, any further modification
-///     using graphics input will be made on the copy of the histogram,
-///     and not to the original object.
-///     By default a postfix "_copy" is added to the histogram name. Pass an empty postfix in case
-///     you want to draw an histogram with the same name
+/// Once the histogram is drawn into the pad, any further modification
+/// using graphics input will be made on the copy of the histogram,
+/// and not to the original object.
+/// By default a postfix "_copy" is added to the histogram name. Pass an empty postfix in case
+/// you want to draw an histogram with the same name
 ///
-///     See Draw for the list of options
+/// See Draw for the list of options
 
 TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
 {
@@ -2958,7 +2943,7 @@ TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
 ///  The kCanDelete bit is set for the returned object. If a pad containing
 ///  this copy is cleared, the histogram will be automatically deleted.
 ///
-///     See Draw for the list of options
+///  See Draw for the list of options
 
 TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
 {
@@ -2990,7 +2975,7 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Display a panel with all histogram drawing options.
 ///
-///      See class TDrawPanelHist for example
+///   See class TDrawPanelHist for example
 
 void TH1::DrawPanel()
 {
@@ -3002,13 +2987,13 @@ void TH1::DrawPanel()
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate function f1 at the center of bins of this histogram.
 ///
-///     If option "R" is specified, the function is evaluated only
-///     for the bins included in the function range.
-///     If option "A" is specified, the value of the function is added to the
-///     existing bin contents
-///     If option "S" is specified, the value of the function is used to
-///     generate a value, distributed according to the Poisson
-///     distribution, with f1 as the mean.
+/// If option "R" is specified, the function is evaluated only
+/// for the bins included in the function range.
+/// If option "A" is specified, the value of the function is added to the
+/// existing bin contents
+/// If option "S" is specified, the value of the function is used to
+/// generate a value, distributed according to the Poisson
+/// distribution, with f1 as the mean.
 
 void TH1::Eval(TF1 *f1, Option_t *option)
 {
@@ -3054,10 +3039,10 @@ void TH1::Eval(TF1 *f1, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
-///     This member function is called when a histogram is clicked with the locator
+/// This member function is called when a histogram is clicked with the locator
 ///
-///     If Left button clicked on the bin top value, then the content of this bin
-///     is modified according to the new position of the mouse when it is released.
+/// If Left button clicked on the bin top value, then the content of this bin
+/// is modified according to the new position of the mouse when it is released.
 
 void TH1::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
@@ -3070,42 +3055,39 @@ void TH1::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 /// Available transform types and flags are described below.
 ///
 /// To extract more information about the transform, use the function
-///  TVirtualFFT::GetCurrentTransform() to get a pointer to the current
-///  transform object.
+/// TVirtualFFT::GetCurrentTransform() to get a pointer to the current
+/// transform object.
 ///
-/// Parameters:
-///  1st - histogram for the output. If a null pointer is passed, a new histogram is created
-///  and returned, otherwise, the provided histogram is used and should be big enough
-///
-///  Options: option parameters consists of 3 parts:
-///    - option on what to return
-///   "RE" - returns a histogram of the real part of the output
-///   "IM" - returns a histogram of the imaginary part of the output
-///   "MAG"- returns a histogram of the magnitude of the output
-///   "PH" - returns a histogram of the phase of the output
-///
-///    - option of transform type
-///   "R2C"  - real to complex transforms - default
-///   "R2HC" - real to halfcomplex (special format of storing output data,
-///          results the same as for R2C)
-///   "DHT" - discrete Hartley transform
-///         real to real transforms (sine and cosine):
-///   "R2R_0", "R2R_1", "R2R_2", "R2R_3" - discrete cosine transforms of types I-IV
-///   "R2R_4", "R2R_5", "R2R_6", "R2R_7" - discrete sine transforms of types I-IV
-///    To specify the type of each dimension of a 2-dimensional real to real
-///    transform, use options of form "R2R_XX", for example, "R2R_02" for a transform,
-///    which is of type "R2R_0" in 1st dimension and  "R2R_2" in the 2nd.
-///
-///    - option of transform flag
-///    "ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
-///       performance
-///    "M" (from "measure")   - some time spend in finding the optimal way to do the transform
-///    "P" (from "patient")   - more time spend in finding the optimal way to do the transform
-///    "EX" (from "exhaustive") - the most optimal way is found
+/// \param[out] h_output histogram for the output. If a null pointer is passed, a new histogram is created
+///          and returned, otherwise, the provided histogram is used and should be big enough
+/// \param[in] option option parameters consists of 3 parts:
+/// - option on what to return
+///   - "RE" - returns a histogram of the real part of the output
+///   - "IM" - returns a histogram of the imaginary part of the output
+///   - "MAG"- returns a histogram of the magnitude of the output
+///   - "PH" - returns a histogram of the phase of the output
+/// - option of transform type
+///   - "R2C"  - real to complex transforms - default
+///   - "R2HC" - real to halfcomplex (special format of storing output data,
+///     results the same as for R2C)
+///   - "DHT" - discrete Hartley transform
+///     real to real transforms (sine and cosine):
+///   - "R2R_0", "R2R_1", "R2R_2", "R2R_3" - discrete cosine transforms of types I-IV
+///   - "R2R_4", "R2R_5", "R2R_6", "R2R_7" - discrete sine transforms of types I-IV
+///     To specify the type of each dimension of a 2-dimensional real to real
+///     transform, use options of form "R2R_XX", for example, "R2R_02" for a transform,
+///     which is of type "R2R_0" in 1st dimension and  "R2R_2" in the 2nd.
+/// - option of transform flag
+///   - "ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
+///     performance
+///   - "M" (from "measure")   - some time spend in finding the optimal way to do the transform
+///   - "P" (from "patient")   - more time spend in finding the optimal way to do the transform
+///   - "EX" (from "exhaustive") - the most optimal way is found
 ///     This option should be chosen depending on how many transforms of the same size and
 ///     type are going to be done. Planning is only done once, for the first transform of this
 ///     size and type. Default is "ES".
-///   Examples of valid options: "Mag R2C M" "Re R2R_11" "Im R2C ES" "PH R2HC EX"
+///
+/// Examples of valid options: "Mag R2C M" "Re R2R_11" "Im R2C ES" "PH R2HC EX"
 
 TH1* TH1::FFT(TH1* h_output, Option_t *option)
 {
@@ -3159,14 +3141,14 @@ TH1* TH1::FFT(TH1* h_output, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin with abscissa X by 1.
 ///
-///    if x is less than the low-edge of the first bin, the Underflow bin is incremented
-///    if x is greater than the upper edge of last bin, the Overflow bin is incremented
+/// if x is less than the low-edge of the first bin, the Underflow bin is incremented
+/// if x is greater than the upper edge of last bin, the Overflow bin is incremented
 ///
-///    If the storage of the sum of squares of weights has been triggered,
-///    via the function Sumw2, then the sum of the squares of weights is incremented
-///    by 1 in the bin corresponding to x.
+/// If the storage of the sum of squares of weights has been triggered,
+/// via the function Sumw2, then the sum of the squares of weights is incremented
+/// by 1 in the bin corresponding to x.
 ///
-///    The function returns the corresponding bin number which has its content incremented by 1
+/// The function returns the corresponding bin number which has its content incremented by 1
 
 Int_t TH1::Fill(Double_t x)
 {
@@ -3192,14 +3174,14 @@ Int_t TH1::Fill(Double_t x)
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin with abscissa X with a weight w.
 ///
-///    if x is less than the low-edge of the first bin, the Underflow bin is incremented
-///    if x is greater than the upper edge of last bin, the Overflow bin is incremented
+/// if x is less than the low-edge of the first bin, the Underflow bin is incremented
+/// if x is greater than the upper edge of last bin, the Overflow bin is incremented
 ///
-///    If the weight is not equal to 1, the storage of the sum of squares of
-///    weights is automatically triggered and the sum of the squares of weights is incremented
-///    by w^2 in the bin corresponding to x.
+/// If the weight is not equal to 1, the storage of the sum of squares of
+/// weights is automatically triggered and the sum of the squares of weights is incremented
+/// by w^2 in the bin corresponding to x.
 ///
-///    The function returns the corresponding bin number which has its content incremented by w
+/// The function returns the corresponding bin number which has its content incremented by w
 
 Int_t TH1::Fill(Double_t x, Double_t w)
 {
@@ -3264,15 +3246,15 @@ Int_t TH1::Fill(const char *namex, Double_t w)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill this histogram with an array x and weights w.
 ///
-///    ntimes:  number of entries in arrays x and w (array size must be ntimes*stride)
-///    x:       array of values to be histogrammed
-///    w:       array of weighs
-///    stride:  step size through arrays x and w
+/// \param[in] ntimes number of entries in arrays x and w (array size must be ntimes*stride)
+/// \param[in] x array of values to be histogrammed
+/// \param[in[ w array of weighs
+/// \param[in] stride step size through arrays x and w
 ///
-///    If the weight is not equal to 1, the storage of the sum of squares of
-///    weights is automatically triggered and the sum of the squares of weights is incremented
-///    by w^2 in the bin corresponding to x.
-///    if w is NULL each entry is assumed a weight=1
+/// If the weight is not equal to 1, the storage of the sum of squares of
+/// weights is automatically triggered and the sum of the squares of weights is incremented
+/// y w^2 in the bin corresponding to x.
+/// if w is NULL each entry is assumed a weight=1
 
 void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride)
 {
@@ -3328,16 +3310,16 @@ void TH1::DoFillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stri
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in function fname.
 ///
-///      The distribution contained in the function fname (TF1) is integrated
-///      over the channel contents for the bin range of this histogram.
-///      It is normalized to 1.
-///      Getting one random number implies:
-///        - Generating a random number between 0 and 1 (say r1)
-///        - Look in which bin in the normalized integral r1 corresponds to
-///        - Fill histogram channel
-///      ntimes random numbers are generated
+/// The distribution contained in the function fname (TF1) is integrated
+/// over the channel contents for the bin range of this histogram.
+/// It is normalized to 1.
+/// Getting one random number implies:
+/// - Generating a random number between 0 and 1 (say r1)
+/// - Look in which bin in the normalized integral r1 corresponds to
+/// - Fill histogram channel
+///   ntimes random numbers are generated
 ///
-///     One can also call TF1::GetRandom to get a random variate from a function.
+/// One can also call TF1::GetRandom to get a random variate from a function.
 
 void TH1::FillRandom(const char *fname, Int_t ntimes)
 {
@@ -3394,18 +3376,17 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in histogram h.
 ///
-///      The distribution contained in the histogram h (TH1) is integrated
-///      over the channel contents for the bin range of this histogram.
-///      It is normalized to 1.
-///      Getting one random number implies:
-///        - Generating a random number between 0 and 1 (say r1)
-///        - Look in which bin in the normalized integral r1 corresponds to
-///        - Fill histogram channel
-///      ntimes random numbers are generated
+/// The distribution contained in the histogram h (TH1) is integrated
+/// over the channel contents for the bin range of this histogram.
+/// It is normalized to 1.
+/// Getting one random number implies:
+/// - Generating a random number between 0 and 1 (say r1)
+/// - Look in which bin in the normalized integral r1 corresponds to
+/// - Fill histogram channel ntimes random numbers are generated
 ///
-///    SPECIAL CASE when the target histogram has the same binning as the source.
-///   in this case we simply use a poisson distribution where
-///   the mean value per bin = bincontent/integral.
+/// SPECIAL CASE when the target histogram has the same binning as the source.
+/// in this case we simply use a poisson distribution where
+/// the mean value per bin = bincontent/integral.
 
 void TH1::FillRandom(TH1 *h, Int_t ntimes)
 {
@@ -3478,14 +3459,15 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///   Return Global bin number corresponding to x,y,z
+/// Return Global bin number corresponding to x,y,z
 ///
-///      2-D and 3-D histograms are represented with a one dimensional
-///      structure. This has the advantage that all existing functions, such as
-///      GetBinContent, GetBinError, GetBinFunction work for all dimensions.
-///      This function tries to extend the axis if the given point belongs to an
-///       under-/overflow bin AND if CanExtendAllAxes() is true.
-///     See also TH1::GetBin, TAxis::FindBin and TAxis::FindFixBin
+/// 2-D and 3-D histograms are represented with a one dimensional
+/// structure. This has the advantage that all existing functions, such as
+/// GetBinContent, GetBinError, GetBinFunction work for all dimensions.
+/// This function tries to extend the axis if the given point belongs to an
+///  under-/overflow bin AND if CanExtendAllAxes() is true.
+///
+/// See also TH1::GetBin, TAxis::FindBin and TAxis::FindFixBin
 
 Int_t TH1::FindBin(Double_t x, Double_t y, Double_t z)
 {
@@ -3511,14 +3493,15 @@ Int_t TH1::FindBin(Double_t x, Double_t y, Double_t z)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///   Return Global bin number corresponding to x,y,z.
+/// Return Global bin number corresponding to x,y,z.
 ///
-///      2-D and 3-D histograms are represented with a one dimensional
-///      structure. This has the advantage that all existing functions, such as
-///      GetBinContent, GetBinError, GetBinFunction work for all dimensions.
-///      This function DOES NOT try to extend the axis if the given point belongs
-///      to an under-/overflow bin.
-///     See also TH1::GetBin, TAxis::FindBin and TAxis::FindFixBin
+/// 2-D and 3-D histograms are represented with a one dimensional
+/// structure. This has the advantage that all existing functions, such as
+/// GetBinContent, GetBinError, GetBinFunction work for all dimensions.
+/// This function DOES NOT try to extend the axis if the given point belongs
+/// to an under-/overflow bin.
+///
+/// See also TH1::GetBin, TAxis::FindBin and TAxis::FindFixBin
 
 Int_t TH1::FindFixBin(Double_t x, Double_t y, Double_t z) const
 {
@@ -3544,8 +3527,8 @@ Int_t TH1::FindFixBin(Double_t x, Double_t y, Double_t z) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///find first bin with content > threshold for axis (1=x, 2=y, 3=z)
-///if no bins with content > threshold is found the function returns -1.
+/// Find first bin with content > threshold for axis (1=x, 2=y, 3=z)
+/// if no bins with content > threshold is found the function returns -1.
 
 Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis) const
 {
@@ -3564,8 +3547,8 @@ Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///find last bin with content > threshold for axis (1=x, 2=y, 3=z)
-///if no bins with content > threshold is found the function returns -1.
+/// Find last bin with content > threshold for axis (1=x, 2=y, 3=z)
+/// if no bins with content > threshold is found the function returns -1.
 
 Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis) const
 {
@@ -3606,11 +3589,11 @@ TObject *TH1::FindObject(const TObject *obj) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Fit histogram with function fname.
 ///
-///      fname is the name of an already predefined function created by TF1 or TF2
-///      Predefined functions such as gaus, expo and poln are automatically
-///      created by ROOT.
-///      fname can also be a formula, accepted by the linear fitter (linear parts divided
-///      by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
+/// fname is the name of an already predefined function created by TF1 or TF2
+/// Predefined functions such as gaus, expo and poln are automatically
+/// created by ROOT.
+/// fname can also be a formula, accepted by the linear fitter (linear parts divided
+/// by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
 ///
 ///  This function finds a pointer to the TF1 object with name fname
 ///  and calls TH1::Fit(TF1 *f1,...)
@@ -3649,161 +3632,158 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ////////////////////////////////////////////////////////////////////////////////
 /// Fit histogram with function f1.
 ///
-///      Fit this histogram with function f1.
+/// \param[in] option fit options is given in parameter option.
+///        - "W"  Set all weights to 1 for non empty bins; ignore error bars
+///        - "WW" Set all weights to 1 including empty bins; ignore error bars
+///        - "I"  Use integral of function in bin, normalized by the bin volume,
+///          instead of value at bin center
+///        -  "L"  Use Loglikelihood method (default is chisquare method)
+///        - "WL" Use Loglikelihood method and bin contents are not integer,
+///          i.e. histogram is weighted (must have Sumw2() set)
+///        - "P"  Use Pearson chi2 (using expected errors instead of observed errors)
+///        - "U"  Use a User specified fitting algorithm (via SetFCN)
+///        - "Q"  Quiet mode (minimum printing)
+///        - "V"  Verbose mode (default is between Q and V)
+///        - "E"  Perform better Errors estimation using Minos technique
+///        - "B"  User defined parameter settings are used for predefined functions
+///          like "gaus", "expo", "poln", "landau".
+///          Use this option when you want to fix one or more parameters for these functions.
+///        - "M"  More. Improve fit results.
+///          It uses the IMPROVE command of TMinuit (see TMinuit::mnimpr).
+///          This algorithm attempts to improve the found local minimum by searching for a
+///          better one.
+///        - "R"  Use the Range specified in the function range
+///        - "N"  Do not store the graphics function, do not draw
+///        - "0"  Do not plot the result of the fit. By default the fitted function
+///          is drawn unless the option"N" above is specified.
+///        - "+"  Add this new fitted function to the list of fitted functions
+///          (by default, any previous function is deleted)
+///        - "C"  In case of linear fitting, don't calculate the chisquare
+///          (saves time)
+///        - "F"  If fitting a polN, switch to minuit fitter
+///        - "S"  The result of the fit is returned in the TFitResultPtr
+///          (see below Access to the Fit Result)
+/// \param[in] goption specify a list of graphics options. See TH1::Draw for a complete list of these options.
+/// \param[in] xxmin range
+/// \param[in] xxmax range
 ///
-///      The list of fit options is given in parameter option.
-///         option = "W"  Set all weights to 1 for non empty bins; ignore error bars
-///                = "WW" Set all weights to 1 including empty bins; ignore error bars
-///                = "I"  Use integral of function in bin, normalized by the bin volume,
-///                       instead of value at bin center
-///                = "L"  Use Loglikelihood method (default is chisquare method)
-///                = "WL" Use Loglikelihood method and bin contents are not integer,
-///                       i.e. histogram is weighted (must have Sumw2() set)
-///                = "P"  Use Pearson chi2 (using expected errors instead of observed errors)
-///                = "U"  Use a User specified fitting algorithm (via SetFCN)
-///                = "Q"  Quiet mode (minimum printing)
-///                = "V"  Verbose mode (default is between Q and V)
-///                = "E"  Perform better Errors estimation using Minos technique
-///                = "B"  User defined parameter settings are used for predefined functions
-///                       like "gaus", "expo", "poln", "landau".
-///                       Use this option when you want to fix one or more parameters for these functions.
-///                = "M"  More. Improve fit results.
-///                       It uses the IMPROVE command of TMinuit (see TMinuit::mnimpr).
-///                       This algorithm attempts to improve the found local minimum by searching for a
-///                       better one.
-///                = "R"  Use the Range specified in the function range
-///                = "N"  Do not store the graphics function, do not draw
-///                = "0"  Do not plot the result of the fit. By default the fitted function
-///                       is drawn unless the option"N" above is specified.
-///                = "+"  Add this new fitted function to the list of fitted functions
-///                       (by default, any previous function is deleted)
-///                = "C"  In case of linear fitting, don't calculate the chisquare
-///                       (saves time)
-///                = "F"  If fitting a polN, switch to minuit fitter
-///                = "S"  The result of the fit is returned in the TFitResultPtr
-///                       (see below Access to the Fit Result)
+/// In order to use the Range option, one must first create a function
+/// with the expression to be fitted. For example, if your histogram
+/// has a defined range between -4 and 4 and you want to fit a gaussian
+/// only in the interval 1 to 3, you can do:
 ///
-///      When the fit is drawn (by default), the parameter goption may be used
-///      to specify a list of graphics options. See TH1::Draw for a complete
-///      list of these options.
+///      TF1 *f1 = new TF1("f1", "gaus", 1, 3);
+///      histo->Fit("f1", "R");
 ///
-///      In order to use the Range option, one must first create a function
-///      with the expression to be fitted. For example, if your histogram
-///      has a defined range between -4 and 4 and you want to fit a gaussian
-///      only in the interval 1 to 3, you can do:
-///           TF1 *f1 = new TF1("f1", "gaus", 1, 3);
-///           histo->Fit("f1", "R");
+/// ## Setting initial conditions
+/// Parameters must be initialized before invoking the Fit function.
+/// The setting of the parameter initial values is automatic for the
+/// predefined functions : poln, expo, gaus, landau. One can however disable
+/// this automatic computation by specifying the option "B".
+/// Note that if a predefined function is defined with an argument,
+/// eg, gaus(0), expo(1), you must specify the initial values for
+/// the parameters.
+/// You can specify boundary limits for some or all parameters via
 ///
-///      Setting initial conditions
-///      ==========================
-///      Parameters must be initialized before invoking the Fit function.
-///      The setting of the parameter initial values is automatic for the
-///      predefined functions : poln, expo, gaus, landau. One can however disable
-///      this automatic computation by specifying the option "B".
-///      Note that if a predefined function is defined with an argument,
-///      eg, gaus(0), expo(1), you must specify the initial values for
-///      the parameters.
-///      You can specify boundary limits for some or all parameters via
-///           f1->SetParLimits(p_number, parmin, parmax);
-///      if parmin>=parmax, the parameter is fixed
-///      Note that you are not forced to fix the limits for all parameters.
-///      For example, if you fit a function with 6 parameters, you can do:
-///        func->SetParameters(0, 3.1, 1.e-6, -8, 0, 100);
-///        func->SetParLimits(3, -10, -4);
-///        func->FixParameter(4, 0);
-///        func->SetParLimits(5, 1, 1);
-///      With this setup, parameters 0->2 can vary freely
-///      Parameter 3 has boundaries [-10,-4] with initial value -8
-///      Parameter 4 is fixed to 0
-///      Parameter 5 is fixed to 100.
-///      When the lower limit and upper limit are equal, the parameter is fixed.
-///      However to fix a parameter to 0, one must call the FixParameter function.
+///      f1->SetParLimits(p_number, parmin, parmax);
+/// if parmin>=parmax, the parameter is fixed
+/// Note that you are not forced to fix the limits for all parameters.
+/// For example, if you fit a function with 6 parameters, you can do:
 ///
-///      Note that option "I" gives better results but is slower.
+///      func->SetParameters(0, 3.1, 1.e-6, -8, 0, 100);
+///      func->SetParLimits(3, -10, -4);
+///      func->FixParameter(4, 0);
+///      func->SetParLimits(5, 1, 1);
+/// With this setup, parameters 0->2 can vary freely
+/// Parameter 3 has boundaries [-10,-4] with initial value -8
+/// Parameter 4 is fixed to 0
+/// Parameter 5 is fixed to 100.
+/// When the lower limit and upper limit are equal, the parameter is fixed.
+/// However to fix a parameter to 0, one must call the FixParameter function.
 ///
+/// Note that option "I" gives better results but is slower.
 ///
-///     Changing the fitting objective function
-///     =======================================
-///     By default a chi square function is used for fitting. When option "L" (or "LL") is used
-///     a Poisson likelihood function (see note below) is used.
-///     The functions are defined in the header Fit/Chi2Func.h or Fit/PoissonLikelihoodFCN and they
-///     are implemented using the routines FitUtil::EvaluateChi2 or FitUtil::EvaluatePoissonLogL in
-///     the file math/mathcore/src/FitUtil.cxx.
-///     To specify a User defined fitting function, specify option "U" and
-///     call the following functions:
-///       TVirtualFitter::Fitter(myhist)->SetFCN(MyFittingFunction)
-///     where MyFittingFunction is of type:
-///     extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+/// ## Changing the fitting objective function
+/// By default a chi square function is used for fitting. When option "L" (or "LL") is used
+/// a Poisson likelihood function (see note below) is used.
+/// The functions are defined in the header Fit/Chi2Func.h or Fit/PoissonLikelihoodFCN and they
+/// are implemented using the routines FitUtil::EvaluateChi2 or FitUtil::EvaluatePoissonLogL in
+/// the file math/mathcore/src/FitUtil.cxx.
+/// To specify a User defined fitting function, specify option "U" and
+/// call the following functions:
 ///
-///     Chi2 Fits
-///     =========
-///     By default a chi2 (least-square) fit is performed on the histogram. The so-called modified least-square method
-///     is used where the residual for each bin is computed using as error the observed value (the bin error)
+///      TVirtualFitter::Fitter(myhist)->SetFCN(MyFittingFunction)
+/// where MyFittingFunction is of type:
 ///
-///     Chi2 = Sum{ ( y(i) - f (x(i) | p )/ e(i) )^2 }
+///      extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 ///
-///     where y(i) is the bin content for each bin i, x(i) is the bin center and e(i) is the bin error (sqrt(y(i) for
-///     an un-weighted histogram. Bins with zero errors are excluded from the fit. See also later the note on the treatment of empty bins.
-///     When using option "I" the residual is computed not using the function value at the bin center, f (x(i) | p), but the integral
-///     of the function in the bin,   Integral{ f(x|p)dx } divided by the bin volume
+/// ## Chi2 Fits
+/// By default a chi2 (least-square) fit is performed on the histogram. The so-called modified least-square method
+/// is used where the residual for each bin is computed using as error the observed value (the bin error)
 ///
-///     Likelihood Fits
-///     ===============
-///     When using option "L" a likelihood fit is used instead of the default chi2 square fit.
-///     The likelihood is built assuming a Poisson probability density function for each bin.
-///     The negative log-likelihood to be minimized is
-///      NLL = Sum{ log Poisson( y(i) |{ f(x(i) | p ) ) }
-///     The exact likelihood used is the Poisson likelihood described in this paper:
-///     S. Baker and R. D. Cousins, “Clarification of the use of chi-square and likelihood functions in fits to histograms,”
-///     Nucl. Instrum. Meth. 221 (1984) 437.
-///     This method can then be used only when the bin content represents counts (i.e. errors are sqrt(N) ).
-///     The likelihood method has the advantage of treating correctly bins with low statistics. In case of high
-///     statistics/bin the distribution of the bin content becomes a normal distribution and the likelihood and chi2 fit
-///     give the same result.
-///     The likelihood method, although a bit slower, it is therefore the recommended method in case of low
-///     bin statistics, where the chi2 method may give incorrect results, in particular when there are
-///     several empty bins (see also below).
-///     In case of a weighted histogram, it is possible to perform a likelihood fit by using the
-///     option "WL". Note a weighted histogram is an histogram which has been filled with weights and it
-///     contains the sum of the weight square ( TH1::Sumw2() has been called). The bin error for a weighted
-///     histogram is the square root of the sum of the weight square.
+///      Chi2 = Sum{ ( y(i) - f (x(i) | p )/ e(i) )^2 }
 ///
-///     Treatment of Empty Bins
-///     =======================
+/// where y(i) is the bin content for each bin i, x(i) is the bin center and e(i) is the bin error (sqrt(y(i) for
+/// an un-weighted histogram. Bins with zero errors are excluded from the fit. See also later the note on the treatment of empty bins.
+/// When using option "I" the residual is computed not using the function value at the bin center, f (x(i) | p), but the integral
+/// of the function in the bin,   Integral{ f(x|p)dx } divided by the bin volume
 ///
-///     Empty bins, which have the content equal to zero AND error equal to zero,
-///     are excluded by default from the chisquare fit, but they are considered in the likelihood fit.
-///     since they affect the likelihood if the function value in these bins is not negligible.
-///     When using option "WW" these bins will be considered in the chi2 fit with an error of 1.
-///     Note that if the histogram is having bins with zero content and non zero-errors they are considered as
-///     any other bins in the fit. Instead bins with zero error and non-zero content are excluded in the chi2 fit.
-///     A likelihood fit should also not be peformed on such an histogram, since we are assuming a wrong pdf for each bin.
-///     In general, one should not fit an histogram with non-empty bins and zero errors, apart if all the bins have zero errors.
-///     In this case one could use the option "w", which gives a weight=1 for each bin (unweighted least-square fit).
+/// ## Likelihood Fits
+/// When using option "L" a likelihood fit is used instead of the default chi2 square fit.
+/// The likelihood is built assuming a Poisson probability density function for each bin.
+/// The negative log-likelihood to be minimized is
 ///
-///     Fitting a histogram of dimension N with a function of dimension N-1
-///     ===================================================================
-///     It is possible to fit a TH2 with a TF1 or a TH3 with a TF2.
-///     In this case the option "Integral" is not allowed and each cell has
-///     equal weight.
+///       NLL = Sum{ log Poisson( y(i) |{ f(x(i) | p ) ) }
+/// The exact likelihood used is the Poisson likelihood described in this paper:
+/// S. Baker and R. D. Cousins, “Clarification of the use of chi-square and likelihood functions in fits to histograms,”
+/// Nucl. Instrum. Meth. 221 (1984) 437.
 ///
-///     Associated functions
-///     ====================
-///     One or more object (typically a TF1*) can be added to the list
-///     of functions (fFunctions) associated to each histogram.
-///     When TH1::Fit is invoked, the fitted function is added to this list.
-///     Given an histogram h, one can retrieve an associated function
-///     with:  TF1 *myfunc = h->GetFunction("myfunc");
+/// This method can then be used only when the bin content represents counts (i.e. errors are sqrt(N) ).
+/// The likelihood method has the advantage of treating correctly bins with low statistics. In case of high
+/// statistics/bin the distribution of the bin content becomes a normal distribution and the likelihood and chi2 fit
+/// give the same result.
 ///
-///     Access to the fit result
-///     ========================
-///     The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
-///     By default the TFitResultPtr contains only the status of the fit which is return by an
-///     automatic conversion of the TFitResultPtr to an integer. One can write in this case directly:
+/// The likelihood method, although a bit slower, it is therefore the recommended method in case of low
+/// bin statistics, where the chi2 method may give incorrect results, in particular when there are
+/// several empty bins (see also below).
+/// In case of a weighted histogram, it is possible to perform a likelihood fit by using the
+/// option "WL". Note a weighted histogram is an histogram which has been filled with weights and it
+/// contains the sum of the weight square ( TH1::Sumw2() has been called). The bin error for a weighted
+/// histogram is the square root of the sum of the weight square.
+///
+/// ## Treatment of Empty Bins
+/// Empty bins, which have the content equal to zero AND error equal to zero,
+/// are excluded by default from the chisquare fit, but they are considered in the likelihood fit.
+/// since they affect the likelihood if the function value in these bins is not negligible.
+/// When using option "WW" these bins will be considered in the chi2 fit with an error of 1.
+/// Note that if the histogram is having bins with zero content and non zero-errors they are considered as
+/// any other bins in the fit. Instead bins with zero error and non-zero content are excluded in the chi2 fit.
+/// A likelihood fit should also not be peformed on such an histogram, since we are assuming a wrong pdf for each bin.
+/// In general, one should not fit an histogram with non-empty bins and zero errors, apart if all the bins have zero errors.
+/// In this case one could use the option "w", which gives a weight=1 for each bin (unweighted least-square fit).
+///
+/// ## Fitting a histogram of dimension N with a function of dimension N-1
+/// It is possible to fit a TH2 with a TF1 or a TH3 with a TF2.
+/// In this case the option "Integral" is not allowed and each cell has
+/// equal weight.
+///
+/// ## Associated functions
+/// One or more object (typically a TF1*) can be added to the list
+/// of functions (fFunctions) associated to each histogram.
+/// When TH1::Fit is invoked, the fitted function is added to this list.
+/// Given an histogram h, one can retrieve an associated function
+/// with:  TF1 *myfunc = h->GetFunction("myfunc");
+///
+/// ##Access to the fit result
+/// The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
+/// By default the TFitResultPtr contains only the status of the fit which is return by an
+/// automatic conversion of the TFitResultPtr to an integer. One can write in this case directly:
+///
 ///     Int_t fitStatus =  h->Fit(myFunc)
 ///
-///     If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart
-///     pointer to it. For example one can do:
+/// If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart
+/// pointer to it. For example one can do:
+///
 ///     TFitResultPtr r = h->Fit(myFunc,"S");
 ///     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
 ///     Double_t chi2   = r->Chi2(); // to retrieve the fit chi2
@@ -3812,46 +3792,47 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///     r->Print("V");     // print full information of fit including covariance matrix
 ///     r->Write();        // store the result in a file
 ///
-///     The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
-///     from the fitted function.
-///     If the histogram is made persistent, the list of
-///     associated functions is also persistent. Given a pointer (see above)
-///     to an associated function myfunc, one can retrieve the function/fit
-///     parameters with calls such as:
-///       Double_t chi2 = myfunc->GetChisquare();
-///       Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
-///       Double_t err0 = myfunc->GetParError(0);  //error on first parameter
+/// The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
+/// from the fitted function.
+/// If the histogram is made persistent, the list of
+/// associated functions is also persistent. Given a pointer (see above)
+/// to an associated function myfunc, one can retrieve the function/fit
+/// parameters with calls such as:
 ///
-///     Access to the fit status
-///     ========================
-///     The status of the fit can be obtained converting the TFitResultPtr to an integer
-///     independently if the fit option "S" is used or not:
+///     Double_t chi2 = myfunc->GetChisquare();
+///     Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
+///     Double_t err0 = myfunc->GetParError(0);  //error on first parameter
+///
+/// ## Access to the fit status
+/// The status of the fit can be obtained converting the TFitResultPtr to an integer
+/// independently if the fit option "S" is used or not:
+///
 ///     TFitResultPtr r = h->Fit(myFunc,opt);
 ///     Int_t fitStatus = r;
 ///
-///     The fitStatus is 0 if the fit is OK (i.e no error occurred).
-///     The value of the fit status code is negative in case of an error not connected with the
-///     minimization procedure, for example  when a wrong function is used.
-///     Otherwise the return value is the one returned from the minimization procedure.
-///     When TMinuit (default case) or Minuit2 are used as minimizer the status returned is :
-///     fitStatus =  migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult.
-///     TMinuit will return 0 (for migrad, minos, hesse or improve) in case of success and 4 in
-///     case of error (see the documentation of TMinuit::mnexcm). So for example, for an error
-///     only in Minos but not in Migrad a fitStatus of 40 will be returned.
-///     Minuit2 will return also 0 in case of success and different values in migrad minos or
-///     hesse depending on the error. See in this case the documentation of
-///     Minuit2Minimizer::Minimize for the migradResult, Minuit2Minimizer::GetMinosError for the
-///     minosResult and Minuit2Minimizer::Hesse for the hesseResult.
-///     If other minimizers are used see their specific documentation for the status code returned.
-///     For example in the case of Fumili, for the status returned see TFumili::Minimize.
+/// The fitStatus is 0 if the fit is OK (i.e no error occurred).
+/// The value of the fit status code is negative in case of an error not connected with the
+/// minimization procedure, for example  when a wrong function is used.
+/// Otherwise the return value is the one returned from the minimization procedure.
+/// When TMinuit (default case) or Minuit2 are used as minimizer the status returned is :
+/// fitStatus =  migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult.
+/// TMinuit will return 0 (for migrad, minos, hesse or improve) in case of success and 4 in
+/// case of error (see the documentation of TMinuit::mnexcm). So for example, for an error
+/// only in Minos but not in Migrad a fitStatus of 40 will be returned.
+/// Minuit2 will return also 0 in case of success and different values in migrad minos or
+/// hesse depending on the error. See in this case the documentation of
+/// Minuit2Minimizer::Minimize for the migradResult, Minuit2Minimizer::GetMinosError for the
+/// minosResult and Minuit2Minimizer::Hesse for the hesseResult.
+/// If other minimizers are used see their specific documentation for the status code returned.
+/// For example in the case of Fumili, for the status returned see TFumili::Minimize.
 ///
-///     Excluding points
-///     ================
-///     Use TF1::RejectPoint inside your fitting function to exclude points
-///     within a certain range from the fit. Example:
+/// ## Excluding points
+/// Use TF1::RejectPoint inside your fitting function to exclude points
+/// within a certain range from the fit. Example:
+///
 ///     Double_t fline(Double_t *x, Double_t *par)
 ///     {
-///         if (x[0] > 2.5 && x[0] < 3.5) {
+///        if (x[0] > 2.5 && x[0] < 3.5) {
 ///           TF1::RejectPoint();
 ///           return 0;
 ///        }
@@ -3868,36 +3849,36 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///        h->Fit("fline", "l");
 ///     }
 ///
-///     Warning when using the option "0"
-///     =================================
-///     When selecting the option "0", the fitted function is added to
-///     the list of functions of the histogram, but it is not drawn.
-///     You can undo what you disabled in the following way:
-///       h.Fit("myFunction", "0"); // fit, store function but do not draw
-///       h.Draw(); function is not drawn
-///       const Int_t kNotDraw = 1<<9;
-///       h.GetFunction("myFunction")->ResetBit(kNotDraw);
-///       h.Draw();  // function is visible again
+/// ## Warning when using the option "0"
+/// When selecting the option "0", the fitted function is added to
+/// the list of functions of the histogram, but it is not drawn.
+/// You can undo what you disabled in the following way:
 ///
-///     Access to the Minimizer information during fitting
-///     ==================================================
-///     This function calls, the ROOT::Fit::FitObject function implemented in HFitImpl.cxx
-///     which uses the ROOT::Fit::Fitter class. The Fitter class creates the objective fuction
-///     (e.g. chi2 or likelihood) and uses an implementation of the  Minimizer interface for minimizing
-///     the function.
-///     The default minimizer is Minuit (class TMinuitMinimizer which calls TMinuit).
-///     The default  can be set in the resource file in etc/system.rootrc. For example
+///     h.Fit("myFunction", "0"); // fit, store function but do not draw
+///     h.Draw(); function is not drawn
+///     const Int_t kNotDraw = 1<<9;
+///     h.GetFunction("myFunction")->ResetBit(kNotDraw);
+///     h.Draw();  // function is visible again
+///
+/// ## Access to the Minimizer information during fitting
+/// This function calls, the ROOT::Fit::FitObject function implemented in HFitImpl.cxx
+/// which uses the ROOT::Fit::Fitter class. The Fitter class creates the objective fuction
+/// (e.g. chi2 or likelihood) and uses an implementation of the  Minimizer interface for minimizing
+/// the function.
+/// The default minimizer is Minuit (class TMinuitMinimizer which calls TMinuit).
+/// The default  can be set in the resource file in etc/system.rootrc. For example
+///
 ///     Root.Fitter:      Minuit2
-///     A different fitter can also be set via ROOT::Math::MinimizerOptions::SetDefaultMinimizer
-///     (or TVirtualFitter::SetDefaultFitter).
-///     For example ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiMin","BFGS");
-///     will set the usdage of the BFGS algorithm of the GSL multi-dimensional minimization
-///     (implemented in libMathMore). ROOT::Math::MinimizerOptions can be used also to set other
-///     default options, like maximum number of function calls, minimization tolerance or print
-///     level. See the documentation of this class.
+/// A different fitter can also be set via ROOT::Math::MinimizerOptions::SetDefaultMinimizer
+/// (or TVirtualFitter::SetDefaultFitter).
+/// For example ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiMin","BFGS");
+/// will set the usdage of the BFGS algorithm of the GSL multi-dimensional minimization
+/// (implemented in libMathMore). ROOT::Math::MinimizerOptions can be used also to set other
+/// default options, like maximum number of function calls, minimization tolerance or print
+/// level. See the documentation of this class.
 ///
-///     For fitting linear functions (containing the "++" sign" and polN functions,
-///     the linear fitter is automatically initialized.
+/// For fitting linear functions (containing the "++" sign" and polN functions,
+/// the linear fitter is automatically initialized.
 
 TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Double_t xxmax)
 {
@@ -3920,7 +3901,7 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 ////////////////////////////////////////////////////////////////////////////////
 /// Display a panel with all histogram fit options.
 ///
-///      See class TFitPanel for example
+/// See class TFitPanel for example
 
 void TH1::FitPanel()
 {
@@ -3948,26 +3929,26 @@ void TH1::FitPanel()
 /// Return an histogram containing the asymmetry of this histogram with h2,
 /// where the asymmetry is defined as:
 ///
-///  Asymmetry = (h1 - h2)/(h1 + h2)  where h1 = this
+/// Asymmetry = (h1 - h2)/(h1 + h2)  where h1 = this
 ///
-///  works for 1D, 2D, etc. histograms
-///  c2 is an optional argument that gives a relative weight between the two
-///  histograms, and dc2 is the error on this weight.  This is useful, for example,
-///  when forming an asymmetry between two histograms from 2 different data sets that
-///  need to be normalized to each other in some way.  The function calculates
-///  the errors asumming Poisson statistics on h1 and h2 (that is, dh = sqrt(h)).
+/// works for 1D, 2D, etc. histograms
+/// c2 is an optional argument that gives a relative weight between the two
+/// histograms, and dc2 is the error on this weight.  This is useful, for example,
+/// when forming an asymmetry between two histograms from 2 different data sets that
+/// need to be normalized to each other in some way.  The function calculates
+/// the errors asumming Poisson statistics on h1 and h2 (that is, dh = sqrt(h)).
 ///
-///  example:  assuming 'h1' and 'h2' are already filled
+/// example:  assuming 'h1' and 'h2' are already filled
 ///
-///     h3 = h1->GetAsymmetry(h2)
+/// h3 = h1->GetAsymmetry(h2)
 ///
-///  then 'h3' is created and filled with the asymmetry between 'h1' and 'h2';
-///  h1 and h2 are left intact.
+/// then 'h3' is created and filled with the asymmetry between 'h1' and 'h2';
+/// h1 and h2 are left intact.
 ///
-///  Note that it is the user's responsibility to manage the created histogram.
-///  The name of the returned histogram will be Asymmetry_nameOfh1-nameOfh2
+/// Note that it is the user's responsibility to manage the created histogram.
+/// The name of the returned histogram will be Asymmetry_nameOfh1-nameOfh2
 ///
-///  code proposed by Jason Seely (seely@mit.edu) and adapted by R.Brun
+/// code proposed by Jason Seely (seely@mit.edu) and adapted by R.Brun
 ///
 /// clone the histograms so top and bottom will have the
 /// correct dimensions:
@@ -4049,7 +4030,6 @@ Int_t TH1::GetDefaultBufferSize()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// static function
 /// return kTRUE if TH1::Sumw2 must be called when creating new histograms.
 /// see TH1::SetDefaultSumw2.
 
@@ -4093,10 +4073,9 @@ Double_t TH1::GetEffectiveEntries() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///   Redefines TObject::GetObjectInfo.
-///   Displays the histogram info (bin number, contents, integral up to bin
-///   corresponding to cursor position px,py
-///
+/// Redefines TObject::GetObjectInfo.
+/// Displays the histogram info (bin number, contents, integral up to bin
+/// corresponding to cursor position px,py
 
 char *TH1::GetObjectInfo(Int_t px, Int_t py) const
 {
@@ -4132,67 +4111,67 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 /// Compute Quantiles for this histogram
 /// Quantile x_q of a probability distribution Function F is defined as
 ///
-///        F(x_q) = q with 0 <= q <= 1.
+///      F(x_q) = q with 0 <= q <= 1.
 ///
-///     For instance the median x_0.5 of a distribution is defined as that value
-///     of the random variable for which the distribution function equals 0.5:
+/// For instance the median x_0.5 of a distribution is defined as that value
+/// of the random variable for which the distribution function equals 0.5:
 ///
-///        F(x_0.5) = Probability(x < x_0.5) = 0.5
+///      F(x_0.5) = Probability(x < x_0.5) = 0.5
 ///
-///  code from Eddy Offermann, Renaissance
+/// code from Eddy Offermann, Renaissance
 ///
-/// input parameters
-///   - this 1-d histogram (TH1F,D,etc). Could also be a TProfile
-///   - nprobSum maximum size of array q and size of array probSum (if given)
-///   - probSum array of positions where quantiles will be computed.
-///     if probSum is null, probSum will be computed internally and will
+/// \param[in] nprobSum maximum size of array q and size of array probSum (if given)
+/// \param[in] probSum array of positions where quantiles will be computed.
+///   - if probSum is null, probSum will be computed internally and will
 ///     have a size = number of bins + 1 in h. it will correspond to the
-///      quantiles calculated at the lowest edge of the histogram (quantile=0) and
+///     quantiles calculated at the lowest edge of the histogram (quantile=0) and
 ///     all the upper edges of the bins.
-///     if probSum is not null, it is assumed to contain at least nprobSum values.
-///  output
-///   - return value nq (<=nprobSum) with the number of quantiles computed
-///   - array q filled with nq quantiles
+///   - if probSum is not null, it is assumed to contain at least nprobSum values.
+/// \param[out] q array q filled with nq quantiles
+/// \return value nq (<=nprobSum) with the number of quantiles computed
 ///
-///  Note that the Integral of the histogram is automatically recomputed
-///  if the number of entries is different of the number of entries when
-///  the integral was computed last time. In case you do not use the Fill
-///  functions to fill your histogram, but SetBinContent, you must call
-///  TH1::ComputeIntegral before calling this function.
+/// Note that the Integral of the histogram is automatically recomputed
+/// if the number of entries is different of the number of entries when
+/// the integral was computed last time. In case you do not use the Fill
+/// functions to fill your histogram, but SetBinContent, you must call
+/// TH1::ComputeIntegral before calling this function.
 ///
-///  Getting quantiles q from two histograms and storing results in a TGraph,
-///   a so-called QQ-plot
-///
-///     TGraph *gr = new TGraph(nprob);
-///     h1->GetQuantiles(nprob,gr->GetX());
-///     h2->GetQuantiles(nprob,gr->GetY());
-///     gr->Draw("alp");
+/// Getting quantiles q from two histograms and storing results in a TGraph,
+/// a so-called QQ-plot
+/// ~~~{.cpp}
+/// TGraph *gr = new TGraph(nprob);
+/// h1->GetQuantiles(nprob,gr->GetX());
+/// h2->GetQuantiles(nprob,gr->GetY());
+/// gr->Draw("alp");
+/// ~~~
 ///
 /// Example:
-///     void quantiles() {
-///        // demo for quantiles
-///        const Int_t nq = 20;
-///        TH1F *h = new TH1F("h","demo quantiles",100,-3,3);
-///        h->FillRandom("gaus",5000);
+/// ~~~{cpp}
+/// void quantiles() {
+///    // demo for quantiles
+///    const Int_t nq = 20;
+///    TH1F *h = new TH1F("h","demo quantiles",100,-3,3);
+///    h->FillRandom("gaus",5000);
 ///
-///        Double_t xq[nq];  // position where to compute the quantiles in [0,1]
-///        Double_t yq[nq];  // array to contain the quantiles
-///        for (Int_t i=0;i<nq;i++) xq[i] = Float_t(i+1)/nq;
-///        h->GetQuantiles(nq,yq,xq);
+///    Double_t xq[nq];  // position where to compute the quantiles in [0,1]
+///    Double_t yq[nq];  // array to contain the quantiles
+///    for (Int_t i=0;i<nq;i++) xq[i] = Float_t(i+1)/nq;
+///    h->GetQuantiles(nq,yq,xq);
 ///
-///        //show the original histogram in the top pad
-///        TCanvas *c1 = new TCanvas("c1","demo quantiles",10,10,700,900);
-///        c1->Divide(1,2);
-///        c1->cd(1);
-///        h->Draw();
+///    //show the original histogram in the top pad
+///    TCanvas *c1 = new TCanvas("c1","demo quantiles",10,10,700,900);
+///    c1->Divide(1,2);
+///    c1->cd(1);
+///    h->Draw();
 ///
-///        // show the quantiles in the bottom pad
-///        c1->cd(2);
-///        gPad->SetGrid();
-///        TGraph *gr = new TGraph(nq,xq,yq);
-///        gr->SetMarkerStyle(21);
-///        gr->Draw("alp");
-///     }
+///    // show the quantiles in the bottom pad
+///    c1->cd(2);
+///    gPad->SetGrid();
+///    TGraph *gr = new TGraph(nq,xq,yq);
+///    gr->SetMarkerStyle(21);
+///    gr->Draw("alp");
+/// }
+/// ~~~
 
 Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 {
@@ -4348,12 +4327,12 @@ void H1InitPolynom()
 ////////////////////////////////////////////////////////////////////////////////
 /// Least squares lpolynomial fitting without weights.
 ///
-///     n   number of points to fit
-///     m   number of parameters
-///     a   array of parameters
+/// \param[in] n number of points to fit
+/// \param[in] m number of parameters
+/// \param[in] a array of parameters
 ///
-///      based on CERNLIB routine LSQ: Translated to C++ by Rene Brun
-///      (E.Keil.  revised by B.Schorr, 23.10.1981.)
+///  based on CERNLIB routine LSQ: Translated to C++ by Rene Brun
+///  (E.Keil.  revised by B.Schorr, 23.10.1981.)
 
 void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a)
 {
@@ -4412,8 +4391,8 @@ void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a)
 ////////////////////////////////////////////////////////////////////////////////
 /// Least square linear fit without weights.
 ///
-///      extracted from CERNLIB LLSQ: Translated to C++ by Rene Brun
-///      (added to LSQ by B. Schorr, 15.02.1982.)
+///  extracted from CERNLIB LLSQ: Translated to C++ by Rene Brun
+///  (added to LSQ by B. Schorr, 15.02.1982.)
 
 void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail)
 {
@@ -4460,7 +4439,7 @@ void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifai
 ////////////////////////////////////////////////////////////////////////////////
 /// Extracted from CERN Program library routine DSEQN.
 ///
-///           : Translated to C++ by Rene Brun
+///       : Translated to C++ by Rene Brun
 
 void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b)
 {
@@ -4525,26 +4504,27 @@ void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return Global bin number corresponding to binx,y,z.
 ///
-///      2-D and 3-D histograms are represented with a one dimensional
-///      structure.
-///      This has the advantage that all existing functions, such as
-///        GetBinContent, GetBinError, GetBinFunction work for all dimensions.
+/// 2-D and 3-D histograms are represented with a one dimensional
+/// structure.
+/// This has the advantage that all existing functions, such as
+/// GetBinContent, GetBinError, GetBinFunction work for all dimensions.
 ///
-///     In case of a TH1x, returns binx directly.
-///     see TH1::GetBinXYZ for the inverse transformation.
+/// In case of a TH1x, returns binx directly.
+/// see TH1::GetBinXYZ for the inverse transformation.
 ///
-///      Convention for numbering bins
-///      =============================
-///      For all histogram types: nbins, xlow, xup
-///        bin = 0;       underflow bin
-///        bin = 1;       first bin with low-edge xlow INCLUDED
-///        bin = nbins;   last bin with upper-edge xup EXCLUDED
-///        bin = nbins+1; overflow bin
-///      In case of 2-D or 3-D histograms, a "global bin" number is defined.
-///      For example, assuming a 3-D histogram with binx,biny,binz, the function
-///        Int_t bin = h->GetBin(binx,biny,binz);
-///      returns a global/linearized bin number. This global bin is useful
-///      to access the bin information independently of the dimension.
+/// Convention for numbering bins
+///
+/// For all histogram types: nbins, xlow, xup
+///    bin = 0;       underflow bin
+///    bin = 1;       first bin with low-edge xlow INCLUDED
+///    bin = nbins;   last bin with upper-edge xup EXCLUDED
+///    bin = nbins+1; overflow bin
+/// In case of 2-D or 3-D histograms, a "global bin" number is defined.
+/// For example, assuming a 3-D histogram with binx,biny,binz, the function
+///
+///     Int_t bin = h->GetBin(binx,biny,binz);
+/// returns a global/linearized bin number. This global bin is useful
+/// to access the bin information independently of the dimension.
 
 Int_t TH1::GetBin(Int_t binx, Int_t, Int_t) const
 {
@@ -4627,18 +4607,18 @@ Double_t TH1::GetRandom() const
 ///
 /// Implemented in TH1C,S,F,D
 ///
-///      Convention for numbering bins
-///      =============================
-///      For all histogram types: nbins, xlow, xup
-///        bin = 0;       underflow bin
-///        bin = 1;       first bin with low-edge xlow INCLUDED
-///        bin = nbins;   last bin with upper-edge xup EXCLUDED
-///        bin = nbins+1; overflow bin
-///      In case of 2-D or 3-D histograms, a "global bin" number is defined.
-///      For example, assuming a 3-D histogram with binx,biny,binz, the function
-///        Int_t bin = h->GetBin(binx,biny,binz);
-///      returns a global/linearized bin number. This global bin is useful
-///      to access the bin information independently of the dimension.
+///  Convention for numbering bins
+///
+///  For all histogram types: nbins, xlow, xup
+///    bin = 0;       underflow bin
+///    bin = 1;       first bin with low-edge xlow INCLUDED
+///    bin = nbins;   last bin with upper-edge xup EXCLUDED
+///    bin = nbins+1; overflow bin
+///  In case of 2-D or 3-D histograms, a "global bin" number is defined.
+///  For example, assuming a 3-D histogram with binx,biny,binz, the function
+///    Int_t bin = h->GetBin(binx,biny,binz);
+///  returns a global/linearized bin number. This global bin is useful
+///  to access the bin information independently of the dimension.
 
 Double_t TH1::GetBinContent(Int_t bin) const
 {
@@ -4660,8 +4640,8 @@ Double_t TH1::GetBinContent(Int_t bin) const
 /// In all cases the function returns the smallest difference.
 ///
 /// NOTE1: if firstx <= 0, firstx is set to bin 1
-///        if (lastx < firstx then firstx is set to the number of bins
-///        ie if firstx=0 and lastx=0 (default) the search is on all bins.
+///    if (lastx < firstx then firstx is set to the number of bins
+///    ie if firstx=0 and lastx=0 (default) the search is on all bins.
 /// NOTE2: if maxdiff=0 (default), the first bin with content=c is returned.
 
 Double_t TH1::GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx, Int_t lastx,Double_t maxdiff) const
@@ -4902,14 +4882,15 @@ void TH1::LabelsInflate(Option_t *ax)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Set option(s) to draw axis with labels
-///  option = "a" sort by alphabetic order
-///         = ">" sort by decreasing values
-///         = "<" sort by increasing values
-///         = "h" draw labels horizontal
-///         = "v" draw labels vertical
-///         = "u" draw labels up (end of label right adjusted)
-///         = "d" draw labels down (start of label left adjusted)
+/// Set option(s) to draw axis with labels
+/// \param[in] option
+///     - "a" sort by alphabetic order
+///     - ">" sort by decreasing values
+///     - "<" sort by increasing values
+///     - "h" draw labels horizontal
+///     - "v" draw labels vertical
+///     - "u" draw labels up (end of label right adjusted)
+///     - "d" draw labels down (start of label left adjusted)
 
 void TH1::LabelsOption(Option_t *option, Option_t *ax)
 {
@@ -5291,26 +5272,29 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
 /// a multiple of the smallest bin width and the upper limit must also
 /// be a multiple of the bin width.
 /// Example:
-/// void atest() {
-///    TH1F *h1 = new TH1F("h1","h1",110,-110,0);
-///    TH1F *h2 = new TH1F("h2","h2",220,0,110);
-///    TH1F *h3 = new TH1F("h3","h3",330,-55,55);
-///    TRandom r;
-///    for (Int_t i=0;i<10000;i++) {
-///       h1->Fill(r.Gaus(-55,10));
-///       h2->Fill(r.Gaus(55,10));
-///       h3->Fill(r.Gaus(0,10));
-///    }
 ///
-///    TList *list = new TList;
-///    list->Add(h1);
-///    list->Add(h2);
-///    list->Add(h3);
-///    TH1F *h = (TH1F*)h1->Clone("h");
-///    h->Reset();
-///    h->Merge(list);
-///    h->Draw();
+/// ~~~{.cpp}
+/// void atest() {
+/// TH1F *h1 = new TH1F("h1","h1",110,-110,0);
+/// TH1F *h2 = new TH1F("h2","h2",220,0,110);
+/// TH1F *h3 = new TH1F("h3","h3",330,-55,55);
+/// TRandom r;
+/// for (Int_t i=0;i<10000;i++) {
+///   h1->Fill(r.Gaus(-55,10));
+///   h2->Fill(r.Gaus(55,10));
+///   h3->Fill(r.Gaus(0,10));
 /// }
+///
+/// TList *list = new TList;
+/// list->Add(h1);
+/// list->Add(h2);
+/// list->Add(h3);
+/// TH1F *h = (TH1F*)h1->Clone("h");
+/// h->Reset();
+/// h->Merge(list);
+/// h->Draw();
+/// }
+/// ~~~
 
 Long64_t TH1::Merge(TCollection *li)
 {
@@ -5678,11 +5662,11 @@ Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiply this histogram by h1.
 ///
-///   this = this*h1
+/// this = this*h1
 ///
-///   If errors of this are available (TH1::Sumw2), errors are recalculated.
-///   Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
-///   if not already set.
+/// If errors of this are available (TH1::Sumw2), errors are recalculated.
+/// Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
+/// if not already set.
 ///
 /// IMPORTANT NOTE: If you intend to use the errors of this histogram later
 /// you should call Sumw2 before making this operation.
@@ -5737,11 +5721,11 @@ Bool_t TH1::Multiply(const TH1 *h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace contents of this histogram by multiplication of h1 by h2.
 ///
-///   this = (c1*h1)*(c2*h2)
+/// this = (c1*h1)*(c2*h2)
 ///
-///   If errors of this are available (TH1::Sumw2), errors are recalculated.
-///   Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for this
-///   if not already set.
+/// If errors of this are available (TH1::Sumw2), errors are recalculated.
+/// Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for this
+/// if not already set.
 ///
 /// IMPORTANT NOTE: If you intend to use the errors of this histogram later
 /// you should call Sumw2 before making this operation.
@@ -5802,8 +5786,8 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
 ////////////////////////////////////////////////////////////////////////////////
 /// Control routine to paint any kind of histograms.
 ///
-///  This function is automatically called by TCanvas::Update.
-///  (see TH1::Draw for the list of options)
+/// This function is automatically called by TCanvas::Update.
+/// (see TH1::Draw for the list of options)
 
 void TH1::Paint(Option_t *option)
 {
@@ -5817,50 +5801,52 @@ void TH1::Paint(Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///   Rebin this histogram
+/// Rebin this histogram
 ///
-///  -case 1  xbins=0
-///   If newname is blank (default), the current histogram is modified and
-///   a pointer to it is returned.
+/// ### case 1  xbins=0
+/// If newname is blank (default), the current histogram is modified and
+/// a pointer to it is returned.
 ///
-///   If newname is not blank, the current histogram is not modified, and a
-///   new histogram is returned which is a Clone of the current histogram
-///   with its name set to newname.
+/// If newname is not blank, the current histogram is not modified, and a
+/// new histogram is returned which is a Clone of the current histogram
+/// with its name set to newname.
 ///
-///   The parameter ngroup indicates how many bins of this have to be merged
-///   into one bin of the result.
+/// The parameter ngroup indicates how many bins of this have to be merged
+/// into one bin of the result.
 ///
-///   If the original histogram has errors stored (via Sumw2), the resulting
-///   histograms has new errors correctly calculated.
+/// If the original histogram has errors stored (via Sumw2), the resulting
+/// histograms has new errors correctly calculated.
 ///
-///   examples: if h1 is an existing TH1F histogram with 100 bins
+/// examples: if h1 is an existing TH1F histogram with 100 bins
+///
 ///     h1->Rebin();  //merges two bins in one in h1: previous contents of h1 are lost
 ///     h1->Rebin(5); //merges five bins in one in h1
 ///     TH1F *hnew = h1->Rebin(5,"hnew"); // creates a new histogram hnew
 ///                                       // merging 5 bins of h1 in one bin
 ///
-///   NOTE:  If ngroup is not an exact divider of the number of bins,
-///          the top limit of the rebinned histogram is reduced
-///          to the upper edge of the last bin that can make a complete
-///          group. The remaining bins are added to the overflow bin.
-///          Statistics will be recomputed from the new bin contents.
+/// NOTE:  If ngroup is not an exact divider of the number of bins,
+/// the top limit of the rebinned histogram is reduced
+/// to the upper edge of the last bin that can make a complete
+/// group. The remaining bins are added to the overflow bin.
+/// Statistics will be recomputed from the new bin contents.
 ///
-///  -case 2  xbins!=0
-///   A new histogram is created (you should specify newname).
-///   The parameter ngroup is the number of variable size bins in the created histogram.
-///   The array xbins must contain ngroup+1 elements that represent the low-edges
-///   of the bins.
-///   If the original histogram has errors stored (via Sumw2), the resulting
-///   histograms has new errors correctly calculated.
+/// ### case 2  xbins!=0
+/// A new histogram is created (you should specify newname).
+/// The parameter ngroup is the number of variable size bins in the created histogram.
+/// The array xbins must contain ngroup+1 elements that represent the low-edges
+/// of the bins.
+/// If the original histogram has errors stored (via Sumw2), the resulting
+/// histograms has new errors correctly calculated.
 ///
-///   NOTE:  The bin edges specified in xbins should correspond to bin edges
-///          in the original histogram. If a bin edge in the new histogram is
-///          in the middle of a bin in the original histogram, all entries in
-///          the split bin in the original histogram will be transfered to the
-///          lower of the two possible bins in the new histogram. This is
-///          probably not what you want.
+/// NOTE:  The bin edges specified in xbins should correspond to bin edges
+/// in the original histogram. If a bin edge in the new histogram is
+/// in the middle of a bin in the original histogram, all entries in
+/// the split bin in the original histogram will be transfered to the
+/// lower of the two possible bins in the new histogram. This is
+/// probably not what you want.
 ///
-///   examples: if h1 is an existing TH1F histogram with 100 bins
+/// examples: if h1 is an existing TH1F histogram with 100 bins
+///
 ///     Double_t xbins[25] = {...} array of low-edges (xbins[25] is the upper edge of last bin
 ///     h1->Rebin(24,"hnew",xbins);  //creates a new variable bin size histogram hnew
 
@@ -6163,7 +6149,7 @@ void TH1::RecursiveRemove(TObject *obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiply this histogram by a constant c1.
 ///
-///   this = c1*this
+///this = c1*this
 ///
 /// Note that both contents and errors(if any) are scaled.
 /// This function uses the services of TH1::Add
@@ -6267,11 +6253,11 @@ void TH1::SetDefaultSumw2(Bool_t sumw2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change (i.e. set) the title
 ///
-///   if title is in the form "stringt;stringx;stringy;stringz"
-///   the histogram title is set to stringt, the x axis title to stringx,
-///   the y axis title to stringy, and the z axis title to stringz.
-///   To insert the character ";" in one of the titles, one should use "#;"
-///   or "#semicolon".
+///if title is in the form "stringt;stringx;stringy;stringz"
+///the histogram title is set to stringt, the x axis title to stringx,
+///the y axis title to stringy, and the z axis title to stringz.
+///To insert the character ";" in one of the titles, one should use "#;"
+///or "#semicolon".
 
 void TH1::SetTitle(const char *title)
 {
@@ -6488,9 +6474,9 @@ void  TH1::Smooth(Int_t ntimes, Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  if flag=kTRUE, underflows and overflows are used by the Fill functions
-///  in the computation of statistics (mean value, StdDev).
-///  By default, underflows or overflows are not used.
+/// if flag=kTRUE, underflows and overflows are used by the Fill functions
+/// in the computation of statistics (mean value, StdDev).
+/// By default, underflows or overflows are not used.
 
 void  TH1::StatOverflows(Bool_t flag)
 {
@@ -6571,12 +6557,12 @@ void TH1::Streamer(TBuffer &b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print some global quantities for this histogram.
-///
-///  If option "base" is given, number of bins and ranges are also printed
-///  If option "range" is given, bin contents and errors are also printed
-///                     for all bins in the current range (default 1-->nbins)
-///  If option "all" is given, bin contents and errors are also printed
-///                     for all bins including under and overflows.
+/// \param[in] option
+///   - "base" is given, number of bins and ranges are also printed
+///   - "range" is given, bin contents and errors are also printed
+///     for all bins in the current range (default 1-->nbins)
+///   - "all" is given, bin contents and errors are also printed
+///     for all bins including under and overflows.
 
 void TH1::Print(Option_t *option) const
 {
@@ -6668,11 +6654,11 @@ void TH1::Rebuild(Option_t *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this histogram: contents, errors, etc.
-///
-/// if option "ICE" is specified, resets only Integral, Contents and Errors.
-/// if option "ICES" is specified, resets only Integral, Contents , Errors and Statistics
-///                  This option is used
-/// if option "M"   is specified, resets also Minimum and Maximum
+/// \param[in] option
+///   - "ICE" is specified, resets only Integral, Contents and Errors.
+///   - "ICES" is specified, resets only Integral, Contents , Errors and Statistics
+///     This option is used
+///   - "M"   is specified, resets also Minimum and Maximum
 
 void TH1::Reset(Option_t *option)
 {
@@ -6952,7 +6938,7 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///   Copy current attributes from/to current style
+///Copy current attributes from/to current style
 
 void TH1::UseCurrentStyle()
 {
@@ -6997,26 +6983,26 @@ void TH1::UseCurrentStyle()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  For axis = 1,2 or 3 returns the mean value of the histogram along
-///  X,Y or Z axis.
-///  For axis = 11, 12, 13 returns the standard error of the mean value
-///  of the histogram along X, Y or Z axis
+/// For axis = 1,2 or 3 returns the mean value of the histogram along
+/// X,Y or Z axis.
+/// For axis = 11, 12, 13 returns the standard error of the mean value
+/// of the histogram along X, Y or Z axis
 ///
-///  Note that the mean value/StdDev is computed using the bins in the currently
-///  defined range (see TAxis::SetRange). By default the range includes
-///  all bins from 1 to nbins included, excluding underflows and overflows.
-///  To force the underflows and overflows in the computation, one must
-///  call the static function TH1::StatOverflows(kTRUE) before filling
-///  the histogram.
+/// Note that the mean value/StdDev is computed using the bins in the currently
+/// defined range (see TAxis::SetRange). By default the range includes
+/// all bins from 1 to nbins included, excluding underflows and overflows.
+/// To force the underflows and overflows in the computation, one must
+/// call the static function TH1::StatOverflows(kTRUE) before filling
+/// the histogram.
 ///
 /// Return mean value of this histogram along the X axis.
 ///
-///  Note that the mean value/StdDev is computed using the bins in the currently
-///  defined range (see TAxis::SetRange). By default the range includes
-///  all bins from 1 to nbins included, excluding underflows and overflows.
-///  To force the underflows and overflows in the computation, one must
-///  call the static function TH1::StatOverflows(kTRUE) before filling
-///  the histogram.
+/// Note that the mean value/StdDev is computed using the bins in the currently
+/// defined range (see TAxis::SetRange). By default the range includes
+/// all bins from 1 to nbins included, excluding underflows and overflows.
+/// To force the underflows and overflows in the computation, one must
+/// call the static function TH1::StatOverflows(kTRUE) before filling
+/// the histogram.
 
 Double_t TH1::GetMean(Int_t axis) const
 {
@@ -7040,14 +7026,14 @@ Double_t TH1::GetMean(Int_t axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return standard error of mean of this histogram along the X axis.
 ///
-///  Note that the mean value/StdDev is computed using the bins in the currently
-///  defined range (see TAxis::SetRange). By default the range includes
-///  all bins from 1 to nbins included, excluding underflows and overflows.
-///  To force the underflows and overflows in the computation, one must
-///  call the static function TH1::StatOverflows(kTRUE) before filling
-///  the histogram.
-///  Also note, that although the definition of standard error doesn't include the
-///  assumption of normality, many uses of this feature implicitly assume it.
+/// Note that the mean value/StdDev is computed using the bins in the currently
+/// defined range (see TAxis::SetRange). By default the range includes
+/// all bins from 1 to nbins included, excluding underflows and overflows.
+/// To force the underflows and overflows in the computation, one must
+/// call the static function TH1::StatOverflows(kTRUE) before filling
+/// the histogram.
+/// Also note, that although the definition of standard error doesn't include the
+/// assumption of normality, many uses of this feature implicitly assume it.
 
 Double_t TH1::GetMeanError(Int_t axis) const
 {
@@ -7056,20 +7042,20 @@ Double_t TH1::GetMeanError(Int_t axis) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Returns the Standard Deviation (Sigma).
-///  The Sigma estimate is computed as Sqrt((1/N)*(Sum(x_i-x_mean)^2))
+/// Returns the Standard Deviation (Sigma).
+/// The Sigma estimate is computed as Sqrt((1/N)*(Sum(x_i-x_mean)^2))
 ///
-///  For axis = 1,2 or 3 returns the Sigma value of the histogram along
-///  X, Y or Z axis
-///  For axis = 11, 12 or 13 returns the error of StdDev estimation along
-///  X, Y or Z axis for Normal distribution
+/// For axis = 1,2 or 3 returns the Sigma value of the histogram along
+/// X, Y or Z axis
+/// For axis = 11, 12 or 13 returns the error of StdDev estimation along
+/// X, Y or Z axis for Normal distribution
 ///
-///     Note that the mean value/sigma is computed using the bins in the currently
-///  defined range (see TAxis::SetRange). By default the range includes
-///  all bins from 1 to nbins included, excluding underflows and overflows.
-///  To force the underflows and overflows in the computation, one must
-///  call the static function TH1::StatOverflows(kTRUE) before filling
-///  the histogram.
+/// Note that the mean value/sigma is computed using the bins in the currently
+/// defined range (see TAxis::SetRange). By default the range includes
+/// all bins from 1 to nbins included, excluding underflows and overflows.
+/// To force the underflows and overflows in the computation, one must
+/// call the static function TH1::StatOverflows(kTRUE) before filling
+/// the histogram.
 
 Double_t TH1::GetStdDev(Int_t axis) const
 {
@@ -7095,19 +7081,19 @@ Double_t TH1::GetStdDev(Int_t axis) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Return error of standard deviation estimation for Normal distribution
+/// Return error of standard deviation estimation for Normal distribution
 ///
-///  Note that the mean value/StdDev is computed using the bins in the currently
-///  defined range (see TAxis::SetRange). By default the range includes
-///  all bins from 1 to nbins included, excluding underflows and overflows.
-///  To force the underflows and overflows in the computation, one must
-///  call the static function TH1::StatOverflows(kTRUE) before filling
-///  the histogram.
-///  Value returned is standard deviation of sample standard deviation.
-///  Note that it is an approximated value which is valid only in the case that the
-///  original data distribution is Normal. The correct one would require
-///  the 4-th momentum value, which cannot be accurately estimated from an histogram since
-///  the x-information for all entries is not kept.
+/// Note that the mean value/StdDev is computed using the bins in the currently
+/// defined range (see TAxis::SetRange). By default the range includes
+/// all bins from 1 to nbins included, excluding underflows and overflows.
+/// To force the underflows and overflows in the computation, one must
+/// call the static function TH1::StatOverflows(kTRUE) before filling
+/// the histogram.
+/// Value returned is standard deviation of sample standard deviation.
+/// Note that it is an approximated value which is valid only in the case that the
+/// original data distribution is Normal. The correct one would require
+/// the 4-th momentum value, which cannot be accurately estimated from an histogram since
+/// the x-information for all entries is not kept.
 
 Double_t TH1::GetStdDevError(Int_t axis) const
 {
@@ -7256,22 +7242,23 @@ Double_t TH1::GetKurtosis(Int_t axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// fill the array stats from the contents of this histogram
 /// The array stats must be correctly dimensioned in the calling program.
-/// stats[0] = sumw
-/// stats[1] = sumw2
-/// stats[2] = sumwx
-/// stats[3] = sumwx2
+///
+///      stats[0] = sumw
+///      stats[1] = sumw2
+///      stats[2] = sumwx
+///      stats[3] = sumwx2
 ///
 /// If no axis-subrange is specified (via TAxis::SetRange), the array stats
 /// is simply a copy of the statistics quantities computed at filling time.
 /// If a sub-range is specified, the function recomputes these quantities
 /// from the bin contents in the current axis range.
 ///
-///  Note that the mean value/StdDev is computed using the bins in the currently
-///  defined range (see TAxis::SetRange). By default the range includes
-///  all bins from 1 to nbins included, excluding underflows and overflows.
-///  To force the underflows and overflows in the computation, one must
-///  call the static function TH1::StatOverflows(kTRUE) before filling
-///  the histogram.
+/// Note that the mean value/StdDev is computed using the bins in the currently
+/// defined range (see TAxis::SetRange). By default the range includes
+/// all bins from 1 to nbins included, excluding underflows and overflows.
+/// To force the underflows and overflows in the computation, one must
+/// call the static function TH1::StatOverflows(kTRUE) before filling
+/// the histogram.
 
 void TH1::GetStats(Double_t *stats) const
 {
@@ -7481,24 +7468,24 @@ Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Statistical test of compatibility in shape between
-///  this histogram and h2, using the Anderson-Darling 2 sample test.
-///  The AD 2 sample test formula are derived from the paper
-///  F.W Scholz, M.A. Stephens "k-Sample Anderson-Darling Test".
-///  The test is implemented in root in the ROOT::Math::GoFTest class
-///  It is the same formula ( (6) in the paper), and also shown in this preprint
-///  http://arxiv.org/pdf/0804.0380v1.pdf
-///  Binned data are considered as un-binned data
-///   with identical observation happening in the bin center.
+/// Statistical test of compatibility in shape between
+/// this histogram and h2, using the Anderson-Darling 2 sample test.
+/// The AD 2 sample test formula are derived from the paper
+/// F.W Scholz, M.A. Stephens "k-Sample Anderson-Darling Test".
+/// The test is implemented in root in the ROOT::Math::GoFTest class
+/// It is the same formula ( (6) in the paper), and also shown in this preprint
+/// http://arxiv.org/pdf/0804.0380v1.pdf
+/// Binned data are considered as un-binned data
+/// with identical observation happening in the bin center.
 ///
-///     option is a character string to specify options
-///         "D" Put out a line of "Debug" printout
-///         "T" Return the normalized A-D test statistic
+/// \param[in] option is a character string to specify options
+///    - "D" Put out a line of "Debug" printout
+///    - "T" Return the normalized A-D test statistic
 ///
-///  Note1: Underflow and overflow are not considered in the test
-///  Note2:  The test works only for un-weighted histogram (i.e. representing counts)
-///  Note3:  The histograms are not required to have the same X axis
-///  Note4:  The test works only for 1-dimensional histograms
+/// - Note1: Underflow and overflow are not considered in the test
+/// - Note2:  The test works only for un-weighted histogram (i.e. representing counts)
+/// - Note3:  The histograms are not required to have the same X axis
+/// - Note4:  The test works only for 1-dimensional histograms
 
 Double_t TH1::AndersonDarlingTest(const TH1 *h2, Option_t *option) const
 {
@@ -7542,77 +7529,76 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Statistical test of compatibility in shape between
-///  this histogram and h2, using Kolmogorov test.
-///  Note that the KolmogorovTest (KS) test should in theory be used only for unbinned data
-///  and not for binned data as in the case of the histogram (see NOTE 3 below).
-///  So, before using this method blindly, read the NOTE 3.
+/// Statistical test of compatibility in shape between
+/// this histogram and h2, using Kolmogorov test.
+/// Note that the KolmogorovTest (KS) test should in theory be used only for unbinned data
+/// and not for binned data as in the case of the histogram (see NOTE 3 below).
+/// So, before using this method blindly, read the NOTE 3.
 ///
+/// Default: Ignore under- and overflow bins in comparison
 ///
-///     Default: Ignore under- and overflow bins in comparison
+/// \param[in] option is a character string to specify options
+///    - "U" include Underflows in test  (also for 2-dim)
+///    -  "O" include Overflows     (also valid for 2-dim)
+///    -  "N" include comparison of normalizations
+///    -  "D" Put out a line of "Debug" printout
+///    -  "M" Return the Maximum Kolmogorov distance instead of prob
+///    -  "X" Run the pseudo experiments post-processor with the following procedure:
+///       make pseudoexperiments based on random values from the parent
+///       distribution and compare the KS distance of the pseudoexperiment
+///       to the parent distribution. Bin the KS distances in a histogram,
+///       and then take the integral of all the KS values above the value
+///       obtained from the original data to Monte Carlo distribution.
+///       The number of pseudo-experiments nEXPT is currently fixed at 1000.
+///       The function returns the integral.
+///       (thanks to Ben Kilminster to submit this procedure). Note that
+///       this option "X" is much slower.
 ///
-///     option is a character string to specify options
-///         "U" include Underflows in test  (also for 2-dim)
-///         "O" include Overflows     (also valid for 2-dim)
-///         "N" include comparison of normalizations
-///         "D" Put out a line of "Debug" printout
-///         "M" Return the Maximum Kolmogorov distance instead of prob
-///         "X" Run the pseudo experiments post-processor with the following procedure:
-///             make pseudoexperiments based on random values from the parent
-///             distribution and compare the KS distance of the pseudoexperiment
-///             to the parent distribution. Bin the KS distances in a histogram,
-///             and then take the integral of all the KS values above the value
-///             obtained from the original data to Monte Carlo distribution.
-///             The number of pseudo-experiments nEXPT is currently fixed at 1000.
-///             The function returns the integral.
-///             (thanks to Ben Kilminster to submit this procedure). Note that
-///             this option "X" is much slower.
+/// The returned function value is the probability of test
+///   (much less than one means NOT compatible)
 ///
-///   The returned function value is the probability of test
-///       (much less than one means NOT compatible)
+/// Code adapted by Rene Brun from original HBOOK routine HDIFF
 ///
-///  Code adapted by Rene Brun from original HBOOK routine HDIFF
+/// NOTE1
+/// A good description of the Kolmogorov test can be seen at:
+/// http://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm
 ///
-///  NOTE1
-///  A good description of the Kolmogorov test can be seen at:
-///    http://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm
+/// NOTE2
+/// see also alternative function TH1::Chi2Test
+/// The Kolmogorov test is assumed to give better results than Chi2Test
+/// in case of histograms with low statistics.
 ///
-///  NOTE2
-///  see also alternative function TH1::Chi2Test
-///  The Kolmogorov test is assumed to give better results than Chi2Test
-///  in case of histograms with low statistics.
+/// NOTE3 (Jan Conrad, Fred James)
+/// "The returned value PROB is calculated such that it will be
+/// uniformly distributed between zero and one for compatible histograms,
+/// provided the data are not binned (or the number of bins is very large
+/// compared with the number of events). Users who have access to unbinned
+/// data and wish exact confidence levels should therefore not put their data
+/// into histograms, but should call directly TMath::KolmogorovTest. On
+/// the other hand, since TH1 is a convenient way of collecting data and
+/// saving space, this function has been provided. However, the values of
+/// PROB for binned data will be shifted slightly higher than expected,
+/// depending on the effects of the binning. For example, when comparing two
+/// uniform distributions of 500 events in 100 bins, the values of PROB,
+/// instead of being exactly uniformly distributed between zero and one, have
+/// a mean value of about 0.56. We can apply a useful
+/// rule: As long as the bin width is small compared with any significant
+/// physical effect (for example the experimental resolution) then the binning
+/// cannot have an important effect. Therefore, we believe that for all
+/// practical purposes, the probability value PROB is calculated correctly
+/// provided the user is aware that:
+/// 1. The value of PROB should not be expected to have exactly the correct
+///    distribution for binned data.
+/// 2. The user is responsible for seeing to it that the bin widths are
+///    small compared with any physical phenomena of interest.
+/// 3. The effect of binning (if any) is always to make the value of PROB
+///    slightly too big. That is, setting an acceptance criterion of (PROB>0.05
+///    will assure that at most 5% of truly compatible histograms are rejected,
+///    and usually somewhat less."
 ///
-///  NOTE3 (Jan Conrad, Fred James)
-///  "The returned value PROB is calculated such that it will be
-///  uniformly distributed between zero and one for compatible histograms,
-///  provided the data are not binned (or the number of bins is very large
-///  compared with the number of events). Users who have access to unbinned
-///  data and wish exact confidence levels should therefore not put their data
-///  into histograms, but should call directly TMath::KolmogorovTest. On
-///  the other hand, since TH1 is a convenient way of collecting data and
-///  saving space, this function has been provided. However, the values of
-///  PROB for binned data will be shifted slightly higher than expected,
-///  depending on the effects of the binning. For example, when comparing two
-///  uniform distributions of 500 events in 100 bins, the values of PROB,
-///  instead of being exactly uniformly distributed between zero and one, have
-///  a mean value of about 0.56. We can apply a useful
-///  rule: As long as the bin width is small compared with any significant
-///  physical effect (for example the experimental resolution) then the binning
-///  cannot have an important effect. Therefore, we believe that for all
-///  practical purposes, the probability value PROB is calculated correctly
-///  provided the user is aware that:
-///     1. The value of PROB should not be expected to have exactly the correct
-///  distribution for binned data.
-///     2. The user is responsible for seeing to it that the bin widths are
-///  small compared with any physical phenomena of interest.
-///     3. The effect of binning (if any) is always to make the value of PROB
-///  slightly too big. That is, setting an acceptance criterion of (PROB>0.05
-///  will assure that at most 5% of truly compatible histograms are rejected,
-///  and usually somewhat less."
-///
-///  Note also that for GoF test of unbinned data ROOT provides also the class
-///  ROOT::Math::GoFTest. The class has also method for doing one sample tests
-///  (i.e. comparing the data with a given distribution).
+/// Note also that for GoF test of unbinned data ROOT provides also the class
+/// ROOT::Math::GoFTest. The class has also method for doing one sample tests
+/// (i.e. comparing the data with a given distribution).
 
 Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 {
@@ -7785,10 +7771,10 @@ void TH1::SetContent(const Double_t *content)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Return contour values into array levels if pointer levels is non zero
+/// Return contour values into array levels if pointer levels is non zero
 ///
-///  The function returns the number of contour levels.
-///  see GetContourLevel to return one contour only
+/// The function returns the number of contour levels.
+/// see GetContourLevel to return one contour only
 ///
 
 Int_t TH1::GetContour(Double_t *levels)
@@ -7860,12 +7846,12 @@ void TH1::SetBuffer(Int_t buffersize, Option_t * /*option*/)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Set the number and values of contour levels.
+/// Set the number and values of contour levels.
 ///
-///  By default the number of contour levels is set to 20. The contours values
-///  in the array "levels" should be specified in increasing order.
+/// By default the number of contour levels is set to 20. The contours values
+/// in the array "levels" should be specified in increasing order.
 ///
-///  if argument levels = 0 or missing, equidistant contours are computed
+/// if argument levels = 0 or missing, equidistant contours are computed
 
 void TH1::SetContour(Int_t  nlevels, const Double_t *levels)
 {
@@ -7916,14 +7902,14 @@ void TH1::SetContourLevel(Int_t level, Double_t value)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Return maximum value smaller than maxval of bins in the range,
-///  unless the value has been overridden by TH1::SetMaximum,
-///  in which case it returns that value. (This happens, for example,
-///  when the histogram is drawn and the y or z axis limits are changed
+/// Return maximum value smaller than maxval of bins in the range,
+/// unless the value has been overridden by TH1::SetMaximum,
+/// in which case it returns that value. (This happens, for example,
+/// when the histogram is drawn and the y or z axis limits are changed
 ///
-///  To get the maximum value of bins in the histogram regardless of
-///  whether the value has been overridden, use
-///      h->GetBinContent(h->GetMaximumBin())
+/// To get the maximum value of bins in the histogram regardless of
+/// whether the value has been overridden, use
+///  h->GetBinContent(h->GetMaximumBin())
 
 Double_t TH1::GetMaximum(Double_t maxval) const
 {
@@ -8001,14 +7987,14 @@ Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Return minimum value larger than minval of bins in the range,
-///  unless the value has been overridden by TH1::SetMinimum,
-///  in which case it returns that value. (This happens, for example,
-///  when the histogram is drawn and the y or z axis limits are changed
+/// Return minimum value larger than minval of bins in the range,
+/// unless the value has been overridden by TH1::SetMinimum,
+/// in which case it returns that value. (This happens, for example,
+/// when the histogram is drawn and the y or z axis limits are changed
 ///
-///  To get the minimum value of bins in the histogram regardless of
-///  whether the value has been overridden, use
-///     h->GetBinContent(h->GetMinimumBin())
+/// To get the minimum value of bins in the histogram regardless of
+/// whether the value has been overridden, use
+/// h->GetBinContent(h->GetMinimumBin())
 
 Double_t TH1::GetMinimum(Double_t minval) const
 {
@@ -8319,10 +8305,10 @@ void TH1::SetNameTitle(const char *name, const char *title)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set statistics option on/off
 ///
-///  By default, the statistics box is drawn.
-///  The paint options can be selected via gStyle->SetOptStats.
-///  This function sets/resets the kNoStats bin in the histogram object.
-///  It has priority over the Style option.
+/// By default, the statistics box is drawn.
+/// The paint options can be selected via gStyle->SetOptStats.
+/// This function sets/resets the kNoStats bin in the histogram object.
+/// It has priority over the Style option.
 
 void TH1::SetStats(Bool_t stats)
 {
@@ -8344,15 +8330,15 @@ void TH1::SetStats(Bool_t stats)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create structure to store sum of squares of weights.
 ///
-///     if histogram is already filled, the sum of squares of weights
-///     is filled with the existing bin contents
+/// if histogram is already filled, the sum of squares of weights
+/// is filled with the existing bin contents
 ///
-///     The error per bin will be computed as sqrt(sum of squares of weight)
-///     for each bin.
+/// The error per bin will be computed as sqrt(sum of squares of weight)
+/// for each bin.
 ///
-///  This function is automatically called when the histogram is created
-///  if the static function TH1::SetDefaultSumw2 has been called before.
-///  If flag = false the structure is deleted
+/// This function is automatically called when the histogram is created
+/// if the static function TH1::SetDefaultSumw2 has been called before.
+/// If flag = false the structure is deleted
 
 void TH1::Sumw2(Bool_t flag)
 {
@@ -8395,9 +8381,9 @@ TF1 *TH1::GetFunction(const char *name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value of error associated to bin number bin.
 ///
-///    if the sum of squares of weights has been defined (via Sumw2),
-///    this function returns the sqrt(sum of w2).
-///    otherwise it returns the sqrt(contents) for this bin.
+/// if the sum of squares of weights has been defined (via Sumw2),
+/// this function returns the sqrt(sum of w2).
+/// otherwise it returns the sqrt(contents) for this bin.
 
 Double_t TH1::GetBinError(Int_t bin) const
 {
@@ -8413,8 +8399,8 @@ Double_t TH1::GetBinError(Int_t bin) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return lower error associated to bin number bin.
 ///
-///    The error will depend on the statistic option used will return
-///     the binContent - lower interval value
+/// The error will depend on the statistic option used will return
+/// the binContent - lower interval value
 
 Double_t TH1::GetBinErrorLow(Int_t bin) const
 {
@@ -8442,8 +8428,8 @@ Double_t TH1::GetBinErrorLow(Int_t bin) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return upper error associated to bin number bin.
 ///
-///    The error will depend on the statistic option used will return
-///     the binContent - upper interval value
+/// The error will depend on the statistic option used will return
+/// the binContent - upper interval value
 
 Double_t TH1::GetBinErrorUp(Int_t bin) const
 {
@@ -8588,39 +8574,32 @@ void TH1::SetBinError(Int_t binx, Int_t biny, Int_t binz, Double_t error)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///   This function calculates the background spectrum in this histogram.
-///   The background is returned as a histogram.
+/// This function calculates the background spectrum in this histogram.
+/// The background is returned as a histogram.
 ///
-///   Function parameters:
-///   -niter, number of iterations (default value = 2)
-///      Increasing niter make the result smoother and lower.
-///   -option: may contain one of the following options
-///      - to set the direction parameter
-///        "BackDecreasingWindow". By default the direction is BackIncreasingWindow
-///      - filterOrder-order of clipping filter,  (default "BackOrder2"
-///                  -possible values= "BackOrder4"
-///                                    "BackOrder6"
-///                                    "BackOrder8"
-///      - "nosmoothing"- if selected, the background is not smoothed
-///           By default the background is smoothed.
-///      - smoothWindow-width of smoothing window, (default is "BackSmoothing3")
-///                  -possible values= "BackSmoothing5"
-///                                    "BackSmoothing7"
-///                                    "BackSmoothing9"
-///                                    "BackSmoothing11"
-///                                    "BackSmoothing13"
-///                                    "BackSmoothing15"
-///      - "nocompton"- if selected the estimation of Compton edge
-///                  will be not be included   (by default the compton estimation is set)
-///      - "same" : if this option is specified, the resulting background
-///                 histogram is superimposed on the picture in the current pad.
-///                 This option is given by default.
+/// \param[in] niter number of iterations (default value = 2)
+///     Increasing niter make the result smoother and lower.
+/// \param[in] option may contain one of the following options
+///  - to set the direction parameter
+///    "BackDecreasingWindow". By default the direction is BackIncreasingWindow
+///  - filterOrder-order of clipping filter (default "BackOrder2")
+///    possible values= "BackOrder4" "BackOrder6" "BackOrder8"
+///  - "nosmoothing" - if selected, the background is not smoothed
+///    By default the background is smoothed.
+///  - smoothWindow - width of smoothing window, (default is "BackSmoothing3")
+///    possible values= "BackSmoothing5" "BackSmoothing7" "BackSmoothing9"
+///    "BackSmoothing11" "BackSmoothing13" "BackSmoothing15"
+///  - "nocompton" - if selected the estimation of Compton edge
+///    will be not be included   (by default the compton estimation is set)
+///  - "same" if this option is specified, the resulting background
+///    histogram is superimposed on the picture in the current pad.
+///    This option is given by default.
 ///
-///  NOTE that the background is only evaluated in the current range of this histogram.
-///  i.e., if this has a bin range (set via h->GetXaxis()->SetRange(binmin, binmax),
-///  the returned histogram will be created with the same number of bins
-///  as this input histogram, but only bins from binmin to binmax will be filled
-///  with the estimated background.
+/// NOTE that the background is only evaluated in the current range of this histogram.
+/// i.e., if this has a bin range (set via h->GetXaxis()->SetRange(binmin, binmax),
+/// the returned histogram will be created with the same number of bins
+/// as this input histogram, but only bins from binmin to binmax will be filled
+/// with the estimated background.
 ///
 
 TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
@@ -8632,12 +8611,12 @@ TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///Interface to TSpectrum::Search.
-///The function finds peaks in this histogram where the width is > sigma
-///and the peak maximum greater than threshold*maximum bin content of this.
-///For more details see TSpectrum::Search.
-///Note the difference in the default value for option compared to TSpectrum::Search
-///option="" by default (instead of "goff").
+/// Interface to TSpectrum::Search.
+/// The function finds peaks in this histogram where the width is > sigma
+/// and the peak maximum greater than threshold*maximum bin content of this.
+/// For more details see TSpectrum::Search.
+/// Note the difference in the default value for option compared to TSpectrum::Search
+/// option="" by default (instead of "goff").
 
 Int_t TH1::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 {
@@ -8648,15 +8627,15 @@ Int_t TH1::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///For a given transform (first parameter), fills the histogram (second parameter)
-///with the transform output data, specified in the third parameter
-///If the 2nd parameter h_output is empty, a new histogram (TH1D or TH2D) is created
-///and the user is responsible for deleting it.
+/// For a given transform (first parameter), fills the histogram (second parameter)
+/// with the transform output data, specified in the third parameter
+/// If the 2nd parameter h_output is empty, a new histogram (TH1D or TH2D) is created
+/// and the user is responsible for deleting it.
 /// Available options:
-///   "RE" - real part of the output
-///   "IM" - imaginary part of the output
-///   "MAG" - magnitude of the output
-///   "PH"  - phase of the output
+/// - "RE" - real part of the output
+/// - "IM" - imaginary part of the output
+/// - "MAG" - magnitude of the output
+/// - "PH"  - phase of the output
 
 TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
 {
@@ -9800,8 +9779,8 @@ TH1D operator/(const TH1D &h1, const TH1D &h2)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///return pointer to histogram with name
-///   hid if id >=0
-///   h_id if id <0
+///hid if id >=0
+///h_id if id <0
 
 TH1 *R__H(Int_t hid)
 {
