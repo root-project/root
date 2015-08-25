@@ -5,7 +5,6 @@ from IPython import get_ipython
 
 import utils
 import cppcompleter
-import ROOT
 
 from IPython.core import display
 
@@ -58,9 +57,10 @@ class CppTransformer(InputTransformer):
                 utils.processCppCode(code)
             self.cell = ""
         if self.mustSwitchToPython:
-            unload_ipython_extension(get_ipython())
+            ip = get_ipython()
+            unload_ipython_extension(ip)
             self.mustSwitchToPython = False
-            cppcompleter.unload_ipython_extension(get_ipython())
+            cppcompleter.unload_ipython_extension(ip)
             # Change highlight mode
             display.display_javascript(utils.jsDefaultHighlight.format(mimeType = utils.ipyMIME), raw=True)
             print "Notebook is in Python mode"
