@@ -34,10 +34,27 @@
 #include <memory>
 
 
+/**
+   @defgroup NumAlgo Numerical Algorithms
+   Numerical Algorithm classes from the \ref MathCorePage and \ref MathMorePage libraries.
+   @ingroup MathCore
+   @ingroup MathMore
+ */
+
 
 /**
 
 @defgroup Integration Numerical Integration
+
+Classes for numerical integration of functions. 
+These classes provide algorithms for integration of one-dimensional functions, with several adaptive and non-adaptive methods 
+and for integration of multi-dimensional function using an adaptive method or MonteCarlo Integration (GSLMCIntegrator).
+The basic classes ROOT::Math::IntegratorOneDim provides a common interface for the one-dimensional methods while the class 
+ROOT::Math::IntegratorMultiDim provides the interface for the multi-dimensional ones. 
+The methods can be configured (e.g  setting the default method with its defult parameters) using the ROOT::Math::IntegratorOneDimOptions and 
+ROOT::Math::IntegratorMultiDimOptions classes.
+
+@ingroup  NumAlgo
 
 */
 

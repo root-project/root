@@ -29,6 +29,10 @@ THLimitsFinder *THLimitsFinder::fgLimitsFinder = 0;
 
 ClassImp(THLimitsFinder)
 
+/** \class THLimitsFinder
+Class to find nice axis limits
+*/ 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 THLimitsFinder::THLimitsFinder()

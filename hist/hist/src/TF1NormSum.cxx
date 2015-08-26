@@ -21,8 +21,9 @@
 #include "Math/WrappedTF1.h"
 
 
-
-
+/** \class TF1NormSum
+Class adding two functions: c1*f1+c2*f2
+*/
 
 //ClassImp(TF1NormSum)
 
@@ -192,9 +193,10 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, TF1* function3, Double_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  TF1NormSum constructortaking any addition of formulas with coefficient or not
-/// example 1 : 2.*expo + gauss + 0.5* gauss
-/// example 2 : expo + 0.3*f1 if f1 is defined in the list of fucntions
+/// TF1NormSum constructor taking any addition of formulas with coefficient or not
+///
+/// - example 1 : 2.*expo + gauss + 0.5* gauss
+/// - example 2 : expo + 0.3*f1 if f1 is defined in the list of fucntions
 
 TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
 {
@@ -285,7 +287,7 @@ double TF1NormSum::operator()(double* x, double* p)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return array of parameters
+/// Return array of parameters
 
 std::vector<double>  TF1NormSum::GetParameters() const {
    std::vector<double> params(GetNpar() );
@@ -308,6 +310,7 @@ std::vector<double>  TF1NormSum::GetParameters() const {
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize array of all parameters.
+///
 /// double *params must contains first an array of the coefficients, then an array of the parameters.
 
 void TF1NormSum::SetParameters(const double* params)//params should have the size [fNOfFunctions][fNOfNonCstParams]
@@ -343,6 +346,7 @@ void TF1NormSum::SetParameters(const double* params)//params should have the siz
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize array of all parameters.
+///
 /// Overload the TF1::SetParameters() method.
 /// A maximum of 10 parameters must be used, with first the coefficients, then the parameters
 

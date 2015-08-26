@@ -27,8 +27,12 @@ class TUnuranEmpDist;
 
 #include <memory>
 
-//______________________________________________________________________
+
 /**
+
+   \class TUnuran
+   \ingroup Unuran
+
    TUnuran class.
    Interface to the UNU.RAN package for generating non uniform random
    numbers. This class wraps the UNU.RAN calls in C++ methods.
@@ -54,7 +58,7 @@ class TUnuranEmpDist;
    In addition is possible to set the random number generator in the constructor of the class, its seed
    via the TUnuran::SetSeed() method.
 */
-///////////////////////////////////////////////////////////////////////
+
 
 
 //class TUnuranGenerator;

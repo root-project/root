@@ -26,8 +26,11 @@ class TF1;
 
 
 
-//______________________________________________________________
+
 /**
+   \class TUnuranContDist
+   \ingroup Unuran
+
    TUnuranContDist class describing one dimensional continuous distribution.
    It is used by TUnuran to generate random numbers according to this distribution via
    TUnuran::Sample()
@@ -44,7 +47,8 @@ class TF1;
    Some methods require instead of the pdf the log of the pdf.
    This can also be controlled by setting a flag when constructing this class.
 */
-///////////////////////////////////////////////////////////////////////
+
+
 class TUnuranContDist : public TUnuranBaseDist {
 
 public:

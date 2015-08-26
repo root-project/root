@@ -1,20 +1,23 @@
 // @(#)root/mathcore:$Id$
 // Author: Rene Brun from CLHEP & CERNLIB  04/05/2006
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TRandom1
-//
-// The Ranlux Random number generator class
-//
-// The algorithm for this random engine has been taken from the original
-// implementation in FORTRAN by Fred James as part of CLHEP.
-//
-// The initialisation is carried out using a Multiplicative Congruential
-// generator using formula constants of L'Ecuyer as described in "F.James,
-// Comp. Phys. Comm. 60 (1990) 329-344".
-//
-//////////////////////////////////////////////////////////////////////////
+/**
+
+\class TRandom1
+
+The Ranlux Random number generator class
+
+The algorithm for this random engine has been taken from the original
+implementation in FORTRAN by Fred James as part of CLHEP.
+
+The initialisation is carried out using a Multiplicative Congruential
+generator using formula constants of L'Ecuyer as described in "F.James,
+Comp. Phys. Comm. 60 (1990) 329-344".
+
+@ingroup Random
+
+*/
+
 
 #include "TRandom1.h"
 #include "TRandom3.h"

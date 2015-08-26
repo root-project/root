@@ -55,6 +55,8 @@ namespace ROOT {
    In ROOT it can be instantiated using the plug-in manager (plug-in "Minuit2")
    Using a string  (used by the plugin manager) or via an enumeration
    an one can set all the possible minimization algorithms (Migrad, Simplex, Combined, Scan and Fumili).
+
+   @ingroup Minuit
 */
 class Minuit2Minimizer : public ROOT::Math::Minimizer {
 

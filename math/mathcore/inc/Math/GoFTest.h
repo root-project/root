@@ -21,7 +21,6 @@
 #endif
 
 /*
-  Goodness of Fit Statistical Tests Toolkit -- Anderson-Darling and Kolmogorov-Smirnov 1- and 2-Samples Tests
 */
 
 namespace ROOT {
@@ -31,6 +30,15 @@ namespace ROOT {
    }
 namespace Math {
 
+/////  @defgroup GoFClasses Goodness of Fit Statistical Tests Tools 
+   
+/*
+  Class for Goodness of Fit tests implementing the Anderson-Darling and Kolmogorov-Smirnov 1- and 2-Samples Goodness of Fit Tests.
+  @ingroup MathCore
+
+ */
+
+   
 class GoFTest {
 public:
 

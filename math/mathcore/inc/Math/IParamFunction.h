@@ -29,7 +29,8 @@
 #include <cassert>
 
 /**
-   @defgroup ParamFunc Interfaces for parametric functions
+   @defgroup ParamFunc Parameteric Function Evaluation Interfaces.
+   Interfaces classes for evaluation of parametric functions
    @ingroup CppFunctions
 */
 

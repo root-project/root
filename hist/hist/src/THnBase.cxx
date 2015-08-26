@@ -31,12 +31,10 @@
 #include "Math/WrappedMultiTF1.h"
 
 
-//______________________________________________________________________________
-//
-//    Multidimensional histogram base.
-//
-//  Defines common functionality and interfaces for THn, THnSparse.
-//
+/** \class THnBase
+Multidimensional histogram base.
+Defines common functionality and interfaces for THn, THnSparse.
+*/
 
 ClassImp(THnBase);
 

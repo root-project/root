@@ -40,14 +40,16 @@ namespace ROOT {
       class DistSamplerOptions;
 
 /**
-   @defgroup Random Random number generators and generation of random number distributions
-   @ingroup Random
+   @defgroup Random Random Classes
 
-   Classes implementing random number generators and classes implementing generation of random numbers
+   Pseudo-random numbers generator classes and for generation of random number distributions.
+   These classes implement several pseudo-random number generators and method for generation of random numbers
    according to arbitrary distributions
+
+   @ingroup MathCore
+
 */
 
-//_______________________________________________________________________________
 /**
    Interface class for generic sampling of a distribution,
    i.e. generating random numbers according to arbitrary distributions

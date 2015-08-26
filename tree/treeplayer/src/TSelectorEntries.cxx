@@ -28,10 +28,11 @@ The following methods are defined in this file:
                     a convenient place to draw/fit your histograms.
 
 To use this file, try the following session on your Tree T:
-
+~~~{.cpp}
      Root > T->Process("TSelectorEntries.C")
      Root > T->Process("TSelectorEntries.C","some options")
      Root > T->Process("TSelectorEntries.C+")
+~~~
 */
 
 #include "TSelectorEntries.h"

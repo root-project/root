@@ -1,24 +1,27 @@
 // @(#)root/mathcore:$Id$
 // Author: Rene Brun, Lorenzo Moneta  17/05/2006
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TRandom2
-//
-// Random number generator class based on the maximally quidistributed combined
-// Tausworthe generator by L'Ecuyer.
-//
-// The period of the generator is 2**88 (about 10**26) and it uses only 3 words
-// for the state.
-//
-// For more information see:
-// P. L'Ecuyer, Mathematics of Computation, 65, 213 (1996)
-// P. L'Ecuyer, Mathematics of Computation, 68, 225 (1999)
-//
-// The publication are available online at
-//  http://www.iro.umontreal.ca/~lecuyer/myftp/papers/tausme.ps
-//  http://www.iro.umontreal.ca/~lecuyer/myftp/papers/tausme2.ps
-//////////////////////////////////////////////////////////////////////////
+/**
+
+\class TRandom2
+
+Random number generator class based on the maximally quidistributed combined
+Tausworthe generator by L'Ecuyer.
+
+The period of the generator is 2**88 (about 10**26) and it uses only 3 words
+for the state.
+
+For more information see:
+P. L'Ecuyer, Mathematics of Computation, 65, 213 (1996)
+P. L'Ecuyer, Mathematics of Computation, 68, 225 (1999)
+
+The publication are available online at
+ [http://www.iro.umontreal.ca/~lecuyer/myftp/papers/tausme.ps]
+ [http://www.iro.umontreal.ca/~lecuyer/myftp/papers/tausme2.ps]
+
+@ingroup Random
+
+*/
 
 #include "TRandom2.h"
 #include "TRandom3.h"

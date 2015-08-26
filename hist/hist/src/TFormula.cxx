@@ -43,11 +43,8 @@ using namespace std;
 #include "v5/TFormula.h"
 
 ClassImp(TFormula)
-////////////////////////////////////////////////////////////////////////////////
-
-/******************************************************************************
-Begin_Html
-<h1>The  F O R M U L A  class</h1>
+/** \class TFormula
+The  F O R M U L A  class
 
 <p>This is a new version of the TFormula class based on Cling.
 This class is not 100% backward compatible with the old TFOrmula class, which is still available in ROOT as
@@ -133,10 +130,14 @@ On the other hand formula expressions which were valid in version 5 are still va
 adata member of TF1 which can be access via <code>TF1::GetFormula</code>.   </p>
 
 
-End_Html
-********************************************************************************/
+\class TFormulaFunction
+ Helper class for TFormula
+\class TFormulaVariable
+ Another helper class for TFormula
+\class TFormulaParamOrder
+ Functor defining the parameter order
 
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+*/
 
 // prefix used for function name passed to Cling
 static const TString gNamePrefix = "TFormula__";

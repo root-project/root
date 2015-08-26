@@ -27,9 +27,9 @@ of all entries in the tree. (you know for example the list of entry numbers you
 want to process). Making several branches is particularly interesting in the
 data analysis phase, when one wants to histogram some attributes of an object
 (entry) without reading all the attributes.
-
+~~~ {.cpp}
     TTree *tree = new TTree(name, title)
-
+~~~
 Creates a Tree with name and title.
 
 Various kinds of branches can be added to a tree:
@@ -39,9 +39,9 @@ Various kinds of branches can be added to a tree:
 - a ClonesArray. (a specialized object for collections of same class objects)
 
 ## Case A
-
+~~~ {.cpp}
     TBranch *branch = tree->Branch(branchname, address, leaflist, bufsize)
-
+~~~
 - address is the address of the first item of a structure
 - leaflist is the concatenation of all the variable names and types
   separated by a colon character :
@@ -75,10 +75,10 @@ Various kinds of branches can be added to a tree:
   padding strategy).
 
 ## Case B
-
+~~~ {.cpp}
     TBranch *branch = tree->Branch(branchname, &p_object, bufsize, splitlevel)
     TBranch *branch = tree->Branch(branchname, className, &p_object, bufsize, splitlevel)
-
+~~~
 - p_object is a pointer to an object.
 - If className is not specified, Branch uses the type of p_object to determine the
   type of the object.
@@ -101,25 +101,25 @@ Note: The pointer whose address is passed to TTree::Branch must not
 
 Note: The pointer p_object must be initialized before calling TTree::Branch
 - Do either:
-
-    `MyDataClass* p_object = 0;`
-    `tree->Branch(branchname, &p_object);`
-
+~~~ {.cpp}
+    MyDataClass* p_object = 0;
+    tree->Branch(branchname, &p_object);
+~~~
 - Or:
-
-    `MyDataClass* p_object = new MyDataClass;`
-    `tree->Branch(branchname, &p_object);`
-
+~~~ {.cpp}
+    MyDataClass* p_object = new MyDataClass;
+    tree->Branch(branchname, &p_object);
+~~~
 Whether the pointer is set to zero or not, the ownership of the object
 is not taken over by the TTree.  I.e. eventhough an object will be allocated
 by TTree::Branch if the pointer p_object is zero, the object will <b>not</b>
 be deleted when the TTree is deleted.
 
 ## Case C
-
+~~~ {.cpp}
     MyClass object;
     TBranch *branch = tree->Branch(branchname, &object, bufsize, splitlevel)
-
+~~~
 Note: The 2nd parameter must be the address of a valid object.
       The object must not be destroyed (i.e. be deleted) until the TTree
       is deleted or TTree::ResetBranchAddress is called.
@@ -135,19 +135,19 @@ Note: The 2nd parameter must be the address of a valid object.
   it is processed as a TObject*, only one branch.
 
 ## Case D
-
+~~~ {.cpp}
     TBranch *branch = tree->Branch(branchname,clonesarray, bufsize, splitlevel)
     clonesarray is the address of a pointer to a TClonesArray.
-
+~~~
 The TClonesArray is a direct access list of objects of the same class.
 For example, if the TClonesArray is an array of TTrack objects,
 this function will create one subbranch for each data member of
 the object TTrack.
 
 ## Case E
-
+~~~ {.cpp}
     TBranch *branch = tree->Branch( branchname, STLcollection, buffsize, splitlevel);
-
+~~~
 STLcollection is the address of a pointer to std::vector, std::list,
 std::deque, std::set or std::multiset containing pointers to objects.
 If the splitlevel is a value bigger than 100 (TTree::kSplitCollectionOfPointers)
@@ -155,15 +155,15 @@ then the collection will be written in split mode, e.g. if it contains objects o
 any types deriving from TTrack this function will sort the objects
 based on their type and store them in separate branches in split
 mode.
-
+~~~ {.cpp}
     branch->SetAddress(Void *address)
-
+~~~
 In case of dynamic structures changing with each entry for example, one must
 redefine the branch address before filling the branch again.
 This is done via the TBranch::SetAddress member function.
-
+~~~ {.cpp}
     tree->Fill()
-
+~~~
 loops on all defined branches and for each branch invokes the Fill function.
 
 See also the class TNtuple (a simple Tree with branches of floats)
@@ -179,7 +179,7 @@ The code below adds a simple branch to an existing tree.
 Note the kOverwrite option in the Write method, it overwrites the
 existing tree. If it is not specified, two copies of the tree headers
 are saved.
-
+~~~ {.cpp}
     void tree3AddBranch() {
         TFile f("tree3.root", "update");
 
@@ -196,7 +196,7 @@ are saved.
 
         t3->Write("", TObject::kOverwrite); // save only the new version of the tree
     }
-
+~~~
 Adding a branch is often not possible because the tree is in a read-only
 file and you do not have permission to save the modified tree with the
 new branch. Even if you do have the permission, you risk losing the
@@ -213,7 +213,7 @@ We encourage you to use TTree::AddFriend rather than adding a branch manually.
 
 \image html ttree_layout.png
 
-<pre>
+~~~ {.cpp}
     // A simple example with histograms and a tree
     //
     // This program creates :
@@ -306,7 +306,7 @@ We encourage you to use TTree::AddFriend rather than adding a branch manually.
 
     return 0;
 }
-</pre>
+~~~
 */
 
 #include "RConfig.h"
@@ -1103,19 +1103,19 @@ void TTree::AddClone(TTree* clone)
 /// Once the tree has friends, we can use TTree::Draw as if the friend's
 /// variables were in the original tree. To specify which tree to use in
 /// the Draw method, use the syntax:
-///
+/// ~~~ {.cpp}
 ///     <treeName>.<branchname>.<varname>
-///
+/// ~~~
 /// If the variablename is enough to uniquely identify the variable, you can
 /// leave out the tree and/or branch name.
 /// For example, these commands generate a 3-d scatter plot of variable "var"
 /// in the TTree tree versus variable v1 in TTree ft1 versus variable v2 in
 /// TTree ft2.
-///
+/// ~~~ {.cpp}
 ///     tree.AddFriend("ft1","friendfile1.root");
 ///     tree.AddFriend("ft2","friendfile2.root");
 ///     tree.Draw("var:ft1.v1:ft2.v2");
-///
+/// ~~~
 /// \image html ttree_friend2.png
 ///
 /// The picture illustrates the access of the tree and its friends with a
@@ -1134,8 +1134,9 @@ void TTree::AddClone(TTree* clone)
 /// It is possible to declare a friend tree that has the same internal
 /// structure (same branches and leaves) as the original tree, and compare the
 /// same values by specifying the tree.
-///
+/// ~~~ {.cpp}
 ///     tree.Draw("var:ft1.var:ft2.var")
+/// ~~~
 
 TFriendElement* TTree::AddFriend(const char* treename, const char* filename)
 {
@@ -1257,7 +1258,7 @@ TFriendElement* TTree::AddFriend(TTree* tree, const char* alias, Bool_t warn)
 /// The script treew.C is executed by process1, treer.C by process2
 ///
 /// script treew.C:
-///
+/// ~~~ {.cpp}
 ///     void treew() {
 ///        TFile f("test.root","recreate");
 ///        TNtuple *ntuple = new TNtuple("ntuple","Demo","px:py:pz:random:i");
@@ -1270,9 +1271,9 @@ TFriendElement* TTree::AddFriend(TTree* tree, const char* alias, Bool_t warn)
 ///           if (i%1000 == 1) ntuple->AutoSave("SaveSelf");
 ///        }
 ///     }
-///
+/// ~~~
 /// script treer.C:
-///
+/// ~~~ {.cpp}
 ///     void treer() {
 ///        TFile f("test.root");
 ///        TTree *ntuple = (TTree*)f.Get("ntuple");
@@ -1287,6 +1288,7 @@ TFriendElement* TTree::AddFriend(TTree* tree, const char* alias, Bool_t warn)
 ///           ntuple->Refresh();
 ///        }
 ///     }
+/// ~~~
 
 Long64_t TTree::AutoSave(Option_t* option)
 {
@@ -1562,15 +1564,15 @@ Int_t TTree::Branch(TList* li, Int_t bufsize /* = 32000 */ , Int_t splitlevel /*
 /// has two or more members referencing the same class.
 /// For example, if a Tree has two branches B1 and B2 corresponding
 /// to objects of the same class MyClass, one can do:
-///
+/// ~~~ {.cpp}
 ///     tree.Branch("B1.","MyClass",&b1,8000,1);
 ///     tree.Branch("B2.","MyClass",&b2,8000,1);
-///
+/// ~~~
 /// if MyClass has 3 members a,b,c, the two instructions above will generate
 /// subbranches called B1.a, B1.b ,B1.c, B2.a, B2.b, B2.c
 ///
 /// Example:
-///
+/// ~~~ {.cpp}
 ///     {
 ///           TTree T("T","test list");
 ///           TList *list = new TList();
@@ -1601,6 +1603,7 @@ Int_t TTree::Branch(TList* li, Int_t bufsize /* = 32000 */ , Int_t splitlevel /*
 ///           T.Branch(list,16000,2);
 ///           T.Print();
 ///     }
+/// ~~~
 
 Int_t TTree::Branch(TCollection* li, Int_t bufsize /* = 32000 */, Int_t splitlevel /* = 99 */, const char* name /* = "" */)
 {
@@ -1821,10 +1824,10 @@ TBranch* TTree::Branch(const char* name, const char* classname, void* addobj, In
 /// has two or more members referencing the same class.
 /// For example, if a Tree has two branches B1 and B2 corresponding
 /// to objects of the same class MyClass, one can do:
-///
+/// ~~~ {.cpp}
 ///     tree.Branch("B1.","MyClass",&b1,8000,1);
 ///     tree.Branch("B2.","MyClass",&b2,8000,1);
-///
+/// ~~~
 /// if MyClass has 3 members a,b,c, the two instructions above will generate
 /// subbranches called B1.a, B1.b ,B1.c, B2.a, B2.b, B2.c
 ///
@@ -2145,10 +2148,10 @@ TBranch* TTree::BranchRef()
 /// has two or more members referencing the same class.
 /// For example, if a Tree has two branches B1 and B2 corresponding
 /// to objects of the same class MyClass, one can do:
-///
+/// ~~~ {.cpp}
 ///     tree.Branch("B1.","MyClass",&b1,8000,1);
 ///     tree.Branch("B2.","MyClass",&b2,8000,1);
-///
+/// ~~~
 /// if MyClass has 3 members a,b,c, the two instructions above will generate
 /// subbranches called B1.a, B1.b ,B1.c, B2.a, B2.b, B2.c
 ///
@@ -2560,21 +2563,22 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Boo
 /// Be careful when writing the final Tree header to the file!
 ///
 /// Don't do:
-///
+/// ~~~ {.cpp}
 ///     TFile *file = new TFile("myfile.root","recreate");
 ///     TTree *T = new TTree("T","title");
 ///     T->Fill(); //loop
 ///     file->Write();
 ///     file->Close();
-///
+///~~~
 /// but do the following:
-///
+///~~~ {.cpp}
 ///     TFile *file = new TFile("myfile.root","recreate");
 ///     TTree *T = new TTree("T","title");
 ///     T->Fill(); //loop
 ///     file = T->GetCurrentFile(); //to get the pointer to the current file
 ///     file->Write();
 ///     file->Close();
+/// ~~~
 
 TFile* TTree::ChangeFile(TFile* file)
 {
@@ -3434,17 +3438,17 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
 /// Example macro to copy a subset of a tree to a new tree.
 /// The input file was generated by running the program in
 /// $ROOTSYS/test/Event in this way:
-///
+/// ~~~ {.cpp}
 ///     ./Event 1000 1 1 1
-///
+/// ~~~
 /// - copytree2
 /// Example macro to copy a subset of a tree to a new tree.
 /// One branch of the new tree is written to a separate file.
 /// The input file was generated by running the program in
 /// $ROOTSYS/test/Event in this way:
-///
+/// ~~~ {.cpp}
 ///     ./Event 1000 1 1 1
-///
+/// ~~~
 /// - copytree3
 /// Example macro to copy a subset of a tree to a new tree.
 /// Only selected entries are copied to the new tree.
@@ -3623,10 +3627,10 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// standing function taking numerical arguments (TMath::Bessel).
 /// In addition, you can call member functions taking numerical
 /// arguments. For example:
-///
+/// ~~~ {.cpp}
 ///     TMath::BreitWigner(fPx,3,2)
 ///     event.GetHistogram().GetXaxis().GetXmax()
-///
+/// ~~~
 /// Note: You can only pass expression that depend on the TTree's data
 /// to static functions and you can only call non-static member function
 /// with 'fixed' parameters.
@@ -3638,9 +3642,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// If the expression includes only boolean operations, the result
 /// is 0 or 1. If the result is 0, the histogram is not filled.
 /// In general, the expression may be of the form:
-///
+/// ~~~ {.cpp}
 ///     value*(boolean expression)
-///
+/// ~~~
 /// if boolean expression is true, the histogram is filled with
 /// a `weight = value`.
 ///
@@ -3655,9 +3659,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// option is the drawing option.
 ///  - See TH1::Draw for the list of all drawing options.
 ///  - If option COL is specified when varexp has three fields:
-///
-///      `tree.Draw("e1:e2:e3","","col");`
-///
+///~~~ {.cpp}
+///      tree.Draw("e1:e2:e3","","col");
+///~~~
 ///    a 2D scatter is produced with e1 vs e2, and e3 is mapped on the color
 ///    table. The colors for e3 are evaluated once in linear scale before
 ///    painting. Therefore changing the pad to log scale along Z as no effect
@@ -3723,29 +3727,29 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// for each entry of the tree.
 ///
 /// So the loop equivalent to "fMatrix[][2] - fResults[3][]" is:
-///
+/// ~~~ {.cpp}
 ///     for (Int_t i0; i < min(3,2); i++) {
 ///        use the value of (fMatrix[i0][2] - fMatrix[3][i0])
 ///     }
-///
+/// ~~~
 /// So the loop equivalent to "fMatrix[][2] - fResults[][]" is:
-///
+/// ~~~ {.cpp}
 ///     for (Int_t i0; i < min(3,5); i++) {
 ///        for (Int_t i1; i1 < 2; i1++) {
 ///           use the value of (fMatrix[i0][2] - fMatrix[i0][i1])
 ///        }
 ///     }
-///
+/// ~~~
 /// So the loop equivalent to "fMatrix[][] - fResults[][]" is:
-///
+/// ~~~ {.cpp}
 ///     for (Int_t i0; i < min(3,5); i++) {
 ///        for (Int_t i1; i1 < min(3,2); i1++) {
 ///           use the value of (fMatrix[i0][i1] - fMatrix[i0][i1])
 ///        }
 ///     }
-///
+/// ~~~
 /// So the loop equivalent to "fMatrix[][fResults[][]]" is:
-///
+/// ~~~ {.cpp}
 ///     for (Int_t i0; i0 < 3; i0++) {
 ///        for (Int_t j2; j2 < 5; j2++) {
 ///           for (Int_t j3; j3 < 2; j3++) {
@@ -3753,27 +3757,27 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///              use the value of fMatrix[i0][i1]
 ///        }
 ///     }
-///
+/// ~~~
 /// ## Retrieving the result of Draw
 ///
 /// By default the temporary histogram created is called "htemp", but only in
 /// the one dimensional Draw("e1") it contains the TTree's data points. For
 /// a two dimensional Draw, the data is filled into a TGraph which is named
 /// "Graph". They can be retrieved by calling
-///
+/// ~~~ {.cpp}
 ///     TH1F *htemp = (TH1F*)gPad->GetPrimitive("htemp"); // 1D
 ///     TGraph *graph = (TGraph*)gPad->GetPrimitive("Graph"); // 2D
-///
+/// ~~~
 /// For a three and four dimensional Draw the TPolyMarker3D is unnamed, and
 /// cannot be retrieved.
 ///
 /// gPad always contains a TH1 derived object called "htemp" which allows to
 /// access the axes:
-///
+/// ~~~ {.cpp}
 ///     TGraph *graph = (TGraph*)gPad->GetPrimitive("Graph"); // 2D
 ///     TH2F   *htemp = (TH2F*)gPad->GetPrimitive("htemp"); // empty, but has axes
 ///     TAxis  *xaxis = htemp->GetXaxis();
-///
+/// ~~~
 /// ## Saving the result of Draw to an histogram
 ///
 /// If varexp0 contains >>hnew (following the variable(s) name(s),
@@ -3781,18 +3785,18 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// directory (and also the current pad). This works for all dimensions.
 ///
 /// Example:
-///
+/// ~~~ {.cpp}
 ///     tree.Draw("sqrt(x)>>hsqrt","y>0")
-///
+/// ~~~
 /// will draw `sqrt(x)` and save the histogram as "hsqrt" in the current
 /// directory. To retrieve it do:
-///
+/// ~~~ {.cpp}
 ///     TH1F *hsqrt = (TH1F*)gDirectory->Get("hsqrt");
-///
+/// ~~~
 /// The binning information is taken from the environment variables
-///
+/// ~~~ {.cpp}
 ///     Hist.Binning.?D.?
-///
+/// ~~~
 /// In addition, the name of the histogram can be followed by up to 9
 /// numbers between '(' and ')', where the numbers describe the
 /// following:
@@ -3807,23 +3811,23 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// Values can be skipped.
 ///
 /// Example:
-///
+/// ~~~ {.cpp}
 ///     tree.Draw("sqrt(x)>>hsqrt(500,10,20)")
 ///          // plot sqrt(x) between 10 and 20 using 500 bins
 ///     tree.Draw("sqrt(x):sin(y)>>hsqrt(100,10,60,50,.1,.5)")
 ///          // plot sqrt(x) against sin(y)
 ///          // 100 bins in x-direction; lower limit on x-axis is 10; upper limit is 60
 ///          //  50 bins in y-direction; lower limit on y-axis is .1; upper limit is .5
-///
+/// ~~~
 /// By default, the specified histogram is reset.
 /// To continue to append data to an existing histogram, use "+" in front
 /// of the histogram name.
 ///
 /// A '+' in front of the histogram name is ignored, when the name is followed by
 /// binning information as described in the previous paragraph.
-///
+/// ~~~ {.cpp}
 ///     tree.Draw("sqrt(x)>>+hsqrt","y>0")
-///
+/// ~~~
 /// will not reset `hsqrt`, but will continue filling. This works for 1-D, 2-D
 /// and 3-D histograms.
 ///
@@ -3832,23 +3836,23 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// TTree::Draw default's handling of collections is to assume that any
 /// request on a collection pertain to it content.  For example, if fTracks
 /// is a collection of Track objects, the following:
-///
+/// ~~~ {.cpp}
 ///     tree->Draw("event.fTracks.fPx");
-///
+/// ~~~
 /// will plot the value of fPx for each Track objects inside the collection.
 /// Also
-///
+/// ~~~ {.cpp}
 ///     tree->Draw("event.fTracks.size()");
-///
+/// ~~~
 /// would plot the result of the member function Track::size() for each
 /// Track object inside the collection.
 /// To access information about the collection itself, TTree::Draw support
 /// the '@' notation.  If a variable which points to a collection is prefixed
 /// or postfixed with '@', the next part of the expression will pertain to
 /// the collection object.  For example:
-///
+/// ~~~ {.cpp}
 ///     tree->Draw("event.@fTracks.size()");
-///
+/// ~~~
 /// will plot the size of the collection referred to by `fTracks` (i.e the number
 /// of Track objects).
 ///
@@ -3859,13 +3863,13 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// If both AsDouble and AsString are present, AsDouble will be used.
 /// AsString can return either a char*, a std::string or a TString.s
 /// For example, the following
-///
+/// ~~~ {.cpp}
 ///     tree->Draw("event.myTTimeStamp");
-///
+/// ~~~
 /// will draw the same histogram as
-///
+/// ~~~ {.cpp}
 ///     tree->Draw("event.myTTimeStamp.AsDouble()");
-///
+/// ~~~
 /// In addition, when the object is a type TString or std::string, TTree::Draw
 /// will call respectively `TString::Data` and `std::string::c_str()`
 ///
@@ -3877,13 +3881,13 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// You can refer to the tree (or chain) containing the data by using the
 /// string 'This'.
 /// You can then could any TTree methods. For example:
-///
+/// ~~~ {.cpp}
 ///     tree->Draw("This->GetReadEntry()");
-///
+/// ~~~
 /// will display the local entry numbers be read.
-///
+/// ~~~ {.cpp}
 ///     tree->Draw("This->GetUserInfo()->At(0)->GetName()");
-///
+/// ~~~
 ///  will display the name of the first 'user info' object.
 ///
 /// ## Special functions and variables
@@ -3891,9 +3895,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// `Entry$`:  A TTree::Draw formula can use the special variable `Entry$`
 /// to access the entry number being read. For example to draw every
 /// other entry use:
-///
+/// ~~~ {.cpp}
 ///     tree.Draw("myvar","Entry$%2==0");
-///
+/// ~~~
 /// - `Entry$`      : return the current entry number (`== TTree::GetReadEntry()`)
 /// - `LocalEntry$` : return the current entry number in the current tree of a
 ///   chain (`== GetTree()->GetReadEntry()`)
@@ -3918,46 +3922,46 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///   if they match the condition. If no element matches the condition,
 ///   the result is zero.  To avoid the resulting peak at zero, use the
 ///   pattern:
-///
+/// ~~~ {.cpp}
 ///        tree->Draw("MinIf$(formula,condition)","condition");
-///
+/// ~~~
 ///   which will avoid calculation `MinIf$` for the entries that have no match
 ///   for the condition.
 /// - `Alt$(primary,alternate)` : return the value of "primary" if it is available
 ///   for the current iteration otherwise return the value of "alternate".
 ///   For example, with arr1[3] and arr2[2]
-///
+/// ~~~ {.cpp}
 ///        tree->Draw("arr1+Alt$(arr2,0)");
-///
+/// ~~~
 ///   will draw arr1[0]+arr2[0] ; arr1[1]+arr2[1] and arr1[2]+0
 ///   Or with a variable size array arr3
-///
+/// ~~~ {.cpp}
 ///        tree->Draw("Alt$(arr3[0],0)+Alt$(arr3[1],0)+Alt$(arr3[2],0)");
-///
+/// ~~~
 ///   will draw the sum arr3 for the index 0 to min(2,actual_size_of_arr3-1)
 ///   As a comparison
-///
+/// ~~~ {.cpp}
 ///        tree->Draw("arr3[0]+arr3[1]+arr3[2]");
-///
+/// ~~~
 ///   will draw the sum arr3 for the index 0 to 2 only if the
 ///   actual_size_of_arr3 is greater or equal to 3.
 ///   Note that the array in 'primary' is flattened/linearized thus using
 ///   Alt$ with multi-dimensional arrays of different dimensions in unlikely
 ///   to yield the expected results.  To visualize a bit more what elements
 ///   would be matched by TTree::Draw, TTree::Scan can be used:
-///
+/// ~~~ {.cpp}
 ///        tree->Scan("arr1:Alt$(arr2,0)");
-///
+/// ~~~
 ///   will print on one line the value of arr1 and (arr2,0) that will be
 ///   matched by
-///
+/// ~~~ {.cpp}
 ///        tree->Draw("arr1-Alt$(arr2,0)");
-///
+/// ~~~
 /// The ternary operator is not directly supported in TTree::Draw however, to plot the
 /// equivalent of `var2<20 ? -99 : var1`, you can use:
-///
+/// ~~~ {.cpp}
 ///     tree->Draw("(var2<20)*99+(var2>=20)*var1","");
-///
+/// ~~~
 /// ## Drawing a user function accessing the TTree data directly
 ///
 /// If the formula contains  a file name, TTree::MakeProxy will be used
@@ -3968,17 +3972,17 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///
 /// For example draw px using the file hsimple.root (generated by the
 /// hsimple.C tutorial), we need a file named hsimple.cxx:
-///
+/// ~~~ {.cpp}
 ///     double hsimple() {
 ///        return px;
 ///     }
-///
+/// ~~~
 /// MakeProxy can then be used indirectly via the TTree::Draw interface
 /// as follow:
-///
+/// ~~~ {.cpp}
 ///     new TFile("hsimple.root")
 ///     ntuple->Draw("hsimple.cxx");
-///
+/// ~~~
 /// A more complete example is available in the tutorials directory:
 /// `h1analysisProxy.cxx`, `h1analysProxy.h` and `h1analysisProxyCut.C`
 /// which reimplement the selector found in `h1analysis.C`
@@ -4048,30 +4052,30 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// containing also the subentries satisfying the selection, i.e. the indices of
 /// the branches which hold containers classes.
 /// Example:
-///
+/// ~~~ {.cpp}
 ///     tree.Draw(">>yplus","y>0")
-///
+/// ~~~
 /// will create a TEventList object named "yplus" in the current directory.
 /// In an interactive session, one can type (after TTree::Draw)
-///
+/// ~~~ {.cpp}
 ///     yplus.Print("all")
-///
+/// ~~~
 /// to print the list of entry numbers in the list.
-///
+/// ~~~ {.cpp}
 ///     tree.Draw(">>yplus", "y>0", "entrylist")
-///
+/// ~~~
 /// will create a TEntryList object names "yplus" in the current directory
-///
+/// ~~~ {.cpp}
 ///     tree.Draw(">>yplus", "y>0", "entrylistarray")
-
+/// ~~~
 /// will create a TEntryListArray object names "yplus" in the current directory
 ///
 /// By default, the specified entry list is reset.
 /// To continue to append data to an existing list, use "+" in front
 /// of the list name;
-///
+/// ~~~ {.cpp}
 ///     tree.Draw(">>+yplus","y>0")
-///
+/// ~~~
 /// will not reset yplus, but will enter the selected entries at the end
 /// of the existing list.
 ///
@@ -4082,17 +4086,17 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// current event list
 ///
 /// Example 1:
-///
+/// ~~~ {.cpp}
 ///     TEventList *elist = (TEventList*)gDirectory->Get("yplus");
 ///     tree->SetEventList(elist);
 ///     tree->Draw("py");
-///
+/// ~~~
 /// Example 2:
-///
+/// ~~~ {.cpp}
 ///     TEntryList *elist = (TEntryList*)gDirectory->Get("yplus");
 ///     tree->SetEntryList(elist);
 ///     tree->Draw("py");
-///
+/// ~~~
 /// If a TEventList object is used as input, a new TEntryList object is created
 /// inside the SetEventList function. In case of a TChain, all tree headers are loaded
 /// for this transformation. This new object is owned by the chain and is deleted
@@ -4104,11 +4108,11 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// are entered in the list.
 ///
 /// Example:
-///
+/// ~~~ {.cpp}
 ///     tree.Draw(">>pyplus","fTracks.fPy>0");
 ///     tree->SetEventList(pyplus);
 ///     tree->Draw("fTracks.fPy");
-///
+/// ~~~
 ///  will draw the fPy of ALL tracks in event with at least one track with
 ///  a positive fPy.
 ///
@@ -4116,23 +4120,23 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// use TEventList::SetReapplyCut or TEntryList::SetReapplyCut.
 ///
 /// Example:
-///
+/// ~~~ {.cpp}
 ///     tree.Draw(">>pyplus","fTracks.fPy>0");
 ///     pyplus->SetReapplyCut(kTRUE);
 ///     tree->SetEventList(pyplus);
 ///     tree->Draw("fTracks.fPy");
-///
+/// ~~~
 /// will draw the fPy of only the tracks that have a positive fPy.
 ///
 /// To draw only the elements that match a selection in case of arrays,
 /// you can also use TEntryListArray (faster in case of a more general selection).
 ///
 /// Example:
-///
+/// ~~~ {.cpp}
 ///     tree.Draw(">>pyplus","fTracks.fPy>0", "entrylistarray");
 ///     tree->SetEntryList(pyplus);
 ///     tree->Draw("fTracks.fPy");
-///
+/// ~~~
 /// will draw the fPy of only the tracks that have a positive fPy,
 /// but without redoing the selection.
 ///
@@ -4151,18 +4155,18 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// - GetW()            // returns a pointer to the double array of Weights where weight equal the result of the selection expression.
 ///
 /// where V1,V2,V3 correspond to the expressions in
-///
+/// ~~~ {.cpp}
 ///     TTree::Draw("V1:V2:V3:V4",selection);
-///
+/// ~~~
 /// If the expression has more than 4 component use GetVal(index)
 ///
 /// Example:
-///
+/// ~~~ {.cpp}
 ///     Root > ntuple->Draw("py:px","pz>4");
 ///     Root > TGraph *gr = new TGraph(ntuple->GetSelectedRows(),
 ///                                   ntuple->GetV2(), ntuple->GetV1());
 ///     Root > gr->Draw("ap"); //draw graph in current pad
-///
+/// ~~~
 /// creates a TGraph object with a number of points corresponding to the
 /// number of entries selected by the expression "pz>4", the x points of the graph
 /// being the px values of the Tree and the y points the py values.
@@ -4174,9 +4178,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// By default fEstimate=1000000 and can be modified
 /// via TTree::SetEstimate. To keep in memory all the results (in case
 /// where there is only one result per entry), use
-///
+/// ~~~ {.cpp}
 ///     tree->SetEstimate(tree->GetEntries()+1); // same as tree->SetEstimate(-1);
-///
+/// ~~~
 /// You must call SetEstimate if the expected number of selected rows
 /// you need to look at is greater than 1000000.
 ///
@@ -4684,9 +4688,9 @@ TLeaf* TTree::FindLeaf(const char* searchname)
 /// The function returns the number of selected entries.
 ///
 /// Example:
-///
+/// ~~~ {.cpp}
 ///     tree.Fit(pol4,sqrt(x)>>hsqrt,y>0)
-///
+/// ~~~
 /// will fit sqrt(x) and save the histogram as "hsqrt" in the current
 /// directory.
 ///
@@ -4946,12 +4950,13 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
 /// Return an iterator over the cluster of baskets starting at firstentry.
 ///
 /// This iterator is not yet supported for TChain object.
-///
+/// ~~~ {.cpp}
 ///      TTree::TClusterIterator clusterIter = tree->GetClusterIterator(entry);
 ///      Long64_t clusterStart;
 ///      while( (clusterStart = clusterIter()) < tree->GetEntries() ) {
 ///         printf("The cluster starts at %lld and ends at %lld (inclusive)\n",clusterStart,clusterIter.GetNextEntry()-1);
 ///      }
+/// ~~~
 
 TTree::TClusterIterator TTree::GetClusterIterator(Long64_t firstentry)
 {
@@ -5023,30 +5028,30 @@ Long64_t TTree::GetEntriesFriend() const
 /// To activate/deactivate one or more branches, use TBranch::SetBranchStatus
 /// For example, if you have a Tree with several hundred branches, and you
 /// are interested only by branches named "a" and "b", do
-///
+/// ~~~ {.cpp}
 ///     mytree.SetBranchStatus("*",0); //disable all branches
 ///     mytree.SetBranchStatus("a",1);
 ///     mytree.SetBranchStatus("b",1);
-///
+/// ~~~
 /// when calling mytree.GetEntry(i); only branches "a" and "b" will be read.
 ///
 /// __WARNING!!__
 /// If your Tree has been created in split mode with a parent branch "parent.",
-///
+/// ~~~ {.cpp}
 ///     mytree.SetBranchStatus("parent",1);
-///
+/// ~~~
 /// will not activate the sub-branches of "parent". You should do:
-///
+/// ~~~ {.cpp}
 ///     mytree.SetBranchStatus("parent*",1);
-///
+/// ~~~
 /// Without the trailing dot in the branch creation you have no choice but to
 /// call SetBranchStatus explicitly for each of the sub branches.
 ///
 /// An alternative is to call directly
-///
+/// ~~~ {.cpp}
 ///     brancha.GetEntry(i)
 ///     branchb.GetEntry(i);
-///
+/// ~~~
 /// ## IMPORTANT NOTE
 ///
 /// By default, GetEntry reuses the space allocated by the previous object
@@ -5057,20 +5062,20 @@ Long64_t TTree::GetEntriesFriend() const
 ///
 /// Consider the example in $ROOTSYS/test/Event.h
 /// The top level branch in the tree T is declared with:
-///
+/// ~~~ {.cpp}
 ///     Event *event = 0;  //event must be null or point to a valid object
 ///                        //it must be initialized
 ///     T.SetBranchAddress("event",&event);
-///
+/// ~~~
 /// When reading the Tree, one can choose one of these 3 options:
 ///
 /// ## OPTION 1
-///
+/// ~~~ {.cpp}
 ///     for (Long64_t i=0;i<nentries;i++) {
 ///        T.GetEntry(i);
 ///        // the object event has been filled at this point
 ///     }
-///
+/// ~~~
 /// The default (recommended). At the first entry an object of the class
 /// Event will be created and pointed by event. At the following entries,
 /// event will be overwritten by the new data. All internal members that are
@@ -5090,7 +5095,7 @@ Long64_t TTree::GetEntriesFriend() const
 /// ## OPTION 2
 ///
 /// The option AutoDelete is set
-///
+/// ~~~ {.cpp}
 ///     TBranch *branch = T.GetBranch("event");
 ///     branch->SetAddress(&event);
 ///     branch->SetAutoDelete(kTRUE);
@@ -5098,12 +5103,12 @@ Long64_t TTree::GetEntriesFriend() const
 ///        T.GetEntry(i);
 ///        // the object event has been filled at this point
 ///     }
-///
+/// ~~~
 /// In this case, at each iteration, the object event is deleted by GetEntry
 /// and a new instance of Event is created and filled.
 ///
 /// ## OPTION 3
-///
+/// ~~~ {.cpp}
 /// Same as option 1, but you delete yourself the event.
 ///
 ///     for (Long64_t i=0;i<nentries;i++) {
@@ -5112,7 +5117,7 @@ Long64_t TTree::GetEntriesFriend() const
 ///        T.GetEntry(i);
 ///        // the object event has been filled at this point
 ///     }
-///
+/// ~~~
 /// It is strongly recommended to use the default option 1. It has the
 /// additional advantage that functions like TTree::Draw (internally calling
 /// TTree::GetEntry) will be functional even when the classes in the file are
@@ -5336,9 +5341,9 @@ TTree* TTree::GetFriend(const char *friendname) const
 ///
 /// It can also be used in conjunction with an alias created using
 /// TTree::SetAlias in a TTreeFormula, e.g.:
-///
+/// ~~~ {.cpp}
 ///      maintree->Draw("treealias.fPx - treealias.myAlias");
-///
+/// ~~~
 /// where fPx is a branch of the friend tree aliased as 'treealias' and 'myAlias'
 /// was created using TTree::SetAlias on the friend tree.
 ///
@@ -5403,8 +5408,9 @@ TIterator* TTree::GetIteratorOnAllLeaves(Bool_t dir)
 /// The leaf name can contain the name of a friend tree with the
 /// syntax: friend_dir_and_tree.full_leaf_name
 /// the friend_dir_and_tree can be of the form:
-///
+/// ~~~ {.cpp}
 ///     TDirectoryName/TreeName
+/// ~~~
 
 TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
 {
@@ -5888,14 +5894,14 @@ Long64_t TTree::LoadTreeFriend(Long64_t entry, TTree* masterTree)
 /// where T is the name of the TTree in file myfile.root,
 /// and MyClass.h, MyClass.C the name of the files created by this function.
 /// In a ROOT session, you can do:
-///
+/// ~~~ {.cpp}
 ///     root > .L MyClass.C
 ///     root > MyClass* t = new MyClass;
 ///     root > t->GetEntry(12); // Fill data members of t with entry number 12.
 ///     root > t->Show();       // Show values of entry 12.
 ///     root > t->Show(16);     // Read and show values of entry 16.
 ///     root > t->Loop();       // Loop on all entries.
-///
+/// ~~~
 /// NOTE: Do not use the code generated for a single TTree which is part
 /// of a TChain to process that entire TChain.  The maximum dimensions
 /// calculated for arrays on the basis of a single TTree from the TChain
@@ -5952,13 +5958,13 @@ Int_t TTree::MakeCode(const char* filename)
 /// indirect access to the content of the branches of a TTree.
 ///
 /// "proxyClassname" is expected to be of the form:
-///
+/// ~~~ {.cpp}
 ///     [path/]fileprefix
-///
+/// ~~~
 /// The skeleton will then be generated in the file:
-///
+/// ~~~ {.cpp}
 ///     fileprefix.h
-///
+/// ~~~
 /// located in the current directory or in 'path/' if it is specified.
 /// The class generated will be named 'fileprefix'
 ///
@@ -5966,9 +5972,9 @@ Int_t TTree::MakeCode(const char* filename)
 /// to source files which will be included by the generated skeleton.
 /// Method of the same name as the file(minus the extension and path)
 /// will be called by the generated skeleton's Process method as follow:
-///
+/// ~~~ {.cpp}
 ///     [if (cutfilename())] htemp->Fill(macrofilename());
-///
+/// ~~~
 /// "option" can be used select some of the optional features during
 /// the code generation.  The possible options are:
 ///
@@ -5987,22 +5993,22 @@ Int_t TTree::MakeCode(const char* filename)
 /// * ability to use the branch data as an object (when the user code is available)
 ///
 /// For example with Event.root, if
-///
+/// ~~~ {.cpp}
 ///     Double_t somePx = fTracks.fPx[2];
-///
+/// ~~~
 /// is executed by one of the method of the skeleton,
 /// somePx will updated with the current value of fPx of the 3rd track.
 ///
 /// Both macrofilename and the optional cutfilename are expected to be
 /// the name of source files which contain at least a free standing
 /// function with the signature:
-///
+/// ~~~ {.cpp}
 ///     x_t macrofilename(); // i.e function with the same name as the file
-///
+/// ~~~
 /// and
-///
+/// ~~~ {.cpp}
 ///     y_t cutfilename();   // i.e function with the same name as the file
-///
+/// ~~~
 /// x_t and y_t needs to be types that can convert respectively to a double
 /// and a bool (because the skeleton uses:
 ///
@@ -6013,14 +6019,14 @@ Int_t TTree::MakeCode(const char* filename)
 ///
 /// Note that if you use the same 'variable' twice, it is more efficient
 /// to 'cache' the value. For example:
-///
+/// ~~~ {.cpp}
 ///     Int_t n = fEventNumber; // Read fEventNumber
 ///     if (n<10 || n>10) { ... }
-///
+/// ~~~
 /// is more efficient than
-///
+/// ~~~ {.cpp}
 ///     if (fEventNumber<10 || fEventNumber>10)
-///
+/// ~~~
 /// Also, optionally, the generated selector will also call methods named
 /// macrofilename_methodname in each of 6 main selector methods if the method
 /// macrofilename_methodname exist (Where macrofilename is stripped of its
@@ -6049,17 +6055,17 @@ Int_t TTree::MakeCode(const char* filename)
 ///
 /// To draw px using the file hsimple.root (generated by the
 /// hsimple.C tutorial), we need a file named hsimple.cxx:
-///
+/// ~~~ {.cpp}
 ///     double hsimple() {
 ///        return px;
 ///     }
-///
+/// ~~~
 /// MakeProxy can then be used indirectly via the TTree::Draw interface
 /// as follow:
-///
+/// ~~~ {.cpp}
 ///     new TFile("hsimple.root")
 ///     ntuple->Draw("hsimple.cxx");
-///
+/// ~~~
 /// A more complete example is available in the tutorials directory:
 /// h1analysisProxy.cxx , h1analysProxy.h and h1analysisProxyCut.C
 /// which reimplement the selector found in h1analysis.C
@@ -6108,14 +6114,15 @@ Int_t TTree::MakeProxy(const char* proxyClassname, const char* macrofilename, co
 ///
 /// To use this function:
 ///
-///    - connect your Tree file (eg: TFile f("myfile.root");)
-///    - T->MakeSelector("myselect");
+///    - connect your Tree file (eg: `TFile f("myfile.root");`)
+///    - `T->MakeSelector("myselect");`
 ///
 /// where T is the name of the Tree in file myfile.root
 /// and myselect.h, myselect.C the name of the files created by this function.
 /// In a ROOT session, you can do:
-///
+/// ~~~ {.cpp}
 ///     root > T->Process("myselect.C")
+/// ~~~
 
 Int_t TTree::MakeSelector(const char* selector, Option_t* option)
 {
@@ -6446,9 +6453,10 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
 /// The created object is  named "principal" and a reference to it
 /// is added to the list of specials Root objects.
 /// you can retrieve a pointer to the created object via:
-///
+/// ~~~ {.cpp}
 ///     TPrincipal *principal =
 ///     (TPrincipal*)gROOT->GetListOfSpecials()->FindObject("principal");
+///  ~~~
 
 TPrincipal* TTree::Principal(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
@@ -6462,12 +6470,12 @@ TPrincipal* TTree::Principal(const char* varexp, const char* selection, Option_t
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a summary of the tree contents.
 ///
-/// If option contains "all" friend trees are also printed.
-/// If option contains "toponly" only the top level branches are printed.
-/// If option contains "clusters" information about the cluster of baskets is printed.
+/// -  If option contains "all" friend trees are also printed.
+/// -  If option contains "toponly" only the top level branches are printed.
+/// -  If option contains "clusters" information about the cluster of baskets is printed.
 ///
 /// Wildcarding can be used to print only a subset of the branches, e.g.,
-/// T.Print("Elec*") will print all branches with name starting with "Elec".
+/// `T.Print("Elec*")` will print all branches with name starting with "Elec".
 
 void TTree::Print(Option_t* option) const
 {
@@ -6575,12 +6583,12 @@ void TTree::Print(Option_t* option) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// print statistics about the TreeCache for this tree, like
-///
+/// ~~~ {.cpp}
 ///     ******TreeCache statistics for file: cms2.root ******
 ///     Reading 73921562 bytes in 716 transactions
 ///     Average transaction = 103.242405 Kbytes
 ///     Number of blocks in current cache: 202, total size : 6001193
-///
+/// ~~~
 /// if option = "a" the list of blocks in the cache is printed
 
 void TTree::PrintCacheStats(Option_t* option) const
@@ -6624,11 +6632,11 @@ void TTree::PrintCacheStats(Option_t* option) const
 ///
 /// It may be more interesting to invoke directly the other Process function
 /// accepting a TSelector* as argument.eg
-///
+///  ~~~ {.cpp}
 ///     MySelector *selector = (MySelector*)TSelector::GetSelector(filename);
 ///     selector->CallSomeFunction(..);
 ///     mytree.Process(selector,..);
-///
+///  ~~~
 /// ## NOTE2
 //
 /// One should not call this function twice with the same selector file
@@ -6636,7 +6644,7 @@ void TTree::PrintCacheStats(Option_t* option) const
 /// by getting a pointer to the corresponding TSelector,eg
 ///
 /// ### workaround 1
-///
+/// ~~~ {.cpp}
 ///     void stubs1() {
 ///        TSelector *selector = TSelector::GetSelector("h1test.C");
 ///        TFile *f1 = new TFile("stubs_nood_le1.root");
@@ -6646,11 +6654,11 @@ void TTree::PrintCacheStats(Option_t* option) const
 ///        TTree *h2 = (TTree*)f2->Get("h1");
 ///        h2->Process(selector);
 ///     }
-///
+/// ~~~
 /// or use ACLIC to compile the selector
 ///
 /// ### workaround 2
-///
+/// ~~~ {.cpp}
 ///     void stubs2() {
 ///        TFile *f1 = new TFile("stubs_nood_le1.root");
 ///        TTree *h1 = (TTree*)f1->Get("h1");
@@ -6659,6 +6667,7 @@ void TTree::PrintCacheStats(Option_t* option) const
 ///        TTree *h2 = (TTree*)f2->Get("h1");
 ///        h2->Process("h1test.C+");
 ///     }
+/// ~~~
 
 Long64_t TTree::Process(const char* filename, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
@@ -6737,9 +6746,9 @@ TSQLResult* TTree::Query(const char* varexp, const char* selection, Option_t* op
 ///
 /// if branchDescriptor = "" (default), it is assumed that the Tree descriptor
 /// is given in the first line of the file with a syntax like
-///
+/// ~~~ {.cpp}
 ///     A/D:Table[2]/F:Ntracks/I:astring/C
-///
+/// ~~~
 /// otherwise branchDescriptor must be specified with the above syntax.
 ///
 /// - If the type of the first variable is not specified, it is assumed to be "/F"
@@ -6769,9 +6778,10 @@ TSQLResult* TTree::Query(const char* varexp, const char* selection, Option_t* op
 ///
 /// To fill a TTree with multiple input text files, proceed as indicated above
 /// for the first input file and omit the second argument for subsequent calls
-///
+/// ~~~ {.cpp}
 ///      T.ReadFile("file1.dat","branch descriptor");
 ///      T.ReadFile("file2.dat");
+/// ~~~
 
 Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor, char delimiter)
 {
@@ -7288,7 +7298,7 @@ Long64_t TTree::Scan(const char* varexp, const char* selection, Option_t* option
 /// Return true if it was added properly.
 ///
 /// For example:
-///
+/// ~~~ {.cpp}
 ///     tree->SetAlias("x1","(tdc1[1]-tdc1[0])/49");
 ///     tree->SetAlias("y1","(tdc1[3]-tdc1[2])/47");
 ///     tree->SetAlias("x2","(tdc2[1]-tdc2[0])/49");
@@ -7297,6 +7307,7 @@ Long64_t TTree::Scan(const char* varexp, const char* selection, Option_t* option
 ///
 ///     tree->SetAlias("theGoodTrack","event.fTracks[3]");
 ///     tree->Draw("theGoodTrack.fPx"); // same as "event.fTracks[3].fPx"
+/// ~~~
 
 Bool_t TTree::SetAlias(const char* aliasName, const char* aliasFormula)
 {
@@ -7581,49 +7592,48 @@ Int_t TTree::SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr)
 /// Assume a tree T with sub-branches a,b,c,d,e,f,g,etc..
 /// when doing T.GetEntry(i) all branches are read for entry i.
 /// to read only the branches c and e, one can do
-///
+/// ~~~ {.cpp}
 ///     T.SetBranchStatus("*",0); //disable all branches
 ///     T.SetBranchStatus("c",1);
 ///     T.setBranchStatus("e",1);
 ///     T.GetEntry(i);
+/// ~~~
+/// bname is interpreted as a wildcarded TRegexp (see TRegexp::MakeWildcard).
+/// Thus, "a*b" or "a.*b" matches branches starting with "a" and ending with
+/// "b", but not any other branch with an "a" followed at some point by a
+/// "b". For this second behavior, use "*a*b*". Note that TRegExp does not
+/// support '|', and so you cannot select, e.g. track and shower branches
+/// with "track|shower".
 ///
-///  bname is interpreted as a wildcarded TRegexp (see TRegexp::MakeWildcard).
-///  Thus, "a*b" or "a.*b" matches branches starting with "a" and ending with
-///  "b", but not any other branch with an "a" followed at some point by a
-///  "b". For this second behavior, use "*a*b*". Note that TRegExp does not
-///  support '|', and so you cannot select, e.g. track and shower branches
-///  with "track|shower".
+/// __WARNING! WARNING! WARNING!__
 ///
-///  __WARNING! WARNING! WARNING!__
+/// SetBranchStatus is matching the branch based on match of the branch
+/// 'name' and not on the branch hierarchy! In order to be able to
+/// selectively enable a top level object that is 'split' you need to make
+/// sure the name of the top level branch is prefixed to the sub-branches'
+/// name (by adding a dot ('.') at the end of the Branch creation and use the
+/// corresponding bname.
 ///
-///  SetBranchStatus is matching the branch based on match of the branch
-///  'name' and not on the branch hierarchy! In order to be able to
-///  selectively enable a top level object that is 'split' you need to make
-///  sure the name of the top level branch is prefixed to the sub-branches'
-///  name (by adding a dot ('.') at the end of the Branch creation and use the
-///  corresponding bname.
-///
-///  I.e If your Tree has been created in split mode with a parent branch "parent."
-///  (note the trailing dot).
-///
+/// I.e If your Tree has been created in split mode with a parent branch "parent."
+/// (note the trailing dot).
+/// ~~~ {.cpp}
 ///     T.SetBranchStatus("parent",1);
-///
-///  will not activate the sub-branches of "parent". You should do:
-///
+/// ~~~
+/// will not activate the sub-branches of "parent". You should do:
+/// ~~~ {.cpp}
 ///     T.SetBranchStatus("parent*",1);
-///
+/// ~~~
 /// Without the trailing dot in the branch creation you have no choice but to
 /// call SetBranchStatus explicitly for each of the sub branches.
 ///
-///
 /// An alternative to this function is to read directly and only
 /// the interesting branches. Example:
-///
+/// ~~~ {.cpp}
 ///     TBranch *brc = T.GetBranch("c");
 ///     TBranch *bre = T.GetBranch("e");
 ///     brc->GetEntry(i);
 ///     bre->GetEntry(i);
-///
+/// ~~~
 /// If found is not 0, the number of branch(es) found matching the regular
 /// expression is returned in *found AND the error message 'unknown branch'
 /// is suppressed.
@@ -8324,12 +8334,13 @@ void TTree::SetPerfStats(TVirtualPerfStats *perf)
 /// The current TreeIndex is replaced by the new index.
 /// Note that this function does not delete the previous index.
 /// This gives the possibility to play with more than one index, e.g.,
-///
+/// ~~~ {.cpp}
 ///     TVirtualIndex* oldIndex = tree.GetTreeIndex();
 ///     tree.SetTreeIndex(newIndex);
 ///     tree.Draw();
 ///     tree.SetTreeIndex(oldIndex);
 ///     tree.Draw(); etc
+/// ~~~
 
 void TTree::SetTreeIndex(TVirtualIndex* index)
 {
@@ -8346,14 +8357,14 @@ void TTree::SetTreeIndex(TVirtualIndex* index)
 /// selected entry in the resulting histogram.
 ///
 /// For example the equivalent of:
-///
+/// ~~~ {.cpp}
 ///     T.Draw("x", "w")
-///
+/// ~~~
 /// is:
-///
+/// ~~~ {.cpp}
 ///     T.SetWeight(w);
 ///     T.Draw("x");
-///
+/// ~~~
 /// This function is redefined by TChain::SetWeight. In case of a
 /// TChain, an option "global" may be specified to set the same weight
 /// for all trees in the TChain instead of the default behaviour
@@ -8659,18 +8670,18 @@ void TTree::Streamer(TBuffer& b)
 /// - option = "M" More. Improve fit results
 ///
 /// You can specify boundary limits for some or all parameters via
-///
+/// ~~~ {.cpp}
 ///     func->SetParLimits(p_number, parmin, parmax);
-///
+/// ~~~
 /// if parmin>=parmax, the parameter is fixed
 ///
 /// Note that you are not forced to fix the limits for all parameters.
 /// For example, if you fit a function with 6 parameters, you can do:
-///
+/// ~~~ {.cpp}
 ///     func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
 ///     func->SetParLimits(4,-10,-4);
 ///     func->SetParLimits(5, 1,1);
-///
+/// ~~~
 /// With this setup:
 ///
 /// - Parameters 0->3 can vary freely
@@ -8685,12 +8696,12 @@ void TTree::Streamer(TBuffer& b)
 ///
 /// It is mandatory to have a normalization variable
 /// which is fixed for the fit.  e.g.
-///
+/// ~~~ {.cpp}
 ///     TF1* f1 = new TF1("f1", "gaus(0)/sqrt(2*3.14159)/[2]", 0, 5);
 ///     f1->SetParameters(1, 3.1, 0.01);
 ///     f1->SetParLimits(0, 1, 1); // fix the normalization parameter to 1
 ///     data->UnbinnedFit("f1", "jpsimass", "jpsipt>3.0");
-///
+/// ~~~
 /// 1, 2 and 3 Dimensional fits are supported. See also TTree::Fit
 ///
 /// Return status:

@@ -49,6 +49,8 @@ struct GeneticMinimizerParameters {
 /**
    GeneticMinimizer
 
+   Minimizer class based on the Gentic algorithm implemented in TMVA
+
    @ingroup MultiMin
 */
 class GeneticMinimizer: public ROOT::Math::Minimizer {

@@ -95,19 +95,19 @@ Long64_t THnSparseBinIter::Next(Int_t* coord /*= 0*/)
 
 
 
-//______________________________________________________________________________
-//
-// THnSparseCoordCompression is a class used by THnSparse internally. It
-// represents a compacted n-dimensional array of bin coordinates (indices).
-// As the total number of bins in each dimension is known by THnSparse, bin
-// indices can be compacted to only use the amount of bins needed by the total
-// number of bins in each dimension. E.g. for a THnSparse with
-// {15, 100, 2, 20, 10, 100} bins per dimension, a bin index will only occupy
-// 28 bits (4+7+1+5+4+7), i.e. less than a 32bit integer. The tricky part is
-// the fast compression and decompression, the platform-independent storage
-// (think of endianness: the bits of the number 0x123456 depend on the
-// platform), and the hashing needed by THnSparseArrayChunk.
-//______________________________________________________________________________
+/** \class THnSparseCoordCompression
+THnSparseCoordCompression is a class used by THnSparse internally. It
+represents a compacted n-dimensional array of bin coordinates (indices).
+As the total number of bins in each dimension is known by THnSparse, bin
+indices can be compacted to only use the amount of bins needed by the total
+number of bins in each dimension. E.g. for a THnSparse with
+{15, 100, 2, 20, 10, 100} bins per dimension, a bin index will only occupy
+28 bits (4+7+1+5+4+7), i.e. less than a 32bit integer. The tricky part is
+the fast compression and decompression, the platform-independent storage
+(think of endianness: the bits of the number 0x123456 depend on the
+platform), and the hashing needed by THnSparseArrayChunk.
+*/
+
 
 class THnSparseCoordCompression {
 public:
@@ -342,12 +342,11 @@ ULong64_t THnSparseCoordCompression::GetHashFromBuffer(const Char_t* buf) const
 
 
 
-//______________________________________________________________________________
-//
-// THnSparseCompactBinCoord is a class used by THnSparse internally. It
-// maps between an n-dimensional array of bin coordinates (indices) and
-// its compact version, the THnSparseCoordCompression.
-//______________________________________________________________________________
+/** \class THnSparseCompactBinCoord
+THnSparseCompactBinCoord is a class used by THnSparse internally. It
+maps between an n-dimensional array of bin coordinates (indices) and
+its compact version, the THnSparseCoordCompression.
+*/
 
 class THnSparseCompactBinCoord: public THnSparseCoordCompression {
 public:
@@ -410,17 +409,14 @@ THnSparseCompactBinCoord::~THnSparseCompactBinCoord()
    delete [] fCurrentBin;
 }
 
-//______________________________________________________________________________
-//
-// THnSparseArrayChunk is used internally by THnSparse.
-//
-// THnSparse stores its (dynamic size) array of bin coordinates and their
-// contents (and possibly errors) in a TObjArray of THnSparseArrayChunk. Each
-// of the chunks holds an array of THnSparseCompactBinCoord and the content
-// (a TArray*), which is created outside (by the templated derived classes of
-// THnSparse) and passed in at construction time.
-//______________________________________________________________________________
-
+/** \class THnSparseArrayChunk
+THnSparseArrayChunk is used internally by THnSparse.
+THnSparse stores its (dynamic size) array of bin coordinates and their
+contents (and possibly errors) in a TObjArray of THnSparseArrayChunk. Each
+of the chunks holds an array of THnSparseCompactBinCoord and the content
+(a TArray*), which is created outside (by the templated derived classes of
+THnSparse) and passed in at construction time.
+*/
 
 ClassImp(THnSparseArrayChunk);
 
@@ -493,92 +489,94 @@ void THnSparseArrayChunk::Sumw2()
 }
 
 
+/** \class THnSparse
+Efficient multidimensional histogram.
 
-//______________________________________________________________________________
-//
-//
-//    Efficient multidimensional histogram.
-//
-// Use a THnSparse instead of TH1 / TH2 / TH3 / array for histogramming when
-// only a small fraction of bins is filled. A 10-dimensional histogram with 10
-// bins per dimension has 10^10 bins; in a naive implementation this will not
-// fit in memory. THnSparse only allocates memory for the bins that have
-// non-zero bin content instead, drastically reducing both the memory usage
-// and the access time.
-//
-// To construct a THnSparse object you must use one of its templated, derived
-// classes:
-// THnSparseD (typedef for THnSparseT<ArrayD>): bin content held by a Double_t,
-// THnSparseF (typedef for THnSparseT<ArrayF>): bin content held by a Float_t,
-// THnSparseL (typedef for THnSparseT<ArrayL>): bin content held by a Long_t,
-// THnSparseI (typedef for THnSparseT<ArrayI>): bin content held by an Int_t,
-// THnSparseS (typedef for THnSparseT<ArrayS>): bin content held by a Short_t,
-// THnSparseC (typedef for THnSparseT<ArrayC>): bin content held by a Char_t,
-//
-// They take name and title, the number of dimensions, and for each dimension
-// the number of bins, the minimal, and the maximal value on the dimension's
-// axis. A TH2 h("h","h",10, 0., 10., 20, -5., 5.) would correspond to
-//   Int_t bins[2] = {10, 20};
-//   Double_t xmin[2] = {0., -5.};
-//   Double_t xmax[2] = {10., 5.};
-//   THnSparse hs("hs", "hs", 2, bins, min, max);
-//
-// * Filling
-// A THnSparse is filled just like a regular histogram, using
-// THnSparse::Fill(x, weight), where x is a n-dimensional Double_t value.
-// To take errors into account, Sumw2() must be called before filling the
-// histogram.
-// Bins are allocated as needed; the status of the allocation can be observed
-// by GetSparseFractionBins(), GetSparseFractionMem().
-//
-// * Fast Bin Content Access
-// When iterating over a THnSparse one should only look at filled bins to save
-// processing time. The number of filled bins is returned by
-// THnSparse::GetNbins(); the bin content for each (linear) bin number can
-// be retrieved by THnSparse::GetBinContent(linidx, (Int_t*)coord).
-// After the call, coord will contain the bin coordinate of each axis for the bin
-// with linear index linidx. A possible call would be
-//   std::cout << hs.GetBinContent(0, coord);
-//   std::cout <<" is the content of bin [x = " << coord[0] "
-//        << " | y = " << coord[1] << "]" << std::endl;
-//
-// * Efficiency
-// TH1 and TH2 are generally faster than THnSparse for one and two dimensional
-// distributions. THnSparse becomes competitive for a sparsely filled TH3
-// with large numbers of bins per dimension. The tutorial hist/sparsehist.C
-// shows the turning point. On a AMD64 with 8GB memory, THnSparse "wins"
-// starting with a TH3 with 30 bins per dimension. Using a THnSparse for a
-// one-dimensional histogram is only reasonable if it has a huge number of bins.
-//
-// * Projections
-// The dimensionality of a THnSparse can be reduced by projecting it to
-// 1, 2, 3, or n dimensions, which can be represented by a TH1, TH2, TH3, or
-// a THnSparse. See the Projection() members. To only project parts of the
-// histogram, call
-//   THnSparse::GetAxis(12)->SetRange(from_bin, to_bin);
-//
-// * Internal Representation
-// An entry for a filled bin consists of its n-dimensional coordinates and
-// its bin content. The coordinates are compacted to use as few bits as
-// possible; e.g. a histogram with 10 bins in x and 20 bins in y will only
-// use 4 bits for the x representation and 5 bits for the y representation.
-// This is handled by the internal class THnSparseCompactBinCoord.
-// Bin data (content and coordinates) are allocated in chunks of size
-// fChunkSize; this parameter can be set when constructing a THnSparse. Each
-// chunk is represented by an object of class THnSparseArrayChunk.
-//
-// Translation from an n-dimensional bin coordinate to the linear index within
-// the chunks is done by GetBin(). It creates a hash from the compacted bin
-// coordinates (the hash of a bin coordinate is the compacted coordinate itself
-// if it takes less than 8 bytes, the size of a Long64_t.
-// This hash is used to lookup the linear index in the TExMap member fBins;
-// the coordinates of the entry fBins points to is compared to the coordinates
-// passed to GetBin(). If they do not match, these two coordinates have the same
-// hash - which is extremely unlikely but (for the case where the compact bin
-// coordinates are larger than 4 bytes) possible. In this case, fBinsContinued
-// contains a chain of linear indexes with the same hash. Iterating through this
-// chain and comparing each bin coordinates with the one passed to GetBin() will
-// retrieve the matching bin.
+Use a THnSparse instead of TH1 / TH2 / TH3 / array for histogramming when
+only a small fraction of bins is filled. A 10-dimensional histogram with 10
+bins per dimension has 10^10 bins; in a naive implementation this will not
+fit in memory. THnSparse only allocates memory for the bins that have
+non-zero bin content instead, drastically reducing both the memory usage
+and the access time.
+
+To construct a THnSparse object you must use one of its templated, derived
+classes:
+- THnSparseD (typedef for THnSparseT<ArrayD>): bin content held by a Double_t,
+- THnSparseF (typedef for THnSparseT<ArrayF>): bin content held by a Float_t,
+- THnSparseL (typedef for THnSparseT<ArrayL>): bin content held by a Long_t,
+- THnSparseI (typedef for THnSparseT<ArrayI>): bin content held by an Int_t,
+- THnSparseS (typedef for THnSparseT<ArrayS>): bin content held by a Short_t,
+- THnSparseC (typedef for THnSparseT<ArrayC>): bin content held by a Char_t,
+
+They take name and title, the number of dimensions, and for each dimension
+the number of bins, the minimal, and the maximal value on the dimension's
+axis. A TH2 h("h","h",10, 0., 10., 20, -5., 5.) would correspond to
+
+    Int_t bins[2] = {10, 20};
+    Double_t xmin[2] = {0., -5.};
+    Double_t xmax[2] = {10., 5.};
+    THnSparse hs("hs", "hs", 2, bins, min, max);
+
+## Filling
+A THnSparse is filled just like a regular histogram, using
+THnSparse::Fill(x, weight), where x is a n-dimensional Double_t value.
+To take errors into account, Sumw2() must be called before filling the
+histogram.
+
+Bins are allocated as needed; the status of the allocation can be observed
+by GetSparseFractionBins(), GetSparseFractionMem().
+
+## Fast Bin Content Access
+When iterating over a THnSparse one should only look at filled bins to save
+processing time. The number of filled bins is returned by
+THnSparse::GetNbins(); the bin content for each (linear) bin number can
+be retrieved by THnSparse::GetBinContent(linidx, (Int_t*)coord).
+After the call, coord will contain the bin coordinate of each axis for the bin
+with linear index linidx. A possible call would be
+
+   std::cout << hs.GetBinContent(0, coord);
+   std::cout <<" is the content of bin [x = " << coord[0] "
+        << " | y = " << coord[1] << "]" << std::endl;
+
+## Efficiency
+TH1 and TH2 are generally faster than THnSparse for one and two dimensional
+distributions. THnSparse becomes competitive for a sparsely filled TH3
+with large numbers of bins per dimension. The tutorial hist/sparsehist.C
+shows the turning point. On a AMD64 with 8GB memory, THnSparse "wins"
+starting with a TH3 with 30 bins per dimension. Using a THnSparse for a
+one-dimensional histogram is only reasonable if it has a huge number of bins.
+
+## Projections
+The dimensionality of a THnSparse can be reduced by projecting it to
+1, 2, 3, or n dimensions, which can be represented by a TH1, TH2, TH3, or
+a THnSparse. See the Projection() members. To only project parts of the
+histogram, call
+
+    THnSparse::GetAxis(12)->SetRange(from_bin, to_bin);
+
+## Internal Representation
+An entry for a filled bin consists of its n-dimensional coordinates and
+its bin content. The coordinates are compacted to use as few bits as
+possible; e.g. a histogram with 10 bins in x and 20 bins in y will only
+use 4 bits for the x representation and 5 bits for the y representation.
+This is handled by the internal class THnSparseCompactBinCoord.
+Bin data (content and coordinates) are allocated in chunks of size
+fChunkSize; this parameter can be set when constructing a THnSparse. Each
+chunk is represented by an object of class THnSparseArrayChunk.
+
+Translation from an n-dimensional bin coordinate to the linear index within
+the chunks is done by GetBin(). It creates a hash from the compacted bin
+coordinates (the hash of a bin coordinate is the compacted coordinate itself
+if it takes less than 8 bytes, the size of a Long64_t.
+This hash is used to lookup the linear index in the TExMap member fBins;
+the coordinates of the entry fBins points to is compared to the coordinates
+passed to GetBin(). If they do not match, these two coordinates have the same
+hash - which is extremely unlikely but (for the case where the compact bin
+coordinates are larger than 4 bytes) possible. In this case, fBinsContinued
+contains a chain of linear indexes with the same hash. Iterating through this
+chain and comparing each bin coordinates with the one passed to GetBin() will
+retrieve the matching bin.
+*/
 
 
 ClassImp(THnSparse);

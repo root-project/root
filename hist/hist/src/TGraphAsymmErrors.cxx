@@ -29,19 +29,14 @@
 
 ClassImp(TGraphAsymmErrors)
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class TGraphAsymmErrors
+TGraph with assymetric error bars.
 
-/* Begin_Html
-<center><h2>TGraphAsymmErrors class</h2></center>
-A TGraphAsymmErrors is a TGraph with assymetric error bars.
-<p>
-The TGraphAsymmErrors painting is performed thanks to the
-<a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
-class. All details about the various painting options are given in
-<a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
+The TGraphAsymmErrors painting is performed thanks to the TGraphPainter
+class. All details about the various painting options are given in this class.
 <p>
 The picture below gives an example:
-End_Html
+
 Begin_Macro(source)
 {
    c1 = new TCanvas("c1","A Simple Graph with assymetric error bars",200,10,700,500);
@@ -63,7 +58,8 @@ Begin_Macro(source)
    gr->Draw("ALP");
    return c1;
 }
-End_Macro */
+End_Macro
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -415,8 +411,8 @@ void TGraphAsymmErrors::BayesDivide(const TH1* pass, const TH1* total, Option_t 
 /// oscillation on the actual coverage probability a couple of approximations and
 /// methodes has been developped. For a detailed discussion, please have a look at
 /// this statistical paper:
-/// Begin_Html <a href="http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf"
-/// > http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf</a> End_Html
+/// <a href="http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf"
+/// > http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf</a>
 
 void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 {

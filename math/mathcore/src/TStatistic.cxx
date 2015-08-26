@@ -10,14 +10,18 @@
  *************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStatistic                                                           //
-//                                                                      //
-// Statistical variable, defined by its mean and RMS.                   //
-// Named, streamable, storable and mergeable.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+                                                               
+\class TStatistic                                                     
+                                                               
+Statistical variable, defined by its mean and variance (RMS).             
+Named, streamable, storable and mergeable.                     
+
+@ingroup MathCore
+
+*/
+                                                               
+
 
 #include "TStatistic.h"
 

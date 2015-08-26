@@ -28,13 +28,14 @@ A simple TTree restricted to a list of float variables only.
 Each variable goes to a separate branch.
 
 A Ntuple is created via
-
+~~~ {.cpp}
     TNtuple(name,title,varlist,bufsize)
-
+~~~
 It is filled via:
-
+~~~ {.cpp}
     TNtuple::Fill(*x)  or
     TNtuple::Fill(v1,v2,v3.....)
+~~~
 */
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -54,12 +54,6 @@
 #include <vector>
 
 
-/**
-
-@defgroup Integration Numerical Integration
-@ingroup NumAlgo
-*/
-
 
 namespace ROOT {
 namespace Math {

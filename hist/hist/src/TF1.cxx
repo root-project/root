@@ -3482,10 +3482,12 @@ void TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, D
 }
 
 
-//TF1 Parameters class
+/** \class TF1Parameters
+TF1 Parameters class
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the parameter number given a name
+/// Returns the parameter number given a name
 /// not very efficient but list of parameters is typically small
 /// could use a map if needed
 
@@ -3498,7 +3500,7 @@ Int_t TF1Parameters::GetParNumber(const char * name) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set parameter values
+/// Set parameter values
 
 void  TF1Parameters::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Double_t p4,
                                    Double_t p5,Double_t p6,Double_t p7,Double_t p8,
@@ -3519,7 +3521,7 @@ void  TF1Parameters::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set parameter names
+/// Set parameter names
 
 void TF1Parameters::SetParNames(const char *name0,const char *name1,const char *name2,const char *name3,
                                 const char *name4, const char *name5,const char *name6,const char *name7,

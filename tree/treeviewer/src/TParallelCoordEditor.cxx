@@ -39,28 +39,25 @@
 
 ClassImp(TParallelCoordEditor)
 
-////////////////////////////////////////////////////////////////////////////////
 
-/* Begin_Html
-<center><h2>The TParallelCoord editor class</h2></center>
+/** \class TParallelCoordEditor
+
 This is the TParallelCoord editor. It brings tools to explore datas
 Using parallel coordinates. The main tools are:
-</ul>
-<li> Dots spacing : Set the dots spacing with whichone the lines
-  must be drawn. This tool is useful to reduce the image
-  cluttering.
-<li> The Selections section : Set the current edited selection and
-  allows to apply it to the tree through a generated entry list.
-<li> The Entries section : Set how many events must be drawn.
-  A weight cut can be defioned here (see TParallelCoord for a
-  a description of the weight cut).
-<li> The Variables tab : To define the global settings to display
-  the axes. It is also possible to add a variable from its
-  expression or delete a selected one (also possible using right
-  click on the pad.
-</ul>
-End_Html */
 
+  - Dots spacing : Set the dots spacing with whichone the lines
+    must be drawn. This tool is useful to reduce the image
+    cluttering.
+  - The Selections section : Set the current edited selection and
+    allows to apply it to the tree through a generated entry list.
+  - The Entries section : Set how many events must be drawn.
+    A weight cut can be defioned here (see TParallelCoord for a
+    a description of the weight cut).
+  - The Variables tab : To define the global settings to display
+    the axes. It is also possible to add a variable from its
+    expression or delete a selected one (also possible using right
+    click on the pad.
+*/
 
 enum EParallelWid {
    kGlobalLineColor,
@@ -109,7 +106,7 @@ TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
    fPriority = 1;
    fDelay = kTRUE;
 
-   //**Line**_________________________________________
+   // Line
    MakeTitle("Line");
 
    TGHorizontalFrame *f1 = new TGHorizontalFrame(this);
@@ -162,7 +159,7 @@ TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
    fLineTypeBgroup->ChangeOptions(kChildFrame|kVerticalFrame);
    AddFrame(fLineTypeBgroup, new TGLayoutHints(kLHintsCenterY | kLHintsLeft));
 
-   //**Selections**___________________________________
+   // Selections
    MakeTitle("Selections");
 
    fHideAllRanges = new TGCheckButton(this,"Hide all ranges",kHideAllRanges);
@@ -207,7 +204,7 @@ TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
    f7->AddFrame(fUnApply, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,10,0,0,0));
    AddFrame(f7, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,0,0,3,0));
 
-   //**Entries**___________________________________
+   // Entries
    MakeTitle("Entries");
 
    fPaintEntries = new TGCheckButton(this,"Draw entries",kPaintEntries);
@@ -252,14 +249,13 @@ TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
    MakeVariablesTab();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Make the "variable" tab.
 
 void TParallelCoordEditor::MakeVariablesTab()
 {
    fVarTab = CreateEditorTabSubFrame("Variables");
-   //**Variable**_________________________________
+   // Variable
 
    TGHorizontalFrame *f9 = new TGHorizontalFrame(fVarTab);
    fAddVariable = new TGTextEntry(f9);
@@ -321,7 +317,6 @@ void TParallelCoordEditor::MakeVariablesTab()
    fVarTab->AddFrame(f13, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -330,7 +325,6 @@ TParallelCoordEditor::~TParallelCoordEditor()
    delete fLineTypePoly;
    delete fLineTypeCurves;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clean up the selection combo box.
@@ -372,7 +366,6 @@ void TParallelCoordEditor::CleanUpSelections()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Clean up the variables combo box.
 
@@ -401,7 +394,6 @@ void TParallelCoordEditor::CleanUpVariables()
       fHistBinning->SetNumber(var->GetHistBinning());
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Connect signals to slots.
@@ -490,7 +482,6 @@ void TParallelCoordEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to activate or not a selection.
 
@@ -504,7 +495,6 @@ void TParallelCoordEditor::DoActivateSelection(Bool_t on)
       Update();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to add a selection.
@@ -530,7 +520,6 @@ void TParallelCoordEditor::DoAddSelection()
    CleanUpSelections();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to add a variable.
 
@@ -542,7 +531,6 @@ void TParallelCoordEditor::DoAddVariable()
    CleanUpVariables();
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to apply a selection to the tree.
@@ -559,7 +547,6 @@ void TParallelCoordEditor::DoApplySelect()
    SetModel(fParallel);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to delay the drawing.
 
@@ -570,7 +557,6 @@ void TParallelCoordEditor::DoDelayDrawing(Bool_t on)
    fDelay = on;
    fParallel->SetLiveRangesUpdate(!on);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to delete a selection.
@@ -585,7 +571,6 @@ void TParallelCoordEditor::DoDeleteSelection()
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to delete a variable().
 
@@ -598,7 +583,6 @@ void TParallelCoordEditor::DoDeleteVar()
    if (var) Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the line dotspacing.
 
@@ -610,7 +594,6 @@ void TParallelCoordEditor::DoDotsSpacing()
    fDotsSpacingField->SetNumber((Int_t)fDotsSpacing->GetPosition());
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the line dotspacing from the entry field.
@@ -668,7 +651,6 @@ void TParallelCoordEditor::DoEntriesToDraw()
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the first entry.
 
@@ -680,7 +662,6 @@ void TParallelCoordEditor::DoFirstEntry()
    fEntriesToDraw->SetPosition((Long64_t)fFirstEntry->GetNumber(),(Long64_t)fFirstEntry->GetNumber()+fParallel->GetCurrentN());
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the global line color.
@@ -698,7 +679,6 @@ void TParallelCoordEditor::DoGlobalLineColor(Pixel_t a)
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the global line width.
 
@@ -709,7 +689,6 @@ void TParallelCoordEditor::DoGlobalLineWidth(Int_t wid)
    fParallel->SetLineWidth(wid);
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to hide all the ranges.
@@ -727,7 +706,6 @@ void TParallelCoordEditor::DoHideAllRanges(Bool_t on)
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the axes histogram binning.
 
@@ -738,7 +716,6 @@ void TParallelCoordEditor::DoHistBinning()
    fParallel->SetAxisHistogramBinning((Int_t)fHistBinning->GetNumber());
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the histograms color.
@@ -754,7 +731,6 @@ void TParallelCoordEditor::DoHistColorSelect(Pixel_t p)
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set histogram height.
 
@@ -767,7 +743,6 @@ void TParallelCoordEditor::DoHistShowBoxes(Bool_t s)
    while ((var = (TParallelCoordVar*)next())) var->SetBit(TParallelCoordVar::kShowBarHisto,s);
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the histograms fill style.
@@ -782,7 +757,6 @@ void TParallelCoordEditor::DoHistPatternSelect(Style_t sty)
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set histogram width.
 
@@ -793,7 +767,6 @@ void TParallelCoordEditor::DoHistWidth()
    fParallel->SetAxisHistogramLineWidth((Int_t)fHistWidth->GetNumber());
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the line type.
@@ -807,7 +780,6 @@ void TParallelCoordEditor::DoLineType()
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the dots spacing online.
 
@@ -818,7 +790,6 @@ void TParallelCoordEditor::DoLiveDotsSpacing(Int_t a)
    fParallel->SetDotsSpacing(a);
    if (!fDelay) Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set alpha value online.
@@ -853,7 +824,6 @@ void TParallelCoordEditor::DoLiveEntriesToDraw()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to update the wieght cut entry field from the slider position.
 
@@ -868,7 +838,6 @@ void TParallelCoordEditor::DoLiveWeightCut(Int_t n)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the number of entries to display.
 
@@ -881,7 +850,6 @@ void TParallelCoordEditor::DoNentries()
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to postpone the entries drawing.
 
@@ -892,7 +860,6 @@ void TParallelCoordEditor::DoPaintEntries(Bool_t on)
    fParallel->SetBit(TParallelCoord::kPaintEntries,on);
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the line color of selection.
@@ -907,7 +874,6 @@ void TParallelCoordEditor::DoSelectLineColor(Pixel_t a)
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the line width of selection.
 
@@ -921,7 +887,6 @@ void TParallelCoordEditor::DoSelectLineWidth(Int_t wid)
       Update();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the selection beeing edited.
@@ -942,7 +907,6 @@ void TParallelCoordEditor::DoSelectionSelect(const char* title)
    fShowRanges->SetOn(fParallel->GetCurrentSelection()->TestBit(TParallelCoordSelect::kShowRanges));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to show or not the ranges on the pad.
 
@@ -957,7 +921,6 @@ void TParallelCoordEditor::DoShowRanges(Bool_t s)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to reset the tree entry list to the original one.
 
@@ -970,14 +933,12 @@ void TParallelCoordEditor::DoUnApply()
    SetModel(fParallel);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to select a variable.
 
 void TParallelCoordEditor::DoVariableSelect(const char* /*var*/)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to update the weight cut.
@@ -990,7 +951,6 @@ void TParallelCoordEditor::DoWeightCut()
    fParallel->SetWeightCut(n);
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Pick up the used parallel coordinates plot attributes.

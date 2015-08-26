@@ -116,7 +116,7 @@ in case you process only a subset of the events, otherwise you run the risk
 to store in the cache entries that you do not need.
 
 #### example 2a
-
+~~~ {.cpp}
     TTree *T = (TTree*)f->Get("mytree");
     Long64_t nentries = T->GetEntries();
     Int_t cachesize = 10000000; //10 MBytes
@@ -126,12 +126,12 @@ to store in the cache entries that you do not need.
     //in the TSelector::Process function we read all branches
     T->GetEntry(i);
     ... here you process your entry
-
+~~~
 #### example 2b
 
 in the Process function we read a subset of the branches.
 Only the branches used in the first entry will be put in the cache
-
+~~~ {.cpp}
     TTree *T = (TTree*)f->Get("mytree");
     //we want to process only the 200 first entries
     Long64_t nentries=200;
@@ -149,14 +149,14 @@ Only the branches used in the first entry will be put in the cache
     TBranch *b2 = T->GetBranch("branch2");
     b2->GetEntry(i);
     ... here you process your entry
-
+~~~
 ### 3. with your own event loop
 
 #### example 3a
 
 in your analysis loop, you always use 2 branches. You want to prefetch
 the branch buffers for these 2 branches only.
-
+~~~ {.cpp}
     TTree *T = (TTree*)f->Get("mytree");
     TBranch *b1 = T->GetBranch("branch1");
     TBranch *b2 = T->GetBranch("branch2");
@@ -179,14 +179,14 @@ the branch buffers for these 2 branches only.
        .. process the rare but interesting cases.
        ... here you process your entry
     }
-
+~~~
 #### example 3b
 
 in your analysis loop, you always use 2 branches in the main loop.
 you also call some analysis functions where a few more branches will be read.
 but you do not know a priori which ones. There is no point in prefetching
 branches that will be used very rarely.
-
+~~~ {.cpp}
     TTree *T = (TTree*)f->Get("mytree");
     Long64_t nentries = T->GetEntries();
     Int_t cachesize = 10000000;   //10 MBytes
@@ -210,7 +210,7 @@ branches that will be used very rarely.
        .. process the rare but interesting cases.
        ... here you process your entry
     }
-
+~~~
 ## SPECIAL CASES WHERE TreeCache should not be activated
 
 When reading only a small fraction of all entries such that not all branch
@@ -221,8 +221,9 @@ buffers are read, it might be faster to run without a cache.
 Once your analysis loop has terminated, you can access/print the number
 of effective system reads for a given file with a code like
 (where TFile* f is a pointer to your file)
-
+~~~ {.cpp}
     printf("Reading %lld bytes in %d transactions\n",f->GetBytesRead(),  f->GetReadCalls());
+~~~
 */
 
 #include "TSystem.h"
@@ -962,18 +963,20 @@ Int_t TTreeCache::GetLearnEntries()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Print cache statistics, like
-/// <pre>
-///       ******TreeCache statistics for file: cms2.root ******
-///       Number of branches in the cache ...: 1093
-///       Cache Efficiency ..................: 0.997372
-///       Cache Efficiency Rel...............: 1.000000
-///       Learn entries......................: 100
-///       Reading............................: 72761843 bytes in 7 transactions
-///       Readahead..........................: 256000 bytes with overhead = 0 bytes
-///       Average transaction................: 10394.549000 Kbytes
-///       Number of blocks in current cache..: 210, total size: 6280352
-/// </pre>
+/// Print cache statistics. Like:
+///
+/// ~~~ {.cpp}
+///    ******TreeCache statistics for file: cms2.root ******
+///    Number of branches in the cache ...: 1093
+///    Cache Efficiency ..................: 0.997372
+///    Cache Efficiency Rel...............: 1.000000
+///    Learn entries......................: 100
+///    Reading............................: 72761843 bytes in 7 transactions
+///    Readahead..........................: 256000 bytes with overhead = 0 bytes
+///    Average transaction................: 10394.549000 Kbytes
+///    Number of blocks in current cache..: 210, total size: 6280352
+/// ~~~
+///
 /// - if option = "a" the list of blocks in the cache is printed
 ///   see also class TTreePerfStats.
 /// - if option contains 'cachedbranches', the list of branches being

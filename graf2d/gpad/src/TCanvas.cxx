@@ -544,6 +544,7 @@ void TCanvas::Init()
    fEventX          = -1;
    fEventY          = -1;
    fContextMenu     = 0;
+   fDrawn           = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -817,6 +818,8 @@ void TCanvas::Draw(Option_t *)
    // library static initializer.
    if (gApplication)
       gApplication->InitializeGraphics();
+
+   fDrawn = kTRUE;
 
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(GetName());
    if (old == this) {

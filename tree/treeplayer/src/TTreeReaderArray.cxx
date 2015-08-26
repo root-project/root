@@ -290,21 +290,10 @@ namespace {
    };
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// TTreeReaderArray                                                        //
-//                                                                            //
-// Extracts array data from a TTree.                                          //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+/** \class TTreeReaderArray
+
+Extracts array data from a TTree.
+*/
 
 ClassImp(TTreeReaderArrayBase)
 

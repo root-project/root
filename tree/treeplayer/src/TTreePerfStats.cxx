@@ -9,75 +9,75 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-//                       TTreePerfStats
-//
-//        TTree I/O performance measurement. see example of use below.
-//
-// The function FileReadEvent is called from TFile::ReadBuffer.
-// For each call the following information is stored in fGraphIO
-//     - x[i]  = Tree entry number
-//     - y[i]  = 1e-6*(file position)
-//     - ey[i] = 1e-9*number of bytes read
-// For each call the following information is stored in fGraphTime
-//     - x[i]  = Tree entry number
-//     - y[i]  = Time now
-//     - ey[i] = readtime, eg timenow - start
-// The TTreePerfStats object can be saved in a ROOT file in such a way that
-// its inspection can be done outside the job that generated it.
-//
-//       Example of use
-// {
-//   TFile *f = TFile::Open("RelValMinBias-GEN-SIM-RECO.root");
-//   T = (TTree*)f->Get("Events");
-//   Long64_t nentries = T->GetEntries();
-//   T->SetCacheSize(10000000);
-//   T->SetCacheEntryRange(0,nentries);
-//   T->AddBranchToCache("*");
-//
-//   TTreePerfStats *ps= new TTreePerfStats("ioperf",T);
-//
-//   for (Int_t i=0;i<nentries;i++) {
-//      T->GetEntry(i);
-//   }
-//   ps->SaveAs("cmsperf.root");
-// }
-//
-// then, in a root interactive session, one can do:
-//    root > TFile f("cmsperf.root");
-//    root > ioperf->Draw();
-//    root > ioperf->Print();
-//
-// The Draw or Print functions print the following information:
-//   TreeCache = TTree cache size in MBytes
-//   N leaves  = Number of leaves in the TTree
-//   ReadTotal = Total number of zipped bytes read
-//   ReadUnZip = Total number of unzipped bytes read
-//   ReadCalls = Total number of disk reads
-//   ReadSize  = Average read size in KBytes
-//   Readahead = Readahead size in KBytes
-//   Readextra = Readahead overhead in percent
-//   Real Time = Real Time in seconds
-//   CPU  Time = CPU Time in seconds
-//   Disk Time = Real Time spent in pure raw disk IO
-//   Disk IO   = Raw disk IO speed in MBytes/second
-//   ReadUZRT  = Unzipped MBytes per RT second
-//   ReadUZCP  = Unipped MBytes per CP second
-//   ReadRT    = Zipped MBytes per RT second
-//   ReadCP    = Zipped MBytes per CP second
-//
-//   NOTE1 : The ReadTotal value indicates the effective number of zipped bytes
-//           returned to the application. The physical number of bytes read
-//           from the device (as measured for example with strace) is
-//           ReadTotal +ReadTotal*Readextra/100. Same for ReadSize.
-//
-//   NOTE2 : A consequence of NOTE1, the Disk I/O speed corresponds to the effective
-//           number of bytes returned to the application per second.
-//           The Physical disk speed is DiskIO + DiskIO*ReadExtra/100.
-//
-//////////////////////////////////////////////////////////////////////////
+/** \class TTreePerfStats
 
+TTree I/O performance measurement. see example of use below.
+
+The function FileReadEvent is called from TFile::ReadBuffer.
+For each call the following information is stored in fGraphIO
+ -  x[i]  = Tree entry number
+ -  y[i]  = 1e-6*(file position)
+ -  ey[i] = 1e-9*number of bytes read
+For each call the following information is stored in fGraphTime
+ -  x[i]  = Tree entry number
+ -  y[i]  = Time now
+ -  ey[i] = readtime, eg timenow - start
+The TTreePerfStats object can be saved in a ROOT file in such a way that
+its inspection can be done outside the job that generated it.
+
+Example of use:
+~~~{.cpp}
+{
+  TFile *f = TFile::Open("RelValMinBias-GEN-SIM-RECO.root");
+  T = (TTree*)f->Get("Events");
+  Long64_t nentries = T->GetEntries();
+  T->SetCacheSize(10000000);
+  T->SetCacheEntryRange(0,nentries);
+  T->AddBranchToCache("*");
+//
+  TTreePerfStats *ps= new TTreePerfStats("ioperf",T);
+//
+  for (Int_t i=0;i<nentries;i++) {
+     T->GetEntry(i);
+  }
+  ps->SaveAs("cmsperf.root");
+}
+~~~
+then, in a root interactive session, one can do:
+~~~{.cpp}
+   root > TFile f("cmsperf.root");
+   root > ioperf->Draw();
+   root > ioperf->Print();
+~~~
+The Draw or Print functions print the following information:
+ -  TreeCache = TTree cache size in MBytes
+ -  N leaves  = Number of leaves in the TTree
+ -  ReadTotal = Total number of zipped bytes read
+ -  ReadUnZip = Total number of unzipped bytes read
+ -  ReadCalls = Total number of disk reads
+ -  ReadSize  = Average read size in KBytes
+ -  Readahead = Readahead size in KBytes
+ -  Readextra = Readahead overhead in percent
+ -  Real Time = Real Time in seconds
+ -  CPU  Time = CPU Time in seconds
+ -  Disk Time = Real Time spent in pure raw disk IO
+ -  Disk IO   = Raw disk IO speed in MBytes/second
+ -  ReadUZRT  = Unzipped MBytes per RT second
+ -  ReadUZCP  = Unipped MBytes per CP second
+ -  ReadRT    = Zipped MBytes per RT second
+ -  ReadCP    = Zipped MBytes per CP second
+
+ ### NOTE 1 :
+The ReadTotal value indicates the effective number of zipped bytes
+returned to the application. The physical number of bytes read
+from the device (as measured for example with strace) is
+ReadTotal +ReadTotal*Readextra/100. Same for ReadSize.
+
+ ### NOTE 2 :
+A consequence of NOTE1, the Disk I/O speed corresponds to the effective
+number of bytes returned to the application per second.
+The Physical disk speed is DiskIO + DiskIO*ReadExtra/100.
+*/
 
 #include "TTreePerfStats.h"
 #include "TROOT.h"
@@ -273,8 +273,8 @@ void TTreePerfStats::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Record TTree file read event.
-/// start is the TimeStamp before reading
-/// len is the number of bytes read
+/// -  start is the TimeStamp before reading
+/// -  len is the number of bytes read
 
 void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 {
@@ -297,10 +297,10 @@ void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Record TTree unzip event.
-/// start is the TimeStamp before unzip
-/// pos is where in the file the compressed buffer came from
-/// complen is the length of the compressed buffer
-/// objlen is the length of the de-compressed buffer
+/// -  start is the TimeStamp before unzip
+/// -  pos is where in the file the compressed buffer came from
+/// -  complen is the length of the compressed buffer
+/// -  objlen is the length of the de-compressed buffer
 
 void TTreePerfStats::UnzipEvent(TObject * tree, Long64_t /* pos */, Double_t start, Int_t /* complen */, Int_t /* objlen */)
 {

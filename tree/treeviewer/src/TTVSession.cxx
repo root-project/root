@@ -20,6 +20,10 @@
 
 ClassImp(TTVRecord)
 
+/** \class TTVRecord
+I/O classes for TreeViewer session handling.
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
 /// TTVRecord default constructor
 
@@ -31,6 +35,7 @@ TTVRecord::TTVRecord()
    fUserCode = "";
    fAutoexec = kFALSE;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute user-defined code
 
@@ -43,6 +48,7 @@ void TTVRecord::ExecuteUserCode()
       gInterpreter->ProcessLine(code);
    }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Populate members from treeviewer tv
 
@@ -61,6 +67,7 @@ void TTVRecord::FormFrom(TTreeViewer *tv)
    fScanRedirected = tv->IsScanRedirected();
    fCutEnabled = tv->IsCutEnabled();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Change treeviewer status to this record
 
@@ -84,6 +91,7 @@ void TTVRecord::PlugIn(TTreeViewer *tv)
    else
       item->SetSmallPic(gClient->GetPicture("cut-disable_t.xpm"));
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the TTVRecord in a C++ macro file
 
@@ -120,8 +128,12 @@ void TTVRecord::SaveSource(std::ofstream &out)
 
 ClassImp(TTVSession)
 
+/** \class TTVSession
+I/O classes for TreeViewer session handling.
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Constructor
 
 TTVSession::TTVSession(TTreeViewer *tv)
 {
@@ -131,16 +143,18 @@ TTVSession::TTVSession(TTreeViewer *tv)
    fCurrent = 0;
    fRecords = 0;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-/// destructor
+/// Destructor
 
 TTVSession::~TTVSession()
 {
    fList->Delete();
    delete fList;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-/// add a record
+/// Add a record
 
 TTVRecord *TTVSession::AddRecord(Bool_t fromFile)
 {
@@ -165,8 +179,9 @@ TTVRecord *TTVSession::AddRecord(Bool_t fromFile)
    }
    return newrec;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-/// return record at index i
+/// Return record at index i
 
 TTVRecord *TTVSession::GetRecord(Int_t i)
 {
@@ -187,6 +202,7 @@ TTVRecord *TTVSession::GetRecord(Int_t i)
    fViewer->SetCurrentRecord(fCurrent);
    return (TTVRecord *)fList->UncheckedAt(fCurrent);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set record name
 
@@ -199,8 +215,9 @@ void TTVSession::SetRecordName(const char *name)
    fCurrent = crt;
    fViewer->SetCurrentRecord(fCurrent);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-///--- Remove current record from list
+/// Remove current record from list
 
 void TTVSession::RemoveLastRecord()
 {
@@ -218,6 +235,7 @@ void TTVSession::RemoveLastRecord()
    }
    GetRecord(fCurrent);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Display record rec
 
@@ -228,6 +246,7 @@ void TTVSession::Show(TTVRecord *rec)
    if (rec->HasUserCode() && rec->MustExecuteCode()) rec->ExecuteUserCode();
    fViewer->SetHistogramTitle(rec->GetName());
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the TTVSession in a C++ macro file
 
@@ -244,8 +263,9 @@ void TTVSession::SaveSource(std::ofstream &out)
    out<<"//--- Connect first record"<<std::endl;
    out<<"   tv_session->First();"<<std::endl;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-///--- Updates current record according to new X, Y, Z settings
+/// Updates current record according to new X, Y, Z settings
 
 void TTVSession::UpdateRecord(const char *name)
 {

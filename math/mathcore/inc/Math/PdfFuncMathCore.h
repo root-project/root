@@ -29,6 +29,9 @@ Additional distributions are also provided by the
 
 @defgroup StatFunc Statistical functions
 
+@ingroup  MathCore
+@ingroup  MathMore
+
 */
 
 #ifndef ROOT_Math_PdfFuncMathCore
@@ -40,7 +43,7 @@ namespace Math {
 
 
 
-  /** @defgroup PdfFunc Probability Density Functions (PDF) from MathCore
+  /** @defgroup PdfFunc Probability Density Functions (PDF)
    *   @ingroup StatFunc
    *  Probability density functions of various statistical distributions
    *  (continuous and discrete).

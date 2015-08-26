@@ -52,16 +52,18 @@
 
 /**
    @defgroup SMatrixGroup SMatrix
+   @ingroup  Math
 
-   \ref SMatrix  for high performance vector and matrix computations.
+   \ref SMatrixPage  for high performance vector and matrix computations.
    Classes representing Matrices and Vectors of arbitrary type and dimension and related functions.
    For a detailed description and usage examples see:
    <ul>
-    <li>\ref SMatrix home page
+    <li>\ref SMatrixPage home page
     <li>\ref SVectorDoc
     <li>\ref SMatrixDoc
     <li>\ref MatVecFunctions
    </ul>
+
 
 */
 

@@ -30,164 +30,188 @@ std::map<TString,TFormula*> TLinearFitter::fgFormulaMap;
 
 
 
-//////////////////////////////////////////////////////////////////////////
-//
-// The Linear Fitter - fitting functions that are LINEAR IN PARAMETERS
-//
-// Linear fitter is used to fit a set of data points with a linear
-// combination of specified functions. Note, that "linear" in the name
-// stands only for the model dependency on parameters, the specified
-// functions can be nonlinear.
-// The general form of this kind of model is
-//
-//          y(x) = a[0] + a[1]*f[1](x)+...a[n]*f[n](x)
-//
-// Functions f are fixed functions of x. For example, fitting with a
-// polynomial is linear fitting in this sense.
-//
-//                         The fitting method
-//
-// The fit is performed using the Normal Equations method with Cholesky
-// decomposition.
-//
-//                         Why should it be used?
-//
-// The linear fitter is considerably faster than general non-linear
-// fitters and doesn't require to set the initial values of parameters.
-//
-//                          Using the fitter:
-//
-// 1.Adding the data points:
-//  1.1 To store or not to store the input data?
-//      - There are 2 options in the constructor - to store or not
-//        store the input data. The advantages of storing the data
-//        are that you'll be able to reset the fitting model without
-//        adding all the points again, and that for very large sets
-//        of points the chisquare is calculated more precisely.
-//        The obvious disadvantage is the amount of memory used to
-//        keep all the points.
-//      - Before you start adding the points, you can change the
-//        store/not store option by StoreData() method.
-//  1.2 The data can be added:
-//      - simply point by point - AddPoint() method
-//      - an array of points at once:
-//        If the data is already stored in some arrays, this data
-//        can be assigned to the linear fitter without physically
-//        coping bytes, thanks to the Use() method of
-//        TVector and TMatrix classes - AssignData() method
-//
-// 2.Setting the formula
-//  2.1 The linear formula syntax:
-//      -Additive parts are separated by 2 plus signes "++"
-//       --for example "1 ++ x" - for fitting a straight line
-//      -All standard functions, undrestood by TFormula, can be used
-//       as additive parts
-//       --TMath functions can be used too
-//      -Functions, used as additive parts, shouldn't have any parameters,
-//       even if those parameters are set.
-//       --for example, if normalizing a sum of a gaus(0, 1) and a
-//         gaus(0, 2), don't use the built-in "gaus" of TFormula,
-//         because it has parameters, take TMath::Gaus(x, 0, 1) instead.
-//      -Polynomials can be used like "pol3", .."polN"
-//      -If fitting a more than 3-dimensional formula, variables should
-//       be numbered as follows:
-//       -- x[0], x[1], x[2]... For example, to fit  "1 ++ x[0] ++ x[1] ++ x[2] ++ x[3]*x[3]"
-//  2.2 Setting the formula:
-//    2.2.1 If fitting a 1-2-3-dimensional formula, one can create a
-//          TF123 based on a linear expression and pass this function
-//          to the fitter:
-//          --Example:
-//            TLinearFitter *lf = new TLinearFitter();
-//            TF2 *f2 = new TF2("f2", "x ++ y ++ x*x*y*y", -2, 2, -2, 2);
-//            lf->SetFormula(f2);
-//          --The results of the fit are then stored in the function,
-//            just like when the TH1::Fit or TGraph::Fit is used
-//          --A linear function of this kind is by no means different
-//            from any other function, it can be drawn, evaluated, etc.
-//
-//          --For multidimensional fitting, TFormulas of the form:
-//            x[0]++...++x[n] can be used
-//    2.2.2 There is no need to create the function if you don't want to,
-//          the formula can be set by expression:
-//          --Example:
-//            // 2 is the number of dimensions
-//            TLinearFitter *lf = new TLinearFitter(2);
-//            lf->SetFormula("x ++ y ++ x*x*y*y");
-//
-//    2.2.3 The fastest functions to compute are polynomials and hyperplanes.
-//          --Polynomials are set the usual way: "pol1", "pol2",...
-//          --Hyperplanes are set by expression "hyp3", "hyp4", ...
-//          ---The "hypN" expressions only work when the linear fitter
-//             is used directly, not through TH1::Fit or TGraph::Fit.
-//             To fit a graph or a histogram with a hyperplane, define
-//             the function as "1++x++y".
-//          ---A constant term is assumed for a hyperplane, when using
-//             the "hypN" expression, so "hyp3" is in fact fitting with
-//             "1++x++y++z" function.
-//          --Fitting hyperplanes is much faster than fitting other
-//            expressions so if performance is vital, calculate the
-//            function values beforehand and give them to the fitter
-//            as variables
-//          --Example:
-//            You want to fit "sin(x)|cos(2*x)" very fast. Calculate
-//            sin(x) and cos(2*x) beforehand and store them in array *data.
-//            Then:
-//            TLinearFitter *lf=new TLinearFitter(2, "hyp2");
-//            lf->AssignData(npoint, 2, data, y);
-//
-//  2.3 Resetting the formula
-//    2.3.1 If the input data is stored (or added via AssignData() function),
-//          the fitting formula can be reset without re-adding all the points.
-//          --Example:
-//            TLinearFitter *lf=new TLinearFitter("1++x++x*x");
-//            lf->AssignData(n, 1, x, y, e);
-//            lf->Eval()
-//            //looking at the parameter significance, you see,
-//            // that maybe the fit will improve, if you take out
-//            // the constant term
-//            lf->SetFormula("x++x*x");
-//            lf->Eval();
-//            ...
-//    2.3.2 If the input data is not stored, the fitter will have to be
-//          cleared and the data will have to be added again to try a
-//          different formula.
-//
-// 3.Accessing the fit results
-//  3.1 There are methods in the fitter to access all relevant information:
-//      --GetParameters, GetCovarianceMatrix, etc
-//      --the t-values of parameters and their significance can be reached by
-//        GetParTValue() and GetParSignificance() methods
-//  3.2 If fitting with a pre-defined TF123, the fit results are also
-//      written into this function.
-//
-///////////////////////////////////////////////////////////////////////////
-// 4.Robust fitting - Least Trimmed Squares regression (LTS)
-//   Outliers are atypical(by definition), infrequant observations; data points
-//   which do not appear to follow the characteristic distribution of the rest
-//   of the data. These may reflect genuine properties of the underlying
-//   phenomenon(variable), or be due to measurement errors or anomalies which
-//   shouldn't be modelled. (StatSoft electronic textbook)
-//
-//   Even a single gross outlier can greatly influence the results of least-
-//   squares fitting procedure, and in this case use of robust(resistant) methods
-//   is recommended.
-//
-//   The method implemented here is based on the article and algorithm:
-//   "Computing LTS Regression for Large Data Sets" by
-//   P.J.Rousseeuw and Katrien Van Driessen
-//   The idea of the method is to find the fitting coefficients for a subset
-//   of h observations (out of n) with the smallest sum of squared residuals.
-//   The size of the subset h should lie between (npoints + nparameters +1)/2
-//   and n, and represents the minimal number of good points in the dataset.
-//   The default value is set to (npoints + nparameters +1)/2, but of course
-//   if you are sure that the data contains less outliers it's better to change
-//   h according to your data.
-//
-//   To perform a robust fit, call EvalRobust() function instead of Eval() after
-//   adding the points and setting the fitting function.
-//   Note, that standard errors on parameters are not computed!
-//
-//////////////////////////////////////////////////////////////////////////
+/**
+
+\class TLinearFitter
+
+\ingroup MinuitOld
+
+The Linear Fitter - For fitting functions that are LINEAR IN PARAMETERS
+
+## The Linear Fitter
+
+Linear fitter is used to fit a set of data points with a linear
+combination of specified functions. Note, that "linear" in the name
+stands only for the model dependency on parameters, the specified
+functions can be nonlinear.
+The general form of this kind of model is
+~~~~
+         y(x) = a[0] + a[1]*f[1](x)+...a[n]*f[n](x)
+~~~~
+
+Functions f are fixed functions of x. For example, fitting with a
+polynomial is linear fitting in this sense.
+
+### Introduction 
+
+####   The fitting method
+
+The fit is performed using the Normal Equations method with Cholesky
+decomposition.
+
+####                        Why should it be used?
+
+The linear fitter is considerably faster than general non-linear
+fitters and doesn't require to set the initial values of parameters.
+
+###  Using the fitter:
+
+### 1.Adding the data points:
+
+#### 1.1 To store or not to store the input data?
+     - There are 2 options in the constructor - to store or not
+       store the input data. The advantages of storing the data
+       are that you'll be able to reset the fitting model without
+       adding all the points again, and that for very large sets
+       of points the chisquare is calculated more precisely.
+       The obvious disadvantage is the amount of memory used to
+       keep all the points.
+     - Before you start adding the points, you can change the
+       store/not store option by StoreData() method.
+
+#### 1.2 The data can be added:
+     - simply point by point - AddPoint() method
+     - an array of points at once:
+       If the data is already stored in some arrays, this data
+       can be assigned to the linear fitter without physically
+       coping bytes, thanks to the Use() method of
+       TVector and TMatrix classes - AssignData() method
+
+### 2.Setting the formula
+
+#### 2.1 The linear formula syntax:
+     -Additive parts are separated by 2 plus signes "++"
+      --for example "1 ++ x" - for fitting a straight line
+     -All standard functions, undrestood by TFormula, can be used
+      as additive parts
+      --TMath functions can be used too
+     -Functions, used as additive parts, shouldn't have any parameters,
+      even if those parameters are set.
+      --for example, if normalizing a sum of a gaus(0, 1) and a
+        gaus(0, 2), don't use the built-in "gaus" of TFormula,
+        because it has parameters, take TMath::Gaus(x, 0, 1) instead.
+     -Polynomials can be used like "pol3", .."polN"
+     -If fitting a more than 3-dimensional formula, variables should
+      be numbered as follows:
+      -- x[0], x[1], x[2]... For example, to fit  "1 ++ x[0] ++ x[1] ++ x[2] ++ x[3]*x[3]"
+
+#### 2.2 Setting the formula:
+
+#####   2.2.1 If fitting a 1-2-3-dimensional formula, one can create a
+         TF123 based on a linear expression and pass this function
+         to the fitter:
+         --Example:
+~~~~
+           TLinearFitter *lf = new TLinearFitter();
+           TF2 *f2 = new TF2("f2", "x ++ y ++ x*x*y*y", -2, 2, -2, 2);
+           lf->SetFormula(f2);
+~~~~
+         --The results of the fit are then stored in the function,
+           just like when the TH1::Fit or TGraph::Fit is used
+         --A linear function of this kind is by no means different
+           from any other function, it can be drawn, evaluated, etc.
+
+         --For multidimensional fitting, TFormulas of the form:
+           x[0]++...++x[n] can be used
+#####   2.2.2 There is no need to create the function if you don't want to,
+         the formula can be set by expression:
+         --Example:
+~~~~
+           // 2 is the number of dimensions
+           TLinearFitter *lf = new TLinearFitter(2);
+           lf->SetFormula("x ++ y ++ x*x*y*y");
+~~~~
+
+#####   2.2.3 The fastest functions to compute are polynomials and hyperplanes.
+         --Polynomials are set the usual way: "pol1", "pol2",...
+         --Hyperplanes are set by expression "hyp3", "hyp4", ...
+         ---The "hypN" expressions only work when the linear fitter
+            is used directly, not through TH1::Fit or TGraph::Fit.
+            To fit a graph or a histogram with a hyperplane, define
+            the function as "1++x++y".
+         ---A constant term is assumed for a hyperplane, when using
+            the "hypN" expression, so "hyp3" is in fact fitting with
+            "1++x++y++z" function.
+         --Fitting hyperplanes is much faster than fitting other
+           expressions so if performance is vital, calculate the
+           function values beforehand and give them to the fitter
+           as variables
+         --Example:
+           You want to fit "sin(x)|cos(2*x)" very fast. Calculate
+           sin(x) and cos(2*x) beforehand and store them in array *data.
+           Then:
+           TLinearFitter *lf=new TLinearFitter(2, "hyp2");
+           lf->AssignData(npoint, 2, data, y);
+
+#### 2.3 Resetting the formula
+
+#####   2.3.1 If the input data is stored (or added via AssignData() function),
+         the fitting formula can be reset without re-adding all the points.
+         --Example:
+~~~~
+           TLinearFitter *lf=new TLinearFitter("1++x++x*x");
+           lf->AssignData(n, 1, x, y, e);
+           lf->Eval()
+           //looking at the parameter significance, you see,
+           // that maybe the fit will improve, if you take out
+           // the constant term
+           lf->SetFormula("x++x*x");
+           lf->Eval();
+           ...
+~~~~
+
+#####   2.3.2 If the input data is not stored, the fitter will have to be
+         cleared and the data will have to be added again to try a
+         different formula.
+
+### 3.Accessing the fit results
+
+#### 3.1 There are methods in the fitter to access all relevant information:
+     --GetParameters, GetCovarianceMatrix, etc
+     --the t-values of parameters and their significance can be reached by
+       GetParTValue() and GetParSignificance() methods
+
+#### 3.2 If fitting with a pre-defined TF123, the fit results are also
+     written into this function.
+
+
+### 4.Robust fitting - Least Trimmed Squares regression (LTS)
+  Outliers are atypical(by definition), infrequant observations; data points
+  which do not appear to follow the characteristic distribution of the rest
+  of the data. These may reflect genuine properties of the underlying
+  phenomenon(variable), or be due to measurement errors or anomalies which
+  shouldn't be modelled. (StatSoft electronic textbook)
+
+  Even a single gross outlier can greatly influence the results of least-
+  squares fitting procedure, and in this case use of robust(resistant) methods
+  is recommended.
+
+  The method implemented here is based on the article and algorithm:
+  "Computing LTS Regression for Large Data Sets" by
+  P.J.Rousseeuw and Katrien Van Driessen
+  The idea of the method is to find the fitting coefficients for a subset
+  of h observations (out of n) with the smallest sum of squared residuals.
+  The size of the subset h should lie between (npoints + nparameters +1)/2
+  and n, and represents the minimal number of good points in the dataset.
+  The default value is set to (npoints + nparameters +1)/2, but of course
+  if you are sure that the data contains less outliers it's better to change
+  h according to your data.
+
+  To perform a robust fit, call EvalRobust() function instead of Eval() after
+  adding the points and setting the fitting function.
+  Note, that standard errors on parameters are not computed!
+
+*/
 
 
 

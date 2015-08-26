@@ -17,6 +17,9 @@
 @defgroup Fit Fitting and Parameter Estimation
 
 Classes used for fitting (regression analysis) and estimation of parameter values given a data sample.
+
+@ingroup MathCore
+
 */
 
 // #ifndef ROOT_Fit_DataVectorfwd
