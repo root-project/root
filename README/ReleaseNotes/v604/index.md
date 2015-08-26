@@ -737,29 +737,6 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 
 # Patch Releases
 
-## HEAD of the v6-04-00-patches branch
-
-### Build System
-- Fix generation of PCH with CXX flags with spaces [ROOT-7478]
-- Implemented option 'geocad' with CMake making use of the OpenCASCADE software package.
-- Option 'cxx14' requires GCC > 5.1 
-
-### Core
-- Fix the location of include files in ROOTINCDIR/include instead of ROOTINCDIR [ROOT-7537]
-
-### Geom
-- Fix missing OCC header file for the version [ROOT-7536]
-
-### Tree
-- TTreeReader: fix reading of data members of type `BasicType[42]`
-
-### Interpreter
-- Fix redirection [ROOT-7053]
-- Take the language and target options from the PCH [ROOT-7478] [ROOT-6966]
-- Properly recover from a template instantiation failure when looking up a class in the interpreter [ROOT-7462]
-
-Changes will be part of the future v6.04/04.
-
 ## Release v6.04/02
 
 ### Platform Support
@@ -830,3 +807,28 @@ directory - this behavior is now implement by the default constructor.
 ### Graphics
  - Fix file corruption in `TTeXDump::DrawPolyMarker`.
  - Make sure the line width used to draw `#sqrt` is always >=1.
+
+
+## HEAD of the v6-04-00-patches branch
+
+### Build System
+- Fix generation of PCH with CXX flags with spaces [ROOT-7478]
+- Implemented option 'geocad' with CMake making use of the OpenCASCADE software package.
+- Option 'cxx14' requires GCC > 5.1
+
+### Core
+- Fix the location of include files in ROOTINCDIR/include instead of ROOTINCDIR [ROOT-7537]
+
+### Geom
+- Fix missing OCC header file for the version [ROOT-7536]
+
+### Tree
+- TTreeReader: fix reading of data members of type `BasicType[42]`
+
+### Interpreter
+- Fix redirection [ROOT-7053]
+- Take the language and target options from the PCH [ROOT-7478] [ROOT-6966]
+- Properly recover from a template instantiation failure when looking up a class in the interpreter [ROOT-7462]
+- Do not clear pending instantiations upon unloading; fixes missing symbols due to missing function bodies [ROOT-7586]
+
+Changes will be part of the future v6.04/04.
