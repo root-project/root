@@ -544,6 +544,7 @@ void TCanvas::Init()
    fEventX          = -1;
    fEventY          = -1;
    fContextMenu     = 0;
+   fDrawn           = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
