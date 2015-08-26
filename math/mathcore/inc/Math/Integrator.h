@@ -38,6 +38,7 @@
    @defgroup NumAlgo Numerical Algorithms
    Numerical Algorithm classes from the \ref MathCorePage and \ref MathMorePage libraries.
    @ingroup MathCore
+   @ingroup MathMore
  */
 
 

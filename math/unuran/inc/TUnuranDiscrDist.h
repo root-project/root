@@ -28,7 +28,7 @@
 
 class TF1;
 
-//____________________________________________________________________
+
 /**
    TUnuranDiscrDist class for one dimensional discrete distribution.
    It is used by TUnuran to generate integer random numbers according to this distribution via
@@ -48,8 +48,10 @@ class TF1;
    Some extra information (like distribution mode, cdf function, probability sum, etc..)
    can be set as well otherwise will be estimated internally if required.
 
-
+   \class TUnuranDiscrDist
+   \ingroup Unuran
 */
+
 class TUnuranDiscrDist : public TUnuranBaseDist {
 
 public:

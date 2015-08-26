@@ -42,6 +42,7 @@
    Random number classes based on GSL 
 
    @ingroup Random
+   @ingroup MathMore
 */
 
 

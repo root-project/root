@@ -2,15 +2,15 @@
 
 \defgroup Math Math 
 
-The ROOT Mathematical library.
+The %ROOT Mathematical library.
 
 See the \subpage MathPage "Math" libraries description page.
 
 
-\page MathPage The ROOT Mathematical Libraries 
+\page MathPage The %ROOT Mathematical Libraries 
 
 
-The ROOT Mathematical libraries consist of the following components:
+The %ROOT Mathematical libraries consist of the following components:
 
 - \subpage MathCorePage "MathCore":   a self-consistent minimal set of tools required for the basic numerical computing.
   It provides the major mathematical functions in the namespaces ROOT::Math and TMath,
@@ -23,25 +23,25 @@ The ROOT Mathematical libraries consist of the following components:
 
 - **Minimization and Fitting Libraries** 
  Libraries required for numerical minimization and fitting. The minimization libraries include the numerical methods for solving the fitting problem by finding minimum of multi-dimensional
-  function. The current common interface for minimization is the class ROOT::Math::Minimizer and implemented by derived classes in the minimization and fitting libraries. The fitting in ROOT is
+  function. The current common interface for minimization is the class ROOT::Math::Minimizer and implemented by derived classes in the minimization and fitting libraries. The fitting in %ROOT is
   organized in fitting classes present in MathCore in the (ROOT::Fit namespace) for providing the fitting functionality and the use the minimization libraries via the common interface (ROOT::Math::Minimizer). In detail the minimization libraries, implementing all the new and old minimization interface, include:
 
    -  \ref MinuitOld "Minuit": library providing via a class TMinuit an implementation of the popular MINUIT minimization package. In addition the library contains also an implementation of the linear fitter (class TLinearFitter), for solving linear least square fits.
    - \subpage Minuit2Page "Minuit2": new object-oriented implementation of MINUIT, with the same minimization algorithms (such as Migrad or Simplex). In addition it provides a new implementation of the Fumili algorithm, a specialized method for finding the minimum of a standard least square or likelihood functions. 
    - **Fumili**: library providing the implementation of the original Fumili fitting algorithm (class TFumili).
 
-- **Linear algebra**. Two libraries are contained in ROOT for describing linear algebra matrices and vector classes:
+- **Linear algebra**. Two libraries are contained in %ROOT for describing linear algebra matrices and vector classes:
    
    - Matrix: general matrix package providing matrix classes (TMatrixD and TMatrixF)  and vector classes (TVectorD and TVectorF) and the complete environment to perform linear algebra calculations, like equation solving and eigenvalue decompositions.
    - \subpage SMatrixPage "SMatrix": package optimized for high performances matrix and vector computations of small and fixed size. It is based on expression templates to achieve an high level optimization.
 
 
-- **Physics Vectors**: Classes for describing vectors in 2, 3 and 4 dimensions (relativistic vectors) and their rotation and transformation algorithms. Two package exist in ROOT:
+- **Physics Vectors**: Classes for describing vectors in 2, 3 and 4 dimensions (relativistic vectors) and their rotation and transformation algorithms. Two package exist in %ROOT:
 
    - Physics: library with the TVector3 and TLorentzVector classes.
    - GenVector: new library providing generic class templates for modeling the vectors. See the \subpage "GenVector" page. 
 
-- **Unuran** : Package with universal algorithms for generating non-uniform pseudo-random numbers, from a large classes of continuous or discrete distributions in one or multi-dimensions. 
+- \ref Unuran "UNURAN": Package with universal algorithms for generating non-uniform pseudo-random numbers, from a large classes of continuous or discrete distributions in one or multi-dimensions. 
 
 - **Foam**  Multi-dimensional general purpose Monte Carlo event generator (and integrator). It generates randomly points (vectors) according to an arbitrary probability distribution  in n dimensions.
 

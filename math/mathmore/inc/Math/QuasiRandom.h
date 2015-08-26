@@ -37,6 +37,7 @@
    @defgroup QuasiRandom QuasiRandom number generators and distributions
    Classes for generating QuasiRandom numbers and based on GSL 
    @ingroup Random
+   @ingroup MathMore
 */
 
 

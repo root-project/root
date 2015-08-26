@@ -35,10 +35,12 @@ namespace ROOT {
 
 //_______________________________________________________________________________
 /**
+   \class TUnuranSampler
+   \ingroup Unuran
+
    TUnuranSampler class
    class implementing  the ROOT::Math::DistSampler interface using the UNU.RAN
    package for sampling distributions.
-
 
 */
 

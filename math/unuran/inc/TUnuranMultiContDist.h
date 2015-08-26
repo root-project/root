@@ -28,7 +28,7 @@
 class TF1;
 
 
-//___________________________________________________________________________________________
+
 /**
    TUnuranMultiContDist class describing multi dimensional continuous distributions.
    It is used by TUnuran to generate a set of random numbers according to this distribution via
@@ -43,9 +43,11 @@ class TF1;
    Derivative() method. Some extra information (like distribution mode) can be set using SetMode.
    Some methods require instead of the pdf the log of the pdf.
    This can also be controlled by setting a flag when constructing this class.
+   
+   \ingroup Unuran
 
 */
-/////////////////////////////////////////////////////////////
+
 class TUnuranMultiContDist : public TUnuranBaseDist {
 
 public:

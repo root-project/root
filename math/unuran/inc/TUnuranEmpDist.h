@@ -23,8 +23,11 @@
 
 class TH1;
 
-//_______________________________________________________________________________
+
 /**
+   \class TUnuranEmpDist
+   \ingroup Unuran
+
    TUnuranEmpDist class for describing empiral  distributions. It is used by TUnuran
    to generate double random number according to this distribution via TUnuran::Sample() or
    TUnuran::Sample(double *) in case of multi-dimensional empirical distributions.
@@ -43,7 +46,7 @@ class TH1;
    a large amount of data.
 
 */
-///////////////////////////////////////////////////////////////////////
+
 
 class TUnuranEmpDist : public TUnuranBaseDist {
 

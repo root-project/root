@@ -46,7 +46,19 @@
 #define M_PI_4     0.78539816339744830961566084582      // Pi/4
 #endif
 
+/**
+   \namespace ROOT
+   Namespace for new ROOT classes and functions 
+ */
+
 namespace ROOT {
+
+   /**
+   \namespace Math
+   Namespace for new Math classes and functions.
+   See the \ref Math "Math Libraries" page for a detailed description. 
+ */
+
 
    namespace Math {
 

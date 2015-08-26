@@ -28,7 +28,9 @@ Additional distributions are also provided by the
 
 
 @defgroup StatFunc Statistical functions
+
 @ingroup  MathCore
+@ingroup  MathMore
 
 */
 
