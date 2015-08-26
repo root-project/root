@@ -84,6 +84,7 @@ protected:
    Bool_t        fUpdating;        //!True when Updating the canvas
    Bool_t        fRetained;        //Retain structure flag
    Bool_t        fUseGL;           //!True when rendering is with GL
+   Bool_t        fDrawn;           //!Set to True when drawing
    //
    TVirtualPadPainter *fPainter;   //!Canvas (pad) painter.
 
@@ -190,6 +191,7 @@ public:
    Bool_t            HasMenuBar() const { return TestBit(kMenuBar); }
    void              Iconify() { fCanvasImp->Iconify(); }
    Bool_t            IsBatch() const { return fBatch; }
+   Bool_t            IsDrawn() { return fDrawn; }
    Bool_t            IsFolder() const;
    Bool_t            IsGrayscale();
    Bool_t            IsRetained() const { return fRetained; }
@@ -206,6 +208,7 @@ public:
    virtual void      Cleared(TVirtualPad *pad);                                        // *SIGNAL*
    virtual void      Closed();                                                         // *SIGNAL*
    void              RaiseWindow() { fCanvasImp->RaiseWindow(); }
+   void              ResetDrawn() { fDrawn=kFALSE; }
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1);
    void              SaveSource(const char *filename="", Option_t *option="");

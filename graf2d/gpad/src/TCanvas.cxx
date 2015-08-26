@@ -818,6 +818,8 @@ void TCanvas::Draw(Option_t *)
    if (gApplication)
       gApplication->InitializeGraphics();
 
+   fDrawn = kTRUE;
+
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(GetName());
    if (old == this) {
       Paint();
