@@ -122,9 +122,9 @@ int main(int argc, char *argv[])
          if (gLineString.BeginsWith("class"))    gInClassDef = kTRUE;
          if (gLineString.Index("ClassDef") >= 0) gInClassDef = kFALSE;
 
-         if (gInClassDef && gLineString.Index("//") >= 0) {
-            gLineString.ReplaceAll("//","///<");
-         }
+//         if (gInClassDef && gLineString.Index("//") >= 0) {
+//            gLineString.ReplaceAll("//","///<");
+//         }
 
          printf("%s",gLineString.Data());
       }
