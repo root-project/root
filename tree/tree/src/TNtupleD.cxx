@@ -26,13 +26,14 @@ A simple TTree restricted to a list of double variables only.
 Each variable goes to a separate branch.
 
 A Ntuple is created via
-
+~~~ {.cpp}
     TNtupleD(name,title,varlist,bufsize)
-
+~~~
 It is filled via:
-
+~~~ {.cpp}
     TNtupleD::Fill(*x)  or
     TNtupleD::Fill(v1,v2,v3.....)
+~~~
 */
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -62,12 +62,12 @@ End_Macro
 
 Use option __entrylist__ to write the results of TTree::Draw and TChain::Draw into
 an entry list. Example:
-
+~~~ {.cpp}
      tree->Draw(">>elist", "x<0 && y>0", "entrylist");
      TEntryList *elist = (TEntryList*)gDirectory->Get("elist");
-
+~~~
 ## Example of Loop on TEntryList with a TChain
-
+~~~ {.cpp}
      void loopChain() {
         TFile *fe = TFile::Open("myelist.root");
         TEntryList *myelist = (TEntryList*)fe->Get("myelist");
@@ -91,17 +91,17 @@ an entry list. Example:
            ...
         }
      }
-
+~~~
 When using the TEntryList interface directly, you can get the 'tree number' and entry in
 the current tree (i.e. value similar to the return value of LoadTree) from calling
 TEntryList::GetEntryAndTree:
-
+~~~ {.cpp}
      Long64_t treeEntry = myelist->GetEntryAndTree(el,treenum);
-
+~~~
 to obtain the entry number within the chain you need to add to it the value of
 `treeEntry+ch->GetTreeOffset()[treenum]`
 such that the loop in the previous example can also be written as:
-
+~~~ {.cpp}
      for (Long64_t el = 0; el < listEntries; el++) {
         Long64_t treeEntry = myelist->GetEntryAndTree(el,treenum);
         Long64_t chainEntry = treeEntry+ch->GetTreeOffset()[treenum];
@@ -110,7 +110,7 @@ such that the loop in the previous example can also be written as:
         ch->LoadTree(chainEntry); // this also returns treeEntry
         needed_branch->GetEntry(treeEntry);
      }
-
+~~~
 ## TSelectors
 
 To fill an TEntryList from a TSelector correctly, one must add the TEntryList object

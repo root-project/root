@@ -4314,11 +4314,11 @@ void TBranchElement::ResetDeleteObject()
 /// a pointer to the branch object with GetObject().
 ///
 /// Example:
-///
+/// ~~~ {.cpp}
 ///     branch->SetAddress(0);
 ///     Event* event = branch->GetObject();
 ///     ... Do some work.
-///
+/// ~~~
 /// If addr is not zero, but the pointer addr points at is
 /// zero, then we allocate a branch object and set the passed
 /// pointer to point at the allocated object.  The caller
@@ -4326,33 +4326,33 @@ void TBranchElement::ResetDeleteObject()
 /// it when it is no longer needed.
 ///
 /// Example:
-///
+/// ~~~ {.cpp}
 ///     Event* event = 0;
 ///     branch->SetAddress(&event);
 ///     ... Do some work.
 ///     delete event;
 ///     event = 0;
-///
+/// ~~~
 /// If addr is not zero and the pointer addr points at is
 /// also not zero, then the caller has allocated a branch
 /// object and is asking us to use it.  The caller owns it
 /// and must delete it when it is no longer needed.
 ///
 /// Example:
-///
+/// ~~~ {.cpp}
 ///     Event* event = new Event();
 ///     branch->SetAddress(&event);
 ///     ... Do some work.
 ///     delete event;
 ///     event = 0;
-///
+/// ~~~
 /// These rules affect users of TTree::Branch(),
 /// TTree::SetBranchAddress(), and TChain::SetBranchAddress()
 /// as well because those routines call this one.
 ///
 /// An example of a tree with branches with objects allocated
 /// and owned by us:
-///
+/// ~~~ {.cpp}
 ///     TFile* f1 = new TFile("myfile_original.root");
 ///     TTree* t1 = (TTree*) f->Get("MyTree");
 ///     TFile* f2 = new TFile("myfile_copy.root", "recreate");
@@ -4366,10 +4366,10 @@ void TBranchElement::ResetDeleteObject()
 ///     f2 = 0;
 ///     delete f1;
 ///     f1 = 0;
-///
+/// ~~~
 /// An example of a branch with an object allocated by us,
 /// but owned by the caller:
-///
+/// ~~~ {.cpp}
 ///     TFile* f = new TFile("myfile.root", "recreate");
 ///     TTree* t = new TTree("t", "A test tree.")
 ///     Event* event = 0;
@@ -4383,14 +4383,14 @@ void TBranchElement::ResetDeleteObject()
 ///     event = 0;
 ///     delete f;
 ///     f = 0;
-///
+/// ~~~
 /// Notice that the only difference between this example
 /// and the following example is that the event pointer
 /// is zero when the branch is created.
 ///
 /// An example of a branch with an object allocated and
 /// owned by the caller:
-///
+/// ~~~ {.cpp}
 ///     TFile* f = new TFile("myfile.root", "recreate");
 ///     TTree* t = new TTree("t", "A test tree.")
 ///     Event* event = new Event();
@@ -4404,7 +4404,7 @@ void TBranchElement::ResetDeleteObject()
 ///     event = 0;
 ///     delete f;
 ///     f = 0;
-///
+/// ~~~
 /// If AutoDelete is on (see TBranch::SetAutoDelete),
 /// the top level objet will be deleted and recreate
 /// each time an entry is read, whether or not the

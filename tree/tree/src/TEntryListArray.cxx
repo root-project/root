@@ -18,15 +18,15 @@ subentries (sublists) for when the user has a TTree with containers (vectors, ar
 ## Usage with TTree::Draw to select entries and subentries
 
 ###  To fill a list elist
-
+~~~ {.cpp}
      tree->Draw(">> elist", "x > 0", "entrylistarray");`
-
+~~~
 ### To use a list to select entries and subentries
-
+~~~ {.cpp}
      tree->SetEntryList(elist);
      tree->Draw("y");
      tree->Draw("z");
-
+~~~
 Its main purpose is to improve the performance of a code that needs to apply
 complex cuts on TTree::Draw multiple times. After the first call above to
 TTree::Draw, a TEntryListArray is created and filled with the entries and the

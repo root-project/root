@@ -16,9 +16,9 @@ existing TTree T, any variable from TF can be referenced in a query
 to T.
 
 To add a TFriendElement to an existing TTree T, do:
-
+~~~ {.cpp}
     T.AddFriend("friendTreename","friendTreeFile");
-
+~~~
 See TTree::AddFriend for more information.
 */
 

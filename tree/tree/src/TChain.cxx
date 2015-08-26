@@ -101,19 +101,19 @@ TChain::TChain()
 /// Use TChain::Add to add a new element to this chain.
 ///
 /// In case the Tree is in a subdirectory, do, eg:
-///
+/// ~~~ {.cpp}
 ///     TChain ch("subdir/treename");
-///
+/// ~~~
 /// Example:
 ///  Suppose we have 3 files f1.root, f2.root and f3.root. Each file
 ///  contains a TTree object named "T".
-///
+/// ~~~ {.cpp}
 ///     TChain ch("T");  creates a chain to process a Tree called "T"
 ///     ch.Add("f1.root");
 ///     ch.Add("f2.root");
 ///     ch.Add("f3.root");
 ///     ch.Draw("x");
-///
+/// ~~~
 /// The Draw function above will process the variable "x" in Tree "T"
 /// reading sequentially the 3 files in the chain ch.
 ///
@@ -122,7 +122,7 @@ TChain::TChain()
 /// Each TChainElement has a name equal to the tree name of this TChain
 /// and a title equal to the file name. So, to loop over the
 /// TFiles that have been added to this chain:
-///
+/// ~~~ {.cpp}
 ///     TObjArray *fileElements=chain->GetListOfFiles();
 ///     TIter next(fileElements);
 ///     TChainElement *chEl=0;
@@ -130,6 +130,7 @@ TChain::TChain()
 ///        TFile f(chEl->GetTitle());
 ///        ... do something with f ...
 ///     }
+/// ~~~
 
 TChain::TChain(const char* name, const char* title)
 :TTree(name, title)
@@ -252,20 +253,20 @@ Int_t TChain::Add(TChain* chain)
 /// Add a new file to this chain.
 ///
 /// Argument name may have either of two formats. The first:
-///
+/// ~~~ {.cpp}
 ///     [//machine]/path/file_name.root[/tree_name]
-///
+/// ~~~
 /// If tree_name is missing the chain name will be assumed.
 /// Wildcard treatment is triggered by the any of the special characters []*?
 /// which may be used in the file name, eg. specifying "xxx*.root" adds
 /// all files starting with xxx in the current file system directory.
 ///
 /// Alternatively name may have the format of a url, eg.
-///
+/// ~~~ {.cpp}
 ///         root://machine/path/file_name.root
 ///     or  root://machine/path/file_name.root/tree_name
 ///     or  root://machine/path/file_name.root/tree_name?query
-///
+/// ~~~
 /// where "query" is to be interpreted by the remote server. Wildcards may be
 /// supported in urls, depending on the protocol plugin and the remote server.
 /// http or https urls can contain a query identifier without tree_name, but
@@ -301,7 +302,7 @@ Int_t TChain::Add(TChain* chain)
 ///    Each TChainElement has a name equal to the tree name of this TChain
 ///    and a title equal to the file name. So, to loop over the
 ///    TFiles that have been added to this chain:
-///
+/// ~~~ {.cpp}
 ///        TObjArray *fileElements=chain->GetListOfFiles();
 ///        TIter next(fileElements);
 ///        TChainElement *chEl=0;
@@ -309,7 +310,7 @@ Int_t TChain::Add(TChain* chain)
 ///           TFile f(chEl->GetTitle());
 ///           ... do something with f ...
 ///        }
-///
+/// ~~~
 /// Return value:
 ///
 /// - If nentries>0 (including the default of kBigNumber) and no
@@ -385,9 +386,9 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
 /// where the tree name can be specified in the url fragment.
 ///
 /// eg.
-///
+/// ~~~ {.cpp}
 ///     root://machine/path/file_name.root?query#tree_name
-///
+/// ~~~
 /// If tree_name is given as a part of the file name it is used to
 /// as the name of the tree to load from the file. Otherwise if tname
 /// argument is specified the chain will load the tree named tname from
@@ -420,7 +421,7 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
 ///    Each TChainElement has a name equal to the tree name of this TChain
 ///    and a title equal to the file name. So, to loop over the
 ///    TFiles that have been added to this chain:
-///
+/// ~~~ {.cpp}
 ///         TObjArray *fileElements=chain->GetListOfFiles();
 ///         TIter next(fileElements);
 ///         TChainElement *chEl=0;
@@ -428,7 +429,7 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
 ///            TFile f(chEl->GetTitle());
 ///            ... do something with f ...
 ///         }
-///
+/// ~~~
 /// The function returns 1 if the file is successfully connected, 0 otherwise.
 
 Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, const char* tname /* = "" */)
@@ -578,18 +579,18 @@ Int_t TChain::AddFileInfoList(TCollection* filelist, Long64_t nfiles /* = kBigNu
 /// You can add a friend to a chain with the TChain::AddFriend method, and you
 /// can retrieve the list of friends with TChain::GetListOfFriends.
 /// This example has four chains each has 20 ROOT trees from 20 ROOT files.
-///
+/// ~~~ {.cpp}
 ///     TChain ch("t"); // a chain with 20 trees from 20 files
 ///     TChain ch1("t1");
 ///     TChain ch2("t2");
 ///     TChain ch3("t3");
-///
+/// ~~~
 /// Now we can add the friends to the first chain.
-///
+/// ~~~ {.cpp}
 ///     ch.AddFriend("t1")
 ///     ch.AddFriend("t2")
 ///     ch.AddFriend("t3")
-///
+/// ~~~
 /// \image html tchain_friend.png
 ///
 ///
@@ -599,16 +600,16 @@ Int_t TChain::AddFileInfoList(TCollection* filelist, Long64_t nfiles /* = kBigNu
 /// We can use the TChain::Draw method as if the values in the friends were
 /// in the original chain.
 /// To specify the chain to use in the Draw method, use the syntax:
-///
+/// ~~~ {.cpp}
 ///     <chainname>.<branchname>.<varname>
-///
+/// ~~~
 /// If the variable name is enough to uniquely identify the variable, you can
 /// leave out the chain and/or branch name.
 /// For example, this generates a 3-d scatter plot of variable "var" in the
 /// TChain ch versus variable v1 in TChain t1 versus variable v2 in TChain t2.
-///
+/// ~~~ {.cpp}
 ///     ch.Draw("var:t1.v1:t2.v2");
-///
+/// ~~~
 /// When a TChain::Draw is executed, an automatic call to TTree::AddFriend
 /// connects the trees in the chain. When a chain is deleted, its friend
 /// elements are also deleted.
@@ -1199,8 +1200,9 @@ Double_t TChain::GetWeight() const
 /// when necessary.
 ///
 /// This is to support the syntax:
-///
+/// ~~~ {.cpp}
 ///     TTree* clone = chain->GetTree()->CloneTree(0);
+/// ~~~
 
 void TChain::InvalidateCurrentTree()
 {
@@ -1770,16 +1772,17 @@ void TChain::ls(Option_t* option) const
 /// this directory is NOT created by this routine.
 ///
 /// So in a case where we have:
-///
+/// ~~~ {.cpp}
 ///     TChain ch("mydir/mytree");
 ///     ch.Merge("newfile.root");
-///
+/// ~~~
 /// The resulting file will have not subdirectory. To recreate
 /// the directory structure do:
-///
+/// ~~~ {.cpp}
 ///     TFile* file = TFile::Open("newfile.root", "RECREATE");
 ///     file->mkdir("mydir")->cd();
 ///     ch.Merge(file);
+/// ~~~
 
 Long64_t TChain::Merge(const char* name, Option_t* option)
 {
@@ -1823,28 +1826,28 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 ///
 /// Example using the file generated in $ROOTSYS/test/Event
 /// merge two copies of Event.root
-///
+/// ~~~ {.cpp}
 ///     gSystem.Load("libEvent");
 ///     TChain ch("T");
 ///     ch.Add("Event1.root");
 ///     ch.Add("Event2.root");
 ///     ch.Merge("all.root");
-///
+/// ~~~
 /// If the chain is expecting the input tree inside a directory,
 /// this directory is NOT created by this routine.
 ///
 /// So if you do:
-///
+/// ~~~ {.cpp}
 ///     TChain ch("mydir/mytree");
 ///     ch.Merge("newfile.root");
-///
+/// ~~~
 /// The resulting file will not have subdirectories.  In order to
 /// preserve the directory structure do the following instead:
-///
+/// ~~~ {.cpp}
 ///     TFile* file = TFile::Open("newfile.root", "RECREATE");
 ///     file->mkdir("mydir")->cd();
 ///     ch.Merge(file);
-///
+/// ~~~
 /// If 'option' contains the word 'fast' the merge will be done without
 /// unzipping or unstreaming the baskets (i.e., a direct copy of the raw
 /// bytes on disk).
@@ -1853,11 +1856,11 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 /// sorting order for the baskets in the output file.
 ///
 /// There is currently 3 supported sorting order:
-///
+/// ~~~ {.cpp}
 ///     SortBasketsByOffset (the default)
 ///     SortBasketsByBranch
 ///     SortBasketsByEntry
-///
+/// ~~~
 /// When using SortBasketsByOffset the baskets are written in
 /// the output file in the same order as in the original file
 /// (i.e. the basket are sorted on their offset in the original
@@ -1901,10 +1904,11 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 ///
 /// The function returns the total number of files produced.
 /// To check that all files have been merged use something like:
-///
+/// ~~~ {.cpp}
 ///     if (newchain->GetEntries()!=oldchain->GetEntries()) {
 ///        ... not all the file have been copied ...
 ///     }
+/// ~~~
 
 Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 {
@@ -2013,11 +2017,11 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 /// subsequently treated for wildcards or not, since the question mark is
 /// both the url query identifier and a wildcard. Wildcard matching is not
 /// done in this method itself.
-///
+/// ~~~ {.cpp}
 ///     /a/path/file.root[/treename]
 ///     xxx://a/path/file.root[/treename][?query]
 ///     xxx://a/path/file.root[?query[#treename]]
-///
+/// ~~~
 /// \param[in] name        is the original name
 /// \param[in] wildcards   indicates if the resulting filename will be treated for
 ///                        wildcards. For backwards compatibility, with most protocols
@@ -2763,14 +2767,14 @@ void TChain::SetProof(Bool_t on, Bool_t refresh, Bool_t gettreeheader)
 /// The weight is used by TTree::Draw to automatically weight each
 /// selected entry in the resulting histogram.
 /// For example the equivalent of
-///
+/// ~~~ {.cpp}
 ///     chain.Draw("x","w")
-///
+/// ~~~
 /// is
-///
+/// ~~~ {.cpp}
 ///     chain.SetWeight(w,"global");
 ///     chain.Draw("x");
-///
+/// ~~~
 /// By default the weight used will be the weight
 /// of each Tree in the TChain. However, one can force the individual
 /// weights to be ignored by specifying the option "global".

@@ -593,12 +593,15 @@ void* TTreeCacheUnzip::UnzipLoop(void *arg)
 /// That must be the pointer tho the header part not the object by itself and
 /// must contain data of at least maxbytes
 /// Returns nread;
+///
 /// In output arguments:
-///    nbytes : number of bytes in record
+///
+/// -  nbytes : number of bytes in record
 ///             if negative, this is a deleted record
 ///             if 0, cannot read record, wrong value of argument first
-///    objlen : uncompressed object size
-///    keylen : length of logical record header
+/// -  objlen : uncompressed object size
+/// -  keylen : length of logical record header
+///
 /// Note that the arguments objlen and keylen are returned only
 /// if maxbytes >=16
 /// Note: This was adapted from TFile... so some things dont apply
@@ -913,7 +916,6 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 
 ////////////////////////////////////////////////////////////////////////////////
 /// static function: Sets the unzip relatibe buffer size
-/// FABRIZIO: PLEASE DOCUMENT and also in TTree::Set...
 
 void TTreeCacheUnzip::SetUnzipRelBufferSize(Float_t relbufferSize)
 {
@@ -932,7 +934,7 @@ void TTreeCacheUnzip::SetUnzipBufferSize(Long64_t bufferSize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// UNzips a ROOT specific buffer... by reading the header at the beginning.
+/// Unzips a ROOT specific buffer... by reading the header at the beginning.
 /// returns the size of the inflated buffer or -1 if error
 /// Note!! : If *dest == 0 we will allocate the buffer and it will be the
 /// responsability of the caller to free it... it is useful for example
