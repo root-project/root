@@ -5,6 +5,7 @@ import time
 import tempfile
 import itertools
 import ctypes
+import re
 from contextlib import contextmanager
 from IPython import get_ipython
 from IPython.display import HTML
@@ -100,6 +101,23 @@ def _setIgnoreLevel(level):
     ROOT.gErrorIgnoreLevel = level
     yield
     ROOT.gErrorIgnoreLevel = originalLevel
+
+def commentRemover( text ):
+   def blotOutNonNewlines( strIn ) :  # Return a string containing only the newline chars contained in strIn
+      return "" + ("\n" * strIn.count('\n'))
+
+   def replacer( match ) :
+      s = match.group(0)
+      if s.startswith('/'):  # Matched string is //...EOL or /*...*/  ==> Blot out all non-newline chars
+         return blotOutNonNewlines(s)
+      else:                  # Matched string is '...' or "..."  ==> Keep unchanged
+         return s
+
+   pattern = re.compile(\
+        r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+        re.DOTALL | re.MULTILINE)
+
+   return re.sub(pattern, replacer, text)
 
 class StreamCapture(object):
     def __init__(self, stream, ip=get_ipython()):
@@ -271,10 +289,30 @@ class CanvasCapture(object):
         self.shell.events.unregister('pre_execute', self._pre_execute)
         self.shell.events.unregister('post_execute', self._post_execute)
 
+class CaptureDrawnCanvases(object):
+    '''
+    Capture the canvas which is drawn to display it.
+    '''
+    def __init__(self, ip=get_ipython()):
+        self.shell = ip
+
+    def _pre_execute(self):
+        pass
+
+    def _post_execute(self):
+        for can in ROOT.gROOT.GetListOfCanvases():
+            if can.IsDrawn():
+               can.Draw()
+               can.ResetDrawn()
+
+    def register(self):
+        self.shell.events.register('pre_execute', self._pre_execute)
+        self.shell.events.register('post_execute', self._post_execute)
+
 
 captures = [StreamCapture(sys.stderr),
-            StreamCapture(sys.stdout)]
-            #CanvasCapture()]
+            StreamCapture(sys.stdout),
+            CaptureDrawnCanvases()]
 
 def toCpp():
     '''
@@ -392,9 +430,11 @@ def setStyle():
 
 # Here functions are defined to process C++ code
 def processCppCodeImpl(cell):
+    cell = commentRemover(cell)
     ROOT.gInterpreter.ProcessLine(cell)
 
 def declareCppCodeImpl(cell):
+    cell = commentRemover(cell)
     ROOT.gInterpreter.Declare(cell)
 
 def processCppCode(cell):

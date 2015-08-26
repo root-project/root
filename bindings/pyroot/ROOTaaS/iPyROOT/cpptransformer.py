@@ -1,5 +1,3 @@
-import re
-
 from IPython.core.inputtransformer import InputTransformer
 from IPython import get_ipython
 
@@ -9,22 +7,7 @@ import cppcompleter
 from IPython.core import display
 
 
-def commentRemover( text ):
-   def blotOutNonNewlines( strIn ) :  # Return a string containing only the newline chars contained in strIn
-      return "" + ("\n" * strIn.count('\n'))
 
-   def replacer( match ) :
-      s = match.group(0)
-      if s.startswith('/'):  # Matched string is //...EOL or /*...*/  ==> Blot out all non-newline chars
-         return blotOutNonNewlines(s)
-      else:                  # Matched string is '...' or "..."  ==> Keep unchanged
-         return s
-
-   pattern = re.compile(\
-        r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-        re.DOTALL | re.MULTILINE)
-
-   return re.sub(pattern, replacer, text)
 
 class CppTransformer(InputTransformer):
 
@@ -52,9 +35,7 @@ class CppTransformer(InputTransformer):
                 utils.declareCppCode(self.cell)
                 self.mustDeclare = False
             else:
-                cell = self.cell
-                code = commentRemover(self.cell)
-                utils.processCppCode(code)
+                utils.processCppCode(self.cell)
             self.cell = ""
         if self.mustSwitchToPython:
             ip = get_ipython()
