@@ -1267,7 +1267,7 @@ namespace cling {
   }
 
   bool TransactionUnloader::UnloadDecl(Decl* D) {
-    DeclUnloader DeclU(m_Sema, m_CodeGen, 0);
+    DeclUnloader DeclU(m_Sema, m_CodeGen, m_EEngine, 0);
     return DeclU.UnloadDecl(D);
   }
 } // end namespace cling
