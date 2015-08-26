@@ -36,7 +36,7 @@ cells[cells.length-1].cm_config.mode = '{mimeType}';
 _jsMagicHighlight = "IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};"
 
 
-_jsNotDrawableClassesPatterns = ["TGraph{2,3}D","TH3*","TGraphPolar","TProf*","TEve*","TF{2,3}","TGeo*","TPolyLine3D"]
+_jsNotDrawableClassesPatterns = ["TGraph[23]D","TH3*","TGraphPolar","TProf*","TEve*","TF[23]","TGeo*","TPolyLine3D"]
 
 
 _jsROOTSourceDir = "https://root.cern.ch/js/dev/"
@@ -262,9 +262,9 @@ class CanvasDrawer(object):
         # to be optimised
         if not _enableJSVis: return False
         primitivesTypesNames = self._getListOfPrimitivesNamesAndTypes()
-        for unsupportedPatterns in _jsNotDrawableClassesPatterns:
+        for unsupportedPattern in _jsNotDrawableClassesPatterns:
             for primitiveTypeName in primitivesTypesNames:
-                if fnmatch.fnmatch(primitiveTypeName,unsupportedPatterns):
+                if fnmatch.fnmatch(primitiveTypeName,unsupportedPattern):
                     print >> sys.stderr, "The canvas contains an object of a type jsROOT cannot currently handle (%s). Falling back to a static png." %primitiveTypeName
                     return False
         return True
