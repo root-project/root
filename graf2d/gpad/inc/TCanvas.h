@@ -84,7 +84,7 @@ protected:
    Bool_t        fUpdating;        //!True when Updating the canvas
    Bool_t        fRetained;        //Retain structure flag
    Bool_t        fUseGL;           //!True when rendering is with GL
-   Bool_t        fDrawn;           //!Set to True when drawing
+   Bool_t        fDrawn;           //!Set to True when the Draw method is called
    //
    TVirtualPadPainter *fPainter;   //!Canvas (pad) painter.
 
