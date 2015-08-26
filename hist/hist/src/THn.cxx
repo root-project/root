@@ -122,6 +122,7 @@ namespace {
 
 
 /** \class THn
+    \ingroup Hist
 Multidimensional histogram.
 
 Use a THn if you really, really have to store more than three dimensions,

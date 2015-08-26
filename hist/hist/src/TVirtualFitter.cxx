@@ -10,9 +10,10 @@
  *************************************************************************/
 
 
-//______________________________________________________________________________
-//
-//     Abstract Base Class for Fitting
+/** \class TVirtualFitter
+    \ingroup Hist
+  Abstract Base Class for Fitting
+*/
 
 #include "TROOT.h"
 #include "TVirtualFitter.h"

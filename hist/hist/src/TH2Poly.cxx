@@ -28,7 +28,8 @@
 
 ClassImp(TH2Poly)
 
-/** \class TH2Poly
+/** \class TH2Poly 
+    \ingroup Hist
 2D Histogram with Polygonal Bins
 
 <h3>Overview</h3>
@@ -1240,6 +1241,11 @@ void TH2Poly::SetFloat(Bool_t flag)
 {
    fFloat = flag;
 }
+
+
+/** \class TH2PolyBin
+Helper class to represent a bin in the TH2Poly histogram
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

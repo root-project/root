@@ -9,14 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSpline                                                              //
-//                                                                      //
-// Base class for spline implementation containing the Draw/Paint       //
-// methods                                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSpline
+    \ingroup Hist
+ Base class for spline implementation containing the Draw/Paint methods                                                              //
+*/
 
 #include "TROOT.h"
 #include "TSpline.h"

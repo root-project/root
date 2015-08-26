@@ -490,6 +490,8 @@ void THnSparseArrayChunk::Sumw2()
 
 
 /** \class THnSparse
+    \ingroup Hist
+
 Efficient multidimensional histogram.
 
 Use a THnSparse instead of TH1 / TH2 / TH3 / array for histogramming when

@@ -32,6 +32,7 @@
 
 
 /** \class THnBase
+    \ingroup Hist
 Multidimensional histogram base.
 Defines common functionality and interfaces for THn, THnSparse.
 */
@@ -1391,12 +1392,11 @@ void THnBase::Browse(TBrowser *b)
 
 
 
-//______________________________________________________________________________
-//
-//
-//    Iterator over THnBase bins; internal implementation.
-//
-////////////////////////////////////////////////////////////////////////////////
+
+/** \class ROOT::THnBaseBinIter
+  Iterator over THnBase bins (internal implementation).
+*/
+
 /// Destruct a bin iterator.
 
 ROOT::THnBaseBinIter::~THnBaseBinIter() {
@@ -1404,12 +1404,10 @@ ROOT::THnBaseBinIter::~THnBaseBinIter() {
 }
 
 
-//______________________________________________________________________________
-//
-//
-//    Iterator over THnBase bins
-//
-////////////////////////////////////////////////////////////////////////////////
+
+/** \class THnIter
+   Iterator over THnBase bins
+*/
 
 ClassImp(THnIter);
 
@@ -1419,13 +1417,10 @@ THnIter::~THnIter() {
 }
 
 
+/** \class ROOT::THnBaseBrowsable
+   TBrowser helper for THnBase.
+*/
 
-
-//______________________________________________________________________________
-//
-// TBrowser helper for THnBase.
-//
-////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(ROOT::THnBaseBrowsable);
 
