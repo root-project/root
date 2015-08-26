@@ -24,20 +24,17 @@
 
 ClassImp(TGTreeTable)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTreeTable                                                          //
-//                                                                      //
-// TGTreeTable is a TGTable that owns it's own interface, it            //
-// can be used to view a TTree. If an expression is given to the        //
-// constuctor, it will be used to define the columns. A selection can   //
-// also be given. This selection is applied to the TTree as a           //
-// TEntryList. See the documentation of TGTable for more information    //
-//                                                                      //
-// The interface is accesible after the creation through the            //
-// GetInterface() method.                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGTreeTable
+
+TGTreeTable is a TGTable that owns it's own interface.
+It can be used to view a TTree. If an expression is given to the
+constructor, it will be used to define the columns. A selection can
+also be given. This selection is applied to the TTree as a
+TEntryList. See the documentation of TGTable for more information
+
+The interface is accesible after the creation through the
+GetInterface() method.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGTreeTable constructor.

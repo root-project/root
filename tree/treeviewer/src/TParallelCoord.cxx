@@ -40,39 +40,68 @@
 
 ClassImp(TParallelCoord)
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class TParallelCoord
+Parallel Coordinates class.
 
-/* Begin_Html
-<center><h2>Parallel Coordinates class</h2></center>
-<p>
-The multidimensional system of Parallel coordinates is a common way of studying high-dimensional geometry and visualizing multivariate problems. It has first been proposed by A. Inselberg in 1981.
-<p>
-To show a set of points in an n-dimensional space, a backdrop is drawn consisting of n parallel lines. A point in n-dimensional space is represented as a polyline with vertices on the parallel axes; the position of the vertex on the i-th axis corresponds to the i-th coordinate of the point.
-<p>
-This tool comes with a rather large gui in the editor. It is necessary to use this editor in order to explore a data set, as explained below.
-<h4>Reduce cluttering:</h4>
-<p>
-The main issue for parallel coordinates is the very high cluttering of the output when dealing with large data set. Two techniques have been implemented to bypass that so far:
-<ul>
-<li>Draw doted lines instead of plain lines with an adjustable dots spacing. A slider to adjust the dots spacing is available in the editor.</li>
-<li>Sort the entries to display with  a "weight cut". On each axis is drawn a histogram describing the distribution of the data on the corresponding variable. The "weight" of an entry is the sum of the bin content of each bin the entry is going through. An entry going through the histograms peaks will have a big weight wether an entry going randomly through the histograms will have a rather small weight. Setting a cut on this weight allows to draw only the most representative entries. A slider set the cut is also available in the gui.</li>
-</ul>
-<center><h2>Selections:</h2></center>
-<p>
-Selections of specific entries can be defined over the data se using parallel coordinates. With that representation, a selection is an ensemble of ranges defined on the axes. Ranges defined on the same axis are conjugated with OR (an entry must be in one or the other ranges to be selected). Ranges on different axes are are conjugated with AND (an entry must be in all the ranges to be selected). Several selections can be defined with different colors. It is possible to generate an entry list from a given selection and apply it to the tree using the editor ("Apply to tree" button).
-<center><h2>Axes:</h2></center>
-<p>
-Options can be defined each axis separatly using the right mouse click. These options can be applied to every axes using the editor.
-<ul>
-<li>Axis width: If set to 0, the axis is simply a line. If higher, a color histogram is drawn on the axis.</li>
-<li>Axis histogram height: If not 0, a usual bar histogram is drawn on the plot.</li>
-</ul>
-<p>
-The order in which the variables are drawn is essential to see the clusters. The axes can be dragged to change their position. A zoom is also available. The logarithm scale is also available by right clicking on the axis.
-<center><h2>Candle chart:</h2></center>
-<p>
-TParallelCoord can also be used to display a candle chart. In that mode, every variable is drawn in the same scale. The candle chart can be combined with the parallel coordinates mode, drawing the candle sticks over the axes.
-End_Html
+The multidimensional system of Parallel coordinates is a common way of studying
+high-dimensional geometry and visualizing multivariate problems. It has first
+been proposed by A. Inselberg in 1981.
+
+To show a set of points in an n-dimensional space, a backdrop is drawn
+consisting of n parallel lines. A point in n-dimensional space is represented as
+a polyline with vertices on the parallel axes; the position of the vertex on the
+i-th axis corresponds to the i-th coordinate of the point.
+
+This tool comes with a rather large gui in the editor. It is necessary to use
+this editor in order to explore a data set, as explained below.
+
+### Reduce cluttering:
+
+The main issue for parallel coordinates is the very high cluttering of the
+output when dealing with large data set. Two techniques have been implemented to
+bypass that so far:
+
+  - Draw doted lines instead of plain lines with an adjustable dots spacing. A
+    slider to adjust the dots spacing is available in the editor.
+  - Sort the entries to display with  a "weight cut". On each axis is drawn a
+    histogram describing the distribution of the data on the corresponding
+    variable. The "weight" of an entry is the sum of the bin content of each bin
+    the entry is going through. An entry going through the histograms peaks will
+    have a big weight wether an entry going randomly through the histograms will
+    have a rather small weight. Setting a cut on this weight allows to draw only
+    the most representative entries. A slider set the cut is also available in
+    the gui.
+
+## Selections:
+
+Selections of specific entries can be defined over the data se using parallel
+coordinates. With that representation, a selection is an ensemble of ranges
+defined on the axes. Ranges defined on the same axis are conjugated with OR
+(an entry must be in one or the other ranges to be selected). Ranges on
+different axes are are conjugated with AND (an entry must be in all the ranges
+to be selected). Several selections can be defined with different colors. It is
+possible to generate an entry list from a given selection and apply it to the
+tree using the editor ("Apply to tree" button).
+
+## Axes:
+
+Options can be defined each axis separately using the right mouse click. These
+options can be applied to every axes using the editor.
+
+  - Axis width: If set to 0, the axis is simply a line. If higher, a color
+    histogram is drawn on the axis.
+  - Axis histogram height: If not 0, a usual bar histogram is drawn on the plot.
+
+The order in which the variables are drawn is essential to see the clusters. The
+axes can be dragged to change their position. A zoom is also available. The
+logarithm scale is also available by right clicking on the axis.
+
+## Candle chart:
+
+TParallelCoord can also be used to display a candle chart. In that mode, every
+variable is drawn in the same scale. The candle chart can be combined with the
+parallel coordinates mode, drawing the candle sticks over the axes.
+
 Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1");
@@ -89,16 +118,16 @@ Begin_Macro(source)
    return c1;
 }
 End_Macro
-Begin_Html
-<p> Some references:
-<ul>
-<li> Alfred Inselberg's Homepage <http://www.math.tau.ac.il/~aiisreal>, with Visual Tutorial, History, Selected Publications and Applications.</li>
-<li> A small, easy introduction <http://catt.okstate.edu/jones98/parallel.html> by Christopher V. Jones. </li>
-<li> Almir Olivette Artero, Maria Cristina Ferreira de Oliveira, Haim Levkowitz, "Uncovering Clusters in Crowded Parallel Coordinates Visualizations," <i>infovis</i>, pp. 81-88,  IEEE Symposium on Information Visualization (INFOVIS'04),  2004. </li>
-</ul>
-End_Html
-*/
 
+ Some references:
+
+  - Alfred Inselberg's Homepage <http://www.math.tau.ac.il/~aiisreal>, with
+    Visual Tutorial, History, Selected Publications and Applications.
+  - Almir Olivette Artero, Maria Cristina Ferreira de Oliveira, Haim Levkowitz,
+    "Uncovering Clusters in Crowded Parallel Coordinates Visualizations,"
+    infovis, pp. 81-88,  IEEE Symposium on Information Visualization
+    (INFOVIS'04),  2004.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -108,7 +137,6 @@ TParallelCoord::TParallelCoord()
 {
    Init();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor without a reference to a tree,
@@ -125,7 +153,6 @@ TParallelCoord::TParallelCoord(Long64_t nentries)
    fCurrentSelection = new TParallelCoordSelect();
    fSelectList->Add(fCurrentSelection);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor, the datas must be added afterwards
@@ -153,7 +180,6 @@ TParallelCoord::TParallelCoord(TTree* tree, Long64_t nentries)
    fSelectList->Add(fCurrentSelection);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -172,7 +198,6 @@ TParallelCoord::~TParallelCoord()
    SetDotsSpacing(0);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a variable.
 
@@ -183,13 +208,12 @@ void TParallelCoord::AddVariable(Double_t* val, const char* title)
    SetAxesPosition();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a variable from an expression.
 
 void TParallelCoord::AddVariable(const char* varexp)
 {
-   if(!fTree) return; // The tree from whichone one will get the data must be defined.
+   if(!fTree) return; // The tree from which one will get the data must be defined.
 
    // Select in the only the entries of this TParallelCoord.
    TEntryList *list = GetEntryList(kFALSE);
@@ -219,7 +243,6 @@ void TParallelCoord::AddVariable(const char* varexp)
    var->Draw();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a selection.
 
@@ -229,7 +252,6 @@ void TParallelCoord::AddSelection(const char* title)
    fSelectList->Add(sel);
    fCurrentSelection = sel;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Apply the current selection to the tree.
@@ -266,7 +288,6 @@ void  TParallelCoord::ApplySelectionToTree()
    gPad->Modified();
    gPad->Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Call constructor and add the variables.
@@ -305,7 +326,6 @@ void TParallelCoord::CleanUpSelections(TParallelCoordRange* range)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete a selection.
 
@@ -316,7 +336,6 @@ void TParallelCoord::DeleteSelection(TParallelCoordSelect * sel)
    if(fSelectList->GetSize() == 0) fCurrentSelection = 0;
    else fCurrentSelection = (TParallelCoordSelect*)fSelectList->At(0);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the distance from the TParallelCoord.
@@ -340,7 +359,6 @@ Int_t TParallelCoord::DistancetoPrimitive(Int_t px, Int_t py)
    if(xx>x1 && xx<x2 && yy>y1 && yy<y2) return 0;
    else                                 return 9999;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the parallel coordinates graph.
@@ -413,7 +431,6 @@ void TParallelCoord::Draw(Option_t* option)
       ((TCanvas*)gPad)->Selected(gPad,this,1);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the corresponding entry.
 
@@ -422,7 +439,6 @@ void TParallelCoord::ExecuteEvent(Int_t /*entry*/, Int_t /*px*/, Int_t /*py*/)
    if (!gPad) return;
    gPad->SetCursor(kHand);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the selection currently being edited.
@@ -435,7 +451,6 @@ TParallelCoordSelect* TParallelCoord::GetCurrentSelection()
    }
    return fCurrentSelection;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the whole entry list or one for a selection.
@@ -461,7 +476,6 @@ TEntryList* TParallelCoord::GetEntryList(Bool_t sel)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// return the global maximum.
 
@@ -475,7 +489,6 @@ Double_t TParallelCoord::GetGlobalMax()
    }
    return gmax;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return the global minimum.
@@ -491,7 +504,6 @@ Double_t TParallelCoord::GetGlobalMin()
    return gmin;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// get the binning of the histograms.
 
@@ -499,7 +511,6 @@ Int_t TParallelCoord::GetNbins()
 {
    return ((TParallelCoordVar*)fVarList->First())->GetNbins();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get a selection from its title.
@@ -511,7 +522,6 @@ TParallelCoordSelect* TParallelCoord::GetSelection(const char* title)
    while ((sel = (TParallelCoordSelect*)next()) && strcmp(title,sel->GetTitle())) { }
    return sel;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return the tree if fTree is defined. If not, the method try to load the tree
@@ -526,7 +536,7 @@ TTree* TParallelCoord::GetTree()
    }
    TFile *f = TFile::Open(fTreeFileName.Data());
    if (!f) {
-      Error("GetTree","Tree file name : \"%s\" does not exsist (Are you in the correct directory?).",fTreeFileName.Data());
+      Error("GetTree","Tree file name : \"%s\" does not exist (Are you in the correct directory?).",fTreeFileName.Data());
       return 0;
    } else if (f->IsZombie()) {
       Error("GetTree","while opening \"%s\".",fTreeFileName.Data());
@@ -556,7 +566,6 @@ TTree* TParallelCoord::GetTree()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the variables values from its title.
 
@@ -569,7 +578,6 @@ Double_t* TParallelCoord::GetVariable(const char* vartitle)
    else     return var->GetValues();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the variables values from its index.
 
@@ -578,7 +586,6 @@ Double_t* TParallelCoord::GetVariable(Int_t i)
    if(i<0 || (UInt_t)i>fNvar) return 0;
    else return ((TParallelCoordVar*)fVarList->At(i))->GetValues();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialise the data members of TParallelCoord.
@@ -633,7 +640,6 @@ void TParallelCoord::Paint(Option_t* /*option*/)
    }
    gPad->RangeAxis(0,0,1,1);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop over the entries and paint them.
@@ -719,7 +725,6 @@ void TParallelCoord::PaintEntries(TParallelCoordSelect* sel)
    delete [] y;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete a variable from the graph.
 
@@ -729,7 +734,6 @@ void TParallelCoord::RemoveVariable(TParallelCoordVar *var)
    fNvar = fVarList->GetSize();
    SetAxesPosition();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete the variable "vartitle" from the graph.
@@ -748,7 +752,6 @@ TParallelCoordVar* TParallelCoord::RemoveVariable(const char* vartitle)
    var->DeleteVariable();
    return var;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the tree entry list to the initial one..
@@ -782,7 +785,6 @@ void TParallelCoord::ResetTree()
    gPad->Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the entry lists in a root file "filename.root".
 
@@ -805,7 +807,6 @@ void TParallelCoord::SaveEntryLists(const char* filename, Bool_t overwrite)
    fCurrentEntries->Write("currententries");
    Info("SaveEntryLists","File \"%s\" written.",sfile.Data());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the TParallelCoord in a macro.
@@ -876,7 +877,6 @@ void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
    out<<std::endl<<"   para->Draw();"<<std::endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the tree in a file if fTreeFileName == "".
 
@@ -900,7 +900,6 @@ void TParallelCoord::SaveTree(const char* filename, Bool_t overwrite)
    fTreeFileName = sfile;
    Info("SaveTree","File \"%s\" written.",sfile.Data());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update the position of the axes.
@@ -946,7 +945,6 @@ void TParallelCoord::SetAxesPosition()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the same histogram axis binning for all axis.
 
@@ -957,7 +955,6 @@ void TParallelCoord::SetAxisHistogramBinning(Int_t n)
    while((var = (TParallelCoordVar*)next())) var->SetHistogramBinning(n);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the same histogram axis height for all axis.
 
@@ -967,7 +964,6 @@ void TParallelCoord::SetAxisHistogramHeight(Double_t h)
    TParallelCoordVar *var;
    while((var = (TParallelCoordVar*)next())) var->SetHistogramHeight(h);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// All axes in log scale.
@@ -981,7 +977,6 @@ void TParallelCoord::SetGlobalLogScale(Bool_t lt)
    while ((var = (TParallelCoordVar*)next())) var->SetLogScale(lt);
    if (TestBit(kGlobalScale)) SetGlobalScale(kTRUE);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constraint all axes to the same scale.
@@ -1016,7 +1011,6 @@ void TParallelCoord::SetGlobalScale(Bool_t gl)
    gPad->Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the same histogram axis line width for all axis.
 
@@ -1026,7 +1020,6 @@ void TParallelCoord::SetAxisHistogramLineWidth(Int_t lw)
    TParallelCoordVar *var;
    while((var = (TParallelCoordVar*)next())) var->SetHistogramLineWidth(lw);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a candle chart display.
@@ -1058,9 +1051,8 @@ void TParallelCoord::SetCandleChart(Bool_t can)
    gPad->Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the first entry to be dispayed.
+/// Set the first entry to be displayed.
 
 void TParallelCoord::SetCurrentFirst(Long64_t f)
 {
@@ -1075,7 +1067,6 @@ void TParallelCoord::SetCurrentFirst(Long64_t f)
       if (var->TestBit(TParallelCoordVar::kShowBox)) var->GetQuantiles();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the number of entry to be displayed.
@@ -1094,9 +1085,8 @@ void TParallelCoord::SetCurrentN(Long64_t n)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the selection beeing edited.
+/// Set the selection being edited.
 
 TParallelCoordSelect* TParallelCoord::SetCurrentSelection(const char* title)
 {
@@ -1108,16 +1098,14 @@ TParallelCoordSelect* TParallelCoord::SetCurrentSelection(const char* title)
    return sel;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the selection beeing edited.
+/// Set the selection being edited.
 
 void TParallelCoord::SetCurrentSelection(TParallelCoordSelect* sel)
 {
    if (fCurrentSelection == sel) return;
    fCurrentSelection = sel;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set dots spacing. Modify the line style 11.
@@ -1131,7 +1119,6 @@ void TParallelCoord::SetDotsSpacing(Int_t s)
    gStyle->SetLineStyleString(11,Form("%d %d",4,s*8));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the entry lists of "para".
 
@@ -1140,7 +1127,6 @@ void TParallelCoord::SetEntryList(TParallelCoord* para, TEntryList* enlist)
    para->SetCurrentEntries(enlist);
    para->SetInitEntries(enlist);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Force all variables to adopt the same max.
@@ -1154,7 +1140,6 @@ void TParallelCoord::SetGlobalMax(Double_t max)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Force all variables to adopt the same min.
 
@@ -1167,7 +1152,6 @@ void TParallelCoord::SetGlobalMin(Double_t min)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// If true, the pad is updated while the motion of a dragged range.
 
@@ -1178,7 +1162,6 @@ void TParallelCoord::SetLiveRangesUpdate(Bool_t on)
    TParallelCoordVar* var;
    while((var = (TParallelCoordVar*)next())) var->SetLiveRangesUpdate(on);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the vertical or horizontal display.
@@ -1209,7 +1192,6 @@ void TParallelCoord::SetVertDisplay(Bool_t vert)
    gPad->Modified();
    gPad->Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Unzoom all variables.

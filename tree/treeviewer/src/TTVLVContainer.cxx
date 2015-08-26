@@ -21,10 +21,9 @@
 
 ClassImp(TGItemContext)
 
-//////////////////////////////////////////////////////////////////////////
-// TGItemContext  -  empty object used as context menu support for      //
-// TGLVTreeEntries                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGItemContext
+empty object used as context menu support for TGLVTreeEntries.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -33,6 +32,7 @@ TGItemContext::TGItemContext()
 {
    fItem = 0;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw item
 
@@ -40,6 +40,7 @@ void TGItemContext::Draw(Option_t *)
 {
    fItem->GetContainer()->GetViewer()->ProcessMessage(MK_MSG(kC_CONTAINER, kCT_ITEMDBLCLICK), kButton1, 0);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Edit expression
 
@@ -47,6 +48,7 @@ void TGItemContext::EditExpression()
 {
    fItem->GetContainer()->GetViewer()->EditExpression();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Empty item
 
@@ -54,6 +56,7 @@ void TGItemContext::Empty()
 {
    fItem->Empty();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove item
 
@@ -61,6 +64,7 @@ void TGItemContext::RemoveItem()
 {
    fItem->GetContainer()->GetViewer()->RemoveItem();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Scan item
 
@@ -69,6 +73,7 @@ void TGItemContext::Scan()
    fItem->GetContainer()->GetViewer()->SetScanMode();
    fItem->GetContainer()->GetViewer()->ProcessMessage(MK_MSG(kC_CONTAINER, kCT_ITEMDBLCLICK), kButton1, 0);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set item expression
 
@@ -79,16 +84,14 @@ void TGItemContext::SetExpression(const char *name, const char *alias, Bool_t cu
 
 ClassImp(TTVLVEntry)
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTreeLVEntry is a TGLVEntry that has a name of a variable to be     //
-// draw by the TTreeViewer GUI, and an alias for it.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTVLVEntry
+This class represent entries that goes into the TreeViewer
+listview container. It subclasses TGLVEntry and adds 2
+data members: the item true name and the alias.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGTreeLVEntry constructor.
+/// TTVLVEntry constructor.
 
 TTVLVEntry::TTVLVEntry(const TGWindow *p,
                              const TGPicture *bigpic, const TGPicture *smallpic,
@@ -107,14 +110,16 @@ TTVLVEntry::TTVLVEntry(const TGWindow *p,
 
    AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-/// TGTreeLVEntry destructor
+/// TTVLVEntry destructor
 
 TTVLVEntry::~TTVLVEntry()
 {
    if (fTip) delete fTip;
    delete fContext;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert all aliases into true names
 
@@ -140,6 +145,7 @@ const char *TTVLVEntry::ConvertAliases()
    }
    return(fConvName.Data());
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if converted name is alias free
 
@@ -155,6 +161,7 @@ Bool_t TTVLVEntry::FullConverted()
    }
    return kTRUE;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this item's name and alias to an other.
 
@@ -165,6 +172,7 @@ void TTVLVEntry::CopyItem(TTVLVEntry *dest)
    TString alias = dest->GetAlias();
    if (!alias.BeginsWith("~") && !alias.Contains("empty")) dest->PrependTilde();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle mouse crossing event.
 
@@ -178,6 +186,7 @@ Bool_t TTVLVEntry::HandleCrossing(Event_t *event)
    }
    return kTRUE;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if alias name is not empty.
 
@@ -186,6 +195,7 @@ Bool_t TTVLVEntry::HasAlias()
    if (fAlias.Length()) return kTRUE;
    return kFALSE;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Prepend a ~ to item alias
 
@@ -194,8 +204,9 @@ void TTVLVEntry::PrependTilde()
    fAlias = "~" + fAlias;
    SetItemName(fAlias.Data());
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-/// redraw this entry with new name
+/// Redraw this entry with new name
 
 void TTVLVEntry::SetItemName(const char* name)
 {
@@ -209,6 +220,7 @@ void TTVLVEntry::SetItemName(const char* name)
    Resize(GetDefaultSize());
    fClient->NeedRedraw(this);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set cut type
 
@@ -223,6 +235,7 @@ void TTVLVEntry::SetCutType(Bool_t type)
       SetSmallPic(fClient->GetPicture("expression_t.xpm"));
    fIsCut = type;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the true name, alias and type of the expression, then refresh it
 
@@ -242,8 +255,9 @@ void TTVLVEntry::SetExpression(const char* name, const char* alias, Bool_t cutTy
       SetToolTipText("Double-click to draw. Drag and drop. Use Edit/Expression or context menu to edit.");
    if (*itemType & TTreeViewer::kLTDragType) SetCutType(cutType);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-/// clear all names and alias
+/// Clear all names and alias
 
 void TTVLVEntry::Empty()
 {
@@ -252,6 +266,7 @@ void TTVLVEntry::Empty()
    if (itemType && (*itemType & TTreeViewer::kLTDragType))
       SetToolTipText("User-defined expression/cut. Double-click to edit");
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set tool tip text associated with this item. The delay is in
 /// milliseconds (minimum 250). To remove tool tip call method with text = 0
@@ -285,15 +300,11 @@ void TTVLVEntry::SetSmallPic(const TGPicture *spic)
 
 ClassImp(TTVLVContainer)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//   TTVLVContainer                                                     //
-//                                                                      //
-// This class represent the list view container for the.                //
-// TreeView class. It is a TGLVContainer with item dragging             //
-// capabilities for the TTVLVEntry objects inside.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTVLVContainer
+This class represent the list view container for the.
+TreeView class. It is a TGLVContainer with item dragging
+capabilities for the TTVLVEntry objects inside.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGLVContainer constructor
@@ -318,7 +329,7 @@ TTVLVContainer::~TTVLVContainer()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the cut entry
+/// Return the cut entry
 
 const char* TTVLVContainer::Cut()
 {
@@ -332,7 +343,7 @@ const char* TTVLVContainer::Cut()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the expression item at specific position
+/// Return the expression item at specific position
 
 TTVLVEntry * TTVLVContainer::ExpressionItem(Int_t index)
 {
@@ -345,7 +356,7 @@ TTVLVEntry * TTVLVContainer::ExpressionItem(Int_t index)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the list of user-defined expressions
+/// Return the list of user-defined expressions
 
 TList* TTVLVContainer::ExpressionList()
 {
@@ -364,7 +375,7 @@ TList* TTVLVContainer::ExpressionList()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the expression on X
+/// Return the expression on X
 
 const char* TTVLVContainer::Ex()
 {
@@ -378,7 +389,7 @@ const char* TTVLVContainer::Ex()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the expression on Y
+/// Return the expression on Y
 
 const char* TTVLVContainer::Ey()
 {
@@ -392,7 +403,7 @@ const char* TTVLVContainer::Ey()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the expression on Z
+/// Return the expression on Z
 
 const char* TTVLVContainer::Ez()
 {
@@ -406,7 +417,7 @@ const char* TTVLVContainer::Ez()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the cut entry
+/// Return the cut entry
 
 const char* TTVLVContainer::ScanList()
 {
@@ -593,7 +604,7 @@ void TTVLVContainer::EmptyAll()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// remove all non-static items from the list view, except expressions
+/// Remove all non-static items from the list view, except expressions
 
 void TTVLVContainer::RemoveNonStatic()
 {
@@ -610,7 +621,7 @@ void TTVLVContainer::RemoveNonStatic()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// select an item
+/// Select an item
 
 void TTVLVContainer::SelectItem(const char* name)
 {
@@ -635,16 +646,12 @@ void TTVLVContainer::SelectItem(const char* name)
 
 ClassImp(TGSelectBox)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//   TGSelectBox                                                        //
-//                                                                      //
-// This class represent a specialized expression editor for             //
-// TTVLVEntry 'true name' and 'alias' data members.                     //
-// It is a singleton in order to be able to use it for several          //
-// expressions.                                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGSelectBox
+This class represent a specialized expression editor for
+TTVLVEntry 'true name' and 'alias' data members.
+It is a singleton in order to be able to use it for several
+expressions.
+*/
 
 enum ETransientFrameCommands {
    kTFDone,
@@ -728,7 +735,7 @@ TGSelectBox::~TGSelectBox()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// close the select box
+/// Close the select box
 
 void TGSelectBox::CloseWindow()
 {
@@ -737,7 +744,7 @@ void TGSelectBox::CloseWindow()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the pointer to the instantiated singleton
+/// Return the pointer to the instantiated singleton
 
 TGSelectBox * TGSelectBox::GetInstance()
 {
@@ -745,7 +752,7 @@ TGSelectBox * TGSelectBox::GetInstance()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// just focus the cursor inside
+/// Just focus the cursor inside
 
 void TGSelectBox::GrabPointer()
 {
@@ -767,7 +774,7 @@ void TGSelectBox::SetLabel(const char* title)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// save the edited entry true name and alias
+/// Save the edited entry true name and alias
 
 void TGSelectBox::SaveText()
 {
@@ -804,7 +811,7 @@ void TGSelectBox::SaveText()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// connect one entry
+/// Connect one entry
 
 void TGSelectBox::SetEntry(TTVLVEntry *entry)
 {
@@ -867,7 +874,7 @@ Bool_t TGSelectBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return true if edited alias is not a leading string of other expression aliases
+/// Return true if edited alias is not a leading string of other expression aliases
 
 Bool_t TGSelectBox::ValidateAlias()
 {

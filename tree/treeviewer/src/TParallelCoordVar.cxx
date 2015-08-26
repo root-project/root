@@ -30,21 +30,20 @@
 
 ClassImp(TParallelCoordVar)
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class TParallelCoordVar
 
-/* Begin_Html
-<center><h2>Axes:</h2></center>
-<p>
-Class containing a variable for the TParallelCoord.
-<p>
-Options can be defined each axis separatly using the right mouse click. These options can be applied to every axes using the editor.
-<ul>
-<li>Axis width: If set to 0, the axis is simply a line. If higher, a color histogram is drawn on the axis.</li>
-<li>Axis histogram height: If not 0, a usual bar histogram is drawn on the plot.</li>
-</ul>
-<p>
-The order in which the variables are drawn is essential to see the clusters. The axes can be dragged to change their position. A zoom is also available. The logarithm scale is also available by right clicking on the axis.
-End_Html
+TParallelCoord axes. Class containing a variable for the TParallelCoord.
+
+Options can be defined each axis separately using the right mouse click. These
+options can be applied to every axes using the editor.
+
+  - Axis width: If set to 0, the axis is simply a line. If higher, a color
+    histogram is drawn on the axis.
+  - Axis histogram height: If not 0, a usual bar histogram is drawn on the plot.
+
+The order in which the variables are drawn is essential to see the clusters. The
+axes can be dragged to change their position. A zoom is also available. The
+logarithm scale is also available by right clicking on the axis.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +54,6 @@ TParallelCoordVar::TParallelCoordVar()
 {
    Init();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Destructor.
@@ -73,10 +71,10 @@ TParallelCoordVar::~TParallelCoordVar()
    if (fVal) delete [] fVal;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor. By default, the title and the name are the expression given to TTree::Draw. The name
-/// can be changed by the user (the label on the plot) but not the title.
+/// Normal constructor. By default, the title and the name are the expression
+/// given to TTree::Draw. The name can be changed by the user (the label on the
+/// plot) but not the title.
 
 TParallelCoordVar::TParallelCoordVar(Double_t *val, const char* title, Int_t id, TParallelCoord* parallel)
    :TNamed(title,title), TAttLine(1,1,1), TAttFill(kOrange+9,3001)
@@ -95,7 +93,6 @@ TParallelCoordVar::TParallelCoordVar(Double_t *val, const char* title, Int_t id,
    GetHistogram();
    GetQuantiles();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a range to the current selection on the axis.
@@ -119,7 +116,6 @@ void TParallelCoordVar::AddRange(TParallelCoordRange* range)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete variables.
 
@@ -128,7 +124,6 @@ void TParallelCoordVar::DeleteVariable()
    fParallel->RemoveVariable(this);
    delete this;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes the distance from the axis.
@@ -149,7 +144,6 @@ Int_t TParallelCoordVar::DistancetoPrimitive(Int_t px, Int_t py)
    else             return 9999;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the axis.
 
@@ -161,11 +155,10 @@ void TParallelCoordVar::Draw(Option_t *option)
    AppendPad(option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if the entry is within the range(s) of "select". Two ranges on a single
-/// axis are conjugated as a "or": to be selected, the entry must be in one of
-/// the ranges.
+/// Check if the entry is within the range(s) of "select". Two ranges on a
+/// single axis are conjugated as a "or": to be selected, the entry must be in
+/// one of the ranges.
 
 Bool_t TParallelCoordVar::Eval(Long64_t evtidx, TParallelCoordSelect *select)
 {
@@ -185,7 +178,6 @@ Bool_t TParallelCoordVar::Eval(Long64_t evtidx, TParallelCoordSelect *select)
    }
    else return kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the corresponding entry.
@@ -322,7 +314,6 @@ void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the position of the variable on the graph for the n'th entry.
 
@@ -351,7 +342,6 @@ void TParallelCoordVar::GetEntryXY(Long64_t n, Double_t & x, Double_t & y)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the entry weight: The weight of an entry for a given variable
 /// is the bin content of the histogram bin the entry is going through.
@@ -361,7 +351,6 @@ Int_t TParallelCoordVar::GetEntryWeight(Long64_t evtidx)
    Int_t bin = 1 + (Int_t)((fVal[evtidx] - fMinCurrent)/((fMaxCurrent-fMinCurrent)/fNbins));
    return (Int_t)fHistogram->GetBinContent(bin);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create or recreate the histogram.
@@ -380,9 +369,8 @@ TH1F* TParallelCoordVar::GetHistogram()
    return fHistogram;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///Get mean, min and max of thos variable
+/// Get mean, min and max of those variable.
 
 void TParallelCoordVar::GetMinMaxMean()
 {
@@ -402,7 +390,6 @@ void TParallelCoordVar::GetMinMaxMean()
    fMinCurrent = fMinInit = min;
    fMaxCurrent = fMaxInit = max;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns info about this axis.
@@ -438,7 +425,6 @@ char* TParallelCoordVar::GetObjectInfo(Int_t px, Int_t py) const
    }
    return info;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the box plot values (quantiles).
@@ -480,9 +466,8 @@ void TParallelCoordVar::GetQuantiles()
    delete [] prob;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the value corresponding to the posiiton.
+/// Get the value corresponding to the position.
 
 Double_t TParallelCoordVar::GetValuefromXY(Double_t x,Double_t y)
 {
@@ -499,7 +484,6 @@ Double_t TParallelCoordVar::GetValuefromXY(Double_t x,Double_t y)
    }
    return pos;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get a position corresponding to the value on the axis.
@@ -530,7 +514,6 @@ void TParallelCoordVar::GetXYfromValue(Double_t value, Double_t & x, Double_t & 
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialise the TParallelVar variables.
@@ -563,7 +546,6 @@ void TParallelCoordVar::Init()
    SetBit(kShowBarHisto,kTRUE);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the axis.
 
@@ -573,7 +555,6 @@ void TParallelCoordVar::Paint(Option_t* /*option*/)
    if (TestBit(kShowBox)) PaintBoxPlot();
    PaintLabels();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the boxes in the case of a candle chart.
@@ -674,7 +655,6 @@ void TParallelCoordVar::PaintBoxPlot()
    delete line;
    delete box;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the histogram on the axis.
@@ -781,7 +761,6 @@ void TParallelCoordVar::PaintHistogram()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the axis labels and titles.
 
@@ -833,9 +812,8 @@ void TParallelCoordVar::PaintLabels()
    delete t;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Print the axis main datas.
+/// Print the axis main data.
 
 void TParallelCoordVar::Print(Option_t* /*option*/) const
 {
@@ -843,7 +821,6 @@ void TParallelCoordVar::Print(Option_t* /*option*/) const
    printf("at x1=%f, y1=%f, x2=%f, y2=%f.\n",fX1,fY1,fX2,fY2);
    printf("min = %f, Q1 = %f, Med = %f, Q3 = %f, Max = %f\n", fMinInit, fQua1, fMed, fQua3, fMaxInit);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the TParallelCoordVar as a macro. Can be used only in the context
@@ -885,7 +862,6 @@ void TParallelCoordVar::SavePrimitive(std::ostream & out, Option_t* options)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the axis to display a candle.
 
@@ -899,7 +875,6 @@ void TParallelCoordVar::SetBoxPlot(Bool_t box)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the histogram binning.
 
@@ -909,7 +884,6 @@ void TParallelCoordVar::SetHistogramBinning(Int_t n)
    fNbins = n;
    GetHistogram();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the height of the bar histogram.
@@ -923,7 +897,6 @@ void TParallelCoordVar::SetHistogramHeight(Double_t h)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the current minimum of the axis.
 
@@ -932,7 +905,6 @@ void TParallelCoordVar::SetCurrentMin(Double_t min)
    fMinCurrent = min;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the current maximum of the axis.
 
@@ -940,7 +912,6 @@ void TParallelCoordVar::SetCurrentMax(Double_t max)
 {
    fMaxCurrent = max;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the limits within which one the entries must be painted.
@@ -967,7 +938,6 @@ void TParallelCoordVar::SetCurrentLimits(Double_t min, Double_t max)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// If true, the pad is updated while the motion of a dragged range.
 
@@ -978,9 +948,8 @@ void TParallelCoordVar::SetLiveRangesUpdate(Bool_t on)
    while ((range = (TParallelCoordRange*)next())) range->SetBit(TParallelCoordRange::kLiveUpdate,on);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the axis in logscale.
+/// Set the axis in log scale.
 
 void TParallelCoordVar::SetLogScale(Bool_t log)
 {
@@ -1001,7 +970,6 @@ void TParallelCoordVar::SetLogScale(Bool_t log)
    GetHistogram();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the variable values.
 
@@ -1015,7 +983,6 @@ void TParallelCoordVar::SetValues(Long64_t length, Double_t* val)
    GetHistogram();
    if (TestBit(kShowBox)) GetQuantiles();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the X position of the axis in the case of a vertical axis.
@@ -1035,7 +1002,6 @@ void TParallelCoordVar::SetX(Double_t x, Bool_t gl)
    }
    fX1 = fX2 = x;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the Y position of the axis in the case of a horizontal axis.

@@ -25,15 +25,12 @@
 #include "TGedPatternSelect.h"
 #include "TColor.h"
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>The TSpider editor class</h2></center>
-Provides the graphical user interface to the spider plots.
-End_Html */
-
-
 ClassImp(TSpiderEditor)
+
+/** \class TSpiderEditor
+The TSpider editor class.
+Provides the graphical user interface to the spider plots.
+*/
 
 enum ESpiderWid {
    kAverage,
@@ -129,9 +126,8 @@ TSpiderEditor::TSpiderEditor(const TGWindow* /*p*/, Int_t /*width*/, Int_t /*hei
    MakeBrowse();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor of the TSpidereditor.
+/// Destructor of the TSpiderEditor.
 
 TSpiderEditor::~TSpiderEditor()
 {
@@ -163,7 +159,6 @@ void TSpiderEditor::ConnectSignals2Slots()
 
    fInit = kFALSE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make the Browse tab.
@@ -253,7 +248,6 @@ void TSpiderEditor::MakeBrowse()
    fBrowse->AddFrame(f4, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Pick up the used spider attributes.
 
@@ -296,7 +290,6 @@ void TSpiderEditor::SetModel(TObject* obj)
    fAvoidSignal = kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to add a variable.
 
@@ -309,7 +302,6 @@ void TSpiderEditor::DoAddVar()
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the average LineStyle.
 
@@ -320,7 +312,6 @@ void TSpiderEditor::DoAvLineStyle(Int_t a)
    fSpider->SetAverageLineStyle(a);
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the average LineWidth.
@@ -333,7 +324,6 @@ void TSpiderEditor::DoAvLineWidth(Int_t a)
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the average LineColor.
 
@@ -345,9 +335,8 @@ void TSpiderEditor::DoAvLineColor(Pixel_t a)
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Slot to set the average FillColor.
+/// Slot to set the average Fill Color.
 
 void TSpiderEditor::DoAvFillColor(Pixel_t a)
 {
@@ -356,7 +345,6 @@ void TSpiderEditor::DoAvFillColor(Pixel_t a)
    fSpider->SetAverageFillColor(TColor::GetColor(a));
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to set the average FillStyle.
@@ -368,7 +356,6 @@ void TSpiderEditor::DoAvFillPattern(Style_t a)
    fSpider->SetAverageFillStyle(a);
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to delete a variable.
@@ -382,7 +369,6 @@ void TSpiderEditor::DoDeleteVar()
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot Connected to the average display.
 
@@ -393,7 +379,6 @@ void TSpiderEditor::DoDisplayAverage(Bool_t av)
    fSpider->SetDisplayAverage(av);
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to select an entry by number.
@@ -406,7 +391,6 @@ void  TSpiderEditor::DoGotoEntry()
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to Go to next entries.
 
@@ -416,7 +400,6 @@ void  TSpiderEditor::DoGotoNext()
    fSpider->GotoNext();
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to go to previous entries.
@@ -428,7 +411,6 @@ void  TSpiderEditor::DoGotoPrevious()
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to go to next entry.
 
@@ -439,7 +421,6 @@ void  TSpiderEditor::DoGotoFollowing()
    Update();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot to go to last entry.
 
@@ -449,7 +430,6 @@ void  TSpiderEditor::DoGotoPreceding()
    fSpider->GotoPreceding();
    Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot connected to the nx setting.
