@@ -11,7 +11,9 @@
 
 /**
 
-   @defgroup MinuitOld TMinuit 
+   \defgroup MinuitOld TMinuit 
+   \ingroup Math
+
    The Minuit Minimization package.
    Direct C++ implementation of the Minuit minimization package. 
    This package was originally written in Fortran by Fred James      
