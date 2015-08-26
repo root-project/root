@@ -1,5 +1,4 @@
 import IPython.core.magic as ipym
-import ROOT
 import utils
 
 @ipym.magics_class
