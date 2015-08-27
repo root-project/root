@@ -9,25 +9,27 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////
-//  This class is an interface to the Hbook objects in Hbook files
-//  Any Hbook object (1-D, 2-D, Profile, RWN or CWN can be read
-//  NB: a THbookFile can only be used in READ mode
-//      Use the utility in $ROOTSYS/bin/h2root to convert Hbook to Root
-//
-// Example of use:
-//  gSystem->Load("libHbook");
-//  THbookFile f("myfile.hbook");
-//  f.ls();
-//  TH1F *h1 = (TH1F*)f.Get(1);  //import histogram ID=1 in h1
-//  h1->Fit("gaus");
-//  THbookTree *T = (THbookTree*)f.Get(111); //import ntuple header
-//  T->Print();  //show the Hbook ntuple variables
-//  T->Draw("x","y<0"); // as in normal TTree::Draw
-//
-//  THbookFile can be browsed via TBrowser.
-//
-////////////////////////////////////////////////////////////////////////
+/** \class THbookFile
+    \ingroup Hist
+ This class is an interface to the Hbook objects in Hbook files.
+ Any Hbook object (1-D, 2-D, Profile, RWN or CWN can be read
+
+ NB: a THbookFile can only be used in READ mode
+        Use the utility in $ROOTSYS/bin/h2root to convert Hbook to Root
+
+ Example of use:
+
+     gSystem->Load("libHbook");
+     THbookFile f("myfile.hbook");
+     f.ls();
+     TH1F *h1 = (TH1F*)f.Get(1);  //import histogram ID=1 in h1
+     h1->Fit("gaus");
+     THbookTree *T = (THbookTree*)f.Get(111); //import ntuple header
+     T->Print();  //show the Hbook ntuple variables
+     T->Draw("x","y<0"); // as in normal TTree::Draw
+
+ THbookFile can be browsed via TBrowser.
+*/
 
 #include <stdlib.h>
 #include <string.h>

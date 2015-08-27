@@ -30,6 +30,7 @@
 ClassImp(TGraphAsymmErrors)
 
 /** \class TGraphAsymmErrors
+    \ingroup Hist
 TGraph with assymetric error bars.
 
 The TGraphAsymmErrors painting is performed thanks to the TGraphPainter

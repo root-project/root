@@ -11,6 +11,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TBinomialEfficiencyFitter
+    \ingroup Hist
     \brief Binomial fitter for the division of two histograms.
  
 Use when you need to calculate a selection's efficiency from two histograms,

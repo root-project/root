@@ -42,6 +42,7 @@ ClassImp(TEfficiency)
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TEfficiency
+    \ingroup Hist 
     \brief Class to handle efficiency histograms
 
 ## I. Overview

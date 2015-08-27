@@ -141,6 +141,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TF1
+    \ingroup Hist 
     \brief 1-Dim function class
 <h2>TF1: 1-Dim function class</h2>
 A TF1 object is a 1-Dim function defined between a lower and upper limit.

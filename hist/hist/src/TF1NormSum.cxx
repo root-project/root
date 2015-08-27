@@ -22,6 +22,7 @@
 
 
 /** \class TF1NormSum
+    \ingroup Hist
 Class adding two functions: c1*f1+c2*f2
 */
 

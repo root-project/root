@@ -11,6 +11,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TBackCompFitter
+    \ingroup Hist
     \brief Backward compatible implementation of TVirtualFitter
 
 Backward compatible implementation of TVirtualFitter using the

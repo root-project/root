@@ -32,6 +32,7 @@ ClassImp(TGraph2D)
 
 
 /** \class TGraph2D
+    \ingroup Hist 
 Graphics object made of three arrays X, Y and Z with the same number of points each.
 
 This class has different constructors:

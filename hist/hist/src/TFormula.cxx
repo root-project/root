@@ -44,6 +44,7 @@ using namespace std;
 
 ClassImp(TFormula)
 /** \class TFormula
+    \ingroup Hist
 The  F O R M U L A  class
 
 <p>This is a new version of the TFormula class based on Cling.

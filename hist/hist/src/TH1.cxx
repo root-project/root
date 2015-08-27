@@ -47,12 +47,15 @@
 #include "Math/MinimizerOptions.h"
 #include "Math/QuantFuncMathCore.h"
 
-
-/// \class TH1C \brief tomato 1-D histogram with a bype per channel (see TH1 documentation)
-/// \class TH1S \brief tomato 1-D histogram with a short per channel (see TH1 documentation)
-/// \class TH1I \brief tomato 1-D histogram with a int per channel (see TH1 documentation)}
-/// \class TH1F \brief tomato 1-D histogram with a float per channel (see TH1 documentation)}
-/// \class TH1D \brief tomato 1-D histogram with a double per channel (see TH1 documentation)}
+/** \addtogroup Hist
+@{
+\class TH1C \brief tomato 1-D histogram with a bype per channel (see TH1 documentation)
+\class TH1S \brief tomato 1-D histogram with a short per channel (see TH1 documentation)
+\class TH1I \brief tomato 1-D histogram with a int per channel (see TH1 documentation)}
+\class TH1F \brief tomato 1-D histogram with a float per channel (see TH1 documentation)}
+\class TH1D \brief tomato 1-D histogram with a double per channel (see TH1 documentation)}
+@}
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TH1

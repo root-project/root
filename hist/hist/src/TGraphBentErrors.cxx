@@ -29,6 +29,7 @@ ClassImp(TGraphBentErrors)
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class  TGraphBentErrors
+    \ingroup Hist
 A TGraphBentErrors is a TGraph with bent, assymetric error bars.
 
 The TGraphBentErrors painting is performed thanks to the TGraphPainter
