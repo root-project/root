@@ -17,14 +17,15 @@
 
 ClassImp(TDialogCanvas)
 
-//______________________________________________________________________________
-// A DialogCanvas is a canvas specialized to set attributes.
-// It contains, in general, TGroupButton objects.
-// When the APPLY button is executed, the actions corresponding
-// to the active buttons are executed via the Interpreter.
-//
-// See examples in TAttLineCanvas, TAttFillCanvas, TAttTextCanvas, TAttMarkerCanvas
+/** \class TDialogCanvas
+A TDialogCanvas is a canvas specialized to set attributes.
 
+It contains, in general, TGroupButton objects.
+When the APPLY button is executed, the actions corresponding
+to the active buttons are executed via the Interpreter.
+
+See examples in TAttLineCanvas, TAttFillCanvas, TAttTextCanvas, TAttMarkerCanvas
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// DialogCanvas default constructor
@@ -34,7 +35,6 @@ TDialogCanvas::TDialogCanvas() : TCanvas()
    fRefObject = 0;
    fRefPad    = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// DialogCanvas constructor
@@ -47,7 +47,6 @@ TDialogCanvas::TDialogCanvas(const char *name, const char *title, Int_t ww, Int_
    fRefPad    = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// DialogCanvas constructor
 
@@ -59,14 +58,12 @@ TDialogCanvas::TDialogCanvas(const char *name, const char *title, Int_t wtopx, I
    fRefPad    = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// DialogCanvas default destructor
 
 TDialogCanvas::~TDialogCanvas()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Called when the APPLY button is executed
@@ -130,7 +127,7 @@ void TDialogCanvas::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Recursively remove object from a pad and its subpads
+/// Recursively remove object from a pad and its sub-pads
 
 void TDialogCanvas::RecursiveRemove(TObject *obj)
 {

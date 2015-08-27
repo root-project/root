@@ -9,14 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-// TControlBarButton                                                   //
-//                                                                     //
-// TControlBarButtons are created by the TControlBar. Not for general  //
-// consumption.                                                        //
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
+/** \class TControlBarButton
+TControlBarButton are created by the TControlBar. Not for general consumption.
+*/
 
 #include "TControlBarButton.h"
 #include "TCanvas.h"
@@ -33,7 +28,7 @@ const char *kSStr = "SEPARATOR";
 ClassImp(TControlBarButton)
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default controlbar button ctor.
+/// Default control bar button ctor.
 
 TControlBarButton::TControlBarButton() : TNamed()
 {
@@ -41,7 +36,7 @@ TControlBarButton::TControlBarButton() : TNamed()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create controlbar button.
+/// Create control bar button.
 
 TControlBarButton::TControlBarButton(const char *label, const char *action,
                                      const char *hint, const char *type)
@@ -52,7 +47,7 @@ TControlBarButton::TControlBarButton(const char *label, const char *action,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute controlbar button command.
+/// Execute control bar button command.
 
 void TControlBarButton::Action()
 {

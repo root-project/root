@@ -8,16 +8,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCreatePrimitives                                                    //
-//                                                                      //
-// Creates new primitives.                                              //
-//                                                                      //
-// The functions in this static class are called by TPad::ExecuteEvent  //
-// to create new primitives in gPad from the TPad toolbar.              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TCreatePrimitives
+Creates new primitives.
+
+The functions in this static class are called by TPad::ExecuteEvent
+to create new primitives in gPad from the TPad toolbar.
+*/
 
 #include "TCanvas.h"
 #include "TStyle.h"
@@ -58,7 +54,6 @@ TCreatePrimitives::TCreatePrimitives()
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TCreatePrimitives destructor
 
@@ -67,11 +62,10 @@ TCreatePrimitives::~TCreatePrimitives()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Create a new arc/ellipse in this gPad
+/// Create a new arc/ellipse in this gPad
 ///
-///  Click left button to indicate arrow starting position.
-///  Release left button to terminate the arrow.
-///
+/// Click left button to indicate arrow starting position.
+/// Release left button to terminate the arrow.
 
 void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
@@ -157,13 +151,11 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new line/arrow in this gPad
 ///
-///  Click left button to indicate arrow starting position.
-///  Release left button to terminate the arrow.
-///
+/// Click left button to indicate arrow starting position.
+/// Release left button to terminate the arrow.
 
 void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
@@ -280,15 +272,13 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new pad in gPad
 ///
-///  Click left button to indicate one corner of the pad
-///  Click left button to indicate the opposite corner
+/// Click left button to indicate one corner of the pad
+/// Click left button to indicate the opposite corner
 ///
-///  The new pad is inserted in the pad where the first point is selected.
-///
+/// The new pad is inserted in the pad where the first point is selected.
 
 void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 {
@@ -366,13 +356,11 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new pavetext in gPad
 ///
-///  Click left button to indicate one corner of the pavelabel.
-///  Release left button at the opposite corner.
-///
+/// Click left button to indicate one corner of the pavelabel.
+/// Release left button at the opposite corner.
 
 void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
@@ -602,9 +590,8 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new PolyLine in gPad
 ///
-///  Click left button to indicate a new point
-///  Click left button at same place or double click to close the polyline
-///
+/// Click left button to indicate a new point
+/// Click left button at same place or double click to close the polyline
 
 void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
@@ -694,7 +681,6 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
 /// Create a new TLatex at the cursor position in gPad
 ///
 /// Click left button to indicate the text position
-///
 
 void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
