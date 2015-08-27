@@ -9,77 +9,70 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-//   ControlBar is a fully user configurable tool which provides fast  //
-// access to frequently used operations. The user can choose between   //
-// buttons and drawnbuttons (let's say icons) and assign to them their //
-// own actions (let's say ROOT or C++ commands).                       //
-//
-// The macro belows shows an example of controlbar.
-// To execute an item, click with the left mouse button.
-// To see the HELP of a button, click on the right mouse button.
-//
-// You have access to the last clicked button via the method
-// GetClicked(). For example, bar->GetClicked()->GetName()
-// will return the name of the last clicked button.
-//
-//
-//{
-//   gROOT.Reset("a");
-//   TControlBar bar("vertical");
-//   bar.AddButton("Help to run demos",".x demoshelp.C",
-//                 "Explains how to run the demos");
-//   bar.AddButton("framework",        ".x framework.C",
-//                 "An Example of Object Oriented User Interface");
-//   bar.AddButton("hsimple",          ".x hsimple.C",
-//                 "An Example Creating Histograms/Ntuples on File");
-//   bar.AddButton("hsum",             ".x hsum.C",
-//                 "Filling histograms and some graphics options");
-//   bar.AddButton("canvas",           ".x canvas.C",
-//                 "Canvas and Pad Management");
-//   bar.AddButton("formula1",         ".x formula1.C",
-//                 "Simple Formula and Functions");
-//   bar.AddButton("fillrandom",       ".x fillrandom.C",
-//                 "Histograms with Random Numbers from a Function");
-//   bar.AddButton("fit1",             ".x fit1.C",
-//                 "A Simple Fitting Example");
-//   bar.AddButton("h1draw",           ".x h1draw.C",
-//                 "Drawing Options for 1D Histograms");
-//   bar.AddButton("graph",            ".x graph.C",
-//                 "Examples of a simple graph");
-//   bar.AddButton("tornado",          ".x tornado.C",
-//                 "Examples of 3-D PolyMarkers");
-//   bar.AddButton("shapes",           ".x shapes.C",
-//                 "The Geometry Shapes");
-//   bar.AddButton("atlasna49",        ".x atlasna49.C",
-//                 "Creating and Viewing Geometries");
-//   bar.AddButton("file_layout",      ".x file.C",
-//                 "The ROOT file format");
-//   bar.AddButton("tree_layout",      ".x tree.C",
-//                 "The Tree Data Structure");
-//   bar.AddButton("ntuple1",          ".x ntuple1.C",
-//                 "Ntuples and Selections");
-//   bar.AddButton("run benchmarks",   ".x benchmarks.C",
-//                 "Runs all the ROOT benchmarks");
-//   bar.AddButton("rootmarks",        ".x rootmarks.C",
-//                 "Prints an estimated ROOTMARKS for your machine");
-//   bar.AddButton("edit_hsimple",     ".!ved hsimple.C &",
-//                 "Invokes the text editor on file hsimple.C");
-//   bar.AddButton("Close Bar",        "gROOT.Reset(\"a\")",
-//                 "Close ControlBar");
-//   bar.Show();
-//   gROOT.SaveContext();
-//}
-//
-//Begin_Html
-/*
-<img src="gif/controlbar.gif">
+/** \class TControlBar
+A Control Bar is a fully user configurable tool which provides fast
+access to frequently used operations. The user can choose between
+buttons and drawn buttons (let's say icons) and assign to them their
+own actions (let's say ROOT or C++ commands).
+
+The macro below shows an example of control bar.
+To execute an item, click with the left mouse button.
+To see the HELP of a button, click on the right mouse button.
+
+You have access to the last clicked button via the method
+GetClicked(). For example, bar->GetClicked()->GetName()
+will return the name of the last clicked button.
+
+~~~ {.cpp}
+{
+   gROOT->Reset("a");
+   TControlBar bar("vertical");
+   bar.AddButton("Help to run demos",".x demoshelp.C",
+                 "Explains how to run the demos");
+   bar.AddButton("framework",        ".x framework.C",
+                 "An Example of Object Oriented User Interface");
+   bar.AddButton("hsimple",          ".x hsimple.C",
+                 "An Example Creating Histograms/Ntuples on File");
+   bar.AddButton("hsum",             ".x hsum.C",
+                 "Filling histograms and some graphics options");
+   bar.AddButton("canvas",           ".x canvas.C",
+                 "Canvas and Pad Management");
+   bar.AddButton("formula1",         ".x formula1.C",
+                 "Simple Formula and Functions");
+   bar.AddButton("fillrandom",       ".x fillrandom.C",
+                 "Histograms with Random Numbers from a Function");
+   bar.AddButton("fit1",             ".x fit1.C",
+                 "A Simple Fitting Example");
+   bar.AddButton("h1draw",           ".x h1draw.C",
+                 "Drawing Options for 1D Histograms");
+   bar.AddButton("graph",            ".x graph.C",
+                 "Examples of a simple graph");
+   bar.AddButton("tornado",          ".x tornado.C",
+                 "Examples of 3-D PolyMarkers");
+   bar.AddButton("shapes",           ".x shapes.C",
+                 "The Geometry Shapes");
+   bar.AddButton("atlasna49",        ".x atlasna49.C",
+                 "Creating and Viewing Geometries");
+   bar.AddButton("file_layout",      ".x file.C",
+                 "The ROOT file format");
+   bar.AddButton("tree_layout",      ".x tree.C",
+                 "The Tree Data Structure");
+   bar.AddButton("ntuple1",          ".x ntuple1.C",
+                 "Ntuples and Selections");
+   bar.AddButton("run benchmarks",   ".x benchmarks.C",
+                 "Runs all the ROOT benchmarks");
+   bar.AddButton("rootmarks",        ".x rootmarks.C",
+                 "Prints an estimated ROOTMARKS for your machine");
+   bar.AddButton("edit_hsimple",     ".!ved hsimple.C &",
+                 "Invokes the text editor on file hsimple.C");
+   bar.AddButton("Close Bar",        "gROOT.Reset(\"a\")",
+                 "Close ControlBar");
+   bar.Show();
+   gROOT->SaveContext();
+}
+~~~
+\image html gpad_control bar.png
 */
-//End_Html
-//
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
 
 #include "TApplication.h"
 #include "TControlBar.h"
@@ -89,7 +82,6 @@
 
 
 ClassImp(TControlBar)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -102,34 +94,27 @@ TControlBar::TControlBar() : TControlBarButton()
    fNoroc         = 1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
 
 TControlBar::TControlBar(const char *orientation, const char *title)
             : TControlBarButton(title, "", "", "button")
-
 {
-   // Normal constructor.
-
    SetOrientation( orientation );
    Initialize(-999, -999);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
 
 TControlBar::TControlBar(const char *orientation, const char *title, Int_t x, Int_t y)
             : TControlBarButton(title, "", "", "button")
-
 {
-   // Normal constructor.
-
    Int_t xs = (Int_t)(x*gStyle->GetScreenFactor());
    Int_t ys = (Int_t)(y*gStyle->GetScreenFactor());
    SetOrientation( orientation );
    Initialize(xs, ys);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -145,7 +130,6 @@ TControlBar::~TControlBar()
    fControlBarImp = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add button.
 
@@ -153,7 +137,6 @@ void TControlBar::AddButton(TControlBarButton &button)
 {
    AddButton( &button );
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add button.
@@ -164,7 +147,6 @@ void TControlBar::AddButton(TControlBarButton *button)
       fButtons->Add( button );
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add button.
 
@@ -174,25 +156,22 @@ void TControlBar::AddButton(const char *label, const char *action, const char *h
    AddButton( button );
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Add controlbar.
+/// Add control bar.
 
 void TControlBar::AddControlBar(TControlBar &controlBar)
 {
    AddControlBar( &controlBar );
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Add controlbar.
+/// Add control bar.
 
 void TControlBar::AddControlBar(TControlBar *controlBar)
 {
    if( fButtons && controlBar )
       fButtons->Add( controlBar );
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add separator.
@@ -201,9 +180,8 @@ void TControlBar::AddSeparator()
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Create controlbar.
+/// Create control bar.
 
 void TControlBar::Create()
 {
@@ -212,9 +190,8 @@ void TControlBar::Create()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Hide controlbar.
+/// Hide control bar.
 
 void TControlBar::Hide()
 {
@@ -223,9 +200,8 @@ void TControlBar::Hide()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Initialize controlbar.
+/// Initialize control bar.
 
 void TControlBar::Initialize(Int_t x, Int_t y)
 {
@@ -245,38 +221,46 @@ void TControlBar::Initialize(Int_t x, Int_t y)
    fNoroc         = 1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets new font for control bar buttons, e.g.:
+/// ~~~ {.cpp}
 /// root > .x tutorials/demos.C
 /// root > bar->SetFont("-adobe-helvetica-bold-r-*-*-24-*-*-*-*-*-iso8859-1")
+/// ~~~
 
 void TControlBar::SetFont(const char *fontName)
 {
    fControlBarImp->SetFont(fontName);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets text color for control bar buttons, e.g.:
+/// ~~~ {.cpp}
 /// root > .x tutorials/demos.C
 /// root > bar->SetTextColor("red")
+/// ~~~
 
 void TControlBar::SetTextColor(const char *colorName)
 {
    fControlBarImp->SetTextColor(colorName);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets a state for control bar button 'label'; possible states are
 /// 0-kButtonUp, 1-kButtonDown, 2-kButtonEngaged, 3-kButtonDisabled,
+///
 /// e.g.:
+/// ~~~ {.cpp}
 /// root > .x tutorials/demos.C
+/// ~~~
 /// to disable the button 'first' do:
+/// ~~~ {.cpp}
 /// root > bar->SetButtonState("first", 3)
+/// ~~~
 /// to enable the button 'first' do:
+/// ~~~ {.cpp}
 /// root > bar->SetButtonState("first", 0)
+/// ~~~
 
 void TControlBar::SetButtonState(const char *label, Int_t state)
 {
@@ -296,9 +280,8 @@ void TControlBar::SetButtonWidth(UInt_t width)
    fControlBarImp->SetButtonWidth(width);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set controlbar orientation.
+/// Set control bar orientation.
 
 void TControlBar::SetOrientation(const char *o)
 {
@@ -315,9 +298,8 @@ void TControlBar::SetOrientation(const char *o)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set controlbar orientation.
+/// Set control bar orientation.
 
 void TControlBar::SetOrientation(Int_t o)
 {
@@ -330,10 +312,8 @@ void TControlBar::SetOrientation(Int_t o)
               o, kVertical, kHorizontal );
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Show controlbar.
+/// Show control bar.
 
 void TControlBar::Show()
 {
@@ -341,14 +321,13 @@ void TControlBar::Show()
       fControlBarImp->Show();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns a pointer to the last clicked controlbar button;
+/// Returns a pointer to the last clicked control bar button;
 /// null if no button was clicked yet
 
 TControlBarButton *TControlBar::GetClicked() const
 {
    if (!fControlBarImp->GetClicked())
-      Printf("None of the controlbar buttons is clicked yet");
+      Printf("None of the control bar buttons is clicked yet");
    return fControlBarImp->GetClicked();
 }
