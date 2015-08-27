@@ -68,6 +68,7 @@
 // Avoid the inclusion of dlfcn.h by Pyhtia.h that CINT is not able to process
 #ifdef __CINT__
 #define _DLFCN_H_
+#define _DLFCN_H
 #endif
 
 #include "TGenerator.h"
