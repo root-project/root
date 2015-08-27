@@ -14,10 +14,9 @@
 
 ClassImp(TAttCanvas)
 
-//______________________________________________________________________________
-//
-//     Manages canvas attributes. Referenced by TStyle.
-//
+/** \class TAttCanvas
+Manages canvas attributes. Referenced by TStyle.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
