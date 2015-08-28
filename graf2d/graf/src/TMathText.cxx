@@ -25,29 +25,23 @@
 #include "../../../graf2d/mathtext/inc/mathtext.h"
 #include "../../../graf2d/mathtext/inc/mathrender.h"
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>TMathText : to draw TeX Mathematical Formula</h2></center>
+/** \class TMathText
+To draw TeX Mathematical Formula
 
 TMathText's purpose is to write mathematical equations, exactly as TeX would
 do it. The syntax is the same as the TeX's one.
-<p>
+
 The following example demonstrate how to use TMathText:
-End_Html
+
 Begin_Macro(source)
 ../../../tutorials/graphics/tmathtext.C
 End_Macro
-Begin_Html
-<p>
+
 The list of all available symbols is given in the following example:
-End_Html
+
 Begin_Macro(source)
 ../../../tutorials/graphics/tmathtext2.C
 End_Macro
-Begin_Html
-<p>
-End_Html
 */
 
 const Double_t kPI      = TMath::Pi();
@@ -341,7 +335,6 @@ public:
 
 ClassImp(TMathText)
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
@@ -350,7 +343,6 @@ TMathText::TMathText(void)
 {
    fRenderer = new TMathTextRenderer(this);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor.
@@ -361,14 +353,12 @@ TMathText::TMathText(Double_t x, Double_t y, const char *text)
    fRenderer = new TMathTextRenderer(this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TMathText::~TMathText(void)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
@@ -379,7 +369,6 @@ TMathText::TMathText(const TMathText &text)
    ((TMathText &)text).Copy(*this);
    fRenderer = new TMathTextRenderer(this);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator.
@@ -393,7 +382,6 @@ TMathText &TMathText::operator=(const TMathText &rhs)
    return *this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy.
 
@@ -403,7 +391,6 @@ void TMathText::Copy(TObject &obj) const
    TText::Copy(obj);
    TAttFill::Copy((TAttFill &)obj);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Render the text.
@@ -418,7 +405,6 @@ Render(const Double_t x, const Double_t y, const Double_t size,
    renderer->set_parameter(x, y, size, angle);
    renderer->text(0, 0, math_text);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the text bounding box.
@@ -452,7 +438,6 @@ GetSize(Double_t &x0, Double_t &y0, Double_t &x1, Double_t &y1,
    x1 = std::max(std::max(x[0], x[1]), std::max(x[2], x[3]));
    y1 = std::max(std::max(y[0], y[1]), std::max(y[2], y[3]));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Alignment.
@@ -491,7 +476,6 @@ GetAlignPoint(Double_t &x0, Double_t &y0,
    renderer->transform_pad(x0, y0, x, y);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the text width and height.
 
@@ -511,7 +495,6 @@ void TMathText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t /*angle*/)
    w = (UInt_t)(TMath::Abs(gPad->XtoAbsPixel(x1) - gPad->XtoAbsPixel(x0)));
    h = (UInt_t)(TMath::Abs(gPad->YtoAbsPixel(y0) - gPad->YtoAbsPixel(y1)));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get X size.
@@ -534,7 +517,6 @@ Double_t TMathText::GetXsize(void)
    return TMath::Abs(x1 - x0);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get Y size.
 
@@ -556,7 +538,6 @@ Double_t TMathText::GetYsize(void)
    return TMath::Abs(y0 - y1);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a copy of this object with the new parameters
 /// and copy object attributes.
@@ -572,7 +553,6 @@ TMathText *TMathText::DrawMathText(Double_t x, Double_t y, const char *text)
 
    return newtext;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint text.
@@ -593,7 +573,6 @@ void TMathText::Paint(Option_t *)
    fX = xsave;
    fY = ysave;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint text (used by Paint()).
@@ -686,7 +665,6 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
    SetTextFont(saveFont);
    SetTextAlign(saveAlign);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out

@@ -17,20 +17,13 @@
 
 ClassImp(TLink)
 
+/** \class TLink
+Special TText object used to show hyperlinks.
 
-//______________________________________________________________________________
-//
-// Special TText object used to show hyperlinks.
-// In the example below created by TObject::Inspect, TLinks are used
-// to show pointers to other objects.
-// Clicking on one link, inspect the corresponding object.
-//Begin_Html
-/*
-<img src="gif/link.gif">
+In the example below created by TObject::Inspect, TLinks are used
+to show pointers to other objects.
+Clicking on one link, inspect the corresponding object.
 */
-//End_Html
-//
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Link default constructor.
@@ -39,7 +32,6 @@ TLink::TLink() : TText()
 {
    fLink  = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor to define a link object.
@@ -55,14 +47,12 @@ TLink::TLink(Double_t x, Double_t y, void *pointer)
    SetTitle(line);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Link default destructor.
 
 TLink::~TLink()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
