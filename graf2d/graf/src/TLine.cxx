@@ -22,7 +22,7 @@
 
 ClassImp(TLine)
 
-/** \class TLIne
+/** \class TLine
 A Graphical line
 */
 
