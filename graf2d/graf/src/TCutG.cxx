@@ -9,10 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
-////////////////////////////////////////////////////////////////////////////////
-/*! \class TCutG
-\brief Graphical cut class.
+/** \class TCutG
+Graphical cut class.
 
 A TCutG object is a closed polygon defining a closed region in a x,y plot.
 It can be created via the graphics editor option "CutG" or directly by
@@ -21,25 +19,25 @@ invoking its constructor. The first and last points should be the same.
 To create a TCutG via the graphics editor, use the left button to select the
 points building the contour of the cut. Click on the right button to close the
 TCutG. When it is created via the graphics editor, the TCutG object is named
-"CUTG". It is recommended to immediatly change the name by using the context
+"CUTG". It is recommended to immediately change the name by using the context
 menu item "SetName". When the graphics editor is used, the names of the
 variables X,Y are automatically taken from the current pad title.
 
 Example:
 
 Assume a TTree object T and:
-
+~~~ {.cpp}
     Root > T.Draw("abs(fMomemtum)%fEtot")
-
+~~~
 the TCutG members fVarX, fVary will be set to:
-
+~~~ {.cpp}
     fVarx = fEtot
     fVary = abs(fMomemtum)
-
+~~~
 A graphical cut can be used in a TTree selection expression:
-
+~~~ {.cpp}
     Root > T.Draw("fEtot","cutg1")
-
+~~~
 where "cutg1" is the name of an existing graphical cut.
 
 Note that, as shown in the example above, a graphical cut may be used in a
@@ -50,14 +48,14 @@ the fVarX, fVarY of the graphical cut plus other variables.
 When the TCutG object is created by TTree::Draw, it is added to the list of special objects in
 the main TROOT object pointed by gROOT. To retrieve a pointer to this object
 from the code or command line, do:
-
+~~~ {.cpp}
     TCutG *mycutg;
     mycutg = (TCutG*)gROOT->GetListOfSpecials()->FindObject("CUTG")
     mycutg->SetName("mycutg");
-
+~~~
 When the TCutG is not created via TTree::Draw, one must set the variable names
 corresponding to x,y if one wants to use the cut as input to TTree::Draw,eg
-
+~~~ {.cpp}
     TCutG *cutg = new TCutG("mycut",5);
     cutg->SetVarX("y");
     cutg->SetVarY("x");
@@ -67,11 +65,11 @@ corresponding to x,y if one wants to use the cut as input to TTree::Draw,eg
     cutg->SetPoint(3,-1.0375,-0.07944915);
     cutg->SetPoint(4,0.756681,0.1853814);
     cutg->SetPoint(5,-0.3586207,1.509534);
-
+~~~
 Example of use of a TCutG in TTree::Draw:
-
+~~~ {.cpp}
     tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")
-
+~~~
 A Graphical cut may be drawn via TGraph::Draw. It can be edited like a normal
 TGraph.
 
@@ -91,7 +89,6 @@ A Graphical cut may be saved to a file via TCutG::Write.
 
 ClassImp(TCutG)
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TCutG default constructor.
 
@@ -100,7 +97,6 @@ TCutG::TCutG() : TGraph()
    fObjectX  = 0;
    fObjectY  = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TCutG copy constructor
@@ -113,7 +109,6 @@ TCutG::TCutG(const TCutG &cutg)
    fObjectX = cutg.fObjectX;
    fObjectY = cutg.fObjectY;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TCutG normal constructor.
@@ -156,7 +151,6 @@ TCutG::TCutG(const char *name, Int_t n)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TCutG normal constructor.
 
@@ -197,7 +191,6 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
       delete [] vars;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TCutG normal constructor.
@@ -352,7 +345,6 @@ Double_t TCutG::IntegralHist(TH2 *h, Option_t *option) const
    return integral;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
@@ -409,7 +401,6 @@ void TCutG::SetVarX(const char *varx)
    fObjectX = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set Y variable.
 
@@ -419,7 +410,6 @@ void TCutG::SetVarY(const char *vary)
    delete fObjectY;
    fObjectY = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TCutG.

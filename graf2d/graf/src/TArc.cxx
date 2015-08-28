@@ -16,15 +16,13 @@
 
 ClassImp(TArc)
 
-////////////////////////////////////////////////////////////////////////////////
-/*! \class TArc
-\brief Create an Arc.
+/** \class TArc
+Create an Arc.
 
 An arc is specified with the position of its centre, its radius a minimum and
 maximum angle. The attributes of the outline line are given via TAttLine. The
 attributes of the fill area are given via TAttFill
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Arc  default constructor.
@@ -32,7 +30,6 @@ attributes of the fill area are given via TAttFill
 TArc::TArc(): TEllipse()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Arc  normal constructor.
@@ -42,15 +39,14 @@ TArc::TArc(): TEllipse()
 /// \param[in] phimin   min angle in degrees (default is 0-->360)
 /// \param[in] phimax   max angle in degrees (default is 0-->360)
 ///
-///  When a circle sector only is drawn, the lines connecting the center
-///  of the arc to the edges are drawn by default. One can specify
-///  the drawing option "only" to not draw these lines.
+/// When a circle sector only is drawn, the lines connecting the center
+/// of the arc to the edges are drawn by default. One can specify
+/// the drawing option "only" to not draw these lines.
 
 TArc::TArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t phimax)
       :TEllipse(x1,y1,r1,r1,phimin,phimax,0)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
@@ -60,14 +56,12 @@ TArc::TArc(const TArc &arc) : TEllipse(arc)
    ((TArc&)arc).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Arc default destructor.
 
 TArc::~TArc()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this arc to arc.
@@ -76,7 +70,6 @@ void TArc::Copy(TObject &arc) const
 {
    TEllipse::Copy(arc);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this arc with new coordinates.
@@ -89,7 +82,6 @@ void TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t
    newarc->SetBit(kCanDelete);
    newarc->AppendPad(option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out

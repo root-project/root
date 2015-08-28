@@ -23,10 +23,8 @@ const Double_t kPI = 3.14159265358979323846;
 
 ClassImp(TEllipse)
 
-
-////////////////////////////////////////////////////////////////////////////////
-/*! \class TEllipse
-\brief Draw Ellipses.
+/** \class TEllipse
+Draw Ellipses.
 
 The ellipse can be truncated and rotated. It is defined by its center `(x1,y1)`
 and two radius`r1` and `r2`.
@@ -46,8 +44,8 @@ outline it is enough to specify 0 as line style.
 
 Begin_Macro(source)
 ../../../tutorials/graphics/ellipse.C
-End_Macro */
-
+End_Macro
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ellipse default constructor.
@@ -62,7 +60,6 @@ TEllipse::TEllipse(): TObject(), TAttLine(), TAttFill()
    fPhimax = 360;
    fTheta  = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ellipse normal constructor.
@@ -80,14 +77,12 @@ TEllipse::TEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phi
    if (r2 <= 0) fR2 = fR1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Ellipse default destructor.
 
 TEllipse::~TEllipse()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
@@ -105,7 +100,6 @@ TEllipse::TEllipse(const TEllipse &ellipse) : TObject(ellipse), TAttLine(ellipse
    ((TEllipse&)ellipse).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this ellipse to ellipse.
 
@@ -122,7 +116,6 @@ void TEllipse::Copy(TObject &obj) const
    ((TEllipse&)obj).fPhimax = fPhimax;
    ((TEllipse&)obj).fTheta  = fTheta;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to an ellipse.
@@ -165,16 +158,13 @@ Int_t TEllipse::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this ellipse with its current attributes.
 
 void TEllipse::Draw(Option_t *option)
 {
    AppendPad(option);
-
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this ellipse with new coordinates.
@@ -188,7 +178,6 @@ void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Doub
    newellipse->AppendPad(option);
    if (TestBit(kNoEdges)) newellipse->SetBit(kNoEdges);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
@@ -512,7 +501,6 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// List this ellipse with its attributes.
 
@@ -522,7 +510,6 @@ void TEllipse::ls(Option_t *) const
    printf("%s:  X1= %f Y1=%f R1=%f R2=%f\n",GetName(),fX1,fY1,fR1,fR2);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this ellipse with its current attributes.
 
@@ -530,7 +517,6 @@ void TEllipse::Paint(Option_t *option)
 {
    PaintEllipse(fX1,fY1,fR1,fR2,fPhimin,fPhimax,fTheta,option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this ellipse with new coordinates.
@@ -581,7 +567,6 @@ void TEllipse::PaintEllipse(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump this ellipse with its attributes.
 
@@ -593,7 +578,6 @@ void TEllipse::Print(Option_t *) const
    if (GetLineWidth() != 1) printf(" Width=%d",GetLineWidth());
    printf("\n");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
@@ -617,7 +601,6 @@ void TEllipse::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   ellipse->Draw();"<<std::endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if kNoEdges bit is set, kFALSE otherwise.
 
@@ -625,7 +608,6 @@ Bool_t TEllipse::GetNoEdges() const
 {
    return TestBit(kNoEdges) ? kTRUE : kFALSE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// if  noEdges = kTRUE the lines connecting the center to the edges
@@ -637,7 +619,6 @@ void TEllipse::SetNoEdges(Bool_t noEdges)
    if (noEdges) SetBit(kNoEdges);
    else         ResetBit(kNoEdges);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TEllipse.
@@ -671,7 +652,6 @@ void TEllipse::Streamer(TBuffer &R__b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the bounding Box of the Ellipse, currently not taking into
 /// account the rotating angle.
@@ -686,7 +666,6 @@ Rectangle_t TEllipse::GetBBox()
    return (BBox);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the center of the Ellipse as TPoint in pixels
 
@@ -698,7 +677,6 @@ TPoint TEllipse::GetBBoxCenter()
    return(p);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set center of the Ellipse
 
@@ -708,7 +686,6 @@ void TEllipse::SetBBoxCenter(const TPoint &p)
    fY1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set X coordinate of the center of the Ellipse
 
@@ -716,7 +693,6 @@ void TEllipse::SetBBoxCenterX(const Int_t x)
 {
    fX1 = gPad->PixeltoX(x);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set Y coordinate of the center of the Ellipse
@@ -726,9 +702,8 @@ void TEllipse::SetBBoxCenterY(const Int_t y)
    fY1 = gPad->PixeltoY(y-gPad->VtoPixel(0));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set lefthandside of BoundingBox to a value
+/// Set left hand side of BoundingBox to a value
 /// (resize in x direction on left)
 
 void TEllipse::SetBBoxX1(const Int_t x)
@@ -740,9 +715,8 @@ void TEllipse::SetBBoxX1(const Int_t x)
    fX1 = x1 + fR1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set righthandside of BoundingBox to a value
+/// Set right hand side of BoundingBox to a value
 /// (resize in x direction on right)
 
 void TEllipse::SetBBoxX2(const Int_t x)
@@ -753,7 +727,6 @@ void TEllipse::SetBBoxX2(const Int_t x)
    fR1 = (x2-fX1+fR1)*0.5;
    fX1 = x2-fR1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set top of BoundingBox to a value (resize in y direction on top)
@@ -766,7 +739,6 @@ void TEllipse::SetBBoxY1(const Int_t y)
    fR2 = (y1-fY1+fR2)*0.5;
    fY1 = y1-fR2;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set bottom of BoundingBox to a value

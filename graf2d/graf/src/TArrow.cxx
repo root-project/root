@@ -21,9 +21,8 @@ TString TArrow::fgDefaultOption     = ">";
 
 ClassImp(TArrow)
 
-////////////////////////////////////////////////////////////////////////////////
-/*! \class TArrow
-\brief Draw all kinds of Arrows.
+/** \class TArrow
+Draw all kinds of Arrows.
 
 The different arrow's formats are explained in TArrow::TArrow.
 The picture below gives some examples.
@@ -51,9 +50,9 @@ TArrow::TArrow(): TLine(),TAttFill()
 ///   Arrow normal constructor.
 ///
 /// Define an arrow between points x1,y1 and x2,y2
-/// the arrowsize is in percentage of the pad height
+/// the `arrowsize` is in percentage of the pad height
 /// Opening angle between the two sides of the arrow is fAngle (60 degrees)
-///
+/// ~~~ {.cpp}
 ///     option = ">"      -------->
 ///     option = "|->"    |------->
 ///     option = "<"      <--------
@@ -63,7 +62,7 @@ TArrow::TArrow(): TLine(),TAttFill()
 ///     option = "-|>-"   ---|>----
 ///     option = "<>"     <------->
 ///     option = "<|>"    <|-----|>  arrow defined by a triangle
-///
+/// ~~~
 /// Note:
 ///
 /// - If FillColor == 0 an open triangle is drawn, otherwise a full triangle is drawn with the fill color. The default is filled with LineColor
@@ -99,7 +98,7 @@ TArrow::TArrow(const TArrow &arrow) : TLine(), TAttFill()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy this arrow to arro
+/// Copy this arrow to arrow
 
 void TArrow::Copy(TObject &obj) const
 {
@@ -128,8 +127,8 @@ void TArrow::Draw(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this arrow with new coordinates.
 ///
-/// if `arrowsize` is <= 0, `arrowsize` will be the current arrow size
-/// if `option=""`, `option` will be the current arrow option
+///  - if `arrowsize` is <= 0, `arrowsize` will be the current arrow size
+///  - if `option=""`, `option` will be the current arrow option
 
 void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                      Float_t arrowsize ,Option_t *option)
