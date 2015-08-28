@@ -333,7 +333,7 @@ TPad::~TPad()
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new TExec object to the list of Execs.
 ///
-/// When an event occurs in the pad (mouse click, etc) the list of CINT commands
+/// When an event occurs in the pad (mouse click, etc) the list of C++ commands
 /// in the list of Execs are executed via TPad::AutoExec.
 ///
 /// When a pad event occurs (mouse move, click, etc) all the commands
@@ -368,8 +368,8 @@ TPad::~TPad()
 /// of the mouse. The resulting histogram is fitted with a gaussian.
 /// A "dynamic" line shows the current bin position in Y.
 /// This more elaborated example can be used as a starting point
-/// to develop more powerful interactive applications exploiting CINT
-/// as a development engine.
+/// to develop more powerful interactive applications exploiting the C++
+/// interpreter as a development engine.
 
 void TPad::AddExec(const char *name, const char*command)
 {
