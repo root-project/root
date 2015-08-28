@@ -24,28 +24,25 @@
 
 ClassImp(TPaveStats)
 
+/** \class TPaveStats
+The histogram statistics painter class.
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>The histogram statistics painter class</h2></center>
 A PaveStats is a PaveText to draw histogram statistics and fit parameters.
-<ul>
-<li><a href="#PS01">Statistics Display</a>
-<li><a href="#PS02">Fit Statistics</a>
-<li><a href="#PS03">Statistics box editing</a>
-</ul>
 
-<a name="PS01"></a><h3>Statistics Display</h3>
+- [Statistics Display](#PS01)
+- [Fit Statistics](#PS02)
+- [Statistics box editing](#PS03)
+
+## <a name="PS01"></a> Statistics Display
 
 The type of information shown in the histogram statistics box can be selected
 with:
-<pre>
+~~~ {.cpp}
       gStyle->SetOptStat(mode);
-</pre>
+~~~
 
-<p>The "<tt>mode</tt>" has up to nine digits that can be set to on (1 or 2), off (0).
-<pre>
+The "`mode`" has up to nine digits that can be set to on (1 or 2), off (0).
+~~~ {.cpp}
       mode = ksiourmen  (default = 000001111)
       k = 1;  kurtosis printed
       k = 2;  kurtosis and kurtosis error printed
@@ -60,47 +57,47 @@ with:
       m = 2;  mean and mean error values printed
       e = 1;  number of entries printed
       n = 1;  name of histogram is printed
-</pre>
+~~~
 
-<p>For example:
-<pre>
+For example:
+~~~ {.cpp}
       gStyle->SetOptStat(11);
-</pre>
+~~~
 displays only the name of histogram and the number of entries, whereas:
-<pre>
+~~~ {.cpp}
       gStyle->SetOptStat(1101);
-</pre>
+~~~
 displays the name of histogram, mean value and RMS.
 
-<p><b>WARNING 1:</b> never do:
-<pre>
-      <s>gStyle->SetOptStat(0001111);</s>
-</pre>
+<b>WARNING 1:</b> never do:
+~~~ {.cpp}
+      gStyle->SetOptStat(0001111);
+~~~
 but instead do:
-<pre>
+~~~ {.cpp}
       gStyle->SetOptStat(1111);
-</pre>
-because <tt>0001111</tt> will be taken as an octal number!
+~~~
+because `0001111` will be taken as an octal number!
 
-<p><b>WARNING 2:</b> for backward compatibility with older versions
-<pre>
+<b>WARNING 2:</b> for backward compatibility with older versions
+~~~ {.cpp}
       gStyle->SetOptStat(1);
-</pre>
+~~~
 is taken as:
-<pre>
+~~~ {.cpp}
       gStyle->SetOptStat(1111)
-</pre>
+~~~
 To print only the name of the histogram do:
-<pre>
+~~~ {.cpp}
       gStyle->SetOptStat(1000000001);
-</pre>
+~~~
 
-<p><b>NOTE</b> that in case of 2D histograms, when selecting only underflow
+<b>NOTE</b> that in case of 2D histograms, when selecting only underflow
 (10000) or overflow (100000), the statistics box will show all combinations
 of underflow/overflows and not just one single number.
 
-<p>The parameter mode can be any combination of the letters <tt>kKsSiourRmMen</tt>
-<pre>
+The parameter mode can be any combination of the letters `kKsSiourRmMen`
+~~~ {.cpp}
       k :  kurtosis printed
       K :  kurtosis and kurtosis error printed
       s :  skewness printed
@@ -114,138 +111,128 @@ of underflow/overflows and not just one single number.
       M :  mean value mean error values printed
       e :  number of entries printed
       n :  name of histogram is printed
-</pre>
+~~~
 
-<p>For example, to print only name of histogram and number of entries do:
-<pre>
+For example, to print only name of histogram and number of entries do:
+~~~ {.cpp}
       gStyle->SetOptStat("ne");
-</pre>
+~~~
 
-<p>To print only the name of the histogram do:
-<pre>
+To print only the name of the histogram do:
+~~~ {.cpp}
       gStyle->SetOptStat("n");
-</pre>
+~~~
 
-<p>The default value is:
-<pre>
+The default value is:
+~~~ {.cpp}
       gStyle->SetOptStat("nemr");
-</pre>
+~~~
 
-<p>When a histogram is painted, a <tt>TPaveStats</tt> object is created and added
-to the list of functions of the histogram. If a <tt>TPaveStats</tt> object
+When a histogram is painted, a `TPaveStats` object is created and added
+to the list of functions of the histogram. If a `TPaveStats` object
 already exists in the histogram list of functions, the existing object is just
 updated with the current histogram parameters.
 
-<p>Once a histogram is painted, the statistics box can be accessed using
-<tt>h->FindObject("stats")</tt>. In the command line it is enough to do:
-<pre>
+Once a histogram is painted, the statistics box can be accessed using
+`h->FindObject("stats")`. In the command line it is enough to do:
+~~~ {.cpp}
       Root > h->Draw()
       Root > TPaveStats *st = (TPaveStats*)h->FindObject("stats")
-</pre>
+~~~
 
-<p>because after <tt>h->Draw()</tt> the histogram is automatically painted. But
-in a script file the painting should be forced using <tt>gPad->Update()</tt>
+because after `h->Draw()` the histogram is automatically painted. But
+in a script file the painting should be forced using `gPad->Update()`
 in order to make sure the statistics box is created:
-<pre>
+~~~ {.cpp}
       h->Draw();
       gPad->Update();
       TPaveStats *st = (TPaveStats*)h->FindObject("stats");
-</pre>
+~~~
 
-<p>Without <tt>gPad->Update()</tt> the line <tt>h->FindObject("stats")</tt>
+Without `gPad->Update()` the line `h->FindObject("stats")`
 returns a null pointer.
 
-<p>When a histogram is drawn with the option "<tt>SAME</tt>", the statistics box
+When a histogram is drawn with the option "`SAME`", the statistics box
 is not drawn. To force the statistics box drawing with the option
-"<tt>SAME</tt>", the option "<tt>SAMES</tt>" must be used.
+"`SAME`", the option "`SAMES`" must be used.
 If the new statistics box hides the previous statistics box, one can change
-its position with these lines ("<tt>h</tt>" being the pointer to the histogram):
-<pre>
+its position with these lines ("`h`" being the pointer to the histogram):
+~~~ {.cpp}
       Root > TPaveStats *st = (TPaveStats*)h->FindObject("stats")
       Root > st->SetX1NDC(newx1); //new x start position
       Root > st->SetX2NDC(newx2); //new x end position
-</pre>
+~~~
 
-<p>To change the type of information for an histogram with an existing
-<tt>TPaveStats</tt> one should do:
-<pre>
+To change the type of information for an histogram with an existing
+`TPaveStats` one should do:
+~~~ {.cpp}
       st->SetOptStat(mode);
-</pre>
-Where "<tt>mode</tt>" has the same meaning than when calling
-<tt>gStyle->SetOptStat(mode)</tt> (see above).
+~~~
+Where "`mode`" has the same meaning than when calling
+`gStyle->SetOptStat(mode)` (see above).
 
-<p>One can delete the statistics box for a histogram <tt>TH1* h</tt> with:
-<pre>
+One can delete the statistics box for a histogram `TH1* h` with:
+~~~ {.cpp}
       h->SetStats(0)
-</pre>
+~~~
 
-<p>and activate it again with:
-<pre>
+and activate it again with:
+~~~ {.cpp}
       h->SetStats(1).
-</pre>
+~~~
 
-
-<a name="PS02"></a><h3>Fit Statistics</h3>
-
+## <a name="PS02"></a> Fit Statistics
 
 The type of information about fit parameters printed in the histogram statistics
 box can be selected via the parameter mode. The parameter mode can be
-<tt>= pcev</tt>  (default <tt>= 0111</tt>)
-<pre>
+`= pcev`  (default `= 0111`)
+~~~ {.cpp}
       p = 1;  print Probability
       c = 1;  print Chisquare/Number of degrees of freedom
       e = 1;  print errors (if e=1, v must be 1)
       v = 1;  print name/values of parameters
-</pre>
+~~~
 Example:
-<pre>
+~~~ {.cpp}
       gStyle->SetOptFit(1011);
-</pre>
+~~~
 print fit probability, parameter names/values and errors.
-<ol>
-<li> When <tt>"v" = 1</tt> is specified, only the non-fixed parameters are
+
+  1. When `"v" = 1` is specified, only the non-fixed parameters are
      shown.
-<li> When <tt>"v" = 2</tt> all parameters are shown.
-</ol>
-Note: <tt>gStyle->SetOptFit(1)</tt> means "default value", so it is equivalent
-to <tt>gStyle->SetOptFit(111)</tt>
+  2. When `"v" = 2` all parameters are shown.
 
+Note: `gStyle->SetOptFit(1)` means "default value", so it is equivalent
+to `gStyle->SetOptFit(111)`
 
-<a name="PS03"></a><h3>Statistics box editing</h3>
+## <a name="PS03"></a> Statistics box editing
 
 The following example show how to remove and add a line in a statistics box.
-End_Html
+
 Begin_Macro(source)
 ../../../tutorials/hist/statsEditing.C
-End_Macro */
+End_Macro
+*/
 
 
 const UInt_t kTakeStyle = BIT(17); //see TStyle::SetOptFit/Stat
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// TPaveStats default constructor.
 
 TPaveStats::TPaveStats(): TPaveText()
 {
-   /* Begin_Html
-   TPaveStats default constructor.
-   End_Html */
-
    fParent  = 0;
    fOptFit  = gStyle->GetOptFit();
    fOptStat = gStyle->GetOptStat();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// TPaveStats normal constructor.
 
 TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)
 {
-   /* Begin_Html
-   TPaveStats normal constructor.
-   End_Html */
-
    fParent = 0;
    fOptFit  = gStyle->GetOptFit();
    fOptStat = gStyle->GetOptStat();
@@ -253,118 +240,82 @@ TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Optio
    SetStatFormat(gStyle->GetStatFormat());
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// TPaveStats default destructor.
 
 TPaveStats::~TPaveStats()
 {
-   /* Begin_Html
-   TPaveStats default destructor.
-   End_Html */
-
    if ( fParent && !fParent->TestBit(kInvalidObject)) fParent->RecursiveRemove(this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the fit option.
 
 Int_t TPaveStats::GetOptFit() const
 {
-   /* Begin_Html
-   Return the fit option.
-   End_Html */
-
    if (TestBit(kTakeStyle)) return gStyle->GetOptFit();
    return fOptFit;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the stat option.
 
 Int_t TPaveStats::GetOptStat() const
 {
-   /* Begin_Html
-   Return the stat option.
-   End_Html */
-
    if (TestBit(kTakeStyle)) return gStyle->GetOptStat();
    return fOptStat;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Save This TPaveStats options in current style.
 
 void TPaveStats::SaveStyle()
 {
-   /* Begin_Html
-   Save This TPaveStats options in current style.
-   End_Html */
-
    gStyle->SetOptFit(fOptFit);
    gStyle->SetOptStat(fOptStat);
    gStyle->SetFitFormat(fFitFormat.Data());
    gStyle->SetStatFormat(fStatFormat.Data());
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Change (i.e. set) the format for printing fit parameters in statistics box.
 
 void TPaveStats::SetFitFormat(const char *form)
 {
-   /* Begin_Html
-   Change (i.e. set) the format for printing fit parameters in statistics box.
-   End_Html */
-
    fFitFormat = form;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the fit option.
 
 void TPaveStats::SetOptFit(Int_t fit)
 {
-   /* Begin_Html
-   Set the fit option.
-   End_Html */
-
    fOptFit = fit;
    ResetBit(kTakeStyle);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the stat option.
 
 void TPaveStats::SetOptStat(Int_t stat)
 {
-   /* Begin_Html
-   Set the stat option.
-   End_Html */
-
    fOptStat = stat;
    ResetBit(kTakeStyle);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Change (i.e. set) the format for printing statistics.
 
 void TPaveStats::SetStatFormat(const char *form)
 {
-   /* Begin_Html
-   Change (i.e. set) the format for printing statistics.
-   End_Html */
-
    fStatFormat = form;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Paint the pave stat.
 
 void TPaveStats::Paint(Option_t *option)
 {
-   /* Begin_Html
-   Paint the pave stat.
-   End_Html */
-
    TPave::ConvertNDCtoPad();
    TPave::PaintPave(fX1,fY1,fX2,fY2,GetBorderSize(),option);
 
@@ -543,15 +494,11 @@ void TPaveStats::Paint(Option_t *option)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out.
 
 void TPaveStats::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   /* Begin_Html
-   Save primitive as a C++ statement(s) on output stream out.
-   End_Html */
-
    char quote = '"';
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TPaveStats::Class())) {
@@ -581,15 +528,11 @@ void TPaveStats::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   ptstats->Draw();"<<std::endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TPaveStats.
 
 void TPaveStats::Streamer(TBuffer &R__b)
 {
-   /* Begin_Html
-   Stream an object of class TPaveStats.
-   End_Html */
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -616,15 +559,11 @@ void TPaveStats::Streamer(TBuffer &R__b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Replace current attributes by current style.
 
 void TPaveStats::UseCurrentStyle()
 {
-   /* Begin_Html
-   Replace current attributes by current style.
-   End_Html */
-
    if (gStyle->IsReading()) {
       SetOptStat(gStyle->GetOptStat());
       SetOptFit(gStyle->GetOptFit());
