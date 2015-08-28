@@ -17,11 +17,10 @@
 
 #include <assert.h>
 
-//______________________________________________________________________________
-//
-// Provides 3D viewer interface (TVirtualViewer3D) support on a pad.
-// Will be merged with TView / TView3D eventually.
-
+/** \class TViewer3DPad
+Provides 3D viewer interface (TVirtualViewer3D) support on a pad.
+Will be merged with TView / TView3D eventually.
+*/
 
 ClassImp(TViewer3DPad)
 
@@ -33,7 +32,6 @@ Bool_t TViewer3DPad::PreferLocalFrame() const
 {
    return kFALSE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a scene on the viewer
@@ -81,8 +79,9 @@ void TViewer3DPad::EndScene()
 ////////////////////////////////////////////////////////////////////////////////
 /// Add an 3D object described by the buffer to the viewer. Returns flags
 /// to indicate:
-/// i) if extra sections of the buffer need completing.
-/// ii) if child objects of the buffer object should be added (always true)
+///
+/// 1. if extra sections of the buffer need completing.
+/// 2. if child objects of the buffer object should be added (always true)
 
 Int_t TViewer3DPad::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 {
@@ -157,7 +156,6 @@ Int_t TViewer3DPad::AddObject(UInt_t /*placedID*/, const TBuffer3D & buffer, Boo
 {
    return AddObject(buffer,addChildren);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Composite shapes not supported on this viewer currently - ignore.

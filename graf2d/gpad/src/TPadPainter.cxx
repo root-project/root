@@ -60,6 +60,10 @@ void DrawPolyMarkerAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T 
 
 ClassImp(TPadPainter)
 
+/** \class TPadPainter
+Implement TVirtualPadPainter which is an attempt to abstract painting operations
+furthermore.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Empty ctor. We need it only because of explicit copy ctor.
@@ -697,9 +701,9 @@ inline size_type MergePointsInplaceY(std::vector<TPoint> &dst, size_type nMerged
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///I'm using 'pad' pointer to get rid of this damned gPad.
-///Unfortunately, TPadPainter itself still has to use it.
-///But at least this code does not have to be fixed.
+/// I'm using 'pad' pointer to get rid of this damned gPad.
+/// Unfortunately, TPadPainter itself still has to use it.
+/// But at least this code does not have to be fixed.
 
 template<typename T>
 void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y,
@@ -746,8 +750,7 @@ void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///This pass is a bit more complicated, since we have
-///to 'compact' in-place.
+/// This pass is a bit more complicated, since we have to 'compact' in-place.
 
 void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst)
 {
@@ -795,13 +798,9 @@ void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///This is a quite simple algorithm, using the fact, that after conversion many subsequent vertices
-///can have the same 'x' or 'y' coordinate and this part of a polygon will look like a line
-///on the screen.
-///Please NOTE: even if there are some problems (like invalid polygons), the algorithm can be
-///fixed (I'm not sure at the moment if it's important) and remembering the order
-///of yMin/yMax or xMin/xMax (see aux. functions above) -
-///this should help if there's any problems.
+/// This is a quite simple algorithm, using the fact, that after conversion many
+/// subsequent vertices can have the same 'x' or 'y' coordinate and this part of
+/// a polygon will look like a line on the screen.
 
 template<typename T>
 void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoints, const T *x,
