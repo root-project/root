@@ -93,7 +93,8 @@ if(NOT ROOT_fftw3_FOUND)
                  roofit/rf210_angularconv.C
                  roofit/rf211_paramconv.C
                  roofit/rf512_wsfactory_oper.C
-                 fft/FFT.C)
+                 fft/FFT.C
+                 fit/fitConvolution.C)
 endif()
 
 if(NOT ROOT_opengl_FOUND)
@@ -206,6 +207,7 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-geom-na49view
                        tutorial-tree-ntuple1
                        tutorial-io-hadd
+                       tutorial-io-loopdir
                        tutorial-io-copyFiles)
 
 #--many roostats tutorials depending on having creating the file first with histfactory
