@@ -1,3 +1,5 @@
+#!/bin/sh
+
 cp -p build/configure.in . 
 cp -p build/Makefile.am . 
 cp -p build/src_Makefile.am src/Makefile.am
