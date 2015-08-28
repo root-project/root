@@ -19,15 +19,11 @@
 ClassImp(TPavesText)
 
 
-//______________________________________________________________________________
-//  A PavesText is a PaveText (see TPaveText) with several stacked paves.
-//Begin_Html
-/*
-<img src="gif/pavestext.gif">
-*/
-//End_Html
-//
+/** \class TPavesText
+A PavesText is a PaveText (see TPaveText) with several stacked paves.
 
+\image html graf_pavestext.png
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Pavestext default constructor.
@@ -37,17 +33,16 @@ TPavesText::TPavesText(): TPaveText()
    fNpaves = 5;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Pavestext normal constructor.
 ///
-/// The PavesText is by default defined bith bordersize=1 and option ="br".
-///  option = "T" Top frame
-///  option = "B" Bottom frame
-///  option = "R" Right frame
-///  option = "L" Left frame
-///  option = "NDC" x1,y1,x2,y2 are given in NDC
-///  option = "ARC" corners are rounded
+/// The PavesText is by default defined both bordersize=1 and option ="br".
+///  - option = "T" Top frame
+///  - option = "B" Bottom frame
+///  - option = "R" Right frame
+///  - option = "L" Left frame
+///  - option = "NDC" x1,y1,x2,y2 are given in NDC
+///  - option = "ARC" corners are rounded
 
 TPavesText::TPavesText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Int_t npaves,Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)
@@ -56,14 +51,12 @@ TPavesText::TPavesText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Int_t
    SetBorderSize(1);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Pavestext default destructor.
 
 TPavesText::~TPavesText()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Pavestext copy constructor.
@@ -78,7 +71,6 @@ TPavesText::TPavesText(const TPavesText &pavestext) : TPaveText()
    Streamer(b);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this pavestext with its current attributes.
 
@@ -86,7 +78,6 @@ void TPavesText::Draw(Option_t *option)
 {
    AppendPad(option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this pavestext with its current attributes.
@@ -118,7 +109,6 @@ void TPavesText::Paint(Option_t *option)
    // Draw the top pavetext
    TPaveText::Paint(option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
