@@ -140,6 +140,7 @@ set(extra_veto
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
+  histfactory/makeExample.C         # Internal tutorial called by prepareHistFactory
   tree/copytree2.C
   tree/copytree3.C
   tree/copytree.C
