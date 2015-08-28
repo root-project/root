@@ -24,8 +24,7 @@ class CppTransformer(InputTransformer):
         elif line == ".dcl" and self.cell == "":
             self.mustDeclare = True
         else:
-            if "" != self.cell:
-               line+="\n"
+            line+="\n"
             self.cell += line
         return None
 
