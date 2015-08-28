@@ -34,30 +34,24 @@ lt_symlist_t lt_preloaded_symbols[] = {
 
 ClassImp(TGraphStruct)
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>Graph Structure class</h2></center>
+/** \class TGraphStruct
 The Graph Structure is an interface to the graphviz package.
-<p>
+
 The graphviz package is a graph visualization system. This interface consists in
 three classes:
-<ol>
-<li> TGraphStruct: holds the graph structure. It uses the graphiz library to
-     layout the graphs and the ROOT graphics to paint them.
-<li> TGraphNode: Is a graph node object which can be added in a TGraphStruct.
-<li> TGraphEdge: Is an edge object connecting two nodes which can be added in
-     a TGraphStruct.
-</ol>
-End_Html
+
+  - TGraphStruct: holds the graph structure. It uses the graphviz library to
+    layout the graphs and the ROOT graphics to paint them.
+  - TGraphNode: Is a graph node object which can be added in a TGraphStruct.
+  - TGraphEdge: Is an edge object connecting two nodes which can be added in
+    a TGraphStruct.
+
 Begin_Macro(source)
 ../../../tutorials/graphs/graphstruct.C
 End_Macro
-Begin_Html
-A graph structure can be dumped into a "dot" file using DumpAsDotFile.
-End_Html */
 
+A graph structure can be dumped into a "dot" file using DumpAsDotFile.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph Structure default constructor.
@@ -71,7 +65,6 @@ TGraphStruct::TGraphStruct()
 
    SetMargin();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph Structure default destructor.
@@ -87,7 +80,6 @@ TGraphStruct::~TGraphStruct()
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add the edge "edge" in this TGraphStruct.
 
@@ -97,7 +89,6 @@ void TGraphStruct::AddEdge(TGraphEdge *edge)
 
    fEdges->Add(edge);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an edge between n1 and n2 and put it in this graph.
@@ -115,7 +106,6 @@ TGraphEdge *TGraphStruct::AddEdge(TGraphNode *n1, TGraphNode *n2)
    return edge;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add the node "node" in this TGraphStruct.
 
@@ -125,7 +115,6 @@ void TGraphStruct::AddNode(TGraphNode *node)
 
    fNodes->Add(node);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the node "name" if it does not exist and add it to this TGraphStruct.
@@ -144,8 +133,6 @@ TGraphNode *TGraphStruct::AddNode(const char *name, const char *title)
    return node;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump this graph structure as a "dot" file.
 
@@ -162,7 +149,6 @@ void TGraphStruct::DumpAsDotFile(const char *filename)
       fclose(file);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the graph
@@ -204,7 +190,6 @@ void TGraphStruct::Draw(Option_t *option)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Layout the graph into a GraphViz data structure
@@ -280,7 +265,6 @@ Int_t TGraphStruct::Layout()
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
@@ -334,7 +318,6 @@ void TGraphStruct::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
    out<<"   graphstruct->Draw();"<<std::endl;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

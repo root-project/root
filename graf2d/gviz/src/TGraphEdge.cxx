@@ -21,12 +21,11 @@ ClassImp(TGraphEdge)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Begin_Html
-<center><h2>Graph Edge class</h2></center>
+/** \class TGraphEdge
 TGraphEdge is an edge object connecting two nodes which can be added in a
 TGraphStruct.
-End_Html */
-
+End_Html
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph Edge default constructor.
@@ -42,7 +41,6 @@ TGraphEdge::TGraphEdge(): TObject(), TAttLine()
    fArrX   = 0;
    fArrY   = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph Edge normal constructor.
@@ -60,7 +58,6 @@ TGraphEdge::TGraphEdge(TGraphNode *n1, TGraphNode *n2)
    fArrY   = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph Edge default destructor.
 
@@ -72,7 +69,6 @@ TGraphEdge::~TGraphEdge()
    if (fY) delete [] fY; fY = 0;
    if (fN) delete [] fN; fN = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the GraphViz edge into the GraphViz data structure gv.
@@ -91,7 +87,6 @@ void TGraphEdge::CreateGVEdge(GVizAgraph_t *gv)
       Error("CreateGVEdge","Invalid graphviz graph");
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to an edge.
@@ -113,7 +108,6 @@ Int_t TGraphEdge::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 
@@ -131,7 +125,6 @@ void TGraphEdge::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       a = a+n;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Layout this edge in the GraphViz space. This is done after gvLayout
@@ -176,7 +169,6 @@ void TGraphEdge::Layout()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this edge with its current attributes.
 
@@ -209,7 +201,6 @@ void TGraphEdge::Paint(Option_t *)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
@@ -225,7 +216,6 @@ void TGraphEdge::SaveAttributes(std::ostream &out, const char* name)
 {
    SaveLineAttributes(out,name,1,1,1);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
