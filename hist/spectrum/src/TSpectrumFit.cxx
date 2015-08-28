@@ -29,6 +29,26 @@
 //                                                                         //
 //____________________________________________________________________________
 
+/** \class TSpectrumFit
+ \ingroup Hist
+ \brief Advanced 1-dimentional spectra fitting functions
+ \author Miroslav Morhac
+ 
+ The original code in C has been repackaged as a C++ class by R.Brun
+
+ The algorithms in this class have been published in the following
+ references:
+ 1. M. Morhac et al.: Efficient fitting algorithms applied to
+    analysis of coincidence gamma-ray spectra. Computer Physics
+    Communications, Vol 172/1 (2005) pp. 19-41.
+
+ 2.  M. Morhac et al.: Study of fitting algorithms applied to
+    simultaneous analysis of large number of peaks in gamma-ray spectra.
+    Applied Spectroscopy, Vol. 57, No. 7, pp. 753-760, 2003.
+
+*/
+
+
 #include "TSpectrumFit.h"
 #include "TMath.h"
 

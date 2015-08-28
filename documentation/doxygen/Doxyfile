@@ -774,11 +774,7 @@ INPUT                  = ../../core/base/ \
                          ../../graf3d/g3d/ \
                          ../../graf3d/gl/ \
                          ../../graf3d/gviz3d/ \
-                         ../../hist/hist/ \
-                         ../../hist/histpainter/ \
-                         ../../hist/hbook/ \
-                         ../../hist/spectrum/ \
-                         ../../hist/spectrumpainter/ \
+                         ../../hist
                          ../../io/io/ \
                          ../../io/sql/ \
                          ../../io/xml/ \
