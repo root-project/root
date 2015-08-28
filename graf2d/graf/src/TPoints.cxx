@@ -14,3 +14,6 @@
 
 ClassImp(TPoints)
 
+/** \class TPoints
+2-D graphics point (world coordinates).
+*/
