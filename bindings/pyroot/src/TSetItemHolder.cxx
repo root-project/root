@@ -7,7 +7,7 @@
 
 
 //- protected members --------------------------------------------------------
-Bool_t PyROOT::TSetItemHolder::InitExecutor_( TExecutor*& executor )
+Bool_t PyROOT::TSetItemHolder::InitExecutor_( TExecutor*& executor, TCallContext* )
 {
 // basic call will do
    if ( ! TMethodHolder::InitExecutor_( executor ) )
