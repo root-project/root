@@ -44,6 +44,7 @@
 namespace PyROOT {
 
 R__EXTERN void* TPyExceptionMagic;
+R__EXTERN void* TPyCPPExceptionMagic;
 
 class TPyException : public std::exception {
 public:
