@@ -74,6 +74,8 @@ namespace Cppyy {
    TCppIndex_t GetNumBases( TCppType_t type );
    std::string GetBaseName( TCppType_t type, TCppIndex_t ibase );
    Bool_t      IsSubtype( TCppType_t derived, TCppType_t base );
+   void        AddSmartPtrType( const std::string& );
+   Bool_t      IsSmartPtr( const std::string& );
 
 // calculate offsets between declared and actual type, up-cast: direction > 0; down-cast: direction < 0
    ptrdiff_t GetBaseOffset(
