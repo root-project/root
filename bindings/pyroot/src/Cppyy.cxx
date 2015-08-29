@@ -685,6 +685,13 @@ std::vector< Cppyy::TCppMethod_t > Cppyy::GetMethodsFromName(
             }
          }
       }
+   } else {
+      TClassRef& cr = type_from_handle( scope );
+      if ( cr.GetClass() ) {
+      // todo: handle overloads
+         TMethod* m = cr->GetMethodAny( name.c_str() );
+         if ( m ) methods.push_back( (TCppMethod_t)m );
+      }
    }
 
    return methods;
