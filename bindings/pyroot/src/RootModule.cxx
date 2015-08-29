@@ -640,7 +640,25 @@ namespace {
       return Py_None;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a smart pointer to the list of known smart pointer types.
+
+   PyObject* AddSmartPtrType( PyObject*, PyObject* args )
+   {
+      const char* type_name;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "s" ), &type_name ) )
+         return nullptr;
+
+      Cppyy::AddSmartPtrType( type_name );
+
+      Py_RETURN_NONE;
+   }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a pinning so that objects of type `derived' are interpreted as
+/// objects of type `base'.
+
    PyObject* SetTypePinning( PyObject*, PyObject* args )
    {
       PyRootClass* derived = nullptr, *base = nullptr;
@@ -649,11 +667,13 @@ namespace {
                                &PyRootType_Type, &base ) )
          return nullptr;
       gPinnedTypes.push_back( std::make_pair( derived->fCppType, base->fCppType ) );
-      Py_INCREF( Py_None );
-      return Py_None;
+
+      Py_RETURN_NONE;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an exception to the type pinning for objects of type `derived'.
+
    PyObject* IgnoreTypePinning( PyObject*, PyObject* args )
    {
       PyRootClass* derived = nullptr;
@@ -661,11 +681,13 @@ namespace {
                                &PyRootType_Type, &derived ) )
          return nullptr;
       gIgnorePinnings.push_back( derived->fCppType );
-      Py_INCREF( Py_None );
-      return Py_None;
+
+      Py_RETURN_NONE;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cast `obj' to type `type'.
+
    PyObject* Cast( PyObject*, PyObject* args )
    {
       ObjectProxy* obj = nullptr;
@@ -717,6 +739,8 @@ static PyMethodDef gPyROOTMethods[] = {
      METH_VARARGS, (char*) "Trap signals in safe mode to prevent interpreter abort" },
    { (char*) "SetOwnership", (PyCFunction)SetOwnership,
      METH_VARARGS, (char*) "Modify held C++ object ownership" },
+   { (char*) "AddSmartPtrType", (PyCFunction)AddSmartPtrType,
+     METH_VARARGS, (char*) "Add a smart pointer to the list of known smart pointer types" },
    { (char*) "InstallGUIEventInputHook", (PyCFunction)PyROOT::Utility::InstallGUIEventInputHook,
      METH_NOARGS, (char*) "Install input hook to sent GUI events" },
    { (char*) "RemoveGUIEventInputHook", (PyCFunction)PyROOT::Utility::RemoveGUIEventInputHook,
