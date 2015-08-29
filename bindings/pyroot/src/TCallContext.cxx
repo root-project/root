@@ -19,7 +19,7 @@ namespace PyROOT {
 
 Bool_t PyROOT::TCallContext::SetMemoryPolicy( ECallFlags e )
 {
-   if ( kUseHeuristics <= e && e <= kUseStrict ) {
+   if ( kUseHeuristics == e || e == kUseStrict ) {
       sMemoryPolicy = e;
       return kTRUE;
    }
@@ -32,7 +32,7 @@ Bool_t PyROOT::TCallContext::SetMemoryPolicy( ECallFlags e )
 
 Bool_t PyROOT::TCallContext::SetSignalPolicy( ECallFlags e )
 {
-   if ( kFast <= e && e <= kSafe ) {
+   if ( kFast == e || e == kSafe ) {
       sSignalPolicy = e;
       return kTRUE;
    }
