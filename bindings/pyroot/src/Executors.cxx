@@ -96,6 +96,7 @@ static inline PyObject* PyROOT_PyBool_FromInt( Int_t b ) {
    return result;
 }
 
+
 //- executors for built-ins ---------------------------------------------------
 PyObject* PyROOT::TBoolExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -425,6 +426,7 @@ PyObject* PyROOT::TCppObjectByValueExecutor::Execute(
    return (PyObject*)pyobj;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// executor binds the result to the left-hand side, overwriting if an old object
 
@@ -486,6 +488,111 @@ PyObject* PyROOT::TCppObjectPtrRefExecutor::Execute(
    return BindCppObject( *(void**)GILCallR( method, self, ctxt ), fClass, kFALSE );
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// smart pointer excutor
+
+PyObject* PyROOT::TCppObjectBySmartPtrExecutor::Execute(
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
+{
+   Cppyy::TCppObject_t value = GILCallO( method, self, ctxt, fClass );
+
+   if ( ! value ) {
+      if ( ! PyErr_Occurred() )         // callee may have set a python error itself
+         PyErr_SetString( PyExc_ValueError, "NULL result where temporary expected" );
+      return 0;
+   }
+
+// fixme? - why doesn't this do the same as `self._get_smart_ptr().get()'
+   ObjectProxy* pyobj = (ObjectProxy*) BindCppObject(
+      (void*)GILCallR( (Cppyy::TCppMethod_t)fDereferencer, value, ctxt ), fRawPtrType );
+
+   if ( pyobj )
+      pyobj->SetSmartPtr( (void*)value, fClass );
+
+// python ref counting will now control this object's life span
+   pyobj->HoldOn();
+
+   return (PyObject*)pyobj;
+}
+
+PyObject* PyROOT::TCppObjectBySmartPtrPtrExecutor::Execute(
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
+{
+   Cppyy::TCppObject_t value = GILCallR( method, self, ctxt );
+   if ( ! value )
+      return nullptr;
+
+// todo: why doesn't this do the same as `self._get_smart_ptr().get()'
+   ObjectProxy* pyobj = (ObjectProxy*) BindCppObject(
+      (void*)GILCallR( (Cppyy::TCppMethod_t)fDereferencer, value, ctxt ), fRawPtrType );
+
+   if ( pyobj )
+      pyobj->SetSmartPtr( (void*)value, fClass );
+
+   return (PyObject*)pyobj;
+}
+
+PyObject* PyROOT::TCppObjectBySmartPtrRefExecutor::Execute(
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
+{
+   Cppyy::TCppObject_t value = GILCallR( method, self, ctxt );
+   if ( ! value )
+      return nullptr;
+
+   //if ( ! fAssignable ) {
+
+     // fixme? - why doesn't this do the same as `self._get_smart_ptr().get()'
+     ObjectProxy* pyobj = (ObjectProxy*) BindCppObject(
+        (void*)GILCallR( (Cppyy::TCppMethod_t)fDereferencer, value, ctxt ), fRawPtrType );
+
+     if ( pyobj )
+        pyobj->SetSmartPtr( (void*)value, fClass );
+
+     return (PyObject*)pyobj;
+
+   // todo: assignment not done yet
+   //
+   /*} else {
+
+     PyObject* result = BindCppObject( (void*)value, fClass );
+
+   // this generic code is quite slow compared to its C++ equivalent ...
+      PyObject* assign = PyObject_GetAttrString( result, const_cast< char* >( "__assign__" ) );
+      if ( ! assign ) {
+         PyErr_Clear();
+         PyObject* descr = PyObject_Str( result );
+         if ( descr && PyBytes_CheckExact( descr ) ) {
+            PyErr_Format( PyExc_TypeError, "can not assign to return object (%s)",
+                          PyBytes_AS_STRING( descr ) );
+         } else {
+            PyErr_SetString( PyExc_TypeError, "can not assign to result" );
+         }
+         Py_XDECREF( descr );
+         Py_DECREF( result );
+         Py_DECREF( fAssignable ); fAssignable = 0;
+         return 0;
+      }
+
+      PyObject* res2 = PyObject_CallFunction( assign, const_cast< char* >( "O" ), fAssignable );
+
+
+      Py_DECREF( assign );
+      Py_DECREF( result );
+      Py_DECREF( fAssignable ); fAssignable = 0;
+
+      if ( res2 ) {
+         Py_DECREF( res2 );             // typically, *this from operator=()
+         Py_INCREF( Py_None );
+         return Py_None;
+      }
+
+      return 0;
+   }
+   */
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// execute <method> with argument <self, ctxt>, construct TTupleOfInstances from return value
 
@@ -494,7 +601,6 @@ PyObject* PyROOT::TCppObjectArrayExecutor::Execute(
 {
    return BindCppObjectArray( (void*)GILCallR( method, self, ctxt ), fClass, fArraySize );
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// package return address in PyObject* for caller to handle appropriately (see
@@ -517,7 +623,8 @@ PyObject* PyROOT::TPyObjectExecutor::Execute(
 
 
 //- factories -----------------------------------------------------------------
-PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
+PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType,
+                                           Bool_t manage_smart_ptr )
 {
 // The matching of the fulltype to an executor factory goes through up to 4 levels:
 //   1) full, qualified match
@@ -564,23 +671,45 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 // ROOT classes and special cases (enum)
    TExecutor* result = 0;
    if ( Cppyy::TCppType_t klass = Cppyy::GetScope( realType ) ) {
-      if ( cpd == "" )
-         result = new TCppObjectByValueExecutor( klass );
-      else if ( cpd == "&" )
-         result = new TCppObjectRefExecutor( klass );
-      else if ( cpd == "**" )
-         result = new TCppObjectPtrPtrExecutor( klass );
-      else if ( cpd == "*&" || cpd == "&*" )
-         result = new TCppObjectPtrRefExecutor( klass );
-      else if ( cpd == "[]" ) {
-         Py_ssize_t asize = Utility::ArraySize( resolvedType );
-         if ( 0 < asize )
-            result = new TCppObjectArrayExecutor( klass, asize );
-         else
-            result = new TCppObjectPtrRefExecutor( klass );
+      if ( manage_smart_ptr && Cppyy::IsSmartPtr( realType ) ) {
+         const std::vector< Cppyy::TCppMethod_t > methods = Cppyy::GetMethodsFromName( klass, "operator->" );
+         if ( ! methods.empty() ) {
+            Cppyy::TCppType_t rawPtrType = Cppyy::GetScope(
+               TClassEdit::ShortType( Cppyy::GetMethodResultType( methods[0] ).c_str(), 1 ) );
+            if ( rawPtrType ) {
+               if ( cpd == "" ) {
+                  result = new TCppObjectBySmartPtrExecutor( klass, rawPtrType, methods[0] );
+               } else if ( cpd == "*" ) {
+                  result = new TCppObjectBySmartPtrPtrExecutor( klass, rawPtrType, methods[0] );
+               } else if ( cpd == "&" ) {
+                  result = new TCppObjectBySmartPtrRefExecutor( klass, rawPtrType, methods[0] );
+               } /* else if ( cpd == "**" ) {
+               } else if ( cpd == "*&" || cpd == "&*" ) {
+               } else if ( cpd == "[]" ) {
+               } else {
+               } */
+            }
+         }
       }
-      else
-         result = new TCppObjectExecutor( klass );
+
+      if ( ! result ) {
+         if ( cpd == "" )
+            result = new TCppObjectByValueExecutor( klass );
+         else if ( cpd == "&" )
+            result = new TCppObjectRefExecutor( klass );
+         else if ( cpd == "**" )
+            result = new TCppObjectPtrPtrExecutor( klass );
+         else if ( cpd == "*&" || cpd == "&*" )
+            result = new TCppObjectPtrRefExecutor( klass );
+         else if ( cpd == "[]" ) {
+            Py_ssize_t asize = Utility::ArraySize( resolvedType );
+            if ( 0 < asize )
+              result = new TCppObjectArrayExecutor( klass, asize );
+            else
+              result = new TCppObjectPtrRefExecutor( klass );
+         } else
+            result = new TCppObjectExecutor( klass );
+      }
    } else if ( Cppyy::IsEnum( realType ) ) {
    // enums don't resolve to unsigned ints, but that's what they are ...
       h = gExecFactories.find( "UInt_t" + cpd );

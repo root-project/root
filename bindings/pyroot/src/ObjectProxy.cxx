@@ -5,6 +5,7 @@
 #include "PyROOT.h"
 #include "PyStrings.h"
 #include "ObjectProxy.h"
+#include "RootWrapper.h"
 #include "Utility.h"
 
 // ROOT
@@ -44,11 +45,20 @@ namespace PyROOT {
 void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
    if ( gROOT && !gROOT->TestBit( TObject::kInvalidObject ) ) {
       if ( pyobj->fFlags & ObjectProxy::kIsValue ) {
-         Cppyy::CallDestructor( pyobj->ObjectIsA(), pyobj->GetObject() );
-         Cppyy::Deallocate(  pyobj->ObjectIsA(), pyobj->GetObject() );
+         if ( ! (pyobj->fFlags & ObjectProxy::kIsSmartPtr) ) {
+            Cppyy::CallDestructor( pyobj->ObjectIsA(), pyobj->GetObject() );
+            Cppyy::Deallocate( pyobj->ObjectIsA(), pyobj->GetObject() );
+         } else {
+            Cppyy::CallDestructor( pyobj->fSmartPtrType, pyobj->fSmartPtr );
+            Cppyy::Deallocate( pyobj->fSmartPtrType, pyobj->fSmartPtr );
+         }
       }
       else if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
-         Cppyy::Destruct( pyobj->ObjectIsA(), pyobj->GetObject() );
+         if ( ! (pyobj->fFlags & ObjectProxy::kIsSmartPtr) ) {
+            Cppyy::Destruct( pyobj->ObjectIsA(), pyobj->GetObject() );
+         } else {
+            Cppyy::Destruct( pyobj->fSmartPtrType, pyobj->fSmartPtr );
+         }
       }
    }
    pyobj->fObject = NULL;
@@ -159,6 +169,15 @@ namespace {
       return oload;
    }
 
+//= PyROOT smart pointer support =============================================
+  PyObject* op_get_smart_ptr( ObjectProxy* self )
+  {
+     if ( !( self->fFlags & ObjectProxy::kIsSmartPtr ) ) {
+        Py_RETURN_NONE;
+     }
+
+     return (PyObject*)PyROOT::BindCppObject( self->fSmartPtr, self->fSmartPtrType );
+  }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -168,6 +187,7 @@ namespace {
       { (char*)"__destruct__", (PyCFunction)op_destruct, METH_NOARGS, NULL },
       { (char*)"__reduce__",   (PyCFunction)op_reduce,   METH_NOARGS, NULL },
       { (char*)"__dispatch__", (PyCFunction)op_dispatch, METH_VARARGS, (char*)"dispatch to selected overload" },
+      { (char*)"_get_smart_ptr", (PyCFunction)op_get_smart_ptr, METH_NOARGS, (char*)"get associated smart pointer, if any" },
       { (char*)NULL, NULL, 0, NULL }
    };
 
@@ -233,6 +253,12 @@ namespace {
       if ( pyobj->fFlags & ObjectProxy::kIsReference )
          clName.append( "*" );
 
+      std::string smartPtrName;
+      if ( pyobj->fFlags & ObjectProxy::kIsSmartPtr ) {
+         Cppyy::TCppType_t smartPtrType = pyobj->fSmartPtrType;
+         smartPtrName = smartPtrType ? Cppyy::GetFinalName( smartPtrType ) : "unknown smart pointer";
+      }
+
    // need to prevent accidental derefs when just printing (usually unsafe)
       if ( ! PyObject_HasAttr( (PyObject*)pyobj, PyStrings::gDeref ) ) {
          PyObject* name = PyObject_CallMethod( (PyObject*)pyobj,
@@ -240,10 +266,17 @@ namespace {
 
          if ( name ) {
             if ( PyROOT_PyUnicode_GET_SIZE( name ) != 0 ) {
-               PyObject* repr = PyROOT_PyUnicode_FromFormat( "<ROOT.%s object (\"%s\") at %p>",
-                  clName.c_str(), PyROOT_PyUnicode_AsString( name ), pyobj->GetObject() );
-               Py_DECREF( name );
-               return repr;
+               if ( pyobj->fFlags & ObjectProxy::kIsSmartPtr ) {
+                  PyObject* repr = PyROOT_PyUnicode_FromFormat( "<ROOT.%s object (\"%s\") at %p held by %s at %p>",
+                     clName.c_str(), PyROOT_PyUnicode_AsString( name ), pyobj->GetObject(), smartPtrName.c_str(), pyobj->fSmartPtr );
+                  Py_DECREF( name );
+                  return repr;
+               } else {
+                  PyObject* repr = PyROOT_PyUnicode_FromFormat( "<ROOT.%s object (\"%s\") at %p>",
+                     clName.c_str(), PyROOT_PyUnicode_AsString( name ), pyobj->GetObject() );
+                  Py_DECREF( name );
+                  return repr;
+               }
             }
             Py_DECREF( name );
          } else
@@ -251,8 +284,13 @@ namespace {
       }
 
    // get here if object has no method GetName() or name = ""
-      return PyROOT_PyUnicode_FromFormat( const_cast< char* >( "<ROOT.%s object at %p>" ),
-         clName.c_str(), pyobj->GetObject() );
+      if ( pyobj->fFlags & ObjectProxy::kIsSmartPtr ) {
+         return PyROOT_PyUnicode_FromFormat( const_cast< char* >( "<ROOT.%s object at %p held by %s at %p>" ),
+            clName.c_str(), pyobj->GetObject(), smartPtrName.c_str(), pyobj->fSmartPtr );
+      } else {
+         return PyROOT_PyUnicode_FromFormat( const_cast< char* >( "<ROOT.%s object at %p>" ),
+                                             clName.c_str(), pyobj->GetObject() );
+      }
    }
 
 

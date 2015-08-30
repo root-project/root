@@ -92,7 +92,7 @@ public:
 static inline
 TClassRef& type_from_handle( Cppyy::TCppScope_t scope )
 {
-   assert( (ClassRefs_t::size_type) scope < g_classrefs.size());
+   assert( (ClassRefs_t::size_type) scope < g_classrefs.size() );
    return g_classrefs[ (ClassRefs_t::size_type)scope ];
 }
 

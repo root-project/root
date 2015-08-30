@@ -878,7 +878,7 @@ Bool_t PyROOT::TCppObjectConverter::SetArg(
    ObjectProxy* pyobj = (ObjectProxy*)pyobject;
    if ( pyobj->ObjectIsA() && Cppyy::IsSubtype( pyobj->ObjectIsA(), fClass ) ) {
    // depending on memory policy, some objects need releasing when passed into functions
-      if ( ! KeepControl() && ! (ctxt->fFlags & TCallContext::kUseStrict) )
+      if ( ! KeepControl() && ! UseStrictOwnership( ctxt ) )
          ((ObjectProxy*)pyobject)->Release();
 
    // calculate offset between formal and actual arguments
@@ -1016,7 +1016,7 @@ Bool_t PyROOT::TCppObjectPtrConverter::SetArg(
 
    if ( Cppyy::IsSubtype( ((ObjectProxy*)pyobject)->ObjectIsA(), fClass ) ) {
    // depending on memory policy, some objects need releasing when passed into functions
-      if ( ! KeepControl() && ! (ctxt->fFlags & TCallContext::kUseStrict) )
+      if ( ! KeepControl() && ! UseStrictOwnership( ctxt ) )
          ((ObjectProxy*)pyobject)->Release();
 
    // set pointer (may be null) and declare success
@@ -1209,6 +1209,77 @@ Bool_t PyROOT::TPyObjectConverter::ToMemory( PyObject* value, void* address )
    return kTRUE;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// smart pointer converter
+
+Bool_t PyROOT::TSmartPtrCppObjectConverter::SetArg(
+      PyObject* pyobject, TParameter& para, TCallContext* ctxt )
+{
+   char typeCode = fHandlePtr ? 'p' : 'V';
+
+   if ( ! ObjectProxy_Check( pyobject ) ) {
+      if ( fHandlePtr && GetAddressSpecialCase( pyobject, para.fValue.fVoidp ) ) {
+         para.fTypeCode = typeCode;      // allow special cases such as NULL
+         return kTRUE;
+      }
+
+      return kFALSE;
+   }
+
+   ObjectProxy* pyobj = (ObjectProxy*)pyobject;
+
+// for the case where we have a 'hidden' smart pointer:
+   if ( pyobj->fFlags & ObjectProxy::kIsSmartPtr && Cppyy::IsSubtype( pyobj->fSmartPtrType, fClass ) ) {
+   // depending on memory policy, some objects need releasing when passed into functions
+      if ( fKeepControl && ! UseStrictOwnership( ctxt ) )
+         ((ObjectProxy*)pyobject)->Release();
+
+   // calculate offset between formal and actual arguments
+      para.fValue.fVoidp = pyobj->fSmartPtr;
+      if ( pyobj->fSmartPtrType != fClass ) {
+         para.fValue.fLong += Cppyy::GetBaseOffset(
+            pyobj->fSmartPtrType, fClass, para.fValue.fVoidp, 1 /* up-cast */ );
+      }
+
+   // set pointer (may be null) and declare success
+      para.fTypeCode = typeCode;
+      return kTRUE;
+   }
+
+// for the case where we have an 'exposed' smart pointer:
+   if ( pyobj->ObjectIsA() && Cppyy::IsSubtype( pyobj->ObjectIsA(), fClass ) ) {
+   // calculate offset between formal and actual arguments
+      para.fValue.fVoidp = pyobj->GetObject();
+      if ( pyobj->ObjectIsA() != fClass ) {
+         para.fValue.fLong += Cppyy::GetBaseOffset(
+            pyobj->ObjectIsA(), fClass, para.fValue.fVoidp, 1 /* up-cast */ );
+      }
+
+   // set pointer (may be null) and declare success
+      para.fTypeCode = typeCode;
+      return kTRUE;
+   }
+
+   return kFALSE;
+}
+
+PyObject* PyROOT::TSmartPtrCppObjectConverter::FromMemory( void* address )
+{
+   if ( !address || !fClass )
+      return nullptr;
+
+// obtain raw pointer
+   std::vector<TParameter> args;
+   ObjectProxy* pyobj = (ObjectProxy*) BindCppObject(
+      Cppyy::CallR( (Cppyy::TCppMethod_t)fDereferencer, address, &args ), fRawPtrType );
+   if ( pyobj )
+      pyobj->SetSmartPtr( (void*)address, fClass );
+
+   return (PyObject*)pyobj;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// raise a NotImplemented exception to take a method out of overload resolution
 
@@ -1274,22 +1345,43 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
 // converters for known/ROOT classes and default (void*)
    TConverter* result = 0;
    if ( Cppyy::TCppScope_t klass = Cppyy::GetScope( realType ) ) {
-   // CLING WORKAROUND -- special case for STL iterators
-      if ( realType.find( "__gnu_cxx::__normal_iterator", 0 ) /* vector */ == 0 )
-         result = new TSTLIteratorConverter();
-      else
-   // -- CLING WORKAROUND
-      if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
-         result = new TCppObjectPtrConverter( klass, control );
-      else if ( cpd == "*" && size <= 0 )
-         result = new TCppObjectConverter( klass, control );
-      else if ( cpd == "&" )
-         result = new TRefCppObjectConverter( klass );
-      else if ( cpd == "[]" || size > 0 )
-         result = new TCppObjectArrayConverter( klass, size, kFALSE );
-      else if ( cpd == "" )               // by value
-         result = new TValueCppObjectConverter( klass, kTRUE );
+      if ( Cppyy::IsSmartPtr( realType ) ) {
+         const std::vector< Cppyy::TCppMethod_t > methods = Cppyy::GetMethodsFromName( klass, "operator->" );
+         if ( ! methods.empty() ) {
+            Cppyy::TCppType_t rawPtrType = Cppyy::GetScope(
+               TClassEdit::ShortType( Cppyy::GetMethodResultType( methods[0] ).c_str(), 1 ) );
+            if ( rawPtrType ) {
+               if ( cpd == "" ) {
+                  result = new TSmartPtrCppObjectConverter( klass, rawPtrType, methods[0], control );
+               } else if ( cpd == "&" ) {
+                  result = new TSmartPtrCppObjectConverter( klass, rawPtrType, methods[0] );
+               } else if ( cpd == "*" && size <= 0 ) {
+                  result = new TSmartPtrCppObjectConverter( klass, rawPtrType, methods[0], control, kTRUE );
+               } /* else if ( cpd == "**" || cpd == "*&" || cpd == "&*" ) {
+               } else if ( cpd == "[]" || size > 0 ) {
+               } else {
+               } */
+            }
+         }
+      }
 
+      if ( ! result ) {
+        // CLING WORKAROUND -- special case for STL iterators
+        if ( realType.find( "__gnu_cxx::__normal_iterator", 0 ) /* vector */ == 0 )
+          result = new TSTLIteratorConverter();
+        else
+          // -- CLING WORKAROUND
+        if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
+          result = new TCppObjectPtrConverter( klass, control );
+        else if ( cpd == "*" && size <= 0 )
+          result = new TCppObjectConverter( klass, control );
+        else if ( cpd == "&" )
+          result = new TRefCppObjectConverter( klass );
+        else if ( cpd == "[]" || size > 0 )
+          result = new TCppObjectArrayConverter( klass, size, kFALSE );
+        else if ( cpd == "" )               // by value
+          result = new TValueCppObjectConverter( klass, kTRUE );
+      }
    } else if ( Cppyy::IsEnum( realType ) ) {
    // special case (Cling): represent enums as unsigned integers
       if ( cpd == "&" )
