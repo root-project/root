@@ -1,3 +1,4 @@
+from __future__ import print_function
 import distutils.sysconfig as conf, sys, os; 
 ldlib = conf.get_config_var('LDLIBRARY')
 if ldlib:
@@ -15,4 +16,4 @@ elif 'win' in sys.platform:
    lib = os.path.join(prefix,'python%s.dll' % version)
 if not os.path.isfile(lib):
    raise RuntimeError("Cannot locate Python dynamic libraries");
-print lib
+print(lib)

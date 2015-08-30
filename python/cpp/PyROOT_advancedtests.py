@@ -185,7 +185,7 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertRaises( TypeError, m.GetSize )
       try:
          m.GetSize()
-      except TypeError, e:
+      except TypeError as e:
          self.assert_( "must be explicit" in str(e) )
 
       self.assertEqual( m.GetSize( 'char' )(),   m.GetCharSize() )
