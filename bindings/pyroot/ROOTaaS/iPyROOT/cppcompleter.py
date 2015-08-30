@@ -28,7 +28,7 @@ class CppCompleter(object):
     def activate(self):
         self.active = True
         if self.firstActivation:
-           utils._loadLibrary("libRint.so")
+           utils._loadLibrary("libRint")
            self.firstActivation = False
 
     def deactivate(self):

@@ -88,11 +88,26 @@ def disableJSVisDebug():
     _enableJSVis = False
     _enableJSVisDebug = False
 
+def _getLibExtension():
+    '''Return appropriate file extension for a shared library'''
+    pExtMap = {
+        'darwin' : '.dylib',
+        'win32'  : '.dll'
+    }
+    return pExtMap.get(sys.platform, '.so')
+
+
 def _loadLibrary(libName):
-   """
-   Dl-open a library bypassing the ROOT calling sequence
-   """
-   return ctypes.cdll.LoadLibrary(libName)
+    '''Dl-open a library bypassing the ROOT calling sequence.
+    It attaches the correct extension.
+    '''
+    lib = None
+    try:
+      lib = ctypes.cdll.LoadLibrary(libName + _getLibExtension())
+    except:
+      lib = ctypes.cdll.LoadLibrary(libName + ".so")
+    return lib
+   
 
 def welcomeMsg():
     print "Welcome to ROOTaas Beta"
@@ -129,7 +144,7 @@ class StreamCapture(object):
         self.sysStreamFile = stream
         self.sysStreamFileNo = streamsFileNo[stream]
         self.shell = ip
-        self.libc = _loadLibrary("libc.so.6")
+        self.libc = _loadLibrary("libc")
 
     def more_data(self):
         r, _, _ = select.select([self.pipe_out], [], [], 0)
@@ -174,9 +189,11 @@ class CaptureDrawnCanvases(object):
         self.shell.events.register('post_execute', self._post_execute)
 
 
-captures = [StreamCapture(sys.stderr),
-            StreamCapture(sys.stdout),
-            CaptureDrawnCanvases()]
+_captures = [StreamCapture(sys.stderr),
+             StreamCapture(sys.stdout),
+             CaptureDrawnCanvases()]
+def enableCaptures():
+  for capture in _captures: capture.register()
 
 def toCpp():
     '''
