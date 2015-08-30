@@ -3,10 +3,20 @@ import utils
 from hashlib import sha1
 
 def _codeToFilename(code):
+    '''Convert code to a unique file name
+
+    >>> _codeToFilename("int f(i){return i*i;}")
+    'dbf7e731.C'
+    '''
     fileNameBase = sha1(code).hexdigest()[0:8]
     return fileNameBase + ".C"
 
 def _dumpToUniqueFile(code):
+    '''Dump code to file whose name is unique
+
+    >>> _codeToFilename("int f(i){return i*i;}")
+    'dbf7e731.C'
+    '''
     fileName = _codeToFilename(code)
     ofile = open (fileName,'w')
     ofile.write(code)
