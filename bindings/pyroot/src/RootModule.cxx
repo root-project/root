@@ -274,6 +274,9 @@ namespace {
          ep->me_value = gval;
          ep->me_key   = key;
          ep->me_hash  = hash;
+#if PY_VERSION_HEX >= 0x03030000
+         *value_addr  = &gval;
+#endif
          gDictLookupActive = kFALSE;
          return ep;
       }
@@ -326,6 +329,11 @@ namespace {
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyDict_Type, &dict ) )
          return 0;
 
+   // Notwithstanding the code changes, the following does not work for p3.3 and
+   // later: once the dictionary is resized, its lookup function on its keys will
+   // revert to the default (lookdict_unicode_nodummy) and only if the resizing
+   // dictionary has the generic lookdict function as dk_lookup for its keys, will
+   // this be set on the new keys.
       PYROOT_GET_DICT_LOOKUP( dict ) = RootLookDictString;
 
       Py_INCREF( Py_None );
