@@ -23,7 +23,7 @@ ROOT.gROOT.SetBatch()
 cppMIME = 'text/x-c++src'
 ipyMIME = 'text/x-ipython'
 
-jsDefaultHighlight = """
+_jsDefaultHighlight = """
 // Set default mode for code cells
 IPython.CodeCell.options_default.cm_config.mode = '{mimeType}';
 // Set CodeMirror's current mode
@@ -33,7 +33,7 @@ cells[cells.length-1].code_mirror.setOption('mode', '{mimeType}');
 cells[cells.length-1].cm_config.mode = '{mimeType}';
 """
 
-jsMagicHighlight = "IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp|^%%dcl/]}};"
+_jsMagicHighlight = "IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp|^%%dcl/]}};"
 
 
 _jsNotDrawableClassesPatterns = ["TGraph{2,3}D","TH3*","TGraphPolar","TProf*","TEve*","TF{2,3}","TGeo*","TPolyLine3D"]
@@ -189,11 +189,12 @@ class CaptureDrawnCanvases(object):
         self.shell.events.register('post_execute', self._post_execute)
 
 
-_captures = [StreamCapture(sys.stderr),
-             StreamCapture(sys.stdout),
-             CaptureDrawnCanvases()]
-def enableCaptures():
-  for capture in _captures: capture.register()
+captures = [StreamCapture(sys.stderr),
+            StreamCapture(sys.stdout),
+            CaptureDrawnCanvases()]
+
+
+extNames = ["ROOTaaS.iPyROOT.cppmagic","ROOTaaS.iPyROOT.dclmagic"]
 
 def toCpp():
     '''
@@ -204,7 +205,7 @@ def toCpp():
     cpptransformer.load_ipython_extension(ip)
     cppcompleter.load_ipython_extension(ip)
     # Change highlight mode
-    IPython.display.display_javascript(jsDefaultHighlight.format(mimeType = cppMIME), raw=True)
+    IPython.display.display_javascript(_jsDefaultHighlight.format(mimeType = cppMIME), raw=True)
     print "Notebook is in Cpp mode"
 
 class CanvasDrawer(object):
@@ -310,6 +311,22 @@ def setStyle():
     style.SetMarkerSize(.5)
     style.SetMarkerColor(ROOT.kBlue)
     style.SetPalette(57)
+
+def enhanceROOTModule():
+    ROOT.toCpp = toCpp
+    ROOT.enableJSVis = enableJSVis
+    ROOT.disableJSVis = disableJSVis
+    ROOT.enableJSVisDebug = enableJSVisDebug
+    ROOT.disableJSVisDebug = disableJSVisDebug
+    ROOT.TCanvas.DrawCpp = ROOT.TCanvas.Draw
+    ROOT.TCanvas.Draw = _PyDraw
+
+def enableCppHighlighting():
+    ipDispJs = IPython.display.display_javascript
+    #Make sure clike JS lexer is loaded
+    ipDispJs("require(['codemirror/mode/clike/clike'], function(Clike) { console.log('ROOTaaS - C++ CodeMirror module loaded'); });", raw=True)
+    # Define highlight mode for %%cpp and %%dcl magics
+    ipDispJs(_jsMagicHighlight.format(cppMIME = cppMIME), raw=True)
 
 # Here functions are defined to process C++ code
 def processCppCodeImpl(cell):
