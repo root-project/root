@@ -371,15 +371,27 @@ namespace ROOT {
             df = obj.df;
             return *this;
          }
+         
          TRDataFrame &operator=(TRDataFrame obj)
          {
             df = obj.df;
             return *this;
          }
+         
          TRDataFrame &operator=(SEXP obj)
          {
             df = Rcpp::as<Rcpp::DataFrame>(obj);
             return *this;
+         }
+         
+         operator SEXP()
+         {
+            return df;
+         }
+         
+         operator SEXP() const
+         {
+            return df;
          }
 
          /**

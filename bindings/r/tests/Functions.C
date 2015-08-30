@@ -77,6 +77,7 @@ void Functions(TString type = "Import")
       ROOT::R::TRFunctionImport x11("x11");
       ROOT::R::TRFunctionImport read("read.csv");
       ROOT::R::TRFunctionImport head("head");
+      ROOT::R::TRFunctionImport aslist("as.list");
       
       ROOT::R::TRFunctionImport options("options");
       options(ROOT::R::Label["device"]="x11");
@@ -101,8 +102,8 @@ void Functions(TString type = "Import")
      ROOT::R::TRDataFrame obj=read("training.csv");
       
 //      ROOT::R::TRDataFrame df(obj.As<ROOT::R::TRDataFrame>());
+     print(head(Rcpp::wrap(obj)));
      print(head(obj));
-//      print(vector);
       x11();
       plot(sin,0,6,ROOT::R::Label["type"]="s");
       x11();

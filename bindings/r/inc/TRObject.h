@@ -167,11 +167,17 @@ namespace ROOT {
          {
             return ::Rcpp::as<T>(obj);
          }
+         
          operator SEXP()
          {
             return fObj;
          }
-
+         
+         operator SEXP() const
+         {
+            return fObj;
+         }
+         
          operator Rcpp::RObject()
          {
             return fObj;
