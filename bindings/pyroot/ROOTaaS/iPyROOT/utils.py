@@ -91,13 +91,20 @@ def disableJSVisDebug():
 def _getPlatform():
     return sys.platform
 
-def _getLibExtension():
-    '''Return appropriate file extension for a shared library'''
+def _getLibExtension(thePlatform):
+    '''Return appropriate file extension for a shared library
+    >>> _getLibExtension('darwin')
+    '.dylib'
+    >>> _getLibExtension('win32')
+    '.dll'
+    >>> _getLibExtension('OddPlatform')
+    '.so'
+    '''
     pExtMap = {
         'darwin' : '.dylib',
         'win32'  : '.dll'
     }
-    return pExtMap.get(_getPlatform(), '.so')
+    return pExtMap.get(thePlatform, '.so')
 
 
 def _loadLibrary(libName):
@@ -106,14 +113,15 @@ def _loadLibrary(libName):
     '''
     lib = None
     try:
-      lib = ctypes.cdll.LoadLibrary(libName + _getLibExtension())
+      extension = _getLibExtension(_getPlatform())
+      lib = ctypes.cdll.LoadLibrary(libName + extension)
     except:
       lib = ctypes.cdll.LoadLibrary(libName + ".so")
     return lib
    
 
 def welcomeMsg():
-    print "Welcome to ROOTaas Beta"
+    print "Welcome to ROOTaas (version %s)" %ROOT.gROOT.GetVersion()
 
 @contextmanager
 def _setIgnoreLevel(level):
@@ -123,6 +131,14 @@ def _setIgnoreLevel(level):
     ROOT.gErrorIgnoreLevel = originalLevel
 
 def commentRemover( text ):
+   '''
+   >>> s="// hello"
+   >>> commentRemover(s)
+   ''
+   >>> s="int /** Test **/ main() {return 0;}"
+   >>> commentRemover(s)
+   'int  main() {return 0;}'
+   ''' 
    def blotOutNonNewlines( strIn ) :  # Return a string containing only the newline chars contained in strIn
       return "" + ("\n" * strIn.count('\n'))
 
