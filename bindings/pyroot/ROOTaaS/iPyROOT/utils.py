@@ -88,13 +88,16 @@ def disableJSVisDebug():
     _enableJSVis = False
     _enableJSVisDebug = False
 
+def _getPlatform():
+    return sys.platform
+
 def _getLibExtension():
     '''Return appropriate file extension for a shared library'''
     pExtMap = {
         'darwin' : '.dylib',
         'win32'  : '.dll'
     }
-    return pExtMap.get(sys.platform, '.so')
+    return pExtMap.get(_getPlatform(), '.so')
 
 
 def _loadLibrary(libName):
@@ -343,6 +346,29 @@ def processCppCode(code):
 def declareCppCode(code):
     declareCppCodeImpl(code)
 
+from subprocess import check_output
+def _invokeAclicMac(fileName):
+    '''FIXME!
+    This function is a workaround. On osx, it is impossible to link against
+    libzmq.so, among the others. The error is known and is 
+    "ld: can't link with bundle (MH_BUNDLE) only dylibs (MH_DYLIB)"
+    We cannot at the moment force Aclic to change the linker command in order 
+    to exclude these libraries, so we launch a second root session to compile
+    the library, which we then load.
+    '''
+    command = 'root -l -q -b -e gSystem->CompileMacro(\"%s\",\"k\")'%fileName
+    out = ""
+    try:
+      out = check_output(command.split())
+    except:
+      pass
+    print out
+    libNameBase = fileName.replace(".C","_C")
+    ROOT.gSystem.Load(libNameBase)
+
 def invokeAclic(fileName):
-    processCppCode(".L %s+" %fileName)
+    if _getPlatform() == 'darwin':
+        _invokeAclicMac(fileName)
+    else:
+        processCppCode(".L %s+" %fileName)
     

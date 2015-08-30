@@ -1,9 +1,9 @@
 import IPython.core.magic as ipym
 import utils
-from hashlib import sha224
+from hashlib import sha1
 
 def _codeToFilename(code):
-    fileNameBase = sha224(code).hexdigest()
+    fileNameBase = sha1(code).hexdigest()[0:8]
     return fileNameBase + ".C"
 
 def _dumpToUniqueFile(code):
