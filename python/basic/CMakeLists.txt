@@ -20,9 +20,4 @@ if(ROOT_python_FOUND)
                     MACRO PyROOT_overloadtests.py
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                     OUTREF PyROOT_overloadtests.ref)
-
-  ROOTTEST_ADD_TEST(roottest-python-basic-failingDowncast
-                    MACRO PyROOT_failingDowncast.py
-                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                    OUTREF PyROOT_failingDowncast.ref)
 endif()

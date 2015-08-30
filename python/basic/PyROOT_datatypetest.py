@@ -199,15 +199,15 @@ class TestClassDATATYPES:
         # integer types
         names = ['short', 'ushort', 'int', 'uint', 'long', 'ulong', 'llong', 'ullong', 'long64', 'ulong64' ]
         for i in range(len(names)):
-            exec 'c.m_%s = %d' % (names[i],i)
+            exec('c.m_%s = %d' % (names[i],i))
             assert eval('c.get_%s()' % names[i]) == i
 
         for i in range(len(names)):
-            exec 'c.set_%s(%d)' % (names[i],2*i)
+            exec('c.set_%s(%d)' % (names[i],2*i))
             assert eval('c.m_%s' % names[i]) == 2*i
 
         for i in range(len(names)):
-            exec 'c.set_%s_cr(%d)' % (names[i],3*i)
+            exec('c.set_%s_cr(%d)' % (names[i],3*i))
             assert eval('c.m_%s' % names[i]) == 3*i
 
         # float types through functions
@@ -241,11 +241,11 @@ class TestClassDATATYPES:
         atypes = ['h', 'H', 'i', 'I', 'l', 'L' ]
         for j in range(len(names)):
             b = array.array(atypes[j], a)
-            exec 'c.m_%s_array = b' % names[j]   # buffer copies
+            exec('c.m_%s_array = b' % names[j])  # buffer copies
             for i in range(self.N):
                 assert eval('c.m_%s_array[i]' % names[j]) == b[i]
 
-            exec 'c.m_%s_array2 = b' % names[j]  # pointer copies
+            exec('c.m_%s_array2 = b' % names[j]) # pointer copies
             b[i] = 28
             for i in range(self.N):
                 assert eval('c.m_%s_array2[i]' % names[j]) == b[i]
@@ -321,18 +321,18 @@ class TestClassDATATYPES:
         assert c.s_int                 == -202
         assert c.s_uint                ==  202
         assert CppyyTestData.s_uint    ==  202
-        assert CppyyTestData.s_long    == -303L
-        assert c.s_long                == -303L
-        assert c.s_ulong               ==  303L
-        assert CppyyTestData.s_ulong   ==  303L
-        assert CppyyTestData.s_llong   == -404L
-        assert c.s_llong               == -404L
-        assert c.s_ullong              ==  404L
-        assert CppyyTestData.s_ullong  ==  404L
-        assert CppyyTestData.s_long64  == -505L
-        assert c.s_long64              == -505L
-        assert c.s_ulong64             ==  505L
-        assert CppyyTestData.s_ulong64 ==  505L
+        assert CppyyTestData.s_long    == pylong(-303)
+        assert c.s_long                == pylong(-303)
+        assert c.s_ulong               == pylong( 303)
+        assert CppyyTestData.s_ulong   == pylong( 303)
+        assert CppyyTestData.s_llong   == pylong(-404)
+        assert c.s_llong               == pylong(-404)
+        assert c.s_ullong              == pylong( 404)
+        assert CppyyTestData.s_ullong  == pylong( 404)
+        assert CppyyTestData.s_long64  == pylong(-505)
+        assert c.s_long64              == pylong(-505)
+        assert c.s_ulong64             == pylong( 505)
+        assert CppyyTestData.s_ulong64 == pylong( 505)
 
         # floating point types
         assert round(CppyyTestData.s_float   + 606.,  5) == 0
@@ -397,14 +397,14 @@ class TestClassDATATYPES:
         assert CppyyTestData.s_uint    == 4321
         raises(ValueError, setattr, c,             's_uint', -1)
         raises(ValueError, setattr, CppyyTestData, 's_uint', -1)
-        CppyyTestData.s_long            = -87L
-        assert c.s_long                == -87L
-        c.s_long                        = 876L
-        assert CppyyTestData.s_long    == 876L
-        CppyyTestData.s_ulong           = 876L
-        assert c.s_ulong               == 876L
-        c.s_ulong                       = 678L
-        assert CppyyTestData.s_ulong   == 678L
+        CppyyTestData.s_long            = pylong(-87)
+        assert c.s_long                == pylong(-87)
+        c.s_long                        = pylong(876)
+        assert CppyyTestData.s_long    == pylong(876)
+        CppyyTestData.s_ulong           = pylong(876)
+        assert c.s_ulong               == pylong(876)
+        c.s_ulong                       = pylong(678)
+        assert CppyyTestData.s_ulong   == pylong(678)
         raises(ValueError, setattr, CppyyTestData, 's_ulong', -1)
         raises(ValueError, setattr, c,             's_ulong', -1)
         CppyyTestData.s_long64          = -90

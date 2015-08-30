@@ -3,10 +3,10 @@
 .PHONY: DataTypes_C Overloads_C
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog failingDowncast.h
+CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog __pycache__
 
 #Set the list of target to make while testing
-TEST_TARGETS += PyROOT_basictests PyROOT_overloadtests PyROOT_datatypetest PyROOT_operatortests PyROOT_failingDowncast
+TEST_TARGETS += PyROOT_basictests PyROOT_overloadtests PyROOT_datatypetest PyROOT_operatortests
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
    export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
@@ -51,5 +51,3 @@ PyROOT_operatortests.log: Operators_C.$(DllSuf)
 PyROOT_operatortests: PyROOT_operatortests.log
 	$(TestDiff)
 
-PyROOT_failingDowncast: PyROOT_failingDowncast.log
-	$(TestDiff)
