@@ -6,10 +6,8 @@ class DeclareMagics(ipym.Magics):
     @ipym.line_cell_magic
     def dcl(self, line, cell=None):
         """Inject into root."""
-        if cell:
-            utils.declareCppCode(cell)
-        else:
-            utils.declareCppCode(line)
+        code = cell if cell else line
+        utils.declareCppCode(code)
 
 def load_ipython_extension(ipython):
     ipython.register_magics(DeclareMagics)
