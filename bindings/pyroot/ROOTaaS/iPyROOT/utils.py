@@ -194,7 +194,7 @@ captures = [StreamCapture(sys.stderr),
             CaptureDrawnCanvases()]
 
 
-extNames = ["ROOTaaS.iPyROOT.cppmagic","ROOTaaS.iPyROOT.dclmagic"]
+extNames = ["ROOTaaS.iPyROOT." + name for name in ["cppmagic","dclmagic","aclicmagic"]]
 
 def toCpp():
     '''
@@ -329,16 +329,20 @@ def enableCppHighlighting():
     ipDispJs(_jsMagicHighlight.format(cppMIME = cppMIME), raw=True)
 
 # Here functions are defined to process C++ code
-def processCppCodeImpl(cell):
-    cell = commentRemover(cell)
-    ROOT.gInterpreter.ProcessLine(cell)
+def processCppCodeImpl(code):
+    code = commentRemover(code)
+    ROOT.gInterpreter.ProcessLine(code)
 
-def declareCppCodeImpl(cell):
-    cell = commentRemover(cell)
-    ROOT.gInterpreter.Declare(cell)
+def declareCppCodeImpl(code):
+    code = commentRemover(code)
+    ROOT.gInterpreter.Declare(code)
 
-def processCppCode(cell):
-    processCppCodeImpl(cell)
+def processCppCode(code):
+    processCppCodeImpl(code)
 
-def declareCppCode(cell):
-    declareCppCodeImpl(cell)
+def declareCppCode(code):
+    declareCppCodeImpl(code)
+
+def invokeAclic(fileName):
+    processCppCode(".L %s+" %fileName)
+    
