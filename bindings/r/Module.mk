@@ -25,12 +25,15 @@ RDO          := $(RDS:.cxx=.o)
 
 RDH          := $(MODDIRI)/RExports.h \
                 $(MODDIRI)/TRInterface.h \
-                $(MODDIRI)/TRObjectProxy.h \
+                $(MODDIRI)/TRInterface_Binding.h \
+                $(MODDIRI)/TRObject.h \
                 $(MODDIRI)/TRDataFrame.h \
+                $(MODDIRI)/TRDataFrame__ctors.h \
                 $(MODDIRI)/TRFunctionImport.h \
+                $(MODDIRI)/TRFunctionImport__oprtr.h \
                 $(MODDIRI)/TRFunctionExport.h \
                 $(MODDIRI)/TRInternalFunction.h \
-                $(MODDIRI)/TRInternalFunction__ctors.h
+                $(MODDIRI)/TRInternalFunction__ctors.h 
 
 
 
