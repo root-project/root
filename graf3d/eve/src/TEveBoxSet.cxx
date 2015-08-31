@@ -26,7 +26,7 @@ on the fBoxType data-member.
   - kBT_AABoxFixedDim   axis-aligned box w/ fixed dimensions: specify (x,y,z)
                          also set fDefWidth, fDefHeight and fDefDepth
   - kBT_Cone            cone defined with position, axis-vector and radius
-  - EllipticCone        conew with elliptic base (specify another radius and angle in deg)
+  - EllipticCone        cone with elliptic base (specify another radius and angle in deg)
 
 Each primitive can be assigned:
 
@@ -179,7 +179,7 @@ void TEveBoxSet::AddEllipticCone(const TEveVector& pos, const TEveVector& dir,
    static const TEveException eH("TEveBoxSet::AddEllipticCone ");
 
    if (fBoxType != kBT_EllipticCone)
-      throw(eH + "expect ellicptic-cone box-type.");
+      throw(eH + "expect elliptic-cone box-type.");
 
    BEllipticCone_t* cone = (BEllipticCone_t*) NewDigit();
    cone->fPos = pos;
