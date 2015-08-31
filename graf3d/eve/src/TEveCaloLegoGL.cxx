@@ -32,13 +32,14 @@
 
 #include <algorithm>
 
-//______________________________________________________________________________
-// OpenGL renderer class for TEveCaloLego.
-//
+/** \class TEveCaloLegoGL_
+OpenGL renderer class for TEveCaloLego.
+*/
 
 ClassImp(TEveCaloLegoGL);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveCaloLegoGL::TEveCaloLegoGL() :
    TGLObject(),
@@ -57,8 +58,6 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    fCells3D(kTRUE),
    fBinStep(-1)
 {
-   // Constructor.
-
    fDLCache = kFALSE;
 
    fEtaAxis = new TAxis();
@@ -129,22 +128,22 @@ void TEveCaloLegoGL::DLCachePurge()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw an axis-aligned box using quads.
+/// ~~~ {.cpp}
+///    z
+///    |
+///    |
+///    |________y
+///   /  6-------7
+///  /  /|      /|
+/// x  5-------4 |
+///    | 2-----|-3
+///    |/      |/
+///    1-------0
+/// ~~~
 
 void TEveCaloLegoGL::MakeQuad(Float_t x1, Float_t y1, Float_t z1,
       Float_t xw, Float_t yw, Float_t h) const
 {
-   //    z
-   //    |
-   //    |
-   //    |________y
-   //   /  6-------7
-   //  /  /|      /|
-   // x  5-------4 |
-   //    | 2-----|-3
-   //    |/      |/
-   //    1-------0
-   //
-
    Float_t x2 = x1 + xw;
    Float_t y2 = y1 + yw;
    Float_t z2 = z1 + h;
@@ -288,6 +287,7 @@ void TEveCaloLegoGL::Make3DDisplayListRebin(TEveCaloData::RebinData_t& rebinData
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the axis 3D title position.
 
 void TEveCaloLegoGL::SetAxis3DTitlePos(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const
 {
@@ -576,6 +576,7 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
 } // DrawAxis3D
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get scale for matrix.
 
 void  TEveCaloLegoGL::GetScaleForMatrix(Float_t& sx, Float_t& sy, Float_t& sz) const
 {
