@@ -1,10 +1,3 @@
-// Current Status:
-// Dictionaries which do not compile with -fmodules:
-//   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++  -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -I. -o net/net/src/G__Net.o -c net/net/src/G__Net.cxx
-//   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++ -g -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -I. -o hist/hist/src/G__Hist.o -c hist/hist/src/G__Hist.cxx
-//   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++  -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -I. -o graf2d/gpad/src/G__Gpad.o -c graf2d/gpad/src/G__Gpad.cxx
-//   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++  -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -I. -o gui/gui/src/G__Gui.o -c gui/gui/src/G__Gui.cxx
-//   * 
 //module ROOT {
 //requires cplusplus
 module sql_pgsql {
