@@ -18,8 +18,9 @@ HTMLDS       := $(call stripsrc,$(MODDIRS)/G__Html.cxx)
 HTMLDO       := $(HTMLDS:.cxx=.o)
 HTMLDH       := $(HTMLDS:.cxx=.h)
 
-HTMLH        := $(patsubst $(MODDIRI)/%.h,%.h,$(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h)))
-HTMLHINC     := $(add-prefix include,$(HTMLH))
+HTMLMH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+HTMLH        := $(patsubst $(MODDIRI)/%.h,%.h,$(HTMLMH))
+HTMLINCH     := $(add-prefix include,$(HTMLH))
 HTMLS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HTMLO        := $(call stripsrc,$(HTMLS:.cxx=.o))
 
@@ -29,7 +30,7 @@ HTMLLIB      := $(LPATH)/libHtml.$(SOEXT)
 HTMLMAP      := $(HTMLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(HTMLHINC)
+ALLHDRS     += $(HTMLINCH)
 ALLLIBS     += $(HTMLLIB)
 ALLMAPS     += $(HTMLMAP)
 
@@ -50,12 +51,12 @@ $(HTMLLIB):     $(HTMLO) $(HTMLDO) $(ORDER_) $(MAINLIBS) $(HTMLLIBDEP)
 $(call pcmrule,HTML)
 	$(noop)
 
-$(HTMLDS):      $(HTMLHINC) $(HTMLL) $(ROOTCLINGEXE) $(call pcmdep,HTML)
+$(HTMLDS):      $(HTMLINCH) $(HTMLL) $(ROOTCLINGEXE) $(call pcmdep,HTML)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HTML) -c $(HTMLH) $(HTMLL)
 
-$(HTMLMAP):     $(HTMLHINC) $(HTMLL) $(ROOTCLINGEXE) $(call pcmdep,HTML)
+$(HTMLMAP):     $(HTMLINCH) $(HTMLL) $(ROOTCLINGEXE) $(call pcmdep,HTML)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCLINGSTAGE2) -r $(HTMLDS) $(call dictModule,HTML) -c $(HTMLH) $(HTMLL)

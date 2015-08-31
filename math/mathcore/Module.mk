@@ -21,9 +21,9 @@ MATHCOREDO   := $(MATHCOREDS:.cxx=.o)
 MATHCOREDH   := $(MATHCOREDS:.cxx=.h)
 
 MATHCOREDICTH :=  TComplex.h \
-		TMath.h \
-		TRandom.h \
-		TRandom1.h \
+                TMath.h \
+                TRandom.h \
+                TRandom1.h \
                 TRandom2.h \
                 TRandom3.h \
                 TStatistic.h \
@@ -70,13 +70,13 @@ MATHCOREDICTH :=  TComplex.h \
                 Math/ChebyshevPol.h \
                 Math/SpecFuncMathCore.h \
                 Math/DistFuncMathCore.h \
-		$(patsubst $(MODDIRI)/%.h,%.h,$(filter-out $(MODDIRI)/Fit/LinkDef%,$(filter-out $(MODDIRI)/Fit/Chi2Grad%,$(wildcard $(MODDIRI)/Fit/*.h))))
+		$(patsubst $(MODDIRI)/%,%,$(filter-out $(MODDIRI)/Fit/LinkDef%,$(filter-out $(MODDIRI)/Fit/Chi2Grad%,$(wildcard $(MODDIRI)/Fit/*.h))))
 
-MATHCOREH1   := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-MATHCOREH2   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
-MATHCOREH3   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.icc))
-MATHCOREH4   := $(filter-out $(MODDIRI)/Fit/LinkDef%,$(wildcard $(MODDIRI)/Fit/*.h))
-MATHCOREH    := $(MATHCOREH1) $(MATHCOREH2) $(MATHCOREH3) $(MATHCOREH4)
+MATHCOREMH1   := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+MATHCOREMH2   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
+MATHCOREMH3   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.icc))
+MATHCOREMH4   := $(filter-out $(MODDIRI)/Fit/LinkDef%,$(wildcard $(MODDIRI)/Fit/*.h))
+MATHCOREMH    := $(MATHCOREH1) $(MATHCOREH2) $(MATHCOREH3) $(MATHCOREH4)
 
 MATHCORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MATHCORECS   := $(wildcard $(MODDIRS)/*.c)
@@ -88,8 +88,7 @@ MATHCORELIB  := $(LPATH)/libMathCore.$(SOEXT)
 MATHCOREMAP  := $(MATHCORELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.icc,include/%.icc,\
-	$(patsubst $(MODDIRI)/%.h,include/%.h,$(MATHCOREH)))
+ALLHDRS      += $(patsubst $(MODDIRI)/%,include/%,$(MATHCOREMH))
 ALLLIBS      += $(MATHCORELIB)
 ALLMAPS      += $(MATHCOREMAP)
 
