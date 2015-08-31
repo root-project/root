@@ -1555,7 +1555,6 @@ module hist_hist {
   header "TH3C.h"
   header "TGraph.h"
   header "TBinomialEfficiencyFitter.h"
-  header "TFormulaPrimitive.h"
   header "TBackCompFitter.h"
   header "TConfidenceLevel.h"
 }
