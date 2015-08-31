@@ -274,7 +274,6 @@ public: \
 }
 R__EXTERN int optind;
 
-
 // The functions are used to bridge cling/clang/llvm compiled with no-rtti and
 // ROOT (which uses rtti)
 
@@ -881,6 +880,13 @@ namespace{
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Allow calling autoparsing from TMetaUtils
+bool TClingLookupHelper__AutoParse(const char *cname)
+{
+   return gCling->AutoParse(cname);
+}
+
 //______________________________________________________________________________
 bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
                                            std::string &result)
@@ -1129,7 +1135,7 @@ TCling::TCling(const char *name, const char *title)
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
-   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck);
+   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck, TClingLookupHelper__AutoParse);
    TClassEdit::Init(fLookupHelper);
 
    // Initialize the cling interpreter interface.

@@ -146,17 +146,20 @@ public:
 class TClingLookupHelper : public TClassEdit::TInterpreterLookupHelper {
 public:
    typedef bool (*ExistingTypeCheck_t)(const std::string &tname, std::string &result);
+   typedef bool (*AutoParse_t)(const char *name);
 
 private:
    cling::Interpreter *fInterpreter;
    TNormalizedCtxt    *fNormalizedCtxt;
    ExistingTypeCheck_t fExistingTypeCheck;
+   AutoParse_t         fAutoParse;
    const int          *fPDebug; // debug flag, might change at runtime thus *
    bool WantDiags() const { return fPDebug && *fPDebug > 5; }
 
 public:
    TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
                       ExistingTypeCheck_t existingTypeCheck,
+                      AutoParse_t autoParse,
                       const int *pgDebug = 0);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
 
