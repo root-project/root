@@ -33,16 +33,14 @@
 #include <KeySymbols.h>
 
 
-//______________________________________________________________________________
-//
-//
-// GL-overaly control GUI for TEveCaloLego.
-//
-//
+/** \class TEveCaloLegoOverlay
+ GL-overlay control GUI for TEveCaloLego.
+*/
 
 ClassImp(TEveCaloLegoOverlay);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveCaloLegoOverlay::TEveCaloLegoOverlay() :
    TGLCameraOverlay(),
@@ -74,8 +72,6 @@ TEveCaloLegoOverlay::TEveCaloLegoOverlay() :
 
    fActiveID(-1), fActiveCol(kRed-4)
 {
-   // Constructor.
-
    fPlaneAxis = new TAxis();
 }
 
@@ -232,7 +228,7 @@ void TEveCaloLegoOverlay::SetScalePosition(Double_t x, Double_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set frame attribs.
+/// Set frame attributes.
 
 void TEveCaloLegoOverlay:: SetFrameAttribs(Color_t frameColor, Char_t lineTransp, Char_t bgTransp)
 {
@@ -441,7 +437,7 @@ void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
    }
    glEnd();
 
-   // draw points in case suare is below pixels
+   // draw points in case square is below pixels
    glBegin(GL_POINTS);
    for (Int_t i=0; i < ne; ++i)
       glVertex2f(0, i* scaleStepY);
@@ -517,8 +513,8 @@ void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
    glPopAttrib();
 } // end draw scales
 
+////////////////////////////////////////////////////////////////////////////////
 
-/******************************************************************************/
 void TEveCaloLegoOverlay::RenderPaletteScales(TGLRnrCtx& rnrCtx)
 {
    // Draw slider of calo 2D in mode TEveCalo:fValColor.
@@ -596,7 +592,7 @@ void TEveCaloLegoOverlay::RenderPaletteScales(TGLRnrCtx& rnrCtx)
    glPopAttrib();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
 
 void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
 {
@@ -633,7 +629,7 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
    if (cam.IsOrthographic())
    {
       // in 2D need pixel cell dimension
-      // project lego eta-phi boundraries
+      // project lego eta-phi boundaries
       TGLVector3 rng(fCalo->GetEtaRng(), fCalo->GetPhiRng(), 0);
       TGLVertex3 p;
       TGLVector3 res = cam.WorldDeltaToViewport(p, rng);
@@ -695,7 +691,7 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
       RenderPlaneInterface(rnrCtx);
    }
 
-   // draw info text on yop right corner
+   // draw info text on top right corner
    if (fHeaderTxt.Length())
    {
       RenderHeader(rnrCtx);
