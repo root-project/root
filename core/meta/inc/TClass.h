@@ -66,17 +66,10 @@ class TViewPubDataMembers;
 class TFunctionTemplate;
 class TProtoClass;
 
-namespace clang {
-   class Decl;
-}
-
 namespace ROOT {
    class TGenericClassInfo;
    class TCollectionProxyInfo;
    class TSchemaRuleSet;
-}
-
-namespace ROOT {
    class TMapTypeToTClass;
    class TMapDeclIdToTClass;
 }
