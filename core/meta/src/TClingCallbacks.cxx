@@ -268,7 +268,8 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
 
 bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
    // Clang needs Tag's complete definition. Can we parse it?
-   if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
+   //if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
+   if (fIsAutoloadingRecursively) return false;
 
    if (RecordDecl* RD = dyn_cast<RecordDecl>(Tag)) {
       Sema &SemaR = m_Interpreter->getSema();
