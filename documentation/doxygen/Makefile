@@ -19,6 +19,9 @@ doxygen:
 	if [ ! -d $(DOXYGEN_IMAGE_PATH) ]; then mkdir $(DOXYGEN_IMAGE_PATH); fi
 	./makehtmlfooter.sh > htmlfooter.html
 	cp images/* $(DOXYGEN_IMAGE_PATH)
+	echo DOXYGEN_STRIP_PATH: $(DOXYGEN_STRIP_PATH)
+	pwd
+	echo PWD: $PWD
 	doxygen
 	rm c1*
 	rm stdout.dat
