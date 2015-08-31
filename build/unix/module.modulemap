@@ -1428,7 +1428,7 @@ module math_mlp {
   header "TVectorFfwd.h"
   header "TMatrixDSymfwd.h"
   header "TDecompLU.h"
-  textual header "TMatrixTSparse.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
+  header "TMatrixTSparse.h"
   header "TMatrixDUtilsfwd.h"
   header "TMatrixFSparse.h"
   header "TMatrixTBase.h"
