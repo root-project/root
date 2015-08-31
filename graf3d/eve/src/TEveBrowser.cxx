@@ -56,21 +56,14 @@
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
 
+/** \class TEveListTreeItem
+Special list-tree-item for Eve.
 
-//==============================================================================
-//==============================================================================
-// TEveListTreeItem
-//==============================================================================
+Most state is picked directly from TEveElement, no need to store it
+locally nor to manage its consistency.
 
-//______________________________________________________________________________
-//
-// Special list-tree-item for Eve.
-//
-// Most state is picked directly from TEveElement, no need to store it
-// locally nor to manage its consistency.
-//
-// Handles also selected/highlighted colors and, in the future,
-// drag-n-drop.
+Handles also selected/highlighted colors and, in the future, drag-n-drop.
+*/
 
 ClassImp(TEveListTreeItem);
 
@@ -108,16 +101,9 @@ void TEveListTreeItem::Toggle()
    fElement->ElementChanged(kTRUE, kTRUE);
 }
 
-
-//==============================================================================
-//==============================================================================
-// TEveGListTreeEditorFrame
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Composite GUI frame for parallel display of a TGListTree and TEveGedEditor.
-//
+/** \class TEveGListTreeEditorFrame
+Composite GUI frame for parallel display of a TGListTree and TEveGedEditor.
+*/
 
 ClassImp(TEveGListTreeEditorFrame);
 
@@ -254,8 +240,6 @@ void TEveGListTreeEditorFrame::DisconnectSignals()
    fSignalsConnected = kFALSE;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reconfigure to horizontal layout, list-tree and editor side by side.
 
@@ -338,8 +322,6 @@ void TEveGListTreeEditorFrame::ReconfToVertical()
    MapWindow();
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Different item is below mouse.
 
@@ -351,9 +333,9 @@ void TEveGListTreeEditorFrame::ItemBelowMouse(TGListTreeItem *entry, UInt_t /*ma
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Item has been clicked, based on mouse button do:
-/// M1 - select, show in editor;
-/// M2 - paste (call gEve->ElementPaste();
-/// M3 - popup context menu.
+///  - M1 - select, show in editor;
+///  - M2 - paste (call gEve->ElementPaste();
+///  - M3 - popup context menu.
 
 void TEveGListTreeEditorFrame::ItemClicked(TGListTreeItem *item, Int_t btn, UInt_t mask, Int_t x, Int_t y)
 {
@@ -489,14 +471,9 @@ void TEveGListTreeEditorFrame::ItemKeyPress(TGListTreeItem *entry, UInt_t keysym
 }
 
 
-//==============================================================================
-//==============================================================================
-// TEveBrowser
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Specialization of TRootBrowser for Eve.
+/** \class TEveBrowser
+Specialization of TRootBrowser for Eve.
+*/
 
 ClassImp(TEveBrowser);
 
@@ -524,8 +501,6 @@ void TEveBrowser::CalculateReparentXY(TGObject* parent, Int_t& x, Int_t& y)
                                    gClient->GetDefaultRoot()->GetId(),
                                    0, 0, x, y, childdum);
 }
-
-/******************************************************************************/
 
 namespace
 {
@@ -620,8 +595,6 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
    // Rename "Close Window" to "Close Eve"
    fMenuFile->GetEntry(kCloseWindow)->GetLabel()->SetString("Close Eve");
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle events from Eve menu.
@@ -737,8 +710,6 @@ void TEveBrowser::EveMenu(Int_t id)
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize standard plugins.
 
@@ -764,6 +735,7 @@ void TEveBrowser::InitPlugins(Option_t *opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a file-browser. Caller should provide Start/StopEmbedding() calls
 /// and populate the new browser.
+///
 /// If flag make_default is kTRUE, the default file-browser is set to the
 /// newly created browser.
 
