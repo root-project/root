@@ -31,13 +31,14 @@
 #include "TMathBase.h"
 #include "TMath.h"
 
-//______________________________________________________________________________
-// GUI editor for TEveCaloEditor.
-//
+/** \class TEveCaloVizEditor
+GUI editor for TEveCaloEditor.
+*/
 
 ClassImp(TEveCaloVizEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t height,
                                      UInt_t options, Pixel_t back) :
@@ -57,8 +58,6 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
    fDataFrame(0),
    fSliceFrame(0)
 {
-   // Constructor.
-
    MakeTitle("TEveCaloViz");
 
    TGLabel* label  = 0;
@@ -156,11 +155,10 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create slice info gui.
 
 void TEveCaloVizEditor::MakeSliceInfo()
 {
-   // Create slice info gui.
-
    Int_t ns = fM->GetData()->GetNSlices();
    Int_t nf = fSliceFrame->GetList()->GetSize();
 
@@ -381,12 +379,9 @@ void TEveCaloVizEditor::DoSliceTransparency(Long_t t)
    Update();
 }
 
-/**************************************************************************/
-/**************************************************************************/
-/**************************************************************************/
-//______________________________________________________________________________
-// GUI editor for TEveCalo3DEditor.
-//
+/** \class TEveCalo3DEditor
+GUI editor for TEveCalo3D.
+*/
 
 ClassImp(TEveCalo3DEditor);
 
