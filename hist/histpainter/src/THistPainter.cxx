@@ -48,7 +48,7 @@
 #include "TColor.h"
 #include "TPainter3dAlgorithms.h"
 #include "TGraph2DPainter.h"
-#include "TGraphDelaunay.h"
+#include "TGraphDelaunay2D.h"
 #include "TView.h"
 #include "TMath.h"
 #include "TRandom2.h"
@@ -2948,16 +2948,23 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 TList *THistPainter::GetContourList(Double_t contour) const
 {
 
-   TGraphDelaunay *dt;
 
-   // Check if fH contains a TGraphDelaunay
+
+   // Check if fH contains a TGraphDelaunay2D
    TList *hl = fH->GetListOfFunctions();
-   dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
-   if (!dt) return 0;
+   TGraphDelaunay2D *dt = (TGraphDelaunay2D*)hl->FindObject("TGraphDelaunay2D");
+   // try with the old painter
+   TGraphDelaunay *dtOld = nullptr;
+   if (!dt) dtOld =  (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
+
+   if (!dt && !dtOld) return nullptr; 
 
    gCurrentHist = fH;
 
-   if (!fGraph2DPainter) ((THistPainter*)this)->fGraph2DPainter = new TGraph2DPainter(dt);
+   if (!fGraph2DPainter) {
+      if (dt) ((THistPainter*)this)->fGraph2DPainter = new TGraph2DPainter(dt);
+      else ((THistPainter*)this)->fGraph2DPainter = new TGraph2DPainter(dtOld);
+   }
 
    return fGraph2DPainter->GetContourList(contour);
 }
@@ -4857,11 +4864,16 @@ void THistPainter::PaintContour(Option_t *option)
    }
 
    if (Hoption.Contour == 15) {
-      TGraphDelaunay *dt;
+      TGraphDelaunay2D *dt = nullptr; 
+      TGraphDelaunay *dtOld = nullptr; 
       TList *hl = fH->GetListOfFunctions();
-      dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
-      if (!dt) return;
-      if (!fGraph2DPainter) fGraph2DPainter = new TGraph2DPainter(dt);
+      dt = (TGraphDelaunay2D*)hl->FindObject("TGraphDelaunay2D");
+      if (!dt) dtOld = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
+      if (!dt && !dtOld) return;
+      if (!fGraph2DPainter) {
+         if (dt) fGraph2DPainter = new TGraph2DPainter(dt);
+         else fGraph2DPainter = new TGraph2DPainter(dtOld);
+      }
       fGraph2DPainter->Paint(option);
       return;
    }
@@ -7987,15 +7999,20 @@ void THistPainter::PaintSurface(Option_t *)
 void THistPainter::PaintTriangles(Option_t *option)
 {
 
-   TGraphDelaunay *dt;
+   TGraphDelaunay2D *dt = nullptr;
+   TGraphDelaunay *dtOld = nullptr;
 
-   // Check if fH contains a TGraphDelaunay
+   // Check if fH contains a TGraphDelaunay2D
    TList *hl = fH->GetListOfFunctions();
-   dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
-   if (!dt) return;
+   dt = (TGraphDelaunay2D*)hl->FindObject("TGraphDelaunay2D");
+   if (!dt) dtOld = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
+   if (!dt && !dtOld) return;
 
    // If needed, create a TGraph2DPainter
-   if (!fGraph2DPainter) fGraph2DPainter = new TGraph2DPainter(dt);
+   if (!fGraph2DPainter) {
+      if (dt) fGraph2DPainter = new TGraph2DPainter(dt);
+      else fGraph2DPainter = new TGraph2DPainter(dtOld);
+   }
 
    // Define the 3D view
    if (Hparam.zmin == 0 && Hparam.zmax == 0) {Hparam.zmin = -1; Hparam.zmax = 1;}

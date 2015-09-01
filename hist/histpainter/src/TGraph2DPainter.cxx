@@ -16,6 +16,7 @@
 #include "TGraph.h"
 #include "TGraph2D.h"
 #include "TGraphDelaunay.h"
+#include "TGraphDelaunay2D.h"
 #include "TPolyLine.h"
 #include "TPolyMarker.h"
 #include "TVirtualPad.h"
@@ -59,6 +60,7 @@ TGraph2DPainter::TGraph2DPainter()
    fMTried   = 0;
    fGraph2D  = 0;
    fDelaunay = 0;
+   fDelaunay2D = 0;
    fXmin     = 0.;
    fXmax     = 0.;
    fYmin     = 0.;
@@ -75,12 +77,46 @@ TGraph2DPainter::TGraph2DPainter()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraph2DPainter constructor
+/// TGraph2DPainter constructor using the old Delaunay algorithm
 
 TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
 {
    fDelaunay = gd;
+   fDelaunay2D = 0;
    fGraph2D  = fDelaunay->GetGraph2D();
+   fNpoints  = fGraph2D->GetN();
+   fX        = fGraph2D->GetX();
+   fY        = fGraph2D->GetY();
+   fZ        = fGraph2D->GetZ();
+   fEX       = fGraph2D->GetEX();
+   fEY       = fGraph2D->GetEY();
+   fEZ       = fGraph2D->GetEZ();
+   fNdt      = 0;
+   fXN       = 0;
+   fYN       = 0;
+   fXNmin    = 0;
+   fXNmax    = 0;
+   fYNmin    = 0;
+   fYNmax    = 0;
+   fPTried   = 0;
+   fNTried   = 0;
+   fMTried   = 0;
+   fXmin     = 0.;
+   fXmax     = 0.;
+   fYmin     = 0.;
+   fYmax     = 0.;
+   fZmin     = 0.;
+   fZmax     = 0.;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TGraph2DPainter constructor using the new Delaunay algorithm
+
+TGraph2DPainter::TGraph2DPainter(TGraphDelaunay2D *gd)
+{
+   fDelaunay = 0;
+   fDelaunay2D = gd;
+   fGraph2D  = fDelaunay2D->GetGraph2D();
    fNpoints  = fGraph2D->GetN();
    fX        = fGraph2D->GetX();
    fY        = fGraph2D->GetY();
@@ -121,17 +157,27 @@ TGraph2DPainter::~TGraph2DPainter()
 
 void TGraph2DPainter::FindTriangles()
 {
-   fDelaunay->FindAllTriangles();
-   fNdt    = fDelaunay->GetNdt();
-   fXN     = fDelaunay->GetXN();
-   fYN     = fDelaunay->GetYN();
-   fXNmin  = fDelaunay->GetXNmin();
-   fXNmax  = fDelaunay->GetXNmax();
-   fYNmin  = fDelaunay->GetYNmin();
-   fYNmax  = fDelaunay->GetYNmax();
-   fPTried = fDelaunay->GetPTried();
-   fNTried = fDelaunay->GetNTried();
-   fMTried = fDelaunay->GetMTried();
+   if (fDelaunay) { 
+      fDelaunay->FindAllTriangles();
+      fNdt    = fDelaunay->GetNdt();
+      fXN     = fDelaunay->GetXN();
+      fYN     = fDelaunay->GetYN();
+      fXNmin  = fDelaunay->GetXNmin();
+      fXNmax  = fDelaunay->GetXNmax();
+      fYNmin  = fDelaunay->GetYNmin();
+      fYNmax  = fDelaunay->GetYNmax();
+      fPTried = fDelaunay->GetPTried();
+      fNTried = fDelaunay->GetNTried();
+      fMTried = fDelaunay->GetMTried();
+   }
+   else if (fDelaunay2D) {
+      fDelaunay2D->FindAllTriangles();
+      fNdt    = fDelaunay2D->GetNdt();
+      fXNmin  = fDelaunay2D->GetXNmin();
+      fXNmax  = fDelaunay2D->GetXNmax();
+      fYNmin  = fDelaunay2D->GetYNmin();
+      fYNmax  = fDelaunay2D->GetYNmax();
+   }
 }
 
 
@@ -191,64 +237,130 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
 
    // Loop over all the triangles in order to find all the line segments
    // making the contour.
-   for(it=0; it<fNdt; it++) {
-      t[0] = fPTried[it];
-      t[1] = fNTried[it];
-      t[2] = fMTried[it];
-      p0   = t[0]-1;
-      p1   = t[1]-1;
-      p2   = t[2]-1;
-      x0   = fX[p0]; x2 = fX[p0];
-      y0   = fY[p0]; y2 = fY[p0];
-      z0   = fZ[p0]; z2 = fZ[p0];
 
-      // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
-      // After this z0 < z1 < z2
-      i0=0, i1=0, i2=0;
-      if (fZ[p1]<=z0) {z0=fZ[p1]; x0=fX[p1]; y0=fY[p1]; i0=1;}
-      if (fZ[p1]>z2)  {z2=fZ[p1]; x2=fX[p1]; y2=fY[p1]; i2=1;}
-      if (fZ[p2]<=z0) {z0=fZ[p2]; x0=fX[p2]; y0=fY[p2]; i0=2;}
-      if (fZ[p2]>z2)  {z2=fZ[p2]; x2=fX[p2]; y2=fY[p2]; i2=2;}
-      if (i0==0 && i2==0) {
-         Error("GetContourList", "wrong vertices ordering");
-         delete [] xs0;
-         delete [] ys0;
-         delete [] xs1;
-         delete [] ys1;
-         return 0;
-      } else {
-         i1 = 3-i2-i0;
-      }
-      x1 = fX[t[i1]-1];
-      y1 = fY[t[i1]-1];
-      z1 = fZ[t[i1]-1];
-
-      if (Hoption.Logz) {
-         z0 = TMath::Log10(z0);
-         z1 = TMath::Log10(z1);
-         z2 = TMath::Log10(z2);
-      }
-
-      if(contour >= z0 && contour <=z2) {
-         r20 = (contour-z0)/(z2-z0);
-         xs0c = r20*(x2-x0)+x0;
-         ys0c = r20*(y2-y0)+y0;
-         if(contour >= z1 && contour <=z2) {
-            r21 = (contour-z1)/(z2-z1);
-            xs1c = r21*(x2-x1)+x1;
-            ys1c = r21*(y2-y1)+y1;
+   // old implementation
+   if (fDelaunay) { 
+      for(it=0; it<fNdt; it++) {
+         t[0] = fPTried[it];
+         t[1] = fNTried[it];
+         t[2] = fMTried[it];
+         p0   = t[0]-1;
+         p1   = t[1]-1;
+         p2   = t[2]-1;
+         x0   = fX[p0]; x2 = fX[p0];
+         y0   = fY[p0]; y2 = fY[p0];
+         z0   = fZ[p0]; z2 = fZ[p0];
+         
+         // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
+         // After this z0 < z1 < z2
+         i0=0, i1=0, i2=0;
+         if (fZ[p1]<=z0) {z0=fZ[p1]; x0=fX[p1]; y0=fY[p1]; i0=1;}
+         if (fZ[p1]>z2)  {z2=fZ[p1]; x2=fX[p1]; y2=fY[p1]; i2=1;}
+         if (fZ[p2]<=z0) {z0=fZ[p2]; x0=fX[p2]; y0=fY[p2]; i0=2;}
+         if (fZ[p2]>z2)  {z2=fZ[p2]; x2=fX[p2]; y2=fY[p2]; i2=2;}
+         if (i0==0 && i2==0) {
+            Error("GetContourList", "wrong vertices ordering");
+            delete [] xs0;
+            delete [] ys0;
+            delete [] xs1;
+            delete [] ys1;
+            return 0;
          } else {
-            r10 = (contour-z0)/(z1-z0);
-            xs1c = r10*(x1-x0)+x0;
-            ys1c = r10*(y1-y0)+y0;
+            i1 = 3-i2-i0;
          }
-         // do not take the segments equal to a point
-         if(xs0c != xs1c || ys0c != ys1c) {
-            nbSeg++;
-            xs0[nbSeg-1] = xs0c;
-            ys0[nbSeg-1] = ys0c;
-            xs1[nbSeg-1] = xs1c;
-            ys1[nbSeg-1] = ys1c;
+         x1 = fX[t[i1]-1];
+         y1 = fY[t[i1]-1];
+         z1 = fZ[t[i1]-1];
+
+         if (Hoption.Logz) {
+            z0 = TMath::Log10(z0);
+            z1 = TMath::Log10(z1);
+            z2 = TMath::Log10(z2);
+         }
+
+         if(contour >= z0 && contour <=z2) {
+            r20 = (contour-z0)/(z2-z0);
+            xs0c = r20*(x2-x0)+x0;
+            ys0c = r20*(y2-y0)+y0;
+            if(contour >= z1 && contour <=z2) {
+               r21 = (contour-z1)/(z2-z1);
+               xs1c = r21*(x2-x1)+x1;
+               ys1c = r21*(y2-y1)+y1;
+            } else {
+               r10 = (contour-z0)/(z1-z0);
+               xs1c = r10*(x1-x0)+x0;
+               ys1c = r10*(y1-y0)+y0;
+            }
+            // do not take the segments equal to a point
+            if(xs0c != xs1c || ys0c != ys1c) {
+               nbSeg++;
+               xs0[nbSeg-1] = xs0c;
+               ys0[nbSeg-1] = ys0c;
+               xs1[nbSeg-1] = xs1c;
+               ys1[nbSeg-1] = ys1c;
+            }
+         }
+      }
+   }
+   else if (fDelaunay2D) {
+
+      Int_t p[3];
+      for(const auto & face : *fDelaunay2D) {
+         p[0]   = face.idx[0];
+         p[1]   = face.idx[1];
+         p[2]   = face.idx[2];
+         x0   = fX[p[0]]; x2 = fX[p[0]];
+         y0   = fY[p[0]]; y2 = fY[p[0]];
+         z0   = fZ[p[0]]; z2 = fZ[p[0]];
+
+         // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
+         // After this z0 < z1 < z2
+         i0=0, i1=0, i2=0;
+         if (fZ[p[1]]<=z0) {z0=fZ[p[1]]; x0=fX[p[1]]; y0=fY[p[1]]; i0=1;}
+         if (fZ[p[1]]>z2)  {z2=fZ[p[1]]; x2=fX[p[1]]; y2=fY[p[1]]; i2=1;}
+         if (fZ[p[2]]<=z0) {z0=fZ[p[2]]; x0=fX[p[2]]; y0=fY[p[2]]; i0=2;}
+         if (fZ[p[2]]>z2)  {z2=fZ[p[2]]; x2=fX[p[2]]; y2=fY[p[2]]; i2=2;}
+         if (i0==0 && i2==0) {
+            Error("GetContourList", "wrong vertices ordering");
+            delete [] xs0;
+            delete [] ys0;
+            delete [] xs1;
+            delete [] ys1;
+            return 0;
+         } else {
+            i1 = 3-i2-i0;
+         }
+         x1 = fX[p[i1]];
+         y1 = fY[p[i1]];
+         z1 = fZ[p[i1]];
+
+         if (Hoption.Logz) {
+            z0 = TMath::Log10(z0);
+            z1 = TMath::Log10(z1);
+            z2 = TMath::Log10(z2);
+         }
+
+         if(contour >= z0 && contour <=z2) {
+            r20 = (contour-z0)/(z2-z0);
+            xs0c = r20*(x2-x0)+x0;
+            ys0c = r20*(y2-y0)+y0;
+            if(contour >= z1 && contour <=z2) {
+               r21 = (contour-z1)/(z2-z1);
+               xs1c = r21*(x2-x1)+x1;
+               ys1c = r21*(y2-y1)+y1;
+            } else {
+               r10 = (contour-z0)/(z1-z0);
+               xs1c = r10*(x1-x0)+x0;
+               ys1c = r10*(y1-y0)+y0;
+            }
+            // do not take the segments equal to a point
+            if(xs0c != xs1c || ys0c != ys1c) {
+               nbSeg++;
+               xs0[nbSeg-1] = xs0c;
+               ys0[nbSeg-1] = ys0c;
+               xs1[nbSeg-1] = xs1c;
+               ys1[nbSeg-1] = ys1c;
+            }
          }
       }
    }
@@ -324,6 +436,7 @@ L01:
          list->Add(graph); npg = 0;
       }
    }
+
 
    // Find the closed graphs. At this point all the remaining graphs
    // are closed. Any segment can be used to start the search.
@@ -584,14 +697,22 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
 {
    Int_t i, fillColor, ncolors, theColor0, theColor2;
 
-   Int_t p0=t[0]-1;
-   Int_t p1=t[1]-1;
-   Int_t p2=t[2]-1;
+   Int_t p[3];
+   if (fDelaunay) { 
+      p[0]=t[0]-1;
+      p[1]=t[1]-1;
+      p[2]=t[2]-1;
+   }
+   else if (fDelaunay2D) {
+      p[0]=t[0];
+      p[1]=t[1];
+      p[2]=t[2];
+   }
    Double_t xl[2],yl[2];
    Double_t zl, r21, r20, r10;
    Double_t x0 = x[0]  , x2 = x[0];
    Double_t y0 = y[0]  , y2 = y[0];
-   Double_t z0 = fZ[p0], z2 = fZ[p0];
+   Double_t z0 = fZ[p[0]], z2 = fZ[p[0]];
    Double_t zmin = fGraph2D->GetMinimum();
    Double_t zmax = fGraph2D->GetMaximum();
    if (zmin==-1111 && zmax==-1111) {
@@ -602,14 +723,14 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
    // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
    // After this z0 < z1 < z2
    Int_t i0=0, i1=0, i2=0;
-   if (fZ[p1]<=z0) {z0=fZ[p1]; x0=x[1]; y0=y[1]; i0=1;}
-   if (fZ[p1]>z2)  {z2=fZ[p1]; x2=x[1]; y2=y[1]; i2=1;}
-   if (fZ[p2]<=z0) {z0=fZ[p2]; x0=x[2]; y0=y[2]; i0=2;}
-   if (fZ[p2]>z2)  {z2=fZ[p2]; x2=x[2]; y2=y[2]; i2=2;}
+   if (fZ[p[1]]<=z0) {z0=fZ[p[1]]; x0=x[1]; y0=y[1]; i0=1;}
+   if (fZ[p[1]]>z2)  {z2=fZ[p[1]]; x2=x[1]; y2=y[1]; i2=1;}
+   if (fZ[p[2]]<=z0) {z0=fZ[p[2]]; x0=x[2]; y0=y[2]; i0=2;}
+   if (fZ[p[2]]>z2)  {z2=fZ[p[2]]; x2=x[2]; y2=y[2]; i2=2;}
    i1 = 3-i2-i0;
    Double_t x1 = x[i1];
    Double_t y1 = y[i1];
-   Double_t z1 = fZ[t[i1]-1];
+   Double_t z1 = fZ[p[i1]];
 
    if (z0>zmax) z0 = zmax;
    if (z2>zmax) z2 = zmax;
@@ -913,8 +1034,16 @@ void TGraph2DPainter::PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paints the 2D graph as triangles
-
 void TGraph2DPainter::PaintTriangles(Option_t *option)
+{
+   if (fDelaunay)
+      PaintTriangles_old(option);
+   else if (fDelaunay2D) 
+      PaintTriangles_new(option);
+}
+
+
+void TGraph2DPainter::PaintTriangles_old(Option_t *option)
 {
    Double_t x[4], y[4], temp1[3],temp2[3];
    Int_t it,t[3];
@@ -1062,5 +1191,162 @@ endloop:
    fGraph2D->TAttFill::Modify();
    delete [] order;
    delete [] dist;
+   if (glev) delete [] glev;
+}
+
+
+/////////
+// Paints the 2D graph as triangles (new implementation)
+/////
+void TGraph2DPainter::PaintTriangles_new(Option_t *option)
+{
+
+   Double_t x[4], y[4], temp1[3],temp2[3];
+   Int_t p[3];
+
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("PaintTriangles", "No TView in current pad");
+      return;
+   }
+
+   TString opt = option;
+   opt.ToLower();
+   Bool_t tri1      = opt.Contains("tri1");
+   Bool_t tri2      = opt.Contains("tri2");
+   Bool_t markers   = opt.Contains("p");
+   Bool_t markers0  = opt.Contains("p0");
+   Bool_t wire      = opt.Contains("w");
+
+   // Define the grid levels drawn on the triangles.
+   // The grid levels are aligned on the Z axis' main tick marks.
+   Int_t nblev=0;
+   Double_t *glev=0;
+   if (!tri1 && !tri2 && !wire) {
+      Int_t ndivz = gCurrentHist->GetZaxis()->GetNdivisions()%100;
+      Int_t nbins;
+      Double_t binLow = 0, binHigh = 0, binWidth = 0;
+
+      // Find the main tick marks positions.
+      Double_t *r0 = view->GetRmin();
+      Double_t *r1 = view->GetRmax();
+      if (!r0 || !r1) return;
+
+      if (ndivz > 0) {
+         THLimitsFinder::Optimize(r0[2], r1[2], ndivz,
+                                  binLow, binHigh, nbins, binWidth, " ");
+      } else {
+         nbins = TMath::Abs(ndivz);
+         binLow = r0[2];
+         binHigh = r1[2];
+         binWidth = (binHigh-binLow)/nbins;
+      }
+      // Define the grid levels
+      nblev = nbins+1;
+      glev = new Double_t[nblev];
+      for (Int_t i = 0; i < nblev; ++i) glev[i] = binLow+i*binWidth;
+   }
+
+   // Initialize the levels on the Z axis
+   if (tri1 || tri2) {
+      Int_t ndiv   = gCurrentHist->GetContour();
+      if (ndiv == 0 ) {
+         ndiv = gStyle->GetNumberContours();
+         gCurrentHist->SetContour(ndiv);
+      }
+      if (gCurrentHist->TestBit(TH1::kUserContour) == 0) gCurrentHist->SetContour(ndiv);
+   }
+
+   // For each triangle, compute the distance between the triangle centre
+   // and the back planes. Then these distances are sorted in order to draw
+   // the triangles from back to front.
+   if (!fNdt) FindTriangles();
+   Double_t cp = TMath::Cos(view->GetLongitude()*TMath::Pi()/180.);
+   Double_t sp = TMath::Sin(view->GetLongitude()*TMath::Pi()/180.);
+
+   Bool_t reverse = kFALSE;
+   std::function<Double_t(Double_t, Double_t)> fDist;
+
+   if ((cp >= 0) && (sp >= 0.)) {
+      fDist = [&](Double_t xd, Double_t yd) -> Double_t { return -(fXNmax-xd+fYNmax-yd);};
+   } else if ((cp <= 0) && (sp >= 0.)) {
+	   fDist = [&](Double_t xd, Double_t yd) -> Double_t { return -(fXNmax-xd+yd-fYNmin);};
+	   reverse = kTRUE;
+   } else if ((cp <= 0) && (sp <= 0.)) {
+	   fDist = [&](Double_t xd, Double_t yd) -> Double_t { return -(xd-fXNmin+yd-fYNmin);};
+   } else {
+	   fDist = [&](Double_t xd, Double_t yd) -> Double_t { return -(xd-fXNmin+fYNmax-yd);};
+	   reverse = kTRUE;
+   }
+
+   typedef std::pair<Double_t, TGraphDelaunay2D::Triangles::const_iterator> DistEntry;
+   std::vector<DistEntry> dist;
+   for(auto it = fDelaunay2D->begin(); it != fDelaunay2D->end(); ++it){
+	   auto face = *it;
+	   Double_t xd = (face.x[0] + face.x[1] + face.x[2]) / 3;
+	   Double_t yd = (face.y[0] + face.y[1] + face.y[2]) / 3;
+
+	   dist.emplace_back(fDist(xd, yd), it);
+   }
+
+   std::sort(dist.begin(), dist.end(),
+		   [&](const DistEntry & a, const DistEntry & b){ return !reverse ? (a.first < b.first) : (b.first < a .first); });
+
+   // Draw the triangles and markers if requested
+   fGraph2D->SetFillColor(fGraph2D->GetFillColor());
+   Int_t fs = fGraph2D->GetFillStyle();
+   fGraph2D->SetFillStyle(1001);
+   fGraph2D->TAttFill::Modify();
+   fGraph2D->SetLineColor(fGraph2D->GetLineColor());
+   fGraph2D->TAttLine::Modify();
+   int lst = fGraph2D->GetLineStyle();
+   for (const auto & it : dist) {
+	  p[0] = it.second->idx[0];
+	  p[1] = it.second->idx[1];
+	  p[2] = it.second->idx[2];
+      for (Int_t k=0; k<3; k++) {
+         if(fX[p[k]] < fXmin || fX[p[k]] > fXmax) goto endloop;
+         if(fY[p[k]] < fYmin || fY[p[k]] > fYmax) goto endloop;
+         temp1[0] = fX[p[k]];
+         temp1[1] = fY[p[k]];
+         temp1[2] = fZ[p[k]];
+         temp1[0] = TMath::Max(temp1[0],fXmin);
+         temp1[1] = TMath::Max(temp1[1],fYmin);
+         temp1[2] = TMath::Max(temp1[2],fZmin);
+         temp1[2] = TMath::Min(temp1[2],fZmax);
+         if (Hoption.Logx) temp1[0] = TMath::Log10(temp1[0]);
+         if (Hoption.Logy) temp1[1] = TMath::Log10(temp1[1]);
+         if (Hoption.Logz) temp1[2] = TMath::Log10(temp1[2]);
+         view->WCtoNDC(temp1, &temp2[0]);
+         x[k] = temp2[0];
+         y[k] = temp2[1];
+      }
+      x[3] = x[0];
+      y[3] = y[0];
+      if (tri1 || tri2) PaintLevels(p,x,y);
+      if (!tri1 && !tri2 && !wire) {
+         gPad->PaintFillArea(3,x,y);
+         PaintLevels(p,x,y,nblev,glev);
+      }
+      if (!tri2) gPad->PaintPolyLine(4,x,y);
+      if (markers) {
+         if (markers0) {
+            PaintPolyMarker0(3,x,y);
+         } else {
+            fGraph2D->SetMarkerStyle(fGraph2D->GetMarkerStyle());
+            fGraph2D->SetMarkerSize(fGraph2D->GetMarkerSize());
+            fGraph2D->SetMarkerColor(fGraph2D->GetMarkerColor());
+            fGraph2D->TAttMarker::Modify();
+            gPad->PaintPolyMarker(3,x,y);
+         }
+      }
+endloop:
+      continue;
+   }
+   fGraph2D->SetFillStyle(fs);
+   fGraph2D->SetLineStyle(lst);
+   fGraph2D->TAttLine::Modify();
+   fGraph2D->TAttFill::Modify();
+
    if (glev) delete [] glev;
 }

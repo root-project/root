@@ -273,6 +273,10 @@ if(ROOT_davix_FOUND)
   ROOT_ADD_TEST(test-stressIOPlugins-http COMMAND stressIOPlugins http FAILREGEX "FAILED|Error in")
 endif()
 
+#--delaunay----------------------------------------------------------------------------------
+ROOT_EXECUTABLE(delaunayTriangulation delaunayTriangulation.cxx LIBRARIES Hist)
+ROOT_ADD_TEST(test-delaunay COMMAND delaunayTriangulation)
+
 #--TestTformula------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(TFormulaTests TFormulaTests.cxx LIBRARIES Hist RIO)
 ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error in")

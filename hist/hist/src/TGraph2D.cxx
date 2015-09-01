@@ -17,12 +17,14 @@
 #include "TList.h"
 #include "TGraph2D.h"
 #include "TGraphDelaunay.h"
+#include "TGraphDelaunay2D.h"
 #include "TVirtualPad.h"
 #include "TVirtualFitter.h"
 #include "TPluginManager.h"
 #include "TClass.h"
 #include "TSystem.h"
 #include <stdlib.h>
+#include <cassert>
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
@@ -224,6 +226,7 @@ TGraph2D::TGraph2D()
    fNpy       = 40;
    fDirectory = 0;
    fHistogram = 0;
+   fDelaunay = nullptr; 
    fMaximum   = -1111;
    fMinimum   = -1111;
    fX         = 0;
@@ -598,6 +601,7 @@ void TGraph2D::Build(Int_t n)
    fNpy       = 40;
    fDirectory = 0;
    fHistogram = 0;
+   fDelaunay  = nullptr;
    fMaximum   = -1111;
    fMinimum   = -1111;
    fX         = new Double_t[fSize];
@@ -1041,9 +1045,12 @@ Double_t TGraph2D::GetErrorZ(Int_t) const
 /// the limits of fX, fY and fZ. This option is used when the data set is
 /// drawn with markers only. In that particular case there is no need to
 /// find the Delaunay triangles.
+/// By default use the new interpolation routine based on Triangles
+/// If the option "old" the old interpolation is used 
 
 TH2D *TGraph2D::GetHistogram(Option_t *option)
 {
+   // for an empty graph create histogram in [0,1][0,1]
    if (fNpoints <= 0) {
       if (!fHistogram) {
          Bool_t add = TH1::AddDirectoryStatus();
@@ -1058,6 +1065,7 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
    TString opt = option;
    opt.ToLower();
    Bool_t empty = opt.Contains("empty");
+   Bool_t oldInterp = opt.Contains("old"); 
 
    if (fHistogram) {
       if (!empty && fHistogram->GetEntries() == 0) {
@@ -1065,8 +1073,15 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
             delete fHistogram;
             fHistogram = 0;
          }
-      } else if (fHistogram->GetEntries() == 0){;
-      } else {
+      } else if (fHistogram->GetEntries() == 0)
+      {;      }
+         // check case if interpolation type has changed
+      else if ( (TestBit(kOldInterpolation) && !oldInterp) || ( !TestBit(kOldInterpolation) && oldInterp ) ) { 
+         delete fHistogram;
+         fHistogram = 0;
+      }
+      // normal case return existing histogram 
+      else {
          return fHistogram;
       }
    }
@@ -1121,11 +1136,23 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
    }
 
    // Add a TGraphDelaunay in the list of the fHistogram's functions
-   TGraphDelaunay *dt = new TGraphDelaunay(this);
-   dt->SetMaxIter(fMaxIter);
-   dt->SetMarginBinsContent(fZout);
+
+   if (oldInterp) {      
+      TGraphDelaunay *dt = new TGraphDelaunay(this);
+      dt->SetMaxIter(fMaxIter);
+      dt->SetMarginBinsContent(fZout);
+      fDelaunay = dt;
+      SetBit(kOldInterpolation); 
+   }
+   else {
+      // new interpolation based on ROOT::Math::Delaunay
+      TGraphDelaunay2D *dt = new TGraphDelaunay2D(this);
+      dt->SetMarginBinsContent(fZout);
+      fDelaunay = dt; 
+      ResetBit(kOldInterpolation); 
+   }
    TList *hl = fHistogram->GetListOfFunctions();
-   hl->Add(dt);
+   hl->Add(fDelaunay);
 
    // Option "empty" is selected. An empty histogram is returned.
    if (empty) {
@@ -1155,15 +1182,22 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
    Double_t dy = (hymax - hymin) / fNpy;
 
    Double_t x, y, z;
+
    for (Int_t ix = 1; ix <= fNpx; ix++) {
       x  = hxmin + (ix - 0.5) * dx;
       for (Int_t iy = 1; iy <= fNpy; iy++) {
          y  = hymin + (iy - 0.5) * dy;
-         z  = dt->ComputeZ(x, y);
+         // do interpolation
+         if (oldInterp) 
+            z  = ((TGraphDelaunay*)fDelaunay)->ComputeZ(x, y);
+         else
+            z  = ((TGraphDelaunay2D*)fDelaunay)->ComputeZ(x, y);
+
          fHistogram->Fill(x, y, z);
       }
    }
 
+      
    if (fMinimum != -1111) fHistogram->SetMinimum(fMinimum);
    if (fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
 
@@ -1248,14 +1282,29 @@ Double_t TGraph2D::Interpolate(Double_t x, Double_t y)
       return 0;
    }
 
-   TGraphDelaunay *dt;
-
    if (!fHistogram) GetHistogram("empty");
+   if (!fDelaunay) { 
+      TList *hl = fHistogram->GetListOfFunctions();
+      if (!TestBit(kOldInterpolation) ) {
+         fDelaunay = hl->FindObject("TGraphDelaunay2D");
+         if (!fDelaunay) fDelaunay =  hl->FindObject("TGraphDelaunay");
+      }
+      else {
+         // if using old inmplementation
+         fDelaunay = hl->FindObject("TGraphDelaunay");
+         if (!fDelaunay) fDelaunay =  hl->FindObject("TGraphDelaunay2D");
+      }
+   }
+   
+   if (!fDelaunay) return TMath::QuietNaN();
 
-   TList *hl = fHistogram->GetListOfFunctions();
-   dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
+   if (fDelaunay->IsA() == TGraphDelaunay2D::Class() )
+      return ((TGraphDelaunay2D*)fDelaunay)->ComputeZ(x, y);
+   else if (fDelaunay->IsA() == TGraphDelaunay::Class() )
+      return ((TGraphDelaunay*)fDelaunay)->ComputeZ(x, y);
 
-   return dt->ComputeZ(x, y);
+   // cannot be here
+   assert(false); 
 }
 
 
@@ -1283,7 +1332,9 @@ void TGraph2D::Paint(Option_t *option)
 
    if (opt.Contains("tri0")) {
       GetHistogram("empty");
-   } else {
+   } else if (opt.Contains("old")) {
+      GetHistogram("old");
+   } else  {
       GetHistogram();
    }
 
