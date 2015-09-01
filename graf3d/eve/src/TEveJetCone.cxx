@@ -15,37 +15,32 @@
 
 #include "TMath.h"
 
+/** \class TEveJetCone
+Draws a jet cone with leading particle is specified in (eta,phi) and
+cone radius is given.
 
-//==============================================================================
-// TEveJetCone
-//==============================================================================
+If Apex is not set, default is (0.,0.,0.)
+In case of cylinder was set, cone is cut at the cylinder edges.
 
-//______________________________________________________________________________
-//
-// Draws a jet cone with leading particle is specified in (eta,phi) and
-// cone radius is given.
-//
-// If Apex is not set, default is (0.,0.,0.)
-// In case of cylinder was set, cone is cut at the cylinder edges.
-//
-// Example :
-//
-//  Float_t coneEta    = r.Uniform(-0.9, 0.9);
-//  Float_t conePhi    = r.Uniform(0.0, TwoPi() );
-//  Float_t coneRadius = 0.4;
-//
-//  TEveJetCone* jetCone = new TEveJetCone("JetCone");
-//  jetCone->SetCylinder(250, 250);
-//  if (jetCone->AddCone(coneEta, conePhi, coneRadius) != -1)
-//    gEve->AddElement(jetCone);
-//
-//
-// Implementation notes
-//
-// TEveVector fLimits encodes the following information:
-//   fY, fZ:  barrel radius and endcap z-position;
-//            if both are 0, fX encodes the spherical radius
-//   fX    :  scaling for length of the cone
+Example :
+~~~ {.cpp}
+  Float_t coneEta    = r.Uniform(-0.9, 0.9);
+  Float_t conePhi    = r.Uniform(0.0, TwoPi() );
+  Float_t coneRadius = 0.4;
+
+  TEveJetCone* jetCone = new TEveJetCone("JetCone");
+  jetCone->SetCylinder(250, 250);
+  if (jetCone->AddCone(coneEta, conePhi, coneRadius) != -1)
+    gEve->AddElement(jetCone);
+~~~
+
+#### Implementation notes
+
+TEveVector fLimits encodes the following information:
+  - fY, fZ:  barrel radius and endcap z-position;
+             if both are 0, fX encodes the spherical radius
+  - fX    :  scaling for length of the cone
+*/
 
 ClassImp(TEveJetCone);
 
@@ -82,17 +77,16 @@ TClass* TEveJetCone::ProjectedClass(const TEveProjection*) const
    return TEveJetConeProjected::Class();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add jet cone.
 /// parameters are :
-/// * (eta,phi)    : of the center/leading particle
-/// * cone_r       : cone radius in eta-phi space
-/// * length       : length of the cone
-///   * if cylinder is set and length is adapted to cylinder.
-///     - if length is given, it will be used as scalar factor
-///   * if cylinder is not set, length is used as length of the cone
-/// Return 0 on sucess.
+/// - (eta,phi)    : of the center/leading particle
+/// - cone_r       : cone radius in eta-phi space
+/// - length       : length of the cone
+///   - if cylinder is set and length is adapted to cylinder.
+///      - if length is given, it will be used as scalar factor
+///   - if cylinder is not set, length is used as length of the cone
+/// Return 0 on success.
 
 Int_t TEveJetCone::AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t length)
 {
@@ -102,13 +96,13 @@ Int_t TEveJetCone::AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t len
 ////////////////////////////////////////////////////////////////////////////////
 /// Add jet cone.
 /// parameters are :
-/// * (eta,phi)    : of the center/leading particle
-/// * (reta, rphi) : radius of cone in eta-phi space
-/// * length       : length of the cone
-///   * if cylinder is set and length is adapted to cylinder.
-///     - if length is given, it will be used as scalar factor
-///   * if cylinder is not set, length is used as length of the cone
-/// Returns 0 on sucess.
+/// - (eta,phi)    : of the center/leading particle
+/// - (reta, rphi) : radius of cone in eta-phi space
+/// - length       : length of the cone
+///   - if cylinder is set and length is adapted to cylinder.
+///      - if length is given, it will be used as scalar factor
+///   - if cylinder is not set, length is used as length of the cone
+/// Returns 0 on success.
 
 Int_t TEveJetCone::AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t length)
 {
@@ -189,13 +183,9 @@ Bool_t TEveJetCone::IsInTransitionRegion() const
           (tM > Pi() - fThetaC && tm < Pi() - fThetaC);
 }
 
-//==============================================================================
-// TEveJetConeProjected
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Projection of TEveJetCone.
+/** \class TEveJetConeProjected
+Projection of TEveJetCone.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
