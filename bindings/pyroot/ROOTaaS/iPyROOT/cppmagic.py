@@ -21,28 +21,25 @@ def _dumpToUniqueFile(code):
     'dbf7e731.C'
     '''
     fileName = _codeToFilename(code)
-    ofile = open (fileName,'w')
-    ofile.write(code)
-    ofile.close()
+    with open (fileName,'w') as ofile:
+      ofile.write(code)
     return fileName
 
 
 @magics_class
 class CppMagics(Magics):
-
     @cell_magic
     @magic_arguments()
     @argument('-a', '--aclic', action="store_true", help='Compile code with ACLiC.')
     @argument('-d', '--declare', action="store_true", help='Declare functions and/or classes.')
     def cpp(self, line, cell):
-        """Run a C++ cell in a Python notebook.
-        """
+        '''Executes the content of the cell as C++ code.'''
         args = parse_argstring(self.cpp, line)
         if args.aclic:
             fileName = _dumpToUniqueFile(cell)
-            utils.invokeAclic(fileName) 
+            utils.invokeAclic(fileName)
         elif args.declare:
-            utils.declareCppCode(cell) 
+            utils.declareCppCode(cell)
         else:
             utils.processCppCode(cell)
 
