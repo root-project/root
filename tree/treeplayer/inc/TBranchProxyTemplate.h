@@ -25,6 +25,7 @@
    bool Read() { return obj.Read(); }
 
 namespace ROOT {
+namespace Internal {
    template <class T>
    class TObjProxy {
       Detail::TBranchProxy obj;
@@ -157,14 +158,14 @@ namespace ROOT {
       typedef typename T::value_type value_t;
    public:
 
-      TStlSimpleProxy() : ROOT::TObjProxy<T>(),fCollection(0) {};
-      TStlSimpleProxy(TBranchProxyDirector *director, const char *name) : ROOT::TObjProxy<T>(director,name),fCollection(0) {};
+      TStlSimpleProxy() : TObjProxy<T>(),fCollection(0) {};
+      TStlSimpleProxy(TBranchProxyDirector *director, const char *name) :  TObjProxy<T>(director,name),fCollection(0) {};
       TStlSimpleProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
-         ROOT::TObjProxy<T>(director,top,name),fCollection(0) {};
+         TObjProxy<T>(director,top,name),fCollection(0) {};
       TStlSimpleProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
-         ROOT::TObjProxy<T>(director,top,name,data),fCollection(0) {};
+         TObjProxy<T>(director,top,name,data),fCollection(0) {};
       TStlSimpleProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         ROOT::TObjProxy<T>(director,parent, name, top, mid),fCollection(0) {};
+          TObjProxy<T>(director,parent, name, top, mid),fCollection(0) {};
       ~TStlSimpleProxy() { delete fCollection; };
 
       TVirtualCollectionProxy* GetCollection() {
@@ -178,7 +179,7 @@ namespace ROOT {
       }
 
       Int_t GetEntries() {
-         T *temp =  ROOT::TObjProxy<T>::GetPtr();
+         T *temp =   TObjProxy<T>::GetPtr();
          if (temp) {
             GetCollection();
             if (!fCollection) return 0;
@@ -190,7 +191,7 @@ namespace ROOT {
 
       const value_t At(UInt_t i) {
          static value_t default_val;
-         T *temp = ROOT::TObjProxy<T>::GetPtr();
+         T *temp =  TObjProxy<T>::GetPtr();
          if (temp) {
             GetCollection();
             if (!fCollection) return 0;
@@ -203,12 +204,13 @@ namespace ROOT {
       const value_t operator [](Int_t i) { return At(i); }
       const value_t operator [](UInt_t i) { return At(i); }
 
-      T* operator->() { return ROOT::TObjProxy<T>::GetPtr(); }
-      operator T*() { return ROOT::TObjProxy<T>::GetPtr(); }
+      T* operator->() { return  TObjProxy<T>::GetPtr(); }
+      operator T*() { return  TObjProxy<T>::GetPtr(); }
       // operator T&() { return *GetPtr(); }
 
    };
 
-}
+} // namespace Internal
+} // namespace ROOT
 
 #endif

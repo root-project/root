@@ -37,6 +37,8 @@ namespace ROOT {
    namespace Detail {
       class TBranchProxy;
    }
+
+namespace Internal {
    class TBranchProxyDirector;
    class TTreeReaderArrayBase;
 
@@ -64,15 +66,16 @@ namespace ROOT {
    // Used by TTreeReaderArray
    class TVirtualCollectionReader {
    public:
-      ROOT::TTreeReaderValueBase::EReadStatus fReadStatus;
+      TTreeReaderValueBase::EReadStatus fReadStatus;
 
-      TVirtualCollectionReader() : fReadStatus(ROOT::TTreeReaderValueBase::kReadNothingYet) {}
+      TVirtualCollectionReader() : fReadStatus(TTreeReaderValueBase::kReadNothingYet) {}
 
       virtual ~TVirtualCollectionReader();
       virtual size_t GetSize(Detail::TBranchProxy*) = 0;
       virtual void* At(Detail::TBranchProxy*, size_t /*idx*/) = 0;
    };
 
+}
 }
 
 #endif // defined TTreeReaderUtils

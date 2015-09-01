@@ -22,6 +22,8 @@ of the autoloading of branches as well as all the generic setup routine.
 
 ClassImp(ROOT::Detail::TBranchProxy);
 
+using namespace ROOT::Internal;
+
 ROOT::Detail::TBranchProxy::TBranchProxy() :
    fDirector(0), fInitialized(false), fBranchName(""), fParent(0),
    fDataMember(""), fIsMember(false), fIsClone(false), fIsaPointer(0),

@@ -25,9 +25,10 @@ fragment in the result of MakeProxy.
 #include "TVirtualStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
 
-ClassImp(ROOT::TBranchProxyClassDescriptor);
+ClassImp(ROOT::Internal::TBranchProxyClassDescriptor);
 
 namespace ROOT {
+namespace Internal {
 
    void TBranchProxyClassDescriptor::NameToSymbol() {
 
@@ -450,4 +451,5 @@ namespace ROOT {
       //TBranchProxyDescriptor::OutputDecl(hf,offset,maxVarname);
    }
 
-}
+} // namespace Internal
+} // namespace ROOT

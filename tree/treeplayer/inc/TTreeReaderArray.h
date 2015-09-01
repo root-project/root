@@ -30,6 +30,8 @@
 #endif
 
 namespace ROOT {
+namespace Internal {
+
    class TTreeReaderArrayBase: public TTreeReaderValueBase {
    public:
       TTreeReaderArrayBase(TTreeReader* reader, const char* branchname,
@@ -54,10 +56,11 @@ namespace ROOT {
       //ClassDef(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
    };
 
+} // namespace Internal
 } // namespace ROOT
 
 template <typename T>
-class TTreeReaderArray: public ROOT::TTreeReaderArrayBase {
+class TTreeReaderArray: public ROOT::Internal::TTreeReaderArrayBase {
 public:
 
    // Iterator through the indices of a TTreeReaderArray.

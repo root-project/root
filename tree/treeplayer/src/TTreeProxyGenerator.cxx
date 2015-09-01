@@ -127,6 +127,7 @@ namespace {
 }
 
 namespace ROOT {
+namespace Internal {
 
    TString GetArrayType(TStreamerElement *element, const char *subtype,
                         TTreeProxyGenerator::EContainer container)
@@ -2019,4 +2020,6 @@ namespace ROOT {
       delete [] filename;
       delete [] cutfilename;
    }
-}
+
+} // namespace Internal
+} // namespace ROOT

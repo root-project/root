@@ -29,9 +29,10 @@ which will hold the directory and its associate
 
 namespace std {} using namespace std;
 
-ClassImp(ROOT::TBranchProxyDirector);
+ClassImp(ROOT::Internal::TBranchProxyDirector);
 
 namespace ROOT {
+namespace Internal {
 
    // Helper function to call Reset on each TBranchProxy
    void Reset(Detail::TBranchProxy *x) { x->Reset(); }
@@ -153,4 +154,5 @@ namespace ROOT {
       return oldtree;
    }
 
+} // namespace Internal
 } // namespace ROOT

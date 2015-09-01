@@ -80,7 +80,7 @@ namespace Internal {
 namespace Detail {
    class TBranchProxy {
    protected:
-      TBranchProxyDirector *fDirector; // contain pointer to TTree and entry to be read
+      Internal::TBranchProxyDirector *fDirector; // contain pointer to TTree and entry to be read
 
       Bool_t   fInitialized;
 
@@ -115,10 +115,10 @@ namespace Detail {
       virtual void Print();
 
       TBranchProxy();
-      TBranchProxy(TBranchProxyDirector* boss, const char* top, const char* name = 0);
-      TBranchProxy(TBranchProxyDirector* boss, const char *top, const char *name, const char *membername);
-      TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = 0, const char* name = 0);
-      TBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, const char* top, const char* name = 0);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, const char *top, const char *name, const char *membername);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = 0, const char* name = 0);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, TBranch* branch, const char* membername);
       virtual ~TBranchProxy();
 
       TBranchProxy* GetProxy() { return this; }
@@ -310,6 +310,8 @@ namespace Detail {
       Int_t GetOffset() { return fOffset; }
    };
 } // namespace Detail
+
+namespace Internal {
 
    //____________________________________________________________________________________________
    // Concrete Implementation of the branch proxy around the data members which are array of char
@@ -824,6 +826,7 @@ namespace Detail {
    typedef TStlArrayProxy<TArrayType<Char_t> >      TStlArrayCharProxy;     // Concrete Implementation of the branch proxy around an stl container of char
    typedef TStlArrayProxy<TArrayType<Bool_t> >      TStlArrayBoolProxy;     // Concrete Implementation of the branch proxy around an stl container of bool
 
+} // namespace Internal
 } // namespace ROOT
 
 #endif

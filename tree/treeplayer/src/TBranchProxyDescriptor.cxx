@@ -26,9 +26,10 @@
 #include "TFormLeafInfo.h"
 #include <ctype.h>
 
-ClassImp(ROOT::TBranchProxyDescriptor);
+ClassImp(ROOT::Internal::TBranchProxyDescriptor);
 
 namespace ROOT {
+namespace Internal {
 
    TBranchProxyDescriptor::TBranchProxyDescriptor(const char *dataname,
                                                   const char *type,
@@ -146,4 +147,6 @@ namespace ROOT {
 
       }
    }
-}
+
+} // namespace Internal
+} // namespace ROOT

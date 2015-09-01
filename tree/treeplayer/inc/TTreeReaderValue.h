@@ -38,6 +38,7 @@ class TLeaf;
 class TTreeReader;
 
 namespace ROOT {
+namespace Internal {
 
    class TTreeReaderValueBase {
    public:
@@ -112,11 +113,12 @@ namespace ROOT {
       friend class ::TTreeReader;
    };
 
+} // namespace Internal
 } // namespace ROOT
 
 
 template <typename T>
-class TTreeReaderValue: public ROOT::TTreeReaderValueBase {
+class TTreeReaderValue: public ROOT::Internal::TTreeReaderValueBase {
 public:
    TTreeReaderValue() {}
    TTreeReaderValue(TTreeReader& tr, const char* branchname):

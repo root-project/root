@@ -28,9 +28,11 @@ class TH1F;
 class TTree;
 
 namespace ROOT {
-   namespace Detail {
-      class TBranchProxy;
-   }
+namespace Detail {
+   class TBranchProxy;
+}
+
+namespace Internal{
    class TFriendProxy;
 
    class TBranchProxyDirector {
@@ -61,6 +63,7 @@ namespace ROOT {
 
    };
 
-} /* namespace ROOT */
+} // namespace Internal
+} // namespace ROOT
 
 #endif
