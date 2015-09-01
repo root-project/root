@@ -272,6 +272,7 @@ private:
 };
 
 namespace ROOT {
+namespace Internal {
    // Helper class for browing THnBase objects
    class THnBaseBrowsable: public TNamed {
    public:
@@ -303,6 +304,7 @@ namespace ROOT {
       Bool_t fRespectAxisRange;
       Bool_t fHaveSkippedBin;
    };
+}
 }
 
 class THnIter: public TObject {
