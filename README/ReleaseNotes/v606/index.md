@@ -103,6 +103,9 @@ Using the `COL` option with histograms having some negative bins; the empty bins
 (containing 0) of histograms having a negative minimum. The option `1`, used with
 the option `COL`, allows to do that.
 
+Implement the Log option for `CANDLE` plots as requested
+[here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20225&p=87006#p87006).
+
 ### TTeXDump
 
 From Dmitry Kalinkin (via github): Fix file corruption in TTeXDump::DrawPolyMarker`

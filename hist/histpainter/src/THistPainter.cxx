@@ -4428,6 +4428,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
    h2->TAttMarker::Modify();
 
    // Candle plot along X
+   Double_t xb1,xb2,yb1,yb2,xl1,xl2,yl1,yl2,xl3,yl3,xp1,yp1;
    if (Hoption.Candle == 1) {
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast; i++) {
          x = fXaxis->GetBinLowEdge(i);
@@ -4435,25 +4436,50 @@ void THistPainter::PaintCandlePlot(Option_t *)
          hp = h2->ProjectionY("_px", i, i);
          if (hp->GetEntries() !=0) {
             hp->GetQuantiles(5, quantiles, prob);
-            ypm[0] = hp->GetMean();
-
+            yp1 = hp->GetMean();
+            xb1 = x+m1*w;
+            xb2 = x+(1-m1)*w;
+            yb1 = quantiles[1];
+            yb2 = quantiles[3];
+            xl1 = x+m2*w;
+            xl2 = x+(1-m2)*w;
+            yl1 = quantiles[0];
+            yl2 = quantiles[4];
+            yl3 = quantiles[2];
+            xp1 = x+w/2.;
+            if (Hoption.Logy) {
+               if (yb1 > 0)  yb1  = TMath::Log10(yb1); else continue;
+               if (yb2 > 0)  yb2  = TMath::Log10(yb2); else continue;
+               if (yl1 > 0)  yl1  = TMath::Log10(yl1); else continue;
+               if (yl2 > 0)  yl2  = TMath::Log10(yl2); else continue;
+               if (yl3 > 0)  yl3  = TMath::Log10(yl3); else continue;
+               if (yp1 > 0)  yp1  = TMath::Log10(yp1); else continue;
+            }
+            if (Hoption.Logx) {
+               if (xb1 > 0)  xb1  = TMath::Log10(xb1); else continue;
+               if (xb2 > 0)  xb2  = TMath::Log10(xb2); else continue;
+               if (xl1 > 0)  xl1  = TMath::Log10(xl1); else continue;
+               if (xl2 > 0)  xl2  = TMath::Log10(xl2); else continue;
+               if (xp1 > 0)  xp1  = TMath::Log10(xp1); else continue;
+            }
+            ypm[0] = yp1;
             h2->SetLineStyle(1);
             h2->TAttLine::Modify();
-            gPad->PaintBox(x+m1*w,  quantiles[1], x+(1-m1)*w, quantiles[3]);
-            gPad->PaintLine(x+m2*w, quantiles[0], x+(1-m2)*w, quantiles[0]);
-            gPad->PaintLine(x+m2*w, quantiles[4], x+(1-m2)*w, quantiles[4]);
+            gPad->PaintBox (xb1, yb1, xb2, yb2);
+            gPad->PaintLine(xl1, yl1, xl2, yl1);
+            gPad->PaintLine(xl1, yl2, xl2, yl2);
             h2->SetLineWidth(3*widthsav);
             h2->TAttLine::Modify();
-            gPad->PaintLine(x+m1*w, quantiles[2], x+(1-m1)*w, quantiles[2]);
+            gPad->PaintLine(xb1, yl3, xb2, yl3);
             h2->SetLineWidth(widthsav);
             h2->TAttLine::Modify();
 
             h2->SetLineStyle(2);
             h2->TAttLine::Modify();
-            gPad->PaintLine(x+w/2., quantiles[3], x+w/2., quantiles[4]);
-            gPad->PaintLine(x+w/2., quantiles[0], x+w/2., quantiles[1]);
+            gPad->PaintLine(xp1, yb2, xp1, yl2);
+            gPad->PaintLine(xp1, yl1, xp1, yb1);
 
-            xpm[0] = x+w/2;
+            xpm[0] = xp1;
             gPad->PaintPolyMarker(1,xpm,ypm);
          }
       }
@@ -4465,25 +4491,53 @@ void THistPainter::PaintCandlePlot(Option_t *)
          hp = h2->ProjectionX("_py", i, i);
          if (hp->GetEntries() !=0) {
             hp->GetQuantiles(5, quantiles, prob);
-            xpm[0] = hp->GetMean();
-
+            xp1 = hp->GetMean();
+            yb1 = y+m1*w;
+            yb2 = y+(1-m1)*w;
+            xb1 = quantiles[1];
+            xb2 = quantiles[3];
+            yl1 = y+m2*w;
+            yl2 = y+(1-m2)*w;
+            xl1 = quantiles[0];
+            xl2 = quantiles[4];
+            xl3 = quantiles[2];
+            yp1 = y+w/2.;
+            if (Hoption.Logx) {
+               if (xb1 > 0)  xb1  = TMath::Log10(xb1); else continue;
+               if (xb2 > 0)  xb2  = TMath::Log10(xb2); else continue;
+               if (xl1 > 0)  xl1  = TMath::Log10(xl1); else continue;
+               if (xl2 > 0)  xl2  = TMath::Log10(xl2); else continue;
+               if (xl3 > 0)  xl3  = TMath::Log10(xl3); else continue;
+               if (xp1 > 0)  xp1  = TMath::Log10(xp1); else continue;
+            }
+            if (Hoption.Logy) {
+               if (yb1 > 0)  yb1  = TMath::Log10(yb1); else continue;
+               if (yb2 > 0)  yb2  = TMath::Log10(yb2); else continue;
+               if (yl1 > 0)  yl1  = TMath::Log10(yl1); else continue;
+               if (yl2 > 0)  yl2  = TMath::Log10(yl2); else continue;
+               if (yp1 > 0)  yp1  = TMath::Log10(yp1); else continue;
+            }
+            xpm[0] = xp1;
             h2->SetLineStyle(1);
             h2->TAttLine::Modify();
-            gPad->PaintBox(quantiles[1],  y+m1*w, quantiles[3], y+(1-m1)*w);
-            gPad->PaintLine(quantiles[0], y+m2*w, quantiles[0], y+(1-m2)*w);
-            gPad->PaintLine(quantiles[4], y+m2*w, quantiles[4], y+(1-m2)*w);
+
+            gPad->PaintBox (xb1, yb1, xb2, yb2);
+            gPad->PaintLine(xl1, yl1, xl1, yl2);
+            gPad->PaintLine(xl2, yl1, xl2, yl2);
+
             h2->SetLineWidth(3*widthsav);
             h2->TAttLine::Modify();
-            gPad->PaintLine(quantiles[2], y+m1*w, quantiles[2], y+(1-m1)*w);
+            gPad->PaintLine(xl3, yb1, xl3, yb2);
+
             h2->SetLineWidth(widthsav);
             h2->TAttLine::Modify();
 
             h2->SetLineStyle(2);
             h2->TAttLine::Modify();
-            gPad->PaintLine(quantiles[3], y+w/2., quantiles[4], y+w/2.);
-            gPad->PaintLine(quantiles[0], y+w/2., quantiles[1], y+w/2.);
+            gPad->PaintLine(xb2, yp1, xl2, yp1);
+            gPad->PaintLine(xl1, yp1, xb1, yp1);
 
-            ypm[0] = y+w/2;
+            ypm[0] = yp1;
             gPad->PaintPolyMarker(1,xpm,ypm);
          }
       }
