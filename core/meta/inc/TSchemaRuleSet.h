@@ -14,8 +14,9 @@ class TClass;
 
 namespace ROOT {
 
-   class TSchemaRule;
+class TSchemaRule;
 
+namespace Internal {
    class TSchemaMatch: public TObjArray
    {
       public:
@@ -26,7 +27,9 @@ namespace ROOT {
                Bool_t       HasRuleWithTarget( const TString& name, Bool_t willset ) const;
       ClassDef(TSchemaMatch,0);
    };
+} // End of Namespace Internal
 
+namespace Detail {
    class TSchemaRuleSet: public TObject
    {
       public:
@@ -44,9 +47,9 @@ namespace ROOT {
          Bool_t              AddRules( TSchemaRuleSet* rules, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = 0);
          Bool_t              HasRuleWithSourceClass( const TString &source) const;
          const TObjArray*    FindRules( const TString &source ) const;
-         const TSchemaMatch* FindRules( const TString &source, Int_t version ) const;
-         const TSchemaMatch* FindRules( const TString &source, UInt_t checksum ) const;
-         const TSchemaMatch* FindRules( const TString &source, Int_t version, UInt_t checksum ) const;
+         const Internal::TSchemaMatch* FindRules( const TString &source, Int_t version ) const;
+         const Internal::TSchemaMatch* FindRules( const TString &source, UInt_t checksum ) const;
+         const Internal::TSchemaMatch* FindRules( const TString &source, Int_t version, UInt_t checksum ) const;
          TClass*             GetClass();
          UInt_t              GetClassCheckSum() const;
          TString             GetClassName() const;
@@ -72,6 +75,7 @@ namespace ROOT {
          UInt_t                                 fCheckSum;        //  Target class checksum
    };
 
+} // End of Namespace Detail
 } // End of Namespace ROOT
 
 #endif // ROOT_TSchemaRuleSet

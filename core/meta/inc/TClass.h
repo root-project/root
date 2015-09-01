@@ -68,10 +68,10 @@ class TProtoClass;
 
 namespace ROOT {
    class TGenericClassInfo;
-   class TSchemaRuleSet;
    class TMapTypeToTClass;
    class TMapDeclIdToTClass;
    namespace Detail {
+      class TSchemaRuleSet;
       class TCollectionProxyInfo;
    }
 }
@@ -238,7 +238,7 @@ private:
    mutable std::atomic<TVirtualStreamerInfo*>  fCurrentInfo;     //!cached current streamer info.
    mutable std::atomic<TVirtualStreamerInfo*>  fLastReadInfo;    //!cached streamer info used in the last read.
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
-   ROOT::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
+   ROOT::Detail::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
 
    typedef void (*StreamerImpl_t)(const TClass* pThis, void *obj, TBuffer &b, const TClass *onfile_class);
 #ifdef R__NO_ATOMIC_FUNCTION_POINTER
@@ -347,7 +347,7 @@ public:
    static Bool_t      AddRule(const char *rule);
    static Int_t       ReadRules(const char *filename);
    static Int_t       ReadRules();
-   void               AdoptSchemaRules( ROOT::TSchemaRuleSet *rules );
+   void               AdoptSchemaRules( ROOT::Detail::TSchemaRuleSet *rules );
    virtual void       Browse(TBrowser *b);
    void               BuildRealData(void *pointer=0, Bool_t isTransient = kFALSE);
    void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
@@ -435,8 +435,8 @@ public:
 #endif
    TRealData         *GetRealData(const char *name) const;
    TVirtualRefProxy  *GetReferenceProxy()  const   {  return fRefProxy; }
-   const ROOT::TSchemaRuleSet *GetSchemaRules() const;
-   ROOT::TSchemaRuleSet *GetSchemaRules(Bool_t create = kFALSE);
+   const ROOT::Detail::TSchemaRuleSet *GetSchemaRules() const;
+   ROOT::Detail::TSchemaRuleSet *GetSchemaRules(Bool_t create = kFALSE);
    const char        *GetSharedLibs();
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
    EState             GetState() const { return fState; }

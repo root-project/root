@@ -2650,7 +2650,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       TMakeProject::GenerateMissingStreamerInfos( &extrainfos, info->GetName() );
       TIter enext( info->GetElements() );
       TStreamerElement *el;
-      const ROOT::TSchemaMatch* rules = 0;
+      const ROOT::Internal::TSchemaMatch* rules = 0;
       if (cl && cl->GetSchemaRules()) {
          rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
       }
@@ -2834,7 +2834,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       TClass *cl = TClass::GetClass(info->GetName());
       if (cl) {
          if (cl->HasInterpreterInfo()) continue; // skip known classes
-         const ROOT::TSchemaMatch* rules = 0;
+         const ROOT::Internal::TSchemaMatch* rules = 0;
          if (cl->GetSchemaRules()) {
             rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
             TString strrule;
