@@ -551,15 +551,6 @@ public:
 };
 
 namespace ROOT {
-
-#ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
-   template <typename T> struct IsPointer { enum { kVal = 0 }; };
-   template <typename T> struct IsPointer<T*> { enum { kVal = 1 }; };
-#else
-   template <typename T> Bool_t IsPointer(const T* /* dummy */) { return false; };
-   template <typename T> Bool_t IsPointer(const T** /* dummy */) { return true; };
-#endif
-
    template <typename T> TClass* GetClass(      T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
    template <typename T> TClass* GetClass(const T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
 
