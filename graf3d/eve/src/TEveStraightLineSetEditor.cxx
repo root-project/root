@@ -21,14 +21,14 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//______________________________________________________________________________
-// TEveStraightLineSetEditor
-//
-// Editor for TEveStraightLineSet class.
+/** \class TEveStraightLineSetEditor
+Editor for TEveStraightLineSet class.
+*/
 
 ClassImp(TEveStraightLineSetEditor)
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveStraightLineSetEditor::TEveStraightLineSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                                      UInt_t options, Pixel_t back) :
@@ -36,8 +36,6 @@ TEveStraightLineSetEditor::TEveStraightLineSetEditor(const TGWindow *p, Int_t wi
    fM(0)
                                                     // Initialize widget pointers to 0
 {
-   // Constructor.
-
    MakeTitle("TEveStraightLineSet");
 
    TGHorizontalFrame* frame = new TGHorizontalFrame(this);
@@ -57,8 +55,6 @@ TEveStraightLineSetEditor::TEveStraightLineSetEditor(const TGWindow *p, Int_t wi
    AddFrame(frame, new TGLayoutHints(kLHintsTop, 0, 0, 0, 0));
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -70,10 +66,6 @@ void TEveStraightLineSetEditor::SetModel(TObject* obj)
    fRnrMarkers->SetState(fM->GetRnrMarkers() ? kButtonDown : kButtonUp);
    fRnrLines->SetState(fM->GetRnrLines() ? kButtonDown : kButtonUp);
 }
-
-/******************************************************************************/
-
-// Implements callback/slot methods
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for RnrMarkers.
