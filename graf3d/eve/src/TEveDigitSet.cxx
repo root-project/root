@@ -17,56 +17,65 @@
 #include "TRefArray.h"
 
 
-//______________________________________________________________________________
-//
-// Base-class for storage of digit collections; provides
-// transformation matrix (TEveTrans), signal to color mapping
-// (TEveRGBAPalette) and visual grouping (TEveFrameBox).
-//
-// Base-class for displaying a digit collection.
-// Provdies common services for:
-// - specifying signal / color per digit;
-// - specifying object reference per digit;
-// - controlling palette and thresholds (external object TEveRGBAPalette);
-// - showing a frame around the digits (external object TEveFrameBox);
-// - specifying transformation matrix for the whole collection;
-//   by data-member of class TEveTrans.
-//
-// Use method DigitId(TObject* id) to assign additional identification
-// to the last created digit. By calling SetOwnIds(kTRUE) tje
-// digit-set becomes the owner of the assigned objects and deletes
-// them on destruction.
-// Note that TRef is used for referencing the objects and if you
-// instantiate the objects just to pass them to digit-set you should
-// also call  TProcessID::Get/SetObjectCount() at the beginning / end
-// of processing of an event. See documentation for class TRef, in
-// particular section 'ObjectNumber'.
-//
-// If you use value-is-color mode and want to use transparency, set
-// the transparency to non-zero value so that GL-renderer will be
-// properly informed.
-//
-// If you want to use single color for all elements call:
-//   UseSingleColor()
-// Palette controls will not work in this case.
-//
-// A pointer to a rectangle / box of class TEveFrameBox can be set via
-//   void SetFrame(TEveFrameBox* b);
-// A single TEveFrameBox can be shared among several digit-sets (it is
-// reference-counted). The following flafs affect how the frame-box will drawn
-// and used for selection and highlight:
-//   Bool_t fSelectViaFrame;
-//   Bool_t fHighlightFrame;
-//
-// TEveDigitSet is sub-lcassed from TEveSecondarySelectable -- this means
-// individual digits can be selected. By calling:
-//   TEveSecondarySelectable::SetAlwaysSecSelect(kTRUE);
-// one can enforce immediate feedback (highlight, tooltip and select on normal
-// left-mouse click) on given digit-set.
-//
-// See also:
-//   TEveQuadSet: rectangle, hexagon or line per digit
-//   TEveBoxSet   a 3D box per digit
+/** \class TEveDigitSet
+Base-class for storage of digit collections; provides
+transformation matrix (TEveTrans), signal to color mapping
+(TEveRGBAPalette) and visual grouping (TEveFrameBox).
+
+Base-class for displaying a digit collection.
+Provides common services for:
+ - specifying signal / color per digit;
+ - specifying object reference per digit;
+ - controlling palette and thresholds (external object TEveRGBAPalette);
+ - showing a frame around the digits (external object TEveFrameBox);
+ - specifying transformation matrix for the whole collection;
+   by data-member of class TEveTrans.
+
+Use method DigitId(TObject* id) to assign additional identification
+to the last created digit. By calling SetOwnIds(kTRUE) tje
+digit-set becomes the owner of the assigned objects and deletes
+them on destruction.
+Note that TRef is used for referencing the objects and if you
+instantiate the objects just to pass them to digit-set you should
+also call  TProcessID::Get/SetObjectCount() at the beginning / end
+of processing of an event. See documentation for class TRef, in
+particular section 'ObjectNumber'.
+
+If you use value-is-color mode and want to use transparency, set
+the transparency to non-zero value so that GL-renderer will be
+properly informed.
+
+If you want to use single color for all elements call:
+~~~ {.cpp}
+   UseSingleColor()
+~~~
+Palette controls will not work in this case.
+
+A pointer to a rectangle / box of class TEveFrameBox can be set via
+~~~ {.cpp}
+   void SetFrame(TEveFrameBox* b);
+~~~
+A single TEveFrameBox can be shared among several digit-sets (it is
+reference-counted). The following flags affect how the frame-box will drawn
+and used for selection and highlight:
+~~~ {.cpp}
+   Bool_t fSelectViaFrame;
+   Bool_t fHighlightFrame;
+~~~
+TEveDigitSet is sub-classed from TEveSecondarySelectable -- this means
+individual digits can be selected. By calling:
+~~~ {.cpp}
+   TEveSecondarySelectable::SetAlwaysSecSelect(kTRUE);
+~~~
+one can enforce immediate feedback (highlight, tooltip and select on normal
+left-mouse click) on given digit-set.
+
+See also:
+~~~ {.cpp}
+   TEveQuadSet: rectangle, hexagon or line per digit
+   TEveBoxSet   a 3D box per digit
+~~~
+*/
 
 ClassImp(TEveDigitSet);
 
@@ -119,8 +128,6 @@ TEveDigitSet::~TEveDigitSet()
    delete fDigitIds;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Protected method called whenever a new digit is added.
 
@@ -147,8 +154,6 @@ void TEveDigitSet::ReleaseIds()
       fDigitIds->Expand(0);
    }
 }
-
-//------------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Instruct digit-set to use single color for its digits.
@@ -223,10 +228,6 @@ TString TEveDigitSet::GetHighlightTooltip()
    }
 }
 
-
-/******************************************************************************/
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Instruct underlying memory allocator to regroup itself into a
 /// contiguous memory chunk.
@@ -236,10 +237,8 @@ void TEveDigitSet::RefitPlex()
    fPlex.Refit();
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Iterate over the digits and detmine min and max signal values.
+/// Iterate over the digits and determine min and max signal values.
 
 void TEveDigitSet::ScanMinMaxValues(Int_t& min, Int_t& max)
 {
@@ -266,8 +265,6 @@ void TEveDigitSet::ScanMinMaxValues(Int_t& min, Int_t& max)
    if (min == max)
       --min;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set current digit -- the one that will receive calls to
@@ -377,9 +374,6 @@ void* TEveDigitSet::GetUserData(Int_t n) const
    return GetDigit(n)->fUserData;
 }
 
-/******************************************************************************/
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this object. Only direct rendering is supported.
 
@@ -422,10 +416,6 @@ void TEveDigitSet::SecSelected(TEveDigitSet* qs, Int_t idx)
 
    Emit("SecSelected(TEveDigitSet*, Int_t)", args);
 }
-
-/******************************************************************************/
-// Getters / Setters for Frame, TEveRGBAPalette, TEveTrans
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set TEveFrameBox pointer.

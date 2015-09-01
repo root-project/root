@@ -34,39 +34,27 @@
 
 #include <algorithm>
 
-//==============================================================================
-//==============================================================================
-// TEveElement::TEveListTreeInfo
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Structure holding information about TGListTree and TGListTreeItem
-// that represents given TEveElement. This needed because each element
-// can appear in several list-trees as well as several times in the
-// same list-tree.
+/** \class TEveElement::TEveListTreeInfo
+Structure holding information about TGListTree and TGListTreeItem
+that represents given TEveElement. This needed because each element
+can appear in several list-trees as well as several times in the
+same list-tree.
+*/
 
 ClassImp(TEveElement::TEveListTreeInfo);
 
-
-//==============================================================================
-//==============================================================================
-// TEveElement
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Base class for TEveUtil visualization elements, providing hierarchy
-// management, rendering control and list-tree item management.
+/** \class TEveElement
+Base class for TEveUtil visualization elements, providing hierarchy
+management, rendering control and list-tree item management.
+*/
 
 ClassImp(TEveElement);
 
-//______________________________________________________________________________
 const TGPicture* TEveElement::fgRnrIcons[4]      = { 0 };
 const TGPicture* TEveElement::fgListTreeIcons[9] = { 0 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default contructor.
+/// Default constructor.
 
 TEveElement::TEveElement() :
    fParents             (),
@@ -140,9 +128,10 @@ TEveElement::TEveElement(Color_t& main_color) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor. Does shallow copy.
 /// For deep-cloning and children-cloning, see:
+/// ~~~ {.cpp}
 ///   TEveElement* CloneElementRecurse(Int_t level)
 ///   void         CloneChildrenRecurse(TEveElement* dest, Int_t level)
-///
+/// ~~~
 /// 'TRef fSource' is copied but 'void* UserData' is NOT.
 /// If the element is projectable, its projections are NOT copied.
 ///
@@ -237,8 +226,8 @@ TEveElement* TEveElement::CloneElement() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clone elements and recurse 'level' deep over children.
-/// If level ==  0, only the element itself is cloned (default).
-/// If level == -1, all the hierarchy is cloned.
+///  - If level ==  0, only the element itself is cloned (default).
+///  - If level == -1, all the hierarchy is cloned.
 
 TEveElement* TEveElement::CloneElementRecurse(Int_t level) const
 {
@@ -267,7 +256,7 @@ void TEveElement::CloneChildrenRecurse(TEveElement* dest, Int_t level) const
 //==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Virtual function for retrieveing name of the element.
+/// Virtual function for retrieving name of the element.
 /// Here we attempt to cast the assigned object into TNamed and call
 /// GetName() there.
 
@@ -280,7 +269,7 @@ const char* TEveElement::GetElementName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Virtual function for retrieveing title of the render-element.
+/// Virtual function for retrieving title of the render-element.
 /// Here we attempt to cast the assigned object into TNamed and call
 /// GetTitle() there.
 
@@ -608,8 +597,6 @@ void TEveElement::VizDB_Insert(const char* tag, Bool_t replace, Bool_t update)
       gEve->Redraw3D();
 }
 
-//******************************************************************************
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the master element - that is:
 /// - master of projectable, if this is a projected;
@@ -637,10 +624,9 @@ TEveElement* TEveElement::GetMaster()
    return this;
 }
 
-//******************************************************************************
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add re into the list parents.
+///
 /// Adding parent is subordinate to adding an element.
 /// This is an internal function.
 
@@ -727,10 +713,6 @@ void TEveElement::CollectSceneParentsFromChildren(List_t&      scenes,
       (*c)->CollectSceneParentsFromChildren(scenes, this);
    }
 }
-
-/******************************************************************************/
-// List-tree stuff
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Populates parent with elements.
@@ -943,8 +925,6 @@ TGListTreeItem* TEveElement::FindListTreeItem(TGListTree* ltree,
    return 0;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get a TObject associated with this render-element.
 /// Most cases uses double-inheritance from TEveElement and TObject
@@ -977,8 +957,6 @@ void TEveElement::ExportToCINT(char* var_name)
    const char* cname = IsA()->GetName();
    gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)this));
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Call Dump() on source object.
@@ -1026,8 +1004,6 @@ void TEveElement::ExportSourceObjectToCINT(char* var_name) const
    gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)so));
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint self and/or children into currently active pad.
 
@@ -1074,8 +1050,6 @@ void TEveElement::PaintStandard(TObject* id)
               id->ClassName(), reqSections);
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set render state of this element, i.e. if it will be published
@@ -1173,8 +1147,6 @@ void TEveElement::PropagateRnrStateToProjecteds()
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set main color of the element.
 ///
@@ -1246,7 +1218,7 @@ void TEveElement::SetMainTransparency(Char_t t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set main-transparency via float alpha varable.
+/// Set main-transparency via float alpha variable.
 /// Value of alpha is clamped t0 [0, 1].
 
 void TEveElement::SetMainAlpha(Float_t alpha)
@@ -1267,9 +1239,6 @@ void TEveElement::PropagateMainTransparencyToProjecteds(Char_t t, Char_t old_t)
       pable->PropagateMainTransparency(t, old_t);
    }
 }
-
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to main transformation. If 'create' flag is set (default)
@@ -1321,7 +1290,7 @@ void TEveElement::DestroyMainTrans()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set transformation matrix from colum-major array.
+/// Set transformation matrix from column-major array.
 
 void TEveElement::SetTransMatrix(Double_t* carr)
 {
@@ -1335,9 +1304,6 @@ void TEveElement::SetTransMatrix(const TGeoMatrix& mat)
 {
    RefMainTrans().SetFrom(mat);
 }
-
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if el can be added to this element.
@@ -1435,8 +1401,6 @@ void TEveElement::RemoveElementsLocal()
 {
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// If this is a projectable, loop over all projected replicas and
 /// add the projected image of child 'el' there. This is supposed to
@@ -1496,8 +1460,6 @@ void TEveElement::ProjectAllChildren(Bool_t same_depth)
       }
    }
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if element el is a child of this element.
@@ -1609,9 +1571,6 @@ TEveElement* TEveElement::LastChild () const
    return HasChildren() ? fChildren.back() : 0;
 }
 
-
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Enable rendering of children and their list contents.
 /// Arguments control how to set self/child rendering.
@@ -1644,8 +1603,6 @@ void TEveElement::DisableListElements(Bool_t rnr_self,  Bool_t rnr_children)
 
    ElementChanged(kTRUE, kTRUE);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Protected member function called from TEveElement::Annihilate().
@@ -1876,9 +1833,6 @@ void TEveElement::DecParentIgnoreCnt()
       CheckReferenceCount("TEveElement::DecParentIgnoreCnt ");
 }
 
-
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// React to element being pasted or dnd-ed.
 /// Return true if redraw is needed.
@@ -1897,10 +1851,6 @@ void TEveElement::ElementChanged(Bool_t update_scenes, Bool_t redraw)
 {
    gEve->ElementChanged(this, update_scenes, redraw);
 }
-
-/******************************************************************************/
-// Select/hilite
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set pickable state on the element and all its children.
@@ -2074,11 +2024,6 @@ void TEveElement::RecheckImpliedSelections()
       gEve->GetHighlight()->RecheckImpliedSetForElement(this);
 }
 
-
-/******************************************************************************/
-// Stamping
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add (bitwise or) given stamps to fChangeBits.
 /// Register this element to gEve as stamped.
@@ -2090,10 +2035,6 @@ void TEveElement::AddStamp(UChar_t bits)
    fChangeBits |= bits;
    if (fDestructing == kNone) gEve->ElementStamped(this);
 }
-
-/******************************************************************************/
-// List-tree icons
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns pointer to first listtreeicon
@@ -2126,15 +2067,9 @@ const char* TEveElement::ToString(Bool_t b)
    return b ? "kTRUE" : "kFALSE";
 }
 
-
-/******************************************************************************/
-/******************************************************************************/
-// TEveElementObjectPtr
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// TEveElement with external TObject as a holder of visualization data.
+/** \class TEveElementObjectPtr
+TEveElement with external TObject as a holder of visualization data.
+*/
 
 ClassImp(TEveElementObjectPtr);
 
@@ -2225,22 +2160,15 @@ TEveElementObjectPtr::~TEveElementObjectPtr()
       delete fObject;
 }
 
+/** \class  TEveElementList
+A list of TEveElements.
 
-/******************************************************************************/
-/******************************************************************************/
-// TEveElementList
-/******************************************************************************/
+Class of acceptable children can be limited by setting the
+fChildClass member.
 
-//______________________________________________________________________________
-//
-// A list of TEveElements.
-//
-// Class of acceptable children can be limited by setting the
-// fChildClass member.
-//
-
-// !!! should have two ctors (like in TEveElement), one with Color_t&
-// and set fDoColor automatically, based on which ctor is called.
+!!! should have two ctors (like in TEveElement), one with Color_t&
+and set fDoColor automatically, based on which ctor is called.
+*/
 
 ClassImp(TEveElementList);
 
@@ -2304,16 +2232,10 @@ TClass* TEveElementList::ProjectedClass(const TEveProjection*) const
    return TEveElementListProjected::Class();
 }
 
-
-/******************************************************************************/
-/******************************************************************************/
-// TEveElementListProjected
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// A projected element list -- required for proper propagation
-// of render state to projected views.
+/** \class TEveElementListProjected
+A projected element list -- required for proper propagation
+of render state to projected views.
+*/
 
 ClassImp(TEveElementListProjected);
 
