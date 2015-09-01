@@ -12,15 +12,16 @@
 #include "TEveShape.h"
 #include "Riostream.h"
 
-//______________________________________________________________________________
-//
-// Abstract base-class for 2D/3D shapes.
-// It provides:
-// - fill color / transparency, accessible via Get/SetMainColor/Transparency;
-// - frame line color / width;
-// - flag if frame should be drawn;
-// - flag specifying whether frame or whole shape should be emphasised for
-//   highlight.
+/** \class TEveShape
+Abstract base-class for 2D/3D shapes.
+
+It provides:
+  - fill color / transparency, accessible via Get/SetMainColor/Transparency;
+  - frame line color / width;
+  - flag if frame should be drawn;
+  - flag specifying whether frame or whole shape should be emphasised for
+    highlight.
+*/
 
 ClassImp(TEveShape);
 
@@ -103,8 +104,6 @@ void TEveShape::Paint(Option_t*)
 {
    PaintStandard(this);
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Determines the convex-hull of points in pin.
@@ -213,8 +212,6 @@ Int_t TEveShape::FindConvexHull(const vVector2_t& pin, vVector2_t& pout, TEveEle
 
    return N;
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Checks if the first face normal is pointing into the other

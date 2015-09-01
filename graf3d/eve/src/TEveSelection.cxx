@@ -16,10 +16,10 @@
 
 #include "TClass.h"
 
-//______________________________________________________________________________
-//
-// Make sure there is a SINGLE running TEveSelection for each
-// selection type (select/highlight).
+/* \class TEveSelection
+Make sure there is a SINGLE running TEveSelection for each
+selection type (select/highlight).
+*/
 
 ClassImp(TEveSelection);
 
@@ -54,11 +54,6 @@ void TEveSelection::SetHighlightMode()
    fDecImpSelElement = &TEveElement::DecImpliedHighlighted;
 }
 
-
-/******************************************************************************/
-// Protected helpers
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Select element indicated by the entry and fill its
 /// implied-selected set.
@@ -88,11 +83,6 @@ void TEveSelection::DoElementUnselect(TEveSelection::SelMap_i entry)
    set.clear();
    (el->*fSelElement)(kFALSE);
 }
-
-
-/******************************************************************************/
-// Overrides of child-element-management virtuals from TEveElement
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Pre-addition check. Deny addition if el is already selected.
@@ -232,11 +222,6 @@ void TEveSelection::RecheckImpliedSetForElement(TEveElement* el)
    }
 }
 
-
-//******************************************************************************
-// Signals
-//******************************************************************************
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Emit SelectionAdded signal.
 
@@ -269,10 +254,6 @@ void TEveSelection::SelectionRepeated(TEveElement* el)
    Emit("SelectionRepeated(TEveElement*)", (Long_t)el);
 }
 
-/******************************************************************************/
-// Activation / deactivation of selection
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate this selection.
 
@@ -292,11 +273,6 @@ void TEveSelection::DeactivateSelection()
    for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++i)
       DoElementUnselect(i);
 }
-
-
-/******************************************************************************/
-// User input processing
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Given element el that was picked or clicked by the user, find
