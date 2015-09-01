@@ -248,7 +248,7 @@ namespace Internal {
    /////////////////////////////////////////////////////////////////////////////
    /// Attach the schema evolution information to TClassObject
 
-   void TGenericClassInfo::CreateRuleSet( std::vector<TSchemaHelper>& vect,
+   void TGenericClassInfo::CreateRuleSet( std::vector<Internal::TSchemaHelper>& vect,
                                           Bool_t ProcessReadRules )
    {
       if ( vect.empty() ) {
@@ -267,7 +267,7 @@ namespace Internal {
 
       TSchemaRule* rule;
       TString errmsg;
-      std::vector<TSchemaHelper>::iterator it;
+      std::vector<Internal::TSchemaHelper>::iterator it;
       for( it = vect.begin(); it != vect.end(); ++it ) {
          rule = new TSchemaRule();
          rule->SetTarget( it->fTarget );
@@ -326,7 +326,7 @@ namespace Internal {
       return fInfo;
    }
 
-   const std::vector<TSchemaHelper>& TGenericClassInfo::GetReadRawRules() const
+   const std::vector<Internal::TSchemaHelper>& TGenericClassInfo::GetReadRawRules() const
    {
       // Return the list of rule give raw access to the TBuffer.
 
@@ -334,7 +334,7 @@ namespace Internal {
    }
 
 
-   const std::vector<TSchemaHelper>& TGenericClassInfo::GetReadRules() const
+   const std::vector<Internal::TSchemaHelper>& TGenericClassInfo::GetReadRules() const
    {
       // Return the list of Data Model Evolution regular read rules.
       return fReadRules;
@@ -422,14 +422,14 @@ namespace Internal {
       return 0;
    }
 
-   void TGenericClassInfo::SetReadRawRules( const std::vector<TSchemaHelper>& rules )
+   void TGenericClassInfo::SetReadRawRules( const std::vector<Internal::TSchemaHelper>& rules )
    {
       // Set the list of Data Model Evolution read rules giving direct access to the TBuffer.
       fReadRawRules = rules;
    }
 
 
-   void TGenericClassInfo::SetReadRules( const std::vector<TSchemaHelper>& rules )
+   void TGenericClassInfo::SetReadRules( const std::vector<Internal::TSchemaHelper>& rules )
    {
       // Set the list of Data Model Evolution regular read rules.
       fReadRules = rules;

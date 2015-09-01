@@ -65,8 +65,8 @@ namespace ROOT {
       Int_t                       fPragmaBits;
       Detail::TCollectionProxyInfo *fCollectionProxyInfo;
       Detail::TCollectionProxyInfo *fCollectionStreamerInfo;
-      std::vector<ROOT::TSchemaHelper>  fReadRules;
-      std::vector<ROOT::TSchemaHelper>  fReadRawRules;
+      std::vector<ROOT::Internal::TSchemaHelper>  fReadRules;
+      std::vector<ROOT::Internal::TSchemaHelper>  fReadRawRules;
 
    public:
       TGenericClassInfo(const char *fullClassname,
@@ -106,8 +106,8 @@ namespace ROOT {
       TVirtualIsAProxy                 *GetIsA() const;
       NewFunc_t                         GetNew() const;
       NewArrFunc_t                      GetNewArray() const;
-      const std::vector<ROOT::TSchemaHelper> &GetReadRawRules() const;
-      const std::vector<ROOT::TSchemaHelper> &GetReadRules() const;
+      const std::vector<ROOT::Internal::TSchemaHelper> &GetReadRawRules() const;
+      const std::vector<ROOT::Internal::TSchemaHelper> &GetReadRules() const;
       Int_t                             GetVersion() const;
 
       TClass                           *IsA(const void *obj);
@@ -127,8 +127,8 @@ namespace ROOT {
       void                              SetResetAfterMerge(ResetAfterMergeFunc_t);
       void                              SetNew(NewFunc_t newFunc);
       void                              SetNewArray(NewArrFunc_t newArrayFunc);
-      void                              SetReadRawRules( const std::vector<ROOT::TSchemaHelper>& rules );
-      void                              SetReadRules( const std::vector<ROOT::TSchemaHelper>& rules );
+      void                              SetReadRawRules( const std::vector<ROOT::Internal::TSchemaHelper>& rules );
+      void                              SetReadRules( const std::vector<ROOT::Internal::TSchemaHelper>& rules );
       Short_t                           SetStreamer(ClassStreamerFunc_t);
       void                              SetStreamerFunc(ClassStreamerFunc_t);
       void                              SetConvStreamerFunc(ClassConvStreamerFunc_t);
@@ -136,7 +136,7 @@ namespace ROOT {
 
       //   protected:
    private:
-      void CreateRuleSet( std::vector<ROOT::TSchemaHelper>& vect, Bool_t ProcessReadRules );
+      void CreateRuleSet( std::vector<ROOT::Internal::TSchemaHelper>& vect, Bool_t ProcessReadRules );
       TGenericClassInfo(const TGenericClassInfo&); // Not implemented
       TGenericClassInfo& operator=(const TGenericClassInfo&); // Not implemented
 
