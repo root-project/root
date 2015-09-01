@@ -170,7 +170,7 @@ extern "C" {
 void
 Gl_config(const char* which, int value) {
    if (strcmp(which, "noecho") == 0) {
-      TextInputHolder::get().HideInput(value);
+      TextInputHolder::get().MaskInput(value);
    } else {
       // unsupported directive
       printf("Gl_config unsupported: %s ?\n", which);
