@@ -23,13 +23,14 @@
 #include "TGSlider.h"
 #include "TGDoubleSlider.h"
 
-//______________________________________________________________________________
-//
-// Sub-editor for TEveRGBAPalette class.
+/** \class TEveRGBAPaletteSubEditor
+Sub-editor for TEveRGBAPalette class.
+*/
 
 ClassImp(TEveRGBAPaletteSubEditor)
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveRGBAPaletteSubEditor::TEveRGBAPaletteSubEditor(const TGWindow* p) :
    TGVerticalFrame(p),
@@ -48,10 +49,6 @@ TEveRGBAPaletteSubEditor::TEveRGBAPaletteSubEditor(const TGWindow* p) :
    fDefaultColor(0),
    fFixColorRange(0)
 {
-   // Constructor.
-
-   // Int_t labelW = 42;
-
    {
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
 
@@ -149,8 +146,6 @@ TEveRGBAPaletteSubEditor::TEveRGBAPaletteSubEditor(const TGWindow* p) :
    AddFrame(fMinMax, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -186,8 +181,6 @@ void TEveRGBAPaletteSubEditor::SetModel(TEveRGBAPalette* p)
    fOverflowAction ->Select(fM->fOverflowAction, kFALSE);
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Emit "Changed()" signal.
 
@@ -195,8 +188,6 @@ void TEveRGBAPaletteSubEditor::Changed()
 {
    Emit("Changed()");
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for MinMax.
@@ -231,8 +222,6 @@ void TEveRGBAPaletteSubEditor::DoMinMax()
    Changed();
    fM->MinMaxValChanged();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for Interpolate.
@@ -307,9 +296,9 @@ void TEveRGBAPaletteSubEditor::DoOverflowAction(Int_t mode)
 }
 
 
-//______________________________________________________________________________
-//
-// Editor for TEveRGBAPalette class.
+/** \class TEveRGBAPaletteEditor
+Editor for TEveRGBAPalette class.
+*/
 
 ClassImp(TEveRGBAPaletteEditor)
 
@@ -328,8 +317,6 @@ TEveRGBAPaletteEditor::TEveRGBAPaletteEditor(const TGWindow *p, Int_t width, Int
    AddFrame(fSE, new TGLayoutHints(kLHintsTop, 2, 0, 2, 2));
    fSE->Connect("Changed()", "TEveRGBAPaletteEditor", this, "Update()");
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
