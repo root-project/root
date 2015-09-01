@@ -11,11 +11,11 @@ ROOTTEST_ADD_TEST(roottest-cling-template-templateSingleton
                   DEPENDS Singleton.h
                   LABELS roottest regression cling)
 
-ROOTTEST_GENERATE_DICTIONARY(masterDict       LINKDEF master.h masterLinkDef.h)
-ROOTTEST_GENERATE_DICTIONARY(slaveDict        LINKDEF slave.h slaveLinkDef.h)
-ROOTTEST_GENERATE_DICTIONARY(forwardDict      LINKDEF forward.C linkdef.h)
-ROOTTEST_GENERATE_DICTIONARY(constructorDict  LINKDEF constructor.hh linkdef.h)
-ROOTTEST_GENERATE_DICTIONARY(typenameTestDict LINKDEF typenameTest.C linkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(masterDict       master.h       LINKDEF masterLinkDef.h)
+ROOTTEST_GENERATE_DICTIONARY(slaveDict        slave.h        LINKDEF slaveLinkDef.h)
+ROOTTEST_GENERATE_DICTIONARY(forwardDict      forward.C      LINKDEF linkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(constructorDict  constructor.hh LINKDEF linkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(typenameTestDict typenameTest.C LINKDEF linkdef.h)
 
 ROOTTEST_ADD_TEST(roottest-cling-template-runusingtemplate
                   MACRO runusingtemplate.C

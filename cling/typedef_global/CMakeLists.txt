@@ -1,7 +1,7 @@
-ROOTTEST_GENERATE_DICTIONARY(myclbad LINKDEF bad.h mycl.C LinkDef.h NO_ROOTMAP)
+ROOTTEST_GENERATE_DICTIONARY(myclbad bad.h mycl.C LINKDEF LinkDef.h NO_ROOTMAP)
 set(depends ${GENERATE_DICTIONARY_TEST})
 
-ROOTTEST_GENERATE_DICTIONARY(myclgood LINKDEF mycl.C LinkDef.h NO_ROOTMAP)
+ROOTTEST_GENERATE_DICTIONARY(myclgood mycl.C LINKDEF LinkDef.h NO_ROOTMAP)
 set(depends ${depends} ${GENERATE_DICTIONARY_TEST})
 
 ROOTTEST_ADD_TEST(roottest-cling-typedef_global-scopeTest

@@ -13,8 +13,8 @@ ROOTTEST_ADD_TEST(roottest-cling-parsing-runtestTable
                   WILLFAIL
                   LABELS roottest regression cling)
 
-ROOTTEST_GENERATE_DICTIONARY(scopeDict  LINKDEF scopeProblem.C linkdef.h)
-ROOTTEST_GENERATE_DICTIONARY(scopeDict2 LINKDEF multiScope.C linkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(scopeDict  scopeProblem.C LINKDEF linkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(scopeDict2 multiScope.C LINKDEF linkdef.h)
 
 ROOTTEST_ADD_TEST(roottest-cling-parsing-runReadbool
                   MACRO runReadbool.C

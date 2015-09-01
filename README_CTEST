@@ -160,9 +160,8 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY() macros, e.g.
                                            classes.h        # header files
                                            SELECTION classes_selection.xml)
 
-    2. ROOTTEST_GENERATE_DICTIONARY(scopeDict
-                                    LINKDEF scopeProblem.C
-                                    linkdef.h)
+    2. ROOTTEST_GENERATE_DICTIONARY(scopeDict scopeProblem.C
+                                    LINKDEF linkdef.h)
 
 Invoking these macros also sets the variables GENERATE_REFLEX_TEST and
 GENERATE_DICTIONARY_TEST to the internal CTest test name. They can be

@@ -1,4 +1,4 @@
-ROOTTEST_GENERATE_DICTIONARY(dict.C LINKDEF testing.C LinkDef.h)
+ROOTTEST_GENERATE_DICTIONARY(dict.C testing.C LINKDEF LinkDef.h)
 
 ROOTTEST_ADD_TEST(roottest-cling-stl-map-badOperator
                   MACRO badOperator.C

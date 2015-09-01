@@ -1,4 +1,4 @@
-ROOTTEST_GENERATE_DICTIONARY(dict LINKDEF mylist.C LinkDef.h)
+ROOTTEST_GENERATE_DICTIONARY(dict mylist.C LINKDEF LinkDef.h)
 
 ROOTTEST_ADD_TEST(roottest-cling-stl-default-defaultArgTest
                   COPY_TO_BUILDDIR mylist.C
