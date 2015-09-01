@@ -35,6 +35,8 @@ class CppMagics(Magics):
     @argument('-a', '--aclic', action="store_true", help='Compile code with ACLiC.')
     @argument('-d', '--declare', action="store_true", help='Declare functions and/or classes.')
     def cpp(self, line, cell):
+        """Run a C++ cell in a Python notebook.
+        """
         args = parse_argstring(self.cpp, line)
         if args.aclic:
             fileName = _dumpToUniqueFile(cell)
