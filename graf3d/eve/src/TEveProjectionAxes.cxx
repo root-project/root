@@ -14,16 +14,17 @@
 #include "TMath.h"
 
 
-//______________________________________________________________________________
-//
-// Axes for non-linear projections. Show scale of TEveProjectionManager
-// children. With different step mode tick-marks can positioned
-// equidistant or placed with value monotonically increasing from lower left corner
-// of bounding box.
+/** \class TEveProjectionAxes
+Axes for non-linear projections. Show scale of TEveProjectionManager
+children. With different step mode tick-marks can positioned
+equidistant or placed with value monotonically increasing from lower left corner
+of bounding box.
+*/
 
 ClassImp(TEveProjectionAxes);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m, Bool_t useCS) :
    TEveElement(),
@@ -38,8 +39,6 @@ TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m, Bool_t useCS) :
    fDrawCenter(kFALSE),
    fDrawOrigin(kFALSE)
 {
-   // Constructor.
-
    fCanEditMainTrans = kFALSE;
    fManager->AddDependent(this);
 

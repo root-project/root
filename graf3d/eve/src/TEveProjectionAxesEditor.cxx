@@ -18,9 +18,9 @@
 #include "TGLabel.h"
 #include "TG3DLine.h"
 
-//______________________________________________________________________________
-// GUI editor for TEveProjectionAxes.
-//
+/** \class TEveProjectionAxesEditor
+GUI editor for TEveProjectionAxes.
+*/
 
 ClassImp(TEveProjectionAxesEditor);
 
@@ -115,8 +115,6 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
 
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.

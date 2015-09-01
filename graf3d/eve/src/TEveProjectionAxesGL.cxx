@@ -21,10 +21,9 @@
 
 #include "TMath.h"
 
-//______________________________________________________________________________
-//
-// OpenGL renderer class for TEveProjectionAxes.
-//
+/** \class TEveProjectionAxesGL
+OpenGL renderer class for TEveProjectionAxes.
+*/
 
 ClassImp(TEveProjectionAxesGL);
 
@@ -60,6 +59,7 @@ void TEveProjectionAxesGL::SetBBox()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Filter overlapping labels.
 
 void TEveProjectionAxesGL::FilterOverlappingLabels(Int_t idx, Float_t ref) const
 {
@@ -69,7 +69,7 @@ void TEveProjectionAxesGL::FilterOverlappingLabels(Int_t idx, Float_t ref) const
    Float_t center = fM->GetManager()->GetProjection()->GetProjectedCenter()[idx];
 
    // Get index of label closest to the distortion center.
-   // Needed to keep simetry around center.
+   // Needed to keep symmetry around center.
    Int_t minIdx = 0;
    Int_t cnt = 0;
    Float_t currD = 0;
@@ -228,7 +228,7 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
    THLimitsFinder::Optimize(v1,  v2,      n1a, bl1, bh1, bn1, bw1);
    THLimitsFinder::Optimize(bl1, bl1+bw1, n2a, bl2, bh2, bn2, bw2);
 
-   Float_t pFirst, pSecond; // position of first, second order of tickmarks
+   Float_t pFirst, pSecond; // position of first, second order of tick-marks
    Float_t v = bl1;
 
    // cache values here
@@ -245,7 +245,7 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
       labVec.push_back(TGLAxisPainter::Lab_t(pFirst , v));
       tmVec.push_back(TGLAxisPainter::TM_t(pFirst, 0));
 
-      // Tickmarks.
+      // Tick-marks.
       for (Int_t k=1; k<bn2; k++)
       {
          pSecond = fProjection->GetScreenVal(ax, v+k*bw2, dirVec, oCenter);
@@ -267,7 +267,7 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get range from bounding box of projection manager and furstum size.
+/// Get range from bounding box of projection manager and frustum size.
 
 void TEveProjectionAxesGL::GetRange(Int_t ax, Float_t frustMin, Float_t frustMax, Float_t& min, Float_t& max) const
 {
