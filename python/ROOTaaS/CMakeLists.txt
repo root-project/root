@@ -10,7 +10,7 @@ if(PY_IPYTHON_FOUND)
    get_filename_component(SHORTPYFILE ${pyfile} NAME_WE)
    if (NOT ${SHORTPYFILE} STREQUAL "__init__")
      ROOTTEST_ADD_TEST(roottest-python-ROOTaaS-${SHORTPYFILE}_doctest
-                       COMMAND python -m doctest ${pyfile})
+                       COMMAND ${PYTHON_EXECUTABLE} -m doctest ${pyfile})
    endif()
  endforeach()
 endif()
