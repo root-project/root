@@ -11,15 +11,9 @@
 
 #include "TEveCompound.h"
 
-//==============================================================================
-//==============================================================================
-// TEveCompound
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Description of TEveCompound
-//
+/** \class TEveCompound
+Description of TEveCompound
+*/
 
 ClassImp(TEveCompound);
 
@@ -38,9 +32,9 @@ TEveCompound::TEveCompound(const char* n, const char* t, Bool_t doColor, Bool_t 
 /// whose current color is the same as the old color.
 ///
 /// The following CompoundSelectionColorBits have further influence:
-///   kCSCBApplyMainColorToAllChildren      - apply color to all children;
-///   kCSCBApplyMainColorToMatchingChildren - apply color to children who have
-///                                           matching old color.
+///  - kCSCBApplyMainColorToAllChildren      - apply color to all children;
+///  - kCSCBApplyMainColorToMatchingChildren - apply color to children who have
+///                                            matching old color.
 
 void TEveCompound::SetMainColor(Color_t color)
 {
@@ -63,13 +57,13 @@ void TEveCompound::SetMainColor(Color_t color)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SetMainTransparency for the compound.
-/// The transparenct is also propagated to children with compound set to this
+/// The transparency is also propagated to children with compound set to this
 /// whose current transparency is the same as the old transparency.
 ///
 /// The following CompoundSelectionColorBits have further influence:
-///   kCSCBApplyMainTransparencyToAllChildren      - apply transparency to all children;
-///   kCSCBApplyMainTransparencyToMatchingChildren - apply transparency to children who have
-///                                                  matching transparency.
+///  - kCSCBApplyMainTransparencyToAllChildren      - apply transparency to all children;
+///  - kCSCBApplyMainTransparencyToMatchingChildren - apply transparency to children who have
+///                                                   matching transparency.
 
 void TEveCompound::SetMainTransparency(Char_t t)
 {
@@ -90,11 +84,9 @@ void TEveCompound::SetMainTransparency(Char_t t)
    }
 }
 
-//******************************************************************************
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Call base-class implementation.
-/// If compund is open and compound of the new element is not set,
+/// If compound is open and compound of the new element is not set,
 /// the el's compound is set to this.
 /// You might also want to call RecheckImpliedSelections().
 
@@ -130,16 +122,14 @@ void TEveCompound::RemoveElementsLocal()
    TEveElementList::RemoveElementsLocal();
 }
 
-//******************************************************************************
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Recurse on all children that are in this compund and
+/// Recurse on all children that are in this compound and
 /// call the base-class version.
 /// If SelectionColorBit kSCBImplySelectAllChildren is set, then all
 /// children are added to the set.
 ///
 /// Note that projected replicas of the compound will be added to
-/// the set in base-class function that handles projectables.
+/// the set in base-class function that handles projectable.
 
 void TEveCompound::FillImpliedSelectedSet(Set_t& impSelSet)
 {
@@ -157,8 +147,6 @@ void TEveCompound::FillImpliedSelectedSet(Set_t& impSelSet)
    TEveElementList::FillImpliedSelectedSet(impSelSet);
 }
 
-//******************************************************************************
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual from TEveProjectable, returns TEveCompoundProjected class.
 
@@ -168,15 +156,9 @@ TClass* TEveCompound::ProjectedClass(const TEveProjection*) const
 }
 
 
-//==============================================================================
-//==============================================================================
-// TEveCompoundProjected
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Description of TEveCompoundProjected
-//
+/** \class TEveCompoundProjected
+Description of TEveCompoundProjected
+*/
 
 ClassImp(TEveCompoundProjected);
 
@@ -192,8 +174,8 @@ TEveCompoundProjected::TEveCompoundProjected() :
 ////////////////////////////////////////////////////////////////////////////////
 /// Revert back to the behaviour of TEveElement as color
 /// is propagated:
-/// a) from projectable -> projected
-/// b) from compound -> compound elements
+///  1. from projectable -> projected
+///  2. from compound -> compound elements
 /// and we do not need to do this twice for projected-compound-elements.
 
 void TEveCompoundProjected::SetMainColor(Color_t color)
