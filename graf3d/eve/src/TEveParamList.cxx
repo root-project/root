@@ -22,14 +22,9 @@
 #include "TGNumberEntry.h"
 #include "TGedEditor.h"
 
-//==============================================================================
-//==============================================================================
-// TEveParamList
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Collection of named parameters.
+/** \class TEveParamList
+Collection of named parameters.
+*/
 
 ClassImp(TEveParamList);
 
@@ -90,23 +85,19 @@ void TEveParamList::ParamChanged(const char* name)
    Emit("ParamChanged(char*)", name);
 }
 
-//==============================================================================
-//==============================================================================
-// TEveParamListEditor
-//==============================================================================
+/** \class TEveParamListEditor
+GUI editor for TEveParamList.
 
-//______________________________________________________________________________
-// GUI editor for TEveParamList.
-//
-// Slot methods from this object do not call Update, instead they call
-// their model's ParamChanged(const char* name) function which emits a
-// corresponding signal.
-//
-// This helps in handling of parameter changes as they are probably
-// related to displayed objects in a more complicated way. Further,
-// the TGCheckButton::HandleButton() emits more signal after the
-// Clicked() signal and if model is reset in the editor, its contents
-// is removed. This results in a crash.
+Slot methods from this object do not call Update, instead they call
+their model's ParamChanged(const char* name) function which emits a
+corresponding signal.
+
+This helps in handling of parameter changes as they are probably
+related to displayed objects in a more complicated way. Further,
+the TGCheckButton::HandleButton() emits more signal after the
+Clicked() signal and if model is reset in the editor, its contents
+is removed. This results in a crash.
+*/
 
 ClassImp(TEveParamListEditor);
 
@@ -208,8 +199,6 @@ void TEveParamListEditor::InitModel(TObject* obj)
    MapSubwindows();
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -226,8 +215,6 @@ void TEveParamListEditor::SetModel(TObject* obj)
    for (UInt_t i = 0; i < fBoolParameters.size(); ++i)
       fBoolParameters[i]->SetState( fM->fBoolParameters[i].fValue ? kButtonDown : kButtonUp);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for integer parameter update.
