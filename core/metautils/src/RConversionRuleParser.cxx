@@ -33,6 +33,8 @@ namespace {
 
 namespace ROOT
 {
+   using namespace Internal;
+
    typedef std::list<std::pair<ROOT::TSchemaType,std::string> > SourceTypeList_t;
 
    //--------------------------------------------------------------------------

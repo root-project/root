@@ -844,7 +844,7 @@ Bool_t TSchemaRule::ProcessVersion( const TString& version ) const
    std::string ver = version.Data();
 
    std::list<std::string> versions;
-   ROOT::TSchemaRuleProcessor::SplitList( ver.substr( 1, ver.size()-2), versions );
+   Internal::TSchemaRuleProcessor::SplitList( ver.substr( 1, ver.size()-2), versions );
 
    if( versions.empty() )
    {
@@ -864,7 +864,7 @@ Bool_t TSchemaRule::ProcessVersion( const TString& version ) const
    std::list<std::string>::iterator it;
    for( it = versions.begin(); it != versions.end(); ++it ) {
       std::pair<Int_t, Int_t> verpair;
-      if( !ROOT::TSchemaRuleProcessor::ProcessVersion( *it, verpair ) )
+      if( !Internal::TSchemaRuleProcessor::ProcessVersion( *it, verpair ) )
       {
          delete fVersionVect;
          fVersionVect = 0;
@@ -891,7 +891,7 @@ Bool_t TSchemaRule::ProcessChecksum( const TString& checksum ) const
       return kFALSE;
 
    std::list<std::string> checksums;
-   ROOT::TSchemaRuleProcessor::SplitList( chk.substr( 1, chk.size()-2), checksums );
+   Internal::TSchemaRuleProcessor::SplitList( chk.substr( 1, chk.size()-2), checksums );
 
    if( checksums.empty() ) {
       delete fChecksumVect;
@@ -909,7 +909,7 @@ Bool_t TSchemaRule::ProcessChecksum( const TString& checksum ) const
 
    std::list<std::string>::iterator it;
    for( it = checksums.begin(); it != checksums.end(); ++it ) {
-      if( !ROOT::TSchemaRuleProcessor::IsANumber( *it ) ) {
+      if( !Internal::TSchemaRuleProcessor::IsANumber( *it ) ) {
          delete fChecksumVect;
          fChecksumVect = 0;
          return kFALSE;
@@ -926,7 +926,7 @@ void TSchemaRule::ProcessList( TObjArray* array, const TString& list )
 {
    std::list<std::string>           elems;
    std::list<std::string>::iterator it;
-   ROOT::TSchemaRuleProcessor::SplitList( (const char*)list, elems );
+   Internal::TSchemaRuleProcessor::SplitList( (const char*)list, elems );
 
    array->Clear();
 
@@ -947,7 +947,7 @@ void TSchemaRule::ProcessDeclaration( TObjArray* array, const TString& list )
 {
    std::list<std::pair<ROOT::TSchemaType,std::string> >           elems;
    std::list<std::pair<ROOT::TSchemaType,std::string> >::iterator it;
-   ROOT::TSchemaRuleProcessor::SplitDeclaration( (const char*)list, elems );
+   Internal::TSchemaRuleProcessor::SplitDeclaration( (const char*)list, elems );
 
    array->Clear();
 

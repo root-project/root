@@ -19,8 +19,8 @@
 #include "TSchemaType.h"
 #endif
 
-namespace ROOT
-{
+namespace ROOT {
+namespace Internal {
    class TSchemaRuleProcessor
    {
       public:
@@ -250,7 +250,8 @@ namespace ROOT
             return true;
          }
    };
-}
+} // namespace Internal
+} // namespace ROOT
 #endif // defined(__CINT__)
 
 #endif // ROOT_TSchemaRuleProcessor
