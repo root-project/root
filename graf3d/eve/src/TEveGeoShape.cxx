@@ -59,32 +59,27 @@ namespace
   TGeoHMatrix localGeoHMatrixIdentity;
 }
 
-//==============================================================================
-//==============================================================================
-// TEveGeoShape
-//==============================================================================
+/** \class TEveGeoShape
+Wrapper for TGeoShape with absolute positioning and color
+attributes allowing display of extracted TGeoShape's (without an
+active TGeoManager) and simplified geometries (needed for non-linear
+projections).
 
-//______________________________________________________________________________
-//
-// Wrapper for TGeoShape with absolute positioning and color
-// attributes allowing display of extracted TGeoShape's (without an
-// active TGeoManager) and simplified geometries (needed for non-linear
-// projections).
-//
-// TGeoCompositeShapes and TGeoAssemblies are supported.
-//
-// If fNSegments data-member is < 2 (0 by default), the default number of
-// segments is used for tesselation and special GL objects are
-// instantiated for selected shapes (spheres, tubes). If fNSegments is > 2,
-// it gets forwarded to geo-manager and this tesselation detail is
-// used when creating the buffer passed to GL.
+TGeoCompositeShapes and TGeoAssemblies are supported.
+
+If fNSegments data-member is < 2 (0 by default), the default number of
+segments is used for tesselation and special GL objects are
+instantiated for selected shapes (spheres, tubes). If fNSegments is > 2,
+it gets forwarded to geo-manager and this tesselation detail is
+used when creating the buffer passed to GL.
+*/
 
 ClassImp(TEveGeoShape);
 
 TGeoManager* TEveGeoShape::fgGeoMangeur = init_geo_mangeur();
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return static geo-manager that is used intenally to make shapes
+/// Return static geo-manager that is used internally to make shapes
 /// lead a happy life.
 /// Set gGeoManager to this object when creating TGeoShapes to be
 /// passed into TEveGeoShapes.
@@ -185,8 +180,6 @@ void TEveGeoShape::SetShape(TGeoShape* s)
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute bounding-box.
 
@@ -279,8 +272,6 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
    }
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the shape tree as TEveGeoShapeExtract.
 /// File is always recreated.
@@ -313,8 +304,6 @@ void TEveGeoShape::WriteExtract(const char* name)
    TEveGeoShapeExtract* gse = DumpShapeTree(this, 0);
    gse->Write(name);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Export this shape and its descendants into a geoshape-extract.
@@ -384,7 +373,6 @@ TEveGeoShape* TEveGeoShape::ImportShapeExtract(TEveGeoShapeExtract* gse,
    return gsre;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Recursive version for importing a shape extract tree.
 
@@ -418,8 +406,6 @@ TEveGeoShape* TEveGeoShape::SubImportShapeExtract(TEveGeoShapeExtract* gse,
    return gsre;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return class for projected objects:
 ///  - 2D projections: TEvePolygonSetProjected,
@@ -433,8 +419,6 @@ TClass* TEveGeoShape::ProjectedClass(const TEveProjection* p) const
    else
       return TEveGeoShapeProjected::Class();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TBuffer3D suitable for presentation of the shape.
@@ -466,14 +450,9 @@ TBuffer3D* TEveGeoShape::MakeBuffer3D()
 }
 
 
-//==============================================================================
-//==============================================================================
-// TEveGeoShapeProjected
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// A 3D projected TEveGeoShape.
+/** \class TEveGeoShapeProjected
+A 3D projected TEveGeoShape.
+*/
 
 ClassImp(TEveGeoShapeProjected);
 
