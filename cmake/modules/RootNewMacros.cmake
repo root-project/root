@@ -153,6 +153,8 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
           set(headerfiles ${headerfiles} ${f})
         endif()
       endforeach()
+    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+      set(headerfiles ${headerfiles} ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
     else()
       set(headerfiles ${headerfiles} ${fp})
     endif()
@@ -235,6 +237,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
           set(headerfiles ${headerfiles} ${f})
         endif()
       endforeach()
+    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+      set(headerfiles ${headerfiles} ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
     else()
       set(headerfiles ${headerfiles} ${fp})
     endif()
@@ -335,6 +339,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
+                     IMPLICIT_DEPENDS CXX ${_linkdef}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
   get_filename_component(dictname ${dictionary} NAME)
 
