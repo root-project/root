@@ -9,6 +9,7 @@ import fnmatch
 from contextlib import contextmanager
 from IPython import get_ipython
 from IPython.display import HTML
+from IPython.core.extensions import ExtensionManager
 import IPython.display
 import ROOT
 import cpptransformer
@@ -247,9 +248,6 @@ captures = [StreamCapture(sys.stderr),
             StreamCapture(sys.stdout),
             CaptureDrawnCanvases()]
 
-
-extNames = ["ROOTaaS.iPyROOT." + name for name in ["cppmagic"]]
-
 def toCpp():
     '''
     Change the mode of the notebook to CPP. It is preferred to use cell magic,
@@ -257,7 +255,6 @@ def toCpp():
     '''
     ip = get_ipython()
     cpptransformer.load_ipython_extension(ip)
-    cppcompleter.load_ipython_extension(ip)
     # Change highlight mode
     IPython.display.display_javascript(_jsDefaultHighlight.format(mimeType = cppMIME), raw=True)
     print "Notebook is in Cpp mode"
@@ -346,9 +343,6 @@ class CanvasDrawer(object):
         self._display()
         return 0
 
-
-
-
 def _PyDraw(thePad):
    """
    Invoke the draw function and intercept the graphics
@@ -366,6 +360,16 @@ def setStyle():
     style.SetMarkerColor(ROOT.kBlue)
     style.SetPalette(57)
 
+def loadExtensionsAndCapturers():
+    extNames = ["ROOTaaS.iPyROOT." + name for name in ["cppmagic"]]
+    ip = get_ipython()
+    extMgr = ExtensionManager(ip)
+    for extName in extNames:
+        extMgr.load_extension(extName)
+    cppcompleter.load_ipython_extension(ip)
+
+    for capture in captures: capture.register()
+
 def enhanceROOTModule():
     ROOT.toCpp = toCpp
     ROOT.enableJSVis = enableJSVis
@@ -381,3 +385,11 @@ def enableCppHighlighting():
     ipDispJs("require(['codemirror/mode/clike/clike'], function(Clike) { console.log('ROOTaaS - C++ CodeMirror module loaded'); });", raw=True)
     # Define highlight mode for %%cpp magic
     ipDispJs(_jsMagicHighlight.format(cppMIME = cppMIME), raw=True)
+
+def iPythonize():
+    setStyle()
+    loadExtensionsAndCapturers()
+    enableCppHighlighting()
+    enhanceROOTModule()
+    welcomeMsg()
+
