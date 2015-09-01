@@ -25,51 +25,50 @@ class CppCompleter(object):
 
     >>> comp = CppCompleter()
     >>> comp.activate()
-    >>> for suggestion in comp._completeImpl("TH"):
+    >>> for suggestion in comp._completeImpl("TH1"):
     ...     print suggestion
-    THashList
-    THashTable
-    THashTableIter
-    THelix
-    THYPE
     TH1
     TH1C
-    TH1S
-    TH1I
-    TH1F
     TH1D
-    TH3
-    TH3C
-    TH3S
-    TH3I
-    TH3F
-    TH3D
-    TH2GL
-    TH3GL
+    TH1F
+    TH1I
     TH1K
+    TH1S
+    >>> for suggestion in comp._completeImpl("TH2"):
+    ...     print suggestion
     TH2
     TH2C
-    TH2S
-    TH2I
-    TH2F
     TH2D
-    TH2PolyBin
+    TH2F
+    TH2GL
+    TH2I
     TH2Poly
-    THLimitsFinder
-    THnBase
-    THnIter
-    THn
-    THnSparseArrayChunk
-    THnSparse
-    THStack
-    THistPainter
-    >>> garbage = ROOT.gInterpreter.ProcessLine("TH1F* h;")
+    TH2PolyBin
+    TH2S
+    >>> garbage = ROOT.gInterpreter.ProcessLine("TH1F* h")
     >>> for suggestion in comp._completeImpl("h->GetA"):
     ...     print suggestion
-    h->GetAsymmetry
-    h->GetAxisColor
     h->GetArray
+    h->GetAsymmetry
     h->GetAt
+    h->GetAxisColor
+    >>> for suggestion in comp._completeImpl("TROOT::Is"):
+    ...     print suggestion
+    IsA
+    IsBatch
+    IsEqual
+    IsEscaped
+    IsExecutingMacro
+    IsFolder
+    IsInterrupted
+    IsLineProcessing
+    IsModified
+    IsOnHeap
+    IsProofServ
+    IsRootFile
+    IsSortable
+    IsWritable
+    IsZombie
     >>> comp.deactivate()
     >>> for suggestion in comp._completeImpl("TG"):
     ...     print suggestion
@@ -112,6 +111,7 @@ class CppCompleter(object):
         suggestions = self._getSuggestions(line)
         if not suggestions: return []
         accessorPos = self._getLastAccessorPos(line)
+        suggestions = sorted(suggestions)
         if accessorPos > 0:
             suggestions = [line[:accessorPos]+sugg for sugg in suggestions]
         return suggestions
