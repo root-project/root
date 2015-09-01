@@ -107,7 +107,7 @@ def _getLibExtension(thePlatform):
     return pExtMap.get(thePlatform, '.so')
 
 def welcomeMsg():
-    print "Welcome to ROOTaas (version %s)" %ROOT.gROOT.GetVersion()
+    print "Welcome to ROOTaaS (version %s)" %ROOT.gROOT.GetVersion()
 
 @contextmanager
 def _setIgnoreLevel(level):
