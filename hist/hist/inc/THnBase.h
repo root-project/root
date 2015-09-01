@@ -45,7 +45,9 @@ class TF1;
 class THnIter;
 
 namespace ROOT {
+namespace Internal {
    class THnBaseBinIter;
+}
 }
 
 class THnBase: public TNamed {
@@ -136,7 +138,7 @@ private:
    TFitResultPtr Fit(TF1 *f1 ,Option_t *option = "", Option_t *goption = "");
    TList* GetListOfFunctions() { return 0; }
 
-   virtual ROOT::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const = 0;
+   virtual ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const = 0;
 
    virtual Long64_t GetNbins() const = 0;
    Double_t GetEntries() const { return fEntries; }
@@ -326,7 +328,7 @@ public:
    Bool_t RespectsAxisRange() const { return fIter->RespectsAxisRange(); }
 
 private:
-   ROOT::THnBaseBinIter* fIter;
+   ROOT::Internal::THnBaseBinIter* fIter;
    ClassDef(THnIter, 0); //Iterator over bins of a THnBase.
 };
 

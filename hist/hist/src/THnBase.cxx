@@ -1393,13 +1393,13 @@ void THnBase::Browse(TBrowser *b)
 
 
 
-/** \class ROOT::THnBaseBinIter
+/** \class ROOT::Internal::THnBaseBinIter
   Iterator over THnBase bins (internal implementation).
 */
 
 /// Destruct a bin iterator.
 
-ROOT::THnBaseBinIter::~THnBaseBinIter() {
+ROOT::Internal::THnBaseBinIter::~THnBaseBinIter() {
    // Not much to do, but pin vtable
 }
 
