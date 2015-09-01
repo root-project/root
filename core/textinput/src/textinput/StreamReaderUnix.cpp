@@ -304,4 +304,4 @@ namespace textinput {
   }
 }
 
-#endif // ifndef WIN32
+#endif // ifndef _WIN32
