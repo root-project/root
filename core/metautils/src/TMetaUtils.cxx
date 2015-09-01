@@ -2403,7 +2403,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
    {
       int k = ROOT::TMetaUtils::IsSTLContainer(*iter);
       if (k!=0) {
-         RStl::Instance().GenerateTClassFor( iter->getType(), interp, normCtxt);
+         Internal::RStl::Instance().GenerateTClassFor( iter->getType(), interp, normCtxt);
       }
    }
 
@@ -2430,7 +2430,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
          //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
          //          fprintf(stderr," %s\n",R__TrueName(**field_iter) );
          clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(field_iter->getType()),0);
-         RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
+         Internal::RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
       }
    }
 }
@@ -2674,8 +2674,8 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
    std::string fullname;
    ROOT::TMetaUtils::GetQualifiedName(fullname,cl);
    if (TClassEdit::IsSTLCont(fullname.c_str()) ) {
-     RStl::Instance().GenerateTClassFor(cl.GetNormalizedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()), interp, normCtxt);
-     return;
+      Internal::RStl::Instance().GenerateTClassFor(cl.GetNormalizedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()), interp, normCtxt);
+      return;
    }
 
    if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"Streamer",interp)) {

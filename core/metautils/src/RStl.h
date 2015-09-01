@@ -43,6 +43,7 @@ namespace ROOT {
 }
 
 namespace ROOT {
+namespace Internal {
 
    class RStl {
    private:
@@ -71,5 +72,6 @@ namespace ROOT {
       RStl& operator=(const RStl&);
    };
 
+}
 }
 #endif // R__RSTL_H
