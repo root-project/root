@@ -34,7 +34,9 @@ class TDictionary;
 class TTree;
 
 namespace ROOT {
-   class TBranchProxy;
+   namespace Detail {
+      class TBranchProxy;
+   }
    class TBranchProxyDirector;
    class TTreeReaderArrayBase;
 
@@ -45,15 +47,15 @@ namespace ROOT {
          fProxy(boss, branch, membername), fDict(0), fContentDict(0) {}
 
       const char* GetName() const { return fProxy.GetBranchName(); }
-      const ROOT::TBranchProxy* GetProxy() const { return &fProxy; }
-      ROOT::TBranchProxy* GetProxy() { return &fProxy; }
+      const Detail::TBranchProxy* GetProxy() const { return &fProxy; }
+      Detail::TBranchProxy* GetProxy() { return &fProxy; }
       TDictionary* GetDict() const { return fDict; }
       void SetDict(TDictionary* dict) { fDict = dict; }
       TDictionary* GetContentDict() const { return fContentDict; }
       void SetContentDict(TDictionary* dict) { fContentDict = dict; }
 
    private:
-      ROOT::TBranchProxy fProxy;
+      Detail::TBranchProxy fProxy;
       TDictionary*       fDict;
       TDictionary*       fContentDict; // type of content, if a collection
       ClassDef(TNamedBranchProxy, 0); // branch proxy with a name
@@ -67,8 +69,8 @@ namespace ROOT {
       TVirtualCollectionReader() : fReadStatus(ROOT::TTreeReaderValueBase::kReadNothingYet) {}
 
       virtual ~TVirtualCollectionReader();
-      virtual size_t GetSize(TBranchProxy*) = 0;
-      virtual void* At(TBranchProxy*, size_t /*idx*/) = 0;
+      virtual size_t GetSize(Detail::TBranchProxy*) = 0;
+      virtual void* At(Detail::TBranchProxy*, size_t /*idx*/) = 0;
    };
 
 }

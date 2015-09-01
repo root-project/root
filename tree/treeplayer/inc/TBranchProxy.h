@@ -56,7 +56,7 @@ class TStreamerElement;
 // 2D array would actually be a wrapper of a wrapper i.e. has a method TArrayWrapper<T> operator[](int i);
 
 namespace ROOT {
-
+namespace Internal {
    //_______________________________________________
    // String builder to be used in the constructors.
    class TBranchProxyHelper {
@@ -74,8 +74,10 @@ namespace ROOT {
       }
       operator const char*() { return fName.Data(); };
    };
+} // namespace Internal
 
 
+namespace Detail {
    class TBranchProxy {
    protected:
       TBranchProxyDirector *fDirector; // contain pointer to TTree and entry to be read
@@ -307,10 +309,11 @@ namespace ROOT {
 
       Int_t GetOffset() { return fOffset; }
    };
+} // namespace Detail
 
    //____________________________________________________________________________________________
    // Concrete Implementation of the branch proxy around the data members which are array of char
-   class TArrayCharProxy : public TBranchProxy {
+   class TArrayCharProxy : public Detail::TBranchProxy {
    public:
       void Print() {
          TBranchProxy::Print();
@@ -368,7 +371,7 @@ namespace ROOT {
 
    //_______________________________________________________
    // Base class for the proxy around object in TClonesArray.
-   class TClaProxy : public TBranchProxy {
+   class TClaProxy : public Detail::TBranchProxy {
    public:
       void Print() {
          TBranchProxy::Print();
@@ -410,7 +413,7 @@ namespace ROOT {
 
    //_______________________________________________
    // Base class for the proxy around STL containers.
-   class TStlProxy : public TBranchProxy {
+   class TStlProxy : public Detail::TBranchProxy {
    public:
       void Print() {
          TBranchProxy::Print();
@@ -451,7 +454,7 @@ namespace ROOT {
    //______________________________________
    // Template of the proxy around objects.
    template <class T>
-   class TImpProxy : public TBranchProxy {
+   class TImpProxy : public Detail::TBranchProxy {
    public:
       void Print() {
          TBranchProxy::Print();
@@ -512,7 +515,7 @@ namespace ROOT {
    //____________________________________________
    // Template for concrete implementation of proxy around array of T
    template <class T>
-   class TArrayProxy : public TBranchProxy {
+   class TArrayProxy : public Detail::TBranchProxy {
    public:
       TArrayProxy() : TBranchProxy() {}
       TArrayProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
@@ -550,7 +553,7 @@ namespace ROOT {
    //_____________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around TClonesArray of T
    template <class T>
-   class TClaImpProxy : public TBranchProxy {
+   class TClaImpProxy : public Detail::TBranchProxy {
    public:
 
       void Print() {
@@ -602,7 +605,7 @@ namespace ROOT {
    //_________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an stl container of T
    template <class T>
-   class TStlImpProxy : public TBranchProxy {
+   class TStlImpProxy : public Detail::TBranchProxy {
    public:
 
       void Print() {
@@ -653,7 +656,7 @@ namespace ROOT {
    //_________________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an TClonesArray of array of T
    template <class T>
-   class TClaArrayProxy : public TBranchProxy {
+   class TClaArrayProxy : public Detail::TBranchProxy {
    public:
       typedef typename T::array_t array_t;
       typedef typename T::type_t type_t;
@@ -690,7 +693,7 @@ namespace ROOT {
    //__________________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an stl container of array of T
    template <class T>
-   class TStlArrayProxy : public TBranchProxy {
+   class TStlArrayProxy : public Detail::TBranchProxy {
    public:
       typedef typename T::array_t array_t;
       typedef typename T::type_t type_t;

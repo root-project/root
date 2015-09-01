@@ -20,7 +20,6 @@ class TLeaf;
 class TStreamerElement;
 
 namespace ROOT {
-   class TBranchProxy;
    class TFriendProxyDescriptor;
    class TBranchProxyDescriptor;
    class TBranchProxyClassDescriptor;

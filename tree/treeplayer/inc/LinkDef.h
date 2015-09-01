@@ -30,7 +30,7 @@
 #pragma link C++ namespace ROOT;
 
 #pragma link C++ class ROOT::TBranchProxyDirector+;
-#pragma link C++ class ROOT::TBranchProxy+;
+#pragma link C++ class ROOT::Detail::TBranchProxy+;
 #pragma link C++ class ROOT::TFriendProxy+;
 
 #pragma link C++ class ROOT::TFriendProxyDescriptor;
