@@ -8,8 +8,8 @@
 
 #include <string>
 
-namespace ROOT
-{
+namespace ROOT {
+namespace Internal {
    struct TSchemaType {
       TSchemaType() {}
       TSchemaType(const char *type, const char *dim) : fType(type),fDimensions(dim) {}
@@ -17,6 +17,7 @@ namespace ROOT
       std::string fType;
       std::string fDimensions;
    };
+}
 }
 #endif // __CINT__
 #endif // R__TSCHEMATYPE_H

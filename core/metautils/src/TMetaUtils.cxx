@@ -1392,7 +1392,7 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
       }
 
       GetFullyQualifiedTypeName(typenameStr, fieldType, astContext);
-      nameType[field_iter->getName().str()] = ROOT::TSchemaType(typenameStr.c_str(),dims.str().c_str());
+      nameType[field_iter->getName().str()] = ROOT::Internal::TSchemaType(typenameStr.c_str(),dims.str().c_str());
    }
 
    // And now the base classes
@@ -1401,7 +1401,7 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
        iter != end;
        ++iter){
       std::string basename( iter->getType()->getAsCXXRecordDecl()->getNameAsString() ); // Intentionally using only the unqualified name.
-      nameType[basename] = ROOT::TSchemaType(basename.c_str(),"");
+      nameType[basename] = ROOT::Internal::TSchemaType(basename.c_str(),"");
    }
 }
 

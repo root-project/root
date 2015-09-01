@@ -56,7 +56,7 @@ namespace Internal {
          }
 
          static void SplitDeclaration( const std::string& source,
-                                       std::list<std::pair<ROOT::TSchemaType,std::string> >& result)
+                                       std::list<std::pair<ROOT::Internal::TSchemaType,std::string> >& result)
          {
             // Split a declaration string producing a list of substrings
             // Typically we have:
@@ -116,7 +116,7 @@ namespace Internal {
                         break;
                      }
                   }
-                  result.push_back( make_pair(ROOT::TSchemaType(type,dims),elem) );
+                  result.push_back( make_pair(ROOT::Internal::TSchemaType(type,dims),elem) );
                }
                last = curr+1;
             }

@@ -346,7 +346,7 @@ bool CheckConstructor(const clang::CXXRecordDecl*, const RConstructorType&);
 const clang::FunctionDecl* ClassInfo__HasMethod(const clang::DeclContext *cl, char const*, const cling::Interpreter& interp);
 
 //______________________________________________________________________________
-void CreateNameTypeMap(clang::CXXRecordDecl const&, std::map<std::string, ROOT::TSchemaType, std::less<std::string>, std::allocator<std::pair<std::string const, ROOT::TSchemaType> > >&);
+void CreateNameTypeMap(clang::CXXRecordDecl const&, std::map<std::string, ROOT::Internal::TSchemaType, std::less<std::string>, std::allocator<std::pair<std::string const, ROOT::Internal::TSchemaType> > >&);
 
 //______________________________________________________________________________
 int ElementStreamer(std::ostream& finalString,

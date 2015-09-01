@@ -35,7 +35,7 @@ namespace ROOT
 {
    using namespace Internal;
 
-   typedef std::list<std::pair<ROOT::TSchemaType,std::string> > SourceTypeList_t;
+   typedef std::list<std::pair<ROOT::Internal::TSchemaType,std::string> > SourceTypeList_t;
 
    //--------------------------------------------------------------------------
    // Allocate global variables
@@ -605,7 +605,7 @@ namespace ROOT
 
          std::list<std::string>::const_iterator it;
          for( it = target.begin(); it != target.end(); ++it ) {
-            TSchemaType memData = members[*it];
+            Internal::TSchemaType memData = members[*it];
             output << "      static Long_t offset_" << *it << " = ";
             output << "cls->GetDataMemberOffset(\"" << *it << "\");";
             output << std::endl;
@@ -654,7 +654,7 @@ namespace ROOT
       // Write the automatically generated variables
       //////////////////////////////////////////////////////////////////////////
 
-      std::list<std::pair<ROOT::TSchemaType,std::string> > source;
+      std::list<std::pair<ROOT::Internal::TSchemaType,std::string> > source;
       std::list<std::string> target;
       TSchemaRuleProcessor::SplitDeclaration( rule["source"], source );
       TSchemaRuleProcessor::SplitList( rule["target"], target );
@@ -708,7 +708,7 @@ namespace ROOT
       // Write the automatically generated variables
       //////////////////////////////////////////////////////////////////////////
 
-      std::list<std::pair<ROOT::TSchemaType,std::string> > source;
+      std::list<std::pair<ROOT::Internal::TSchemaType,std::string> > source;
       std::list<std::string> target;
       TSchemaRuleProcessor::SplitList( rule["target"], target );
 

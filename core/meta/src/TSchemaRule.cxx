@@ -945,8 +945,8 @@ void TSchemaRule::ProcessList( TObjArray* array, const TString& list )
 
 void TSchemaRule::ProcessDeclaration( TObjArray* array, const TString& list )
 {
-   std::list<std::pair<ROOT::TSchemaType,std::string> >           elems;
-   std::list<std::pair<ROOT::TSchemaType,std::string> >::iterator it;
+   std::list<std::pair<ROOT::Internal::TSchemaType,std::string> >           elems;
+   std::list<std::pair<ROOT::Internal::TSchemaType,std::string> >::iterator it;
    Internal::TSchemaRuleProcessor::SplitDeclaration( (const char*)list, elems );
 
    array->Clear();
