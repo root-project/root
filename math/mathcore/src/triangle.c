@@ -1333,7 +1333,7 @@ int triunsuitable();
 #else /* not EXTERNAL_TEST */
 
 #ifdef ANSI_DECLARATORS
-int triunsuitable(vertex triorg, vertex tridest, vertex triapex, REAL area)
+int triunsuitable(vertex triorg, vertex tridest, vertex triapex, REAL  area  )
 #else /* not ANSI_DECLARATORS */
 int triunsuitable(triorg, tridest, triapex, area)
 vertex triorg;                              /* The triangle's origin vertex. */
@@ -1347,6 +1347,8 @@ REAL area;                                      /* The area of the triangle. */
   REAL dyoa, dyda, dyod;
   REAL oalen, dalen, odlen;
   REAL maxlen;
+
+  (void)area;      /*LM: added to suppress warning */ 
 
   dxoa = triorg[0] - triapex[0];
   dyoa = triorg[1] - triapex[1];
@@ -3268,8 +3270,9 @@ struct behavior *b;
   int increment;
   int meshnumber;
 #endif /* not TRILIBRARY */
-  int i, j, k;
-  char workstring[FILENAMESIZE];
+  /* int i, j, k; */
+  int i, j;
+  /* char workstring[FILENAMESIZE]; */
 
   b->poly = b->refine = b->quality = 0;
   b->vararea = b->fixedarea = b->usertest = 0;
@@ -3741,6 +3744,8 @@ struct osub *s;
   struct otri printtri;
   vertex printvertex;
 
+  (void)b;      /*LM: added to suppress warning */ 
+
   printf("subsegment x%lx with orientation %d and mark %d:\n",
          (unsigned long) s->ss, s->ssorient, mark(*s));
   sdecode(s->ss[0], printsh);
@@ -3918,7 +3923,7 @@ int alignment;
   /*   - The parameter `alignment'.                                   */
   /*   - sizeof(VOID *), so the stack of dead items can be maintained */
   /*       without unaligned accesses.                                */
-  if (alignment > sizeof(VOID *)) {
+   if (alignment > (int) sizeof(VOID *)) {
     pool->alignbytes = alignment;
   } else {
     pool->alignbytes = sizeof(VOID *);
@@ -4318,7 +4323,7 @@ struct behavior *b;
   /*   integer index can occupy the same space as the subsegment pointers  */
   /*   or attributes or area constraint or extra nodes.                    */
   if ((b->voronoi || b->neighbors) &&
-      (trisize < 6 * sizeof(triangle) + sizeof(int))) {
+      (trisize <  (int) ( 6 *  sizeof(triangle) + sizeof(int)))) {
     trisize = 6 * sizeof(triangle) + sizeof(int);
   }
 
@@ -8168,7 +8173,7 @@ struct otri *flipedge;                    /* Handle for the triangle abc. */
 enum insertvertexresult insertvertex(struct mesh *m, struct behavior *b,
                                      vertex newvertex, struct otri *searchtri,
                                      struct osub *splitseg,
-                                     int segmentflaws, int triflaws)
+                                     int segmentflaws, int triflaws )
 #else /* not ANSI_DECLARATORS */
 enum insertvertexresult insertvertex(m, b, newvertex, searchtri, splitseg,
                                      segmentflaws, triflaws)
@@ -8182,6 +8187,7 @@ int triflaws;
 #endif /* not ANSI_DECLARATORS */
 
 {
+   
   struct otri horiz;
   struct otri top;
   struct otri botleft, botright;
@@ -8212,6 +8218,9 @@ int triflaws;
   int i;
   triangle ptr;                         /* Temporary variable used by sym(). */
   subseg sptr;         /* Temporary variable used by spivot() and tspivot(). */
+
+
+  (void)triflaws;      /*LM: added to suppress warning */ 
 
   if (b->verbose > 1) {
     printf("  Inserting (%.12g, %.12g).\n", newvertex[0], newvertex[1]);

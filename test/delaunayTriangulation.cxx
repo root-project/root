@@ -39,7 +39,7 @@ int delaunayTriangulation(bool old = false) {
 
 	TGraph2D * graph = getGraph();
 
-	auto h = graph->GetHistogram("");
+	//graph->GetHistogram("");
 
 	TGraphDelaunay2D delaunay(graph);
 
