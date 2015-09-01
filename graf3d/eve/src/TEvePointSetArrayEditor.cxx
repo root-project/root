@@ -22,9 +22,9 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//______________________________________________________________________________
-//
-// Editor for TEvePointSetArray class.
+/** \class TEvePointSetArrayEditor
+Editor for TEvePointSetArray class.
+*/
 
 ClassImp(TEvePointSetArrayEditor);
 
@@ -57,8 +57,6 @@ TEvePointSetArrayEditor::~TEvePointSetArrayEditor()
 {
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -72,8 +70,6 @@ void TEvePointSetArrayEditor::SetModel(TObject* obj)
    fRange->SetLimits(fM->fMin, fM->fMax, TGNumberFormat::kNESRealTwo);
    fRange->SetValues(fM->fCurMin, fM->fCurMax);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for setting the range of the separating quantity.

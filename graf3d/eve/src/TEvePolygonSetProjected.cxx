@@ -33,19 +33,13 @@ namespace
    typedef std::list<Seg_t>::iterator LSegIt_t;
 }
 
+/** \class TEvePolygonSetProjected
+ A set of projected polygons.
+Used for storage of projected geometrical shapes.
 
-//==============================================================================
-//==============================================================================
-// TEvePolygonSetProjected
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// A set of projected polygons.
-// Used for storage of projected geometrical shapes.
-//
-// Internal struct Polygon_t holds only indices into the master vertex
-// array in TEvePolygonSetProjected.
+Internal struct Polygon_t holds only indices into the master vertex
+array in TEvePolygonSetProjected.
+*/
 
 ClassImp(TEvePolygonSetProjected);
 
@@ -83,9 +77,6 @@ void TEvePolygonSetProjected::ComputeBBox()
       BBoxZero();
    }
 }
-
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This is virtual method from base-class TEveProjected.
@@ -398,7 +389,7 @@ Float_t TEvePolygonSetProjected::MakePolygonsFromBS(Int_t* idxMap)
 
 void  TEvePolygonSetProjected::ProjectBuffer3D()
 {
-   // create map from original to projected and reduced point needed oly for geometry
+   // create map from original to projected and reduced point needed only for geometry
    Int_t* idxMap = ProjectAndReducePoints();
 
    TEveProjection::EGeoMode_e mode = fManager->GetProjection()->GetGeoMode();
@@ -418,7 +409,7 @@ void  TEvePolygonSetProjected::ProjectBuffer3D()
       }
       case TEveProjection::kGM_Unknown:
       {
-         // take projectopn with largest surface
+         // take projection with largest surface
         Float_t surfBP = MakePolygonsFromBP(idxMap);
         Float_t surfBS = MakePolygonsFromBS(idxMap);
          if (surfBS < surfBP)
@@ -476,7 +467,7 @@ void TEvePolygonSetProjected::DumpPolys() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Dump information about currenty projected buffer.
+/// Dump information about currently projected buffer.
 
 void TEvePolygonSetProjected::DumpBuffer3D()
 {

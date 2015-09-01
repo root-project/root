@@ -21,31 +21,26 @@
 
 #include "TColor.h"
 
+/** \class TEvePointSet
+TEvePointSet is a render-element holding a collection of 3D points with
+optional per-point TRef and an arbitrary number of integer ids (to
+be used for signal, volume-id, track-id, etc).
 
-//==============================================================================
-//==============================================================================
-// TEvePointSet
-//==============================================================================
+3D point representation is implemented in base-class TPolyMarker3D.
+Per-point TRef is implemented in base-class TPointSet3D.
 
-//______________________________________________________________________________
-//
-// TEvePointSet is a render-element holding a collection of 3D points with
-// optional per-point TRef and an arbitrary number of integer ids (to
-// be used for signal, volume-id, track-id, etc).
-//
-// 3D point representation is implemented in base-class TPolyMarker3D.
-// Per-point TRef is implemented in base-class TPointSet3D.
-//
-// By using the TEvePointSelector the points and integer ids can be
-// filled directly from a TTree holding the source data.
-// Setting of per-point TRef's is not supported.
-//
-// TEvePointSet is a TEveProjectable: it can be projected by using the
-// TEveProjectionManager class.
+By using the TEvePointSelector the points and integer ids can be
+filled directly from a TTree holding the source data.
+Setting of per-point TRef's is not supported.
+
+TEvePointSet is a TEveProjectable: it can be projected by using the
+TEveProjectionManager class.
+*/
 
 ClassImp(TEvePointSet);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
    TEveElement(),
@@ -58,8 +53,6 @@ TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
    fIntIds         (0),
    fIntIdsPerPoint (0)
 {
-   // Constructor.
-
    fMarkerStyle = 20;
    SetMainColorPtr(&fMarkerColor);
 
@@ -68,6 +61,7 @@ TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEvePointSet::TEvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_type) :
    TEveElement(),
@@ -80,8 +74,6 @@ TEvePointSet::TEvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_t
    fIntIds         (0),
    fIntIdsPerPoint (0)
 {
-   // Constructor.
-
    fMarkerStyle = 20;
    SetName(name);
    SetMainColorPtr(&fMarkerColor);
@@ -91,6 +83,7 @@ TEvePointSet::TEvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
 
 TEvePointSet::TEvePointSet(const TEvePointSet& e) :
    TEveElement(e),
@@ -103,7 +96,6 @@ TEvePointSet::TEvePointSet(const TEvePointSet& e) :
    fIntIds         (e.fIntIds ? new TArrayI(*e.fIntIds) : 0),
    fIntIdsPerPoint (e.fIntIdsPerPoint)
 {
-   // Copy constructor.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,8 +105,6 @@ TEvePointSet::~TEvePointSet()
 {
    delete fIntIds;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clone points and all point-related information from point-set 'e'.
@@ -142,8 +132,6 @@ void TEvePointSet::ClonePoints(const TEvePointSet& e)
    fIntIds         = e.fIntIds ? new TArrayI(*e.fIntIds) : 0;
    fIntIdsPerPoint = e.fIntIdsPerPoint;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointset icon.
@@ -189,8 +177,6 @@ Int_t TEvePointSet::GrowFor(Int_t n_points)
       fIntIds->Set(fIntIdsPerPoint * new_size);
    return old_size;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assert that size of IntId array is compatible with the size of
@@ -250,8 +236,6 @@ void TEvePointSet::SetPointIntIds(Int_t n, Int_t* ids)
       x[i] = ids[i];
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set marker style, propagate to projecteds.
 
@@ -294,8 +278,6 @@ void TEvePointSet::SetMarkerSize(Size_t msize)
    TAttMarker::SetMarkerSize(msize);
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint point-set.
 
@@ -303,8 +285,6 @@ void TEvePointSet::Paint(Option_t*)
 {
    PaintStandard(this);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize point-set for new filling.
@@ -385,8 +365,6 @@ void TEvePointSet::TakeAction(TEvePointSelector* sel)
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy visualization parameters from element el.
 
@@ -412,8 +390,6 @@ void TEvePointSet::WriteVizParams(std::ostream& out, const TString& var)
    TAttMarker::SaveMarkerAttributes(out, var);
 }
 
-//******************************************************************************
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual from TEveProjectable, returns TEvePointSetProjected class.
 
@@ -432,34 +408,29 @@ void TEvePointSet::PointSelected(Int_t id)
    TPointSet3D::PointSelected(id);
 }
 
+//==============================================================================
+/** \class TEvePointSetArray
+An array of point-sets with each point-set playing a role of a bin
+in a histogram. When a new point is added to a TEvePointSetArray,
+an additional separating quantity needs to be specified: it
+determines into which TEvePointSet (bin) the point will actually be
+stored. Underflow and overflow bins are automatically created but
+they are not drawn by default.
 
-//==============================================================================
-//==============================================================================
-// TEvePointSetArray
-//==============================================================================
+By using the TEvePointSelector the points and the separating
+quantities can be filled directly from a TTree holding the source
+data.
+Setting of per-point TRef's is not supported.
 
-//______________________________________________________________________________
-//
-// An array of point-sets with each point-set playing a role of a bin
-// in a histogram. When a new point is added to a TEvePointSetArray,
-// an additional separating quantity needs to be specified: it
-// determines into which TEvePointSet (bin) the point will actually be
-// stored. Underflow and overflow bins are automatically created but
-// they are not drawn by default.
-//
-// By using the TEvePointSelector the points and the separating
-// quantities can be filled directly from a TTree holding the source
-// data.
-// Setting of per-point TRef's is not supported.
-//
-// After the filling, the range of separating variable can be
-// controlled with a slider to choose a sub-set of PointSets that are
-// actually shown.
-//
+After the filling, the range of separating variable can be
+controlled with a slider to choose a sub-set of PointSets that are
+actually shown.
+*/
 
 ClassImp(TEvePointSetArray);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEvePointSetArray::TEvePointSetArray(const char* name,
                                      const char* title) :
@@ -471,7 +442,6 @@ TEvePointSetArray::TEvePointSetArray(const char* name,
    fBinWidth(0),
    fQuantName()
 {
-   // Constructor.
 
    SetMainColorPtr(&fMarkerColor);
 }
@@ -506,8 +476,6 @@ void TEvePointSetArray::RemoveElementsLocal()
 {
    delete [] fBins; fBins = 0; fLastBin = -1;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set marker color, propagate to children.
@@ -553,8 +521,6 @@ void TEvePointSetArray::SetMarkerSize(Size_t msize)
    }
    TAttMarker::SetMarkerSize(msize);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Called from TEvePointSelector when internal arrays of the tree-selector
@@ -604,8 +570,6 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
       }
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the total number of filled points.
@@ -724,8 +688,6 @@ void TEvePointSetArray::CloseBins()
    fLastBin = -1;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Propagate id-object ownership to children.
 
@@ -737,8 +699,6 @@ void TEvePointSetArray::SetOwnIds(Bool_t o)
          fBins[i]->SetOwnIds(o);
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set active range of the separating quantity.
@@ -760,16 +720,9 @@ void TEvePointSetArray::SetRange(Double_t min, Double_t max)
    }
 }
 
-
-//==============================================================================
-//==============================================================================
-// TEvePointSetProjected
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Projected copy of a TEvePointSet.
-
+/** \class TEvePointSetProjected
+Projected copy of a TEvePointSet.
+*/
 ClassImp(TEvePointSetProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
