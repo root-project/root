@@ -29,10 +29,9 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//______________________________________________________________________________
-// TEveTrackEditor
-//
-// Editor for TEveTrack class.
+/** \class TEveTrackEditor
+Editor for TEveTrack class.
+*/
 
 ClassImp(TEveTrackEditor);
 
@@ -72,15 +71,14 @@ void TEveTrackEditor::DoEditPropagator()
    fGedEditor->SetModel(fGedEditor->GetPad(), fM->GetPropagator(), kButton1Down);
 }
 
-
-//______________________________________________________________________________
-// TEveTrackListEditor
-//
-// Editor for TEveTrackList class.
+/** TEveTrackListEditor
+Editor for TEveTrackList class.
+*/
 
 ClassImp(TEveTrackListEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
                                          Int_t width, Int_t height,
@@ -92,8 +90,6 @@ TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
    fPRange     (0),
    fRSSubEditor(0)
 {
-   // Constructor.
-
    {
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
 
@@ -139,8 +135,6 @@ TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
    CreateRefsTab();
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create tab for control of path-mark display.
 
@@ -165,8 +159,6 @@ void TEveTrackListEditor::CreateRefsTab()
    fRSSubEditor->fFVAtt->SetGedEditor((TGedEditor*)gEve->GetEditor());
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -187,8 +179,6 @@ void TEveTrackListEditor::SetModel(TObject* obj)
    fRSSubEditor->SetModel(fTC->GetPropagator());
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for RnrLine.
 
@@ -206,8 +196,6 @@ void TEveTrackListEditor::DoRnrPoints()
    fTC->SetRnrPoints(fRnrPoints->IsOn());
    Update();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for PtRange.
