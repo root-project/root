@@ -25,9 +25,9 @@
 #include "TGeoCompositeShape.h"
 #include "TGeoMatrix.h"
 
-//______________________________________________________________________________
-// Description of TEveGeoPolyShape
-//
+/** \class TEveGeoPolyShape
+Description of TEveGeoPolyShape
+*/
 
 ClassImp(TEveGeoPolyShape);
 
