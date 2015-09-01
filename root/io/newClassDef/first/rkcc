@@ -1,1 +1,0 @@
-KCC +K0 -g --no_exceptions --strict -D__wcstoll_internal_defined -D__wcstoull_internal_defined -I/cdf/scratch/pcanal/code/root.nofriendkcc/cint/inc /cdf/scratch/pcanal/code/root.nofriendkcc/lib/libCint.so -o rootcint rootcint.cxx -lm -ldl
