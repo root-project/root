@@ -37,7 +37,7 @@ namespace ROOT {
       // section (the dictionaries) and inline would lead to too much
       // repetition of the code (once per class!).
 
-      const TInitBehavior        *fAction;
+      const Internal::TInitBehavior *fAction;
       TClass                     *fClass;
       const char                 *fClassName;
       const char                 *fDeclFileName;
@@ -70,25 +70,25 @@ namespace ROOT {
    public:
       TGenericClassInfo(const char *fullClassname,
                        const char *declFileName, Int_t declFileLine,
-                       const type_info &info, const TInitBehavior *action,
+                       const type_info &info, const Internal::TInitBehavior *action,
                        DictFuncPtr_t dictionary,
                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                        const char *declFileName, Int_t declFileLine,
-                       const type_info &info, const TInitBehavior *action,
+                       const type_info &info, const Internal::TInitBehavior *action,
                        DictFuncPtr_t dictionary,
                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                         const char *declFileName, Int_t declFileLine,
-                        const TInitBehavior *action,
+                        const Internal::TInitBehavior *action,
                         DictFuncPtr_t dictionary, Int_t pragmabits);
 
       void Init(Int_t pragmabits);
       ~TGenericClassInfo();
 
-      const TInitBehavior              &GetAction() const;
+      const Internal::TInitBehavior    &GetAction() const;
       TClass                           *GetClass();
       const char                       *GetClassName() const;
       TCollectionProxyInfo             *GetCollectionProxyInfo() const;

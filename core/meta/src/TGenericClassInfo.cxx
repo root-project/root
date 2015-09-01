@@ -24,6 +24,7 @@
 #include "TClassTable.h"
 
 namespace ROOT {
+namespace Internal {
 
    const TInitBehavior *DefineBehavior(void * /*parent_type*/,
                                        void * /*actual_type*/)
@@ -35,11 +36,12 @@ namespace ROOT {
       static TDefaultInitBehavior theDefault;
       return &theDefault;
    }
+} // Internal
 
 
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname,
                                         const char *declFileName, Int_t declFileLine,
-                                        const type_info &info, const TInitBehavior  *action,
+                                        const type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
@@ -59,7 +61,7 @@ namespace ROOT {
 
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
-                                        const type_info &info, const TInitBehavior  *action,
+                                        const type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
@@ -82,7 +84,7 @@ namespace ROOT {
 
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
-                                        const TInitBehavior  *action,
+                                        const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary, Int_t pragmabits)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
@@ -175,7 +177,7 @@ namespace ROOT {
       if (fAction) GetAction().Unregister(GetClassName());
    }
 
-   const TInitBehavior &TGenericClassInfo::GetAction() const
+   const Internal::TInitBehavior &TGenericClassInfo::GetAction() const
    {
       // Return the creator action.
 

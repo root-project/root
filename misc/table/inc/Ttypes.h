@@ -125,7 +125,10 @@ virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = 
     structName *end()   const  {Int_t i = GetNRows(); return          i? GetTable(i):0;}
 
 
+class TTable;
+
 namespace ROOT {
+namespace Internal {
    template <class T> class TTableInitBehavior: public TDefaultInitBehavior {
    public:
       static const char* fgStructName; // Need to be instantiated
@@ -146,16 +149,14 @@ namespace ROOT {
       }
    };
    template <class T> const char * TTableInitBehavior<T >::fgStructName = 0;
-}
 
-class TTable;
-namespace ROOT {
    template <class RootClass>
       const ROOT::TTableInitBehavior<RootClass> *DefineBehavior(TTable*, RootClass*)
       {
          static ROOT::TTableInitBehavior<RootClass> behave;
          return &behave;
       }
+}
 }
 
 #endif

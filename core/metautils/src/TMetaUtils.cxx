@@ -1837,7 +1837,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          if (filename[i]=='\\') filename[i]='/';
       }
    }
-   finalString << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << "\n" << "                  typeid(" << csymbol << "), DefineBehavior(ptr, ptr)," << "\n" << "                  ";
+   finalString << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl)
+      << "," << "\n" << "                  typeid(" << csymbol
+      << "), ::ROOT::Internal::DefineBehavior(ptr, ptr)," << "\n" << "                  ";
 
    if (ClassInfo__HasMethod(decl,"Dictionary",interp) && !IsTemplate(*decl)) {
       finalString << "&" << csymbol << "::Dictionary, ";
