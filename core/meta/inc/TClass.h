@@ -68,10 +68,12 @@ class TProtoClass;
 
 namespace ROOT {
    class TGenericClassInfo;
-   class TCollectionProxyInfo;
    class TSchemaRuleSet;
    class TMapTypeToTClass;
    class TMapDeclIdToTClass;
+   namespace Detail {
+      class TCollectionProxyInfo;
+   }
 }
 typedef ROOT::TMapTypeToTClass IdMap_t;
 typedef ROOT::TMapDeclIdToTClass DeclIdMap_t;
@@ -482,7 +484,7 @@ public:
    void               ResetMenuList();
    Int_t              Size() const;
    void               SetCanSplit(Int_t splitmode);
-   void               SetCollectionProxy(const ROOT::TCollectionProxyInfo&);
+   void               SetCollectionProxy(const ROOT::Detail::TCollectionProxyInfo&);
    void               SetContextMenuTitle(const char *title);
    void               SetCurrentStreamerInfo(TVirtualStreamerInfo *info);
    void               SetGlobalIsA(IsAGlobalFunc_t);

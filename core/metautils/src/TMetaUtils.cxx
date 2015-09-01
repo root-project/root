@@ -1882,7 +1882,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       finalString << "      instance.SetResetAfterMerge(&reset_" << mappedname.c_str() << ");" << "\n";
    }
    if (bset) {
-      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << "Pushback" << "<TStdBitsetHelper< " << classname.c_str() << " > >()));" << "\n";
+      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << "Pushback" << "<Internal::TStdBitsetHelper< " << classname.c_str() << " > >()));" << "\n";
 
       needCollectionProxy = true;
    } else if (stl != 0 &&

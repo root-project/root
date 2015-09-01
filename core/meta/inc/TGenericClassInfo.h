@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/meta:$Id$
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -25,12 +25,13 @@ class TVirtualIsAProxy;
 //class TClass;
 //class TClassStreamer;
 //class TVirtualCollectionProxy;
-//class TCollectionProxyInfo;
 
 
 namespace ROOT {
 
-   class TCollectionProxyInfo;
+   namespace Detail {
+      class TCollectionProxyInfo;
+   }
 
    class TGenericClassInfo {
       // This class in not inlined because it is used is non time critical
@@ -62,8 +63,8 @@ namespace ROOT {
       TVirtualCollectionProxy    *fCollectionProxy;
       Int_t                       fSizeof;
       Int_t                       fPragmaBits;
-      TCollectionProxyInfo       *fCollectionProxyInfo;
-      TCollectionProxyInfo       *fCollectionStreamerInfo;
+      Detail::TCollectionProxyInfo *fCollectionProxyInfo;
+      Detail::TCollectionProxyInfo *fCollectionStreamerInfo;
       std::vector<ROOT::TSchemaHelper>  fReadRules;
       std::vector<ROOT::TSchemaHelper>  fReadRawRules;
 
@@ -91,8 +92,8 @@ namespace ROOT {
       const Internal::TInitBehavior    &GetAction() const;
       TClass                           *GetClass();
       const char                       *GetClassName() const;
-      TCollectionProxyInfo             *GetCollectionProxyInfo() const;
-      TCollectionProxyInfo             *GetCollectionStreamerInfo() const;
+      Detail::TCollectionProxyInfo     *GetCollectionProxyInfo() const;
+      Detail::TCollectionProxyInfo     *GetCollectionStreamerInfo() const;
       const char                       *GetDeclFileName() const;
       Int_t                             GetDeclFileLine() const;
       DelFunc_t                         GetDelete() const;
@@ -113,8 +114,8 @@ namespace ROOT {
 
       Short_t                           AdoptStreamer(TClassStreamer*);
       Short_t                           AdoptCollectionProxy(TVirtualCollectionProxy*);
-      void                              AdoptCollectionProxyInfo(TCollectionProxyInfo*);
-      void                              AdoptCollectionStreamerInfo(TCollectionProxyInfo*);
+      void                              AdoptCollectionProxyInfo(Detail::TCollectionProxyInfo*);
+      void                              AdoptCollectionStreamerInfo(Detail::TCollectionProxyInfo*);
       Int_t                             SetDeclFile(const char *file, Int_t line);
       void                              SetDelete(DelFunc_t deleteFunc);
       void                              SetDeleteArray(DelArrFunc_t deleteArrayFunc);

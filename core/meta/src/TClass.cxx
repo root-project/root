@@ -5639,7 +5639,7 @@ void TClass::SetStreamerImpl()
 /// Create the collection proxy object (and the streamer object) from
 /// using the information in the TCollectionProxyInfo.
 
-void TClass::SetCollectionProxy(const ROOT::TCollectionProxyInfo &info)
+void TClass::SetCollectionProxy(const ROOT::Detail::TCollectionProxyInfo &info)
 {
    R__LOCKGUARD(gInterpreterMutex);
 

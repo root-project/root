@@ -47,7 +47,7 @@ class TStreamerElement;
 class TStreamerBasicType;
 class TClassStreamer;
 class TVirtualArray;
-namespace ROOT { class TCollectionProxyInfo; }
+namespace ROOT { namespace Detail { class TCollectionProxyInfo; } }
 
 namespace TStreamerInfoActions { class TActionSequence; }
 
@@ -287,8 +287,8 @@ public:
 
    virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name, Bool_t silent);
    virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name, Bool_t silent);
-   virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl );
-   virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl );
+   virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::Detail::TCollectionProxyInfo &info, TClass *cl );
+   virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::Detail::TCollectionProxyInfo &info, TClass *cl );
 
    static TStreamerElement   *GetCurrentElement();
 

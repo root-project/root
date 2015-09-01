@@ -305,14 +305,14 @@ namespace Internal {
    }
 
 
-   TCollectionProxyInfo *TGenericClassInfo::GetCollectionProxyInfo() const
+   Detail::TCollectionProxyInfo *TGenericClassInfo::GetCollectionProxyInfo() const
    {
       // Return the set of info we have for the CollectionProxy, if any
 
       return fCollectionProxyInfo;
    }
 
-   TCollectionProxyInfo *TGenericClassInfo::GetCollectionStreamerInfo() const
+   Detail::TCollectionProxyInfo *TGenericClassInfo::GetCollectionStreamerInfo() const
    {
       // Return the set of info we have for the Collection Streamer, if any
 
