@@ -22,14 +22,9 @@
 #include "TClass.h"
 #include "TContextMenu.h"
 
-//==============================================================================
-// TEveGedEditor
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Specialization of TGedEditor for proper update propagation to
-// TEveManager.
+/** \class TEveGedEditor
+Specialization of TGedEditor for proper update propagation to TEveManager.
+*/
 
 ClassImp(TEveGedEditor);
 
@@ -156,8 +151,6 @@ void TEveGedEditor::DisplayObject(TObject* obj)
    TGedEditor::SetModel(fPad, obj, kButton1Down);
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -182,10 +175,6 @@ void TEveGedEditor::Update(TGedFrame* /*gframe*/)
 
    gEve->Redraw3D();
 }
-
-//------------------------------------------------------------------------------
-// Static functions for management of extra editors.
-//------------------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function to create a new extra editor.
@@ -273,16 +262,11 @@ TContextMenu* TEveGedEditor::GetContextMenu()
    return fgContextMenu;
 }
 
-
-//==============================================================================
-// TEveGedNameFrame
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Specialization of TGedNameFrame used in EVE.
-// It provides the ability to undock given editor for easier use.
-// Support for that is also provided from the TEveManager.
+/** \class TEveGedNameFrame
+Specialization of TGedNameFrame used in EVE.
+It provides the ability to undock given editor for easier use.
+Support for that is also provided from the TEveManager.
+*/
 
 ClassImp(TEveGedNameFrame);
 
@@ -334,15 +318,10 @@ void TEveGedNameFrame::SpawnEditorClone()
    TEveGedEditor::SpawnNewEditor(fGedEditor->GetModel());
 }
 
-
-//==============================================================================
-// TEveGedNameTextButton
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Specialization of TGTextButton for EVE name frame.
-// It opens a context-menu on right-click.
+/** \class TEveGedNameTextButton
+Specialization of TGTextButton for EVE name frame.
+It opens a context-menu on right-click.
+*/
 
 ClassImp(TEveGedNameTextButton);
 

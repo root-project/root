@@ -35,14 +35,9 @@
 #include "TGeoMatrix.h"
 #include "TVirtualGeoPainter.h"
 
-//==============================================================================
-//==============================================================================
-// TEveGeoNode
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Wrapper for TGeoNode that allows it to be shown in GUI and controlled as a TEveElement.
+/** \class TEveGeoNode
+Wrapper for TGeoNode that allows it to be shown in GUI and controlled as a TEveElement.
+*/
 
 ClassImp(TEveGeoNode);
 
@@ -113,8 +108,6 @@ const char* TEveGeoNode::GetElementTitle() const
    return fNode->GetTitle();
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Checks if child-nodes have been imported ... imports them if not.
 /// Then calls TEveElement::ExpandIntoListTree.
@@ -161,8 +154,6 @@ void TEveGeoNode::ExpandIntoListTreesRecursively()
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Override from TEveElement.
 /// Process visibility changes and forward them to fNode.
@@ -176,8 +167,6 @@ void TEveGeoNode::AddStamp(UChar_t bits)
       fNode->VisibleDaughters(fRnrChildren);
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Can edit main-color -- not available for assemblies.
@@ -220,8 +209,6 @@ void TEveGeoNode::SetMainTransparency(Char_t t)
    TEveElement::SetMainTransparency(t);
    fNode->GetVolume()->SetTransparency(t);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Updates all reve-browsers having the node in their contents.
@@ -267,8 +254,6 @@ void TEveGeoNode::UpdateVolume(TGeoVolume* volume)
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the object.
 
@@ -278,8 +263,6 @@ void TEveGeoNode::Draw(Option_t* option)
    opt += option;
    fNode->GetVolume()->Draw(opt);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save TEveGeoShapeExtract tree starting at this node.
@@ -321,8 +304,6 @@ void TEveGeoNode::WriteExtract(const char* name, Bool_t leafs_only)
       gse->Write(name);
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Export the node hierarchy into tree of TEveGeoShapeExtract objects.
@@ -465,19 +446,15 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode*         geon,
 }
 
 
-//==============================================================================
-//==============================================================================
-// TEveGeoTopNode
-//==============================================================================
 
-//______________________________________________________________________________
-//
-// A wrapper over a TGeoNode, possibly displaced with a global
-// trasformation stored in TEveElement.
-//
-// It holds a pointer to TGeoManager and controls for steering of
-// TGeoPainter, fVisOption, fVisLevel and fMaxVisNodes. They have the
-// same meaning as in TGeoManager/TGeoPainter.
+/** \class TEveGeoTopNode
+A wrapper over a TGeoNode, possibly displaced with a global
+trasformation stored in TEveElement.
+
+It holds a pointer to TGeoManager and controls for steering of
+TGeoPainter, fVisOption, fVisLevel and fMaxVisNodes. They have the
+same meaning as in TGeoManager/TGeoPainter.
+*/
 
 ClassImp(TEveGeoTopNode);
 
@@ -496,10 +473,8 @@ TEveGeoTopNode::TEveGeoTopNode(TGeoManager* manager, TGeoNode* node,
    fRnrSelf = kTRUE; // Override back from TEveGeoNode.
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Use transforamtion matrix from the TGeoNode.
+/// Use transformation matrix from the TGeoNode.
 /// Warning: this is local transformation of the node!
 
 void TEveGeoTopNode::UseNodeTrans()
@@ -507,19 +482,15 @@ void TEveGeoTopNode::UseNodeTrans()
    RefMainTrans().SetFrom(*fNode->GetMatrix());
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Revert from TEveGeoNode back to standard behaviour, that is,
-/// do not pass visibility chanes to fNode as they are honoured
+/// do not pass visibility changes to fNode as they are honoured
 /// in Paint() method.
 
 void TEveGeoTopNode::AddStamp(UChar_t bits)
 {
    TEveElement::AddStamp(bits);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the top-node.
@@ -572,8 +543,6 @@ void TEveGeoTopNode::Paint(Option_t* option)
       fManager->SetTopVolume(top_volume);
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Callback for propagating volume visibility changes.
