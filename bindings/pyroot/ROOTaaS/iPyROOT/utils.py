@@ -4,7 +4,6 @@ import select
 import time
 import tempfile
 import itertools
-import ctypes
 import re
 import fnmatch
 from contextlib import contextmanager
@@ -106,20 +105,6 @@ def _getLibExtension(thePlatform):
     }
     return pExtMap.get(thePlatform, '.so')
 
-
-def _loadLibrary(libName):
-    '''Dl-open a library bypassing the ROOT calling sequence.
-    It attaches the correct extension.
-    '''
-    lib = None
-    try:
-      extension = _getLibExtension(_getPlatform())
-      lib = ctypes.cdll.LoadLibrary(libName + extension)
-    except:
-      lib = ctypes.cdll.LoadLibrary(libName + ".so")
-    return lib
-   
-
 def welcomeMsg():
     print "Welcome to ROOTaas (version %s)" %ROOT.gROOT.GetVersion()
 
@@ -138,7 +123,7 @@ def commentRemover( text ):
    >>> s="int /** Test **/ main() {return 0;}"
    >>> commentRemover(s)
    'int  main() {return 0;}'
-   ''' 
+   '''
    def blotOutNonNewlines( strIn ) :  # Return a string containing only the newline chars contained in strIn
       return "" + ("\n" * strIn.count('\n'))
 
@@ -155,6 +140,49 @@ def commentRemover( text ):
 
    return re.sub(pattern, replacer, text)
 
+
+# Here functions are defined to process C++ code
+def processCppCodeImpl(code):
+    code = commentRemover(code)
+    ROOT.gInterpreter.ProcessLine(code)
+
+def declareCppCodeImpl(code):
+    code = commentRemover(code)
+    ROOT.gInterpreter.Declare(code)
+
+def processCppCode(code):
+    processCppCodeImpl(code)
+
+def declareCppCode(code):
+    declareCppCodeImpl(code)
+
+from subprocess import check_output
+def _invokeAclicMac(fileName):
+    '''FIXME!
+    This function is a workaround. On osx, it is impossible to link against
+    libzmq.so, among the others. The error is known and is
+    "ld: can't link with bundle (MH_BUNDLE) only dylibs (MH_DYLIB)"
+    We cannot at the moment force Aclic to change the linker command in order
+    to exclude these libraries, so we launch a second root session to compile
+    the library, which we then load.
+    '''
+    command = 'root -l -q -b -e gSystem->CompileMacro(\"%s\",\"k\")'%fileName
+    out = ""
+    try:
+      out = check_output(command.split())
+    except:
+      pass
+    print out
+    libNameBase = fileName.replace(".C","_C")
+    ROOT.gSystem.Load(libNameBase)
+
+def invokeAclic(fileName):
+    if _getPlatform() == 'darwin':
+        _invokeAclicMac(fileName)
+    else:
+        processCppCode(".L %s+" %fileName)
+
+
 class StreamCapture(object):
     def __init__(self, stream, ip=get_ipython()):
         streamsFileNo={sys.stderr:2,sys.stdout:1}
@@ -163,7 +191,14 @@ class StreamCapture(object):
         self.sysStreamFile = stream
         self.sysStreamFileNo = streamsFileNo[stream]
         self.shell = ip
-        self.libc = _loadLibrary("libc")
+        # Platform independent flush
+        # With ctypes, the name of the libc library is not known a priori
+        # We use jitted function
+        flushFunctionName='_ROOTaaS_Flush'
+        if (not hasattr(ROOT,flushFunctionName)):
+           declareCppCode("void %s(){fflush(nullptr);};" %flushFunctionName)
+        self.flush = getattr(ROOT,flushFunctionName)
+
 
     def more_data(self):
         r, _, _ = select.select([self.pipe_out], [], [], 0)
@@ -179,7 +214,7 @@ class StreamCapture(object):
             while self.more_data():
                 out += os.read(self.pipe_out, 1024)
 
-        self.libc.fflush(None)
+        self.flush()
         self.sysStreamFile.write(out) # important to print the value printing output
         return 0
 
@@ -346,45 +381,3 @@ def enableCppHighlighting():
     ipDispJs("require(['codemirror/mode/clike/clike'], function(Clike) { console.log('ROOTaaS - C++ CodeMirror module loaded'); });", raw=True)
     # Define highlight mode for %%cpp magic
     ipDispJs(_jsMagicHighlight.format(cppMIME = cppMIME), raw=True)
-
-# Here functions are defined to process C++ code
-def processCppCodeImpl(code):
-    code = commentRemover(code)
-    ROOT.gInterpreter.ProcessLine(code)
-
-def declareCppCodeImpl(code):
-    code = commentRemover(code)
-    ROOT.gInterpreter.Declare(code)
-
-def processCppCode(code):
-    processCppCodeImpl(code)
-
-def declareCppCode(code):
-    declareCppCodeImpl(code)
-
-from subprocess import check_output
-def _invokeAclicMac(fileName):
-    '''FIXME!
-    This function is a workaround. On osx, it is impossible to link against
-    libzmq.so, among the others. The error is known and is 
-    "ld: can't link with bundle (MH_BUNDLE) only dylibs (MH_DYLIB)"
-    We cannot at the moment force Aclic to change the linker command in order 
-    to exclude these libraries, so we launch a second root session to compile
-    the library, which we then load.
-    '''
-    command = 'root -l -q -b -e gSystem->CompileMacro(\"%s\",\"k\")'%fileName
-    out = ""
-    try:
-      out = check_output(command.split())
-    except:
-      pass
-    print out
-    libNameBase = fileName.replace(".C","_C")
-    ROOT.gSystem.Load(libNameBase)
-
-def invokeAclic(fileName):
-    if _getPlatform() == 'darwin':
-        _invokeAclicMac(fileName)
-    else:
-        processCppCode(".L %s+" %fileName)
-    
