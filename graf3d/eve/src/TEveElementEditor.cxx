@@ -22,18 +22,14 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//==============================================================================
-//==============================================================================
-// TEveElementEditor
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Editor for TEveElement class.
+/** \class TEveElementEditor
+Editor for TEveElement class.
+*/
 
 ClassImp(TEveElementEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveElementEditor::TEveElementEditor(const TGWindow *p,
                                      Int_t width, Int_t height,
@@ -50,8 +46,6 @@ TEveElementEditor::TEveElementEditor(const TGWindow *p,
    fTransparency (0),
    fTrans        (0)
 {
-   // Constructor.
-
    MakeTitle("TEveElement");
    fPriority = 0;
 
@@ -101,8 +95,6 @@ TEveElementEditor::TEveElementEditor(const TGWindow *p,
    AddFrame(fTrans, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -148,8 +140,6 @@ void TEveElementEditor::SetModel(TObject* obj)
 
    fHFrame->Layout();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for RnrSelf.
