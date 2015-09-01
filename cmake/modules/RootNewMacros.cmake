@@ -359,10 +359,11 @@ endfunction()
 
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT] LIBRARIES library1 library2 ...)
+#---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT]
+#                        [NOINSTALL] LIBRARIES library1 library2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_LINKER_LIBRARY library)
-  CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;TEST" "TYPE" "LIBRARIES;DEPENDENCIES"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;TEST;NOINSTALL" "TYPE" "LIBRARIES;DEPENDENCIES"  ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
   if(NOT ARG_TYPE)
     set(ARG_TYPE SHARED)
@@ -438,7 +439,7 @@ function(ROOT_LINKER_LIBRARY library)
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
   set_target_properties(${library} PROPERTIES LINK_INTERFACE_LIBRARIES "${ARG_DEPENDENCIES}")
   #----Installation details-------------------------------------------------------
-  if(NOT ARG_TEST AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+  if(NOT ARG_TEST AND NOT ARG_NOINSTALL AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     if(ARG_CMAKENOEXPORT)
       install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
                                  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
