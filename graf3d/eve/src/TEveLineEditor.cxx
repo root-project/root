@@ -21,14 +21,9 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//==============================================================================
-//==============================================================================
-// TEveLineEditor
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Editor for TEveLine class.
+/** \class TEveLineEditor
+Editor for TEveLine class.
+*/
 
 ClassImp(TEveLineEditor);
 
@@ -62,8 +57,6 @@ TEveLineEditor::TEveLineEditor(const TGWindow *p, Int_t width, Int_t height,
    fSmooth->Connect("Toggled(Bool_t)", "TEveLineEditor", this, "DoSmooth()");
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -75,8 +68,6 @@ void TEveLineEditor::SetModel(TObject* obj)
    fRnrPoints->SetState(fM->fRnrPoints ? kButtonDown : kButtonUp);
    fSmooth->SetState(fM->fSmooth ? kButtonDown : kButtonUp);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for RnrLine.
