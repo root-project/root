@@ -33,7 +33,7 @@ cells[cells.length-1].code_mirror.setOption('mode', '{mimeType}');
 cells[cells.length-1].cm_config.mode = '{mimeType}';
 """
 
-_jsMagicHighlight = "IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp|^%%dcl/]}};"
+_jsMagicHighlight = "IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};"
 
 
 _jsNotDrawableClassesPatterns = ["TGraph{2,3}D","TH3*","TGraphPolar","TProf*","TEve*","TF{2,3}","TGeo*","TPolyLine3D"]
@@ -213,7 +213,7 @@ captures = [StreamCapture(sys.stderr),
             CaptureDrawnCanvases()]
 
 
-extNames = ["ROOTaaS.iPyROOT." + name for name in ["cppmagic","dclmagic","aclicmagic"]]
+extNames = ["ROOTaaS.iPyROOT." + name for name in ["cppmagic"]]
 
 def toCpp():
     '''
@@ -344,7 +344,7 @@ def enableCppHighlighting():
     ipDispJs = IPython.display.display_javascript
     #Make sure clike JS lexer is loaded
     ipDispJs("require(['codemirror/mode/clike/clike'], function(Clike) { console.log('ROOTaaS - C++ CodeMirror module loaded'); });", raw=True)
-    # Define highlight mode for %%cpp and %%dcl magics
+    # Define highlight mode for %%cpp magic
     ipDispJs(_jsMagicHighlight.format(cppMIME = cppMIME), raw=True)
 
 # Here functions are defined to process C++ code
