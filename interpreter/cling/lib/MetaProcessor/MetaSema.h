@@ -143,6 +143,13 @@ namespace cling {
     ///
     void actOnrawInputCommand(SwitchMode mode = kToggle) const;
 
+    ///\brief Allows for the interactive outputting of the string returned
+    /// by Value::print().
+    ///
+    ///\param[in] mode - either on/off or toggle.
+    ///
+    void actOnInteractivePrintCommand(SwitchMode mode = kToggle) const;
+
     ///\brief Generates debug info for the JIT.
     ///
     ///\param[in] mode - either on/off or toggle.

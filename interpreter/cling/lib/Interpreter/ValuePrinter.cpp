@@ -12,7 +12,6 @@
 #include "cling/Interpreter/CValuePrinter.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Transaction.h"
-#include "cling/Interpreter/Value.h"
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
@@ -359,6 +358,32 @@ static std::string printUnpackedClingValue(const Value &V) {
   return strm.str();
 }
 
+static void printInteractively(llvm::raw_ostream &Out, std::string tv) {
+  unsigned long length = tv.length();
+  unsigned int n = 400; // == 5 lines (default terminal line width == 80 characters)
+  if (length < n) {
+    Out << tv << "\n";
+  } else {
+    Out << "Interactive printing. Press Enter to continue, q Enter to stop.\n";
+    unsigned int i = 0;
+    while (i < length) {
+      Out << tv.substr(0, n);
+      Out.flush();
+      // Keep reading input until Enter or [q|Q] Enter is encountered
+      char c = getchar();
+      while(c != '\n' && c != 'q' && c != 'Q'){
+        c = getchar();
+      }
+      if (c == 'q' || c == 'Q') {
+        getchar(); // read the new line char (Enter)
+        return;
+      }
+      i += n;
+      if (i < length) tv = tv.substr(n);
+    }
+  }
+}
+
 namespace cling {
 
   // General fallback - prints the address
@@ -570,5 +595,22 @@ namespace cling {
       }
       return printUnpackedClingValue(V);
     }
+
+    void printInternal(llvm::raw_ostream &Out, const Value &V) {
+      // Get the default type string representation
+      std::string typeStr = cling::valuePrinterInternal::printTypeInternal(V);
+      // Get the value string representation, by printValue() method overloading
+      std::string valueStr = cling::valuePrinterInternal::printValueInternal(V);
+
+      std::string tv = typeStr + " " + valueStr;
+
+      if (V.getInterpreter()->isInteractivePrintEnabled()) {
+        printInteractively(Out, tv);
+      } else {
+        // Print the type and the value:
+        Out << tv << "\n";
+      }
+    }
+
   } // end namespace valuePrinterInternal
 } // end namespace cling

@@ -215,6 +215,17 @@ namespace cling {
       m_Interpreter.enableRawInput(mode);
   }
 
+  void MetaSema::actOnInteractivePrintCommand(SwitchMode mode/* = kToggle*/) const {
+    if (mode == kToggle) {
+      bool flag = !m_Interpreter.isInteractivePrintEnabled();
+      m_Interpreter.enableInteractivePrint(flag);
+      // FIXME:
+      m_MetaProcessor.getOuts() << (flag ? "U" :"Not u") << "sing interactive printing\n";
+    }
+    else
+      m_Interpreter.enableInteractivePrint(mode);
+  }
+
   void MetaSema::actOndebugCommand(llvm::Optional<int> mode) const {
     clang::CodeGenOptions& CGO = m_Interpreter.getCI()->getCodeGenOpts();
     if (!mode) {
@@ -331,6 +342,9 @@ namespace cling {
       "\n"
       "   " << metaString << "rawInput [0|1]\t\t- Toggle wrapping and printing the"
                              "\n\t\t\t\t  execution results of the input\n"
+      "\n"
+      "   " << metaString << "interactive [0|1]\t\t- Toggle interactive printing mode\n"
+
       "\n"
       "   " << metaString << "dynamicExtensions [0|1]\t- Toggles the use of the dynamic scopes and the"
                              "\n\t\t\t\t  late binding\n"
