@@ -1,6 +1,10 @@
 import utils
 import ROOT
 
+def rreplace(s, old, new, occurrence):
+  li = s.rsplit(old, occurrence)
+  return new.join(li)
+
 # Jit a wrapper for the ttabcom
 _TTabComHookCode = """
 std::vector<std::string> _TTabComHook(const char* pattern){
@@ -72,7 +76,7 @@ class CppCompleter(object):
     '''
 
     def __init__(self):
-        self.hook = None 
+        self.hook = None
         self.active = True
         self.firstActivation = True
         self.accessors = [".", "->", "::"]
@@ -100,12 +104,12 @@ class CppCompleter(object):
         for accessor in self.accessors:
             tmpAccessorPos = line.rfind(accessor)
             if accessorPos < tmpAccessorPos:
-                accessorPos = tmpAccessorPos+len(accessor)
+                accessorPos = tmpAccessorPos+len(accessor) if accessor!="::" else 0
         return accessorPos
 
     def _completeImpl(self, line):
+        line=line.split()[-1]
         suggestions = self._getSuggestions(line)
-        print "LINE: %s SUGGESTIONS: %s" %(line,sorted(suggestions))
         if not suggestions: return []
         accessorPos = self._getLastAccessorPos(line)
         if accessorPos > 0:
@@ -127,7 +131,7 @@ _cppCompleter = CppCompleter()
 
 def load_ipython_extension(ipython):
     _cppCompleter.activate()
-    ipython.set_hook('complete_command', _cppCompleter.complete, re_key=r"(.*)")
+    ipython.set_hook('complete_command', _cppCompleter.complete, re_key=r"[(.*)[\.,::,\->](.*)]|(.*)")
 
 def unload_ipython_extension(ipython):
     _cppCompleter.deactivate()
