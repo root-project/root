@@ -29,14 +29,14 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//______________________________________________________________________________
-// TEveDigitSetEditor
-//
-// Editor for TEveDigitSet class.
+/** \class TEveDigitSetEditor
+Editor for TEveDigitSet class.
+*/
 
 ClassImp(TEveDigitSetEditor)
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveDigitSetEditor::TEveDigitSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                        UInt_t options, Pixel_t back) :
@@ -47,8 +47,6 @@ TEveDigitSetEditor::TEveDigitSetEditor(const TGWindow *p, Int_t width, Int_t hei
    fHistoButtFrame(0),
    fInfoFrame(0)
 {
-   // Constructor.
-
    MakeTitle("Palette controls");
 
    fPalette = new TEveRGBAPaletteSubEditor(this);
@@ -57,8 +55,6 @@ TEveDigitSetEditor::TEveDigitSetEditor(const TGWindow *p, Int_t width, Int_t hei
 
    CreateInfoTab();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create information tab.
@@ -94,8 +90,6 @@ void TEveDigitSetEditor::CreateInfoTab()
    fInfoFrame->AddFrame(fHistoButtFrame, new TGLayoutHints(kLHintsExpandX, 2, 0, 0, 0));
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -115,8 +109,6 @@ void TEveDigitSetEditor::SetModel(TObject* obj)
    else
       fHistoButtFrame->UnmapWindow();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Show histogram slot.
