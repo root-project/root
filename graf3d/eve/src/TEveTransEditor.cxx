@@ -19,7 +19,7 @@
 #include "TGButton.h"
 #include "TGLabel.h"
 
-//______________________________________________________________________________
+//
 // TEveTransSubEditor
 //
 // Sub-editor for TEveTrans class.
