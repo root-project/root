@@ -15,23 +15,18 @@
 
 #include <cassert>
 
-//==============================================================================
-//==============================================================================
-// TEveProjectable
-//==============================================================================
+/** \class TEveProjectable
+Abstract base-class for non-linear projectable objects.
 
-//______________________________________________________________________________
-//
-// Abstract base-class for non-linear projectable objects.
-//
-// Via ProjectedClass(const TEveProjection* p) method it returns a
-// TClass instance for the projected class and keeps references to the
-// projected objects.
-//
-// It is assumed that all classes deriving from TEveProjectable are also
-// derived from TEveElement.
-//
-// See also TEveProjectionManager::ImportElements().
+Via ProjectedClass(const TEveProjection* p) method it returns a
+TClass instance for the projected class and keeps references to the
+projected objects.
+
+It is assumed that all classes deriving from TEveProjectable are also
+derived from TEveElement.
+
+See also TEveProjectionManager::ImportElements().
+*/
 
 ClassImp(TEveProjectable);
 
@@ -95,8 +90,6 @@ void TEveProjectable::AddProjectedsToSet(std::set<TEveElement*>& set)
    }
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set visualization parameters of projecteds.
 /// Use element el as model. If el == 0 (default), this casted to
@@ -138,7 +131,7 @@ void TEveProjectable::PropagateMainColor(Color_t color, Color_t old_color)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set main transparency of projecteds if their transparecy is the
+/// Set main transparency of projecteds if their transparency is the
 /// same as the old one.
 
 void TEveProjectable::PropagateMainTransparency(Char_t t, Char_t old_t)
@@ -150,19 +143,13 @@ void TEveProjectable::PropagateMainTransparency(Char_t t, Char_t old_t)
    }
 }
 
+/** \class TEveProjected
+Abstract base class for classes that hold results of a non-linear
+projection transformation.
 
-//==============================================================================
-//==============================================================================
-// TEveProjected
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Abstract base class for classes that hold results of a non-linear
-// projection transformation.
-//
-// It is assumed that all classes deriving from TEveProjected are also
-// derived from TEveElement.
+It is assumed that all classes deriving from TEveProjected are also
+derived from TEveElement.
+*/
 
 ClassImp(TEveProjected);
 
