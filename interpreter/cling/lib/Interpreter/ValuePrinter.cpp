@@ -12,6 +12,7 @@
 #include "cling/Interpreter/CValuePrinter.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Transaction.h"
+#include "cling/Interpreter/Value.h"
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
@@ -569,18 +570,5 @@ namespace cling {
       }
       return printUnpackedClingValue(V);
     }
-
-    void printInternal(llvm::raw_ostream &Out, const Value &V) {
-      // Get the default type string representation
-      std::string typeStr = cling::valuePrinterInternal::printTypeInternal(V);
-      // Get the value string representation, by printValue() method overloading
-      std::string valueStr = cling::valuePrinterInternal::printValueInternal(V);
-
-      std::string tv = typeStr + " " + valueStr;
-
-      // Print the type and the value:
-      Out << tv << "\n";
-    }
-
   } // end namespace valuePrinterInternal
 } // end namespace cling
