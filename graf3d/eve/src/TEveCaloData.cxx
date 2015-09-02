@@ -729,14 +729,13 @@ X axis is used for eta and Y axis for phi.
 ClassImp(TEveCaloDataHist);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveCaloDataHist::TEveCaloDataHist():
    TEveCaloData(),
 
    fHStack(0)
 {
-   // Constructor.
-
    fHStack = new THStack();
    fEps    = 1e-5;
 }
