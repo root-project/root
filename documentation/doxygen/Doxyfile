@@ -753,7 +753,8 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../../core/base/ \
+INPUT                  = . \
+                         ../../core/base/ \
                          ../../core/cont/ \
                          ../../core/meta/ \
                          ../../core/metautils/ \
@@ -839,12 +840,6 @@ FILE_PATTERNS          = *.c \
                          *.hxx \
                          *.hpp \
                          *.h++ \
-                         *.cs \
-                         *.php \
-                         *.php4 \
-                         *.php5 \
-                         *.phtml \
-                         *.html \
                          *.inc \
                          *.m \
                          *.markdown \
