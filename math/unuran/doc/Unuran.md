@@ -1,6 +1,9 @@
 /**
 
+Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers
+
 \defgroup Unuran Unuran
+
 \ingroup Math
 
 UNU.RAN, (Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers)
