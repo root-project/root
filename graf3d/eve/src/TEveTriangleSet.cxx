@@ -18,15 +18,14 @@
 #include "TRandom3.h"
 
 
-//______________________________________________________________________________
-//
-// Made from a list of vertices and a list of triangles (triplets of
-// vertex indices).
-//
-// If input is composed from triangles with direct vertex coordinates
-// one should consider finding all occurences of the same vertex
-// and specifying it only once.
-//
+/** \class TEveTriangleSet
+Made from a list of vertices and a list of triangles (triplets of
+vertex indices).
+
+If input is composed from triangles with direct vertex coordinates
+one should consider finding all occurrences of the same vertex
+and specifying it only once.
+*/
 
 ClassImp(TEveTriangleSet);
 
@@ -56,8 +55,6 @@ TEveTriangleSet::~TEveTriangleSet()
    delete [] fTringNorms;
    delete [] fTringCols;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate triangle normals via cross product of triangle edges.
@@ -121,8 +118,6 @@ void TEveTriangleSet::GenerateZNormalColors(Float_t fac, Int_t min, Int_t max,
    gEve->Redraw3D();
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute bounding box.
 /// Virtual from TAttBBox.
@@ -147,8 +142,6 @@ void TEveTriangleSet::Paint(Option_t*)
 {
    PaintStandard(this);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read a simple ascii input file describing vertices and triangles.
