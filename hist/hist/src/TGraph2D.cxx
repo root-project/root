@@ -1304,7 +1304,8 @@ Double_t TGraph2D::Interpolate(Double_t x, Double_t y)
       return ((TGraphDelaunay*)fDelaunay)->ComputeZ(x, y);
 
    // cannot be here
-   assert(false); 
+   assert(false);
+   return TMath::QuietNaN();
 }
 
 

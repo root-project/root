@@ -703,7 +703,7 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
       p[1]=t[1]-1;
       p[2]=t[2]-1;
    }
-   else if (fDelaunay2D) {
+   else  {
       p[0]=t[0];
       p[1]=t[1];
       p[2]=t[2];
