@@ -197,6 +197,18 @@ option(all "Enable all optional components" OFF)
 option(testing "Enable testing with CTest" OFF)
 option(roottest "Include roottest, if roottest exists in root or if it is a sibling directory." OFF)
 
+#---Apply minimal or gminimal------------------------------------------------------------------
+foreach(opt ${root_build_options})
+  if(opt MATCHES "thread|cxx11|cling|builtin_llvm|builtin_ftgl|explicitlink")
+    continue()
+  endif()
+  if(minimal)
+    set(${opt} OFF CACHE BOOL "" FORCE)
+  elseif(gminimal AND NOT opt MATCHES "x11|cocoa")
+    set(${opt} OFF CACHE BOOL "" FORCE)
+  endif()
+endforeach()
+
 #---Avoid creating dependencies to 'non-statndard' header files -------------------------------
 include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
 
