@@ -146,11 +146,11 @@ def commentRemover( text ):
 
 # Here functions are defined to process C++ code
 def processCppCodeImpl(code):
-    code = commentRemover(code)
+    #code = commentRemover(code)
     ROOT.gInterpreter.ProcessLine(code)
 
 def declareCppCodeImpl(code):
-    code = commentRemover(code)
+    #code = commentRemover(code)
     ROOT.gInterpreter.Declare(code)
 
 def processCppCode(code):
@@ -159,8 +159,14 @@ def processCppCode(code):
 def declareCppCode(code):
     declareCppCodeImpl(code)
 
-def _checkOutput(command):
-    return check_output(command.split())
+def _checkOutput(command,errMsg=None):
+    out = ""
+    try:
+        out = check_output(command.split())
+    except:
+        if errMsg:
+            sys.stderr.write("%s (command was %s)\n" %(errMsg,command))
+    return out
 
 def _invokeAclicMac(fileName):
     '''FIXME!
@@ -171,13 +177,8 @@ def _invokeAclicMac(fileName):
     to exclude these libraries, so we launch a second root session to compile
     the library, which we then load.
     '''
-    command = 'root -l -q -b -e gSystem->CompileMacro(\"%s\",\"k\")'%fileName
-    out = ""
-    try:
-      out = _checkOutput(command)
-    except:
-      pass
-    print out
+    command = 'root -l -q -b -e gSystem->CompileMacro(\"%s\",\"k\")*0'%fileName
+    out = _checkOutput(command, "Error ivoking ACLiC")
     libNameBase = fileName.replace(".C","_C")
     ROOT.gSystem.Load(libNameBase)
 

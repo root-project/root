@@ -1,14 +1,14 @@
+import sys
+import re
 from IPython.core.inputtransformer import InputTransformer
 from IPython import get_ipython
-
-import utils
-import cppcompleter
-
 from IPython.core import display
+import utils
 
 
-
-
+_cppDcl=re.compile("\s*\.cpp\s+-d")
+_cppAclic=re.compile("\s*\.cpp\s+-a")
+_bash=re.compile("\s*\.bash\d*")
 class CppTransformer(InputTransformer):
 
     def __init__(self):
@@ -26,20 +26,47 @@ class CppTransformer(InputTransformer):
         >>> t.reset()
         >>> ROOT.i
         3
+        >>> t.push('.cpp -a')
+        >>> t.push('int q(int i){return i+i;};')
+        >>> t.reset()
+        >>> ROOT.q(2)
+        4
+        >>> t.push('   .cpp      -a\t\t ')
+        >>> t.push('int qq(int i){return i+i;};')
+        >>> t.reset()
+        >>> ROOT.qq(2)
+        4
         >>> t.push('.cpp -d')
         >>> t.push('int f(int i){return i+i;}')
         >>> t.reset()
         >>> ROOT.f(3)
+        6
+        >>> t.push('.cpp -d')
+        >>> t.push('int ff(int i){return i+i;}')
+        >>> t.reset()
+        >>> ROOT.ff(3)
+        6
+        >>> t.push('.bash echo    Hello  ')
+        >>> t.reset()
+        Hello
+        >>> t.push(' \t .bash \t echo    Hello  ')
+        >>> t.reset()
+        Hello
+        >>> t.push('.bash')
+        >>> t.push('echo    Hello')
+        >>> t.reset()
+        Hello
         '''
         # FIXME: must be in a single line
         fcnName="toPython()"
         if line == "%s;"%fcnName or line == fcnName:
             self.mustSwitchToPython = True
-        elif line == ".cpp -d" and self.cell == "":
+        elif _cppDcl.match(line) and self.cell == "":
             self.runAsDecl = True
-        elif line == ".cpp -a" and self.cell == "":
+        elif _cppAclic.match(line) and self.cell == "":
             self.runAsAclic = True
-        elif line == ".bash" and self.cell == "":
+        elif _bash.match(line) and self.cell == "":
+            self.cell += line.replace(".bash","")+"\n"
             self.runAsBash = True
         else:
             line+="\n"
@@ -47,6 +74,7 @@ class CppTransformer(InputTransformer):
         return None
 
     def reset(self):
+        out = None
         if self.cell != "":
             if self.runAsDecl:
                 utils.declareCppCode(self.cell)
@@ -55,7 +83,9 @@ class CppTransformer(InputTransformer):
                 utils.invokeAclic(self.cell)
                 self.runAsAclic = False
             elif self.runAsBash:
-                utils._checkOutput(self.cell)
+                cellNoEndNewLine = self.cell[:-1]
+                out = utils._checkOutput(cellNoEndNewLine,"Error running shell command")
+                if out: sys.stdout.write(out)
                 self.runAsBash = False
             else:
                 utils.processCppCode(self.cell)
@@ -78,14 +108,3 @@ def unload_ipython_extension(ipython):
 def load_ipython_extension(ipython):
     ipython.input_splitter.logical_line_transforms.insert(0,_transformer)
     ipython.input_transformer_manager.logical_line_transforms.insert(0,_transformer)
-        #>>> code =""".cpp -a\n
-        #... class A{public: A(){cout << "A ctor\n";}};\n
-        #... int i=3;\n
-        #... """
-        #>>> for l in code.split('\n'):
-        #...     t.push(l)
-        #>>> t.reset()
-        #>>> ROOT.A()
-        #>>> t.push('.cpp -d\n')
-        #>>> t.push('int f(int i){return i+i;}\n')
-        #>>> t.reset()
