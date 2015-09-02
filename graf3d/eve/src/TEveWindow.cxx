@@ -24,43 +24,31 @@
 
 #include <cassert>
 
-//==============================================================================
-//==============================================================================
-// CompositeFrame classes - slots for TEveWindows
-//==============================================================================
-//==============================================================================
+/** \class TEveCompositeFrame
+Abstract base-class for frame-slots that encompass EVE-windows
+(sub-classes of TEveWindow).
 
+The EVE-frame classes are managed by their embedded EVE-windows and
+mostly serve as an interface to particular ROOT widgets
+(sub-classes of TGCompositeFrame) they are embedded into.
 
-//==============================================================================
-// TEveCompositeFrame
-//==============================================================================
+This base-class, a sub-class of a vertical composite-frame, creates
+also the title-bar which can be used to interact with the embedded
+window. Optionally, the title-bar can be replaced with a mini-bar
+(a 4-pixel thin bar at the top). By clicking on the mini-bar, the
+title-bar is restored.
 
-//______________________________________________________________________________
-//
-// Abstract base-class for frame-slots that encompass EVE-windows
-// (sub-classes of TEveWindow).
-//
-// The EVE-frame classes are managed by their embedded EVE-windows and
-// mostly serve as an interface to particular ROOT widgets
-// (sub-classes of TGCompositeFrame) they are embedded into.
-//
-// This base-class, a sub-class of a vertical composite-frame, creates
-// also the title-bar which can be used to interact with the embedded
-// window. Optionally, the title-bar can be replaced with a mini-bar
-// (a 4-pixel thin bar at the top). By clicking on the mini-bar, the
-// title-bar is restored.
-//
-// Sub-classes provide for specific behaviour and expectations of
-// individual ROOT GUI container frames.
-//
-//
-// POSSIBLE EXTENSIONS
-//
-// No frame is drawn around this composite-frame - frame style could be
-// available as a (static) member.
-//
-// Menus of embedded windows could also be managed - hidden or transposed
-// to a top-level menubar.
+Sub-classes provide for specific behaviour and expectations of
+individual ROOT GUI container frames.
+
+POSSIBLE EXTENSIONS
+
+No frame is drawn around this composite-frame - frame style could be
+available as a (static) member.
+
+Menus of embedded windows could also be managed - hidden or transposed
+to a top-level menubar.
+*/
 
 ClassImp(TEveCompositeFrame);
 
@@ -91,6 +79,7 @@ void TEveCompositeFrame::SetupFrameMarkup(IconBarCreator_foo creator,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveCompositeFrame::TEveCompositeFrame(TGCompositeFrame* parent,
                                        TEveWindow*   eve_parent) :
@@ -109,8 +98,6 @@ TEveCompositeFrame::TEveCompositeFrame(TGCompositeFrame* parent,
 
    fShowInSync  (kTRUE)
 {
-   // Constructor.
-
    fTopFrame = new TGHorizontalFrame(this, 20, fgTopFrameHeight);
 
    if (fgAllowTopFrameCollapse)
@@ -178,7 +165,7 @@ TEveCompositeFrame::TEveCompositeFrame(TGCompositeFrame* parent,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If fEveWindow != 0 we are being deleted from the ROOT GUI side.
-/// Relinquishe EveWindow and ref-counting should do the rest.
+/// Relinquish EveWindow and ref-counting should do the rest.
 
 TEveCompositeFrame::~TEveCompositeFrame()
 {
@@ -198,8 +185,6 @@ TEveCompositeFrame::~TEveCompositeFrame()
    delete fEveWindowLH;
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Update widgets using window's name or title.
 
@@ -207,8 +192,6 @@ void TEveCompositeFrame::WindowNameChanged(const TString& name)
 {
    fTitleBar->SetText(name);
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Accept window and increase its deny-destroy count.
@@ -364,14 +347,9 @@ void TEveCompositeFrame::TitleBarClicked()
    fEveWindow->TitleBarClicked();
 }
 
-
-//==============================================================================
-// TEveCompositeFrameInMainFrame
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// An EVE window-slot contained within a TGMainFrame.
+/** \class TEveCompositeFrameInMainFrame
+An EVE window-slot contained within a TGMainFrame.
+*/
 
 ClassImp(TEveCompositeFrameInMainFrame);
 
@@ -514,14 +492,9 @@ void TEveCompositeFrameInMainFrame::MainFrameClosed()
            "Expecting destructor call soon.");
 }
 
-
-//==============================================================================
-// TEveCompositeFrameInPack
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// An EVE window-slot contained within one frame of a TGPack.
+/** \class TEveCompositeFrameInPack
+An EVE window-slot contained within one frame of a TGPack.
+*/
 
 ClassImp(TEveCompositeFrameInPack);
 
@@ -560,13 +533,9 @@ void TEveCompositeFrameInPack::Destroy()
    delete this;
 }
 
-//==============================================================================
-// TEveCompositeFrameInTab
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// An EVE window-slot contained within one tab of a TGTab.
+/** \class TEveCompositeFrameInTab
+An EVE window-slot contained within one tab of a TGTab.
+*/
 
 ClassImp(TEveCompositeFrameInTab);
 
@@ -662,24 +631,10 @@ void TEveCompositeFrameInTab::SetCurrent(Bool_t curr)
    fClient->NeedRedraw(te);
 }
 
-
-//==============================================================================
-//==============================================================================
-// TEveWindow classes
-//==============================================================================
-//==============================================================================
-
-
-//==============================================================================
-// TEveWindow
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Abstract base-class for representing eve-windows.
-// Sub-classes define a particular GUI frame that gets show
-// in the window.
-//
+/** \class TEveWindow
+Abstract base-class for representing eve-windows.
+Sub-classes define a particular GUI frame that gets showin the window.
+*/
 
 ClassImp(TEveWindow);
 
@@ -724,8 +679,6 @@ void TEveWindow::PreDeleteElement()
    TEveElementList::PreDeleteElement();
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual function called before a window is undocked.
 
@@ -751,8 +704,6 @@ void TEveWindow::PostDock()
          w->PostDock();
    }
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Name or title of the window changed - propagate to frames.
@@ -856,7 +807,7 @@ void TEveWindow::UndockWindowDestroySlot()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace this window with the passed one.
-/// Eve parentship is properly handled.
+/// Eve parent-ship is properly handled.
 /// This will most likely lead to the destruction of this window.
 /// Layout is called on the frame.
 
@@ -1004,10 +955,6 @@ void TEveWindow::TitleBarClicked()
    gEve->GetWindowManager()->SelectWindow(this);
 }
 
-//------------------------------------------------------------------------------
-// Static helper functions.
-//------------------------------------------------------------------------------
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a default window slot.
 /// Static helper.
@@ -1108,8 +1055,6 @@ void TEveWindow::SwapWindows(TEveWindow* w1, TEveWindow* w2)
    f1->Layout(); f2->Layout();
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get default width for new main-frame windows. Static.
 
@@ -1119,7 +1064,7 @@ UInt_t TEveWindow::GetMainFrameDefWidth()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get default heigth for new main-frame windows. Static.
+/// Get default height for new main-frame windows. Static.
 
 UInt_t TEveWindow::GetMainFrameDefHeight()
 {
@@ -1174,14 +1119,9 @@ void TEveWindow::SetMiniBarBackgroundColor(Pixel_t p)
    fgMiniBarBackgroundColor = p;
 }
 
-
-//==============================================================================
-// TEveWindowSlot
-//==============================================================================
-
-//______________________________________________________________________________
-// Description of TEveWindowSlot
-//
+/** \class TEveWindowSlot
+Description of TEveWindowSlot
+*/
 
 ClassImp(TEveWindowSlot);
 
@@ -1343,15 +1283,10 @@ TEveWindowFrame* TEveWindowSlot::StopEmbedding(const char* name)
    return eve_frame;
 }
 
-
-//==============================================================================
-// TEveWindowFrame
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Encapsulates TGFrame into an eve-window.
-// The frame is owned by the eve-window.
+/** \class TEveWindowFrame
+Encapsulates TGFrame into an eve-window.
+The frame is owned by the eve-window.
+*/
 
 ClassImp(TEveWindowFrame);
 
@@ -1382,7 +1317,7 @@ TEveWindowFrame::~TEveWindowFrame()
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the registered top-frame of this eve-window dynamic-casted
 /// to composite-frame.
-/// Throws an execption if the cast fails.
+/// Throws an exception if the cast fails.
 
 TGCompositeFrame* TEveWindowFrame::GetGUICompositeFrame()
 {
@@ -1395,14 +1330,10 @@ TGCompositeFrame* TEveWindowFrame::GetGUICompositeFrame()
    return cf;
 }
 
-//==============================================================================
-// TEveWindowPack
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Encapsulates TGPack into an eve-window.
-// The pack is owned by the eve-window.
+/** \class TEveWindowPack
+Encapsulates TGPack into an eve-window.
+The pack is owned by the eve-window.
+*/
 
 ClassImp(TEveWindowPack);
 
@@ -1483,14 +1414,10 @@ void TEveWindowPack::EqualizeFrames()
    fPack->Layout();
 }
 
-//==============================================================================
-// TEveWindowTab
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Encapsulates TGTab into an eve-window.
-// The tab is owned by the eve-window.
+/** \class TEveWindowTab
+Encapsulates TGTab into an eve-window.
+The tab is owned by the eve-window.
+*/
 
 ClassImp(TEveWindowTab);
 
@@ -1528,22 +1455,10 @@ TEveWindowSlot* TEveWindowTab::NewSlot()
    return TEveWindow::CreateWindowInTab(fTab, this);
 }
 
-
-//==============================================================================
-//==============================================================================
-// Helper classes
-//==============================================================================
-//==============================================================================
-
-
-//==============================================================================
-// TEveContextMenu
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Specialization of TContext menu.
-// Provide a window manager hint that ensures proper placement of popup on Cocoa.
+/** \class TEveContextMenu
+Specialization of TContext menu.
+Provide a window manager hint that ensures proper placement of popup on Cocoa.
+*/
 
 ClassImp(TEveContextMenu);
 

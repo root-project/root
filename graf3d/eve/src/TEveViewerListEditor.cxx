@@ -13,13 +13,14 @@
 #include "TEveViewer.h"
 #include "TEveGValuators.h"
 
-//______________________________________________________________________________
-// GUI editor for TEveViewerList.
-//
+/** \class TEveViewerListEditor
+GUI editor for TEveViewerList.
+*/
 
 ClassImp(TEveViewerListEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveViewerListEditor::TEveViewerListEditor(const TGWindow *p, Int_t width, Int_t height,
              UInt_t options, Pixel_t back) :
@@ -29,8 +30,6 @@ TEveViewerListEditor::TEveViewerListEditor(const TGWindow *p, Int_t width, Int_t
    fBrightness(0),
    fColorSet(0)
 {
-   // Constructor.
-
    MakeTitle("TEveViewerList");
 
    Int_t labelW = 63;
@@ -47,8 +46,6 @@ TEveViewerListEditor::TEveViewerListEditor(const TGWindow *p, Int_t width, Int_t
    AddFrame(fColorSet, new TGLayoutHints(kLHintsLeft, 2, 1, 4, 4));
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -58,10 +55,6 @@ void TEveViewerListEditor::SetModel(TObject* obj)
 
    fBrightness->SetValue(fM->GetColorBrightness());
 }
-
-/******************************************************************************/
-
-// Implements callback/slot methods
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for brightness.

@@ -32,7 +32,7 @@
 
 #include <algorithm>
 
-/** \class TEveCaloLegoGL_
+/** \class TEveCaloLegoGL
 OpenGL renderer class for TEveCaloLego.
 */
 

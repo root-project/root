@@ -22,7 +22,8 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-/** \class GUI editor for TEveJetCone.
+/** \class TEveJetConeEditor
+GUI editor for TEveJetCone.
 */
 
 ClassImp(TEveJetConeEditor);

@@ -71,7 +71,7 @@ void TEveTrackEditor::DoEditPropagator()
    fGedEditor->SetModel(fGedEditor->GetPad(), fM->GetPropagator(), kButton1Down);
 }
 
-/** TEveTrackListEditor
+/** \class TEveTrackListEditor
 Editor for TEveTrackList class.
 */
 

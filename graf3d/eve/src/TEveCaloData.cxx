@@ -721,7 +721,7 @@ void  TEveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
    fPhiAxis->SetNdivisions(510);
 }
 
-/* \class TEveCaloDataHist
+/** \class TEveCaloDataHist
 A central manager for calorimeter data of an event written in TH2F.
 X axis is used for eta and Y axis for phi.
 */

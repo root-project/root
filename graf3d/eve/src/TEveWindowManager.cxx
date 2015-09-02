@@ -12,18 +12,21 @@
 #include "TEveWindowManager.h"
 #include "TEveWindow.h"
 
-//______________________________________________________________________________
-//
-// Manager for EVE windows.
-//
-// Provides the concept of the current window and takes care for proper
-// destruction of the windows.
-//
-// It is also the EVE-parent of windows that are not attaced into the
-// hierarchy of EVE-windows.
-//
-// Window-manager is created by the EVE-manager and can be retrieved via:
-//   gEve->GetWindowManager.
+/** \class TEveWindowManager
+
+Manager for EVE windows.
+
+Provides the concept of the current window and takes care for proper
+destruction of the windows.
+
+It is also the EVE-parent of windows that are not attached into the
+hierarchy of EVE-windows.
+
+Window-manager is created by the EVE-manager and can be retrieved via:
+~~~ {.cpp}
+   gEve->GetWindowManager.
+~~~
+*/
 
 ClassImp(TEveWindowManager);
 
@@ -45,12 +48,10 @@ TEveWindowManager::~TEveWindowManager()
 {
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Entry-point for communicating the fact that a window was acted
 /// upon in such a way that it should become the current window.
-/// If the passed window is already the current one, it is deselcted.
+/// If the passed window is already the current one, it is deselected.
 ///
 /// For example, this is called from title-bar, when creating a new
 /// window slot, etc.
@@ -120,8 +121,6 @@ void TEveWindowManager::WindowDeleted(TEveWindow* window)
    Emit("WindowDeleted(TEveWindow*)", (Long_t)window);
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current window dynamic-casted to TEveWindowSlot.
 
@@ -176,8 +175,6 @@ void TEveWindowManager::DestroyWindows()
    }
 
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Hide all eve decorations (title-bar and mini-bar) on all frames.
