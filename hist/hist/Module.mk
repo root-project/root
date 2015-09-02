@@ -91,4 +91,3 @@ distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
 $(HISTDO): NOOPT = $(OPT)
-$(HISTDO): CXXFLAGS := $(filter-out -Xclang -fmodules -Xclang -fmodules-cache-path=$(ROOTSYS)/pcm/, $(CXXFLAGS))
