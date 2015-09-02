@@ -159,6 +159,9 @@ def processCppCode(code):
 def declareCppCode(code):
     declareCppCodeImpl(code)
 
+def _checkOutput(command):
+    return check_output(command.split())
+
 def _invokeAclicMac(fileName):
     '''FIXME!
     This function is a workaround. On osx, it is impossible to link against
@@ -171,7 +174,7 @@ def _invokeAclicMac(fileName):
     command = 'root -l -q -b -e gSystem->CompileMacro(\"%s\",\"k\")'%fileName
     out = ""
     try:
-      out = check_output(command.split())
+      out = _checkOutput(command)
     except:
       pass
     print out

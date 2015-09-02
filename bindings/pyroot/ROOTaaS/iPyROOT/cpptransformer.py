@@ -29,7 +29,7 @@ class CppTransformer(InputTransformer):
         >>> t.push('.cpp -d')
         >>> t.push('int f(int i){return i+i;}')
         >>> t.reset()
-
+        >>> ROOT.f(3)
         '''
         # FIXME: must be in a single line
         fcnName="toPython()"
@@ -54,6 +54,9 @@ class CppTransformer(InputTransformer):
             elif self.runAsAclic:
                 utils.invokeAclic(self.cell)
                 self.runAsAclic = False
+            elif self.runAsBash:
+                utils._checkOutput(self.cell)
+                self.runAsBash = False
             else:
                 utils.processCppCode(self.cell)
             self.cell = ""
