@@ -6,13 +6,13 @@ Welcome to %ROOT
 This documentation describes the software classes and functions that makes up the %ROOT softare system as well as their application programming interface (API). 
 This is not an introduction of %ROOT, for this please refer to  the [%ROOT User Guides and Manuals](http://root.cern.ch/root-user-guides-and-manuals).
 This documentaton is generated directly from the source code using [Doxygen](http://doxygen.org) and in principle is kept up to date.
-The version %ROOT corresponding to this documentation is stated at the page heading. 
-You may also find in [reference documentation page](http://root.cern,ch/guides/reference-guide) pointers to reference manuals for other versions.
+The version of %ROOT corresponding to this documentation is indicated at the page heading. 
+You may also find in [reference documentation page](http://root.cern.ch/guides/reference-guide) pointers to reference manuals for other %ROOT versions.
 
 ### How to use this reference documentation
-The [User’s Classes](modules.html) in the top bar provides the list of main user API classes classified by topic.
-The full list of classes, both for the public API and implementation details are available from [All Classes](annotated.html) tab.
-A classification based on the C++ namespace can be found in the [Namespace](namespaces.html) tab. 
+The [User’s Classes](modules.html) in the top bar provides the user API, mainly the list of main Users' classes organized by module or functionality.
+The full list of classes, both for the public API and for the implementation details are available under the [All Classes](annotated.html) tab.
+A classification of classes based on their C++ namespace can be found under the [Namespace](namespaces.html) tab. 
 The fully indexed list of all source code is available under the tab [Files](files.html). 
 
 ### %ROOT provides other types of documentation:
@@ -24,6 +24,6 @@ The fully indexed list of all source code is available under the tab [Files](fil
 
 ### Caveat
 We have moved recently to generate the documentation with Doxygen. 
-To achieve this the comments needed to be formatted and written specifically for Doxygen to generated proper documentation. 
-If you find missing documentation or inaccuracies please report them to our [bug tracker](https://sft.its.cern.ch/jira/secure/CreateIssue.jspa?pid=10010&issuetype=1).
+To achieve this the comments in the source code needed to be formatted and written specifically for Doxygen to generated proper documentation. 
+If you find missing documentation or inaccuracies please report them to our [bug tracker](https://sft.its.cern.ch/jira/secure/CreateIssue.jspa?pid=10010&issuetype=1). Detailed instructions on how to submmit a bug can be found [here](http://root.cern.ch/how/report-bug-jira).
 
