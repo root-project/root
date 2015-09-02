@@ -11,35 +11,31 @@
 #ifndef ROOSTATS_IntervalCalculator
 #define ROOSTATS_IntervalCalculator
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-IntervalCalculator is an interface class for a tools which produce RooStats ConfIntervals.  
-The interface currently assumes that any interval calculator can be configured by specifying:
-<ul>
- <li>a model,</li>
- <li>a data set, </li>
- <li>a set of parameters of interest,</li>
- <li>a set of nuisance parameters (eg. parameters on which the model depends, but are not of interest), and </li>
- <li>a confidence level or size of the test (eg. rate of Type I error).</li>
-</ul>
-The interface allows one to pass the model, data, and parameters via a workspace and then specify them with names.
-The interface will be extended so that one does not need to use a workspace.
-</p>
-<p>
+
+/**
+
+\class IntervalCalculator
+
+\ingroup Roostats
+
+IntervalCalculator is an interface class for a tools which produce RooStats ConfIntervals. The interface currently assumes that any interval calculator can be configured by specifying:
+
+*   a model,
+*   a data set,
+*   a set of parameters of interest,
+*   a set of nuisance parameters (eg. parameters on which the model depends, but are not of interest), and
+*   a confidence level or size of the test (eg. rate of Type I error).
+
+The interface allows one to pass the model, data, and parameters via a workspace and then specify them with names. The interface will be extended so that one does not need to use a workspace.
+
 After configuring the calculator, one only needs to ask GetInterval, which will return a ConfInterval pointer.
-</p>
-<p>
-The concrete implementations of this interface should deal with the details of how the nuisance parameters are
-dealt with (eg. integration vs. profiling) and which test-statistic is used (perhaps this should be added to the interface).
-</p>
-<p>
-The motivation for this interface is that we hope to be able to specify the problem in a common way for several concrete calculators.
-</p>
-END_HTML
+
+The concrete implementations of this interface should deal with the details of how the nuisance parameters are dealt with (eg. integration vs. profiling) and which test-statistic is used (perhaps this should be added to the interface).
+
+The motivation for this interface is that we hope to be able to specify the problem in a common way for several concrete calculators.END_HTML
+
 */
-//
+
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"

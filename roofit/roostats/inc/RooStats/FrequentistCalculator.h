@@ -11,17 +11,6 @@
 #ifndef ROOSTATS_FrequentistCalculator
 #define ROOSTATS_FrequentistCalculator
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-The use of ToyMCSampler as the TestStatSampler is assumed.
-</p>
-END_HTML
-*/
-//
-
-
 
 #ifndef ROOSTATS_HypoTestCalculatorGeneric
 #include "RooStats/HypoTestCalculatorGeneric.h"
@@ -36,6 +25,16 @@ END_HTML
 #endif
 
 #include "RooFitResult.h"
+
+
+/**
+   Hypothesis Test Calculator using a full frequentist procedure for sampling the 
+   test statistic distribution.
+   The use of ToyMCSampler as the TestStatSampler is assumed.
+
+   \ingroup Roostats
+*/
+
 
 namespace RooStats {
 

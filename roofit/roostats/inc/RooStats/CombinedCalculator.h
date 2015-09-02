@@ -41,35 +41,30 @@
 // #endif
 
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-CombinedCalculator is an interface class for a tools which can produce both RooStats HypoTestResults and ConfIntervals.  
-The interface currently assumes that any such calculator can be configured by specifying:
-<ul>
- <li>a model common model (eg. a family of specific models which includes both the null and alternate),</li>
- <li>a data set, </li>
- <li>a set of parameters of which specify the null (including values and const/non-const status), </li>
- <li>a set of parameters of which specify the alternate (including values and const/non-const status),</li>
- <li>a set of parameters of nuisance parameters  (including values and const/non-const status).</li>
-</ul>
-The interface allows one to pass the model, data, and parameters via a workspace and then specify them with names.
-The interface also allows one to pass the model, data, and parameters without a workspace (which is created internally).
-</p>
-<p>
+/**
+   \class CombinedCalculator
+
+   \ingroup Roostats
+
+CombinedCalculator is an interface class for a tools which can produce both RooStats HypoTestResults and ConfIntervals. The interface currently assumes that any such calculator can be configured by specifying:
+
+*   a model common model (eg. a family of specific models which includes both the null and alternate),
+*   a data set,
+*   a set of parameters of which specify the null (including values and const/non-const status),
+*   a set of parameters of which specify the alternate (including values and const/non-const status),
+*   a set of parameters of nuisance parameters (including values and const/non-const status).
+
+The interface allows one to pass the model, data, and parameters via a workspace and then specify them with names. The interface also allows one to pass the model, data, and parameters without a workspace (which is created internally).
+
 After configuring the calculator, one only needs to ask GetHypoTest() (which will return a HypoTestResult pointer) or GetInterval() (which will return an ConfInterval pointer).
-</p>
-<p>
-The concrete implementations of this interface should deal with the details of how the nuisance parameters are
-dealt with (eg. integration vs. profiling) and which test-statistic is used (perhaps this should be added to the interface).
-</p>
-<p>
+
+The concrete implementations of this interface should deal with the details of how the nuisance parameters are dealt with (eg. integration vs. profiling) and which test-statistic is used (perhaps this should be added to the interface).
+
 The motivation for this interface is that we hope to be able to specify the problem in a common way for several concrete calculators.
-</p>
-END_HTML
+
+
 */
-//
+
 
 namespace RooStats {
 

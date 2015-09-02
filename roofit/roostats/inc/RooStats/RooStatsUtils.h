@@ -33,6 +33,25 @@
 #include "RooDataSet.h"
 
 
+/**
+
+\defgroup Roostats RooStats 
+
+%RooStats is a package containing statistical tools built on top of %RooFit. 
+See the %RooStats (Twiki Page)[https://twiki.cern.ch/twiki/bin/view/RooStats/WebHome] for more information. 
+*/
+
+/**
+
+\namespace RooStats Namespace for the RooStats classes
+
+All the classes of the %RooStats package are in the RooStats namespace. 
+In addition the namespace contain a set of utility functions.
+
+\ingroup Roostats
+
+ */
+
 namespace RooStats {
 
 

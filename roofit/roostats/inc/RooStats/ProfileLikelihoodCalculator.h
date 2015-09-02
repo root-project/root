@@ -17,6 +17,20 @@
 
 #include "RooStats/LikelihoodInterval.h"
 
+
+/**
+
+   Hypothesis test and Interval calculator using the profile likelihood function. 
+   The calculator can work with both one-dimensional intervals or multi-dimensional ones (contours)
+   It is based on the same method used by MINOS (the algorithm contained in Minuit). 
+
+   In addition it can be used to perform an hypothesis test and compute the p-value for the null hypothesis.
+   This can be done better with the RooStats::AsymptoricCalculator which can compute in addition the expected p-value. 
+
+
+   \ingroup Roostats
+ */
+
 namespace RooStats {
    
    class LikelihoodInterval; 

@@ -11,17 +11,6 @@
 #ifndef ROOSTATS_AsymptoticCalculator
 #define ROOSTATS_AsymptoticCalculator
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-Calculator based on Asymptotic formula, 
- on the ProfileLikelihood and the Asimov data set
-</p>
-END_HTML
-*/
-//
-
 
 
 #ifndef ROOSTATS_HypoTestCalculatorGeneric
@@ -34,6 +23,23 @@ class RooProdPdf;
 
 
 namespace RooStats {
+
+/**
+
+  Hypothesis Test Calculator based on the asymptotic formulae for the profile 
+  likelihood ratio, 
+  see G. Cowan, K. Cranmer, E. Gross and O. Vitells: Asymptotic formulae for likelihood- based tests of new physics. Eur. Phys. J., C71:1–19, 2011.
+  It provides method to perform an hypothesis tests using the likelihood function 
+  and computes the p values for the null and the alternate using the asymptotic
+  formulae for the profile likelihood ratio described in the given paper. 
+  The calculator provides methojds to produce the Asimov dataset, i.e a dataset generated where the observade values are equal to the expected ones. 
+  The Asimov data set is then used to compute the observed asymptotic p-value for the alternate hypothesis and the asympotic expected p-values.
+  The asymptotic formulae are valid only for one POI (parameter of interest). So the calculator works only for one-dimesional (one POI) model. 
+   If more than one POI exists consider as POI only the first one is used.                                                                                       
+
+   \ingroup Roostats
+*/
+
 
    class AsymptoticCalculator : public HypoTestCalculatorGeneric {
 
