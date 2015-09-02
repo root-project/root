@@ -6,7 +6,9 @@ import tempfile
 import itertools
 import re
 import fnmatch
+from hashlib import sha1
 from contextlib import contextmanager
+from subprocess import check_output
 from IPython import get_ipython
 from IPython.display import HTML
 from IPython.core.extensions import ExtensionManager
@@ -157,7 +159,6 @@ def processCppCode(code):
 def declareCppCode(code):
     declareCppCodeImpl(code)
 
-from subprocess import check_output
 def _invokeAclicMac(fileName):
     '''FIXME!
     This function is a workaround. On osx, it is impossible to link against
@@ -177,7 +178,28 @@ def _invokeAclicMac(fileName):
     libNameBase = fileName.replace(".C","_C")
     ROOT.gSystem.Load(libNameBase)
 
-def invokeAclic(fileName):
+def _codeToFilename(code):
+    '''Convert code to a unique file name
+
+    >>> _codeToFilename("int f(i){return i*i;}")
+    'dbf7e731.C'
+    '''
+    fileNameBase = sha1(code).hexdigest()[0:8]
+    return fileNameBase + ".C"
+
+def _dumpToUniqueFile(code):
+    '''Dump code to file whose name is unique
+
+    >>> _codeToFilename("int f(i){return i*i;}")
+    'dbf7e731.C'
+    '''
+    fileName = _codeToFilename(code)
+    with open (fileName,'w') as ofile:
+      ofile.write(code)
+    return fileName
+
+def invokeAclic(cell):
+    fileName = _dumpToUniqueFile(cell)
     if _getPlatform() == 'darwin':
         _invokeAclicMac(fileName)
     else:

@@ -14,15 +14,33 @@ class CppTransformer(InputTransformer):
     def __init__(self):
         self.cell = ""
         self.mustSwitchToPython = False
-        self.mustDeclare = False
+        self.runAsDecl = False
+        self.runAsAclic = False
+        self.runAsBash = False
 
     def push(self, line):
+        '''
+        >>> import ROOT
+        >>> t = CppTransformer()
+        >>> t.push("int i=3;")
+        >>> t.reset()
+        >>> ROOT.i
+        3
+        >>> t.push('.cpp -d')
+        >>> t.push('int f(int i){return i+i;}')
+        >>> t.reset()
+
+        '''
         # FIXME: must be in a single line
         fcnName="toPython()"
         if line == "%s;"%fcnName or line == fcnName:
             self.mustSwitchToPython = True
-        elif line == ".dcl" and self.cell == "":
-            self.mustDeclare = True
+        elif line == ".cpp -d" and self.cell == "":
+            self.runAsDecl = True
+        elif line == ".cpp -a" and self.cell == "":
+            self.runAsAclic = True
+        elif line == ".bash" and self.cell == "":
+            self.runAsBash = True
         else:
             line+="\n"
             self.cell += line
@@ -30,9 +48,12 @@ class CppTransformer(InputTransformer):
 
     def reset(self):
         if self.cell != "":
-            if self.mustDeclare:
+            if self.runAsDecl:
                 utils.declareCppCode(self.cell)
-                self.mustDeclare = False
+                self.runAsDecl = False
+            elif self.runAsAclic:
+                utils.invokeAclic(self.cell)
+                self.runAsAclic = False
             else:
                 utils.processCppCode(self.cell)
             self.cell = ""
@@ -54,3 +75,14 @@ def unload_ipython_extension(ipython):
 def load_ipython_extension(ipython):
     ipython.input_splitter.logical_line_transforms.insert(0,_transformer)
     ipython.input_transformer_manager.logical_line_transforms.insert(0,_transformer)
+        #>>> code =""".cpp -a\n
+        #... class A{public: A(){cout << "A ctor\n";}};\n
+        #... int i=3;\n
+        #... """
+        #>>> for l in code.split('\n'):
+        #...     t.push(l)
+        #>>> t.reset()
+        #>>> ROOT.A()
+        #>>> t.push('.cpp -d\n')
+        #>>> t.push('int f(int i){return i+i;}\n')
+        #>>> t.reset()
