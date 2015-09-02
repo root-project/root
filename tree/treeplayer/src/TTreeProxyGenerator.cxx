@@ -1733,7 +1733,8 @@ namespace Internal {
       fprintf(hf,"#include <TBranchProxyDirector.h>\n");
       fprintf(hf,"#include <TBranchProxyTemplate.h>\n");
       fprintf(hf,"#include <TFriendProxy.h>\n");
-      fprintf(hf,"using namespace ROOT;\n"); // questionable
+      fprintf(hf,"using namespace ROOT::Internal;\n"); // questionable
+      fprintf(hf,"using ROOT::Detail::TBranchProxy;\n"); // questionable
       fprintf(hf,"\n");
 
       fprintf(hf,"// forward declarations needed by this particular proxy\n");

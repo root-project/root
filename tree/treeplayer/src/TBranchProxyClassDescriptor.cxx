@@ -367,7 +367,7 @@ namespace Internal {
 
 
       // Declare the data members.
-      fprintf(hf,"%-*s%-*s %s;\n",  offset+3," ",  fMaxDatamemberType, "ROOT:::Internal::TBranchProxyHelper", "ffPrefix");
+      fprintf(hf,"%-*s%-*s %s;\n",  offset+3," ",  fMaxDatamemberType, "ROOT::Internal::TBranchProxyHelper", "ffPrefix");
 
       // If the real class is available, make it available via the arrow operator:
       if (IsLoaded()) {

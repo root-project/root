@@ -17,7 +17,7 @@
 #endif
 
 #define InjecTBranchProxyInterface()                     \
-   Detail::TBranchProxy *GetProxy() { return obj.GetProxy(); }   \
+   ROOT::Detail::TBranchProxy *GetProxy() { return obj.GetProxy(); }   \
    void Reset() { obj.Reset(); }                         \
    bool Setup() { return obj.Setup(); }                  \
    bool IsInitialized() { return obj.IsInitialized(); }  \
