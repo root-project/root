@@ -827,6 +827,10 @@ namespace Internal {
    typedef TStlArrayProxy<TArrayType<Bool_t> >      TStlArrayBoolProxy;     // Concrete Implementation of the branch proxy around an stl container of bool
 
 } // namespace Internal
+
+// Reasonably backward compatible.
+using Detail::TBranchProxy;
+
 } // namespace ROOT
 
 #endif
