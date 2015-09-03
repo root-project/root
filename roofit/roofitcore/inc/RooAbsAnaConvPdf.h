@@ -69,6 +69,8 @@ public:
 
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ;
     
+  virtual void setCacheAndTrackHints(RooArgSet&) ;
+
 protected:
   Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const TNamed* rangeName) const ;
 
