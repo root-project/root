@@ -1,9 +1,10 @@
 /**
 
-The %ROOT Mathematical Libraries.
-See the \subpage MathPage "Mathematical Libraries" description page.
-
 \defgroup Math Math 
+
+\brief The %ROOT Mathematical Libraries.
+
+See the \subpage MathPage "Mathematical Libraries" description page.
 
 
 \page MathPage The ROOT Mathematical Libraries 
