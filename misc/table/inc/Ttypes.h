@@ -151,9 +151,9 @@ namespace Internal {
    template <class T> const char * TTableInitBehavior<T >::fgStructName = 0;
 
    template <class RootClass>
-      const ROOT::TTableInitBehavior<RootClass> *DefineBehavior(TTable*, RootClass*)
+      const TTableInitBehavior<RootClass> *DefineBehavior(TTable*, RootClass*)
       {
-         static ROOT::TTableInitBehavior<RootClass> behave;
+         static TTableInitBehavior<RootClass> behave;
          return &behave;
       }
 }
