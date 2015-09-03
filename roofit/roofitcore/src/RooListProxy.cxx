@@ -55,7 +55,6 @@ RooListProxy::RooListProxy(const char* inName, const char* /*desc*/, RooAbsArg* 
   // by the defValueServer and defShapeServer flags.
 
   _owner->registerProxy(*this) ;
-  _iter = createIterator() ;
 }
 
 
@@ -70,7 +69,6 @@ RooListProxy::RooListProxy(const char* inName, RooAbsArg* owner, const RooListPr
   // reference to list proxy to be copied
 
   _owner->registerProxy(*this) ;
-  _iter = createIterator() ;
 }
 
 
@@ -81,7 +79,6 @@ RooListProxy::~RooListProxy()
   // Destructor
 
   if (_owner) _owner->unRegisterProxy(*this) ;
-  delete _iter ;
 }
 
 
@@ -159,12 +156,11 @@ void RooListProxy::removeAll()
 {
   // Reimplementation of standard RooArgList::removeAll()
 
-  TIterator* iter = createIterator() ;
+  RooFIter iter = fwdIterator();
   RooAbsArg* arg ;
-  while ((arg=(RooAbsArg*)iter->Next())) {
+  while ((arg=(RooAbsArg*)iter.next())) {
     _owner->removeServer(*arg) ;
   }
-  delete iter ;
 
   RooArgList::removeAll() ;
 }
@@ -193,22 +189,21 @@ Bool_t RooListProxy::changePointer(const RooAbsCollection& newServerList, Bool_t
 
   if (getSize()==0) {
     if (factoryInitMode) {
-      TIterator* iter = newServerList.createIterator() ;
+      RooFIter iter = newServerList.fwdIterator() ;
       RooAbsArg* arg ;
-      while((arg=(RooAbsArg*)iter->Next())) {
+      while((arg=(RooAbsArg*)iter.next())) {
 	if (arg!=_owner) {
 	  add(*arg,kTRUE) ;
 	}
       }
-      delete iter ;
     } else {
       return kTRUE ;	
     }
   }
-  _iter->Reset() ;
+  RooFIter iter = fwdIterator();
   RooAbsArg* arg ;
   Bool_t error(kFALSE) ;
-  while ((arg=(RooAbsArg*)_iter->Next())) {
+  while ((arg=(RooAbsArg*)iter.next())) {
     
     RooAbsArg* newArg= arg->findNewServer(newServerList, nameChange);
     if (newArg && newArg!=_owner) error |= !RooArgList::replace(*arg,*newArg) ;
@@ -228,10 +223,10 @@ void RooListProxy::print(ostream& os, Bool_t addContents) const
     os << name() << "=" ; printStream(os,kValue,kInline) ; 
   } else {
     os << name() << "=(" ;
-    TIterator* iter = createIterator() ;
+    RooFIter iter = fwdIterator() ;
     RooAbsArg* arg ;
     Bool_t first2(kTRUE) ;
-    while ((arg=(RooAbsArg*)iter->Next())) {
+    while ((arg=(RooAbsArg*)iter.next())) {
       if (first2) {
 	first2 = kFALSE ;
       } else {
@@ -240,6 +235,5 @@ void RooListProxy::print(ostream& os, Bool_t addContents) const
       arg->printStream(os,kValue|kName,kInline) ;
     }
     os << ")" ;
-    delete iter ;
   }
 }
