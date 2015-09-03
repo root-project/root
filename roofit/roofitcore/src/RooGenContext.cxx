@@ -237,21 +237,30 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     _acceptRejectFunc= (RooRealIntegral*) _pdfClone->createIntegral(*depList,vars) ;
     cxcoutI(Generation) << "RooGenContext::ctor() accept/reject sampling function is " << _acceptRejectFunc->GetName() << endl ;
     
-    if (_directVars.getSize()==0)  {
-      
-      // Check if PDF supports maximum finding
-      Int_t maxFindCode = _pdfClone->getMaxVal(_otherVars) ;
+    // Check if PDF supports maximum finding for the entire phase space
+    RooArgSet allVars(_otherVars);
+    allVars.add(_directVars);
+    Int_t maxFindCode = _pdfClone->getMaxVal(allVars) ;
+    if (maxFindCode != 0) {
+      // Special case: PDF supports max-finding in otherVars, no need to scan other+proto space for maximum
+      coutI(Generation) << "RooGenContext::ctor() prototype data provided, and "
+                        << "model supports analytical maximum finding in the full phase space: " 
+                        << "can provide analytical pdf maximum to numeric generator" << endl ;
+      _maxVar = new RooRealVar("funcMax","function maximum",_pdfClone->maxVal(maxFindCode)) ;
+    } else {
+      maxFindCode = _pdfClone->getMaxVal(_otherVars) ;
       if (maxFindCode != 0) {
-	
-	// Special case: PDF supports max-finding in otherVars, no need to scan other+proto space for maximum
-	coutI(Generation) << "RooGenContext::ctor() prototype data provided, all observables are generated numerically and "
-			    << "model supports analytical maximum finding: can provide analytical pdf maximum to numeric generator" << endl ;
-	_maxVar = new RooRealVar("funcMax","function maximum",1) ;
-	_updateFMaxPerEvent = maxFindCode ;
-	cxcoutD(Generation) << "RooGenContext::ctor() maximum value must be reevaluated for each event with configuration code " << maxFindCode << endl ;
+         _updateFMaxPerEvent = maxFindCode ;
+         coutI(Generation) << "RooGenContext::ctor() prototype data provided, and "
+                           << "model supports analytical maximum finding in the variables which are not"
+                           << " internally generated. Can provide analytical pdf maximum to numeric "
+                           << "generator" << endl;
+         cxcoutD(Generation) << "RooGenContext::ctor() maximum value must be reevaluated for each "
+                             << "event with configuration code " << maxFindCode << endl ;
+         _maxVar = new RooRealVar("funcMax","function maximum",1) ;    
       }
     }
-    
+
     if (!_maxVar) {
       
       // Regular case: First find maximum in other+proto space
