@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBuffer                                                              //
-//                                                                      //
-// Buffer base class used for serializing objects.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBuffer
+Buffer base class used for serializing objects.
+*/
 
 #include "TBuffer.h"
 #include "TClass.h"
@@ -84,6 +80,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 /// TBuffer::kInitialSize (1024) bytes. An external buffer can be passed
 /// to TBuffer via the buf argument. By default this buffer will be adopted
 /// unless adopt is false.
+///
 /// If the new buffer is _not_ adopted and no memory allocation routine
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
