@@ -1718,11 +1718,9 @@ namespace Internal {
       fprintf(hf,"\n");
 
 
-      fprintf(hf,"// System Headers needed by the proxy\n");
-      fprintf(hf,"#if defined(__CINT__) && !defined(__MAKECINT__)\n");
-      fprintf(hf,"   #define ROOT_Rtypes\n");
-      fprintf(hf,"   #define ROOT_TError\n");
-      fprintf(hf,"#endif\n");
+      // Interface versioning
+      fprintf(hf,"#define R__BRANCHPROXY_GENERATOR_VERSION 2\n\n");
+      fprintf(hf,"// ROOT headers needed by the proxy\n");
       fprintf(hf,"#include <TROOT.h>\n");
       fprintf(hf,"#include <TChain.h>\n");
       fprintf(hf,"#include <TFile.h>\n");

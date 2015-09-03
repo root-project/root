@@ -12,7 +12,14 @@
 #ifndef ROOT_TBranchProxyTemplate
 #define ROOT_TBranchProxyTemplate
 
-#if !defined(__CINT__) || defined(__MAKECINT__)
+#if !defined(__ROOTCLING__) && !defined(G__DICTIONARY)
+# if R__BRANCHPROXY_GENERATOR_VERSION != 2
+// Generated source and branch proxy interface are out of sync.
+#  error "Please regenerate this file using TTree::MakeProxy()!"
+# endif
+#endif
+
+#ifndef ROOT_TBranchProxy
 #include "TBranchProxy.h"
 #endif
 
