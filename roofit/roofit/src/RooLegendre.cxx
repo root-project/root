@@ -100,11 +100,15 @@ Double_t RooLegendre::evaluate() const
 
 //_____________________________________________________________________________
 namespace {
-    bool fullRange(const RooRealProxy& x ,const char* range) 
-    { return range==0 || strlen(range)==0 
-          || ( x.min(range) == x.min() && x.max(range) == x.max() ) ; 
-    }
+  Bool_t fullRange(const RooRealProxy& x ,const char* range)
+  {
+    return range == 0 || strlen(range) == 0
+        ? std::fabs(x.min() + 1.) < 1.e-8 && std::fabs(x.max() - 1.) < 1.e-8
+        : std::fabs(x.min(range) + 1.) < 1.e-8 && std::fabs(x.max(range) - 1.) < 1.e-8;
+  }
 }
+
+//_____________________________________________________________________________
 Int_t RooLegendre::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   // don't support indefinite integrals...
