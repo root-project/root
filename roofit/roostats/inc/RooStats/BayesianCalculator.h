@@ -34,15 +34,45 @@ class RooAbsReal;
 class TF1;
 
 /**
+
+   BayesianCalculator is a concrete implementation of IntervalCalculator, providing the computation 
+   of a credible interval using a Bayesian method. 
+   The class works only for one single parameter of interest and it integrates the likelihood function with the given prior
+   probability density function to compute the posterior probability. The result of the class is a one dimensional interval 
+   (class SimpleInterval ), which is obtained from inverting the cumulative posterior distribution. 
+   This calculator works then only for model with a single parameter of interest. 
+   The model can instead have several nuisance parameters which are integrated (marginalized) in the computation of the posterior function. 
+   The intergration and normalization of the posterior is computed using numerical integration methods provided by ROOT. 
+   See the MCMCCalculator for model with multiple parameters of interest. 
+
+   The interface allows one to construct the class by passing the data set, probability density function for the model, the prior
+   functions and then the parameter of interest to scan. The nuisance parameters can also be passed to be marginalized when 
+   computing the posterior. Alternatively, the class can be constructed by passing the data and the ModelConfig containing
+   all the needed information (model pdf, prior pdf, parameter of interest, nuisance parameters, etc..)
+
+   After configuring the calculator, one only needs to ask GetInterval(), which
+   will return an SimpleInterval object. By default the extrem of the integral are obtained by inverting directly the
+   cumulative posterior distribution. By using the method SetScanOfPosterior(nbins) the interval is then obtained by 
+   scanning  the posterior function in the given number of points. The firts method is in general faster but it requires an
+   integration one extra dimension  ( in the poi in addition to the nuisance parameters), therefore in some case it can be
+   less robust.   
+
+   The class can also return the posterior function (method GetPosteriorFunction) or if needed the normalized
+   posterior function (the posterior pdf) (method GetPosteriorPdf). A posterior plot is also obtained using 
+   the GetPosteriorPlot method.
+
+   The class allows to use different integration methods for integrating in (marginalizing) the nuisances and in the poi. All the numerical 
+   integration methods of ROOT can be used via the method SetIntegrationType (see more in the documentation of
+   this method).
+
    Calculator estimating a credible interval using the Bayesian procedure.
    The calculator computes given the model the posterior distribution and estimates the 
    credible interval from the given function. 
-   This calculator works for model with a single parameter of interest. The model can instead have several nuisance parameters 
-   which are integrated (marginalized) in the computation of the posterior function. 
-   The intergration and normalization of the posterior is computed using numerical integration methods provided by ROOT. 
+ 
 
    \ingroup Roostats
- */
+
+*/
 
 
 namespace RooStats {

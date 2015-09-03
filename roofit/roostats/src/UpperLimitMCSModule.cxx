@@ -10,15 +10,13 @@
 
 
 
+/**
+   \class UpperLimitMCSModule
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// This modules allow to compute in the ToyMcStudy framework the ProfileLikelihood upper limit for each toy-MC sample generated
+ This class allow to compute in the ToyMcStudy framework the ProfileLikelihood upper limit for each toy-MC sample generated
 
-// END_HTML
-//
-//
+*/
+
 
 #include "Riostream.h"
 

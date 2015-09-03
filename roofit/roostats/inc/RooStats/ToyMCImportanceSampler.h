@@ -12,22 +12,19 @@
 #ifndef ROOSTATS_ToyMCImportanceSampler
 #define ROOSTATS_ToyMCImportanceSampler
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-ToyMCImportanceSampler is an extension of the ToyMCSampler for Importance Sampling.
-</p>
-
-<p>
-Implementation based on:
-   Cranmer, Kreiss, Read (in Preparation)
-</p>
-END_HTML
-*/
-//
 
 #include "RooStats/ToyMCSampler.h"
+
+/**
+
+ToyMCImportanceSampler is an extension of the ToyMCSampler for Importance Sampling.
+
+Implementation based on a work by   Cranmer, Kreiss, Read (in Preparation)
+
+\ingroup Roostats
+
+*/
+
 
 namespace RooStats {
 

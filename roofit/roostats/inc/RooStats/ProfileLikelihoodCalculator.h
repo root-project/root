@@ -20,12 +20,23 @@
 
 /**
 
-   Hypothesis test and Interval calculator using the profile likelihood function. 
-   The calculator can work with both one-dimensional intervals or multi-dimensional ones (contours)
-   It is based on the same method used by MINOS (the algorithm contained in Minuit). 
+ProfileLikelihoodCalculator is a concrete implementation of CombinedCalculator (the interface class for a tools which can produce both RooStats HypoTestResults and ConfIntervals).
+The tool uses the profile likelihood ratio as a test statistic, and assumes that Wilks' theorem is valid. Wilks' theorem states that -2* log (profile likelihood ratio) is asymptotically distributed as a chi^2 distribution with N-dof, where N is the number of degrees of freedom. Thus, p-values can be constructed and the profile likelihood ratio can be used to construct a LikelihoodInterval. (In the future, this class could be extended to use toy Monte Carlo to calibrate the distribution of the test statistic).
 
-   In addition it can be used to perform an hypothesis test and compute the p-value for the null hypothesis.
-   This can be done better with the RooStats::AsymptoricCalculator which can compute in addition the expected p-value. 
+Usage: It uses the interface of the CombinedCalculator, so that it can be configured by specifying:
+
+*   a model common model (eg. a family of specific models which includes both the null and alternate),
+*   a data set,
+*   a set of parameters of interest. The nuisance parameters will be all other parameters of the model
+*   a set of parameters of which specify the null hypothesis (including values and const/non-const status)
+
+The interface allows one to pass the model, data, and parameters either directly or via a ModelConfig class. The alternate hypothesis leaves the parameter free to take any value other than those specified by the null hypotesis. There is therefore no need to specify the alternate parameters.
+
+After configuring the calculator, one only needs to ask GetHypoTest() (which will return a HypoTestResult pointer) or GetInterval() (which will return an ConfInterval pointer).
+
+   This calculator can work with both one-dimensional intervals or multi-dimensional ones (contours)
+
+   Note that for hypothesis tests, it is oftern better to use the RooStats::AsymptoricCalculator class, which can compute in addition the expected p-value using an Asimov data set. 
 
 
    \ingroup Roostats
@@ -39,10 +50,10 @@ namespace RooStats {
 
    public:
 
-      // default constructor (needed for I/O)
+      /// Default constructor (needed for I/O)
       ProfileLikelihoodCalculator();
 
-      /// constructor from data, from a full model pdf describing both parameter of interest and nuisance parameters 
+      /// Constructor from data, from a full model pdf describing both parameter of interest and nuisance parameters 
       /// and from the set specifying the parameter of interest (POI).
       /// There is no need to specify the nuisance parameters since they are all other parameters of the model. 
       /// When using the calculator for performing an hypothesis test one needs to provide also a snapshot (a copy) 
@@ -52,7 +63,7 @@ namespace RooStats {
                                   Double_t size = 0.05, const RooArgSet* nullParams = 0 );
 
 
-      /// constructor from data and a model configuration
+      /// Constructor from data and a model configuration
       /// If the ModelConfig defines a prior pdf for any of the parameters those will be included as constrained terms in the 
       /// likelihood function 
       ProfileLikelihoodCalculator(RooAbsData& data, ModelConfig & model, Double_t size = 0.05);

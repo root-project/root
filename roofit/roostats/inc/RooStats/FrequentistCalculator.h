@@ -30,6 +30,7 @@
 /**
    Hypothesis Test Calculator using a full frequentist procedure for sampling the 
    test statistic distribution.
+   The nuisance parameters are fixed to their MLEs.
    The use of ToyMCSampler as the TestStatSampler is assumed.
 
    \ingroup Roostats

@@ -11,40 +11,39 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-This class uses the Metropolis-Hastings algorithm to construct a Markov Chain
-of data points using Monte Carlo. In the main algorithm, new points in the
-parameter space are proposed and then visited based on their relative
-likelihoods.  This class can use any implementation of the ProposalFunction,
-including non-symmetric proposal functions, to propose parameter points and
-still maintain detailed balance when constructing the chain.
-</p>
+/**
 
-<p>
-The "Likelihood" function that is sampled when deciding what steps to take in
-the chain has been given a very generic implementation.  The user can create
-any RooAbsReal based on the parameters and pass it to a MetropolisHastings
-object with the method SetFunction(RooAbsReal&).  Be sure to tell
-MetropolisHastings whether your RooAbsReal is on a (+/-) regular or log scale,
-so that it knows what logic to use when sampling your RooAbsReal.  For example,
-a common use is to sample from a -log(Likelihood) distribution (NLL), for which
-the appropriate configuration calls are SetType(MetropolisHastings::kLog);
-SetSign(MetropolisHastings::kNegative);
-If you're using a traditional likelihood function:
-SetType(MetropolisHastings::kRegular);  SetSign(MetropolisHastings::kPositive);
-You must set these type and sign flags or MetropolisHastings will not construct
-a MarkovChain.
-</p>
+   \class MetropolisHastings
+   \ingroup Roostats
 
-<p>
-Also note that in ConstructChain(), the values of the variables are randomized
-uniformly over their intervals before construction of the MarkovChain begins.
-</p>
-END_HTML
+   This class uses the Metropolis-Hastings algorithm to construct a Markov Chain
+   of data points using Monte Carlo. In the main algorithm, new points in the
+   parameter space are proposed and then visited based on their relative
+   likelihoods.  This class can use any implementation of the ProposalFunction,
+   including non-symmetric proposal functions, to propose parameter points and
+   still maintain detailed balance when constructing the chain.
+
+
+
+   The "Likelihood" function that is sampled when deciding what steps to take in
+   the chain has been given a very generic implementation.  The user can create
+   any RooAbsReal based on the parameters and pass it to a MetropolisHastings
+   object with the method SetFunction(RooAbsReal&).  Be sure to tell
+   MetropolisHastings whether your RooAbsReal is on a (+/-) regular or log scale,
+   so that it knows what logic to use when sampling your RooAbsReal.  For example,
+   a common use is to sample from a -log(Likelihood) distribution (NLL), for which
+   the appropriate configuration calls are SetType(MetropolisHastings::kLog);
+   SetSign(MetropolisHastings::kNegative);
+   If you're using a traditional likelihood function:
+   SetType(MetropolisHastings::kRegular);  SetSign(MetropolisHastings::kPositive);
+   You must set these type and sign flags or MetropolisHastings will not construct
+   a MarkovChain.
+
+   Also note that in ConstructChain(), the values of the variables are randomized
+   uniformly over their intervals before construction of the MarkovChain begins.
+   
 */
-//_________________________________________________
+
 
 #ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"

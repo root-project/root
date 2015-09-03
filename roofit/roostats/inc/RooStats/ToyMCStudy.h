@@ -11,17 +11,8 @@
 #ifndef ROOSTATS_ToyMCStudy
 #define ROOSTATS_ToyMCStudy
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-ToyMCStudy is an implementation of RooAbsStudy for toy Monte Carlo sampling.
-This class is automatically used by ToyMCSampler when given a ProofConfig.
-This is also its intended use case.
-</p>
-END_HTML
-*/
-//
+
+
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -40,6 +31,17 @@ END_HTML
 #include "RooLinkedListIter.h"
 
 #include <vector>
+
+/**
+
+ToyMCStudy is an implementation of RooAbsStudy for toy Monte Carlo sampling.
+This class is automatically used by ToyMCSampler when given a ProofConfig.
+This is also its intended use case.
+
+\ingroup Roostats
+
+*/
+
 
 namespace RooStats {
 

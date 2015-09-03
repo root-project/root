@@ -13,23 +13,6 @@
 #ifndef ROOSTATS_ToyMCSampler
 #define ROOSTATS_ToyMCSampler
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-ToyMCSampler is an implementation of the TestStatSampler interface.
-It generates Toy Monte Carlo for a given parameter point and evaluates a
-TestStatistic.
-</p>
-
-<p>
-For parallel runs, ToyMCSampler can be given an instance of ProofConfig
-and then run in parallel using proof or proof-lite. Internally, it uses
-ToyMCStudy with the RooStudyManager.
-</p>
-END_HTML
-*/
-//
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -50,6 +33,21 @@ END_HTML
 #include "RooRealVar.h"
 
 #include "RooDataSet.h"
+
+
+/**
+
+ToyMCSampler is an implementation of the TestStatSampler interface.
+It generates Toy Monte Carlo for a given parameter point and evaluates a
+TestStatistic.
+
+For parallel runs, ToyMCSampler can be given an instance of ProofConfig
+and then run in parallel using proof or proof-lite. Internally, it uses
+ToyMCStudy with the RooStudyManager.
+
+\ingroup Roostats
+
+*/
 
 namespace RooStats {
 

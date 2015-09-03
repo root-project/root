@@ -11,16 +11,6 @@
 #ifndef ROOSTATS_TestStatSampler
 #define ROOSTATS_TestStatSampler
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-TestStatSampler is an interface class for a tools which produce RooStats SamplingDistributions.  
-Tools that implement this interface are expected to be used for coverage studies, the Neyman Construction, etc.
-</p>
-END_HTML
-*/
-//
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -30,6 +20,15 @@ class RooAbsArg;
 class RooAbsData; 
 class RooArgSet; 
 class RooAbsPdf;
+
+
+/**
+   TestStatSampler is an interface class for a tools which produce RooStats SamplingDistributions.  
+   Tools that implement this interface are expected to be used for coverage studies, the Neyman Construction, etc.
+   
+   \ingroup Roostats
+*/
+
 
 namespace RooStats {
 

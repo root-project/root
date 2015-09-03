@@ -11,19 +11,19 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
+/**
+
+   \class PdfProposal
+   \ingroup Roostats
+
 PdfProposal is a concrete implementation of the ProposalFunction interface.
 It proposes points across the parameter space in the distribution of the
 given PDF.
-</p>
-<p>
+
 To make Propose(xPrime, x) dependent on x, configure with
 PdfProposal::AddMapping(varToUpdate, valueToUse).  For example, suppose we have:
-</p>
 
-<p>
+````{.cpp}
 // our parameter
 RooRealVar p("p", "p", 5, 0, 10);
 
@@ -44,16 +44,13 @@ pdfProposal.AddMapping(meanP, p); // each call of Propose(xPrime, x), meanP in
 // number of proposals. If you don't call this function, the default cache size
 // is 1, which can be slow.
 pdfProposal.SetCacheSize(desiredCacheSize);
-</p>
+`````
 
-<p>
 PdfProposal currently uses a fixed cache size. Adaptive caching methods are in the works
 for future versions.
-</p>
 
-END_HTML
 */
-//_________________________________________________
+
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"

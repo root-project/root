@@ -11,16 +11,8 @@
 #ifndef ROOSTATS_SimpleLikelihoodRatioTestStat
 #define ROOSTATS_SimpleLikelihoodRatioTestStat
 
-//_________________________________________________
-/*
- BEGIN_HTML
- <p>
- SimpleLikelihoodRatioTestStat: TestStatistic that returns -log(L[null] / L[alt]) where
- L is the likelihood.
- </p>
- END_HTML
- */
-//
+
+
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -38,6 +30,16 @@
 #include "RooStats/TestStatistic.h"
 #endif
 
+/**
+
+ \class SimpleLikelihoodRatioTestStat
+ TestStatistic class that returns -log(L[null] / L[alt]) where
+ L is the likelihood.
+ It is denoted oftern as the LEP Test statistic.
+
+ \ingroup Roostats
+
+ */
 
 namespace RooStats {
 

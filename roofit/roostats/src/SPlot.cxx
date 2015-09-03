@@ -25,27 +25,30 @@
 
 
 
-//_________________________________________________
-//BEGIN_HTML
-// This class calculates sWeights used to create an sPlot.  
-// The code is based on 
-// ``SPlot: A statistical tool to unfold data distributions,'' 
-//  Nucl. Instrum. Meth. A 555, 356 (2005) 
-//  [arXiv:physics/0402083].
-//
-// An SPlot gives us  the distribution of some variable, x in our 
-// data sample for a given species (eg. signal or background).  
-// The result is similar to a likelihood projection plot, but no cuts are made, 
-//  so every event contributes to the distribution.
-//
-// [Usage]
-// To use this class, you first must have a pdf that includes
-// yields for (possibly several) different species.
-// Create an instance of the class by supplying a data set,
-// the pdf, and a list of the yield variables.  The SPlot Class
-// will calculate SWeights and include these as columns in the RooDataSet.
-//END_HTML
-//
+/**
+
+   \class SPlot
+   \ingroup Roostats
+
+   This class calculates sWeights used to create an sPlot.  
+   The code is based on 
+   ``SPlot: A statistical tool to unfold data distributions,'' 
+   Nucl. Instrum. Meth. A 555, 356 (2005) [arXiv:physics/0402083].
+
+   An SPlot gives us  the distribution of some variable, x in our 
+   data sample for a given species (eg. signal or background).  
+   The result is similar to a likelihood projection plot, but no cuts are made, 
+   so every event contributes to the distribution.
+
+To use this class, you first must have a pdf that includes
+yields for (possibly several) different species.
+Create an instance of the class by supplying a data set,
+the pdf, and a list of the yield variables.  The SPlot Class
+will calculate SWeights and include these as columns in the RooDataSet.
+
+
+*/
+
 
 #include <vector>
 #include <map>

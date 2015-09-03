@@ -46,7 +46,18 @@
    Bayesian Calculator estimating an interval or a credible region using the Markov-Chain Monte Carlo method to 
    integrate the likelihood function with the prior to obtain the posterior function. 
    
-   By using the Markov-CHain Monte Carlo methods this calculator can work with model which require the integration of a large number of parameters
+   By using the Markov-Chain Monte Carlo methods this calculator can work with model which require the integration of a large number of parameters.
+
+   MCMCCalculator is a concrete implementation of IntervalCalculator.  It uses a
+   MetropolisHastings object to construct a Markov Chain of data points in the
+   parameter space.  From this Markov Chain, this class can generate a
+   MCMCInterval as per user specification.
+   
+   The interface allows one to pass the model, data, and parameters via a
+   workspace and then specify them with names.
+
+   After configuring the calculator, one only needs to ask GetInterval(), which
+   will return an ConfInterval (MCMCInterval in this case).
 
    \ingroup Roostats
  */
