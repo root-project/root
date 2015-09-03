@@ -6341,14 +6341,6 @@ Sema::ActOnClassTemplateSpecialization(Scope *S, unsigned TagSpec,
   } else {
     // Create a new class template specialization declaration node for
     // this explicit specialization or friend declaration.
-    if (PrevDecl && !PrevDecl->isInvalidDecl()
-        && !PrevDecl->isCompleteDefinition()
-        && TUK != TUK_Friend) {
-        fprintf(stderr,"REUSING: ");
-        PrevDecl->dump();
-       Specialization = PrevDecl;
-    } else 
-
     Specialization
       = ClassTemplateSpecializationDecl::Create(Context, Kind,
                                              ClassTemplate->getDeclContext(),
@@ -6466,7 +6458,7 @@ Sema::ActOnClassTemplateSpecialization(Scope *S, unsigned TagSpec,
                                             /*FIXME:*/KWLoc);
     Friend->setAccess(AS_public);
     CurContext->addDecl(Friend);
-  } else if (Specialization != PrevDecl) {
+  } else {
     // Add the specialization into its lexical context, so that it can
     // be seen when iterating through the list of declarations in that
     // context. However, specializations are not found by name lookup.
