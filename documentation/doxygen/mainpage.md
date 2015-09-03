@@ -17,8 +17,8 @@ The fully indexed list of all source code is available under the tab [Files](fil
 
 ### %ROOT provides other types of documentation:
 
-- A general [Users Guide](http://root.cern.ch/node/69) is provided for a more in depth explanation of concepts and functionality available in the %ROOT system.
-- A number of topical [User Guides and Manuals](http://root.cern.ch/node/69) for various components of the system.
+- A general [Users Guide](http://root.cern.ch/root-user-guides-and-manuals) is provided for a more in depth explanation of concepts and functionality available in the %ROOT system. 
+- A number of topical [User Guides and Manuals](http://root.cern.ch/node/root-user-guides-and-manuals) for various components of the system.
 - A rich set of %ROOT [tutorials and code examples](http://root.cern.ch/node/2836) are offered to developers to exercise specific functionality.
 - A rich set of [HowTo's](http://root.cern.ch/node/2836) is also present to discuss issues commonly faced by %ROOT users.
 
