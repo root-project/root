@@ -167,7 +167,6 @@ protected:
   Double_t _cutOff ;       //  Cutoff parameter for running product
   RooListProxy _pdfList ;  //  List of PDF components
   RooLinkedList _pdfNSetList ; // List of PDF component normalization sets
-  TIterator* _pdfIter ;    //! Iterator of PDF list
   Int_t _extendedIndex ;   //  Index of extended PDF (if any) 
 
   void useDefaultGen(Bool_t flag=kTRUE) { _useDefaultGen = flag ; }
