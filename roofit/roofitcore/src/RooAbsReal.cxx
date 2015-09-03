@@ -2046,7 +2046,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   }
 
   // Create projection integral
-  RooArgSet* projectionCompList ;
+  RooArgSet* projectionCompList = 0 ;
 
   RooArgSet* deps = getObservables(frame->getNormVars()) ;
   deps->remove(projectedVars,kTRUE,kTRUE) ;
@@ -2224,7 +2224,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     }
 
     // add this new curve to the specified plot frame
-    frame->addPlotable(curve, o.drawOptions);
+    frame->addPlotable(curve, o.drawOptions, o.curveInvisible);
 
     if (projDataSel!=o.projData) delete projDataSel ;
        
@@ -3677,6 +3677,16 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
 	       << " message      : " << ee._msg << endl
 	       << " server values: " << ee._srvval << endl ;
   } else if (_evalErrorMode==CollectErrors) {
+    if (_evalErrorList[this].second.size() >= 2048) {
+       // avoid overflowing the error list, so if there are very many, print
+       // the oldest one first, and pop it off the list
+       const EvalError& oee = _evalErrorList[this].second.front();
+       coutE(Eval) << "RooAbsReal::logEvalError(" << GetName() << ") evaluation error, " << endl 
+                   << " origin       : " << oss2.str() << endl 
+                   << " message      : " << oee._msg << endl
+                   << " server values: " << oee._srvval << endl ;       
+       _evalErrorList[this].second.pop_front();
+    }
     _evalErrorList[this].first = oss2.str().c_str() ;
     _evalErrorList[this].second.push_back(ee) ;
   }
