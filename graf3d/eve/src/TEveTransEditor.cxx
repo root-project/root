@@ -50,7 +50,7 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    fUseTrans->Connect("Toggled(Bool_t)", "TEveTransSubEditor", this, "DoUseTrans()");
    fEditTrans = new TGCheckButton(fTopHorFrame, "EditTrans");
    fTopHorFrame->AddFrame(fEditTrans, new TGLayoutHints(kLHintsLeft, 2,1,0,0));
-   fEditTrans->Connect("Toggled(Bool_t)"," TEveTransSubEditor", this, "DoEditTrans()");
+   fEditTrans->Connect("Toggled(Bool_t)", "TEveTransSubEditor", this, "DoEditTrans()");
 
    AddFrame(fTopHorFrame, new TGLayoutHints(kLHintsTop, 0,0,2,1));
 

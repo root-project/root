@@ -95,7 +95,7 @@ TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
 
       fRnrPoints = new TGCheckButton(f, "Draw Marker");
       f->AddFrame(fRnrPoints, new TGLayoutHints(kLHintsLeft, 2,1,0,0));
-      fRnrPoints->Connect("Toggled(Bool_t)"," TEveTrackListEditor", this, "DoRnrPoints()");
+      fRnrPoints->Connect("Toggled(Bool_t)", "TEveTrackListEditor", this, "DoRnrPoints()");
 
       fRnrLine  = new TGCheckButton(f, "Draw Line");
       f->AddFrame(fRnrLine, new TGLayoutHints(kLHintsLeft, 1,2,0,0));
