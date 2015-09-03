@@ -32,6 +32,8 @@ class TBranchElement;
 class TLeaf;
 
 namespace ROOT {
+namespace Internal {
+
    // 0 for the general case, 1 when this a split clases inside a TClonesArray,
    // 2 when this is a split classes inside an STL container.
    enum ELocation { kOut=0, kClones, kSTL };
@@ -106,7 +108,6 @@ namespace ROOT {
       TTreeReaderGenerator(TTree* tree, const char *classname, Option_t *option);
    };
 }
-
-using ROOT::TTreeReaderGenerator;
+}
 
 #endif

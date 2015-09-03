@@ -19,6 +19,7 @@
 ClassImp(TSchemaRule)
 
 using namespace ROOT;
+using namespace ROOT::Detail;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -324,11 +325,11 @@ const TObjArray* TSchemaRuleSet::FindRules( const TString &source ) const
 /// Return all the rules that applies to the specified version of the given 'source' class.
 /// User has to delete the returned array
 
-const TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, Int_t version ) const
+const Internal::TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, Int_t version ) const
 {
    TObject*      obj;
    TObjArrayIter it( fAllRules );
-   TSchemaMatch* arr = new TSchemaMatch();
+   Internal::TSchemaMatch* arr = new Internal::TSchemaMatch();
    arr->SetOwner( kFALSE );
 
    while( (obj = it.Next()) ) {
@@ -349,11 +350,11 @@ const TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, Int_t vers
 /// Return all the rules that applies to the specified checksum of the given 'source' class.
 /// User has to delete the returned array
 
-const TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, UInt_t checksum ) const
+const Internal::TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, UInt_t checksum ) const
 {
    TObject*      obj;
    TObjArrayIter it( fAllRules );
-   TSchemaMatch* arr = new TSchemaMatch();
+   Internal::TSchemaMatch* arr = new Internal::TSchemaMatch();
    arr->SetOwner( kFALSE );
 
    while( (obj = it.Next()) ) {
@@ -374,11 +375,11 @@ const TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, UInt_t che
 /// Return all the rules that applies to the specified version OR checksum of the given 'source' class.
 /// User has to delete the returned array
 
-const TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, Int_t version, UInt_t checksum ) const
+const Internal::TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, Int_t version, UInt_t checksum ) const
 {
    TObject*      obj;
    TObjArrayIter it( fAllRules );
-   TSchemaMatch* arr = new TSchemaMatch();
+   Internal::TSchemaMatch* arr = new Internal::TSchemaMatch();
    arr->SetOwner( kFALSE );
 
    while( (obj = it.Next()) ) {
@@ -479,7 +480,7 @@ void TSchemaRuleSet::SetClass( TClass* cls )
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the rule that has 'name' as a source.
 
-const TSchemaRule* TSchemaMatch::GetRuleWithSource( const TString& name ) const
+const TSchemaRule* Internal::TSchemaMatch::GetRuleWithSource( const TString& name ) const
 {
    for( Int_t i = 0; i < GetEntries(); ++i ) {
       TSchemaRule* rule = (ROOT::TSchemaRule*)At(i);
@@ -491,7 +492,7 @@ const TSchemaRule* TSchemaMatch::GetRuleWithSource( const TString& name ) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the rule that has 'name' as a target.
 
-const TSchemaRule* TSchemaMatch::GetRuleWithTarget( const TString& name ) const
+const TSchemaRule* Internal::TSchemaMatch::GetRuleWithTarget( const TString& name ) const
 {
    for( Int_t i=0; i<GetEntries(); ++i) {
       ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)At(i);
@@ -506,7 +507,7 @@ const TSchemaRule* TSchemaMatch::GetRuleWithTarget( const TString& name ) const
 /// If needingAlloc is true, only the rule that requires the data member to
 /// be cached will be taken in consideration.
 
-Bool_t TSchemaMatch::HasRuleWithSource( const TString& name, Bool_t needingAlloc ) const
+Bool_t Internal::TSchemaMatch::HasRuleWithSource( const TString& name, Bool_t needingAlloc ) const
 {
    for( Int_t i = 0; i < GetEntries(); ++i ) {
       TSchemaRule* rule = (ROOT::TSchemaRule*)At(i);
@@ -537,7 +538,7 @@ Bool_t TSchemaMatch::HasRuleWithSource( const TString& name, Bool_t needingAlloc
 /// member named 'name' as a target.
 /// If willset is true, only the rule that will set the value of the data member.
 
-Bool_t TSchemaMatch::HasRuleWithTarget( const TString& name, Bool_t willset ) const
+Bool_t Internal::TSchemaMatch::HasRuleWithTarget( const TString& name, Bool_t willset ) const
 {
    for( Int_t i=0; i<GetEntries(); ++i) {
       ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)At(i);
@@ -573,12 +574,12 @@ Bool_t TSchemaMatch::HasRuleWithTarget( const TString& name, Bool_t willset ) co
 void TSchemaRuleSet::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
-      R__b.ReadClassBuffer(ROOT::TSchemaRuleSet::Class(),this);
+      R__b.ReadClassBuffer(ROOT::Detail::TSchemaRuleSet::Class(),this);
       fAllRules->Clear();
       fAllRules->AddAll(fPersistentRules);
    } else {
       GetClassCheckSum();
-      R__b.WriteClassBuffer(ROOT::TSchemaRuleSet::Class(),this);
+      R__b.WriteClassBuffer(ROOT::Detail::TSchemaRuleSet::Class(),this);
    }
 }
 

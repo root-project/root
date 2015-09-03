@@ -127,6 +127,7 @@ namespace {
 }
 
 namespace ROOT {
+namespace Internal {
 
    TString GetArrayType(TStreamerElement *element, const char *subtype,
                         TTreeProxyGenerator::EContainer container)
@@ -1717,11 +1718,9 @@ namespace ROOT {
       fprintf(hf,"\n");
 
 
-      fprintf(hf,"// System Headers needed by the proxy\n");
-      fprintf(hf,"#if defined(__CINT__) && !defined(__MAKECINT__)\n");
-      fprintf(hf,"   #define ROOT_Rtypes\n");
-      fprintf(hf,"   #define ROOT_TError\n");
-      fprintf(hf,"#endif\n");
+      // Interface versioning
+      fprintf(hf,"#define R__BRANCHPROXY_GENERATOR_VERSION 2\n\n");
+      fprintf(hf,"// ROOT headers needed by the proxy\n");
       fprintf(hf,"#include <TROOT.h>\n");
       fprintf(hf,"#include <TChain.h>\n");
       fprintf(hf,"#include <TFile.h>\n");
@@ -1732,7 +1731,8 @@ namespace ROOT {
       fprintf(hf,"#include <TBranchProxyDirector.h>\n");
       fprintf(hf,"#include <TBranchProxyTemplate.h>\n");
       fprintf(hf,"#include <TFriendProxy.h>\n");
-      fprintf(hf,"using namespace ROOT;\n"); // questionable
+      fprintf(hf,"using namespace ROOT::Internal;\n"); // questionable
+      fprintf(hf,"using ROOT::Detail::TBranchProxy;\n"); // questionable
       fprintf(hf,"\n");
 
       fprintf(hf,"// forward declarations needed by this particular proxy\n");
@@ -2019,4 +2019,6 @@ namespace ROOT {
       delete [] filename;
       delete [] cutfilename;
    }
-}
+
+} // namespace Internal
+} // namespace ROOT

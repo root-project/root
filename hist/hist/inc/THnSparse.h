@@ -102,7 +102,7 @@ class THnSparse: public THnBase {
    Int_t GetChunkSize() const { return fChunkSize; }
    Int_t GetNChunks() const { return fBinContent.GetEntriesFast(); }
 
-   ROOT::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const;
+   ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const;
 
    Long64_t GetNbins() const { return fFilledBins; }
    void SetFilledBins(Long64_t nbins) { fFilledBins = nbins; }

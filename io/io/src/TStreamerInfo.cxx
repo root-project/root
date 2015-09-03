@@ -278,7 +278,7 @@ void TStreamerInfo::Build()
 
    Bool_t needAllocClass = kFALSE;
    Bool_t wasCompiled = fComp != 0;
-   const ROOT::TSchemaMatch* rules = 0;
+   const ROOT::Internal::TSchemaMatch* rules = 0;
    if (fClass->GetSchemaRules()) {
        rules = fClass->GetSchemaRules()->FindRules(fClass->GetName(), fClassVersion);
    }
@@ -1663,7 +1663,7 @@ void TStreamerInfo::BuildOld()
    // Get schema rules for this class
    /////////////////////////////////////////////////////////////////////////////
 
-   const ROOT::TSchemaMatch*   rules   = 0;
+   const ROOT::Internal::TSchemaMatch*   rules   = 0;
    const ROOT::TSchemaRuleSet* ruleSet = fClass->GetSchemaRules();
 
    rules = (ruleSet ? ruleSet->FindRules( GetName(), fOnFileClassVersion, fCheckSum ) : 0);

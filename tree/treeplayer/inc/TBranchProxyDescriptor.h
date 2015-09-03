@@ -18,6 +18,7 @@
 
 
 namespace ROOT {
+namespace Internal {
 
    class TBranchProxyDescriptor : public TNamed {
       TString fDataName;
@@ -42,6 +43,7 @@ namespace ROOT {
 
       ClassDef(TBranchProxyDescriptor,0); // Describe the proxy for a branch
    };
+}
 }
 
 #endif

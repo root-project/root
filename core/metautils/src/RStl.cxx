@@ -39,21 +39,21 @@ using namespace TClassEdit;
 // void Warning(const char *location, const char *va_(fmt), ...);
 
 //
-// ROOT::RStl is the rootcint STL handling class.
+// ROOT::Internal::RStl is the rootcint STL handling class.
 //
 
 static int fgCount = 0;
 
-ROOT::RStl& ROOT::RStl::Instance()
+ROOT::Internal::RStl& ROOT::Internal::RStl::Instance()
 {
-   // Return the singleton ROOT::RStl.
+   // Return the singleton ROOT::Internal::RStl.
 
-   static ROOT::RStl instance;
+   static ROOT::Internal::RStl instance;
    return instance;
 
 }
 
-void ROOT::RStl::GenerateTClassFor(const clang::QualType &type, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+void ROOT::Internal::RStl::GenerateTClassFor(const clang::QualType &type, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Force the generation of the TClass for the given class.
 
@@ -106,7 +106,7 @@ void ROOT::RStl::GenerateTClassFor(const clang::QualType &type, const cling::Int
    }
 }
 
-void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlclass, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+void ROOT::Internal::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlclass, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Force the generation of the TClass for the given class.
 
@@ -158,20 +158,20 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
       }
    }
 
-   //    fprintf(stderr,"ROOT::RStl registered %s as %s\n",stlclassname.c_str(),registername.c_str());
+   //    fprintf(stderr,"ROOT::Internal::RStl registered %s as %s\n",stlclassname.c_str(),registername.c_str());
 }
 
-void ROOT::RStl::Print()
+void ROOT::Internal::RStl::Print()
 {
    // Print the content of the object
-   fprintf(stderr,"ROOT::RStl singleton\n");
+   fprintf(stderr,"ROOT::Internal::RStl singleton\n");
    list_t::iterator iter;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
       fprintf(stderr, "need TClass for %s\n", ROOT::TMetaUtils::GetQualifiedName(*(*iter)).c_str());
    }
 }
 
-void ROOT::RStl::WriteClassInit(std::ostream &ostr,
+void ROOT::Internal::RStl::WriteClassInit(std::ostream &ostr,
                                 const cling::Interpreter &interp,
                                 const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
                                 const ROOT::TMetaUtils::RConstructorTypes& ctorTypes,
@@ -216,7 +216,7 @@ void ROOT::RStl::WriteClassInit(std::ostream &ostr,
    }
 }
 
-// void ROOT::RStl::WriteStreamer(FILE *file, const clang::CXXRecordDecl *stlcl)
+// void ROOT::Internal::RStl::WriteStreamer(FILE *file, const clang::CXXRecordDecl *stlcl)
 // {
 //    // Write the free standing streamer function for the given
 //    // STL container class.
@@ -359,7 +359,7 @@ void ROOT::RStl::WriteClassInit(std::ostream &ostr,
 
 // }
 
-// void ROOT::RStl::WriteStreamer(FILE *file)
+// void ROOT::Internal::RStl::WriteStreamer(FILE *file)
 // {
 //    // Write the free standing streamer function for the registereed
 //    // STL container classes

@@ -78,7 +78,7 @@ public:
       return (THn*) CreateHnAny(name, title, hn, kFALSE /*THn*/, -1);
    }
 
-   ROOT::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const;
+   ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const;
    Long64_t GetNbins() const { return GetArray().GetNbins(); }
 
    Long64_t GetBin(const Int_t* idx) const {

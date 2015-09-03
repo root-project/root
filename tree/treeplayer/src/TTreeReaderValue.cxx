@@ -31,12 +31,12 @@
 Extracts data from a TTree.
 */
 
-ClassImp(TTreeReaderValueBase)
+ClassImp(ROOT::Internal::TTreeReaderValueBase)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a tree value reader and register it with the reader object.
 
-ROOT::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
+ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
                                                  const char* branchname /*= 0*/,
                                                  TDictionary* dict /*= 0*/):
    fBranchName(branchname),
@@ -54,7 +54,7 @@ ROOT::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Unregister from tree reader, cleanup.
 
-ROOT::TTreeReaderValueBase::~TTreeReaderValueBase()
+ROOT::Internal::TTreeReaderValueBase::~TTreeReaderValueBase()
 {
    if (fTreeReader) fTreeReader->DeregisterValueReader(this);
 }
@@ -63,8 +63,8 @@ ROOT::TTreeReaderValueBase::~TTreeReaderValueBase()
 /// Try to read the value from the TBranchProxy, returns
 /// the status of the read.
 
-ROOT::TTreeReaderValueBase::EReadStatus
-ROOT::TTreeReaderValueBase::ProxyRead() {
+ROOT::Internal::TTreeReaderValueBase::EReadStatus
+ROOT::Internal::TTreeReaderValueBase::ProxyRead() {
    if (!fProxy) return kReadNothingYet;
    if (fProxy->Read()) {
       fReadStatus = kReadSuccess;
@@ -77,7 +77,7 @@ ROOT::TTreeReaderValueBase::ProxyRead() {
 ////////////////////////////////////////////////////////////////////////////////
 /// If we are reading a leaf, return the corresponding TLeaf.
 
-TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
+TLeaf* ROOT::Internal::TTreeReaderValueBase::GetLeaf() {
    if (fLeafName.Length() > 0){
 
       Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
@@ -117,7 +117,7 @@ TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the memory address of the object being read.
 
-void* ROOT::TTreeReaderValueBase::GetAddress() {
+void* ROOT::Internal::TTreeReaderValueBase::GetAddress() {
    if (ProxyRead() != kReadSuccess) return 0;
 
    if (fLeafName.Length() > 0){
@@ -145,7 +145,7 @@ void* ROOT::TTreeReaderValueBase::GetAddress() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the proxy object for our branch.
 
-void ROOT::TTreeReaderValueBase::CreateProxy() {
+void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
    if (fProxy) {
       return;
    }
@@ -169,8 +169,8 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
    // Search for the branchname, determine what it contains, and wire the
    // TBranchProxy representing it to us so we can access its data.
 
-   ROOT::TNamedBranchProxy* namedProxy
-      = (ROOT::TNamedBranchProxy*)fTreeReader->FindObject(fBranchName);
+   TNamedBranchProxy* namedProxy
+      = (TNamedBranchProxy*)fTreeReader->FindObject(fBranchName);
    if (namedProxy && namedProxy->GetDict() == fDict) {
       fProxy = namedProxy->GetProxy();
       return;
@@ -350,7 +350,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
          membername = branch->GetName();
       }
    }
-   namedProxy = new ROOT::TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
+   namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
    fTreeReader->GetProxies()->Add(namedProxy);
    fProxy = namedProxy->GetProxy();
 }
@@ -360,7 +360,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
 /// dict, return its type name. If no dictionary is available, at least
 /// its type name should be returned.
 
-const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
+const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
                                            TDictionary* &dict) const
 {
    dict = 0;

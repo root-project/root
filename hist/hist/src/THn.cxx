@@ -32,7 +32,7 @@ namespace {
    // THnBinIter iterates over all bins of a THn, recursing over all dimensions.
    /////////////////////////////////////////////////////////////////////////////
 
-   class THnBinIter: public ROOT::THnBaseBinIter {
+   class THnBinIter: public ROOT::Internal::THnBaseBinIter {
    public:
       THnBinIter(Int_t dim, const TObjArray* axes, const TNDArray* arr,
                  Bool_t respectAxisRange);
@@ -57,7 +57,7 @@ namespace {
 
    THnBinIter::THnBinIter(Int_t dim, const TObjArray* axes,
                               const TNDArray* arr, Bool_t respectAxisRange):
-      ROOT::THnBaseBinIter(respectAxisRange),
+      ROOT::Internal::THnBaseBinIter(respectAxisRange),
       fNdimensions(dim), fIndex(-1), fArray(arr) {
       fCounter = new CounterRange_t[dim]();
       for (Int_t i = 0; i < dim; ++i) {
@@ -201,7 +201,7 @@ THn::~THn()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an iterator over all bins. Public interface is THnIter.
 
-ROOT::THnBaseBinIter* THn::CreateIter(Bool_t respectAxisRange) const
+ROOT::Internal::THnBaseBinIter* THn::CreateIter(Bool_t respectAxisRange) const
 {
    return new THnBinIter(GetNdimensions(), GetListOfAxes(), &GetArray(),
                          respectAxisRange);

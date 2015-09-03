@@ -1380,7 +1380,7 @@ void THnBase::Browse(TBrowser *b)
 {
    if (fBrowsables.IsEmpty()) {
       for (Int_t dim = 0; dim < fNdimensions; ++dim) {
-         fBrowsables.AddAtAndExpand(new ROOT::THnBaseBrowsable(this, dim), dim);
+         fBrowsables.AddAtAndExpand(new ROOT::Internal::THnBaseBrowsable(this, dim), dim);
       }
       fBrowsables.SetOwner();
    }
@@ -1393,13 +1393,13 @@ void THnBase::Browse(TBrowser *b)
 
 
 
-/** \class ROOT::THnBaseBinIter
+/** \class ROOT::Internal::THnBaseBinIter
   Iterator over THnBase bins (internal implementation).
 */
 
 /// Destruct a bin iterator.
 
-ROOT::THnBaseBinIter::~THnBaseBinIter() {
+ROOT::Internal::THnBaseBinIter::~THnBaseBinIter() {
    // Not much to do, but pin vtable
 }
 
@@ -1417,17 +1417,17 @@ THnIter::~THnIter() {
 }
 
 
-/** \class ROOT::THnBaseBrowsable
+/** \class ROOT::Internal::THnBaseBrowsable
    TBrowser helper for THnBase.
 */
 
 
-ClassImp(ROOT::THnBaseBrowsable);
+ClassImp(ROOT::Internal::THnBaseBrowsable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a THnBaseBrowsable.
 
-ROOT::THnBaseBrowsable::THnBaseBrowsable(THnBase* hist, Int_t axis):
+ROOT::Internal::THnBaseBrowsable::THnBaseBrowsable(THnBase* hist, Int_t axis):
 fHist(hist), fAxis(axis), fProj(0)
 {
    TString axisName = hist->GetAxis(axis)->GetName();
@@ -1443,7 +1443,7 @@ fHist(hist), fAxis(axis), fProj(0)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destruct a THnBaseBrowsable.
 
-ROOT::THnBaseBrowsable::~THnBaseBrowsable()
+ROOT::Internal::THnBaseBrowsable::~THnBaseBrowsable()
 {
    delete fProj;
 }
@@ -1451,7 +1451,7 @@ ROOT::THnBaseBrowsable::~THnBaseBrowsable()
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse an axis of a THnBase, i.e. draw its projection.
 
-void ROOT::THnBaseBrowsable::Browse(TBrowser* b)
+void ROOT::Internal::THnBaseBrowsable::Browse(TBrowser* b)
 {
    if (!fProj) {
       fProj = fHist->Projection(fAxis);

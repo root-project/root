@@ -1088,7 +1088,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
    //        fprintf(stderr,"Add %s (%d) which is also %s\n",
    //                m.Type()->Name(), stltype, m.Type()->TrueName() );
    clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(m.getType()), 0);
-   RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
+   Internal::RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
 
    if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
 
@@ -1529,7 +1529,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
       if (filename[i] == '\\') filename[i] = '/';
    }
    dictStream << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << std::endl
-              << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
+              << "                     ::ROOT::Internal::DefineBehavior((void*)0,(void*)0)," << std::endl
               << "                     ";
 
    if (Namespace__HasMethod(cl, "Dictionary", interp)) {
@@ -2016,7 +2016,7 @@ void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
          ++iter) {
       int k = ROOT::TMetaUtils::IsSTLContainer(*iter);
       if (k != 0) {
-         RStl::Instance().GenerateTClassFor(iter->getType(), interp, normCtxt);
+         Internal::RStl::Instance().GenerateTClassFor(iter->getType(), interp, normCtxt);
       }
    }
 
@@ -3070,7 +3070,7 @@ int GenerateFullDict(std::ostream &dictStream,
          if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */)) {
             // Register the collections
             // coverity[fun_call_w_exception] - that's just fine.
-            RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
+            Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
          } else {
             ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
             EmitStreamerInfo(selClass.GetNormalizedName());
@@ -3098,7 +3098,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
    // LINKDEF SELECTION LOOP
    // Loop to get the shadow class for the class marked 'RequestOnlyTClass' (but not the
-   // STL class which is done via RStl::Instance().WriteClassInit(0);
+   // STL class which is done via Internal::RStl::Instance().WriteClassInit(0);
    // and the ClassInit
 
    for (auto const & selClass : scan.fSelectedClasses) {
@@ -3126,7 +3126,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
    // Loop on the registered collections internally
    // coverity[fun_call_w_exception] - that's just fine.
-   ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy, EmitStreamerInfo);
+   ROOT::Internal::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy, EmitStreamerInfo);
 
 #ifndef ROOT_STAGE1_BUILD
    EmitTypedefs(scan.fSelectedTypedefs);

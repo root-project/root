@@ -12,12 +12,19 @@
 #ifndef ROOT_TBranchProxyTemplate
 #define ROOT_TBranchProxyTemplate
 
-#if !defined(__CINT__) || defined(__MAKECINT__)
+#if !defined(__ROOTCLING__) && !defined(G__DICTIONARY)
+# if R__BRANCHPROXY_GENERATOR_VERSION != 2
+// Generated source and branch proxy interface are out of sync.
+#  error "Please regenerate this file using TTree::MakeProxy()!"
+# endif
+#endif
+
+#ifndef ROOT_TBranchProxy
 #include "TBranchProxy.h"
 #endif
 
 #define InjecTBranchProxyInterface()                     \
-   TBranchProxy *GetProxy() { return obj.GetProxy(); }   \
+   ROOT::Detail::TBranchProxy *GetProxy() { return obj.GetProxy(); }   \
    void Reset() { obj.Reset(); }                         \
    bool Setup() { return obj.Setup(); }                  \
    bool IsInitialized() { return obj.IsInitialized(); }  \
@@ -25,9 +32,10 @@
    bool Read() { return obj.Read(); }
 
 namespace ROOT {
+namespace Internal {
    template <class T>
    class TObjProxy {
-      TBranchProxy obj;
+      Detail::TBranchProxy obj;
    public:
       InjecTBranchProxyInterface();
 
@@ -37,7 +45,7 @@ namespace ROOT {
          obj(director,top,name) {};
       TObjProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
          obj(director,top,name,data) {};
-      TObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+      TObjProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          obj(director,parent, name, top, mid) {};
       ~TObjProxy() {};
 
@@ -81,7 +89,7 @@ namespace ROOT {
          obj(director,top,name) {};
       TClaObjProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
          obj(director,top,name,data) {};
-      TClaObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+      TClaObjProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          obj(director,parent, name, top, mid) {};
       ~TClaObjProxy() {};
 
@@ -123,7 +131,7 @@ namespace ROOT {
          obj(director,top,name) {};
       TStlObjProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
          obj(director,top,name,data) {};
-      TStlObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+      TStlObjProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          obj(director,parent, name, top, mid) {};
       ~TStlObjProxy() {};
 
@@ -157,14 +165,14 @@ namespace ROOT {
       typedef typename T::value_type value_t;
    public:
 
-      TStlSimpleProxy() : ROOT::TObjProxy<T>(),fCollection(0) {};
-      TStlSimpleProxy(TBranchProxyDirector *director, const char *name) : ROOT::TObjProxy<T>(director,name),fCollection(0) {};
+      TStlSimpleProxy() : TObjProxy<T>(),fCollection(0) {};
+      TStlSimpleProxy(TBranchProxyDirector *director, const char *name) :  TObjProxy<T>(director,name),fCollection(0) {};
       TStlSimpleProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
-         ROOT::TObjProxy<T>(director,top,name),fCollection(0) {};
+         TObjProxy<T>(director,top,name),fCollection(0) {};
       TStlSimpleProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
-         ROOT::TObjProxy<T>(director,top,name,data),fCollection(0) {};
-      TStlSimpleProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         ROOT::TObjProxy<T>(director,parent, name, top, mid),fCollection(0) {};
+         TObjProxy<T>(director,top,name,data),fCollection(0) {};
+      TStlSimpleProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+          TObjProxy<T>(director,parent, name, top, mid),fCollection(0) {};
       ~TStlSimpleProxy() { delete fCollection; };
 
       TVirtualCollectionProxy* GetCollection() {
@@ -178,7 +186,7 @@ namespace ROOT {
       }
 
       Int_t GetEntries() {
-         T *temp =  ROOT::TObjProxy<T>::GetPtr();
+         T *temp =   TObjProxy<T>::GetPtr();
          if (temp) {
             GetCollection();
             if (!fCollection) return 0;
@@ -190,7 +198,7 @@ namespace ROOT {
 
       const value_t At(UInt_t i) {
          static value_t default_val;
-         T *temp = ROOT::TObjProxy<T>::GetPtr();
+         T *temp =  TObjProxy<T>::GetPtr();
          if (temp) {
             GetCollection();
             if (!fCollection) return 0;
@@ -203,12 +211,13 @@ namespace ROOT {
       const value_t operator [](Int_t i) { return At(i); }
       const value_t operator [](UInt_t i) { return At(i); }
 
-      T* operator->() { return ROOT::TObjProxy<T>::GetPtr(); }
-      operator T*() { return ROOT::TObjProxy<T>::GetPtr(); }
+      T* operator->() { return  TObjProxy<T>::GetPtr(); }
+      operator T*() { return  TObjProxy<T>::GetPtr(); }
       // operator T&() { return *GetPtr(); }
 
    };
 
-}
+} // namespace Internal
+} // namespace ROOT
 
 #endif
