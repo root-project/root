@@ -10,16 +10,12 @@ set(libname RInterface)
 include_directories(${R_INCLUDE_DIRS})
 
 set(R_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInterface.h
-              ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRObjectProxy.h 
-              ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFunction.h
+              ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRObject.h 
+              ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFunctionExport.h
+              ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFunctionImport.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInternalFunction.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRDataFrame.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/RExports.h)
-set(RHIST_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRF1.h              
-                  ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRGraph.h)
-set(ROI_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFile.h)
-set(RGPAD_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRCanvas.h)
-set(RRINT_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRRint.h)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
 ROOT_GENERATE_DICTIONARY(G__RInterface ${R_HEADERS} MODULE ${libname} LINKDEF LinkDef.h)

@@ -6,10 +6,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #include<RExports.h>
-#include<TRFunction.h>
-#include<TRObjectProxy.h>
+#include<TRFunctionExport.h>
+#include<TRObject.h>
 #include<TRDataFrame.h>
 #include<Rcpp/Vector.h>
+
+Rcpp::internal::NamedPlaceHolder ROOT::R::Label;
+
 namespace Rcpp {
 //TVectorT
    template<>  SEXP wrap(const TVectorT<Double_t> &v)
@@ -70,15 +73,15 @@ namespace Rcpp {
       return TMatrixT<Float_t>(mat.rows(), mat.cols(), &dat[0], "F");
    }
 
-//TRObjectProxy   
-   template<> SEXP wrap(const ROOT::R::TRObjectProxy &obj)
+//TRObject   
+   template<> SEXP wrap(const ROOT::R::TRObject &obj)
    {
-      return obj.x;
+      return obj.fObj;
    }
 
-   template<> ROOT::R::TRObjectProxy as(SEXP obj)
+   template<> ROOT::R::TRObject as(SEXP obj)
    {
-      return ROOT::R::TRObjectProxy(obj);
+      return ROOT::R::TRObject(obj);
    }
 //TRDataFrame   
    template<> SEXP wrap(const ROOT::R::TRDataFrame &obj)
@@ -89,6 +92,17 @@ namespace Rcpp {
    template<> ROOT::R::TRDataFrame as(SEXP obj)
    {
       return ROOT::R::TRDataFrame(Rcpp::as<Rcpp::DataFrame>(obj));
+   }
+   
+//TRFunctionImport
+   template<> SEXP wrap(const ROOT::R::TRFunctionImport &obj)
+   {
+      return *obj.f;
+   }
+
+   template<> ROOT::R::TRFunctionImport as(SEXP obj)
+   {
+      return ROOT::R::TRFunctionImport(Rcpp::as<Rcpp::Function>(obj));
    }
 
 }

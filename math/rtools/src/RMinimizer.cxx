@@ -1,6 +1,6 @@
 
 #include "TRInterface.h"
-#include "TRObjectProxy.h"
+#include "TRObject.h"
 #include "Math/RMinimizer.h"
 #include "Math/IFunction.h"
 #include <TVectorD.h>
@@ -56,8 +56,8 @@ namespace ROOT {
          //pass functions and variables to R
          ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
 	
-         r["minfunction"] = ROOT::R::TRFunction((minfunction));
-         r["mingradfunction"] = ROOT::R::TRFunction((mingradfunction));
+         r["minfunction"] = ROOT::R::TRFunctionExport((minfunction));
+         r["mingradfunction"] = ROOT::R::TRFunctionExport((mingradfunction));
          r["method"] = fMethod.c_str();
          std::vector<double> stepSizes(StepSizes(), StepSizes()+NDim());
          std::vector<double> values(X(), X()+NDim());

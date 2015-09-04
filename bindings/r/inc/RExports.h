@@ -24,8 +24,8 @@
 #include<TVector.h>
 #endif
 
-#ifndef ROOT_TMatrix
-#include<TMatrix.h>
+#ifndef ROOT_TMatrixT
+#include<TMatrixT.h>
 #endif
 
 #ifndef ROOT_TArrayD
@@ -61,12 +61,17 @@
 #endif
 
 
+//Some useful typedefs
+typedef std::vector<TString> TVectorString;
+
+
 #include<RcppCommon.h>
 namespace ROOT {
    namespace R {
-      class TRFunction;
+      class TRFunctionExport;
+      class TRFunctionImport;
       class TRDataFrame;
-      class TRObjectProxy;
+      class TRObject;
    }
 }
 
@@ -99,8 +104,13 @@ namespace Rcpp {
    template<> SEXP wrap(const ROOT::R::TRDataFrame &o);
    template<> ROOT::R::TRDataFrame as(SEXP) ;
    
-   template<> SEXP wrap(const ROOT::R::TRObjectProxy &o);
-   template<> ROOT::R::TRObjectProxy as(SEXP) ;
+//TRObject
+   template<> SEXP wrap(const ROOT::R::TRObject &o);
+   template<> ROOT::R::TRObject as(SEXP) ;
+
+//TRFunctionImport
+   template<> SEXP wrap(const ROOT::R::TRFunctionImport &o);
+   template<> ROOT::R::TRFunctionImport as(SEXP) ;
 
    template<class T, size_t i> std::array<T, i> as(SEXP &obj)
    {
@@ -130,6 +140,7 @@ namespace Rcpp {
 #define R_Version(v,p,s) ((v * 65536) + (p * 256) + (s))
 #endif
 #include<Rcpp.h>//this headers should be called after templates definitions
+#include<Rcpp/Named.h>
 #undef HAVE_UINTPTR_T
 #include<RInside.h>
 
@@ -148,8 +159,11 @@ namespace ROOT {
          //template function required to create modules using the macro ROOTR_MODULE
          Rcpp::function(name_, fun, docstring);
       }
+
+      extern Rcpp::internal::NamedPlaceHolder Label;
    }
 }
+
 
 //macros redifined to be accord with the namespace
 #define ROOTR_MODULE RCPP_MODULE

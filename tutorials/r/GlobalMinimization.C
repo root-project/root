@@ -51,7 +51,7 @@ void GlobalMinimization()
  r<<"suppressMessages(library(DEoptim, quietly = TRUE))";
  
 //  passing RosenBrock function to R
- r["GenRosenBrock"]<<ROOT::R::TRFunction(GenRosenBrock);
+ r["GenRosenBrock"]<<ROOT::R::TRFunctionExport(GenRosenBrock);
 
  //maximun number of iterations 
  r["MaxIter"]<<5000;
@@ -74,7 +74,7 @@ void GlobalMinimization()
 
  
  //passing RosenBrock function to R
- r["Rastrigin"]<<ROOT::R::TRFunction(Rastrigin);
+ r["Rastrigin"]<<ROOT::R::TRFunctionExport(Rastrigin);
  //maximun number of iterations 
  r["MaxIter"]<<2000;
  //n = size of a vector which is an argument for Rastrigin
@@ -97,7 +97,9 @@ void GlobalMinimization()
  if (!gROOT->IsBatch()) {
     r<<"dev.new(title='RosenBrock Convergence')";
     r<<"plot(result1,type='o',pch='.')";
+    r<<"dev.off()";
     r<<"dev.new(title='Rastrigin Convergence')";
     r<<"plot(result2,type='o',pch='.')";
+    r<<"dev.off()";
  }
 }
