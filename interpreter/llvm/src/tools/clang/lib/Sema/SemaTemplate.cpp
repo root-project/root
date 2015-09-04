@@ -8081,6 +8081,10 @@ Sema::CheckTypenameType(ElaboratedTypeKeyword Keyword,
 
   if (RequireCompleteDeclContext(SS, Ctx))
     return QualType();
+  else if (TagDecl* TD = dyn_cast<TagDecl>(Ctx)) {
+    // Update the DeclContext to point to the Tag definition.
+    Ctx = TD->getDefinition();
+  }
 
   DeclarationName Name(&II);
   LookupResult Result(*this, Name, IILoc, LookupOrdinaryName);
