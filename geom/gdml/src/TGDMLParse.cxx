@@ -204,6 +204,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* reflstr = "reflectedSolid";
    const char* ellistr = "ellipsoid";
    const char* elcnstr = "elcone";
+   const char* usrstr  = "userinfo";
    Bool_t hasIsotopes;
    Bool_t hasIsotopesExtended;
 
@@ -319,6 +320,8 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
       node = Reflection(gdml, node, attr);
    } else if ((strcmp(name, assestr)) == 0) {
       node = AssProcess(gdml, node);
+   } else if ((strcmp(name, usrstr)) == 0) {
+      node = UsrProcess(gdml, node);
       //CHECK FOR TAGS NOT SUPPORTED
    } else if (((strcmp(name, "gdml")) != 0) && ((strcmp(name, "define")) != 0) &&
               ((strcmp(name, "element")) != 0) && ((strcmp(name, "materials")) != 0) &&
@@ -476,40 +479,38 @@ TString TGDMLParse::GetScale(const char* unit)
 /// 'mm' or 'deg'. This function is passed the specified unit and if it is
 ///found, replaces it with the appropriate value.
 
-Double_t TGDMLParse::GetScaleVal(const char* unit)
+Double_t TGDMLParse::GetScaleVal(const char* sunit)
 {
    Double_t retunit = 0.;
+   TString unit(sunit);
+   unit.ToLower();
 
-   if (strcmp(unit, "mm") == 0) {
+   if ((unit == "mm") || (unit == "milimeter")) {
       retunit = 0.1;
-   } else if (strcmp(unit, "milimeter") == 0) {
-      retunit = 0.1;
-   } else if (strcmp(unit, "cm") == 0) {
+   } else if ((unit == "cm") || (unit == "centimeter")) {
       retunit = 1.0;
-   } else if (strcmp(unit, "centimeter") == 0) {
-      retunit = 1.0;
-   } else if (strcmp(unit, "m") == 0) {
+   } else if ((unit == "m") || (unit == "meter")) {
       retunit = 100.0;
-   } else if (strcmp(unit, "meter") == 0) {
-      retunit = 100.0;
-   } else if (strcmp(unit, "km") == 0) {
+   } else if ((unit == "km") || (unit == "kilometer")) {
       retunit = 100000.0;
-   } else if (strcmp(unit, "kilometer") == 0) {
-      retunit = 100000.0;
-   } else if (strcmp(unit, "rad") == 0) {
+   } else if ((unit == "rad") || (unit == "radian")) {
       retunit = TMath::RadToDeg();
-   } else if (strcmp(unit, "radian") == 0) {
-      retunit = TMath::RadToDeg();
-   } else if (strcmp(unit, "deg") == 0) {
+   } else if ((unit == "deg") || (unit == "degree")) {
       retunit = 1.0;
-   } else if (strcmp(unit, "degree") == 0) {
-      retunit = 1.0;
-   } else if (strcmp(unit, "pi") == 0) {
+   } else if ((unit == "ev") || (unit == "electronvolt")) {
+      retunit = 0.000000001;
+   } else if ((unit == "kev") || (unit == "kiloelectronvolt")) {
+      retunit = 0.000001;
+   } else if ((unit == "mev") || (unit == "megaelectronvolt")) {
+      retunit = 0.001;
+   } else if ((unit == "gev") || (unit == "gigaelectronvolt")) {
+      retunit = 1;
+   } else if (unit == "pi") {
       retunit = TMath::Pi();
-   } else if (strcmp(unit, "avogadro") == 0) {
+   } else if (unit == "avogadro") {
       retunit = TMath::Na();
    } else {
-      Fatal("GetScaleVal", "Unit <%s> not known", unit);
+      Fatal("GetScaleVal", "Unit <%s> not known", sunit);
       retunit = 0;
    }
    return retunit;
@@ -1625,6 +1626,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
       } //End of replicavol
       else if (strcmp(gdml->GetNodeName(child), "auxiliary") == 0) {
+         TString auxType, auxUnit, auxValue;
          if(!auxmap) {
             printf("Auxiliary values for volume %s\n",vol->GetName());
             auxmap = new TMap();
@@ -1632,18 +1634,14 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          }
          attr = gdml->GetFirstAttr(child);
          while(attr) {
-            if(strcmp(gdml->GetAttrName(attr),"auxtype")) Fatal("VolProcess","Expecting auxtype, found %s",
-                                          gdml->GetAttrName(attr));
-            const char *auxType = gdml->GetAttrValue(attr);
-            attr = gdml->GetNextAttr(attr);
-            if(strcmp(gdml->GetAttrName(attr),"auxvalue")) Fatal("VolProcess","Expecting auxvalue, found %s",
-                                          gdml->GetAttrName(attr));
-            const char *auxValue = gdml->GetAttrValue(attr);
-
-            printf("%s = %s\n",auxType, auxValue);
-            auxmap->Add(new TObjString(auxType),new TObjString(auxValue));
+            if (!strcmp(gdml->GetAttrName(attr),"auxtype")) auxType = gdml->GetAttrValue(attr);
+            else if (!strcmp(gdml->GetAttrName(attr),"auxvalue")) auxValue = gdml->GetAttrValue(attr);
+            else if (!strcmp(gdml->GetAttrName(attr),"auxunit")) auxUnit = gdml->GetAttrValue(attr);
             attr = gdml->GetNextAttr(attr);
          }
+         if (!auxUnit.IsNull()) auxValue = TString::Format("%s*%s", auxValue.Data(), auxUnit.Data());
+         auxmap->Add(new TObjString(auxType),new TObjString(auxValue));
+         printf("  %s: %s\n", auxType.Data(), auxValue.Data());
       }
 
       child = gdml->GetNext(child);
@@ -1806,6 +1804,18 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
 
    return child;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///User data to be processed
+XMLNodePointer_t TGDMLParse::UsrProcess(TXMLEngine* gdml, XMLNodePointer_t node)
+{
+   Warning("ParseGDML", "<userinfo> not supported yet. Skipping.");
+   XMLNodePointer_t child = gdml->GetChild(node);
+   while (child != 0) {
+      child = gdml->GetNext(child);
+   }
+   return child;
+}   
 
 ////////////////////////////////////////////////////////////////////////////////
 ///In the structure section of the GDML file, assembly volumes can be
