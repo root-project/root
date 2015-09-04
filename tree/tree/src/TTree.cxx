@@ -369,6 +369,7 @@ We encourage you to use TTree::AddFriend rather than adding a branch manually.
 #include "TFileMergeInfo.h"
 
 #include <cstddef>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -6831,8 +6832,18 @@ char TTree::GetNewlineValue(std::istream &inputStream)
 
 Long64_t TTree::ReadStream(std::istream& inputStream, const char *branchDescriptor, char delimiter)
 {
-   char newline = GetNewlineValue(inputStream);
-   std::istream& in = inputStream;
+   char newline = 0;
+   std::stringstream ss;
+   std::istream *inTemp;
+   if(&inputStream == &std::cin){
+      ss << std::cin.rdbuf();
+      newline = GetNewlineValue(ss);
+      inTemp = &ss;
+   } else {
+      newline = GetNewlineValue(inputStream);
+      inTemp = &inputStream;
+   }
+   std::istream& in = *inTemp;
    Long64_t nlines = 0;
 
    TBranch *branch = 0;
