@@ -42,6 +42,11 @@
 #endif
 
 
+namespace RooStats {
+
+   class ModelConfig;
+
+   
 /**
    Bayesian Calculator estimating an interval or a credible region using the Markov-Chain Monte Carlo method to 
    integrate the likelihood function with the prior to obtain the posterior function. 
@@ -63,9 +68,6 @@
  */
 
 
-namespace RooStats {
-
-   class ModelConfig;
 
    class MCMCCalculator : public IntervalCalculator, public TNamed {
 

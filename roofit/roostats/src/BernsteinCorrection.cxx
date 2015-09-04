@@ -13,7 +13,7 @@
 
 /**
 
-   \class BernsteinCorrection
+   \class RooStats::BernsteinCorrection
    \ingroup Roostats
 
 BernsteinCorrection is a utility in RooStats to augment a nominal PDF with a polynomial 

@@ -29,7 +29,11 @@
 #endif
 
 
-/**
+
+
+namespace RooStats {
+
+   /**
 
 TestStatistic that returns the ratio of profiled likelihoods.
 
@@ -65,8 +69,6 @@ This test statitsic is often called the Tevatron test statistic, because it has 
 \ingroup Roostats
 */
 
-
-namespace RooStats {
 
 class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
 

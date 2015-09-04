@@ -30,9 +30,11 @@
 #include "RooStats/TestStatistic.h"
 #endif
 
-/**
 
- \class SimpleLikelihoodRatioTestStat
+namespace RooStats {
+
+   /**
+
  TestStatistic class that returns -log(L[null] / L[alt]) where
  L is the likelihood.
  It is denoted oftern as the LEP Test statistic.
@@ -41,7 +43,6 @@
 
  */
 
-namespace RooStats {
 
    class SimpleLikelihoodRatioTestStat : public TestStatistic {
 

@@ -18,7 +18,14 @@
 #include "RooStats/LikelihoodInterval.h"
 
 
-/**
+
+
+namespace RooStats {
+   
+   class LikelihoodInterval;
+
+
+   /**
 
 ProfileLikelihoodCalculator is a concrete implementation of CombinedCalculator (the interface class for a tools which can produce both RooStats HypoTestResults and ConfIntervals).
 The tool uses the profile likelihood ratio as a test statistic, and assumes that Wilks' theorem is valid. Wilks' theorem states that -2* log (profile likelihood ratio) is asymptotically distributed as a chi^2 distribution with N-dof, where N is the number of degrees of freedom. Thus, p-values can be constructed and the profile likelihood ratio can be used to construct a LikelihoodInterval. (In the future, this class could be extended to use toy Monte Carlo to calibrate the distribution of the test statistic).
@@ -41,10 +48,6 @@ After configuring the calculator, one only needs to ask GetHypoTest() (which wil
 
    \ingroup Roostats
  */
-
-namespace RooStats {
-   
-   class LikelihoodInterval; 
 
  class ProfileLikelihoodCalculator : public CombinedCalculator {
 

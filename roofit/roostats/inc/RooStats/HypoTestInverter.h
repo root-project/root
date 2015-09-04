@@ -28,8 +28,19 @@ class TGraphErrors;
 #include <memory>
 
 
-/**
-   \class HypoTestInverter
+
+
+namespace RooStats {
+
+   //class HypoTestCalculator;
+   class HybridCalculator;
+   class FrequentistCalculator;
+   class AsymptoticCalculator;
+   class HypoTestCalculatorGeneric;
+   class TestStatistic;
+
+   /**
+
    \ingroup Roostats
 
    HypoTestInverter class for performing an hypothesis test inversion by scanning the hypothesis test results of an 
@@ -46,15 +57,6 @@ The class can scan the CLs+b values or alternativly CLs (if the method HypoTestI
    Contributions to this class have been written by Giovanni Petrucciani and Annapaola Decosa
 **/
 
-
-namespace RooStats {
-
-   //class HypoTestCalculator;
-   class HybridCalculator;
-   class FrequentistCalculator;
-   class AsymptoticCalculator;
-   class HypoTestCalculatorGeneric;
-   class TestStatistic;
 
 class HypoTestInverter : public IntervalCalculator {
 

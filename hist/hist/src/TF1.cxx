@@ -143,108 +143,122 @@ public:
 /** \class TF1
     \ingroup Hist 
     \brief 1-Dim function class
-<h2>TF1: 1-Dim function class</h2>
-A TF1 object is a 1-Dim function defined between a lower and upper limit.
-<br>The function may be a simple function (see <tt>TFormula</tt>) or a
-precompiled user function.
-<br>The function may have associated parameters.
-<br>TF1 graphics function is via the <tt>TH1/TGraph</tt> drawing functions.
-<p>
+
+
+## TF1: 1-Dim function class
+
+A TF1 object is a 1-Dim function defined between a lower and upper limit.   
+The function may be a simple function (see <tt>TFormula</tt>) or a precompiled user function.   
+The function may have associated parameters.   
+TF1 graphics function is via the <tt>TH1/TGraph</tt> drawing functions.
+
 The following types of functions can be created:
-<ul>
-<li><a href="#F1">A - Expression using variable x and no parameters</a></li>
-<li><a href="#F2">B - Expression using variable x with parameters</a></li>
-<li><a href="#F3">C - A general C function with parameters</a></li>
-<li><a href="#F4">D - A general C++ function object (functor) with parameters</a></li>
-<li><a href="#F5">E - A member function with parameters of a general C++ class</a></li>
-</ul>
 
-<a name="F1"></a><h3>A - Expression using variable x and no parameters</h3>
-<h4>Case 1: inline expression using standard C++ functions/operators</h4>
+*   [A - Expression using variable x and no parameters](#F1)
+*   [B - Expression using variable x with parameters](#F2)
+*   [C - A general C function with parameters](#F3)
+*   [D - A general C++ function object (functor) with parameters](#F4)
+*   [E - A member function with parameters of a general C++ class](#F5)
 
-    TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
-    fa1->Draw();
 
-Begin_Macro
-{
-   TCanvas *c = new TCanvas("c","c",0,0,500,300);
-   TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
-   fa1->Draw();
-   return c;
-}
+
+### <a name="F1"></a> A - Expression using variable x and no parameters
+
+#### Case 1: inline expression using standard C++ functions/operators
+
+~~~~{.cpp}
+TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10); 
+fa1->Draw(); 
+~~~~
+
+Begin_Macro(source)
+{ 
+TCanvas *c = new TCanvas("c","c",0,0,500,300); 
+TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10); 
+fa1->Draw(); 
+return c; 
+} 
 End_Macro
 
-<h4>Case 2: inline expression using TMath functions without parameters</h4>
+#### Case 2: inline expression using TMath functions without parameters
 
-    TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
-    fa2->Draw();
+~~~~{.cpp}
+TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10); 
+fa2->Draw(); 
+~~~~
 
-Begin_Macro
+Begin_Macro(source) 
 {
-   TCanvas *c = new TCanvas("c","c",0,0,500,300);
-   TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
-   fa2->Draw();
-   return c;
-}
+  TCanvas *c = new TCanvas("c","c",0,0,500,300); 
+  TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10); 
+  fa2->Draw(); 
+  return c; 
+} 
 End_Macro
 
-<h4>Case 3: inline expression using a CINT function by name</h4>
+#### Case 3: inline expression using a user defined CLING function by name
 
-    Double_t myFunc(x) {
-       return x+sin(x);
-    }
-    TF1 *fa3 = new TF1("fa3","myFunc(x)",-3,5);
-    fa3->Draw();
+~~~~{.cpp}
+Double_t myFunc(x) { return x+sin(x); } 
+....
+TF1 *fa3 = new TF1("fa3","myFunc(x)",-3,5); 
+fa3->Draw();
+~~~~
 
-<a name="F2"></a><h3>B - Expression using variable x with parameters</h3>
-<h4>Case 1: inline expression using standard C++ functions/operators</h4>
-<ul>
-<li>Example a:
+### <a name="F2"></a> B - Expression using variable x with parameters
 
-    TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3);
+#### Case 1: inline expression using standard C++ functions/operators
 
-This creates a function of variable x with 2 parameters.
-The parameters must be initialized via:
-<pre>
+*   Example a: 
+~~~~
+TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3); 
+~~~~
+This creates a function of variable x with 2 parameters. The parameters must be initialized via:
+
+~~~~
    fa->SetParameter(0,value_first_parameter);
    fa->SetParameter(1,value_second_parameter);
-</pre>
-Parameters may be given a name:
-<pre>
-   fa->SetParName(0,"Constant");
-</pre>
-</li>
-<li> Example b:
-<div class="code"><pre>
-   TF1 *fb = new TF1("fb","gaus(0)*expo(3)",0,10);
-</pre></div><div class="clear" />
-<tt>gaus(0)</tt> is a substitute for <tt>[0]*exp(-0.5*((x-[1])/[2])**2)</tt>
-and <tt>(0)</tt> means start numbering parameters at <tt>0</tt>.
-<tt>expo(3)</tt> is a substitute for <tt>exp([3]+[4]*x)</tt>.
-</li>
-</ul>
+~~~~
 
-<h4>Case 2: inline expression using TMath functions with parameters</h4>
-<div class="code"><pre>
+
+    Parameters may be given a name:
+
+    <pre>   fa->SetParName(0,"Constant");
+    </pre>
+
+*   Example b:
+
+~~~~{.cpp}
+    TF1 *fb = new TF1("fb","gaus(0)*expo(3)",0,10);
+~~~~
+
+
+    <div class="clear"><tt>gaus(0)</tt> is a substitute for <tt>[0]*exp(-0.5*((x-[1])/[2])**2)</tt> and <tt>(0)</tt> means start numbering parameters at <tt>0</tt>. <tt>expo(3)</tt> is a substitute for <tt>exp([3]+[4]*x)</tt>.</div>
+
+#### Case 2: inline expression using TMath functions with parameters
+
+~~~~{.cpp}
    TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
    fb2->SetParameters(0.2,1.3);
    fb2->Draw();
-</pre></div><div class="clear" />
-End_Html
-Begin_Macro
-{
-   TCanvas *c = new TCanvas("c","c",0,0,500,300);
-   TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
-   fb2->SetParameters(0.2,1.3);
-   fb2->Draw();
-   return c;
-}
+~~~~
+
+
+
+Begin_Macro(source) 
+{ 
+    TCanvas *c = new TCanvas("c","c",0,0,500,300);
+    TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10); 
+    fb2->SetParameters(0.2,1.3); fb2->Draw(); 
+    return c; 
+} 
 End_Macro
 
+###<a name="F3"></a> C - A general C function with parameters
 
-<a name="F3"></a><h3>C - A general C function with parameters</h3>
 Consider the macro myfunc.C below:
-<div class="code"><pre>
+
+~~~~{.cpp}
    // Macro myfunc.C
    Double_t myfunction(Double_t *x, Double_t *par)
    {
@@ -267,25 +281,26 @@ Consider the macro myfunc.C below:
       f1->SetParameters(800,1);
       h1->Fit("myfunc");
    }
-</pre></div><div class="clear" />
+~~~~
 
-<p>
+
+
 In an interactive session you can do:
-<div class="code"><pre>
+
+~~~~
    Root > .L myfunc.C
    Root > myfunc();
    Root > myfit();
-</pre></div>
-<div class="clear" />
+~~~~
 
 
-<tt>TF1</tt> objects can reference other <tt>TF1</tt> objects (thanks John
-Odonnell) of type A or B defined above. This excludes CINT interpreted functions
-and compiled functions. However, there is a restriction. A function cannot
-reference a basic function if the basic function is a polynomial polN.
-<p>Example:
-<div class="code"><pre>
-   {
+
+TF1 objects can reference other TF1 objects of type A or B defined above. This excludes CLing or compiled functions. However, there is a restriction. A function cannot reference a basic function if the basic function is a polynomial polN.
+
+Example:
+
+~~~~{.cpp}
+{
       TF1 *fcos = new TF1 ("fcos", "[0]*cos(x)", 0., 10.);
       fcos->SetParNames( "cos");
       fcos->SetParameter( 0, 1.1);
@@ -297,16 +312,18 @@ reference a basic function if the basic function is a polynomial polN.
       TF1 *fsincos = new TF1 ("fsc", "fcos+fsin");
 
       TF1 *fs2 = new TF1 ("fs2", "fsc+fsc");
-   }
-</pre></div><div class="clear" />
+}
+~~~~
 
 
-<a name="F4"></a><h3>D - A general C++ function object (functor) with parameters</h3>
-A TF1 can be created from any C++ class implementing the operator()(double *x, double *p).
-The advantage of the function object is that he can have a state and reference therefore what-ever other object.
-In this way the user can customize his function.
-<p>Example:
-<div class="code"><pre>
+### <a name="F4"></a> D - A general C++ function object (functor) with parameters
+
+A TF1 can be created from any C++ class implementing the operator()(double *x, double *p). The advantage of the function object is that he can have a state and reference therefore what-ever other object. In this way the user can customize his function.
+
+Example:
+
+
+~~~~{.cpp}
 class  MyFunctionObject {
  public:
    // use constructor to customize your function object
@@ -317,22 +334,30 @@ class  MyFunctionObject {
 };
 {
     ....
-   MyFunctionObject * fobj = new MyFunctionObject(....);       // create the function object
-   TF1 * f = new TF1("f",fobj,0,1,npar,"MyFunctionObject");    // create TF1 class.
+   MyFunctionObject fobj;
+   TF1 * f = new TF1("f",fobj,0,1,npar);    // create TF1 class.
    .....
 }
-</pre></div><div class="clear" />
-When constructing the TF1 class, the name of the function object class is required only if running in CINT
-and it is not needed in compiled C++ mode. In addition in compiled mode the cfnution object can be passed to TF1
-by value.
-See also the tutorial math/exampleFunctor.C for a running example.
+~~~~
+
+#### Using a lambda function as a general C++ functor object
+
+From C++11 we can use both std::function or even better lambda functions to create the TF1. As above the lambda must have the right signature but can capture whatever we want. For example we can make
+a TF1 from the TGraph::Eval function as shown below where we use a sfunction parameter the graph normalization.  
+
+~~~~{.cpp}
+TGraph * g = new TGraph(npointx, xvec, yvec); 
+TF1 * f = new TF1("f",[&](double*x, double *p){ return p[0]*g->Eval(x[0]); }, xmin, xmax, 1);   
+~~~~
 
 
-<a name="F5"></a><h3>E - A member function with parameters of a general C++ class</h3>
-A TF1 can be created in this case from any member function of a class which has the signature of
-(double * , double *) and returning a double.
-<p>Example:
-<div class="code"><pre>
+### <a name="F5"></a> E - A member function with parameters of a general C++ class
+
+A TF1 can be created in this case from any member function of a class which has the signature of (double * , double *) and returning a double.
+
+Example:
+
+~~~~{.cpp}
 class  MyFunction {
  public:
    ...
@@ -347,12 +372,11 @@ class  MyFunction {
 
    .....
 }
-</pre></div><div class="clear" />
-When constructing the TF1 class, the name of the function class and of the member function are required only
-if running in CINT and they are not need in compiled C++ mode.
-See also the tutorial math/exampleFunctor.C for a running example.
+~~~~
 
-*////////////////////////////////////////////////////////////////////////////////
+See also the tutorial math/exampleFunctor.C for a running example. 
+*/
+////////////////////////////////////////////////////////////////////////////
 
 TF1 *TF1::fgCurrent = 0;
 

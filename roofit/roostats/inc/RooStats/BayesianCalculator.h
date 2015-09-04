@@ -33,6 +33,13 @@ class RooPlot;
 class RooAbsReal;
 class TF1;
 
+
+namespace RooStats {
+
+   class ModelConfig; 
+   class SimpleInterval; 
+
+
 /**
 
    BayesianCalculator is a concrete implementation of IntervalCalculator, providing the computation 
@@ -73,12 +80,6 @@ class TF1;
    \ingroup Roostats
 
 */
-
-
-namespace RooStats {
-
-   class ModelConfig; 
-   class SimpleInterval; 
 
    class BayesianCalculator : public IntervalCalculator, public TNamed {
 

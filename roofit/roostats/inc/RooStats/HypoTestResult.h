@@ -9,9 +9,28 @@
  *************************************************************************/
 
 
-/**
 
-   \class HypoTestResult
+
+#ifndef ROOSTATS_HypoTestResult
+#define ROOSTATS_HypoTestResult
+
+#ifndef ROOT_TNamed
+#include "TNamed.h"
+#endif
+
+#ifndef ROOSTATS_RooStatsUtils
+#include "RooStats/RooStatsUtils.h"
+#endif
+
+#ifndef ROOSTATS_SamplingDistribution
+#include "RooStats/SamplingDistribution.h"
+#endif
+
+namespace RooStats {
+
+
+   /**
+
    \ingroup Roostats
 
    HypoTestResult is a base class for results from hypothesis tests.
@@ -50,58 +69,41 @@ be larger than one.
 
 
 
-#ifndef ROOSTATS_HypoTestResult
-#define ROOSTATS_HypoTestResult
-
-#ifndef ROOT_TNamed
-#include "TNamed.h"
-#endif
-
-#ifndef ROOSTATS_RooStatsUtils
-#include "RooStats/RooStatsUtils.h"
-#endif
-
-#ifndef ROOSTATS_SamplingDistribution
-#include "RooStats/SamplingDistribution.h"
-#endif
-
-namespace RooStats {
-
    class HypoTestResult : public TNamed {
 
    public:
       
-      // default constructor
+      /// default constructor
       explicit HypoTestResult(const char* name = 0);
       
-      // copy constructo
+      /// copy constructo
       HypoTestResult(const HypoTestResult& other);
 
-      // constructor from name, null and alternate p values 
+      /// constructor from name, null and alternate p values 
       HypoTestResult(const char* name, Double_t nullp, Double_t altp);
 
-      // destructor 
+      /// destructor 
       virtual ~HypoTestResult();
 
-      // assignment operator
+      /// assignment operator
       HypoTestResult & operator=(const HypoTestResult& other);
 
-      // add values from another HypoTestResult
+      /// add values from another HypoTestResult
       virtual void Append(const HypoTestResult *other);
 
-      // Return p-value for null hypothesis
+      /// Return p-value for null hypothesis
       virtual Double_t NullPValue() const { return fNullPValue; }
 
-      // Return p-value for alternate hypothesis
+      /// Return p-value for alternate hypothesis
       virtual Double_t AlternatePValue() const { return fAlternatePValue; }
 
-      // Convert  NullPValue into a "confidence level"
+      /// Convert  NullPValue into a "confidence level"
       virtual Double_t CLb() const { return !fBackgroundIsAlt ? NullPValue() : AlternatePValue(); }
 
-      // Convert  AlternatePValue into a "confidence level"
+      /// Convert  AlternatePValue into a "confidence level"
       virtual Double_t CLsplusb() const { return !fBackgroundIsAlt ? AlternatePValue() : NullPValue(); }
 
-      // CLs is simply CLs+b/CLb (not a method, but a quantity)
+      /// CLs is simply CLs+b/CLb (not a method, but a quantity)
       virtual Double_t CLs() const {
          double thisCLb = CLb();
          if (thisCLb == 0) {
@@ -112,7 +114,7 @@ namespace RooStats {
          return thisCLsb / thisCLb;
       }
 
-      // familiar name for the Null p-value in terms of 1-sided Gaussian significance
+      /// familiar name for the Null p-value in terms of 1-sided Gaussian significance
       virtual Double_t Significance() const {return RooStats::PValueToSignificance( NullPValue() ); }
 
       SamplingDistribution* GetNullDistribution(void) const { return fNullDistr; }

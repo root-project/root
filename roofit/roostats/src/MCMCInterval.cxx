@@ -13,7 +13,7 @@
 
 /**
 
-   \class MCMCInterval 
+   \class RooStats::MCMCInterval 
    \ingroup Roostats
 
    MCMCInterval is a concrete implementation of the RooStats::ConfInterval
