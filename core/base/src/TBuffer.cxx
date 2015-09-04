@@ -247,7 +247,7 @@ ReAllocCharFun_t TBuffer::GetReAllocFunc() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set which memory reallocation method to use.  If reallocafunc is null,
-/// reset it to the defaul value (TStorage::ReAlloc)
+/// reset it to the default value (TStorage::ReAlloc)
 
 void  TBuffer::SetReAllocFunc(ReAllocCharFun_t reallocfunc )
 {
@@ -305,7 +305,7 @@ TClass *TBuffer::GetClass(const char *className)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the current PRocessID.
+/// Return the current Process-ID.
 
 TProcessID *TBuffer::ReadProcessID(UShort_t pidf)
 {
