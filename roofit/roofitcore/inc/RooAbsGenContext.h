@@ -65,19 +65,12 @@ public:
 
   virtual void setExpectedData(Bool_t) {} ;
 
+  virtual void generateEvent(RooArgSet &theEvent, Int_t remaining) = 0;
+  virtual void initGenerator(const RooArgSet &theEvent);
+
 protected:
 
   virtual RooDataSet* createDataSet(const char* name, const char* title, const RooArgSet& obs) ;
-
-  friend class RooConvGenContext ;
-  friend class RooProdGenContext ;
-  friend class RooAddGenContext ;
-  friend class RooSimGenContext ;
-  friend class RooSimSplitGenContext ;
-  friend class RooEffGenContext ;
-
-  virtual void initGenerator(const RooArgSet &theEvent);
-  virtual void generateEvent(RooArgSet &theEvent, Int_t remaining) = 0;
 
   void resampleData(Double_t& ratio) ;
 
