@@ -57,6 +57,8 @@ public:
 
   static RooFormulaVar* identity() ;
 
+  virtual void changeBasis(RooFormulaVar* basis) ;
+
 protected:
 
   static RooFormulaVar* _identity ;  // Identity basis function pointe
@@ -67,7 +69,6 @@ protected:
   RooRealProxy x ;                   // Dependent/convolution variable
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-  virtual void changeBasis(RooFormulaVar* basis) ;
   Bool_t traceEvalHook(Double_t value) const ;
 
 
