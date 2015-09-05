@@ -40,14 +40,16 @@
 #include "RooStats/HypoTestResult.h"
 #endif
 
-/**
+
+namespace RooStats {
+
+   /**
    Common base class for the Hypothesis Test Calculators.
    It is not designed to use directly but via its derived classes
 
    \ingroup Roostats
  */
 
-namespace RooStats {
 
    class HypoTestCalculatorGeneric : public HypoTestCalculator {
 

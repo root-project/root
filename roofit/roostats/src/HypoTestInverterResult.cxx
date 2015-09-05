@@ -9,12 +9,6 @@
  *************************************************************************/
 
 
-/**
-   HypoTestInverterResult class: holds the array of hypothesis test results and compute a confidence interval.
-   Based on the RatioFinder code available in the RooStatsCms package developed by Gregory Schott and Danilo Piparo
-   Ported and adapted to RooStats by Gregory Schott
-   Some contributions to this class have been written by Matthias Wolf (error estimation)
-**/
 
 
 // include header file of this class 

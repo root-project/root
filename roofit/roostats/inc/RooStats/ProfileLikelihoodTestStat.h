@@ -38,6 +38,9 @@
 #include "RooStats/RooStatsUtils.h"
 #endif
 
+
+namespace RooStats {
+
 /**
 
 
@@ -50,9 +53,6 @@ ProfileLikelihoodTestStat is an implementation of the TestStatistic interface th
 \ingroup Roostats
 
 */
-
-
-namespace RooStats {
 
   class ProfileLikelihoodTestStat : public TestStatistic{
 

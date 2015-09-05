@@ -32,6 +32,10 @@
 
 #include <vector>
 
+
+
+namespace RooStats {
+
 /**
 
 ToyMCStudy is an implementation of RooAbsStudy for toy Monte Carlo sampling.
@@ -42,8 +46,6 @@ This is also its intended use case.
 
 */
 
-
-namespace RooStats {
 
 class ToyMCStudy: public RooAbsStudy {
 

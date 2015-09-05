@@ -11,24 +11,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
-   \class NeymanConstruction
-   \ingroup Roostats
 
-NeymanConstruction is a concrete implementation of the NeymanConstruction interface that, as the name suggests, performs a NeymanConstruction. It produces a RooStats::PointSetInterval, which is a concrete implementation of the ConfInterval interface.
-
-The Neyman Construction is not a uniquely defined statistical technique, it requires that one specify an ordering rule or ordering principle, which is usually incoded by choosing a specific test statistic and limits of integration (corresponding to upper/lower/central limits). As a result, this class must be configured with the corresponding information before it can produce an interval. Common configurations, such as the Feldman-Cousins approach, can be enforced by other light weight classes.
-
-The Neyman Construction considers every point in the parameter space independently, no assumptions are made that the interval is connected or of a particular shape. As a result, the PointSetInterval class is used to represent the result. The user indicate which points in the parameter space to perform the constrution by providing a PointSetInterval instance with the desired points.
-
-This class is fairly light weight, because the choice of parameter points to be considered is factorized and so is the creation of the sampling distribution of the test statistic (which is done by a concrete class implementing the DistributionCreator interface). As a result, this class basically just drives the construction by:
-
-*   using a DistributionCreator to create the SamplingDistribution of a user-defined test statistic for each parameter point of interest,
-*   defining the acceptance region in the data by finding the thresholds on the test statistic such that the integral of the sampling distribution is of the appropriate size and consistent with the limits of integration (eg. upper/lower/central limits),
-*   and finally updating the PointSetInterval based on whether the value of the test statistic evaluated on the data are in the acceptance region.
-
-*/
-//
 
 #ifndef RooStats_NeymanConstruction
 #include "RooStats/NeymanConstruction.h"

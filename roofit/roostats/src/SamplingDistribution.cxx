@@ -15,18 +15,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
-
-\class SamplingDistribution 
-
-\ingroup Roostats
-
-This class simply holds a sampling distribution of some test statistic.  
-The distribution can either be an empirical distribution (eg. the samples themselves) or
-a weighted set of points (eg. for the FFT method).
-The class supports merging.
-
-*/
 
 #ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"

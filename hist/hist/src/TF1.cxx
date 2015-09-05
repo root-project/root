@@ -154,11 +154,11 @@ TF1 graphics function is via the <tt>TH1/TGraph</tt> drawing functions.
 
 The following types of functions can be created:
 
-*   [A - Expression using variable x and no parameters](#F1)
-*   [B - Expression using variable x with parameters](#F2)
-*   [C - A general C function with parameters](#F3)
-*   [D - A general C++ function object (functor) with parameters](#F4)
-*   [E - A member function with parameters of a general C++ class](#F5)
+*   (A)[#F1] - Expression using variable x and no parameters
+*   (B)[#F2] - Expression using variable x with parameters
+*   (C)[#F3] - A general C function with parameters
+*   (D)[#F4] - A general C++ function object (functor) with parameters
+*   (E)[#F5] - A member function with parameters of a general C++ class
 
 
 
@@ -209,31 +209,35 @@ fa3->Draw();
 
 #### Case 1: inline expression using standard C++ functions/operators
 
-*   Example a: 
-~~~~
+* Example a: 
+
+
+~~~~{.cpp}
 TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3); 
 ~~~~
+
 This creates a function of variable x with 2 parameters. The parameters must be initialized via:
 
-~~~~
+~~~~{.cpp}
    fa->SetParameter(0,value_first_parameter);
    fa->SetParameter(1,value_second_parameter);
 ~~~~
 
 
-    Parameters may be given a name:
+Parameters may be given a name:
 
-    <pre>   fa->SetParName(0,"Constant");
-    </pre>
+~~~~{.cpp}
+    fa->SetParName(0,"Constant");
+~~~~
 
-*   Example b:
+* Example b:
 
 ~~~~{.cpp}
     TF1 *fb = new TF1("fb","gaus(0)*expo(3)",0,10);
 ~~~~
 
 
-    <div class="clear"><tt>gaus(0)</tt> is a substitute for <tt>[0]*exp(-0.5*((x-[1])/[2])**2)</tt> and <tt>(0)</tt> means start numbering parameters at <tt>0</tt>. <tt>expo(3)</tt> is a substitute for <tt>exp([3]+[4]*x)</tt>.</div>
+``gaus(0)`` is a substitute for ``[0]*exp(-0.5*((x-[1])/[2])**2)`` and ``(0)`` means start numbering parameters at ``0``. ``expo(3)`` is a substitute for ``exp([3]+[4]*x)``.
 
 #### Case 2: inline expression using TMath functions with parameters
 
@@ -374,7 +378,7 @@ class  MyFunction {
 }
 ~~~~
 
-See also the tutorial math/exampleFunctor.C for a running example. 
+See also the tutorial __math/exampleFunctor.C__ for a running example. 
 */
 ////////////////////////////////////////////////////////////////////////////
 

@@ -24,58 +24,71 @@
 
 namespace RooStats {
 
+   /**
+
+   \ingroup Roostats
+
+   PointSetInterval is a concrete implementation of the ConfInterval interface.  
+   It implements simple general purpose interval of arbitrary dimensions and shape.
+   It does not assume the interval is connected.
+   It uses either a RooDataSet (eg. a list of parameter points in the interval) or
+   a RooDataHist (eg. a Histogram-like object for small regions of the parameter space) to
+   store the interval.  
+
+*/
+
  class PointSetInterval : public ConfInterval {
 
   public:
 
-     // default constructors
+     /// default constructors
     explicit PointSetInterval(const char* name = 0);
 
-    // constructor from name and data set specifying the interval points
+    /// constructor from name and data set specifying the interval points
     PointSetInterval(const char* name, RooAbsData&);
 
-    // destructor
+    /// destructor
     virtual ~PointSetInterval();
         
 
-    // check if parameter is in the interval
+    /// check if parameter is in the interval
     virtual Bool_t IsInInterval(const RooArgSet&) const;
 
-    // set the confidence level for the interval
+    /// set the confidence level for the interval
     virtual void SetConfidenceLevel(Double_t cl) {fConfidenceLevel = cl;}
 
-    // return the confidence level for the interval
+    /// return the confidence level for the interval
     virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
  
-    // Method to return lower limit on a given parameter 
-    //  Double_t LowerLimit(RooRealVar& param) ; // could provide, but misleading?
-    //      Double_t UpperLimit(RooRealVar& param) ; // could provide, but misleading?
+    /// Method to return lower limit on a given parameter 
+    ///  Double_t LowerLimit(RooRealVar& param) ; // could provide, but misleading?
+    ///      Double_t UpperLimit(RooRealVar& param) ; // could provide, but misleading?
     
-    // return a cloned list with the parameter of interest
+    /// return a cloned list with the parameter of interest
     virtual RooArgSet* GetParameters() const;
 
-    // return a copy of the data set (points) defining this interval
+    /// return a copy of the data set (points) defining this interval
     RooAbsData* GetParameterPoints() const {return (RooAbsData*)fParameterPointsInInterval->Clone();}
 
-    // return a cloned list with the parameter of interest
+    /// return a cloned list with the parameter of interest
     Bool_t CheckParameters(const RooArgSet&) const ;
 
-    // return lower limit on a given parameter 
+    /// return lower limit on a given parameter 
     Double_t LowerLimit(RooRealVar& param) ;
 
-    // return upper limit on a given parameter 
+    /// return upper limit on a given parameter 
     Double_t UpperLimit(RooRealVar& param) ;
 
     
   protected:
 
-    ClassDef(PointSetInterval,1)  // Concrete implementation of ConfInterval for simple 1-D intervals in the form [a,b]
+    ClassDef(PointSetInterval,1)  /// Concrete implementation of ConfInterval for simple 1-D intervals in the form [a,b]
 
   private:
 
     //    RooArgSet* fParameters; // parameter of interest
-    Double_t fConfidenceLevel; // confidence level
-    RooAbsData* fParameterPointsInInterval; // either a histogram (RooDataHist) or a tree (RooDataSet)
+    Double_t fConfidenceLevel; /// confidence level
+    RooAbsData* fParameterPointsInInterval; /// either a histogram (RooDataHist) or a tree (RooDataSet)
 
       
   };

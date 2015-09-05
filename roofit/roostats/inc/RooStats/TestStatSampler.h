@@ -22,18 +22,20 @@ class RooArgSet;
 class RooAbsPdf;
 
 
-/**
-   TestStatSampler is an interface class for a tools which produce RooStats SamplingDistributions.  
-   Tools that implement this interface are expected to be used for coverage studies, the Neyman Construction, etc.
-   
-   \ingroup Roostats
-*/
 
 
 namespace RooStats {
 
    class SamplingDistribution; 
    class TestStatistic;
+
+   /**
+      TestStatSampler is an interface class for a tools which produce RooStats SamplingDistributions.  
+      Tools that implement this interface are expected to be used for coverage studies, the Neyman Construction, etc.
+   
+      \ingroup Roostats
+   */
+
 
    class TestStatSampler {
 

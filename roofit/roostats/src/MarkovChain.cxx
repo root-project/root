@@ -11,15 +11,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-Stores the steps in a Markov Chain of points.  Allows user to access the
-weight and NLL value (if applicable) with which a point was added to the
-MarkovChain.
-</p>
-END_HTML
-*/
 //_________________________________________________
 
 #ifndef ROOT_Rtypes

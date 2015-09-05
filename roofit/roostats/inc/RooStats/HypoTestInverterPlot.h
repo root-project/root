@@ -16,20 +16,22 @@
 class TGraphErrors; 
 class TMultiGraph;
 
-/**
-   Class to plot an HypoTestInverterResult,  result of the HypoTestInverter calculator
 
-   It can be used to plot th eobtained p-values ( CLb, CLs+b or CLs) for each scanned point and 
-   the test statistic distributions (when a calculator based on pseudo-experiments is used) for the two 
-   hypotheses. 
-
-   \ingroup Roostats
- */
-
-namespace RooStats {
+namespace RooStats {   
 
    class HypoTestInverterResult; 
    class SamplingDistPlot;
+
+   /**
+      Class to plot an HypoTestInverterResult,  result of the HypoTestInverter calculator
+      
+      It can be used to plot the obtained p-values ( CLb, CLs+b or CLs) for each scanned point and 
+      the test statistic distributions (when a calculator based on pseudo-experiments is used) for the two 
+      hypotheses. 
+      
+      \ingroup Roostats
+   */
+
    
    class HypoTestInverterPlot : public TNamed {
      

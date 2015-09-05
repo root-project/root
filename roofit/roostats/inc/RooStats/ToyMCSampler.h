@@ -35,19 +35,6 @@
 #include "RooDataSet.h"
 
 
-/**
-
-ToyMCSampler is an implementation of the TestStatSampler interface.
-It generates Toy Monte Carlo for a given parameter point and evaluates a
-TestStatistic.
-
-For parallel runs, ToyMCSampler can be given an instance of ProofConfig
-and then run in parallel using proof or proof-lite. Internally, it uses
-ToyMCStudy with the RooStudyManager.
-
-\ingroup Roostats
-
-*/
 
 namespace RooStats {
 
@@ -89,6 +76,22 @@ class NuisanceParametersSampler {
       Int_t fIndex;                // current index in fPoints array
 };
 
+
+/**
+
+ToyMCSampler is an implementation of the TestStatSampler interface.
+It generates Toy Monte Carlo for a given parameter point and evaluates a
+TestStatistic.
+
+For parallel runs, ToyMCSampler can be given an instance of ProofConfig
+and then run in parallel using proof or proof-lite. Internally, it uses
+ToyMCStudy with the RooStudyManager.
+
+\ingroup Roostats
+
+*/
+
+   
 class ToyMCSampler: public TestStatSampler {
 
    public:

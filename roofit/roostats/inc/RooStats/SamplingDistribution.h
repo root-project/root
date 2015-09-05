@@ -29,11 +29,23 @@
 
 namespace RooStats {
 
+   /**
+
+      \ingroup Roostats
+
+      This class simply holds a sampling distribution of some test statistic.  
+      The distribution can either be an empirical distribution (eg. the samples themselves) or
+      a weighted set of points (eg. for the FFT method).
+      The class supports merging.
+
+   */
+
+
  class SamplingDistribution : public TNamed {
 
    public:
 
-    // Constructor for SamplingDistribution
+    /// Constructor for SamplingDistribution
     SamplingDistribution(const char *name,const char *title, std::vector<Double_t>& samplingDist, const char * varName = 0);
     SamplingDistribution(const char *name,const char *title,
 			 std::vector<Double_t>& samplingDist, std::vector<Double_t>& sampleWeights, const char * varName = 0);
@@ -43,62 +55,62 @@ namespace RooStats {
 
     SamplingDistribution(const char *name,const char *title, RooDataSet& dataSet, const char * columnName = 0, const char * varName = 0);
 
-    // Default constructor for SamplingDistribution
+    /// Default constructor for SamplingDistribution
     SamplingDistribution();
     
-    // Destructor of SamplingDistribution
+    /// Destructor of SamplingDistribution
     virtual ~SamplingDistribution();
     
-    // get the inverse of the Cumulative distribution function
+    /// get the inverse of the Cumulative distribution function
     Double_t InverseCDF(Double_t pvalue);
 
-    // get the inverse of the Cumulative distribution function
+    /// get the inverse of the Cumulative distribution function
     Double_t InverseCDFInterpolate(Double_t pvalue);
 
-    // get the inverse of the Cumulative distribution function
-    // together with the inverse based on sampling variation
+    /// get the inverse of the Cumulative distribution function
+    /// together with the inverse based on sampling variation
     Double_t InverseCDF(Double_t pvalue, Double_t sigmaVariaton, Double_t& inverseVariation);
   
-    // merge two sampling distributions
+    /// merge two sampling distributions
     void Add(const SamplingDistribution* other);
     
-    // size of samples
+    /// size of samples
     Int_t GetSize() const{return fSamplingDist.size();}
 
-    // Get test statistics values
+    /// Get test statistics values
     const std::vector<Double_t> & GetSamplingDistribution() const {return fSamplingDist;}
-    // Get the sampling weights 
+    /// Get the sampling weights 
     const std::vector<Double_t> & GetSampleWeights() const {return fSampleWeights;}
 
     const TString GetVarName() const {return fVarName;}
     
-    // numerical integral in these limits
+    /// numerical integral in these limits
     Double_t Integral(Double_t low, Double_t high, Bool_t normalize = kTRUE, Bool_t lowClosed = kTRUE, Bool_t highClosed = kFALSE) const;
 
-    // numerical integral in these limits including error estimation
+    /// numerical integral in these limits including error estimation
     Double_t IntegralAndError(Double_t & error, Double_t low, Double_t high, Bool_t normalize = kTRUE, 
                               Bool_t lowClosed = kTRUE, Bool_t highClosed = kFALSE) const;
 
-    // calculate CDF as a special case of Integral(...) with lower limit equal to -inf
+    /// calculate CDF as a special case of Integral(...) with lower limit equal to -inf
     Double_t CDF(Double_t x) const;
 
   private:
 
-    mutable std::vector<Double_t> fSamplingDist; // vector of points for the sampling distribution
-    mutable std::vector<Double_t> fSampleWeights; // vector of weights for the samples
+    mutable std::vector<Double_t> fSamplingDist; /// vector of points for the sampling distribution
+    mutable std::vector<Double_t> fSampleWeights; /// vector of weights for the samples
     // store a RooRealVar that this distribution corresponds to?
 
     TString fVarName;
 
-    mutable std::vector<Double_t> fSumW;   //! Chached vector with sum of the weight used to compute integral 
-    mutable std::vector<Double_t> fSumW2;  //! Chached vector with sum of the weight used to compute integral error 
+    mutable std::vector<Double_t> fSumW;   ///! Chached vector with sum of the weight used to compute integral 
+    mutable std::vector<Double_t> fSumW2;  ///! Chached vector with sum of the weight used to compute integral error 
     
   protected:
 
-    // internal function to sort values
+    /// internal function to sort values
     void SortValues() const;
     
-    ClassDef(SamplingDistribution,2)  // Class containing the results of the HybridCalculator
+    ClassDef(SamplingDistribution,2)  /// Class containing the results of the HybridCalculator
   };
 }
 

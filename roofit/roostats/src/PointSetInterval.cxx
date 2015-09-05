@@ -19,20 +19,6 @@
 
 
 
-/**
-
-   \class PointSetInterval
-   \ingroup Roostats
-
-PointSetInterval is a concrete implementation of the ConfInterval interface.  
-It implements simple general purpose interval of arbitrary dimensions and shape.
-It does not assume the interval is connected.
-It uses either a RooDataSet (eg. a list of parameter points in the interval) or
-a RooDataHist (eg. a Histogram-like object for small regions of the parameter space) to
-store the interval.  
-
-*/
-
 
 #ifndef RooStats_PointSetInterval
 #include "RooStats/PointSetInterval.h"

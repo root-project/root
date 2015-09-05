@@ -10,15 +10,6 @@
  *************************************************************************/
 
 
-/**
-
-\class SamplingDistPlot 
-\ingroup Roostats
-
-
-This class provides simple and straightforward utilities to plot SamplingDistribution
-objects.
-*/
 
 #include "RooStats/SamplingDistPlot.h"
 

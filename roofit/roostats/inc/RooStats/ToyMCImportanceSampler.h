@@ -15,6 +15,14 @@
 
 #include "RooStats/ToyMCSampler.h"
 
+
+
+namespace RooStats {
+
+
+enum toysStrategies { EQUALTOYSPERDENSITY, EXPONENTIALTOYDISTRIBUTION };
+
+
 /**
 
 ToyMCImportanceSampler is an extension of the ToyMCSampler for Importance Sampling.
@@ -24,13 +32,7 @@ Implementation based on a work by   Cranmer, Kreiss, Read (in Preparation)
 \ingroup Roostats
 
 */
-
-
-namespace RooStats {
-
-
-enum toysStrategies { EQUALTOYSPERDENSITY, EXPONENTIALTOYDISTRIBUTION };
-
+   
 
 class ToyMCImportanceSampler: public ToyMCSampler {
 

@@ -29,7 +29,7 @@
 namespace RooStats {
 
 
-   /**
+/**
 
    \ingroup Roostats
 
@@ -66,8 +66,6 @@ CLs has no similar direct interpretation as for exclusion and can
 be larger than one.
 
 */
-
-
 
    class HypoTestResult : public TNamed {
 
