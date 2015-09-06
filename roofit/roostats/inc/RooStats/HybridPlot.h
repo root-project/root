@@ -36,6 +36,20 @@ class TVirtualPad;
 
 namespace RooStats {
 
+
+   /**
+      This class provides the plots for the result of a study performed with the 
+      HybridCalculatorOriginal class.
+
+
+      Authors: D. Piparo, G. Schott - Universitaet Karlsruhe
+
+
+      An example plot is available here:
+      http://www-ekp.physik.uni-karlsruhe.de/~schott/roostats/hybridplot_example.png
+*/
+
+
    class HybridPlot : public TNamed {
 
    public:

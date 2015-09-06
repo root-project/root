@@ -41,37 +41,78 @@
 
 namespace RooStats {
 
+/**
+
+
+   \ingroup Roostats
+
+PdfProposal is a concrete implementation of the ProposalFunction interface.
+It proposes points across the parameter space in the distribution of the
+given PDF.
+
+To make Propose(xPrime, x) dependent on x, configure with
+PdfProposal::AddMapping(varToUpdate, valueToUse).  For example, suppose we have:
+
+````{.cpp}
+// our parameter
+RooRealVar p("p", "p", 5, 0, 10);
+
+// create mean and sigma for gaussian proposal function
+RooRealVar meanP("meanP", "meanP", 0, 10);
+RooRealVar sigma("sigma", "sigma", 1, 0, 5);
+RooGaussian pGaussian("pGaussian", "pGaussian", p, meanP, sigma);
+
+// configure proposal function
+PdfProposal pdfProposal(pGaussian);
+pdfProposal.AddMapping(meanP, p); // each call of Propose(xPrime, x), meanP in
+                                  // the proposal function will be updated to
+                                  // the value of p in x.  this will center the
+                                  // proposal function about x's p when
+                                  // proposing for xPrime
+
+// To improve performance, PdfProposal has the ability to cache a specified
+// number of proposals. If you don't call this function, the default cache size
+// is 1, which can be slow.
+pdfProposal.SetCacheSize(desiredCacheSize);
+````
+
+PdfProposal currently uses a fixed cache size. Adaptive caching methods are in the works
+for future versions.
+
+*/
+
+   
    class PdfProposal : public ProposalFunction {
 
    public:
       PdfProposal();
       PdfProposal(RooAbsPdf& pdf);
 
-      // Populate xPrime with a new proposed point
+      /// Populate xPrime with a new proposed point
       virtual void Propose(RooArgSet& xPrime, RooArgSet& x);
 
-      // Determine whether or not the proposal density is symmetric for
-      // points x1 and x2 - that is, whether the probabilty of reaching x2
-      // from x1 is equal to the probability of reaching x1 from x2
+      /// Determine whether or not the proposal density is symmetric for
+      /// points x1 and x2 - that is, whether the probabilty of reaching x2
+      /// from x1 is equal to the probability of reaching x1 from x2
       virtual Bool_t IsSymmetric(RooArgSet& x1, RooArgSet& x2);
 
-      // Return the probability of proposing the point x1 given the starting
-      // point x2
+      /// Return the probability of proposing the point x1 given the starting
+      /// point x2
       virtual Double_t GetProposalDensity(RooArgSet& x1, RooArgSet& x2);
 
-      // Set the PDF to be the proposal density function
+      /// Set the PDF to be the proposal density function
       virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; }
 
-      // Get the PDF is the proposal density function
+      /// Get the PDF is the proposal density function
       virtual const RooAbsPdf* GetPdf() const { return fPdf; }
 
-      // specify a mapping between a parameter of the proposal function and
-      // a parameter of interest.  this mapping is used to set the value of
-      // proposalParam equal to the value of update to determine the
-      // proposal function.
-      // proposalParam is a parameter of the proposal function that must
-      // be set to the value of update (from the current point) in order to
-      // propose a new point.
+      /// specify a mapping between a parameter of the proposal function and
+      /// a parameter of interest.  this mapping is used to set the value of
+      /// proposalParam equal to the value of update to determine the
+      /// proposal function.
+      /// proposalParam is a parameter of the proposal function that must
+      /// be set to the value of update (from the current point) in order to
+      /// propose a new point.
       virtual void AddMapping(RooRealVar& proposalParam, RooAbsReal& update);
 
       virtual void Reset()
@@ -89,8 +130,8 @@ namespace RooStats {
             std::cout << it->first->GetName() << " => " << it->second->GetName() << std::endl;
       }
 
-      // Set how many points to generate each time we propose from a new point
-      // Default (and minimum) is 1
+      /// Set how many points to generate each time we propose from a new point
+      /// Default (and minimum) is 1
       virtual void SetCacheSize(Int_t size)
       {
          if (size > 0)
@@ -100,8 +141,8 @@ namespace RooStats {
                size << ". Cache size unchanged." << std::endl;
       }
 
-      // set whether we own the PDF that serves as the proposal density function
-      // By default, when constructed, PdfProposal does NOT own the PDF.
+      /// set whether we own the PDF that serves as the proposal density function
+      /// By default, when constructed, PdfProposal does NOT own the PDF.
       virtual void SetOwnsPdf(Bool_t ownsPdf) { fOwnsPdf = ownsPdf; }
 
       //virtual void SetIsAlwaysSymmetric(Bool_t isAlwaysSymmetric)
@@ -115,21 +156,21 @@ namespace RooStats {
       }
 
    protected:
-      RooAbsPdf* fPdf; // the proposal density function
-      std::map<RooRealVar*, RooAbsReal*> fMap; // map of values in pdf to update
-      std::map<RooRealVar*, RooAbsReal*>::iterator fIt; // pdf iterator
-      RooArgSet fLastX; // the last point we were at
-      Int_t fCacheSize; // how many points to generate each time
-      Int_t fCachePosition; // our position in the cached proposal data set
-      RooDataSet* fCache; // the cached proposal data set
-      RooArgSet fMaster; // pointers to master variables needed for updates
-      Bool_t fOwnsPdf; // whether we own the proposal density function
+      RooAbsPdf* fPdf; /// the proposal density function
+      std::map<RooRealVar*, RooAbsReal*> fMap; /// map of values in pdf to update
+      std::map<RooRealVar*, RooAbsReal*>::iterator fIt; /// pdf iterator
+      RooArgSet fLastX; /// the last point we were at
+      Int_t fCacheSize; /// how many points to generate each time
+      Int_t fCachePosition; /// our position in the cached proposal data set
+      RooDataSet* fCache; /// the cached proposal data set
+      RooArgSet fMaster; /// pointers to master variables needed for updates
+      Bool_t fOwnsPdf; /// whether we own the proposal density function
       //Bool_t fIsAlwaysSymmetric; // does Q(x1 | x2) == Q(x2 | x1) for all x1, x2
 
-      // determine whether these two RooArgSets represent the same point
+      /// determine whether these two RooArgSets represent the same point
       virtual Bool_t Equals(RooArgSet& x1, RooArgSet& x2);
 
-      // Interface for tools setting limits (producing confidence intervals)
+      /// Interface for tools setting limits (producing confidence intervals)
       ClassDef(PdfProposal,1)
    };
 }

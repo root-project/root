@@ -11,21 +11,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
-
-\class UniformProposal
-
-\ingroup Roostats
-
-UniformProposal is a concrete implementation of the ProposalFunction interface
-for use with a Markov Chain Monte Carlo algorithm.  This proposal function is
-a uniformly random distribution over the parameter space.  The proposal
-ignores the current point when it proposes a new point.  The proposal
-function is symmetric, though it may not cause a MetropolisHastings run to
-converge as quickly as other proposal functions.
-
-*/
-
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"

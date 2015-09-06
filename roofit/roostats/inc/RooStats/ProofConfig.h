@@ -11,31 +11,8 @@
 #ifndef ROOSTATS_ProofConfig
 #define ROOSTATS_ProofConfig
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-Holds configuration options for proof and proof-lite.
-
-This class will be expanded in the future to hold more specific configuration
-options for the tools in RooStats.
-</p>
 
 
-<p>
-Access to TProof::Mgr for configuration is still possible as usual
-(e.g. to set Root Version to be used on workers). You can do:</p>
-<ul>
-  <li>TProof::Mgr("my.server.url")->ShowROOTVersions()</li>
-  <li>TProof::Mgr("my.server.url")->SetROOTVersion("v5-27-06_dbg")</li>
-</ul>
-
-<p>
-See doc: http://root.cern.ch/drupal/content/changing-default-root-version
-</p>
-END_HTML
-*/
-//
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -47,6 +24,27 @@ END_HTML
 #include "TROOT.h"
 
 namespace RooStats {
+
+/**
+
+Holds configuration options for proof and proof-lite.
+
+This class will be expanded in the future to hold more specific configuration
+options for the tools in RooStats.
+
+Access to TProof::Mgr for configuration is still possible as usual
+(e.g. to set Root Version to be used on workers). You can do:
+
+*  ``TProof::Mgr("my.server.url")->ShowROOTVersions()``
+*  ``TProof::Mgr("my.server.url")->SetROOTVersion("v5-27-06_dbg")``
+
+
+See doc: http://root.cern.ch/drupal/content/changing-default-root-version
+
+\ingroup Roostats
+
+*/
+
 
 class ProofConfig {
 

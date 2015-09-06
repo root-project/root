@@ -25,7 +25,7 @@
 
 namespace RooStats {
 
-   /*
+   /**
      \ingroup Roostats
 
      Represents the Heaviside function.

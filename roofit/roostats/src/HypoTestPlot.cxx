@@ -8,11 +8,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/**
- * Class HypoTestPlot
- * This class provides the plots for the result of a study performed with e.g. the
- * HybridCalculator2 class.
- */
 
 
 #include "RooStats/HypoTestPlot.h"

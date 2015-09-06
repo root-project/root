@@ -40,11 +40,15 @@ namespace RooStats {
 
   class DetailedOutputAggregator;
 
-// only used inside ToyMCSampler, ie "private" in the cxx file
+
+/**
+   Helper class for ToyMCSampler. Handles all of the nuisance parameter related
+   functions. Once instantiated, it gives a new nuisance parameter point
+   at each call to nextPoint(...).
+   Only used inside ToyMCSampler, ie "private" in the cxx file
+*/
+   
 class NuisanceParametersSampler {
-   // Helper for ToyMCSampler. Handles all of the nuisance parameter related
-   // functions. Once instantiated, it gives a new nuisance parameter point
-   // at each call to nextPoint(...).
 
    public:
       NuisanceParametersSampler(RooAbsPdf *prior=NULL, const RooArgSet *parameters=NULL, Int_t nToys=1000, Bool_t asimov=kFALSE) :

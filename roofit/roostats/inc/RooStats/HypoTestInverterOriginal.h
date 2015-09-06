@@ -30,6 +30,23 @@ class RooRealVar;
 
 namespace RooStats {
 
+   /**
+     
+   This class is now depratcated and to be replaced by the HypoTestInverter. 
+   HypoTestInverterOriginal class for performing an hypothesis test inversion by scanning the hypothesis test results of the 
+  HybridCalculator  for various values of the parameter of interest. By looking at the confidence level curve of 
+ the result  an upper limit, where it intersects the desired confidence level, can be derived.
+ The class implements the RooStats::IntervalCalculator interface and returns an  RooStats::HypoTestInverterResult class.
+ The result is a SimpleInterval, which via the method UpperLimit returns to the user the upper limit value.
+
+The  HypoTestInverterOriginal implements various option for performing the scan. HypoTestInverterOriginal::RunFixedScan will scan using a fixed grid the parameter of interest. HypoTestInverterOriginal::RunAutoScan will perform an automatic scan to find optimally the curve and it will stop until the desired precision is obtained.
+The confidence level value at a given point can be done via  HypoTestInverterOriginal::RunOnePoint.
+The class can scan the CLs+b values or alternativly CLs (if the method HypoTestInverterOriginal::UseCLs has been called).
+
+
+   New contributions to this class have been written by Matthias Wolf (advanced AutoRun algorithm)
+**/
+
   class HypoTestInverterOriginal : public IntervalCalculator, public TNamed {
 
   public:

@@ -24,6 +24,11 @@ namespace RooStats {
 
    class ProfileLikelihoodCalculator; 
 
+/**
+
+ This class allow to compute in the ToyMcStudy framework the ProfileLikelihood upper limit for each toy-MC sample generated
+
+*/
 
 class UpperLimitMCSModule : public RooAbsMCStudyModule {
 public:
