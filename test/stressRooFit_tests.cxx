@@ -426,7 +426,7 @@ public:
     // -----------------------------------------------------------------------
 
     // Bind pdf ROOT::Math::Beta with three variables as RooAbsPdf function
-    RooRealVar x2("x2","x2",1e-9,0.999) ;
+    RooRealVar x2("x2","x2",0,0.999) ;
     RooRealVar a("a","a",5,0,10) ;
     RooRealVar b("b","b",2,0,10) ;
     RooAbsPdf* beta = bindPdf("beta",ROOT::Math::beta_pdf,x2,a,b) ;
