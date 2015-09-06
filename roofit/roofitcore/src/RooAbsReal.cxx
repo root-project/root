@@ -3661,7 +3661,10 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
        // avoid overflowing the error list, so if there are very many, print
        // the oldest one first, and pop it off the list
        const EvalError& oee = _evalErrorList[this].second.front();
-       coutE(Eval) << "RooAbsReal::logEvalError(" << GetName() << ") evaluation error, " << endl 
+       // print to debug stream, since these would normally be suppressed, and
+       // we do not want to increase the error count in the message service...
+       ccoutD(Eval) << "RooAbsReal::logEvalError(" << GetName()
+	           << ") delayed evaluation error, " << endl 
                    << " origin       : " << oss2.str() << endl 
                    << " message      : " << oee._msg << endl
                    << " server values: " << oee._srvval << endl ;       
