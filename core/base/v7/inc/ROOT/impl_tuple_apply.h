@@ -1,5 +1,5 @@
 /// \file impl_tuple_apply.h
-/// \ingroup Base StdExt
+/// \ingroup Base StdExt ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-09
 /// \warning This is part of the ROOT 7 prototype! It will change without notice, it might do evil. Feedback is welcome!

@@ -1,5 +1,7 @@
 /// \file ROOT/THistBinIter.h
+/// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
+/// \ingroup Hist ROOT7
 /// \date 2015-08-07
 /// \warning This is part of the ROOT 7 prototype! It will change without notice, it might do evil. Feedback is welcome!
 

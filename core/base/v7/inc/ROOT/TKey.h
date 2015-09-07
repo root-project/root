@@ -1,5 +1,5 @@
 /// \file TKey.h
-/// \ingroup Base
+/// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-31
 /// \warning This is part of the ROOT 7 prototype! It will change without notice, it might do evil. Feedback is welcome!

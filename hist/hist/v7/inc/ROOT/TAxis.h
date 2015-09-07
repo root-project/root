@@ -25,7 +25,7 @@
 namespace ROOT {
 
 /**
- \class TAxisBase
+ \class TAxisBase ROOT7
  Histogram axis base class. Keeps track of the number of bins and overflow
  handling. Offers bin iteration.
 
