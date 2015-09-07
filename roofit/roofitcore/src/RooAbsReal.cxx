@@ -15,19 +15,22 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsReal is the common abstract base class for objects that represent a
-// real value and implements functionality common to all real-valued objects
-// such as the ability to plot them, to construct integrals of them, the
-// ability to advertise (partial) analytical integrals etc..
 
-// Implementation of RooAbsReal may be derived, thus no interface
-// is provided to modify the contents.
-// 
-// 
-// END_HTML
-//
+/** \class RooAbsReal
+
+   RooAbsReal is the common abstract base class for objects that represent a
+   real value and implements functionality common to all real-valued objects
+   such as the ability to plot them, to construct integrals of them, the
+   ability to advertise (partial) analytical integrals etc..
+   
+   Implementation of RooAbsReal may be derived, thus no interface
+   is provided to modify the contents.
+
+   \ingroup Roofitcore
+*/
+
+
+
 
 #include <sys/types.h>
 

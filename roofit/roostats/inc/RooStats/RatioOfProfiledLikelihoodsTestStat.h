@@ -65,8 +65,8 @@ are given at each call of Evaluate.
 
 This test statitsic is often called the Tevatron test statistic, because it has been used by the Tevatron experiments. 
 
+ \ingroup Roostats
 
-\ingroup Roostats
 */
 
 

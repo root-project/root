@@ -15,22 +15,24 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooAbsArg is the common abstract base class for objects that
-// represent a value (of arbitrary type) and "shape" that in general
-// depends on (is a client of) other RooAbsArg subclasses. The only
-// state information about a value that is maintained in this base
-// class consists of named attributes and flags that track when either
-// the value or the shape of this object changes. The meaning of shape
-// depends on the client implementation but could be, for example, the
-// allowed range of a value. The base class is also responsible for
-// managing client/server links and propagating value/shape changes
-// through an expression tree. RooAbsArg implements public interfaces
-// for inspecting client/server relationships and
-// setting/clearing/testing named attributes.
-// END_HTML
-//
+/**  \class RooAbsArg
+     \ingroup Roofitcore
+
+RooAbsArg is the common abstract base class for objects that
+represent a value (of arbitrary type) and "shape" that in general
+depends on (is a client of) other RooAbsArg subclasses. The only
+state information about a value that is maintained in this base
+class consists of named attributes and flags that track when either
+the value or the shape of this object changes. The meaning of shape
+depends on the client implementation but could be, for example, the
+allowed range of a value. The base class is also responsible for
+managing client/server links and propagating value/shape changes
+through an expression tree. RooAbsArg implements public interfaces
+for inspecting client/server relationships and
+setting/clearing/testing named attributes.
+
+*/
+
 #include "RooFit.h"
 #include "Riostream.h"
 
