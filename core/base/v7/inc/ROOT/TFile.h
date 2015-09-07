@@ -1,5 +1,5 @@
 /// \file TFile.h
-/// \ingroup Base
+/// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-31
 /// \warning This is part of the ROOT 7 prototype! It will change without notice, it might do evil. Feedback is welcome!
@@ -22,6 +22,19 @@
 
 namespace ROOT {
 
+namespace Internal {
+/** \class TFileImplBase
+ Base class for file implementations.
+ */
+class TFileImplBase {
+public:
+  ~TFileImplBase() = default;
+
+  virtual void Flush() = 0;
+};
+}
+
+
 /**
  \class TFile
  \brief Stores or reads objects in ROOT's binary format. Storage-agnostic base.
@@ -36,13 +49,16 @@ namespace ROOT {
  */
 
 class TFile: public TDirectory {
+TCoopPtr<Internal::TFileImplBase> fImpl;
+
 public:
-  static TCoopPtr<TFile> Read(std::string_view name);
-  static TCoopPtr<TFile> Create(std::string_view name);
-  static TCoopPtr<TFile> Recreate(std::string_view name);
+  static TFile Read(std::string_view name);
+  static TFile Create(std::string_view name);
+  static TFile Recreate(std::string_view name);
+  static TFile Update(std::string_view name);
 
   template <class T>
-  void Write(const std::string& name, const T& ptr) {}
+  void Write(const std::string& /*name*/, const T& /*ptr*/) {}
 
   /// Save all objects associated with this directory to the storage medium.
   void Flush() {}
@@ -51,7 +67,7 @@ public:
   void Close();
 
 private:
-  TFile() = default;
+  TFile(TCoopPtr<Internal::TFileImplBase>);
 };
 }
 #endif

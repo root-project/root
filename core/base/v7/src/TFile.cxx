@@ -1,5 +1,5 @@
 /// \file TFile.cxx
-/// \ingroup Base
+/// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-31
 /// \warning This is part of the ROOT 7 prototype! It will change without notice, it might do evil. Feedback is welcome!
@@ -13,6 +13,7 @@
  *************************************************************************/
 
 #include "ROOT/TFile.h"
+#include "TFile.h"
 
 #include <mutex>
 
@@ -27,9 +28,9 @@ namespace {
 /// the TFile unclosed and data corrupted / not written. Instead, keep a
 /// collection of all opened writable TFiles and close them at destruction time,
 /// explicitly.
-static void AddFilesToClose(ROOT::TCoopPtr<ROOT::TFile> pFile) {
+static void AddFilesToClose(ROOT::TCoopPtr<ROOT::Internal::TFileImplBase> pFile) {
   struct CloseFiles_t {
-    std::vector<ROOT::TCoopPtr<ROOT::TFile>> fFiles;
+    std::vector<ROOT::TCoopPtr<ROOT::Internal::TFileImplBase>> fFiles;
     std::mutex fMutex;
     ~CloseFiles_t() {
       for (auto& pFile: fFiles)
@@ -42,18 +43,46 @@ static void AddFilesToClose(ROOT::TCoopPtr<ROOT::TFile> pFile) {
   std::lock_guard<std::mutex> lock(closer.fMutex);
   closer.fFiles.emplace_back(pFile);
 }
+
+/** \class TFSFile
+ TFileImplBase for a file-system (POSIX) style TFile.
+ */
+class TFileSystemFile: public ROOT::Internal::TFileImplBase {
+  ::TFile* fOldFile;
+
+public:
+  TFileSystemFile(const std::string& name, const char* mode):
+    fOldFile(::TFile::Open(name.c_str(), mode)) {
+  }
+
+  void Flush() final {}
+
+  ~TFileSystemFile() {
+    delete fOldFile;
+  }
+};
 }
 
-ROOT::TCoopPtr<ROOT::TFile> ROOT::TFile::Read(std::string_view name) {
-  return TCoopPtr<TFile>(new TFile()); // will become delegation to TFileSystemFile, TWebFile etc.
+ROOT::TFile::TFile(TCoopPtr<ROOT::Internal::TFileImplBase> impl):
+fImpl(impl)
+{
+  AddFilesToClose(impl);
 }
-ROOT::TCoopPtr<ROOT::TFile> ROOT::TFile::Create(std::string_view name) {
-  TCoopPtr<TFile> ptr(new TFile()); // will become delegation to TFileSystemFile, TWebFile etc.
-  AddFilesToClose(ptr);
-  return ptr;
+
+
+ROOT::TFile ROOT::TFile::Read(std::string_view name) {
+  // will become delegation to TFileSystemFile, TWebFile etc.
+  return TFile(MakeCoop<TFileSystemFile>(name.to_string(), "READ"));
 }
-ROOT::TCoopPtr<ROOT::TFile> ROOT::TFile::Recreate(std::string_view name) {
-  TCoopPtr<TFile> ptr(new TFile()); // will become delegation to TFileSystemFile, TWebFile etc.
-  AddFilesToClose(ptr);
-  return ptr;
+ROOT::TFile ROOT::TFile::Create(std::string_view name) {
+  // will become delegation to TFileSystemFile, TWebFile etc.
+  return TFile(MakeCoop<TFileSystemFile>(name.to_string(), "CREATE"));
+}
+ROOT::TFile ROOT::TFile::Recreate(std::string_view name) {
+  // will become delegation to TFileSystemFile, TWebFile etc.
+  return TFile(MakeCoop<TFileSystemFile>(name.to_string(), "RECREATE"));
+}
+ROOT::TFile ROOT::TFile::Update(std::string_view name) {
+  // will become delegation to TFileSystemFile, TWebFile etc.
+  return TFile(MakeCoop<TFileSystemFile>(name.to_string(), "UPDATE"));
 }
