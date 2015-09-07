@@ -16,6 +16,8 @@
 #include "ROOT/TFit.h"
 #include "ROOT/TFile.h"
 
+R__LOAD_LIBRARY(libRIO)
+
 void simple() {
 
   // Create a 2D histogram with an X axis with equidistant bins, and a y axis
@@ -39,6 +41,6 @@ void simple() {
 
   ROOT::TFitResult fitResult = ROOT::FitTo(hist, func, {{0., 1.}});
 
-  ROOT::TCoopPtr<ROOT::TFile> file = ROOT::TFile::Recreate("hist.root");
-  file->Write("TheHist", &hist);
+  ROOT::TFile file = ROOT::TFile::Recreate("hist.root");
+  file.Write("TheHist", &hist);
 }
