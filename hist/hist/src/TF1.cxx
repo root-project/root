@@ -148,17 +148,17 @@ public:
 ## TF1: 1-Dim function class
 
 A TF1 object is a 1-Dim function defined between a lower and upper limit.   
-The function may be a simple function (see <tt>TFormula</tt>) or a precompiled user function.   
+The function may be a simple function based on a TFormula expression or a precompiled user function.   
 The function may have associated parameters.   
-TF1 graphics function is via the <tt>TH1/TGraph</tt> drawing functions.
+TF1 graphics function is via the TH1 and TGraph drawing functions.
 
 The following types of functions can be created:
 
-*   (A)[#F1] - Expression using variable x and no parameters
-*   (B)[#F2] - Expression using variable x with parameters
-*   (C)[#F3] - A general C function with parameters
-*   (D)[#F4] - A general C++ function object (functor) with parameters
-*   (E)[#F5] - A member function with parameters of a general C++ class
+*   [A](#F1) - Expression using variable x and no parameters
+*   [B](#F2) - Expression using variable x with parameters
+*   [C](#F3) - A general C function with parameters
+*   [D](#F4) - A general C++ function object (functor) with parameters
+*   [E](#F5) - A member function with parameters of a general C++ class
 
 
 
@@ -166,33 +166,20 @@ The following types of functions can be created:
 
 #### Case 1: inline expression using standard C++ functions/operators
 
-~~~~{.cpp}
-TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10); 
-fa1->Draw(); 
-~~~~
-
 Begin_Macro(source)
 { 
-TCanvas *c = new TCanvas("c","c",0,0,500,300); 
 TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10); 
 fa1->Draw(); 
-return c; 
 } 
 End_Macro
 
-#### Case 2: inline expression using TMath functions without parameters
+#### Case 2: inline expression using a ROOT function (e.g. from TMath) without parameters
 
-~~~~{.cpp}
-TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10); 
-fa2->Draw(); 
-~~~~
 
 Begin_Macro(source) 
 {
-  TCanvas *c = new TCanvas("c","c",0,0,500,300); 
   TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10); 
   fa2->Draw(); 
-  return c; 
 } 
 End_Macro
 
