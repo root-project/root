@@ -20,7 +20,8 @@ MULTIPROCDH     := $(MULTIPROCDS:.cxx=.h)
 
 MULTIPROCH      := $(MODDIRI)/TMPClient.h $(MODDIRI)/TPool.h \
                 $(MODDIRI)/TMPServer.h $(MODDIRI)/MPSendRecv.h \
-                $(MODDIRI)/TPoolServer.h
+                $(MODDIRI)/TPoolServer.h \
+                $(MODDIRI)/EMPCode.h $(MODDIRI)/EPoolCode.h
 
 MULTIPROCS      := $(MODDIRS)/TMPClient.cxx $(MODDIRS)/TPool.cxx \
                 $(MODDIRS)/TMPServer.cxx $(MODDIRS)/MPSendRecv.cxx \
