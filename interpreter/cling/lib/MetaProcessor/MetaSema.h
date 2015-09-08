@@ -58,6 +58,7 @@ namespace cling {
     MetaSema(Interpreter& interp, MetaProcessor& meta);
 
     const Interpreter& getInterpreter() const { return m_Interpreter; }
+    const MetaProcessor& getMetaProcessor() const { return m_MetaProcessor; }
     bool isQuitRequested() const { return m_IsQuitRequested; }
 
     ///\brief L command includes the given file or loads the given library.
@@ -142,6 +143,15 @@ namespace cling {
     ///\param[in] mode - either on/off or toggle.
     ///
     void actOnrawInputCommand(SwitchMode mode = kToggle) const;
+
+
+    ///\brief Sets the depth up to which nested collections are printed.
+    ///
+    ///\param[in] depth - number of nested levels to be printed.
+    ///
+    ///
+    void actOnRecursivePrintDepthCommand(unsigned int depth) const;
+
 
     ///\brief Generates debug info for the JIT.
     ///

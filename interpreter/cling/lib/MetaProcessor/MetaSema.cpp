@@ -215,6 +215,22 @@ namespace cling {
       m_Interpreter.enableRawInput(mode);
   }
 
+  void MetaSema::actOnRecursivePrintDepthCommand(unsigned int depth) const {
+    if(depth == (unsigned int)-1) {
+      if(m_Interpreter.getRecursivePrintDepth() != 2) {
+        m_Interpreter.setRecursivePrintDepth(2);
+      } else {
+        m_Interpreter.setRecursivePrintDepth(0);
+      }
+      m_MetaProcessor.getOuts() << "Recursive print depth set to " << m_Interpreter.getRecursivePrintDepth() << "\n";
+      // TODO maybe only show the value here instead of toggling?
+//      m_MetaProcessor.getOuts() << "Recursive print depth is " << m_Interpreter.getRecursivePrintDepth() << "\n";
+    } else {
+      m_Interpreter.setRecursivePrintDepth(depth);
+      m_MetaProcessor.getOuts() << "Recursive print depth set to " << m_Interpreter.getRecursivePrintDepth() << "\n";
+    }
+  }
+
   void MetaSema::actOndebugCommand(llvm::Optional<int> mode) const {
     clang::CodeGenOptions& CGO = m_Interpreter.getCI()->getCodeGenOpts();
     if (!mode) {
@@ -331,6 +347,9 @@ namespace cling {
       "\n"
       "   " << metaString << "rawInput [0|1]\t\t- Toggle wrapping and printing the"
                              "\n\t\t\t\t  execution results of the input\n"
+      "\n"
+      "   " << metaString << "printDepth [depth]\t\t- Set the recursive depth up to which"
+                             "\n\t\t\t\t  to print nested collections to. depth >= 0\n"
       "\n"
       "   " << metaString << "dynamicExtensions [0|1]\t- Toggles the use of the dynamic scopes and the"
                              "\n\t\t\t\t  late binding\n"

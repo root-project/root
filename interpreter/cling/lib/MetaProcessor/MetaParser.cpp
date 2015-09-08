@@ -124,7 +124,7 @@ namespace cling {
       || isXCommand(actionResult, resultValue) ||isTCommand(actionResult)
       || isAtCommand()
       || isqCommand() || isUCommand(actionResult) || isICommand()
-      || isOCommand() || israwInputCommand()
+      || isOCommand() || israwInputCommand() || isRecursivePrintDepthCommand()
       || isdebugCommand() || isprintDebugCommand()
       || isdynamicExtensionsCommand() || ishelpCommand() || isfileExCommand()
       || isfilesCommand() || isClassCommand() || isNamespaceCommand() || isgCommand()
@@ -376,6 +376,26 @@ namespace cling {
         mode = (MetaSema::SwitchMode)getCurTok().getConstantAsBool();
       m_Actions->actOnrawInputCommand(mode);
       return true;
+    }
+    return false;
+  }
+
+  bool MetaParser::isRecursivePrintDepthCommand() {
+    if (getCurTok().is(tok::ident) &&
+        getCurTok().getIdent().equals("printDepth")) {
+      consumeToken();
+      skipWhitespace();
+      if (getCurTok().is(tok::constant)) {
+        unsigned short depth = getCurTok().getConstant();
+        m_Actions->actOnRecursivePrintDepthCommand(depth);
+        return true;
+      } else if (getCurTok().is(tok::eof)){
+        m_Actions->actOnRecursivePrintDepthCommand((unsigned int)-1);
+        return true;
+      } else {
+        m_Actions->getMetaProcessor().getOuts() << "ERROR: \""
+        << getCurTok().getBufStart() << "\" is not a natural number.\n";
+      }
     }
     return false;
   }

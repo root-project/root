@@ -153,6 +153,8 @@ static std::string executePrintValue(const Value &V, const T &val) {
   printValueSS << "cling::printValue(";
   printValueSS << getTypeString(V);
   printValueSS << (const void *) &val;
+  printValueSS << ", ";
+  printValueSS << Interp->getRecursivePrintDepth();
   printValueSS << ");";
   Value printValueV;
   Interp->evaluate(printValueSS.str(), printValueV);
@@ -362,7 +364,7 @@ static std::string printUnpackedClingValue(const Value &V) {
 namespace cling {
 
   // General fallback - prints the address
-  std::string printValue(const void *ptr) {
+  std::string printValue(const void *ptr, unsigned int) {
     if (!ptr) {
       return "nullptr";
     } else {
@@ -375,7 +377,7 @@ namespace cling {
   }
 
   // void pointer
-  std::string printValue(const void **ptr) {
+  std::string printValue(const void **ptr, unsigned int) {
     if (!*ptr) {
       return "nullptr";
     } else {
@@ -388,7 +390,7 @@ namespace cling {
   }
 
   // Bool
-  std::string printValue(const bool *val) {
+  std::string printValue(const bool *val, unsigned int) {
     return *val ? "true" : "false";
   }
 
@@ -407,88 +409,88 @@ namespace cling {
     return strm.str();
   }
 
-  std::string printValue(const char *val) {
+  std::string printValue(const char *val, unsigned int) {
     return printChar(*val, true);
   }
 
-  std::string printValue(const signed char *val) {
+  std::string printValue(const signed char *val, unsigned int) {
     return printChar(*val, true);
   }
 
-  std::string printValue(const unsigned char *val) {
+  std::string printValue(const unsigned char *val, unsigned int) {
     return printChar(*val, true);
   }
 
   // Ints
-  std::string printValue(const short *val) {
+  std::string printValue(const short *val, unsigned int) {
     std::ostringstream strm;
     strm << *val;
     return strm.str();
   }
 
-  std::string printValue(const unsigned short *val) {
+  std::string printValue(const unsigned short *val, unsigned int) {
     std::ostringstream strm;
     strm << *val;
     return strm.str();
   }
 
-  std::string printValue(const int *val) {
+  std::string printValue(const int *val, unsigned int) {
     std::ostringstream strm;
     strm << *val;
     return strm.str();
   }
 
-  std::string printValue(const unsigned int *val) {
+  std::string printValue(const unsigned int *val, unsigned int) {
     std::ostringstream strm;
     strm << *val;
     return strm.str();
   }
 
-  std::string printValue(const long *val) {
+  std::string printValue(const long *val, unsigned int) {
     std::ostringstream strm;
     strm << *val;
     return strm.str();
   }
 
-  std::string printValue(const unsigned long *val) {
+  std::string printValue(const unsigned long *val, unsigned int) {
     std::ostringstream strm;
     strm << *val;
     return strm.str();
   }
 
-  std::string printValue(const long long *val) {
+  std::string printValue(const long long *val, unsigned int) {
     std::ostringstream strm;
     strm << *val;
     return strm.str();
   }
 
-  std::string printValue(const unsigned long long *val) {
+  std::string printValue(const unsigned long long *val, unsigned int) {
     std::ostringstream strm;
     strm << *val;
     return strm.str();
   }
 
   // Reals
-  std::string printValue(const float *val) {
+  std::string printValue(const float *val, unsigned int) {
     std::ostringstream strm;
     strm << std::showpoint << *val << "f";
     return strm.str();
   }
 
-  std::string printValue(const double *val) {
+  std::string printValue(const double *val, unsigned int) {
     std::ostringstream strm;
     strm << std::showpoint << *val;
     return strm.str();
   }
 
-  std::string printValue(const long double *val) {
+  std::string printValue(const long double *val, unsigned int) {
     std::ostringstream strm;
     strm << *val << "L";
     return strm.str();
   }
 
   // Char pointers
-  std::string printValue(const char *const *val) {
+  std::string printValue(const char *const *val, unsigned int) {
     if (!*val) {
       return "nullptr";
     } else {
@@ -503,17 +505,17 @@ namespace cling {
     }
   }
 
-  std::string printValue(const char **val) {
-    return printValue((const char *const *) val);
+  std::string printValue(const char **val, unsigned int recurseDepth) {
+    return printValue((const char *const *) val, recurseDepth);
   }
 
   // std::string
-  std::string printValue(const std::string *val) {
+  std::string printValue(const std::string *val, unsigned int) {
     return "\"" + *val + "\"";
   }
 
   // cling::Value
-  std::string printValue(const Value *value) {
+  std::string printValue(const Value *value, unsigned int) {
     std::ostringstream strm;
 
     if (!value->isValid()) {

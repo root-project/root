@@ -170,6 +170,10 @@ namespace cling {
     ///
     bool m_RawInputEnabled;
 
+    ///\brief Depth up to which to recursively print collections.
+    ///
+    unsigned int m_RecursivePrintDepth;
+
     ///\brief Interpreter callbacks.
     ///
     std::unique_ptr<InterpreterCallbacks> m_Callbacks;
@@ -544,6 +548,9 @@ namespace cling {
 
     bool isRawInputEnabled() const { return m_RawInputEnabled; }
     void enableRawInput(bool raw = true) { m_RawInputEnabled = raw; }
+
+    unsigned int getRecursivePrintDepth() const { return m_RecursivePrintDepth; }
+    void setRecursivePrintDepth(unsigned int depth) { m_RecursivePrintDepth = depth; }
 
     clang::CompilerInstance* getCI() const;
     clang::Sema& getSema() const;
