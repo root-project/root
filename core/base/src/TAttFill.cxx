@@ -19,31 +19,27 @@
 
 ClassImp(TAttFill)
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>Fill Area Attributes class</h2></center>
+/** \class TAttFill
+Fill Area Attributes class.
 
 This class is used (in general by secondary inheritance)
 by many other classes (graphics, histograms). It holds all the fill area
 attributes.
 
-<h3>Fill Area attributes</h3>
+## Fill Area attributes
 Fill Area attributes are:
-<ul>
-<li><a href="#F1">Fill Area color.</a></li>
-<li><a href="#F2">Fill Area style.</a></li>
-</ul>
 
-<a name="F1"></a><h3>Fill Area color</h3>
+  - [Fill Area color](#F1)</a>
+  - [Fill Area style](#F2)</a>
+
+## <a name="F1"></a> Fill Area color
 The fill area color is a color index (integer) pointing in the ROOT
 color table.
-The fill area color of any class inheriting from <tt>TAttFill</tt> can
-be changed using the method <tt>SetFillColor</tt> and retrieved using the
-method <tt>GetFillColor</tt>.
+The fill area color of any class inheriting from `TAttFill` can
+be changed using the method `SetFillColor` and retrieved using the
+method `GetFillColor`.
 The following table shows the first 50 default colors.
-End_Html
+
 Begin_Macro(source)
 {
    TCanvas *c = new TCanvas("c","Fill Area colors",0,0,500,200);
@@ -52,42 +48,43 @@ Begin_Macro(source)
 }
 End_Macro
 
-Begin_Html
-
-<h4>Color transparency</h4>
-<tt>SetFillColorAlpha()</tt>, allows to set a transparent color.
-In the following example the fill color of the histogram <tt>histo</tt>
-is set to blue with a transparency of 35%. The color <tt>kBlue</tt>
+### Color transparency
+`SetFillColorAlpha()`, allows to set a transparent color.
+In the following example the fill color of the histogram `histo`
+is set to blue with a transparency of 35%. The color `kBlue`
 itself remains fully opaque.
-<p>
-<pre>
-histo->SetFillColorAlpha(kBlue, 0.35);
-</pre>
-<p>
-The transparency is available on all platforms when the <tt>flagOpenGL.CanvasPreferGL</tt> is set to <tt>1</tt>
-in <tt>$ROOTSYS/etc/system.rootrc</tt>, or on Mac with the Cocoa backend. On the file output
-it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
 
-<h4>The ROOT Color Wheel.</h4>
+~~~ {.cpp}
+histo->SetFillColorAlpha(kBlue, 0.35);
+~~~
+
+The transparency is available on all platforms when the `flagOpenGL.CanvasPreferGL` is set to `1`
+in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
+it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
+
+### The ROOT Color Wheel.
 The wheel contains the recommended 216 colors to be used in web applications.
 The colors in the Color Wheel are created by TColor::CreateColorWheel.
-<p>Using this color set for your text, background or graphics will give your
+
+Using this color set for your text, background or graphics will give your
 application a consistent appearance across different platforms and browsers.
-<p>Colors are grouped by hue, the aspect most important in human perception
+
+Colors are grouped by hue, the aspect most important in human perception
 Touching color chips have the same hue, but with different brightness and vividness.
-<p>Colors of slightly different hues <b>clash</b>. If you intend to display
+
+Colors of slightly different hues _clash_. If you intend to display
 colors of the same hue together, you should pick them from the same group.
-<p>Each color chip is identified by a mnemonic (eg kYellow) and a number.
-The keywords, kRed, kBlue, kYellow, kPink, etc are defined in the header file <b>Rtypes.h</b>
+
+Each color chip is identified by a mnemonic (eg kYellow) and a number.
+The keywords, kRed, kBlue, kYellow, kPink, etc are defined in the header file __Rtypes.h__
 that is included in all ROOT other header files. We strongly recommend to use these keywords
 in your code instead of hardcoded color numbers, eg:
-<pre>
+~~~ {.cpp}
    myObject.SetFillColor(kRed);
    myObject.SetFillColor(kYellow-10);
    myLine.SetLineColor(kMagenta+2);
-</pre>
+~~~
 
-End_Html
 Begin_Macro(source)
 {
    TColorWheel *w = new TColorWheel();
@@ -96,36 +93,34 @@ Begin_Macro(source)
 }
 End_Macro
 
-Begin_Html
-<h4>Special case forcing black&white output.</h4>
+### Special case forcing black&white output.
 If the current style fill area color is set to 0, then ROOT will force
 a black&white output for all objects with a fill area defined and independently
 of the object fill style.
 
-<a name="F2"></a><h3>Fill Area style</h3>
+## <a name="F2"></a> Fill Area style
 The fill area style defines the pattern used to fill a polygon.
-The fill area style of any class inheriting from <tt>TAttFill</tt> can
-be changed using the method <tt>SetFillStyle</tt> and retrieved using the
-method <tt>GetFillStyle</tt>.
-<h4>Conventions for fill styles:</h4>
-<ul>
-<li>  0    : hollow                   </li>
-<li>  1001 : Solid                    </li>
-<li>  3000+pattern_number (see below) </li>
-<li>  For TPad only:                  </li>
-<ul>
-   <li>  4000 :the window is transparent.                            </li>
-   <li>  4000 to 4100 the window is 100% transparent to 100% opaque. </li>
-</ul>
+The fill area style of any class inheriting from `TAttFill` can
+be changed using the method `SetFillStyle` and retrieved using the
+method `GetFillStyle`.
+### Conventions for fill styles:
+
+  -   0    : hollow
+  -   1001 : Solid
+  -   3000+pattern_number (see below)
+  -   For TPad only:
+
+     -   4000 :the window is transparent.
+     -   4000 to 4100 the window is 100% transparent to 100% opaque.
+
       The pad transparency is visible in binary outputs files like gif, jpg, png etc ..
       but not in vector graphics output files like PS, PDF and SVG. This convention
       (fill style > 4000) is kept for backward compatibility. It is better to use
       the color transparency instead.
-</ul>
 
 pattern_number can have any value from 1 to 25 (see table), or any
 value from 100 to 999. For the latest the numbering convention is the following:
-<pre>
+~~~ {.cpp}
       pattern_number = ijk      (FillStyle = 3ijk)
 
       i (1-9) : specify the space between each hatch
@@ -154,20 +149,19 @@ value from 100 to 999. For the latest the numbering convention is the following:
                 7 = 110
                 8 = 100
                 9 = 90
-</pre>
+~~~
 The following table shows the list of pattern styles.
 The first table displays the 25 fixed patterns. They cannot be
 customized unlike the hatches displayed in the second table which be
 customized using:
-<ul>
-<li> <tt>gStyle->SetHatchesSpacing()</tt> to define the spacing between hatches.
-<li> <tt>gStyle->SetHatchesLineWidth()</tt> to define the hatches line width.
-</ul>
-End_Html
+
+  -  `gStyle->SetHatchesSpacing()` to define the spacing between hatches.
+  -  `gStyle->SetHatchesLineWidth()` to define the hatches line width.
+
 Begin_Macro(source)
 fillpatterns.C
-End_Macro */
-
+End_Macro
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// AttFill default constructor.
@@ -180,7 +174,6 @@ TAttFill::TAttFill()
    fFillStyle = gStyle->GetFillStyle();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// AttFill normal constructor.
 /// color Fill Color
@@ -192,14 +185,12 @@ TAttFill::TAttFill(Color_t color, Style_t style)
    fFillStyle = style;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// AttFill destructor.
 
 TAttFill::~TAttFill()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this fill attributes to a new TAttFill.
@@ -209,7 +200,6 @@ void TAttFill::Copy(TAttFill &attfill) const
    attfill.fFillColor  = fFillColor;
    attfill.fFillStyle  = fFillStyle;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current fill area attributes if necessary.
@@ -225,7 +215,6 @@ void TAttFill::Modify()
    gPad->SetAttFillPS(fFillColor,fFillStyle);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this fill attributes to default values.
 
@@ -234,7 +223,6 @@ void TAttFill::ResetAttFill(Option_t *)
    fFillColor = 1;
    fFillStyle = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save fill attributes as C++ statement(s) on output stream out
@@ -253,7 +241,6 @@ void TAttFill::SaveFillAttributes(std::ostream &out, const char *name, Int_t col
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Invoke the DialogCanvas Fill attributes.
 
@@ -261,7 +248,6 @@ void TAttFill::SetFillAttributes()
 {
    TVirtualPadEditor::UpdateFillAttributes(fFillColor,fFillStyle);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a transparent fill color. falpha defines the percentage of

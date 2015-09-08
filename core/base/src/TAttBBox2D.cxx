@@ -13,7 +13,12 @@
 
 ClassImp(TAttBBox2D)
 
+/** \class TAttBBox2D
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+// TAttBBox2D destructor.
+
 TAttBBox2D::~TAttBBox2D()
 {
-   // TAttBBox2D destructor.
 }

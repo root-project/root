@@ -18,34 +18,30 @@
 #include "TColor.h"
 #include <cmath>
 
-
 ClassImp(TAttLine)
 using std::sqrt;
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>Line Attributes class</h2></center>
+/** \class TAttLine
+Line Attributes class.
 
 This class is used (in general by secondary inheritance)
 by many other classes (graphics, histograms). It holds all the line attributes.
 
-<h3>Line attributes</h3>
+## Line attributes
 Line attributes are:
-<ul>
-<li><a href="#L1">Line Color.</a></li>
-<li><a href="#L2">Line Width.</a></li>
-<li><a href="#L3">Line Style.</a></li>
-</ul>
 
-<a name="L1"></a><h3>Line Color</h3>
+  - [Line Color](#L1)
+  - [Line Width](#L2)
+  - [Line Style](#L3)
+
+## <a name="L1"></a> Line Color
 The line color is a color index (integer) pointing in the ROOT
 color table.
-The line color of any class inheriting from <tt>TAttLine</tt> can
-be changed using the method <tt>SetLineColor</tt> and retrieved using the
-method <tt>GetLineColor</tt>.
+The line color of any class inheriting from `TAttLine` can
+be changed using the method `SetLineColor` and retrieved using the
+method `GetLineColor`.
 The following table shows the first 50 default colors.
-End_Html
+
 Begin_Macro(source)
 {
    TCanvas *c = new TCanvas("c","Line colors",0,0,500,200);
@@ -54,30 +50,28 @@ Begin_Macro(source)
 }
 End_Macro
 
-Begin_Html
-
-<h4>Color transparency</h4>
-<tt>SetLineColorAlpha()</tt>, allows to set a transparent color.
-In the following example the line color of the histogram <tt>histo</tt>
-is set to blue with a transparency of 35%. The color <tt>kBlue</tt>
+### Color transparency
+`SetLineColorAlpha()`, allows to set a transparent color.
+In the following example the line color of the histogram `histo`
+is set to blue with a transparency of 35%. The color `kBlue`
 itself remains fully opaque.
-<p>
-<pre>
+
+~~~ {.cpp}
 histo->SetLineColorAlpha(kBlue, 0.35);
-</pre>
-<p>
-The transparency is available on all platforms when the <tt>flagOpenGL.CanvasPreferGL</tt> is set to <tt>1</tt>
-in <tt>$ROOTSYS/etc/system.rootrc</tt>, or on Mac with the Cocoa backend. On the file output
+~~~
+
+The transparency is available on all platforms when the `flagOpenGL.CanvasPreferGL` is set to `1`
+in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
 it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
 
 
-<a name="L2"></a><h3>Line Width</h3>
+## <a name="L2"></a> Line Width
 The line width is expressed in pixel units.
-The line width of any class inheriting from <tt>TAttLine</tt> can
-be changed using the method <tt>SetLineWidth</tt> and retrieved using the
-method <tt>GetLineWidth</tt>.
+The line width of any class inheriting from `TAttLine` can
+be changed using the method `SetLineWidth` and retrieved using the
+method `GetLineWidth`.
 The following picture shows the line widths from 1 to 10 pixels.
-End_Html
+
 Begin_Macro(source)
 {
    TCanvas *Lw = new TCanvas("Lw","test",500,200);
@@ -95,14 +89,13 @@ Begin_Macro(source)
 }
 End_Macro
 
-Begin_Html
-<a name="L3"></a><h3>Line Style</h3>
+## <a name="L3"></a> Line Style
 Line styles are identified via integer numbers. The line style of any class
-inheriting from <tt>TAttLine</tt> can be changed using the method
-<tt>SetLineStyle</tt> and retrieved using the method <tt>GetLineStyle</tt>.
-<br>
+inheriting from `TAttLine` can be changed using the method
+`SetLineStyle` and retrieved using the method `GetLineStyle`.
+
 The first 10 line styles are predefined as shown on the following picture:
-End_Html
+
 Begin_Macro(source)
 {
    TCanvas *Ls = new TCanvas("Ls","test",500,200);
@@ -120,15 +113,14 @@ Begin_Macro(source)
 }
 End_Macro
 
-Begin_Html
-Additional line styles can be defined using <tt>TStyle::SetLineStyleString</tt>.
-<br>For example the line style number 11 can be defined as follow:
-<pre>
-   gStyle->SetLineStyleString(11,"400 200");
-</pre>
-Existing line styles (1 to 10) can be redefined using the same method.
-End_Html */
 
+Additional line styles can be defined using `TStyle::SetLineStyleString`.
+For example the line style number 11 can be defined as follow:
+~~~ {.cpp}
+   gStyle->SetLineStyleString(11,"400 200");
+~~~
+Existing line styles (1 to 10) can be redefined using the same method.
+ */
 
 ////////////////////////////////////////////////////////////////////////////////
 /// AttLine default constructor.
@@ -141,14 +133,14 @@ TAttLine::TAttLine()
    fLineStyle = gStyle->GetLineStyle();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// AttLine normal constructor.
 /// Line attributes are taking from the argument list
-///   color : must be one of the valid color index
-///   style : 1=solid, 2=dash, 3=dash-dot, 4=dot-dot. New styles can be
-///           defined using TStyle::SetLineStyleString.
-///   width : expressed in pixel units
+///
+///  - color : must be one of the valid color index
+///  - style : 1=solid, 2=dash, 3=dash-dot, 4=dot-dot. New styles can be
+///            defined using TStyle::SetLineStyleString.
+///  - width : expressed in pixel units
 
 TAttLine::TAttLine(Color_t color, Style_t style, Width_t width)
 {
@@ -157,14 +149,12 @@ TAttLine::TAttLine(Color_t color, Style_t style, Width_t width)
    fLineStyle = style;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// AttLine destructor.
 
 TAttLine::~TAttLine()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this line attributes to a new TAttLine.
@@ -176,14 +166,13 @@ void TAttLine::Copy(TAttLine &attline) const
    attline.fLineWidth  = fLineWidth;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a line.
 /// Compute the closest distance of approach from point px,py to this line.
 /// The distance is computed in pixels units.
 ///
 /// Algorithm:
-///
+///~~~ {.cpp}
 ///   A(x1,y1)         P                             B(x2,y2)
 ///   -----------------+------------------------------
 ///                    |
@@ -202,6 +191,7 @@ void TAttLine::Copy(TAttLine &attline) const
 /// D = A - U
 /// D = B - V  = B -(c-u)**2
 ///    ==> u = (A -B +C)/2c
+///~~~
 
 Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, Double_t xp2, Double_t yp2 )
 {
@@ -236,7 +226,6 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, D
    return Int_t(sqrt(d) - 0.5*Double_t(fLineWidth));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current line attributes if necessary.
 
@@ -255,7 +244,6 @@ void TAttLine::Modify()
    else                                   gPad->SetAttLinePS(fLineColor,1,lineWidth);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this line attributes to default values.
 
@@ -265,7 +253,6 @@ void TAttLine::ResetAttLine(Option_t *)
    fLineStyle  = 1;
    fLineWidth  = 1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save line attributes as C++ statement(s) on output stream out.
@@ -287,7 +274,6 @@ void TAttLine::SaveLineAttributes(std::ostream &out, const char *name, Int_t col
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Invoke the DialogCanvas Line attributes.
 
@@ -295,7 +281,6 @@ void TAttLine::SetLineAttributes()
 {
    TVirtualPadEditor::UpdateLineAttributes(fLineColor,fLineStyle,fLineWidth);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a transparent line color. lalpha defines the percentage of
