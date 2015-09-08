@@ -26,7 +26,7 @@ void Interpolation()
 
 // do plotting only in non-batch mode
    if (!gROOT->IsBatch() )  {
-      
+
       r<<"dev.new()";//Required to activate new window for plot
 //Plot parameter. Plotting using two rows and one column
       r<<"par(mfrow = c(2,1))";
@@ -66,4 +66,5 @@ void Interpolation()
          r << "print('Result of approxfun with const method')";
          r << "print(paste('x = ',x,'  f(x) = ',fc(x2)))";
       }
+    r<<"dev.off()";//Required to close new window for plot
    }
