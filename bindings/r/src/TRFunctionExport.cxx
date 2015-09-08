@@ -5,27 +5,21 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#include<TRDataFrame.h>
-
+#include<TRFunctionExport.h>
 
 using namespace ROOT::R;
-ClassImp(TRDataFrame)
+ClassImp(TRFunctionExport)
 
 
 //______________________________________________________________________________
-TRDataFrame::TRDataFrame(): TObject()
+TRFunctionExport::TRFunctionExport(): TObject()
 {
-   df = Rcpp::DataFrame::create();
+   f = NULL;
 }
 
 //______________________________________________________________________________
-TRDataFrame::TRDataFrame(const TRDataFrame &_df): TObject(_df)
+TRFunctionExport::TRFunctionExport(const TRFunctionExport &fun): TObject(fun)
 {
-   df = _df.df;
+   f = fun.f;
 }
 
-//______________________________________________________________________________
-TRDataFrame::Binding TRDataFrame::operator[](const TString &name)
-{
-   return Binding(df, name);
-}
