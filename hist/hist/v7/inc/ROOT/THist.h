@@ -27,14 +27,17 @@
 
 namespace ROOT {
 
+// fwd declare for fwd declare for friend declaration in THist...
+template <int DIMENSIONS, class PRECISION> class THist;
+
 // fwd declare for friend declaration in THist.
 template <int DIMENSIONS, class PRECISION>
-THist<DIMENSIONS, PRECISION>
-HistFromImpl(std::unique_ptr<typename THist<DIMENSIONS, PRECISION>::ImplBase_t> pHistImpl);
+class ROOT::THist<DIMENSIONS, PRECISION>
+HistFromImpl(std::unique_ptr<typename ROOT::THist<DIMENSIONS, PRECISION>::ImplBase_t> pHistImpl);
 
 template <int DIMENSIONS, class PRECISION>
-void swap(THist<DIMENSIONS, PRECISION> &a,
-          THist<DIMENSIONS, PRECISION> &b) noexcept;
+void swap(ROOT::THist<DIMENSIONS, PRECISION> &a,
+          ROOT::THist<DIMENSIONS, PRECISION> &b) noexcept;
 
 
 /**
@@ -51,8 +54,8 @@ void swap(THist<DIMENSIONS, PRECISION> &a,
 template<int DIMENSIONS, class PRECISION>
 class THist {
 public:
-  /// The type of the `THistImplBase` of this histogram.
-  using ImplBase_t = THistImplBase<DIMENSIONS, PRECISION>;
+  /// The type of the `Detail::THistImplBase` of this histogram.
+  using ImplBase_t = Detail::THistImplBase<DIMENSIONS, PRECISION>;
   /// The coordinates type: a `DIMENSIONS`-dimensional `std::array` of `double`.
   using Coord_t = typename ImplBase_t::Coord_t;
   /// The type of weights (`PRECISION`)
@@ -190,7 +193,7 @@ struct HistImplGen_t {
   /// Select the template argument for the next axis type, and "recurse" into
   /// HistImplGen_t for the next axis.
   template<TAxisConfig::EKind KIND>
-  std::unique_ptr<THistImplBase<DIMENSIONS, PRECISION>>
+  std::unique_ptr<Detail::THistImplBase<DIMENSIONS, PRECISION>>
   MakeNextAxis(const std::array<TAxisConfig, DIMENSIONS> &axes,
                const STATISTICS& statConfig,
                PROCESSEDAXISCONFIG... processedAxisArgs) {
@@ -213,7 +216,7 @@ struct HistImplGen_t {
   /// (`IDIM` == `DIMENSIONS`), all `axes` have been converted to
   /// `processedAxisArgs` and the THistImpl constructor can be invoked, passing
   /// the `processedAxisArgs`.
-  std::unique_ptr<THistImplBase<DIMENSIONS, PRECISION>>
+  std::unique_ptr<Detail::THistImplBase<DIMENSIONS, PRECISION>>
   operator()(const std::array<TAxisConfig, DIMENSIONS> &axes,
              const STATISTICS& statConfig,
              PROCESSEDAXISCONFIG... processedAxisArgs) {
@@ -241,11 +244,11 @@ template<int DIMENSIONS, class PRECISION, class STATISTICS,
 /// determined.
 struct HistImplGen_t<DIMENSIONS, DIMENSIONS, PRECISION, STATISTICS,
    PROCESSEDAXISCONFIG...> {
-  std::unique_ptr<THistImplBase<DIMENSIONS, PRECISION>>
+  std::unique_ptr<Detail::THistImplBase<DIMENSIONS, PRECISION>>
   operator()(const std::array<TAxisConfig, DIMENSIONS> &, const STATISTICS& statConfig,
              PROCESSEDAXISCONFIG... axisArgs) {
     using HistImplt_t
-      = THistImpl<DIMENSIONS, PRECISION, STATISTICS, PROCESSEDAXISCONFIG...>;
+      = Detail::THistImpl<DIMENSIONS, PRECISION, STATISTICS, PROCESSEDAXISCONFIG...>;
     return std::make_unique<HistImplt_t>(statConfig, axisArgs...);
   }
 };

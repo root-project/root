@@ -25,7 +25,7 @@ namespace ROOT {
 template <class HIST, int SIZE> class THistConcurrentFillManager;
 
 
-/**!
+/**
  \class THistConcurrentFiller
  Buffers a thread's Fill calls and submits them to the
  THistConcurrentFillManager. Enables multi-threaded filling.
@@ -68,8 +68,9 @@ public:
   static constexpr int GetNDim() { return HIST::GetNDim(); }
 };
 
-/**!
- \brief THistConcurrentFillManager manages the synchronization of calls to FillN().
+/**
+ \class THistConcurrentFillManager
+ Manages the synchronization of calls to FillN().
 
  The HIST template can be a THist instance. This class hands out
  THistConcurrentFiller objects that can concurrently fill the histogram. They

@@ -20,6 +20,10 @@
 
 namespace ROOT {
 
+namespace Detail {
+template <int DIMENSIONS, class PRECISION> class THistImplBase;
+}
+
 template<int DIMENSIONS, class PRECISION>
 class THistStatEntries {
 public:
@@ -38,7 +42,7 @@ public:
   int64_t GetEntries() const { return fEntries; };
 
   std::vector<double>
-  GetBinUncertainties(int binidx, const THistImplBase<DIMENSIONS, PRECISION>& hist) const {
+  GetBinUncertainties(int binidx, const Detail::THistImplBase<DIMENSIONS, PRECISION>& hist) const {
     PRECISION sqrtcont = std::sqrt(std::max(hist.GetBinContent(binidx), 0.));
     return std::vector<double>{sqrtcont, sqrtcont};
   }

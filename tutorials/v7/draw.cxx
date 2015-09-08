@@ -12,6 +12,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Rtypes.h"
+
 R__LOAD_LIBRARY(libGpad)
 
 #include "ROOT/THist.h"

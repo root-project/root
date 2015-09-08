@@ -318,13 +318,13 @@ public:
   }
 
   /// Get the low bin border for the given bin index.
-  double GetBinMinimum(int bin) const noexcept {
+  double GetBinFrom(int bin) const noexcept {
     return fLow + bin / fInvBinWidth;
   }
 
   /// Get the high bin border for the given bin index.
-  double GetBinMaximum(int bin) const noexcept {
-    return GetBinMinimum(bin + 1);
+  double GetBinTo(int bin) const noexcept {
+    return GetBinFrom(bin + 1);
   }
 
   int GetBinIndexForLowEdge(double x) const noexcept;
@@ -463,7 +463,7 @@ public:
   /// For the bin at index 0 (i.e. the underflow bin), a lower bin border of
   /// `std::numeric_limits<double>::min()` is returned, i.e. the minimum value
   /// that can be held in a double.
-  double GetBinMinimum(int bin) const noexcept {
+  double GetBinFrom(int bin) const noexcept {
     if (IsUnderflowBin(bin))
       return std::numeric_limits<double>::min();
     // bin 0 is underflow;
@@ -476,10 +476,10 @@ public:
   /// For the bin at index N + 1 (i.e. the overflow bin), a bin border of
   /// `std::numeric_limits<double>::max()` is returned, i.e. the maximum value
   /// that can be held in a double.
-  double GetBinMaximum(int bin) const noexcept {
+  double GetBinTo(int bin) const noexcept {
     if (IsOverflowBin(bin))
       return std::numeric_limits<double>::max();
-    return GetBinMinimum(bin + 1);
+    return GetBinFrom(bin + 1);
   }
 
   /// This axis cannot be extended.
@@ -734,17 +734,17 @@ public:
   }
 
   /// Get the minimal coordinate of bin index `i`. Forwards to the underlying axis.
-  double GetBinMinimum(int i) const noexcept {
+  double GetBinFrom(int i) const noexcept {
     if (fEqui)
-      return fEqui->GetBinMinimum(i);
-    return fIrr->GetBinMinimum(i);
+      return fEqui->GetBinFrom(i);
+    return fIrr->GetBinFrom(i);
   }
 
   /// Get the maximal coordinate of bin index `i`. Forwards to the underlying axis.
-  double GetBinMaximum(int i) const noexcept {
+  double GetBinTo(int i) const noexcept {
     if (fEqui)
-      return fEqui->GetBinMaximum(i);
-    return fIrr->GetBinMaximum(i);
+      return fEqui->GetBinTo(i);
+    return fIrr->GetBinTo(i);
   }
 };
 

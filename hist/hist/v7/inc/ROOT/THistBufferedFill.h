@@ -58,8 +58,8 @@ public:
 } // namespace Internal
 
 
-  /**!
-   \brief THistBufferedFill buffers calls to Fill().
+  /** \class THistBufferedFill
+   Buffers calls to Fill().
 
    Once the buffer is full, on destruction of when calling Flush(), it sends the
    buffers off as an ideally vectorizable FillN() operation. It also serves as a

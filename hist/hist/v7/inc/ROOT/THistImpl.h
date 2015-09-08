@@ -42,22 +42,43 @@ inline bool operator&(EOverflow a, EOverflow b) {
 }
 }
 
+namespace Detail {
+
+/**
+ \class THistImplPrecisionAgnosticBase
+ Base class for THistImplBase that abstracts out the histogram's PRECISION.
+
+ For operations such as painting a histogram, the PRECISION (type of the bin
+ content) is not relevant; painting will cast the underlying bin type to double.
+ To facilitate this, THistImplBase itself inherits from the
+ THistImplPrecisionAgnosticBase interface.
+ */
 template <int DIMENSIONS>
 class THistImplPrecisionAgnosticBase {
 public:
+  /// Type of the coordinate: a DIMENSIONS-dimensional array of doubles.
   using Coord_t = std::array<double, DIMENSIONS>;
 
   virtual ~THistImplPrecisionAgnosticBase() {}
 
+  /// Number of dimensions of this histogram.
   constexpr int GetNDim() const { return DIMENSIONS; }
+  /// Number of bins of this histogram, including all overflow and underflow
+  /// bins. Simply the product of all axes' number of bins.
   virtual int GetNBins() const = 0;
 
+  /// Given the coordinate `x`, determine the index of the bin.
   virtual int GetBinIndex(const Coord_t& x) const = 0;
+  /// Given the coordinate `x`, determine the index of the bin, possibly growing
+  /// axes for which `x` is out of range.
   virtual int GetBinIndexAndGrow(const Coord_t& x) = 0;
 
+  /// Get the center in all dimensions of the bin with index `binidx`.
   virtual Coord_t GetBinCenter(int binidx) const = 0;
-  virtual Coord_t GetBinLowEdge(int binidx) const = 0;
-  virtual Coord_t GetBinHighEdge(int binidx) const = 0;
+  /// Get the lower edge in all dimensions of the bin with index `binidx`.
+  virtual Coord_t GetBinFrom(int binidx) const = 0;
+  /// Get the upper edge in all dimensions of the bin with index `binidx`.
+  virtual Coord_t GetBinTo(int binidx) const = 0;
 
   /// The bin's uncertainty. size() of the vector is a multiple of 2:
   /// several kinds of uncertainty, same number of entries for lower and upper.
@@ -66,40 +87,62 @@ public:
   /// The bin content, cast to double.
   virtual double GetBinContentAsDouble(int binidx) const = 0;
 
+  /// Get a TAxisView on axis with index iAxis.
+  ///
+  /// \param iAxis - index of the axis, must be 0 <= iAxis < DIMENSION
   virtual TAxisView GetAxis(int iAxis) const = 0;
 
+  /// Get a Hist::AxisIterRange_t for the whole histogram, possibly
+  /// restricting the range to non-overflow bins.
+  ///
+  /// \param withOverUnder - specifies for each dimension whether under and
+  /// overflow should be included in the returned range.
   virtual Hist::AxisIterRange_t<DIMENSIONS>
     GetRange(const std::array<Hist::EOverflow, DIMENSIONS>& withOverUnder) const = 0;
 };
 
 
-template<int DIMENSIONS, class PRECISION>
-class THistStatEntries;
+/**
+ \class THistImplBase
+ Interface class for THistImpl.
 
-
+ THistImpl is templated for a specific configuration of axes. To enable access
+ through THist, THistImpl inherits from THistImplBase, exposing only dimension
+ (`DIMENSION`) and bin type (`PRECISION`).
+ */
 template<int DIMENSIONS, class PRECISION>
 class THistImplBase: public THistImplPrecisionAgnosticBase<DIMENSIONS> {
 public:
-  using Coord_t = std::array<double, DIMENSIONS>;
+  /// Type of a coordinate: an array of `DIMENSIONS` doubles.
+  using Coord_t = typename THistImplPrecisionAgnosticBase<DIMENSIONS>::Coord_t;
+  /// Type of the bin content (and thus weights).
   using Weight_t = PRECISION;
+  /// Type of the Fill(x, w) function
   using FillFunc_t = void (THistImplBase::*)(const Coord_t& x, Weight_t w);
 
+  /// Interface function to fill a vector or array of coordinates with
+  /// corresponding weights.
+  /// \note the size of `xN` and `weightN` must be the same!
   virtual void FillN(const std::array_view<Coord_t> xN,
                      const std::array_view<Weight_t> weightN) = 0;
 
+  /// Interface function to fill a vector or array of coordinates.
   virtual void FillN(const std::array_view<Coord_t> xN) = 0;
 
+  /// Retrieve the pointer to the overridden Fill(x, w) function.
   virtual FillFunc_t GetFillFunc() const = 0;
 
 
+  /// Get the bin content (sum of weights) for bin index `binidx`.
   virtual PRECISION GetBinContent(int binidx) const = 0;
 
+  /// Get the bin content (sum of weights) for bin index `binidx`, cast to
+  /// double.
   double GetBinContentAsDouble(int binidx) const final {
     return (double) GetBinContent(binidx);
   }
-
-  virtual const THistStatEntries<DIMENSIONS, PRECISION>& GetStat() const = 0;
 };
+} // namespace Detail
 
 
 namespace Internal {
@@ -192,9 +235,9 @@ struct FillIterRange_t {
 
 
 enum class EBinCoord {
-  kBinLowEdge, ///< Get the lower bin edge
+  kBinFrom, ///< Get the lower bin edge
   kBinCenter, ///< Get the bin center
-  kBinHighEdge ///< Get the bin high edge
+  kBinTo ///< Get the bin high edge
 };
 
 template<int I, class COORD, class AXES> struct FillBinCoord_t;
@@ -212,14 +255,14 @@ struct FillBinCoord_t {
     int axisbin = binidx % std::get<I>(axes).GetNBins();
     size_t coordidx = std::tuple_size<AXES>::value - I;
     switch (kind) {
-      case EBinCoord::kBinLowEdge:
-        coord[coordidx] = std::get<I>(axes).GetBinMinimum(axisbin);
+      case EBinCoord::kBinFrom:
+        coord[coordidx] = std::get<I>(axes).GetBinFrom(axisbin);
         break;
       case EBinCoord::kBinCenter:
         coord[coordidx] = std::get<I>(axes).GetBinCenter(axisbin);
         break;
-      case EBinCoord::kBinHighEdge:
-        coord[coordidx] = std::get<I>(axes).GetBinMaximum(axisbin);
+      case EBinCoord::kBinTo:
+        coord[coordidx] = std::get<I>(axes).GetBinTo(axisbin);
         break;
     }
     FillBinCoord_t<I - 1, COORD, AXES>()(coord, axes, kind,
@@ -243,6 +286,8 @@ GetAxisView(const AXISCONFIG&...axes) noexcept {
 
 
 template <int DIMENSIONS, class PRECISION> class THist;
+
+namespace Detail {
 
 template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
 class THistImpl final: public THistImplBase<DIMENSIONS, PRECISION>,
@@ -325,18 +370,18 @@ public:
   }
 
   /// Get the coordinate of the low limit of the bin.
-  Coord_t GetBinLowEdge(int binidx) const final {
+  Coord_t GetBinFrom(int binidx) const final {
     using FillBinCoord_t = Internal::FillBinCoord_t<DIMENSIONS - 1, Coord_t, decltype(fAxes)>;
     Coord_t coord;
-    FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinLowEdge, binidx);
+    FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx);
     return coord;
   }
 
   /// Get the coordinate of the high limit of the bin.
-  Coord_t GetBinHighEdge(int binidx) const final {
+  Coord_t GetBinTo(int binidx) const final {
     using FillBinCoord_t =  Internal::FillBinCoord_t<DIMENSIONS - 1, Coord_t, decltype(fAxes)>;
     Coord_t coord;
-    FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinHighEdge, binidx);
+    FillBinCoord_t()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx);
     return coord;
   }
 
@@ -369,6 +414,7 @@ public:
     }
   }
 
+  /// Return the uncertainties for the given bin.
   std::vector<double> GetBinUncertainties(int binidx) const final {
     return STATISTICS::GetBinUncertainties(binidx, *this);
   }
@@ -395,12 +441,6 @@ public:
     return fContent[binidx];
   }
 
-
-  /// Get the statistics part of the histogram
-  const THistStatEntries<DIMENSIONS, PRECISION>& GetStat() const final {
-    return static_cast<const THistStatEntries<DIMENSIONS, PRECISION>&>(*this);
-  }
-
   /// Get the begin() and end() for each axis.
   ///
   ///\param[in] withOverUnder - Whether the begin and end should contain over-
@@ -423,18 +463,22 @@ public:
 };
 
 
-
-template <int DIMENSIONS, class PRECISION>
-class THistImplRuntime: public THistImplBase<DIMENSIONS, PRECISION> {
-public:
-  THistImplRuntime(std::array<TAxisConfig, DIMENSIONS>&& axisCfg);
-};
-
 template <int DIMENSIONS, class PRECISION, class STATISTICS, class... AXISCONFIG>
 THistImpl<DIMENSIONS, PRECISION, STATISTICS, AXISCONFIG...>::THistImpl(STATISTICS statConfig, AXISCONFIG... axisArgs):
   STATISTICS(statConfig), fAxes{axisArgs...}, fContent(GetNBins())
 {}
 
+#if 0
+// In principle we can also have a runtime version of THistImpl, that does not
+// contain a tuple of concrete axis types but a vector of `TAxisConfig`.
+template <int DIMENSIONS, class PRECISION>
+class THistImplRuntime: public THistImplBase<DIMENSIONS, PRECISION> {
+public:
+  THistImplRuntime(std::array<TAxisConfig, DIMENSIONS>&& axisCfg);
+};
+#endif
+
+} // namespace Detail
 } // namespace ROOT
 
 #endif
