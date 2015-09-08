@@ -154,11 +154,11 @@ TF1 graphics function is via the TH1 and TGraph drawing functions.
 
 The following types of functions can be created:
 
-*   [A](#F1) - Expression using variable x and no parameters
-*   [B](#F2) - Expression using variable x with parameters
-*   [C](#F3) - A general C function with parameters
-*   [D](#F4) - A general C++ function object (functor) with parameters
-*   [E](#F5) - A member function with parameters of a general C++ class
+* [A](#F1) - Expression using variable x and no parameters
+* [B](#F2) - Expression using variable x with parameters
+* [C](#F3) - A general C function with parameters
+* [D](#F4) - A general C++ function object (functor) with parameters
+* [E](#F5) - A member function with parameters of a general C++ class
 
 
 
