@@ -758,6 +758,7 @@ INPUT                  = . \
                          ../../core/cont/ \
                          ../../core/meta/ \
                          ../../core/metautils/ \
+                         ../../core/multiproc/ \
                          ../../core/rint/ \
                          ../../core/thread/ \
                          ../../core/unix/ \
