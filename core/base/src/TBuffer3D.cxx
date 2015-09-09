@@ -12,205 +12,209 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBuffer3D                                                            //
-//                                                                      //
-// Generic 3D primitive description class - see TBuffer3DTypes for      //
-// producer classes                                                     //
-//////////////////////////////////////////////////////////////////////////
-//BEGIN_HTML <!--
-/* -->
-<h4>Filling TBuffer3D and Adding to Viewer</h4>
-<p>The viewers behind the TVirtualViewer3D interface differ greatly in their
-  capabilities e.g.</p>
-<ul>
-  <li> Some know how to draw certain shapes natively (e.g. spheres/tubes in
-    OpenGL) - others always require a raw tessellation description of points/lines/segments.</li>
-  <li>Some
-      need the 3D object positions in the global frame, others can cope with
+/** \class TBuffer3D
+Generic 3D primitive description class.
+See TBuffer3DTypes for producer classes.
+
+### Filling TBuffer3D and Adding to Viewer
+
+The viewers behind the TVirtualViewer3D interface differ greatly in their
+capabilities e.g.
+
+  - Some know how to draw certain shapes natively (e.g. spheres/tubes in OpenGL)
+  - others always require a raw tessellation description of points/lines/segments.
+  - Some need the 3D object positions in the global frame, others can cope with
     local frames + a translation matrix - which can give considerable performance
-      benefits.</li>
-</ul>
-<p>To cope with these situations the object buffer is filled out in negotiation
-  with the viewer. TBuffer3D classes are conceptually divided into enumerated
-  sections Core, BoundingBox, Raw etc (see TBuffer3D.h for more details). </p>
-<p align="center"><img src="gif/TBuffer3D.gif" width="501" height="501"></p>
-<p>The<em> SectionsValid() / SetSectionsValid / ClearSectionsValid() </em>methods of TBuffer3D
-    are used to test/set/clear these section valid flags.</p>
-<p>The sections found in TBuffer3D (<em>Core/BoundingBox/Raw Sizes/Raw</em>)
-  are sufficient to describe any tessellated shape in a generic fashion. An additional <em>ShapeSpecific</em>  section
-  in derived shape specific classes allows a more abstract shape description
-  (&quot;a sphere of inner radius x, outer radius y&quot;). This enables a viewer
-  which knows how to draw (tessellate) the shape itself to do so, which can bring
-  considerable performance and quality benefits, while providing a generic fallback
-  suitable for all viewers.</p>
-<p>The rules for client negotiation with the viewer are:</p>
-<ul>
-  <li> If suitable specialized TBuffer3D class exists, use it, otherwise use
-    TBuffer3D.</li>
-  <li>Complete the mandatory Core section.</li>
-  <li>Complete the ShapeSpecific section
-      if applicable.</li>
-  <li>Complete the BoundingBox if you can.</li>
-  <li>Pass this buffer to the viewer using
-      one of the AddObject() methods - see below.</li>
-</ul>
-<p>If the viewer requires more sections to be completed (Raw/RawSizes) AddObject()
-  will return flags indicating which ones, otherwise it returns kNone. You must
-  fill the buffer and mark these sections valid, and pass the buffer again. A
-  typical code snippet would be:</p>
-<pre>TBuffer3DSphere sphereBuffer;
+    benefits.
+
+To cope with these situations the object buffer is filled out in negotiation
+with the viewer. TBuffer3D classes are conceptually divided into enumerated
+sections Core, BoundingBox, Raw etc (see TBuffer3D.h for more details).
+
+\image html base_tbuffer3d.png
+
+The `SectionsValid() / SetSectionsValid / ClearSectionsValid()` methods of
+TBuffer3D are used to test/set/clear these section valid flags.
+
+The sections found in TBuffer3D (`Core/BoundingBox/Raw Sizes/Raw`) are sufficient
+to describe any tessellated shape in a generic fashion. An additional
+`ShapeSpecific` section in derived shape specific classes allows a more abstract
+shape description ("a sphere of inner radius x, outer radius y"). This
+enables a viewer which knows how to draw (tessellate) the shape itself to do so,
+which can bring considerable performance and quality benefits, while providing a
+generic fallback suitable for all viewers.
+
+The rules for client negotiation with the viewer are:
+
+  - If suitable specialized TBuffer3D class exists, use it, otherwise use TBuffer3D.
+  - Complete the mandatory Core section.
+  - Complete the ShapeSpecific section if applicable.
+  - Complete the BoundingBox if you can.
+  - Pass this buffer to the viewer using one of the AddObject() methods - see below.
+
+If the viewer requires more sections to be completed (Raw/RawSizes) AddObject()
+will return flags indicating which ones, otherwise it returns kNone. You must
+fill the buffer and mark these sections valid, and pass the buffer again. A
+typical code snippet would be:
+
+~~~ {.cpp}
+TBuffer3DSphere sphereBuffer;
 // Fill out kCore...
 // Fill out kBoundingBox...
 // Fill out kShapeSpecific for TBuffer3DSphere
 // Try first add to viewer
 Int_t reqSections = viewer-&gt;AddObject(buffer);
 if (reqSections != TBuffer3D::kNone) {
-  if (reqSections &amp; TBuffer3D::kRawSizes) {
+  if (reqSections & TBuffer3D::kRawSizes) {
      // Fill out kRawSizes...
   }
-  if (reqSections &amp; TBuffer3D::kRaw) {
+  if (reqSections & TBuffer3D::kRaw) {
      // Fill out kRaw...
   }
   // Add second time to viewer - ignore return cannot do more
   viewer-&gt;AddObject(buffer);
   }
-}</pre>
-<p><em>ShapeSpecific</em>: If the viewer can directly display the buffer without
-  filling of the kRaw/kRawSizes section it will not need to request client side
-  tessellation.
-  Currently we provide the following various shape specific classes, which the
-  OpenGL viewer can take advantage of (see TBuffer3D.h and TBuffer3DTypes.h)</p>
-<ul>
-  <li>TBuffer3DSphere - solid, hollow and cut spheres*</li>
-  <li>TBuffer3DTubeSeg - angle tube segment</li>
-  <li>TBuffer3DCutTube - angle tube segment with plane cut ends.</li>
-</ul>
-<p>*OpenGL only supports solid spheres at present - cut/hollow ones will be
-    requested tessellated.</p>
-<p>Anyone is free to add new TBuffer3D classes, but it should be clear that the
-  viewers require updating to be able to take advantage of them. The number of
-  native shapes in OpenGL will be expanded over time.</p>
-<p><em>BoundingBox: </em>You are not obliged to complete this, as any viewer
-  requiring one internally (OpenGL) will build one for you if you do not provide.
-  However
-  to do this the viewer will force you to provide the raw tessellation, and the
-  resulting box will be axis aligned with the overall scene, which is non-ideal
-  for rotated shapes.</p>
-<p>As we need to support orientated (rotated) bounding boxes, TBuffer3D requires
-  the 6 vertices of the box. We also provide a convenience function, SetAABoundingBox(),
-  for simpler case of setting an axis aligned bounding box.</p>
-<h4>
-  Master/Local Reference Frames</h4>
-The <em>Core</em> section of TBuffer3D contains two members relating to reference
-  frames:
-<em>fLocalFrame</em> &amp; <em>fLocalMaster</em>. <em>fLocalFrame</em> indicates
-  if any positions in the buffer (bounding box and tessellation vertexes) are
-  in local or master (world
-  frame). <em>fLocalMaster</em> is a standard 4x4 translation matrix (OpenGL
-  colum major ordering) for placing the object into the 3D master frame.
-  <p>If <em>fLocalFrame</em> is kFALSE, <em>fLocalMaster</em> should contain an
-  identity matrix. This is set by default, and can be reset using <em>SetLocalMasterIdentity()</em> function.<br>
-Logical &amp; Physical Objects</p>
-<p>There are two cases of object addition:</p>
-<ul>
-  <li> Add this object as a single independent entity in the world reference
-    frame.</li>
-  <li>Add
-        a physical placement (copy) of this logical object (described in local
-    reference frame).</li>
-</ul>
-<p>The second case is very typical in geometry packages, GEANT4, where we have
-  very large number repeated placements of relatively few logical (unique) shapes.
-  Some viewers (OpenGL only at present) are able to take advantage of this by
-  identifying unique logical shapes from the <em>fID</em> logical ID member of
-  TBuffer3D. If repeated addition of the same <em>fID</em> is found, the shape
-  is cached already - and the costly tessellation does not need to be sent again.
-  The viewer can
-  also perform internal GL specific caching with considerable performance gains
-  in these cases.</p>
-<p>For this to work correctly the logical object in must be described in TBuffer3D
-  in the local reference frame, complete with the local/master translation. The
-  viewer indicates this through the interface method</p>
-<pre>PreferLocalFrame()</pre>
-<p>If this returns kTRUE you can make repeated calls to AddObject(), with TBuffer3D
-  containing the same fID, and different <em>fLocalMaster</em> placements.</p>
-<p>For viewers supporting logical/physical objects, the TBuffer3D content refers
-  to the properties of logical object, with the <em>fLocalMaster</em> transform and the
-  <em>fColor</em> and <em>fTransparency</em> attributes, which can be varied for each physical
-  object.</p>
-<p>As a minimum requirement all clients must be capable of filling the raw tessellation
-  of the object buffer, in the master reference frame. Conversely viewers must
-  always be capable of displaying the object described by this buffer.</p>
-<h4>
-  Scene Rebuilds</h4>
-<p>It should be understood that AddObject is not an explicit command to the viewer
-  - it may for various reasons decide to ignore it:</p>
-<ul>
-  <li> It already has the object internally cached .</li>
-  <li>The object falls outside
-    some 'interest' limits of the viewer camera.</li>
-  <li>The object is too small to
-      be worth drawing.</li>
-</ul>
-<p>In all these cases AddObject() returns kNone, as it does for successful addition,
-  simply indicating it does not require you to provide further information about
-  this object. You should
-  not try to make any assumptions about what the viewer did with it.</p>
-<p>This enables the viewer to be connected to a client which sends potentially
-  millions of objects, and only accept those that are of interest at a certain
-  time, caching the relatively small number of CPU/memory costly logical shapes,
-  and retaining/discarding the physical placements as required. The viewer may
-  decide to force the client to rebuild (republish) the scene (via
-  a TPad
-  repaint
-  at
-  present),
-  and
-  thus
-  collect
-  these
-  objects if
-  the
-  internal viewer state changes. It does this presently by forcing a repaint
-  on the attached TPad object - hence the reason for putting all publishing to
-  the viewer in the attached pad objects Paint() method. We will likely remove
-  this requirement in the future, indicating the rebuild request via a normal
-ROOT signal, which the client can detect.</p>
-<h4>
-  Physical IDs</h4>
-TVirtualViewer3D provides for two methods of object addition:virtual Int_t AddObject(const
-TBuffer3D &amp; buffer, Bool_t * addChildren = 0)<br>
-<pre>virtual Int_t AddObject(UInt_t physicalID, const TBuffer3D &amp; buffer, Bool_t * addChildren = 0)</pre>
-<p>If you use the first (simple) case a viewer using logical/physical pairs
+}
+~~~
 
-   SetSectionsValid(TBuffer3D::kBoundingBox);
-    will generate IDs for each physical object internally. In the second you
-    can specify
-      a unique identifier from the client, which allows the viewer to be more
-    efficient. It can now cache both logical and physical objects, and only discard
-    physical
-  objects no longer of interest as part of scene rebuilds.</p>
-<h4>
-  Child Objects</h4>
-<p>In many geometries there is a rigid containment hierarchy, and so if the viewer
-  is not interested in a certain object due to limits/size then it will also
-  not be interest in any of the contained branch of descendents. Both AddObject()
-  methods have an addChildren parameter. The viewer will complete this (if passed)
-indicating if children (contained within the one just sent) are worth adding.</p>
-<h4>
-  Recyling TBuffer3D </h4>
-<p>Once add AddObject() has been called, the contents are copied to the viewer
-  internally. You are free to destroy this object, or recycle it for the next
-  object if suitable.</p>
-<!--*/
-// -->END_HTML
+`ShapeSpecific`: If the viewer can directly display the buffer without
+filling of the kRaw/kRawSizes section it will not need to request client side
+tessellation.
+
+Currently we provide the following various shape specific classes, which the
+OpenGL viewer can take advantage of (see TBuffer3D.h and TBuffer3DTypes.h)
+
+  - TBuffer3DSphere - solid, hollow and cut spheres*
+  - TBuffer3DTubeSeg - angle tube segment
+  - TBuffer3DCutTube - angle tube segment with plane cut ends.
+
+
+*OpenGL only supports solid spheres at present - cut/hollow ones will be
+requested tessellated.
+
+Anyone is free to add new TBuffer3D classes, but it should be clear that the
+viewers require updating to be able to take advantage of them. The number of
+native shapes in OpenGL will be expanded over time.
+
+`BoundingBox:` You are not obliged to complete this, as any viewer
+requiring one internally (OpenGL) will build one for you if you do not provide.
+However to do this the viewer will force you to provide the raw tessellation, and the
+resulting box will be axis aligned with the overall scene, which is non-ideal
+for rotated shapes.
+
+As we need to support orientated (rotated) bounding boxes, TBuffer3D requires
+the 6 vertices of the box. We also provide a convenience function, SetAABoundingBox(),
+for simpler case of setting an axis aligned bounding box.
+
+### Master/Local Reference Frames
+
+The `Core` section of TBuffer3D contains two members relating to reference
+frames:
+`fLocalFrame` & `fLocalMaster`. `fLocalFrame` indicates if any positions in the
+buffer (bounding box and tessellation vertexes) are in local or master (world frame).
+`fLocalMaster` is a standard 4x4 translation matrix (OpenGL column major ordering)
+for placing the object into the 3D master frame.
+
+If `fLocalFrame` is kFALSE, `fLocalMaster` should contain an identity matrix. This
+is set by default, and can be reset using `SetLocalMasterIdentity()` function.
+
+Logical & Physical Objects.
+There are two cases of object addition:
+
+  - Add this object as a single independent entity in the world reference frame.
+  - Add a physical placement (copy) of this logical object (described in local
+    reference frame).
+
+The second case is very typical in geometry packages, GEANT4, where we have
+very large number repeated placements of relatively few logical (unique) shapes.
+Some viewers (OpenGL only at present) are able to take advantage of this by
+identifying unique logical shapes from the `fID` logical ID member of
+TBuffer3D. If repeated addition of the same `fID` is found, the shape
+is cached already - and the costly tessellation does not need to be sent again.
+The viewer can also perform internal GL specific caching with considerable
+performance gains in these cases.
+
+For this to work correctly the logical object in must be described in TBuffer3D
+in the local reference frame, complete with the local/master translation. The
+viewer indicates this through the interface method
+
+~~~ {.cpp}
+PreferLocalFrame()
+~~~
+
+If this returns kTRUE you can make repeated calls to AddObject(), with TBuffer3D
+containing the same fID, and different `fLocalMaster` placements.
+
+For viewers supporting logical/physical objects, the TBuffer3D content refers
+to the properties of logical object, with the `fLocalMaster` transform and the
+`fColor` and `fTransparency` attributes, which can be varied for each physical
+object.
+
+As a minimum requirement all clients must be capable of filling the raw tessellation
+of the object buffer, in the master reference frame. Conversely viewers must
+always be capable of displaying the object described by this buffer.
+
+### Scene Rebuilds
+
+It should be understood that AddObject is not an explicit command to the viewer
+  - it may for various reasons decide to ignore it:
+
+  - It already has the object internally cached .
+  - The object falls outside some 'interest' limits of the viewer camera.
+  - The object is too small to be worth drawing.
+
+In all these cases AddObject() returns kNone, as it does for successful addition,
+simply indicating it does not require you to provide further information about
+this object. You should not try to make any assumptions about what the viewer
+did with it.
+
+This enables the viewer to be connected to a client which sends potentially
+millions of objects, and only accept those that are of interest at a certain
+time, caching the relatively small number of CPU/memory costly logical shapes,
+and retaining/discarding the physical placements as required. The viewer may
+decide to force the client to rebuild (republish) the scene (via
+a TPad repaint at present), and thus collect these objects if the
+internal viewer state changes. It does this presently by forcing a repaint
+on the attached TPad object - hence the reason for putting all publishing to
+the viewer in the attached pad objects Paint() method. We will likely remove
+this requirement in the future, indicating the rebuild request via a normal
+ROOT signal, which the client can detect.
+
+### Physical IDs
+
+TVirtualViewer3D provides for two methods of object addition:virtual Int_t AddObject(const
+TBuffer3D & buffer, Bool_t * addChildren = 0)
+
+~~~ {.cpp}
+virtual Int_t AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren = 0)
+~~~
+
+If you use the first (simple) case a viewer using logical/physical pairs
+SetSectionsValid(TBuffer3D::kBoundingBox); will generate IDs for each physical
+object internally. In the second you can specify a unique identifier from the
+client, which allows the viewer to be more efficient. It can now cache both logical
+and physical objects, and only discard physical objects no longer of interest as
+part of scene rebuilds.
+
+### Child Objects
+
+In many geometries there is a rigid containment hierarchy, and so if the viewer
+is not interested in a certain object due to limits/size then it will also
+not be interest in any of the contained branch of descendents. Both AddObject()
+methods have an addChildren parameter. The viewer will complete this (if passed)
+indicating if children (contained within the one just sent) are worth adding.
+
+### Recycling TBuffer3D
+
+Once add AddObject() has been called, the contents are copied to the viewer
+internally. You are free to destroy this object, or recycle it for the next
+object if suitable.
+*/
 
 ClassImp(TBuffer3D)
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
+/// Destructor.
 /// Construct from supplied shape type and raw sizes
 
 TBuffer3D::TBuffer3D(Int_t type,
@@ -223,21 +227,18 @@ TBuffer3D::TBuffer3D(Int_t type,
    SetRawSizes(reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
+/// Destructor.
 
 TBuffer3D::~TBuffer3D()
 {
    if (fPnts) delete [] fPnts;
    if (fSegs) delete [] fSegs;
    if (fPols) delete [] fPols;
-////////////////////////////////////////////////////////////////////////////////
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Initialise buffer
+/// Initialise buffer.
 
 void TBuffer3D::Init()
 {
@@ -257,7 +258,7 @@ void TBuffer3D::Init()
    }
    // Set fLocalMaster in section kCore to identity
 
-   // Set kRaw tesselation section of buffer with supplied sizes
+   // Set kRaw tessellation section of buffer with supplied sizes
    fPnts          = 0;
    fSegs          = 0;
    fPols          = 0;
@@ -273,12 +274,12 @@ void TBuffer3D::Init()
    // Wipe output section.
    fPhysicalID    = 0;
 
-   // Set kRaw tesselation section of buffer with supplied sizes
+   // Set kRaw tessellation section of buffer with supplied sizes
    ClearSectionsValid();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clear any sections marked valid
+/// Clear any sections marked valid.
 
 void TBuffer3D::ClearSectionsValid()
 {
@@ -287,7 +288,7 @@ void TBuffer3D::ClearSectionsValid()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set kRaw tesselation section of buffer with supplied sizes
+/// Set kRaw tessellation section of buffer with supplied sizes.
 /// Set fLocalMaster in section kCore to identity
 
 void TBuffer3D::SetLocalMasterIdentity()
@@ -304,15 +305,15 @@ void TBuffer3D::SetLocalMasterIdentity()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set fBBVertex in kBoundingBox section to a axis aligned (local) BB
-/// using supplied origin and box half lengths
-///
+/// using supplied origin and box half lengths.
+///~~~ {.cpp}
 ///   7-------6
 ///  /|      /|
 /// 3-------2 |
 /// | 4-----|-5
 /// |/      |/
 /// 0-------1
-///
+///~~~
 
 void TBuffer3D::SetAABoundingBox(const Double_t origin[3], const Double_t halfLengths[3])
 {
@@ -351,7 +352,7 @@ void TBuffer3D::SetAABoundingBox(const Double_t origin[3], const Double_t halfLe
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set kRaw tesselation section of buffer with supplied sizes
+/// Set kRaw tessellation section of buffer with supplied sizes.
 
 Bool_t TBuffer3D::SetRawSizes(UInt_t reqPnts, UInt_t reqPntsCapacity,
                               UInt_t reqSegs, UInt_t reqSegsCapacity,
@@ -398,6 +399,7 @@ Bool_t TBuffer3D::SetRawSizes(UInt_t reqPnts, UInt_t reqPntsCapacity,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TBuffer3DSphere::TBuffer3DSphere(UInt_t reqPnts, UInt_t reqPntsCapacity,
                                  UInt_t reqSegs, UInt_t reqSegsCapacity,
@@ -406,12 +408,11 @@ TBuffer3DSphere::TBuffer3DSphere(UInt_t reqPnts, UInt_t reqPntsCapacity,
    fRadiusInner(0.0), fRadiusOuter(0.0),
    fThetaMin(0.0), fThetaMax(180.0),
    fPhiMin(0.0), fPhiMax(360.0)
-   //constructor
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Test if buffer represents a solid uncut sphere
+/// Test if buffer represents a solid uncut sphere.
 
 Bool_t TBuffer3DSphere::IsSolidUncut() const
 {
@@ -427,7 +428,7 @@ Bool_t TBuffer3DSphere::IsSolidUncut() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///constructor
+/// Constructor.
 
 TBuffer3DTube::TBuffer3DTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
                              UInt_t reqSegs, UInt_t reqSegsCapacity,
@@ -438,7 +439,7 @@ TBuffer3DTube::TBuffer3DTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///constructor
+/// Constructor.
 
 TBuffer3DTube::TBuffer3DTube(Int_t type,
                              UInt_t reqPnts, UInt_t reqPntsCapacity,
@@ -450,7 +451,7 @@ TBuffer3DTube::TBuffer3DTube(Int_t type,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///constructor
+/// Constructor.
 
 TBuffer3DTubeSeg::TBuffer3DTubeSeg(UInt_t reqPnts, UInt_t reqPntsCapacity,
                                    UInt_t reqSegs, UInt_t reqSegsCapacity,
@@ -461,7 +462,7 @@ TBuffer3DTubeSeg::TBuffer3DTubeSeg(UInt_t reqPnts, UInt_t reqPntsCapacity,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///constructor
+/// Constructor.
 
 TBuffer3DTubeSeg::TBuffer3DTubeSeg(Int_t type,
                                    UInt_t reqPnts, UInt_t reqPntsCapacity,
@@ -473,7 +474,7 @@ TBuffer3DTubeSeg::TBuffer3DTubeSeg(Int_t type,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///constructor
+/// Constructor.
 
 TBuffer3DCutTube::TBuffer3DCutTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
                                    UInt_t reqSegs, UInt_t reqSegsCapacity,
@@ -488,7 +489,7 @@ TBuffer3DCutTube::TBuffer3DCutTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
 UInt_t TBuffer3D::fgCSLevel = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
-///return CS level
+/// Return CS level.
 
 UInt_t TBuffer3D::GetCSLevel()
 {
@@ -496,7 +497,7 @@ UInt_t TBuffer3D::GetCSLevel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///increment CS level
+/// Increment CS level.
 
 void TBuffer3D::IncCSLevel()
 {
@@ -504,7 +505,7 @@ void TBuffer3D::IncCSLevel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///decrement CS level
+/// Decrement CS level.
 
 UInt_t TBuffer3D::DecCSLevel()
 {
