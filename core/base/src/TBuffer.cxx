@@ -129,11 +129,11 @@ TBuffer::~TBuffer()
    fParent = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Automatically calculate a new size and expand the buffer to fit at least size_needed.
 /// The goals is to minimize the number of memory allocation and the memory allocation
 /// which avoiding too much memory wastage.
+///
 /// If the size_needed is larger than the current size, the policy
 /// is to expand to double the current size or the size_needed which ever is largest.
 
@@ -155,6 +155,7 @@ void TBuffer::AutoExpand(Int_t size_needed)
 /// If the TBuffer owned the previous buffer, it will be deleted prior
 /// to accepting the new buffer. By default the new buffer will be
 /// adopted unless adopt is false.
+///
 /// If the new buffer is _not_ adopted and no memory allocation routine
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
