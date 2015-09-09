@@ -195,6 +195,9 @@ void TCling__DEBUG__dump(clang::Decl* D) {
 void TCling__DEBUG__dump(clang::FunctionDecl* FD) {
    return FD->dump();
 }
+void TCling__DEBUG__decl_dump(void* D) {
+   return ((clang::Decl*)D)->dump();
+}
 void TCling__DEBUG__printName(clang::Decl* D) {
    if (clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(D)) {
       std::string name;
