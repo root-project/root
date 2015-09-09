@@ -5148,36 +5148,17 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Parse the headers relative to the class
-/// Returns 1 in case of success, 0 in case of failure
+/// Helper routine for TCling::AutoParse implementing the actual call to the
+/// parser and looping over template parameters (if
+/// any) and when they don't have a registered header to autoparse,
+/// recurse over their template parameters.
+///
+/// Returns the number of header parsed.
 
-Int_t TCling::AutoParse(const char *cls)
+UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
 {
-   R__LOCKGUARD(gInterpreterMutex);
-
-   if (!fHeaderParsingOnDemand || fIsAutoParsingSuspended) {
-      if (fClingCallbacks->IsAutoloadingEnabled()) {
-         return AutoLoad(cls);
-      } else {
-         return 0;
-      }
-   }
-
-   if (gDebug > 1) {
-      Info("TCling::AutoParse",
-           "Trying to autoparse for %s", cls);
-   }
-
-   // The catalogue of headers is in the dictionary
-   if (fClingCallbacks->IsAutoloadingEnabled()) {
-      AutoLoad(cls);
-   }
-
-   // Prevent the recursion when the library dictionary are loaded.
-   Int_t oldAutoloadValue = SetClassAutoloading(false);
-
-   // No recursive header parsing on demand; we require headers to be standalone.
-   SuspendAutoParsing autoParseRAII(this);
+   // We assume the lock has already been taken.
+   //    R__LOCKGUARD(gInterpreterMutex);
 
    Int_t nHheadersParsed = 0;
 
@@ -5213,7 +5194,7 @@ Int_t TCling::AutoParse(const char *cls)
 
       }
    }
-   autoparseKeys.emplace_back(cls);
+   if (topLevel) autoparseKeys.emplace_back(cls);
 
    for (const auto & apKeyStr : autoparseKeys) {
       if (skipFirstEntry) {
@@ -5231,7 +5212,7 @@ Int_t TCling::AutoParse(const char *cls)
       if (fLookedUpClasses.insert(normNameHash).second) {
          auto const &iter = fClassesHeadersMap.find(normNameHash);
          if (iter != fClassesHeadersMap.end()) {
-            auto const &hNamesPtrs = fClassesHeadersMap[normNameHash];
+            auto const &hNamesPtrs = iter->second;
             if (gDebug > 1) {
                Info("TCling::AutoParse",
                     "We can proceed for %s. We have %s headers.", apKey, std::to_string(hNamesPtrs.size()).c_str());
@@ -5280,8 +5261,55 @@ Int_t TCling::AutoParse(const char *cls)
                }
             }
          }
+         else {
+            // There is no header registered for this class, if this a
+            // template, it will be instantiated if/when it is requested
+            // and if we do no load/parse its components we might end up
+            // not using an eventual specialization.
+            if (strchr(apKey, '<')) {
+               nHheadersParsed += AutoParseImplRecurse(apKey, false);
+            }
+         }
       }
    }
+
+   return nHheadersParsed;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Parse the headers relative to the class
+/// Returns 1 in case of success, 0 in case of failure
+
+Int_t TCling::AutoParse(const char *cls)
+{
+   R__LOCKGUARD(gInterpreterMutex);
+
+   if (!fHeaderParsingOnDemand || fIsAutoParsingSuspended) {
+      if (fClingCallbacks->IsAutoloadingEnabled()) {
+         return AutoLoad(cls);
+      } else {
+         return 0;
+      }
+   }
+
+   if (gDebug > 1) {
+      Info("TCling::AutoParse",
+           "Trying to autoparse for %s", cls);
+   }
+
+   // The catalogue of headers is in the dictionary
+   if (fClingCallbacks->IsAutoloadingEnabled()) {
+      AutoLoad(cls);
+   }
+
+   // Prevent the recursion when the library dictionary are loaded.
+   Int_t oldAutoloadValue = SetClassAutoloading(false);
+
+   // No recursive header parsing on demand; we require headers to be standalone.
+   SuspendAutoParsing autoParseRAII(this);
+
+   Int_t nHheadersParsed = AutoParseImplRecurse(cls,/*topLevel=*/ true);
 
    if (nHheadersParsed != 0) {
       while (!fClassesToUpdate.empty()) {
