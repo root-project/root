@@ -2,7 +2,7 @@
 /// \ingroup Tutorials
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-09
-/// \warning This is part of the ROOT 7 prototype! It will change without notice, it might do evil. Feedback is welcome!
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
