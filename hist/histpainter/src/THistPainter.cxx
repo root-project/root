@@ -2146,6 +2146,8 @@ Begin_Macro(source)
    hs->Add(h3);
 
    hs->Draw("nostackb");
+   hs->GetXaxis()->SetNdivisions(-10);
+   cst0->SetGridx();
    return cst0;
 }
 End_Macro
@@ -2957,7 +2959,7 @@ TList *THistPainter::GetContourList(Double_t contour) const
    TGraphDelaunay *dtOld = nullptr;
    if (!dt) dtOld =  (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
 
-   if (!dt && !dtOld) return nullptr; 
+   if (!dt && !dtOld) return nullptr;
 
    gCurrentHist = fH;
 
@@ -4864,8 +4866,8 @@ void THistPainter::PaintContour(Option_t *option)
    }
 
    if (Hoption.Contour == 15) {
-      TGraphDelaunay2D *dt = nullptr; 
-      TGraphDelaunay *dtOld = nullptr; 
+      TGraphDelaunay2D *dt = nullptr;
+      TGraphDelaunay *dtOld = nullptr;
       TList *hl = fH->GetListOfFunctions();
       dt = (TGraphDelaunay2D*)hl->FindObject("TGraphDelaunay2D");
       if (!dt) dtOld = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
