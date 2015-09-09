@@ -31,13 +31,11 @@
 #include "llvm/Support/FileSystem.h"
 
 #include "TMetaUtils.h"
-// #include "TCling.h"
 
 using namespace clang;
 using namespace cling;
 
 class TObject;
-class TCling;
 
 // Functions used to forward calls from code compiled with no-rtti to code
 // compiled with rtti.
