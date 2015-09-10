@@ -715,6 +715,8 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 
 ## Build, Configuration and Testing Infrastructure
 
+- Backport Python3 compatibility of build scripts
+
 ### New functionalities
 
 - Support ARM 64 bits architecture.
