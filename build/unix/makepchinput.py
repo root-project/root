@@ -8,11 +8,11 @@
 # Author: Axel Naumann <axel@cern.ch>, 2014-10-16
 # Translated to Python by Danilo Piparo, 2015-04-22
 
+from __future__ import print_function
 import sys
 import os
 import glob
 import shutil
-from sets import Set
 
 #-------------------------------------------------------------------------------
 def removeFiles(filesList):
@@ -46,7 +46,8 @@ def getParams():
    clingetpchList = argv[3:posDelim]
    cxxflags = argv[posDelim + 1:]
    print (', '.join(cxxflags))
-   cxxflagsNoW = [flag for flag in cxxflags if (flag[0:2] != '-W' and flag[0:3] != '-wd' and flag[0:5] != '-arch') or flag[0:4] == '-Wno']
+   cxxflagsNoW = [flag for flag in cxxflags if (flag[0:2] != '-W' and flag[0:3] != '-wd' and \
+                                                flag[0:2] != '-O' and flag[0:5] != '-arch') or flag[0:4] == '-Wno']
    print (', '.join(cxxflagsNoW))
 
    return rootSrcDir, modules, clingetpchList, cxxflagsNoW
@@ -416,7 +417,7 @@ def writeFiles(contentFileNamePairs):
 #-------------------------------------------------------------------------------
 def printModulesMessageOnScreen(selModules):
    modulesList = sorted(list(selModules))
-   print "\nGenerating PCH for %s\n" %" ".join(modulesList)
+   print ("\nGenerating PCH for %s\n" %" ".join(modulesList))
 
 #-------------------------------------------------------------------------------
 def makePCHInput():
@@ -445,7 +446,7 @@ def makePCHInput():
 
    # Loop over the dictionaries, ROOT modules
    dictNames = getDictNames(modules)
-   selModules = Set([])
+   selModules = set([])
    allIncPathsList = []
    for dictName in dictNames:
       dirName = getDirName(dictName)
