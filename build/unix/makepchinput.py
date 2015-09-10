@@ -12,12 +12,15 @@ import sys
 import os
 import glob
 import shutil
-from sets import Set
+try:
+    set
+except NameError:
+    from sets import Set as set
 
 #-------------------------------------------------------------------------------
 def removeFiles(filesList):
-   existingFilesList = filter(os.path.exists,filesList)
-   map(os.unlink, existingFilesList)
+   existingFilesList = list(filter(os.path.exists,filesList))
+   list(map(os.unlink, existingFilesList))
 
 #-------------------------------------------------------------------------------
 def removeLeftOvers():
@@ -45,9 +48,9 @@ def getParams():
    posDelim = argv.index('--')
    clingetpchList = argv[3:posDelim]
    cxxflags = argv[posDelim + 1:]
-   print (', '.join(cxxflags))
+   print ((', '.join(cxxflags)))
    cxxflagsNoW = [flag for flag in cxxflags if (flag[0:2] != '-W' and flag[0:3] != '-wd' and flag[0:5] != '-arch') or flag[0:4] == '-Wno']
-   print (', '.join(cxxflagsNoW))
+   print ((', '.join(cxxflagsNoW)))
 
    return rootSrcDir, modules, clingetpchList, cxxflagsNoW
 
@@ -189,7 +192,7 @@ def getDictNames(theDirName):
    for wildcard in wildcards:
       allDictNames += glob.glob(wildcard)
    stdDictpattern = os.path.join("core","metautils","src","G__std_")
-   dictNames = filter (lambda dictName: not ('G__Cling.cxx' in dictName or stdDictpattern in dictName),allDictNames )
+   dictNames = [dictName for dictName in allDictNames if not ('G__Cling.cxx' in dictName or stdDictpattern in dictName)]
    return dictNames
 
 #-------------------------------------------------------------------------------
@@ -374,7 +377,7 @@ def getLocalLinkDefs(rootSrcDir, outdir , dirName):
       linkDefNames += glob.glob(wildcard)
 
    # now get the ones in the inc directory
-   linkDefNames = filter (lambda name: "%sinc%s" %(os.sep,os.sep) in name, linkDefNames)
+   linkDefNames = [name for name in linkDefNames if "%sinc%s" %(os.sep,os.sep) in name]
 
    for linkDefName in linkDefNames:
       fullLinkDefName = os.path.join(outdir,linkDefName)
@@ -384,7 +387,7 @@ def getLocalLinkDefs(rootSrcDir, outdir , dirName):
 
 #-------------------------------------------------------------------------------
 def resolveSoftLinks(thePaths):
-   return map(os.path.realpath,thePaths)
+   return list(map(os.path.realpath,thePaths))
 
 #-------------------------------------------------------------------------------
 def getCppFlags(rootSrcDir,allIncPaths):
@@ -397,7 +400,7 @@ def getCppFlags(rootSrcDir,allIncPaths):
    allHeadersPartContent = ""
    filteredIncPaths = sorted(list(set(resolveSoftLinks(allIncPaths))))
    for name in resolveSoftLinks((rootSrcDir,os.getcwd())):
-      filteredIncPaths = filter (lambda incPath: not name in incPath,filteredIncPaths)
+      filteredIncPaths = [incPath for incPath in filteredIncPaths if not name in incPath]
    for incPath in filteredIncPaths:
       allHeadersPartContent += "-I%s\n" %incPath
    return allHeadersPartContent
@@ -416,7 +419,7 @@ def writeFiles(contentFileNamePairs):
 #-------------------------------------------------------------------------------
 def printModulesMessageOnScreen(selModules):
    modulesList = sorted(list(selModules))
-   print "\nGenerating PCH for %s\n" %" ".join(modulesList)
+   print ("\nGenerating PCH for %s\n" %" ".join(modulesList))
 
 #-------------------------------------------------------------------------------
 def makePCHInput():
