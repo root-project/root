@@ -262,6 +262,7 @@ if(python)
     endif()
   else()
   endif()
+  find_package(NumPy)
 endif()
 
 #---Check for Ruby installation-------------------------------------------------------
