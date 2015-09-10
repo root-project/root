@@ -74,6 +74,20 @@ New options:
 - `-a` option append to existing file
 - The verbosity level is now optional after -v
 
+### Command line utilities
+We added command line utilities to streamline very common operations performed on root files, like listing their content or creating directories.
+The command line utilities are:
+- rootbrowse: to open the file in a TBrowser
+- rootcp: to copy content from one file to another
+- rooteventselector: to select a subset of the events in a tree contained in a file
+- rootls: to list the content of a rootfile
+- rootmkdir: to create a directory in a rootfile
+- rootmv: to move content across files
+- rootprint: to plot content (histograms, graphs) of files
+- rootrm: to remove content from files
+These utilities took inspiration from the well known *nix commands and all offer the -h switch which provides documentation for all options available and example invocation lines.
+
+
 ### I/O New functionalities
 
 ### I/O Behavior change.
@@ -213,6 +227,9 @@ If host has several network interfaces, one could select one for binding:
 
 ## Language Bindings
 
+### Notebooks
+We provided integration of ROOT with Jupyter notebooks. For what concerns Python notebooks, tab completion, output and graphics capturing have been enabled. It is possible to switch from Python to C++ and have a C++ notebook at disposal.
+New tutorials and code examples have been provided here: https://root.cern.ch/code-examples#notebooks
 
 ## JavaScript ROOT
 
