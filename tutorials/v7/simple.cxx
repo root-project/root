@@ -41,6 +41,6 @@ void simple() {
 
   ROOT::TFitResult fitResult = ROOT::FitTo(hist, func, {{0., 1.}});
 
-  ROOT::TFile file = ROOT::TFile::Recreate("hist.root");
-  file.Write("TheHist", &hist);
+  ROOT::TFilePtr file = ROOT::TFile::Recreate("hist.root");
+  file->Write("TheHist", &hist);
 }

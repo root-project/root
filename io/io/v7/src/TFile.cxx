@@ -55,7 +55,9 @@ public:
     fOldFile(::TFile::Open(name.c_str(), mode)) {
   }
 
-  void Flush() final {}
+  void Flush() final { fOldFile->Flush(); }
+
+  void Close() final { fOldFile->Close(); }
 
   ~TFileSystemFile() {
     delete fOldFile;
@@ -63,26 +65,26 @@ public:
 };
 }
 
-ROOT::TFile::TFile(TCoopPtr<ROOT::Internal::TFileImplBase> impl):
+ROOT::TFilePtr::TFilePtr(TCoopPtr<ROOT::Internal::TFileImplBase> impl):
 fImpl(impl)
 {
   AddFilesToClose(impl);
 }
 
 
-ROOT::TFile ROOT::TFile::Read(std::string_view name) {
+ROOT::TFilePtr ROOT::TFilePtr::Read(std::string_view name) {
   // will become delegation to TFileSystemFile, TWebFile etc.
-  return TFile(MakeCoop<TFileSystemFile>(name.to_string(), "READ"));
+  return TFilePtr(MakeCoop<TFileSystemFile>(name.to_string(), "READ"));
 }
-ROOT::TFile ROOT::TFile::Create(std::string_view name) {
+ROOT::TFilePtr ROOT::TFilePtr::Create(std::string_view name) {
   // will become delegation to TFileSystemFile, TWebFile etc.
-  return TFile(MakeCoop<TFileSystemFile>(name.to_string(), "CREATE"));
+  return TFilePtr(MakeCoop<TFileSystemFile>(name.to_string(), "CREATE"));
 }
-ROOT::TFile ROOT::TFile::Recreate(std::string_view name) {
+ROOT::TFilePtr ROOT::TFilePtr::Recreate(std::string_view name) {
   // will become delegation to TFileSystemFile, TWebFile etc.
-  return TFile(MakeCoop<TFileSystemFile>(name.to_string(), "RECREATE"));
+  return TFilePtr(MakeCoop<TFileSystemFile>(name.to_string(), "RECREATE"));
 }
-ROOT::TFile ROOT::TFile::Update(std::string_view name) {
+ROOT::TFilePtr ROOT::TFilePtr::Update(std::string_view name) {
   // will become delegation to TFileSystemFile, TWebFile etc.
-  return TFile(MakeCoop<TFileSystemFile>(name.to_string(), "UPDATE"));
+  return TFilePtr(MakeCoop<TFileSystemFile>(name.to_string(), "UPDATE"));
 }

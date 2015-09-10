@@ -24,50 +24,76 @@ namespace ROOT {
 
 namespace Internal {
 /** \class TFileImplBase
- Base class for file implementations.
+ Base class for storage-specific ROOT file implementations.
+
+ A class deriving from `TFileImplBase` is an object store: it can serialize any
+ object for which ROOT I/O is available (generally: an object which has a
+ dictionary), and it stores the object's data under a key name.
+
+ A `TFileImplBase` stores whatever was added to it as a `TDirectory`, when the
+ `TFileImplBase` object is destructed. It can store non-lifetime managed objects
+ by passing them to `Save()`.
+
  */
-class TFileImplBase {
+class TFileImplBase: public TDirectory {
 public:
   ~TFileImplBase() = default;
 
+  /// Save all objects associated with this directory to the storage medium.
   virtual void Flush() = 0;
+
+  /// Flush() and make the file non-writable: close it.
+  virtual void Close() = 0;
+
+  template <class T>
+  void Write(const std::string& /*name*/, const T& /*ptr*/) {}
+
 };
 }
 
 
 /**
- \class TFile
- \brief Stores or reads objects in ROOT's binary format. Storage-agnostic base.
+ \class TFilePtr
+ \brief Points to an object that stores or reads objects in ROOT's binary
+ format.
 
- A `TFile` is an object store: it can serialize any object for which ROOT I/O is
- available (generally: an object which has a dictionary), and its stores the
- object's data under a key name.
-
- A `TFile` stores whatever was added to it as a `TDirectory`, when the `TFile`
- object is destructed. It can store non-lifetime managed objects by passing them
- to `Save()`.
  */
 
-class TFile: public TDirectory {
+class TFilePtr {
 TCoopPtr<Internal::TFileImplBase> fImpl;
 
 public:
-  static TFile Read(std::string_view name);
-  static TFile Create(std::string_view name);
-  static TFile Recreate(std::string_view name);
-  static TFile Update(std::string_view name);
+  ///\name Generator functions
+  ///\{
+  /// Open a file with `name` for reading.
+  static TFilePtr Read(std::string_view name);
 
-  template <class T>
-  void Write(const std::string& /*name*/, const T& /*ptr*/) {}
+  /// Open a file with `name` for reading and writing. Fail (return an invalid
+  /// `TFilePtr`) if a file with this name already exists.
+  static TFilePtr Create(std::string_view name);
 
-  /// Save all objects associated with this directory to the storage medium.
-  void Flush() {}
+  /// Open a file with `name` for reading and writing. If a file with this name
+  /// already exists, delete it and create a new one. Else simply create a new file.
+  static TFilePtr Recreate(std::string_view name);
 
-  /// Flush() and make the file non-writable: close it.
-  void Close();
+  /// Open an existing file with `name` for reading and writing. If a file with
+  /// that name does not exist, an invalid TFilePtr will be returned.
+  static TFilePtr Update(std::string_view name);
+  ///\}
+
+  /// Dereference the file pointer, giving access to the TFileImplBase object.
+  Internal::TFileImplBase* operator ->() { return fImpl.Get(); }
+
+  /// Dereference the file pointer, giving access to the TFileImplBase object.
+  /// const overload.
+  const Internal::TFileImplBase* operator ->() const { return fImpl.Get(); }
+
+  /// Check the validity of the file pointer.
+  operator bool() const { return fImpl; }
 
 private:
-  TFile(TCoopPtr<Internal::TFileImplBase>);
+  /// Constructed by
+  TFilePtr(TCoopPtr<Internal::TFileImplBase>);
 };
 }
 #endif
