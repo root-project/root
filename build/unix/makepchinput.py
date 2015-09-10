@@ -448,7 +448,7 @@ def makePCHInput():
 
    # Loop over the dictionaries, ROOT modules
    dictNames = getDictNames(modules)
-   selModules = Set([])
+   selModules = set([])
    allIncPathsList = []
    for dictName in dictNames:
       dirName = getDirName(dictName)
