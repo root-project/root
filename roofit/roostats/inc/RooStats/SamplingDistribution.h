@@ -102,8 +102,8 @@ namespace RooStats {
 
     TString fVarName;
 
-    mutable std::vector<Double_t> fSumW;   ///! Chached vector with sum of the weight used to compute integral 
-    mutable std::vector<Double_t> fSumW2;  ///! Chached vector with sum of the weight used to compute integral error 
+    mutable std::vector<Double_t> fSumW;   //! Chached vector with sum of the weight used to compute integral 
+    mutable std::vector<Double_t> fSumW2;  //! Chached vector with sum of the weight used to compute integral error 
     
   protected:
 
