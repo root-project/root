@@ -98,7 +98,10 @@ namespace TMVA {
          kLD             ,
          kPlugins        ,
          kCategory       ,
-         kMaxMethod
+         kMaxMethod      ,
+         kPyRandomForest ,
+         kPyAdaBoost     ,
+         kPyGTB  
       };
 
       // available variable transformations
