@@ -467,6 +467,5 @@ namespace Math {
 
 #include "Math/GSLRandomFunctions.h"
 
-
 #endif /* ROOT_Math_GSLRndmEngines */
 
