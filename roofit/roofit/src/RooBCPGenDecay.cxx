@@ -25,10 +25,6 @@
 // END_HTML
 //
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooBCPGenDecay.h"
@@ -52,7 +48,7 @@ RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
 			       const RooResolutionModel& model, DecayType type) :
   RooAbsAnaConvPdf(name,title,model,t), 
   _avgC("C","Coefficient of cos term",this,a),
-  _avgS("S","Coefficient of cos term",this,b),
+  _avgS("S","Coefficient of sin term",this,b),
   _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
   _delMistag("delMistag","Delta mistag rate",this,delMistag),  
   _mu("mu","Tagg efficiency difference",this,mu),  
