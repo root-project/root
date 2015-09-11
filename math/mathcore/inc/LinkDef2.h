@@ -48,6 +48,10 @@
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::MersenneTwisterEngine>+;
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::MixMaxEngine>+;
 
+
+#pragma link C++ typedef ROOT::Math::RandomMixMax;
+#pragma link C++ typedef ROOT::Math::RandomMT19937;
+
 // #pragma link C++ class TRandomNew3+;
 
 

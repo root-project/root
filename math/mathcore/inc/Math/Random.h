@@ -209,4 +209,20 @@ namespace Math {
 } // namespace Math
 } // namespace ROOT
 
+#include "Math/MixMaxEngine.h"
+#include "Math/MersenneTwisterEngine.h"
+
+namespace ROOT {
+namespace Math {
+
+   /// Useful typedef definitions
+
+   typedef   Random<ROOT::Math::MixMaxEngine>            RandomMixMax;
+   typedef   Random<ROOT::Math::MersenneTwisterEngine>   RandomMT19937;
+
+
+} // namespace Math
+} // namespace ROOT
+
+
 #endif /* ROOT_Math_Random */
