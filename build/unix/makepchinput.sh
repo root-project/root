@@ -80,7 +80,7 @@ for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v /G__Cling.cxx
     dirname=`echo $dirname | sed -e 's,/src$,,' -e 's,^[.]/,,' ` # to get foo/
 
     case $dirname in
-        graf2d/qt | math/fftw | math/foam | math/fumili | math/mlp | math/quadp | math/splot | math/unuran | math/vc | math/vdt) continue;;
+        graf2d/qt | math/fftw | math/foam | math/fumili | math/mlp | math/quadp | math/splot | math/unuran | math/vc | math/vdt | tmva/rmva ) continue;;
 
         interpreter/* | core/* | io/io | net/net | math/* | hist/* | tree/* | graf2d/* | graf3d/ftgl | graf3d/g3d | graf3d/gl | gui/gui | gui/fitpanel | rootx | bindings/pyroot | roofit/* | tmva/* | main) ;;
 

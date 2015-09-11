@@ -254,7 +254,8 @@ def isDirForPCH(dirName):
                            "math/splot",
                            "math/unuran",
                            "math/vc",
-                           "math/vdt")
+                           "math/vdt",
+                           "tmva/rmva")
 
    accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                not isAnyPatternInString(PCHPatternsBlacklist,dirName)
