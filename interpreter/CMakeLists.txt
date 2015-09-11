@@ -18,6 +18,8 @@ set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
 
 if(ROOT_ARCHITECTURE MATCHES linuxarm64)
   set(ROOT_CLING_TARGET "AArch64")
+elseif(ROOT_ARCHITECTURE MATCHES linuxppc64gcc)
+  set(ROOT_CLING_TARGET "PowerPC")
 elseif(ROOT_ARCHITECTURE MATCHES linux)
   set(ROOT_CLING_TARGET "X86")
 elseif(ROOT_ARCHITECTURE MATCHES macosx)
