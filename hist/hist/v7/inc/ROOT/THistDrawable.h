@@ -36,7 +36,7 @@ class THistPainterBase {
 
 protected:
   THistPainterBase() { fgPainter = this; }
-  ~THistPainterBase() { fgPainter = nullptr; }
+  virtual ~THistPainterBase();
 
 public:
   static THistPainterBase<DIMENSION>* GetPainter() {
@@ -49,9 +49,9 @@ public:
   virtual void Paint(TDrawable& obj, THistDrawOptions<DIMENSION> opts) = 0;
 };
 
-template <int DIMENSION>
-THistPainterBase<DIMENSION>* THistPainterBase<DIMENSION>::fgPainter = 0;
-
+extern template class THistPainterBase<1>;
+extern template class THistPainterBase<2>;
+extern template class THistPainterBase<3>;
 
 template <int DIMENSION, class PRECISION>
 class THistDrawable final: public TDrawable {
