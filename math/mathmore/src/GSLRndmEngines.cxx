@@ -307,6 +307,7 @@ namespace Math {
    GSLRngMT::GSLRngMT() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_mt19937));
+      Initialize(); 
    }
 
 
@@ -314,30 +315,35 @@ namespace Math {
    GSLRngRanLux::GSLRngRanLux() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlux) );
+      Initialize(); 
    }
 
    // second generation of Ranlux (single precision version - luxury 1)
    GSLRngRanLuxS1::GSLRngRanLuxS1() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxs1) );
+      Initialize(); 
    }
 
    // second generation of Ranlux (single precision version - luxury 2)
    GSLRngRanLuxS2::GSLRngRanLuxS2() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxs2) );
+      Initialize(); 
    }
 
    // double precision  version - luxury 1
    GSLRngRanLuxD1::GSLRngRanLuxD1() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxd1) );
+      Initialize(); 
    }
 
    // double precision  version - luxury 2
    GSLRngRanLuxD2::GSLRngRanLuxD2() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxd2) );
+      Initialize(); 
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -345,6 +351,7 @@ namespace Math {
    GSLRngTaus::GSLRngTaus() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_taus2) );
+      Initialize(); 
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -352,6 +359,7 @@ namespace Math {
    GSLRngGFSR4::GSLRngGFSR4() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_gfsr4) );
+      Initialize(); 
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -359,6 +367,7 @@ namespace Math {
    GSLRngCMRG::GSLRngCMRG() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_cmrg) );
+      Initialize(); 
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -366,6 +375,7 @@ namespace Math {
    GSLRngMRG::GSLRngMRG() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_mrg) );
+      Initialize(); 
    }
 
 
@@ -374,6 +384,7 @@ namespace Math {
    GSLRngRand::GSLRngRand() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_rand) );
+      Initialize(); 
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -381,6 +392,7 @@ namespace Math {
    GSLRngRanMar::GSLRngRanMar() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranmar) );
+      Initialize(); 
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -388,6 +400,7 @@ namespace Math {
    GSLRngMinStd::GSLRngMinStd() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_minstd) );
+      Initialize(); 
    }
 
 

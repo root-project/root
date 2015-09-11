@@ -40,6 +40,18 @@
 #pragma link C++ class TRandom2+;
 #pragma link C++ class TRandom3-;
 
+#pragma link C++ class ROOT::Math::TRandomEngine+;
+#pragma link C++ class ROOT::Math::LCGEngine+;
+#pragma link C++ class ROOT::Math::MersenneTwisterEngine+;
+#pragma link C++ class ROOT::Math::MixMaxEngine+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::LCGEngine>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::MersenneTwisterEngine>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::MixMaxEngine>+;
+
+// #pragma link C++ class TRandomNew3+;
+
+
+
 #pragma link C++ class TStatistic+;
 
 
