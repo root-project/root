@@ -26,6 +26,11 @@ MATHCOREDH2  := $(MODDIRI)/TRandom.h \
                 $(MODDIRI)/TRandom1.h \
                 $(MODDIRI)/TRandom2.h \
                 $(MODDIRI)/TRandom3.h \
+                $(MODDIRI)/Math/Random.h \
+                $(MODDIRI)/Math/RandomFunctions.h \
+                $(MODDIRI)/Math/TRandomEngine.h \
+                $(MODDIRI)/Math/MersenneTwisterEngine.h \
+                $(MODDIRI)/Math/MixMaxEngine.h \
                 $(MODDIRI)/TStatistic.h \
                 $(MODDIRI)/TKDTree.h \
                 $(MODDIRI)/TKDTreeBinning.h \
