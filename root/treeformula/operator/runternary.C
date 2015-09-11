@@ -22,7 +22,7 @@ bool ternaryfunc_test(TFormula *form, Int_t val, Int_t expected) {
    return true;
 }
    
-void ternaryfunc() {
+void ternaryFunction() {
    TFormula *form = new TFormula("tern1","x?2:4");
    ternaryfunc_test(form, 0,4);
    ternaryfunc_test(form,-1,2);
@@ -67,7 +67,7 @@ TTree* ternarytree() {
 }
 
 int runternary() {
-   ternaryfunc();
+   ternaryFunction();
    ternarytree();
    return 0;
 }
