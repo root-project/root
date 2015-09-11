@@ -16,12 +16,12 @@
 
 # Define package related variables
 set(PCRE_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(PCRE_VERSION "pcre-7.8")
+set(PCRE_VERSION "pcre-8.37")
 set(PCRE_TARGZFILE ${PCRE_SRCDIR}/${PCRE_VERSION}.tar.gz)
 set(PCRE_TARFILE ${PCRE_SRCDIR}/${PCRE_VERSION}.tar)
 
 if(WIN32)
-  set(pcreliba ${CMAKE_CURRENT_BINARY_DIR}/win32/libpcre-7.8.lib)
+  set(pcreliba ${CMAKE_CURRENT_BINARY_DIR}/win32/libpcre-8.37.lib)
   set(pcrelib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpcre.lib)
   if(winrtdebug)
     set(pcrebuild "libpcre - Win32 Debug")
