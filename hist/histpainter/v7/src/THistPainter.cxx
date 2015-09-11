@@ -13,7 +13,6 @@
  *************************************************************************/
 
 #include <iostream>
-#include "ROOT/THistImpl.h"
 #include "ROOT/THistDrawable.h"
 
 using namespace ROOT;
