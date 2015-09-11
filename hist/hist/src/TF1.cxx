@@ -3261,6 +3261,8 @@ void TF1::Streamer(TBuffer &b)
          } else {
             // case of a function pointers
             fParams = new TF1Parameters(fNpar);
+            fName = fold.GetName();
+            fTitle = fold.GetTitle(); 
          }
          // need to set parameter values
          SetParameters(fold.GetParameters() );
