@@ -167,8 +167,6 @@ public:
   ///
   ///\param[in] nbins - number of bins in this axis, excluding under- and
   /// overflow bins.
-  ///\param[in] overflow - how to handle under- / overflow. Note that the
-  /// handling itself (statistics; growing) is done by the histogram.
   constexpr TAxisBase(int nbins) noexcept:
      fNBinsNoOver(nbins) { }
 
