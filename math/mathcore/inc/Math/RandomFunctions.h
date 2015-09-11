@@ -150,8 +150,6 @@ namespace Math {
       /// destructor (no op) we do not mantain the engine)
       ~RandomFunctions() {}
 
-      /// virtual method to generate random numbers
-      //virtual double Rndm() { return (*this)(); }
 
       /// non-virtual method
       inline double operator() () { return (*fEngine)(); }
@@ -216,11 +214,12 @@ namespace Math {
 
       /// generate random numbers following a Uniform distribution in the [a,b] interval
       double Uniform(double a, double b) {
-         return fImpl.Uniform(a,b);
+         return (b-a) * Rndm_impl() + a; 
       }
      
+      /// generate random numbers following a Uniform distribution in the [0,a] interval
       double Uniform(double a) {
-         return fImpl.Uniform(a);
+         return a * Rndm_impl() ; 
       }
 
 
@@ -230,32 +229,50 @@ namespace Math {
       }
 
 
-      /// re-implement Gaussian 
-      double GausBM2(double mean, double sigma) {
-         double y =  Rndm_impl();
-         double z =  Rndm_impl();
-         double x = z * 6.28318530717958623;
-         double radius = std::sqrt(-2*std::log(y));
-         double g = radius * std::sin(x);
-         return mean + g * sigma; 
-      }
+      // /// re-implement Gaussian 
+      // double GausBM2(double mean, double sigma) {
+      //    double y =  Rndm_impl();
+      //    double z =  Rndm_impl();
+      //    double x = z * 6.28318530717958623;
+      //    double radius = std::sqrt(-2*std::log(y));
+      //    double g = radius * std::sin(x);
+      //    return mean + g * sigma; 
+      // }
 
-      inline double FastUniform(double a, double b) {
-         //printf("generate uniform numbers \n");
-         return (b-a) * Rndm_impl() + a; 
-      }
 
+      /// methods which are only for GSL random generators 
       
 
       /// Gamma functions (not implemented here, requires a GSL random engine)
-      static double Gamma( double , double ) {
+      double Gamma( double , double ) {
          //r.Error("Error: Gamma() requires a GSL Engine type"); 
-         static_assert(std::is_fundamental<Engine>::value,"Error: Gamma() requires a GSL Engine type"); 
+         static_assert(std::is_fundamental<Engine>::value,"Error: Gamma() requires a GSL Engine type");
+         return 0;
       }
-
-      /// reimplent GausACR inline
-      double GausACR2(double a, double b);
-      
+      double LogNormal(double, double) {
+         static_assert(std::is_fundamental<Engine>::value,"Error: LogNormal() requires a GSL Engine type");
+         return 0;
+      }
+      double ChiSquare(double) {
+         static_assert(std::is_fundamental<Engine>::value,"Error: ChiSquare() requires a GSL Engine type");
+         return 0;
+      }
+      double FDist(double, double) {
+         static_assert(std::is_fundamental<Engine>::value,"Error: FDist() requires a GSL Engine type");
+         return 0;
+      }
+      double tDist(double) {
+         static_assert(std::is_fundamental<Engine>::value,"Error: tDist() requires a GSL Engine type");
+         return 0;
+      }
+      unsigned int NegativeBinomial(double , double ) {
+         static_assert(std::is_fundamental<Engine>::value,"Error: NegativeBinomial() requires a GSL Engine type");
+         return 0;
+      }
+      std::vector<unsigned int> MultiNomial(unsigned int, const std::vector<double> &){
+         static_assert(std::is_fundamental<Engine>::value,"Error: MultiNomial() requires a GSL Engine type");
+         return std::vector<unsigned int>();
+      }
 
 
    protected:
@@ -277,9 +294,6 @@ namespace Math {
 
 
 
-
-
-#include "RandomFunctions.icc"
 
 } // namespace Math
 } // namespace ROOT
