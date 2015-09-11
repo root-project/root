@@ -88,25 +88,63 @@ public:
   THist(std::array<TAxisConfig, DIMENSIONS> axes,
         STATISTICS statConfig = STATISTICS());
 
+  /// Constructor overload taking histogram and axis titles
+  template<class STATISTICS = THistStatUncertainty<DIMENSIONS, PRECISION>>
+  THist(std::array<TAxisConfig, DIMENSIONS> axes,
+        std::string_view histTitle,
+        std::array<std::string_view, DIMENSIONS> axisTitles,
+        STATISTICS statConfig = STATISTICS());
+
+  /// Constructor overload that's only available for DIMENSIONS == 1.
   template<class STATISTICS = THistStatUncertainty<DIMENSIONS, PRECISION>,
-           class = typename std::enable_if<DIMENSIONS == 1 &&
-                                           std::is_default_constructible<STATISTICS>::value>::type>
+           class = typename std::enable_if<DIMENSIONS == 1>>
   THist(const TAxisConfig& xaxis, STATISTICS statConfig = STATISTICS()):
     THist({{xaxis}}, statConfig) {}
 
+  /// Constructor overload that's only available for DIMENSIONS == 1, also
+  /// passing histogram and axis title.
   template<class STATISTICS = THistStatUncertainty<DIMENSIONS, PRECISION>,
-     class = typename std::enable_if<DIMENSIONS == 2 &&
-                                     std::is_default_constructible<STATISTICS>::value>::type>
+           class = typename std::enable_if<DIMENSIONS == 1>>
+  THist(const TAxisConfig& xaxis, std::string_view histTitle,
+        std::string_view xAxisTitle,
+        STATISTICS statConfig = STATISTICS()):
+  THist({{xaxis}}, histTitle, {{xAxisTitle}}, statConfig) {}
+
+  /// Constructor overload that's only available for DIMENSIONS == 2.
+  template<class STATISTICS = THistStatUncertainty<DIMENSIONS, PRECISION>,
+           class = typename std::enable_if<DIMENSIONS == 2>>
   THist(const TAxisConfig& xaxis, const TAxisConfig& yaxis,
-     STATISTICS statConfig = STATISTICS()):
+        STATISTICS statConfig = STATISTICS()):
     THist({{xaxis, yaxis}}, statConfig) {}
 
+   /// Constructor overload that's only available for DIMENSIONS == 2, also
+   /// passing histogram and axis titles.
+   template<class STATISTICS = THistStatUncertainty<DIMENSIONS, PRECISION>,
+            class = typename std::enable_if<DIMENSIONS == 2>>
+   THist(const TAxisConfig& xaxis, const TAxisConfig& yaxis,
+         std::string_view histTitle,
+         std::string_view xAxisTitle, std::string_view yAxisTitle,
+         STATISTICS statConfig = STATISTICS()):
+   THist({{xaxis, yaxis}}, histTitle, {{xAxisTitle, yAxisTitle}}, statConfig) {}
+
+  /// Constructor overload that's only available for DIMENSIONS == 3.
   template<class STATISTICS = THistStatUncertainty<DIMENSIONS, PRECISION>,
-     class = typename std::enable_if<DIMENSIONS == 3 &&
-                                     std::is_default_constructible<STATISTICS>::value>::type>
+           class = typename std::enable_if<DIMENSIONS == 3>>
   THist(const TAxisConfig& xaxis, const TAxisConfig& yaxis,
         const TAxisConfig& zaxis, STATISTICS statConfig = STATISTICS()):
   THist({{xaxis, yaxis, zaxis}}, statConfig) {}
+
+
+   template<class STATISTICS = THistStatUncertainty<DIMENSIONS, PRECISION>,
+            class = typename std::enable_if<DIMENSIONS == 3>>
+   THist(const TAxisConfig& xaxis, const TAxisConfig& yaxis,
+         const TAxisConfig& zaxis,
+         std::string_view histTitle,
+         std::string_view xAxisTitle, std::string_view yAxisTitle,
+         std::string_view zAxisTitle,
+         STATISTICS statConfig = STATISTICS()):
+   THist({{xaxis, yaxis, zaxis}}, {{xAxisTitle, yAxisTitle, zAxisTitle}},
+         statConfig) {}
 
 
   /// Number of dimensions of the coordinates
@@ -142,6 +180,8 @@ public:
 private:
   FillFunc_t fFillFunc = nullptr; ///< Pinter to THistImpl::Fill() member function
   std::unique_ptr<ImplBase_t> fImpl; ///< The actual histogram implementation
+  std::string fTitle; ///< Title of this histogram
+  std::array<std::string, DIMENSIONS> fAxisTitles; ///< Title of each axis
 
   friend THist HistFromImpl<>(std::unique_ptr<ImplBase_t>);
   friend void swap<>(THist<DIMENSIONS, PRECISION> &a,
