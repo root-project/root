@@ -23,7 +23,10 @@ THistPainterBase<DIMENSION>::~THistPainterBase() { fgPainter = nullptr; }
 template <int DIMENSION>
 THistPainterBase<DIMENSION>* THistPainterBase<DIMENSION>::fgPainter = nullptr;
 
+namespace ROOT {
+namespace Internal {
 template class THistPainterBase<1>;
 template class THistPainterBase<2>;
 template class THistPainterBase<3>;
-
+}
+};
