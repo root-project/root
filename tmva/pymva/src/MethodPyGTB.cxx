@@ -17,8 +17,13 @@
  *                                                                                *
  **********************************************************************************/
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <iomanip>
 #include <fstream>
+
+#include <Python.h>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 
 #include "TMath.h"
 #include "Riostream.h"

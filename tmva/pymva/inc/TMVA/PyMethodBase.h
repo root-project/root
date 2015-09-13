@@ -27,11 +27,6 @@
 #include "TMVA/MethodBase.h"
 #endif
 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wunused-function"
-#include <Python.h>
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
 
 class TGraph;
 class TTree;
@@ -39,6 +34,14 @@ class TDirectory;
 class TSpline;
 class TH1F;
 class TH1D;
+
+struct _object;
+typedef _object PyObject;
+
+struct tagPyArrayObject;
+typedef tagPyArrayObject PyArrayObject;
+//class PyObject;
+//class PyArrayObject;
 
 namespace TMVA {
 
@@ -75,16 +78,10 @@ namespace TMVA {
       static void PyInitialize();
       static int  PyIsInitialized();
       static void PyFinalize();
-      static void PySetProgramName(TString name)
-      {
-         Py_SetProgramName(const_cast<char *>(name.Data()));
-      }
-      static TString Py_GetProgramName()
-      {
-         return Py_GetProgramName();
-      }
-      static PyObject *Eval(TString code);//required to parse booking options from string to pyobjects
+      static void PySetProgramName(TString name);
+      static TString Py_GetProgramName();
 
+      static PyObject *Eval(TString code);//required to parse booking options from string to pyobjects
 
       virtual void     Train() = 0;
       // options treatment
@@ -116,9 +113,9 @@ namespace TMVA {
       static PyObject *fModuleBuiltin;
       static PyObject *fEval;
    protected:
-      static PyObject *fModulePickle;//Module for model persistence
-      static PyObject *fPickleDumps;//Function to dumps PyObject information into string
-      static PyObject *fPickleLoads;//Function to load PyObject information from string
+      static PyObject *fModulePickle;  //Module for model persistence
+      static PyObject *fPickleDumps;  //Function to dumps PyObject information into string
+      static PyObject *fPickleLoads;  //Function to load PyObject information from string
 
       ClassDef(PyMethodBase, 0) // Virtual base class for all TMVA method
 

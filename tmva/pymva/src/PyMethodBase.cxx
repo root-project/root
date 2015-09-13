@@ -13,6 +13,14 @@
 
 #include<TMVA/PyMethodBase.h>
 #include<TApplication.h>
+
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#include <Python.h>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
+
+
 using namespace TMVA;
 
 ClassImp(PyMethodBase)
@@ -123,7 +131,15 @@ void PyMethodBase::PyFinalize()
    if (fPickleLoads) delete fPickleLoads;
 
 }
-
+void PyMethodBase::PySetProgramName(TString name)
+{
+   Py_SetProgramName(const_cast<char *>(name.Data()));
+}
+//_______________________________________________________________________
+TString PyMethodBase::Py_GetProgramName()
+{
+   return Py_GetProgramName();
+}
 //_______________________________________________________________________
 int  PyMethodBase::PyIsInitialized()
 {
