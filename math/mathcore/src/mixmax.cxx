@@ -32,6 +32,8 @@
 
 #define __MIXMAX_C  // do NOT define it in your own program, just include mixmax.h
 
+//#define USE_INLINE_ASM //LM: uncomment if want to use inline asm
+
 #include "mixmax.h"
 
 
@@ -98,7 +100,7 @@ double get_next_float(rng_state_t* X){
     //return ((int64_t)get_next(X)) * INV_MERSBASE;  // 00:01:17.23
     //return ( (double)get_next(X)) * INV_MERSBASE; // 00:01:57.89
     int64_t Z=(int64_t)get_next(X);
-#ifdef __SSE__
+#if defined(__SSE__) && defined(USE_INLINE_ASM)
     double F;
     __asm__ ("pxor %0, %0; "
              "cvtsi2sdq %1, %0; "
@@ -158,7 +160,7 @@ void iterate_and_fill_array(rng_state_t* X, double *array){
 }
 
 myuint modadd(myuint foo, myuint bar){
-#if defined(__x86_64__)
+#if defined(__x86_64__) && defined(USE_INLINE_ASM)
     myuint out;
     /* Assembler trick suggested by Andrzej Görlich     */
     __asm__ ("addq %2, %0; "
