@@ -436,7 +436,6 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax) :
    DoInitialize();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// F1 constructor using name of an interpreted function.
 ///

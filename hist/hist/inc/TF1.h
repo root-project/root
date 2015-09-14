@@ -134,8 +134,21 @@ private:
    std::vector<std::string> fParNames;   // parameter names
 };
 
+/// Internal namespace of TF1 for defining internal classes used
+/// for different TF1 constructor
+namespace TF1Internal {
+   /// generic TF1 building from a functor 
+   template<class Func>
+   struct TF1Builder_t {
+      static void Build(TF1 * f, Func func);
+   };
+}
+
 
 class TF1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
+
+   template<class Func>
+   friend struct TF1Internal::TF1Builder_t;
 
 protected:
    Double_t    fXmin;        //Lower bounds for the range
@@ -182,7 +195,7 @@ protected:
    virtual TH1 *DoCreateHistogram(Double_t xmin, Double_t xmax, Bool_t recreate = kFALSE);
 
    enum {
-       kNotGlobal   = BIT(10)  // don't register in global list of functions
+      kNotGlobal   = BIT(10),  // don't register in global list of functions
    };
 
 public:
@@ -193,6 +206,7 @@ public:
 
    TF1();
    TF1(const char *name, const char *formula, Double_t xmin=0, Double_t xmax = 1);
+   TF1(const char *name, const std::string & formula, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1);
    TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1);
 #ifndef __CINT__
    TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0, Int_t ndim = 1);
@@ -211,25 +225,8 @@ public:
    // xmin and xmax specify the plotting range,  npar is the number of parameters.
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <typename Func>
-   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1 ) :
-      TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
-      fXmin(xmin), fXmax(xmax),
-      fNpar(npar), fNdim(ndim),
-      fNpx(100), fType(1),
-      fNpfits(0), fNDF(0), fChisquare(0),
-      fMinimum(-1111), fMaximum(-1111),
-      fParErrors(std::vector<Double_t>(npar)),
-      fParMin(std::vector<Double_t>(npar)),
-      fParMax(std::vector<Double_t>(npar)),
-      fParent(0), fHistogram(0),
-      fMethodCall(0),
-      fNormalized(false), fNormIntegral(0),
-      fFunctor(ROOT::Math::ParamFunctor(f)),
-      fFormula(0),
-      fParams(new TF1Parameters(npar) )
-   {
-      DoInitialize();
-   }
+   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1 );
+   
    // backward compatible interface
    template <typename Func>
    TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *   ) :
@@ -479,6 +476,52 @@ public:
    ClassDef(TF1,9)  //The Parametric 1-D function
 };
 
+///ctor implementation
+template <typename Func>
+TF1::TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim ) :
+   TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
+   fXmin(xmin), fXmax(xmax),
+   fNpar(npar), fNdim(ndim),
+   fNpx(100), fType(1),
+   fNpfits(0), fNDF(0), fChisquare(0),
+   fMinimum(-1111), fMaximum(-1111),
+   fParErrors(std::vector<Double_t>(npar)),
+   fParMin(std::vector<Double_t>(npar)),
+   fParMax(std::vector<Double_t>(npar)),
+   fParent(0), fHistogram(0),
+   fMethodCall(0),
+   fNormalized(false), fNormIntegral(0),
+   //fFunctor(ROOT::Math::ParamFunctor(f)),
+   fFormula(0),
+   fParams(0)
+{
+   TF1Internal::TF1Builder_t<Func>::Build(this,f); 
+   DoInitialize();
+}
+
+namespace TF1Internal {
+
+   template<class Func>
+   void TF1Builder_t<Func>::Build(TF1 * f, Func func) {
+      f->fType = 1; 
+      f->fFunctor = ROOT::Math::ParamFunctor(func);
+      f->fParams = new TF1Parameters(f->fNpar);
+   }
+   /// TF1 building from a string
+   /// used to build a TFormula based on a lambda function
+   template<>
+   struct TF1Builder_t<const char *> {
+      static void Build(TF1 * f, const char * formula) {
+         f->fType = 0; 
+         f->fFormula = new TFormula("tf1lambda",formula,f->fNdim,f->fNpar,false);
+      }
+   };
+
+   
+}
+
+
+
 inline Double_t TF1::operator()(Double_t x, Double_t y, Double_t z, Double_t t) const
    { return Eval(x,y,z,t); }
 inline Double_t TF1::operator()(const Double_t *x, const Double_t *params)
@@ -506,5 +549,8 @@ void TF1::SetFunction( PtrObj& p, MemFn memFn )   {
    fType = 1;
    fFunctor = ROOT::Math::ParamFunctor(p,memFn);
 }
+
+
+
 
 #endif
