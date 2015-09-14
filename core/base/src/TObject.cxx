@@ -1059,7 +1059,7 @@ void TObject::operator delete[](void *ptr)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print value overload
 
-std::string cling::printValue(TObject *val) {
+std::string cling::printValue(TObject *val, unsigned int) {
    std::ostringstream strm;
    strm << "Name: " << val->GetName() << " Title: " << val->GetTitle();
    return strm.str();

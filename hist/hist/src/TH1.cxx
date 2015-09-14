@@ -8780,9 +8780,9 @@ void TH1::UpdateBinContent(Int_t, Double_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print value overload
 
-std::string cling::printValue(TH1 *val) {
+std::string cling::printValue(TH1 *val, unsigned int recursiveDepth) {
   std::ostringstream strm;
-  strm << cling::printValue((TObject*)val) << " NbinsX: " << val->GetNbinsX();
+  strm << cling::printValue((TObject*)val, recursiveDepth) << " NbinsX: " << val->GetNbinsX();
   return strm.str();
 }
 

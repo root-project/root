@@ -231,7 +231,7 @@ enum EObjBits {
 };
 
 namespace cling {
-   std::string printValue(TObject *val);
+   std::string printValue(TObject *val, unsigned int);
 }
 
 #ifndef ROOT_TBuffer

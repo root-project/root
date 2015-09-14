@@ -439,7 +439,7 @@ protected:
 };
 
 namespace cling {
-  std::string printValue(TH1 *val);
+  std::string printValue(TH1 *val, unsigned int recursiveDepth);
 }
 
 //________________________________________________________________________
