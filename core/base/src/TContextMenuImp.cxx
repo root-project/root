@@ -9,14 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// TContextMenuImp                                                            //
-//                                                                            //
-// This class provides an interface to GUI independent                        //
-// context sensitive popup menus.                                             //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+/** \class TContextMenuImp
+This class provides an interface to GUI independent context sensitive popup menus.
+*/
 
 #include "TContextMenuImp.h"
 
