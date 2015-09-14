@@ -639,6 +639,7 @@ if(builtin_xrootd)
                -DCMAKE_CXX_FLAGS=${__cxxflags}
                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+               -DENABLE_PYTHON=OFF
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
   set(_LIBDIR_DEFAULT "lib")
