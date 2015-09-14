@@ -9,22 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TDatime                                                              //
-//                                                                      //
-// This class stores the date and time with a precision of one second   //
-// in an unsigned 32 bit word (e.g. 950130 124559). The date is stored  //
-// with the origin being the 1st january 1995.                          //
-//                                                                      //
-// This class has no support for time zones. The time is assumed        //
-// to be in the local time of the machine where the object was created. //
-// As a result, TDatime objects are not portable between machines       //
-// operating in different time zones and unsuitable for storing the     //
-// date/time of data taking events and the like. If absolute time is    //
-// required, use TTimeStamp.                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TDatime
+This class stores the date and time with a precision of one second
+in an unsigned 32 bit word (950130 124559).
+The date is stored with the origin being the 1st January 1995.
+
+This class has no support for time zones. The time is assumed
+to be in the local time of the machine where the object was created.
+As a result, TDatime objects are not portable between machines
+operating in different time zones and unsuitable for storing the
+date/time of data taking events and the like. If absolute time is
+required, use TTimeStamp.
+*/
 
 #include "RConfig.h"
 
@@ -173,10 +169,10 @@ const char *TDatime::AsSQLString() const
 /// subtracted from the returned time_t. One use of such a non-standard time_t
 /// value is to convert a TDatime object that contains local time to GMT,
 /// as in this example:
-///
+/// ~~~ {.cpp}
 /// TDatime now;
 /// now.Set(now.Convert(kTRUE));
-///
+/// ~~~
 /// Caution: the time_t returned from Convert(kTRUE) is incompatible with
 /// regular Unix time - it contains an artificial, locale-dependent offset.
 
@@ -284,7 +280,7 @@ void TDatime::ReadBuffer(char *&buffer)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set Date/Time to current time as reported by the system.
 /// Date and Time are encoded into one single unsigned 32 bit word.
-/// Date is stored with the origin being the 1st january 1995.
+/// Date is stored with the origin being the 1st January 1995.
 /// Time has 1 second precision.
 
 void TDatime::Set()
@@ -357,6 +353,7 @@ void TDatime::Set(UInt_t tloc, Bool_t dosDate)
 /// Set date and time. Data must be in format 980418 or 19980418 and time in
 /// 224512 (second precision). The date must
 /// be >= 950101.
+///
 /// For years >= 2000, date can be given in the form 20001127 or 1001127
 /// internally the date will be converted to 1001127
 
