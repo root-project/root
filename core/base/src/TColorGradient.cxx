@@ -9,20 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TColorGradient                                                       //
-//                                                                      //
-// TColorGradient extends basic TColor.                                 //
-// Actually, this is not a simple color, but linear gradient + shadow   //
-// for filled area. By inheriting from TColor, gradients can be placed  //
-// inside gROOT's list of colors and use it in all TAttXXX descendants  //
-// without modifying any existing code.                                 //
-// Shadow, of course, is not a property of any color, and gradient is   //
-// not, but this is the best way to add new attributes to filled area   //
-// without re-writing all the graphics code.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TColorGradient
+TColorGradient extends basic TColor.
+Actually, this is not a simple color, but linear gradient + shadow
+for filled area. By inheriting from TColor, gradients can be placed
+inside gROOT's list of colors and use it in all TAttXXX descendants
+without modifying any existing code.
+
+Shadow, of course, is not a property of any color, and gradient is
+not, but this is the best way to add new attributes to filled area
+without re-writing all the graphics code.
+*/
 
 #include <cassert>
 
@@ -35,6 +32,7 @@
 ClassImp(TColorGradient)
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TColorGradient::TColorGradient()
                    : fCoordinateMode(kObjectBoundingMode)
@@ -42,8 +40,8 @@ TColorGradient::TColorGradient()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///I have no way to validate parameters here, so it's up to user
-///to pass correct arguments.
+/// There is no way to validate parameters here, so it's up to user
+/// to pass correct arguments.
 
 TColorGradient::TColorGradient(Color_t colorIndex, UInt_t nPoints, const Double_t *points,
                                const Color_t *indices, ECoordinateMode mode)
@@ -58,8 +56,8 @@ TColorGradient::TColorGradient(Color_t colorIndex, UInt_t nPoints, const Double_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///I have no way to validate parameters here, so it's up to user
-///to pass correct arguments.
+/// There is no way to validate parameters here, so it's up to user
+/// to pass correct arguments.
 
 TColorGradient::TColorGradient(Color_t colorIndex, UInt_t nPoints, const Double_t *points,
                                const Double_t *colors, ECoordinateMode mode)
@@ -74,6 +72,7 @@ TColorGradient::TColorGradient(Color_t colorIndex, UInt_t nPoints, const Double_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Reset color.
 
 void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points, const Color_t *colorIndices)
 {
@@ -106,6 +105,7 @@ void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points, const Co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Reset color.
 
 void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points,
                                 const Double_t *colors)
@@ -119,6 +119,7 @@ void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set coordinate mode.
 
 void TColorGradient::SetCoordinateMode(ECoordinateMode mode)
 {
@@ -126,6 +127,7 @@ void TColorGradient::SetCoordinateMode(ECoordinateMode mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get coordinate mode.
 
 TColorGradient::ECoordinateMode TColorGradient::GetCoordinateMode()const
 {
@@ -133,7 +135,7 @@ TColorGradient::ECoordinateMode TColorGradient::GetCoordinateMode()const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Get number of steps.
 
 TColorGradient::SizeType_t TColorGradient::GetNumberOfSteps()const
 {
@@ -141,7 +143,7 @@ TColorGradient::SizeType_t TColorGradient::GetNumberOfSteps()const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Get color positions
 
 const Double_t *TColorGradient::GetColorPositions()const
 {
@@ -149,7 +151,7 @@ const Double_t *TColorGradient::GetColorPositions()const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Get colors.
 
 const Double_t *TColorGradient::GetColors()const
 {
@@ -157,6 +159,7 @@ const Double_t *TColorGradient::GetColors()const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Register color
 
 void TColorGradient::RegisterColor(Color_t colorIndex)
 {
@@ -180,13 +183,16 @@ void TColorGradient::RegisterColor(Color_t colorIndex)
 
 ClassImp(TLinearGradient)
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class TLinearGradient
+Define a linear color gradient.
+*/
 
 TLinearGradient::TLinearGradient()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TLinearGradient::TLinearGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                                  const Color_t *colorIndices, ECoordinateMode mode)
@@ -195,6 +201,7 @@ TLinearGradient::TLinearGradient(Color_t newColor, UInt_t nPoints, const Double_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TLinearGradient::TLinearGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                                  const Double_t *colors, ECoordinateMode mode)
@@ -203,6 +210,7 @@ TLinearGradient::TLinearGradient(Color_t newColor, UInt_t nPoints, const Double_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set end and start.
 
 void TLinearGradient::SetStartEnd(const Point &p1, const Point &p2)
 {
@@ -211,6 +219,7 @@ void TLinearGradient::SetStartEnd(const Point &p1, const Point &p2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get start.
 
 const TColorGradient::Point &TLinearGradient::GetStart()const
 {
@@ -218,6 +227,7 @@ const TColorGradient::Point &TLinearGradient::GetStart()const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get end.
 
 const TColorGradient::Point &TLinearGradient::GetEnd()const
 {
@@ -226,13 +236,16 @@ const TColorGradient::Point &TLinearGradient::GetEnd()const
 
 ClassImp(TRadialGradient)
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class TRadialGradient
+Define a radial color gradient
+*/
 
 TRadialGradient::TRadialGradient()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                                  const Color_t *colorIndices, ECoordinateMode mode)
@@ -241,6 +254,7 @@ TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                                  const Double_t *colors, ECoordinateMode mode)
@@ -249,6 +263,7 @@ TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get gradient type.
 
 TRadialGradient::EGradientType TRadialGradient::GetGradientType()const
 {
@@ -256,6 +271,7 @@ TRadialGradient::EGradientType TRadialGradient::GetGradientType()const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set start and end R1 and R2.
 
 void TRadialGradient::SetStartEndR1R2(const Point &p1, Double_t r1, const Point &p2, Double_t r2)
 {
@@ -268,6 +284,7 @@ void TRadialGradient::SetStartEndR1R2(const Point &p1, Double_t r1, const Point 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get start.
 
 const TColorGradient::Point &TRadialGradient::GetStart()const
 {
@@ -275,6 +292,7 @@ const TColorGradient::Point &TRadialGradient::GetStart()const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Get R1.
 
 Double_t TRadialGradient::GetR1()const
 {
@@ -282,6 +300,7 @@ Double_t TRadialGradient::GetR1()const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get end.
 
 const TColorGradient::Point &TRadialGradient::GetEnd()const
 {
@@ -289,6 +308,7 @@ const TColorGradient::Point &TRadialGradient::GetEnd()const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get R2.
 
 Double_t TRadialGradient::GetR2()const
 {
@@ -296,6 +316,7 @@ Double_t TRadialGradient::GetR2()const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set radial gradient.
 
 void TRadialGradient::SetRadialGradient(const Point &center, Double_t radius)
 {
@@ -306,6 +327,7 @@ void TRadialGradient::SetRadialGradient(const Point &center, Double_t radius)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get center.
 
 const TColorGradient::Point &TRadialGradient::GetCenter()const
 {
@@ -313,6 +335,7 @@ const TColorGradient::Point &TRadialGradient::GetCenter()const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get radius.
 
 Double_t TRadialGradient::GetRadius()const
 {
