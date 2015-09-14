@@ -154,11 +154,12 @@ TF1 graphics function is via the TH1 and TGraph drawing functions.
 
 The following types of functions can be created:
 
-* [A](#F1) - Expression using variable x and no parameters
-* [B](#F2) - Expression using variable x with parameters
-* [C](#F3) - A general C function with parameters
-* [D](#F4) - A general C++ function object (functor) with parameters
-* [E](#F5) - A member function with parameters of a general C++ class
+*  [A](#F1) - Expression using variable x and no parameters
+*  [B](#F2) - Expression using variable x with parameters
+*  [C](#F3)- Lambda Expression with variable x and parameters  
+*  [D](#F4) - A general C function with parameters
+*  [E](#F5) - A general C++ function object (functor) with parameters
+*  [F](#F6) - A member function with parameters of a general C++ class
 
 
 
@@ -245,7 +246,20 @@ Begin_Macro(source)
 } 
 End_Macro
 
-###<a name="F3"></a> C - A general C function with parameters
+###<a name="F3"></a> C - A lambda expression with variables and parameters **(NEW)**
+
+TF1 now supports using lambda expressions in the formula. This allows, by using a full C++ syntax the full power of lambda 
+functions and still mantain the capability of storing the function in a file which cannot be done with 
+funciton pointer or lambda written not as expression, but as code (see items belows). 
+
+Example on how using lambda to define a sum of two functions. Note that is necessary to provide the number of parameters
+~~~~{.cpp}
+TF1 f1("f1","sin(x)",0,10);
+TF1 f2("f2","cos(x)",0,10);
+TF1 fsum("f1","[&](double *x, double *p){ return p[0]*f1(x) + p[1]*f2(x); }",0,10,2); 
+~~~~
+
+###<a name="F4"></a> D - A general C function with parameters
 
 Consider the macro myfunc.C below:
 
@@ -307,7 +321,7 @@ Example:
 ~~~~
 
 
-### <a name="F4"></a> D - A general C++ function object (functor) with parameters
+### <a name="F5"></a> E - A general C++ function object (functor) with parameters
 
 A TF1 can be created from any C++ class implementing the operator()(double *x, double *p). The advantage of the function object is that he can have a state and reference therefore what-ever other object. In this way the user can customize his function.
 
@@ -342,7 +356,7 @@ TF1 * f = new TF1("f",[&](double*x, double *p){ return p[0]*g->Eval(x[0]); }, xm
 ~~~~
 
 
-### <a name="F5"></a> E - A member function with parameters of a general C++ class
+### <a name="F6"></a> F - A member function with parameters of a general C++ class
 
 A TF1 can be created in this case from any member function of a class which has the signature of (double * , double *) and returning a double.
 
