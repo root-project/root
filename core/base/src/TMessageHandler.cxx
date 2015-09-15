@@ -19,10 +19,11 @@ In Notify() one has access to the message id and the object
 generating the message. One can install more than one message
 handler per class. A message handler can be removed or again
 added when needed.
-All Root "Warnings"  are logged as message 1001
-All Root "Errors"    are logged as message 1002
-All Root "SysErrors" are logged as message 1003
-All Root "Fatals"    are logged as message 1004
+
+  - All Root "Warnings"  are logged as message 1001
+  - All Root "Errors"    are logged as message 1002
+  - All Root "SysErrors" are logged as message 1003
+  - All Root "Fatals"    are logged as message 1004
 */
 
 #include "TMessageHandler.h"
