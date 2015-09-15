@@ -188,6 +188,7 @@ bool TMPClient::Fork(TMPWorker &server)
       //prepare server and add it to eventloop
       server.Init(sockets[1]);
 
+      //enter main loop
       gSystem->Run();
    }
 

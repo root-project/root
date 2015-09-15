@@ -37,7 +37,7 @@ private:
    Bool_t Notify();
    Bool_t ReadNotify() { return Notify(); }
 
-   std::unique_ptr<TSocket> fS; ///< This worker's socket
+   std::unique_ptr<TSocket> fS; ///< This worker's socket. The unique_ptr makes sure resources are released.
    pid_t fPid; ///< the PID of the process in which this worker is running
 };
 

@@ -13,27 +13,27 @@
 #define ROOT_TProcPool
 
 #include "TMPClient.h"
-#include "TCollection.h"
 #include "MPSendRecv.h"
+#include "TCollection.h"
 #include "TPoolWorker.h"
 #include "TObjArray.h"
-#include "PoolCode.h"
+#include "PoolUtils.h"
 #include "MPCode.h"
+#include "TPoolProcessor.h"
+#include "TTreeReader.h"
+#include "TFileCollection.h"
+#include "TChain.h"
+#include "TChainElement.h"
+#include "THashList.h"
+#include "TFileInfo.h"
 #include <vector>
+#include <string>
 #include <initializer_list>
 #include <type_traits> //std::result_of, std::enable_if
 #include <numeric> //std::iota
+#include <algorithm> //std::generate
+#include <functional> //std::reference_wrapper
 #include <iostream>
-
-//////////////////////////////////////////////////////////////////////////
-///
-/// This namespace contains pre-defined functions to be used in
-/// conjuction with TProcPool::Map and TProcPool::MapReduce.
-///
-//////////////////////////////////////////////////////////////////////////
-namespace PoolUtils {
-   TObject *ReduceObjects(const std::vector<TObject *> &objs);
-}
 
 class TProcPool : private TMPClient {
 public:
@@ -66,9 +66,15 @@ public:
    template<class F, class T, class R> auto MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(func(args.front()));
    /// \endcond
 
+   // Process
+   // this version requires that procFunc returns a ptr to TObject or inheriting classes and takes a TTreeReader& (both enforced at compile-time)
+   template<class F> TObject* Process(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0);
+   template<class F> TObject* Process(const std::string& fileName, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0);
+   template<class F> TObject* Process(TFileCollection& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0);
+   template<class F> TObject* Process(TChain& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0);
+
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
-   /// Return true if this process is the parent/client/master process, false otherwise
 
 private:
    template<class T> void Collect(std::vector<T> &reslist);
@@ -76,13 +82,21 @@ private:
 
    void Reset();
    template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
-   void ReplyToResult(TSocket *s);
+   void ReplyToFuncResult(TSocket *s);
    void ReplyToIdle(TSocket *s);
 
    unsigned fNProcessed; ///< number of arguments already passed to the workers
    unsigned fNToProcess; ///< total number of arguments to pass to the workers
-   bool fWithArg; ///< true if arguments are passed to Map
-   bool fWithReduce; ///< true if MapReduce has been called
+
+   enum class ETask : unsigned {
+      kNoTask = 0,
+      kMap,
+      kMapWithArg,
+      kMapRed,
+      kMapRedWithArg,
+      kProcRange,
+      kProcFile,
+   } fTask; ///< the kind of task that is being executed, if any
 };
 
 
@@ -99,7 +113,7 @@ auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
    using retType = decltype(func());
    //prepare environment
    Reset();
-   fWithArg = false;
+   fTask = ETask::kMap;
 
    //fork max(nTimes, fNWorkers) times
    unsigned oldNWorkers = GetNWorkers();
@@ -125,6 +139,7 @@ auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
 
    //clean-up and return
    ReapWorkers();
+   fTask = ETask::kNoTask;
    return reslist;
 }
 
@@ -194,7 +209,7 @@ auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(a
    using retType = decltype(func(args.front()));
    //prepare environment
    Reset();
-   fWithArg = true;
+   fTask = ETask::kMapWithArg;
 
    //fork max(args.size(), fNWorkers) times
    //N.B. from this point onwards, args is filled with undefined (but valid) values, since TPoolWorker moved its content away
@@ -223,6 +238,7 @@ auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(a
 
    //clean-up and return
    ReapWorkers();
+   fTask = ETask::kNoTask;
    return reslist;
 }
 // tell doxygen to stop ignoring code
@@ -241,8 +257,7 @@ auto TProcPool::MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func()
    using retType = decltype(func());
    //prepare environment
    Reset();
-   fWithArg = false;
-   fWithReduce = true;
+   fTask = ETask::kMapRed;
 
    //fork max(nTimes, fNWorkers) times
    unsigned oldNWorkers = GetNWorkers();
@@ -267,6 +282,7 @@ auto TProcPool::MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func()
 
    //clean-up and return
    ReapWorkers();
+   fTask = ETask::kNoTask;
    return redfunc(reslist);
 }
 
@@ -321,8 +337,7 @@ auto TProcPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(f
    using retType = decltype(func(args.front()));
    //prepare environment
    Reset();
-   fWithArg = true;
-   fWithReduce = true;
+   fTask = ETask::kMapRedWithArg;
 
    //fork max(args.size(), fNWorkers) times
    unsigned oldNWorkers = GetNWorkers();
@@ -348,9 +363,95 @@ auto TProcPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(f
    Collect(reslist);
 
    ReapWorkers();
+   fTask = ETask::kNoTask;
    return redfunc(reslist);
 }
 /// \endcond
+
+
+template<class F>
+TObject* TProcPool::Process(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName, ULong64_t nToProcess)
+{
+   static_assert(std::is_constructible<TObject*, typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type>::value, "procFunc must return a pointer to a class inheriting from TObject, and must take a reference to TTreeReader as the only argument");
+
+   //prepare environment
+   Reset();
+   unsigned nWorkers = GetNWorkers();
+
+   //fork
+   TPoolProcessor<F> worker(procFunc, fileNames, treeName, nWorkers, nToProcess/nWorkers);
+   bool ok = Fork(worker);
+   if(!ok) {
+      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+      return nullptr;
+   }
+
+   if(fileNames.size() < nWorkers) {
+      //TTree entry granularity. For each file, we divide entries equally between workers
+      fTask = ETask::kProcRange;
+      //Tell workers to start processing entries
+      fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
+      std::vector<unsigned> args(nWorkers);
+      std::iota(args.begin(), args.end(), 0);
+      fNProcessed = Broadcast(PoolCode::kProcRange, args);
+      if(fNProcessed < nWorkers)
+         std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+   } else {
+      //file granularity. each worker processes one whole file as a single task
+      fTask = ETask::kProcFile;
+      fNToProcess = fileNames.size();
+      std::vector<unsigned> args(nWorkers);
+      std::iota(args.begin(), args.end(), 0);
+      fNProcessed = Broadcast(PoolCode::kProcFile, args);
+      if(fNProcessed < nWorkers)
+         std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+   }
+
+   //collect results, distribute new tasks
+   std::vector<TObject*> reslist;
+   Collect(reslist);
+
+   //merge
+   TObject* res = PoolUtils::ReduceObjects(reslist);
+
+   //clean-up and return
+   ReapWorkers();
+   fTask = ETask::kNoTask;
+   return res;
+}
+
+
+template<class F>
+TObject* TProcPool::Process(const std::string& fileName, F procFunc, const std::string& treeName, ULong64_t nToProcess)
+{
+   std::vector<std::string> singleFileName(1, fileName);
+   return Process(singleFileName, procFunc, treeName, nToProcess);
+}
+
+
+template<class F>
+TObject* TProcPool::Process(TFileCollection& files, F procFunc, const std::string& treeName, ULong64_t nToProcess)
+{
+   std::vector<std::string> fileNames(files.GetNFiles());
+   unsigned count = 0;
+   for(auto f : *static_cast<THashList*>(files.GetList()))
+      fileNames[count++] = static_cast<TFileInfo*>(f)->GetCurrentUrl()->GetFile();
+
+   return Process(fileNames, procFunc, treeName, nToProcess);
+}
+
+
+template<class F>
+TObject* TProcPool::Process(TChain& files, F procFunc, const std::string& treeName, ULong64_t nToProcess)
+{
+   TObjArray* filelist = files.GetListOfFiles();
+   std::vector<std::string> fileNames(filelist->GetEntries());
+   unsigned count = 0;
+   for(auto f : *filelist)
+      fileNames[count++] = f->GetTitle();
+
+   return Process(fileNames, procFunc, treeName, nToProcess);
+}
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -377,16 +478,26 @@ void TProcPool::Collect(std::vector<T> &reslist)
 
 
 //////////////////////////////////////////////////////////////////////////
-/// Handle message and reply to the worker (actual code implemented in ReplyToResult
+/// Handle message and reply to the worker
 template<class T>
 void TProcPool::HandlePoolCode(MPCodeBufPair &msg, TSocket *s, std::vector<T> &reslist)
 {
    unsigned code = msg.first;
    if (code == PoolCode::kFuncResult) {
       reslist.push_back(std::move(ReadBuffer<T>(msg.second.get())));
-      ReplyToResult(s);
+      ReplyToFuncResult(s);
    } else if (code == PoolCode::kIdling) {
       ReplyToIdle(s);
+   } else if(code == PoolCode::kProcResult) {
+      if(msg.second != nullptr)
+         reslist.push_back(std::move(ReadBuffer<T>(msg.second.get())));
+      MPSend(s, MPCode::kShutdownOrder);
+   } else if(code == PoolCode::kProcError) {
+      const char *str = ReadBuffer<const char*>(msg.second.get());
+      std::cerr << "[E][C] a worker encountered an error: " << str << "\n"
+                << "Continuing execution ignoring these entries.\n";
+      ReplyToIdle(s);
+      delete [] str;
    } else {
       // UNKNOWN CODE
       std::cerr << "[W][C] unknown code received from server. code=" << code << "\n";

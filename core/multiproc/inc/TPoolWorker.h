@@ -13,7 +13,7 @@
 #define ROOT_TPoolWorker
 
 #include "TMPWorker.h"
-#include "PoolCode.h"
+#include "PoolUtils.h"
 #include "MPCode.h"
 #include "MPSendRecv.h"
 #include <string>

@@ -118,17 +118,20 @@ int MPSend(TSocket *s, unsigned code, T obj)
 }
 
 // send a TObject*. Allows polymorphic behaviour and pters to derived classes
-template < class T, typename std::enable_if < std::is_pointer<T>::value  &&std::is_constructible<TObject *, T>::value >::type * >
+template < class T, typename std::enable_if < std::is_pointer<T>::value && std::is_constructible<TObject *, T>::value >::type * >
 int MPSend(TSocket *s, unsigned code, T obj)
 {
    //find out the size of the object
    TBufferFile objBuf(TBuffer::kWrite);
-   objBuf.WriteObjectAny(obj, obj->IsA());
+   if(obj != nullptr)
+      objBuf.WriteObjectAny(obj, obj->IsA());
+
    //write everything together in a buffer
    TBufferFile wBuf(TBuffer::kWrite);
    wBuf.WriteUInt(code);
    wBuf.WriteULong(objBuf.Length());
-   wBuf.WriteBuf(objBuf.Buffer(), objBuf.Length());
+   if(objBuf.Length())
+      wBuf.WriteBuf(objBuf.Buffer(), objBuf.Length());
    return s->SendRaw(wBuf.Buffer(), wBuf.Length());
 }
 

@@ -71,6 +71,7 @@
 ///
 //////////////////////////////////////////////////////////////////////////
 
+
 //////////////////////////////////////////////////////////////////////////
 /// Class constructor.
 /// nWorkers is the number of times this ROOT session will be forked, i.e.
@@ -87,42 +88,7 @@ void TProcPool::Reset()
 {
    fNProcessed = 0;
    fNToProcess = 0;
-   fWithArg = false;
-   fWithReduce = false;
-}
-
-
-//////////////////////////////////////////////////////////////////////////
-/// Merge collection of TObjects.
-/// This function looks for an implementation of the Merge method
-/// (e.g. TH1F::Merge) and calls it on the objects contained in objs.
-/// If Merge is not found, a null pointer is returned.
-TObject *PoolUtils::ReduceObjects(const std::vector<TObject *> &objs)
-{
-   if (objs.size() == 1)
-      return objs[0];
-
-   //get first object from objs
-   TObject *obj = objs[0];
-   //get merge function
-   ROOT::MergeFunc_t merge = obj->IsA()->GetMerge();
-   if (!merge) {
-      std::cerr << "could not find merge method for TObject*\n. Aborting operation.";
-      return nullptr;
-   }
-
-   //put the rest of the objs in a list
-   TList mergelist;
-   unsigned NObjs = objs.size();
-   for (unsigned i = 1; i < NObjs; ++i) //skip first object
-      mergelist.Add(objs[i]);
-
-   //call merge
-   merge(obj, &mergelist, nullptr);
-   mergelist.Delete();
-
-   //return result
-   return obj;
+   fTask = ETask::kNoTask;
 }
 
 
@@ -130,15 +96,16 @@ TObject *PoolUtils::ReduceObjects(const std::vector<TObject *> &objs)
 /// Reply to a worker who just sent a result.
 /// If another argument to process exists, tell the worker. Otherwise
 /// send a shutdown order.
-void TProcPool::ReplyToResult(TSocket *s)
+void TProcPool::ReplyToFuncResult(TSocket *s)
 {
-   if (!fWithReduce && fNProcessed < fNToProcess) {
-      if (fWithArg)
-         MPSend(s, PoolCode::kExecFuncWithArg, fNProcessed);
-      else
+   if (fNProcessed < fNToProcess) {
+      //this cannot be a "greedy worker" task
+      if (fTask == ETask::kMap)
          MPSend(s, PoolCode::kExecFunc);
+      else if (fTask == ETask::kMapWithArg)
+         MPSend(s, PoolCode::kExecFuncWithArg, fNProcessed);
       ++fNProcessed;
-   } else // fWithReduce || fNProcessed >= fNToProcess
+   } else //whatever the task is, we are done
       MPSend(s, MPCode::kShutdownOrder);
 }
 
@@ -150,10 +117,15 @@ void TProcPool::ReplyToResult(TSocket *s)
 void TProcPool::ReplyToIdle(TSocket *s)
 {
    if (fNProcessed < fNToProcess) {
-      if (fWithArg)
+      //we are executing a "greedy worker" task
+      if (fTask == ETask::kMapRedWithArg)
          MPSend(s, PoolCode::kExecFuncWithArg, fNProcessed);
-      else
+      else if (fTask == ETask::kMapRed)
          MPSend(s, PoolCode::kExecFunc);
+      else if (fTask == ETask::kProcRange)
+         MPSend(s, PoolCode::kProcRange, fNProcessed);
+      else if (fTask == ETask::kProcFile)
+         MPSend(s, PoolCode::kProcFile, fNProcessed);
       ++fNProcessed;
    } else
       MPSend(s, PoolCode::kSendResult);
