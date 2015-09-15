@@ -9,14 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// TInspector Imp                                                             //
-//                                                                            //
-// ABC describing GUI independent object inspector (abstration mainly needed  //
-// for Win32. On X11 systems it currently uses a standard TCanvas).           //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+/** \class TInspectorImp
+ABC describing GUI independent object inspector (abstraction mainly needed
+for Win32. On X11 systems it currently uses a standard TCanvas).
+*/
 
 #include "TInspectorImp.h"
 
