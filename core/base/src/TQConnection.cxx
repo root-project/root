@@ -9,20 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TQConnection class is an internal class, used in the object          //
-// communication mechanism.                                             //
-//                                                                      //
-// TQConnection:                                                        //
-//    -  is a list of signal_lists containing pointers                  //
-//       to this connection                                             //
-//    -  receiver is the object to which slot-method is applied         //
-//                                                                      //
-// This implementation is provided by                                   //
-// Valeriy Onuchin (onuchin@sirius.ihep.su).                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TQConnection
+TQConnection class is an internal class, used in the object
+communication mechanism.
+
+TQConnection:
+   -  is a list of signal_lists containing pointers
+      to this connection
+   -  receiver is the object to which slot-method is applied
+*/
 
 #include "Varargs.h"
 #include "TQConnection.h"
@@ -41,13 +36,10 @@ ClassImpQ(TQConnection)
 
 char *gTQSlotParams; // used to pass string parameter
 
+/** \class TQSlot
+Slightly modified TMethodCall class used in the object communication mechanism.
+*/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TQSlot = slightly modified TMethodCall class                        //
-//           used in the object communication mechanism                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 class TQSlot : public TObject, public TRefCnt {
 
 protected:
@@ -95,8 +87,10 @@ public:
 /// string of the form: method(char*,int,float).
 /// To initialize class method with default arguments, method
 /// string with default parameters should be of the form:
+///
 /// method(=\"ABC\",1234,3.14) (!! parameter string should
 /// consists of '=').
+///
 /// To execute the method call TQSlot::ExecuteMethod(object,...).
 
 TQSlot::TQSlot(TClass *cl, const char *method_name,
@@ -120,7 +114,7 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
    char *tmp;
    char *params = 0;
 
-   // separate method and protoype strings
+   // separate method and prototype strings
 
    if ((proto = strchr(method, '('))) {
 
@@ -168,8 +162,10 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 /// of the form: method(char*,int,float).
 /// To initialize class method with default arguments, method
 /// string with default parameters  should be of the form:
+///
 /// method(=\"ABC\",1234,3.14) (!! parameter string should
 /// consists of '=').
+///
 /// To execute the method call TQSlot::ExecuteMethod(object,...).
 
 TQSlot::TQSlot(const char *class_name, const char *funcname) :
@@ -189,7 +185,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    char *tmp;
    char *params = 0;
 
-   // separate method and protoype strings
+   // separate method and prototype strings
 
    if ((proto =  strchr(method, '('))) {
       *proto++ = '\0';
