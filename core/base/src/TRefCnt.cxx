@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRefCnt                                                             //
-//                                                                      //
-//  Definitions for TRefCnt, base class for reference counted objects.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRefCnt
+Definitions for TRefCnt, base class for reference counted objects.
+*/
 
 
 #include "TRefCnt.h"
