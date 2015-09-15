@@ -9,16 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFileCollection                                                      //
-//                                                                      //
-// Class that contains a list of TFileInfo's and accumulated meta       //
-// data information about its entries. This class is used to describe   //
-// file sets as stored by Grid file catalogs, by PROOF or any other     //
-// collection of TFile names.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TFileCollection
+
+Class that contains a list of TFileInfo's and accumulated meta
+data information about its entries. This class is used to describe
+file sets as stored by Grid file catalogs, by PROOF or any other
+collection of TFile names.
+*/
 
 #include "TFileCollection.h"
 #include "THashList.h"
@@ -386,15 +383,16 @@ Int_t TFileCollection::Update(Long64_t avgsize)
 ////////////////////////////////////////////////////////////////////////////////
 /// Prints the contents of the TFileCollection.
 /// If option contains:
-///      'M'             print global meta information
-///      'F'             print all the files in the collection in compact form
-///                      (current url, default tree name|class|entries, md5)
-///      'L'             together with 'F', print all the files in the collection
-///                      in long form (uuid, md5, all URLs, all meta objects; on
-///                      many lines)
-///      "filter:[SsCc]" invokes PrintDetailed() which prints out dataset
-///                      content in a formatted fashion by filtering on files
-///                      which are (S)taged or not (s), (C)orrupted or not (c)
+///
+///  - 'M'             print global meta information
+///  - 'F'             print all the files in the collection in compact form
+///                    (current url, default tree name|class|entries, md5)
+///  - 'L'             together with 'F', print all the files in the collection
+///                    in long form (uuid, md5, all URLs, all meta objects; on
+///                    many lines)
+///  - "filter:[SsCc]" invokes PrintDetailed() which prints out dataset
+///                    content in a formatted fashion by filtering on files
+///                    which are (S)taged or not (s), (C)orrupted or not (c)
 
 void TFileCollection::Print(Option_t *option) const
 {
@@ -433,6 +431,7 @@ void TFileCollection::Print(Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Print detailed.
 
 void TFileCollection::PrintDetailed(TString &showOnly) const
 {
@@ -522,6 +521,7 @@ void TFileCollection::PrintDetailed(TString &showOnly) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Format size.
 
 void TFileCollection::FormatSize(Long64_t bytes, TString &um,
    Double_t &size) const
@@ -628,7 +628,7 @@ Long64_t TFileCollection::GetTotalEntries(const char *tree) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the meta data object with the soecified meta name.
+/// Returns the meta data object with the specified meta name.
 /// Returns 0 in case specified meta data is not found.
 
 TFileInfoMeta *TFileCollection::GetMetaData(const char *meta) const
@@ -641,7 +641,7 @@ TFileInfoMeta *TFileCollection::GetMetaData(const char *meta) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Moves the indicated meta data in the first position, so that
-/// it becomes efectively the default.
+/// it becomes effectively the default.
 
 void TFileCollection::SetDefaultMetaData(const char *meta)
 {
@@ -683,7 +683,7 @@ void TFileCollection::Sort(Bool_t useindex)
    if (!fList)
      return;
 
-   // Make sure the relevant bit has teh wanted value
+   // Make sure the relevant bit has the wanted value
    if (useindex) {
       SetBitAll(TFileInfo::kSortWithIndex);
    } else {
@@ -758,7 +758,7 @@ TObjString *TFileCollection::ExportInfo(const char *name, Int_t popt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the subset of files served by 'server'. The sysntax for 'server' is
+/// Return the subset of files served by 'server'. The syntax for 'server' is
 /// the standard URI one, i.e. [<scheme>://]<host>[:port]
 
 TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
@@ -983,6 +983,7 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude, Bool_t curronly)
 /// adopted by the TFileCollection and should not be deleted by the user.
 /// Typically objects of class TFileInfoMeta or derivatives should be added,
 /// but any class is accepted.
+///
 /// NB : a call to TFileCollection::Update will remove these objects unless the
 ///      bit TFileInfoMeta::kExternal is set.
 /// Returns kTRUE if successful, kFALSE otherwise.
