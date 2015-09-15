@@ -10,72 +10,75 @@
  *************************************************************************/
 
 
-//______________________________________________________________________________
-//
-// A TFolder object is a collection of objects and folders.
-// Folders have a name and a title and are identified in the folder hierarchy
-// by a "Unix-like" naming mechanism. The root of all folders is //root.
-// New folders can be dynamically added or removed to/from a folder.
-// The folder hierarchy can be visualized via the TBrowser.
-//
-// The Root folders hierarchy can be seen as a whiteboard where objects
-// are posted. Other classes/tasks can access these objects by specifying
-// only a string pathname. This whiteboard facility greatly improves the
-// modularity of an application, minimizing the class relationship problem
-// that penalizes large applications.
-//
-// Pointers are efficient to communicate between classes.
-// However, one has interest to minimize direct coupling between classes
-// in the form of direct pointers. One better uses the naming and search
-// service provided by the Root folders hierarchy. This makes the classes
-// loosely coupled and also greatly facilitates I/O operations.
-// In a client/server environment, this mechanism facilitates the access
-// to any kind of object in //root stores running on different processes.
-//
-// A TFolder is created by invoking the TFolder constructor. It is placed
-// inside an existing folder via the TFolder::AddFolder method.
-// One can search for a folder or an object in a folder using the FindObject
-// method. FindObject analyzes the string passed as its argument and searches
-// in the hierarchy until it finds an object or folder matching the name.
-//
-// When a folder is deleted, its reference from the parent folder and
-// possible other folders is deleted.
-//
-// If a folder has been declared the owner of its objects/folders via
-// TFolder::SetOwner, then the contained objects are deleted when the
-// folder is deleted. By default, a folder does not own its contained objects.
-// NOTE that folder ownership can be set
-//   - via TFolder::SetOwner
-//   - or via TCollection::SetOwner on the collection specified to TFolder::AddFolder
-//
-// Standard Root objects are automatically added to the folder hierarchy.
-// For example, the following folders exist:
-//   //root/Files      with the list of currently connected Root files
-//   //root/Classes    with the list of active classes
-//   //root/Geometries with active geometries
-//   //root/Canvases   with the list of active canvases
-//   //root/Styles     with the list of graphics styles
-//   //root/Colors     with the list of active colors
-//
-// For example, if a file "myFile.root" is added to the list of files, one can
-// retrieve a pointer to the corresponding TFile object with a statement like:
-//   TFile *myFile = (TFile*)gROOT->FindObject("//root/Files/myFile.root");
-// The above statement can be abbreviated to:
-//   TFile *myFile = (TFile*)gROOT->FindObject("/Files/myFile.root");
-// or even to:
-//   TFile *myFile = (TFile*)gROOT->FindObjectAny("myFile.root");
-// In this last case, the TROOT::FindObjectAny function will scan the folder hierarchy
-// starting at //root and will return the first object named "myFile.root".
-//
-// Because a string-based search mechanism is expensive, it is recommended
-// to save the pointer to the object as a class member or local variable
-// if this pointer is used frequently or inside loops.
-//
-//Begin_Html
-/*
-<img src="gif/folder.gif">
+/** \class TFolder
+A TFolder object is a collection of objects and folders.
+Folders have a name and a title and are identified in the folder hierarchy
+by a "Unix-like" naming mechanism. The root of all folders is //root.
+New folders can be dynamically added or removed to/from a folder.
+The folder hierarchy can be visualized via the TBrowser.
+
+\image html base_browser.png
+
+The Root folders hierarchy can be seen as a whiteboard where objects
+are posted. Other classes/tasks can access these objects by specifying
+only a string pathname. This whiteboard facility greatly improves the
+modularity of an application, minimizing the class relationship problem
+that penalizes large applications.
+
+Pointers are efficient to communicate between classes.
+However, one has interest to minimize direct coupling between classes
+in the form of direct pointers. One better uses the naming and search
+service provided by the Root folders hierarchy. This makes the classes
+loosely coupled and also greatly facilitates I/O operations.
+In a client/server environment, this mechanism facilitates the access
+to any kind of object in //root stores running on different processes.
+
+A TFolder is created by invoking the TFolder constructor. It is placed
+inside an existing folder via the TFolder::AddFolder method.
+One can search for a folder or an object in a folder using the FindObject
+method. FindObject analyses the string passed as its argument and searches
+in the hierarchy until it finds an object or folder matching the name.
+
+When a folder is deleted, its reference from the parent folder and
+possible other folders is deleted.
+
+If a folder has been declared the owner of its objects/folders via
+TFolder::SetOwner, then the contained objects are deleted when the
+folder is deleted. By default, a folder does not own its contained objects.
+
+NOTE that folder ownership can be set
+  - via TFolder::SetOwner
+  - or via TCollection::SetOwner on the collection specified to TFolder::AddFolder
+
+Standard Root objects are automatically added to the folder hierarchy.
+For example, the following folders exist:
+  //root/Files      with the list of currently connected Root files
+  //root/Classes    with the list of active classes
+  //root/Geometries with active geometries
+  //root/Canvases   with the list of active canvases
+  //root/Styles     with the list of graphics styles
+  //root/Colors     with the list of active colors
+
+For example, if a file "myFile.root" is added to the list of files, one can
+retrieve a pointer to the corresponding TFile object with a statement like:
+~~~ {.cpp}
+  TFile *myFile = (TFile*)gROOT->FindObject("//root/Files/myFile.root");
+~~~
+The above statement can be abbreviated to:
+~~~ {.cpp}
+  TFile *myFile = (TFile*)gROOT->FindObject("/Files/myFile.root");
+~~~
+or even to:
+~~~ {.cpp}
+  TFile *myFile = (TFile*)gROOT->FindObjectAny("myFile.root");
+~~~
+In this last case, the TROOT::FindObjectAny function will scan the folder hierarchy
+starting at //root and will return the first object named "myFile.root".
+
+Because a string-based search mechanism is expensive, it is recommended
+to save the pointer to the object as a class member or local variable
+if this pointer is used frequently or inside loops.
 */
-//End_Html
 
 #include "Riostream.h"
 #include "Strlen.h"
@@ -291,15 +294,16 @@ TObject *TFolder::FindObject(const TObject *) const
 /// Search object identified by name in the tree of folders inside
 /// this folder.
 /// Name may be of the forms:
-///   A, Specify a full pathname starting at the top ROOT folder
+///
+///   A. Specify a full pathname starting at the top ROOT folder
 ///     //root/xxx/yyy/name
 ///
-///   B, Specify a pathname starting with a single slash. //root is assumed
+///   B. Specify a pathname starting with a single slash. //root is assumed
 ///     /xxx/yyy/name
 ///
-///   C, Specify a pathname relative to this folder
-///     xxx/yyy/name
-///     name
+///   C. Specify a pathname relative to this folder
+///      xxx/yyy/name
+///      name
 
 TObject *TFolder::FindObject(const char *name) const
 {
@@ -376,10 +380,14 @@ Bool_t TFolder::IsOwner()  const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// List folder contents
+/// List folder contents.
+///
 ///   If option contains "dump",  the Dump function of contained objects is called.
+///
 ///   If option contains "print", the Print function of contained objects is called.
+///
 ///   By default the ls function of contained objects is called.
+///
 /// Indentation is used to identify the folder tree.
 ///
 /// The if option contains a <regexp> it be used to match the name of the objects.
