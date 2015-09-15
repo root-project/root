@@ -9,19 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TListOfTypes                                                         //
-//                                                                      //
-// A collection of TDataType designed to hold the typedef information   //
-// and numerical type information.  The collection is populated on      //
-// demand.                                                              //
-//                                                                      //
-// Besides the built-in types (int, float) a typedef is explicitly      //
-// added to the collection (and thus visible via ls or Print) only if   //
-// it is requested explicitly.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TListOfTypes
+
+A collection of TDataType designed to hold the typedef information
+and numerical type information.  The collection is populated on demand.
+
+Besides the built-in types (int, float) a typedef is explicitly
+added to the collection (and thus visible via ls or Print) only if
+it is requested explicitly.
+*/
 
 
 #include "TListOfTypes.h"
