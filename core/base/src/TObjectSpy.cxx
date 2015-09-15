@@ -13,17 +13,15 @@
 #include "TROOT.h"
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TObjectSpy, TObjectRefSpy                                            //
-//                                                                      //
-// Monitors objects for deletion and reflects the deletion by reverting //
-// the internal pointer to zero. When this pointer is zero we know the  //
-// object has been deleted. This avoids the unsafe TestBit(kNotDeleted) //
-// hack. The spied object must have the kMustCleanup bit set otherwise  //
-// you will get an error.                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TObjectRefSpy
+    \class TObjectSpy
+
+Monitors objects for deletion and reflects the deletion by reverting
+the internal pointer to zero. When this pointer is zero we know the
+object has been deleted. This avoids the unsafe TestBit(kNotDeleted)
+hack. The spied object must have the kMustCleanup bit set otherwise
+you will get an error.
+*/
 
 ClassImp(TObjectSpy)
 ClassImp(TObjectRefSpy)
