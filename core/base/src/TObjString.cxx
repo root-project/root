@@ -9,20 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TObjString                                                           //
-//                                                                      //
-// Collectable string class. This is a TObject containing a TString.    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TObjString
+Collectable string class. This is a TObject containing a TString.
+*/
 
 #include "TObjString.h"
 
 ClassImp(TObjString)
 
 ////////////////////////////////////////////////////////////////////////////////
-/// string compare the argument with this object.
+/// String compare the argument with this object.
 
 Int_t TObjString::Compare(const TObject *obj) const
 {
@@ -32,7 +28,7 @@ Int_t TObjString::Compare(const TObject *obj) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return kTRUE if the argument has the same content as this object.
+/// Return kTRUE if the argument has the same content as this object.
 
 Bool_t TObjString::IsEqual(const TObject *obj) const
 {
