@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFileInfo                                                            //
-//                                                                      //
-// Class describing a generic file including meta information.          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TFileInfo
+Class describing a generic file including meta information.
+*/
 
 #include "Riostream.h"
 #include "TFileInfo.h"
@@ -131,27 +127,27 @@ TFileInfo::~TFileInfo()
 /// string is tokenized on ' '; the tokens can be prefixed by the following
 /// keys:
 ///
-///   url:<url1>,<url2>,...     URLs for the file; stored in the order given
-///   sz:<size>                 size of the file in bytes
-///   md5:<md5_ascii>           MD5 sum of the file in ASCII form
-///   uuid:<uuid>               UUID of the file
+///  - url:<url1>,<url2>,...     URLs for the file; stored in the order given
+///  - sz:<size>                 size of the file in bytes
+///  - md5:<md5_ascii>           MD5 sum of the file in ASCII form
+///  - uuid:<uuid>               UUID of the file
 ///
-///   tree:<name>,<entries>,<first>,<last>
-///                             meta-information about a tree in the file; the
-///                             should be in the form <subdir>/tree-name;'entries' is
-///                             the number of entries in the tree; 'first' and 'last'
-///                             define the entry range.
+///  - tree:<name>,<entries>,<first>,<last>
+///                              meta-information about a tree in the file; the
+///                              should be in the form <subdir>/tree-name;'entries' is
+///                              the number of entries in the tree; 'first' and 'last'
+///                              define the entry range.
 ///
-///   obj:<name>,<class>,<entries>
-///                             meta-information about a generic object in the file;
-///                             the should be in the form <subdir>/obj-name; 'class'
-///                             is the object class; 'entries' is the number of occurences
-///                             for this object.
+///  - obj:<name>,<class>,<entries>
+///                              meta-information about a generic object in the file;
+///                              the should be in the form <subdir>/obj-name; 'class'
+///                              is the object class; 'entries' is the number of occurrences
+///                              for this object.
 ///
-///   idx:<index>               Index of this file if sorting with index
+///  - idx:<index>               Index of this file if sorting with index
 ///
-/// Multiple occurences of 'tree:' or 'obj:' can be specified.
-/// The initializations done via the input string are superseeded by the ones by other
+/// Multiple occurrences of 'tree:' or 'obj:' can be specified.
+/// The initializations done via the input string are super-seeded by the ones by other
 /// parameters in the constructor, if any.
 /// If no key is given, the token is interpreted as URL(s).
 
@@ -231,6 +227,7 @@ void TFileInfo::ParseInput(const char *in)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the UUID to the value associated to the string 'uuid'. This is
 /// useful to set the UUID to the one of the ROOT file during verification.
+///
 /// NB: we do not change the name in here, because this would screw up lists
 ///     of these objects hashed on the name. Those lists need to be rebuild.
 ///     TFileCollection does that in RemoveDuplicates.
@@ -396,7 +393,7 @@ Bool_t TFileInfo::AddMetaData(TObject *meta)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove the metadata obeject. If meta is 0 remove all meta data objects.
+/// Remove the metadata object. If meta is 0 remove all meta data objects.
 /// Returns kTRUE if successful, kFALSE otherwise.
 
 Bool_t TFileInfo::RemoveMetaData(const char *meta)
