@@ -9,29 +9,27 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRegexp                                                              //
-//                                                                      //
-// Regular expression class.                                            //
-//                                                                      //
-//   '^'             // start-of-line anchor                            //
-//   '$'             // end-of-line anchor                              //
-//   '.'             // matches any character                           //
-//   '['             // start a character class                         //
-//   ']'             // end a character class                           //
-//   '^'             // negates character class if 1st character        //
-//   '*'             // Kleene closure (matches 0 or more)              //
-//   '+'             // Positive closure (1 or more)                    //
-//   '?'             // Optional closure (0 or 1)                       //
-//                                                                      //
-//   Note that the '|' operator (union) is not supported, nor are       //
-//   parentheses (grouping). Therefore "a|b" does not match "a".        //
-//                                                                      //
-//   Standard classes like [:alnum:], [:alpha:], etc. are not supported,//
-//   only [a-zA-Z], [^ntf] and so on.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRegexp
+
+Regular expression class.
+
+~~~ {.cpp}
+  '^'             // start-of-line anchor
+  '$'             // end-of-line anchor
+  '.'             // matches any character
+  '['             // start a character class
+  ']'             // end a character class
+  '^'             // negates character class if 1st character
+  '*'             // Kleene closure (matches 0 or more)
+  '+'             // Positive closure (1 or more)
+  '?'             // Optional closure (0 or 1)
+~~~
+Note that the '|' operator (union) is not supported, nor are
+parentheses (grouping). Therefore "a|b" does not match "a".
+
+Standard classes like [:alnum:], [:alpha:], etc. are not supported,
+only [a-zA-Z], [^ntf] and so on.
+*/
 
 #include "TRegexp.h"
 #include "TString.h"
@@ -203,7 +201,7 @@ const char *TRegexp::MakeWildcard(const char *re)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find the first occurance of the regexp in string and return the
+/// Find the first occurrence of the regexp in string and return the
 /// position, or -1 if there is no match. Len is length of the matched
 /// string and i is the offset at which the matching should start.
 
@@ -236,15 +234,15 @@ TRegexp::EStatVal TRegexp::Status()
    return temp;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TString member functions, put here so the linker will include        //
-// them only if regular expressions are used.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// TString member functions, put here so the linker will include              //
+// them only if regular expressions are used.                                 //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find the first occurance of the regexp in string and return the
+/// Find the first occurrence of the regexp in string and return the
 /// position, or -1 if there is no match. Start is the offset at which
 /// the search should start.
 
@@ -255,7 +253,7 @@ Ssiz_t TString::Index(const TRegexp& r, Ssiz_t start) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find the first occurance of the regexp in string and return the
+/// Find the first occurrence of the regexp in string and return the
 /// position, or -1 if there is no match. Extent is length of the matched
 /// string and start is the offset at which the matching should start.
 
@@ -287,9 +285,9 @@ TSubString TString::operator()(const TRegexp& r) const
 /// in this string; search starts at 'from' and the token is returned in 'tok'.
 /// Returns in 'from' the next position after the delimiter.
 /// Returns kTRUE if a token is found, kFALSE if not or if some inconsistency
-/// occured.
+/// occurred.
 /// This method allows to loop over tokens in this way:
-///
+/// ~~~ {.cpp}
 ///    TString myl = "tok1 tok2|tok3";
 ///    TString tok;
 ///    Ssiz_t from = 0;
@@ -297,7 +295,7 @@ TSubString TString::operator()(const TRegexp& r) const
 ///       // Analyse tok
 ///       ...
 ///    }
-///
+/// ~~~
 /// more convenient of the other Tokenize method when saving the tokens is not
 /// needed.
 
