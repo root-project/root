@@ -9,19 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Exception Handling                                                   //
-//                                                                      //
-// Provide some macro's to simulate the coming C++ try, catch and throw //
-// exception handling functionality.                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+Exception Handling
+
+Provide some macro's to simulate the coming C++ try, catch and throw
+exception handling functionality.
+*/
 
 #include "TException.h"
 
 ExceptionContext_t *gException;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If an exception context has been set (using the TRY and RETRY macros)
