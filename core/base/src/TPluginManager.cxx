@@ -9,77 +9,76 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPluginManager                                                       //
-//                                                                      //
-// This class implements a plugin library manager. It keeps track of    //
-// a list of plugin handlers. A plugin handler knows which plugin       //
-// library to load to get a specific class that is used to extend the   //
-// functionality of a specific base class and how to create an object   //
-// of this class. For example, to extend the base class TFile to be     //
-// able to read RFIO files one needs to load the plugin library         //
-// libRFIO.so which defines the TRFIOFile class. This loading should    //
-// be triggered when a given URI contains a regular expression defined  //
-// by the handler.                                                      //
-// Plugin handlers can be defined via macros in a list of plugin        //
-// directories. With $ROOTSYS/etc/plugins the default top plugin        //
-// directory specified in $ROOTSYS/etc/system.rootrc. Additional        //
-// directories can be specified by adding them to the end of the list.  //
-// Macros for identical plugin handlers in later directories will       //
-// override previous ones (the inverse of normal search path behavior). //
-// The macros must have names like <BaseClass>/PX0_<PluginClass>.C,     //
-// e.g.:                                                                //
-//    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.        //
-// to allow easy sorting and grouping. If the BaseClass is in a         //
-// namespace the directory must have the name NameSpace@@BaseClass as   //
-// : is a reserved pathname character on some operating systems.        //
-// Macros not beginning with 'P' and ending with ".C" are ignored.      //
-// These macros typically look like:                                    //
-//                                                                      //
-//   void P10_TDCacheFile()                                             //
-//   {                                                                  //
-//       gPluginMgr->AddHandler("TFile", "^dcache", "TDCacheFile",      //
-//          "DCache", "TDCacheFile(const char*,Option_t*)");            //
-//   }                                                                  //
-//                                                                      //
-// Plugin handlers can also be defined via resources in the .rootrc     //
-// file. Although now deprecated this method still works for backward   //
-// compatibility, e.g.:                                                 //
-//                                                                      //
-//   Plugin.TFile:       ^rfio:   TRFIOFile    RFIO   "<constructor>"   //
-//   Plugin.TSQLServer:  ^mysql:  TMySQLServer MySQL  "<constructor>"   //
-//   +Plugin.TSQLServer: ^pgsql:  TPgSQLServer PgSQL  "<constructor>"   //
-//   Plugin.TVirtualFitter: *     TFitter      Minuit "TFitter(Int_t)"  //
-//                                                                      //
-// Where the + in front of Plugin.TSQLServer says that it extends the   //
-// existing definition of TSQLServer, useful when there is more than    //
-// one plugin that can extend the same base class. The "<constructor>"  //
-// should be the constructor or a static method that generates an       //
-// instance of the specified class. Global methods should start with    //
-// "::" in their name, like "::CreateFitter()".                         //
-// Instead of being a shared library a plugin can also be a CINT        //
-// script, so instead of libDialog.so one can have Dialog.C.            //
-// The * is a placeholder in case there is no need for a URI to         //
-// differentiate between different plugins for the same base class.     //
-// For the default plugins see $ROOTSYS/etc/system.rootrc.              //
-//                                                                      //
-// Plugin handlers can also be registered at run time, e.g.:            //
-//                                                                      //
-//   gPluginMgr->AddHandler("TSQLServer", "^sapdb:",                    //
-//                          "TSapDBServer", "SapDB",                    //
-//             "TSapDBServer(const char*,const char*, const char*)");   //
-//                                                                      //
-// A list of currently defined handlers can be printed using:           //
-//                                                                      //
-//   gPluginMgr->Print(); // use option="a" to see ctors                //
-//                                                                      //
-// The use of the plugin library manager removes all textual references //
-// to hard-coded class and library names and the resulting dependencies //
-// in the base classes. The plugin manager is used to extend a.o.       //
-// TFile, TSQLServer, TGrid, etc. functionality.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TPluginManager
+This class implements a plugin library manager.
+
+It keeps track of a list of plugin handlers. A plugin handler knows which plugin
+library to load to get a specific class that is used to extend the
+functionality of a specific base class and how to create an object
+of this class. For example, to extend the base class TFile to be
+able to read RFIO files one needs to load the plugin library
+libRFIO.so which defines the TRFIOFile class. This loading should
+be triggered when a given URI contains a regular expression defined
+by the handler.
+
+Plugin handlers can be defined via macros in a list of plugin
+directories. With $ROOTSYS/etc/plugins the default top plugin
+directory specified in $ROOTSYS/etc/system.rootrc. Additional
+directories can be specified by adding them to the end of the list.
+Macros for identical plugin handlers in later directories will
+override previous ones (the inverse of normal search path behavior).
+The macros must have names like <BaseClass>/PX0_<PluginClass>.C,
+e.g.:
+
+   TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.
+to allow easy sorting and grouping. If the BaseClass is in a
+namespace the directory must have the name NameSpace@@BaseClass as
+: is a reserved pathname character on some operating systems.
+Macros not beginning with 'P' and ending with ".C" are ignored.
+These macros typically look like:
+~~~ {.cpp}
+  void P10_TDCacheFile()
+  {
+      gPluginMgr->AddHandler("TFile", "^dcache", "TDCacheFile",
+         "DCache", "TDCacheFile(const char*,Option_t*)");
+  }
+~~~
+Plugin handlers can also be defined via resources in the .rootrc
+file. Although now deprecated this method still works for backward
+compatibility, e.g.:
+~~~ {.cpp}
+  Plugin.TFile:       ^rfio:   TRFIOFile    RFIO   "<constructor>"
+  Plugin.TSQLServer:  ^mysql:  TMySQLServer MySQL  "<constructor>"
+  +Plugin.TSQLServer: ^pgsql:  TPgSQLServer PgSQL  "<constructor>"
+  Plugin.TVirtualFitter: *     TFitter      Minuit "TFitter(Int_t)"
+~~~
+Where the + in front of Plugin.TSQLServer says that it extends the
+existing definition of TSQLServer, useful when there is more than
+one plugin that can extend the same base class. The "<constructor>"
+should be the constructor or a static method that generates an
+instance of the specified class. Global methods should start with
+"::" in their name, like "::CreateFitter()".
+Instead of being a shared library a plugin can also be a CINT
+script, so instead of libDialog.so one can have Dialog.C.
+The * is a placeholder in case there is no need for a URI to
+differentiate between different plugins for the same base class.
+For the default plugins see $ROOTSYS/etc/system.rootrc.
+
+Plugin handlers can also be registered at run time, e.g.:
+~~~ {.cpp}
+  gPluginMgr->AddHandler("TSQLServer", "^sapdb:",
+                         "TSapDBServer", "SapDB",
+            "TSapDBServer(const char*,const char*, const char*)");
+~~~
+A list of currently defined handlers can be printed using:
+~~~ {.cpp}
+  gPluginMgr->Print(); // use option="a" to see ctors
+~~~
+The use of the plugin library manager removes all textual references
+to hard-coded class and library names and the resulting dependencies
+in the base classes. The plugin manager is used to extend a.o.
+TFile, TSQLServer, TGrid, etc. functionality.
+*/
 
 #include "TPluginManager.h"
 #include "Varargs.h"
@@ -323,9 +322,11 @@ TPluginManager::~TPluginManager()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Load plugin handlers specified in config file, like:
+/// ~~~ {.cpp}
 ///    Plugin.TFile:       ^rfio:    TRFIOFile      RFIO  "TRFIOFile(...)"
 ///    Plugin.TSQLServer:  ^mysql:   TMySQLServer   MySQL "TMySQLServer(...)"
 ///    +Plugin.TSQLServer: ^pgsql:   TPgSQLServer   PgSQL "TPgSQLServer(...)"
+/// ~~~
 /// The + allows the extension of an already defined resource (see TEnv).
 
 void TPluginManager::LoadHandlersFromEnv(TEnv *env)
@@ -415,11 +416,13 @@ void TPluginManager::LoadHandlerMacros(const char *path)
 /// 'P' and ending with ".C" are ignored. If base is specified only plugin
 /// macros for that base class are loaded. The macros typically
 /// should look like:
+/// ~~~ {.cpp}
 ///   void P10_TDCacheFile()
 ///   {
 ///       gPluginMgr->AddHandler("TFile", "^dcache", "TDCacheFile",
 ///          "DCache", "TDCacheFile(const char*,Option_t*,const char*,Int_t)");
 ///   }
+/// ~~~
 /// In general these macros should not cause side effects, by changing global
 /// ROOT state via, e.g. gSystem calls, etc. However, in specific cases
 /// this might be useful, e.g. adding a library search path, adding a specific
