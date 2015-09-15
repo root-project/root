@@ -49,6 +49,7 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /
    fReadStatus(kReadNothingYet)
 {
    if (fTreeReader) fTreeReader->RegisterValueReader(this);
+   CreateProxy();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
