@@ -134,21 +134,22 @@ private:
    std::vector<std::string> fParNames;   // parameter names
 };
 
-/// Internal namespace of TF1 for defining internal classes used
-/// for different TF1 constructor
-namespace TF1Internal {
-   /// generic TF1 building from a functor 
-   template<class Func>
-   struct TF1Builder_t {
-      static void Build(TF1 * f, Func func);
-   };
+namespace ROOT {
+   namespace Internal { 
+      /// Internal class used by TF1 for defining 
+      /// template specialization for different TF1 constructors
+      template<class Func>
+      struct TF1Builder {
+         static void Build(TF1 * f, Func func);
+      };
+   }
 }
 
 
 class TF1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
    template<class Func>
-   friend struct TF1Internal::TF1Builder_t;
+   friend struct ROOT::Internal::TF1Builder;
 
 protected:
    Double_t    fXmin;        //Lower bounds for the range
@@ -206,7 +207,6 @@ public:
 
    TF1();
    TF1(const char *name, const char *formula, Double_t xmin=0, Double_t xmax = 1);
-   TF1(const char *name, const std::string & formula, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1);
    TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1);
 #ifndef __CINT__
    TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0, Int_t ndim = 1);
@@ -495,30 +495,31 @@ TF1::TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_
    fFormula(0),
    fParams(0)
 {
-   TF1Internal::TF1Builder_t<Func>::Build(this,f); 
+   ROOT::Internal::TF1Builder<Func>::Build(this,f); 
    DoInitialize();
 }
 
-namespace TF1Internal {
+namespace ROOT {
+   namespace Internal {
 
-   template<class Func>
-   void TF1Builder_t<Func>::Build(TF1 * f, Func func) {
-      f->fType = 1; 
-      f->fFunctor = ROOT::Math::ParamFunctor(func);
-      f->fParams = new TF1Parameters(f->fNpar);
-   }
-   /// TF1 building from a string
-   /// used to build a TFormula based on a lambda function
-   template<>
-   struct TF1Builder_t<const char *> {
-      static void Build(TF1 * f, const char * formula) {
-         f->fType = 0; 
-         f->fFormula = new TFormula("tf1lambda",formula,f->fNdim,f->fNpar,false);
+      template<class Func>
+      void TF1Builder<Func>::Build(TF1 * f, Func func) {
+         f->fType = 1; 
+         f->fFunctor = ROOT::Math::ParamFunctor(func);
+         f->fParams = new TF1Parameters(f->fNpar);
       }
-   };
-
-   
+      /// TF1 building from a string
+      /// used to build a TFormula based on a lambda function
+      template<>
+      struct TF1Builder<const char *> {
+         static void Build(TF1 * f, const char * formula) {
+            f->fType = 0; 
+            f->fFormula = new TFormula("tf1lambda",formula,f->fNdim,f->fNpar,false);
+         }
+      };
+   }
 }
+   
 
 
 
