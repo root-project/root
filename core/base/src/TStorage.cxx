@@ -9,27 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStorage                                                             //
-//                                                                      //
-// Storage manager. The storage manager works best in conjunction with  //
-// the custom ROOT new and delete operators defined in the file         //
-// NewDelete.cxx (libNew.so). Only when using the custom allocation     //
-// operators will memory usage statistics be gathered using the         //
-// TStorage EnterStat(), RemoveStat(), etc. functions.                  //
-// Memory checking is by default enabled (when using libNew.so) and     //
-// usage statistics is gathered. Using the resource (in .rootrc):       //
-// Root.MemStat one can toggle statistics gathering on or off. More     //
-// specifically on can trap the allocation of a block of memory of a    //
-// certain size. This can be specified using the resource:              //
-// Root.MemStat.size, using the resource Root.MemStat.cnt one can       //
-// specify after how many allocations of this size the trap should      //
-// occur.                                                               //
-// Set the compile option R__NOSTATS to de-activate all memory checking //
-// and statistics gathering in the system.                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TStorage
+
+Storage manager. The storage manager works best in conjunction with
+the custom ROOT new and delete operators defined in the file
+NewDelete.cxx (libNew.so). Only when using the custom allocation
+operators will memory usage statistics be gathered using the
+TStorage EnterStat(), RemoveStat(), etc. functions.
+Memory checking is by default enabled (when using libNew.so) and
+usage statistics is gathered. Using the resource (in .rootrc):
+Root.MemStat one can toggle statistics gathering on or off. More
+specifically on can trap the allocation of a block of memory of a
+certain size. This can be specified using the resource:
+Root.MemStat.size, using the resource Root.MemStat.cnt one can
+specify after how many allocations of this size the trap should
+occur.
+
+Set the compile option R__NOSTATS to de-activate all memory checking
+and statistics gathering in the system.
+*/
 
 #include <stdlib.h>
 
