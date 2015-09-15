@@ -65,8 +65,13 @@ TCoopPtr<Internal::TFileImplBase> fImpl;
 public:
   ///\name Generator functions
   ///\{
+
   /// Open a file with `name` for reading.
-  static TFilePtr Read(std::string_view name);
+  static TFilePtr OpenForRead(std::string_view name);
+
+  /// Open an existing file with `name` for reading and writing. If a file with
+  /// that name does not exist, an invalid TFilePtr will be returned.
+  static TFilePtr OpenForUpdate(std::string_view name);
 
   /// Open a file with `name` for reading and writing. Fail (return an invalid
   /// `TFilePtr`) if a file with this name already exists.
@@ -76,9 +81,6 @@ public:
   /// already exists, delete it and create a new one. Else simply create a new file.
   static TFilePtr Recreate(std::string_view name);
 
-  /// Open an existing file with `name` for reading and writing. If a file with
-  /// that name does not exist, an invalid TFilePtr will be returned.
-  static TFilePtr Update(std::string_view name);
   ///\}
 
   /// Dereference the file pointer, giving access to the TFileImplBase object.
