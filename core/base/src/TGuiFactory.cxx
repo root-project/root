@@ -9,17 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGuiFactory                                                          //
-//                                                                      //
-// This ABC is a factory for GUI components. Depending on which         //
-// factory is active one gets either ROOT native (X11 based with Win95  //
-// look and feel), Win32 or Mac components.                             //
-// In case there is no platform dependent implementation on can run in  //
-// batch mode directly using an instance of this base class.            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGuiFactory
+
+This ABC is a factory for GUI components. Depending on which
+factory is active one gets either ROOT native (X11 based with Win95
+look and feel), Win32 or Mac components.
+
+In case there is no platform dependent implementation on can run in
+batch mode directly using an instance of this base class.
+*/
 
 #include "TGuiFactory.h"
 #include "TApplicationImp.h"
