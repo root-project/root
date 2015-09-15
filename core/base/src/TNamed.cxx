@@ -9,17 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TNamed                                                               //
-//                                                                      //
-// The TNamed class is the base class for all named ROOT classes        //
-// A TNamed contains the essential elements (name, title)               //
-// to identify a derived object in containers, directories and files.   //
-// Most member functions defined in this base class are in general      //
-// overridden by the derived classes.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TNamed
+The TNamed class is the base class for all named ROOT classes.
+
+A TNamed contains the essential elements (name, title)
+to identify a derived object in containers, directories and files.
+Most member functions defined in this base class are in general
+overridden by the derived classes.
+*/
 
 #include "Riostream.h"
 #include "Strlen.h"
@@ -136,6 +133,7 @@ void TNamed::SetName(const char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change (i.e. set) all the TNamed parameters (name and title).
+//
 /// WARNING: if the name is changed and the object is a member of a
 /// THashTable or THashList container the container must be Rehash()'ed
 /// after SetName(). For example the list of objects in the current
