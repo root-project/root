@@ -26,6 +26,7 @@
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
+#include <functional>
 
 using namespace std;
 
