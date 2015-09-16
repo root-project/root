@@ -169,7 +169,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	
 	// Composite term
 	if (termDeps->getSize()>0) {
-	  const char* name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet(),0) ;      
+	  const std::string name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet(),0) ;      
 	  
 	  // Construct auxiliary PDF expressing product of composite terms, 
 	  // following Conditional component specification of input model
@@ -192,7 +192,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	    }
 	    
 	  }
-	  RooProdPdf* multiPdf = new RooProdPdf(name,name,fullPdfSet,cmdList) ;
+	  RooProdPdf* multiPdf = new RooProdPdf(name.c_str(),name.c_str(),fullPdfSet,cmdList) ;
 	  cmdList.Delete() ;
 	  pdfSetList.Delete() ;
 
@@ -244,7 +244,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       trailerTermDeps.add(*termDeps) ;
     }
 
-    const char* name = model.makeRGPPName("PRODGEN_",trailerTerm,RooArgSet(),RooArgSet(),0) ;      
+    const std::string name = model.makeRGPPName("PRODGEN_",trailerTerm,RooArgSet(),RooArgSet(),0) ;      
       
     // Construct auxiliary PDF expressing product of composite terms, 
     // following Partial/Full component specification of input model
@@ -268,7 +268,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       
     }
 //     cmdList.Print("v") ;
-    RooProdPdf* multiPdf = new RooProdPdf(name,name,fullPdfSet,cmdList) ;
+    RooProdPdf* multiPdf = new RooProdPdf(name.c_str(),name.c_str(),fullPdfSet,cmdList) ;
     cmdList.Delete() ;
     pdfSetList.Delete() ;
    
