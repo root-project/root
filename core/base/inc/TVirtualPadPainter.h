@@ -1,17 +1,20 @@
+// @(#)root/base:$Id$
+// Author: Timur Pocheptsov   6/5/2009
+
+/*************************************************************************
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TVirtualPadPainter
 #define ROOT_TVirtualPadPainter
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
-
-/*
-To make it possible to use gl for 2D graphic in a TPad/TCanvas,
-TVirtualPadPainter interface must be used instead of TVirtualX.
-Internally, non-gl implementation _should_ delegate all calls
-to gVirtualX, gl implementation will delegate part of calls
-to gVirtualX, and has to implement some of the calls from the scratch.
-*/
 
 class TVirtualPad;
 
