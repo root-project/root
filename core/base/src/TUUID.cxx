@@ -9,100 +9,100 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TUUID                                                                //
-//                                                                      //
-// This class defines a UUID (Universally Unique IDentifier), also      //
-// known as GUIDs (Globally Unique IDentifier). A UUID is 128 bits      //
-// long, and if generated according to this algorithm, is either        //
-// guaranteed to be different from all other UUIDs/GUIDs generated      //
-// until 3400 A.D. or extremely likely to be different. UUIDs were      //
-// originally used in the Network Computing System (NCS) and            //
-// later in the Open Software Foundation's (OSF) Distributed Computing  //
-// Environment (DCE).                                                   //
-//                                                                      //
-// Structure of universal unique IDs (UUIDs).                           //
-//                                                                      //
-// Depending on the network data representation, the multi-             //
-// octet unsigned integer fields are subject to byte swapping           //
-// when communicated between dissimilar endian machines.                //
-//                                                                      //
-// +-----------------------------------+                                //
-// |     low 32 bits of time           |  0-3   .fTimeLow               //
-// +-------------------------------+----                                //
-// |     mid 16 bits of time       |      4-5   .fTimeMid               //
-// +-------+-----------------------+                                    //
-// | vers. |   hi 12 bits of time  |      6-7   .fTimeHiAndVersion      //
-// +-------+-------+---------------+                                    //
-// |Res | clkSeqHi |                      8     .fClockSeqHiAndReserved //
-// +---------------+                                                    //
-// |   clkSeqLow   |                      9     .fClockSeqLow           //
-// +---------------+------------------+                                 //
-// |            node ID               |   10-15 .fNode                  //
-// +----------------------------------+                                 //
-//                                                                      //
-// The adjusted time stamp is split into three fields, and the          //
-// clockSeq is split into two fields.                                   //
-//                                                                      //
-// The timestamp is a 60-bit value. For UUID version 1, this            //
-// is represented by Coordinated Universal Time (UTC/GMT) as            //
-// a count of 100-nanosecond intervals since 00:00:00.00,               //
-// 15 October 1582 (the date of Gregorian reform to the                 //
-// Christian calendar).                                                 //
-//                                                                      //
-// The version number is multiplexed in the 4 most significant          //
-// bits of the 'fTimeHiAndVersion' field. There are two defined         //
-// versions:                                                            //
-//               MSB <---                                               //
-// Version      4-Bit Code      Description                             //
-// ------------------------------------------------------------         //
-// |  1           0 0 0 1     DCE version, as specified herein.         //
-// |  2           0 0 1 0     DCE Security version, with                //
-// |                          embedded POSIX UIDs.                      //
-// |  3           0 0 1 1     node id is a random value                 //
-// ------------------------------------------------------------         //
-//                                                                      //
-// Clock Sequence                                                       //
-//                                                                      //
-// The clock sequence value must be changed whenever:                   //
-//                                                                      //
-//    The UUID generator detects that the local value of UTC            //
-//    has gone backward; this may be due to re-syncing of the system    //
-//    clock.                                                            //
-//                                                                      //
-// While a node is operational, the UUID service always saves           //
-// the last UTC used to create a UUID. Each time a new UUID             //
-// is created, the current UTC is compared to the saved value           //
-// and if either the current value is less or the saved value           //
-// was lost, then the clock sequence is incremented modulo              //
-// 16,384, thus avoiding production of duplicted UUIDs.                 //
-//                                                                      //
-// The clock sequence must be initialized to a random number            //
-// to minimize the correlation across system. This provides             //
-// maximum protection against node identifiers that may move            //
-// or switch from system to system rapidly.                             //
-//                                                                      //
-// Clock Adjustment                                                     //
-//                                                                      //
-// UUIDs may be created at a rate greater than the system clock         //
-// resolution. Therefore, the system must also maintain an              //
-// adjustment value to be added to the lower-order bits of the          //
-// time. Logically, each time the system clock ticks, the               //
-// adjustment value is cleared. Every time a UUID is generated,         //
-// the current adjustment value is read and incremented, and            //
-// then added to the UTC time field of the UUID.                        //
-//                                                                      //
-// Clock Overrun                                                        //
-//                                                                      //
-// The 100-nanosecond granularity of time should prove sufficient       //
-// even for bursts of UUID production in the next generation of         //
-// high-performance multiprocessors. If a system overruns the           //
-// clock adjustment by requesting too many UUIDs within a single        //
-// system clock tick, the UUID generator will stall until the           //
-// system clock catches up.                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TUUID
+
+This class defines a UUID (Universally Unique IDentifier), also
+known as GUIDs (Globally Unique IDentifier). A UUID is 128 bits
+long, and if generated according to this algorithm, is either
+guaranteed to be different from all other UUIDs/GUIDs generated
+until 3400 A.D. or extremely likely to be different. UUIDs were
+originally used in the Network Computing System (NCS) and
+later in the Open Software Foundation's (OSF) Distributed Computing
+Environment (DCE).
+
+Structure of universal unique IDs (UUIDs).
+
+Depending on the network data representation, the multi-
+octet unsigned integer fields are subject to byte swapping
+when communicated between dissimilar endian machines.
+~~~ {.cpp}
++-----------------------------------+
+|     low 32 bits of time           |  0-3   .fTimeLow
++-------------------------------+----
+|     mid 16 bits of time       |      4-5   .fTimeMid
++-------+-----------------------+
+| vers. |   hi 12 bits of time  |      6-7   .fTimeHiAndVersion
++-------+-------+---------------+
+|Res | clkSeqHi |                      8     .fClockSeqHiAndReserved
++---------------+
+|   clkSeqLow   |                      9     .fClockSeqLow
++---------------+------------------+
+|            node ID               |   10-15 .fNode
++----------------------------------+
+~~~
+
+The adjusted time stamp is split into three fields, and the
+clockSeq is split into two fields.
+
+The timestamp is a 60-bit value. For UUID version 1, this
+is represented by Coordinated Universal Time (UTC/GMT) as
+a count of 100-nanosecond intervals since 00:00:00.00,
+15 October 1582 (the date of Gregorian reform to the
+Christian calendar).
+
+The version number is multiplexed in the 4 most significant
+bits of the 'fTimeHiAndVersion' field. There are two defined
+versions:
+~~~ {.cpp}
+              MSB <---
+Version      4-Bit Code      Description
+------------------------------------------------------------
+|  1           0 0 0 1     DCE version, as specified herein.
+|  2           0 0 1 0     DCE Security version, with
+|                          embedded POSIX UIDs.
+|  3           0 0 1 1     node id is a random value
+------------------------------------------------------------
+~~~
+
+## Clock Sequence
+
+The clock sequence value must be changed whenever:
+
+   The UUID generator detects that the local value of UTC
+   has gone backward; this may be due to re-syncing of the system
+   clock.
+
+While a node is operational, the UUID service always saves
+the last UTC used to create a UUID. Each time a new UUID
+is created, the current UTC is compared to the saved value
+and if either the current value is less or the saved value
+was lost, then the clock sequence is incremented modulo
+16,384, thus avoiding production of duplicated UUIDs.
+
+The clock sequence must be initialized to a random number
+to minimize the correlation across system. This provides
+maximum protection against node identifiers that may move
+or switch from system to system rapidly.
+
+## Clock Adjustment
+
+UUIDs may be created at a rate greater than the system clock
+resolution. Therefore, the system must also maintain an
+adjustment value to be added to the lower-order bits of the
+time. Logically, each time the system clock ticks, the
+adjustment value is cleared. Every time a UUID is generated,
+the current adjustment value is read and incremented, and
+then added to the UTC time field of the UUID.
+
+## Clock Overrun
+
+The 100-nanosecond granularity of time should prove sufficient
+even for bursts of UUID production in the next generation of
+high-performance multiprocessors. If a system overruns the
+clock adjustment by requesting too many UUIDs within a single
+system clock tick, the UUID generator will stall until the
+system clock catches up.
+*/
 
 #include "TROOT.h"
 #include "TUUID.h"
@@ -589,9 +589,9 @@ UShort_t TUUID::Hash() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compare two UUIDs "lexically" and return
-///    -1   this is lexically before u
-///     0   this is equal to u
-///     1   this is lexically after u
+///   - -1   this is lexically before u
+///   -  0   this is equal to u
+///   -  1   this is lexically after u
 
 Int_t TUUID::Compare(const TUUID &u) const
 {
