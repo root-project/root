@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualMonitoring                                                   //
-//                                                                      //
-// Provides the interface for externel Monitoring                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TVirtualMonitoring
+Provides the interface for externel Monitoring
+*/
 
 
 #include "TVirtualMonitoring.h"
