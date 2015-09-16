@@ -16,8 +16,8 @@ This extends (and isolates) struct timespec
 ~~~ {.cpp}
    struct timespec
       {
-         time_t   tv_sec;   /* seconds */
-         long     tv_nsec;  /* nanoseconds */
+         time_t   tv_sec;   // seconds
+         long     tv_nsec;  // nanoseconds
       }
    time_t seconds is relative to Jan 1, 1970 00:00:00 UTC
 ~~~
