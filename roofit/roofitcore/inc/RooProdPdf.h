@@ -16,7 +16,6 @@
 #ifndef ROO_PROD_PDF
 #define ROO_PROD_PDF
 
-#include "Riosfwd.h"
 #include "RooAbsPdf.h"
 #include "RooListProxy.h"
 #include "RooLinkedList.h"
@@ -109,7 +108,7 @@ protected:
                         RooLinkedList& termList,   RooLinkedList& normList, 
                         RooLinkedList& impDepList, RooLinkedList& crossDepList,
                         RooLinkedList& intList) const;
-  const char* makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset, const char* isetRangeName) const ;
+  std::string makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset, const char* isetRangeName) const ;
   void groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outerIntDeps,
                          const RooLinkedList& terms, const RooLinkedList& norms, 
                          const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& cross) const ;

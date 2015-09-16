@@ -41,9 +41,6 @@
 // END_HTML
 //
 
-#include "Riostream.h"
-#include "TClass.h"
-
 #include "RooProdPdf.h"
 #include "RooRealProxy.h"
 #include "RooProdGenContext.h"
@@ -62,7 +59,7 @@
 #include "RooRealIntegral.h"
 #include "RooTrace.h"
 
-#include <string.h>
+#include <cstring>
 #include <sstream>
 #include <algorithm>
 
@@ -448,18 +445,12 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
 
       RooFIter siter2 = pdfSet->fwdIterator() ;
       RooAbsPdf* thePdf ;
-      while((thePdf=(RooAbsPdf*)siter2.next())) {
+      while ((thePdf=(RooAbsPdf*)siter2.next())) {
 	_pdfList.add(*thePdf) ;
 
-	if (argType==0) {
-	  RooArgSet* tmp = (RooArgSet*) normSet->snapshot() ;
-	  tmp->setName("nset") ;
-	  _pdfNSetList.Add(tmp) ;       	
-	} else {
-	  RooArgSet* tmp = (RooArgSet*) normSet->snapshot() ;
-	  tmp->setName("cset") ;
-	  _pdfNSetList.Add(tmp) ;       	
-	}
+	RooArgSet* tmp = (RooArgSet*) normSet->snapshot() ;
+	tmp->setName(0 == argType ? "nset" : "cset") ;
+	_pdfNSetList.Add(tmp) ;       	
 
 	if (thePdf->canBeExtended()) {
 	  _extendedIndex = _pdfList.index(thePdf) ;
@@ -536,21 +527,19 @@ Double_t RooProdPdf::evaluate() const
 
 Double_t RooProdPdf::calculate(const RooArgList* partIntList, const RooLinkedList* normSetList) const
 {
-  RooAbsReal* partInt ;
-  RooArgSet* normSet ;
-  Double_t value(1.0) ;
-  Int_t n = partIntList->getSize() ;
+  RooAbsReal* partInt;
+  RooArgSet* normSet;
+  Double_t value = 1.0;
+  RooFIter plIter = partIntList->fwdIterator(), nlIter = normSetList->fwdIterator();
 
-  Int_t i ;
-  for (i=0 ; i<n ; i++) {
-    partInt = ((RooAbsReal*)partIntList->at(i)) ;
-    normSet = ((RooArgSet*)normSetList->At(i)) ;
-    Double_t piVal = partInt->getVal(normSet->getSize()>0 ? normSet : 0) ;
-//     cout << "RooProdPdf::calculate(" << GetName() << ") partInt(" << partInt->GetName() << ") = " << piVal << " normSet = " << normSet << " " << (normSet->getSize()>0 ? *normSet : RooArgSet()) << endl ;
-    value *= piVal ;
-    if (value<=_cutOff) {
-      break ;
-    }
+    for (partInt = (RooAbsReal*) plIter.next(),
+	normSet = (RooArgSet*) nlIter.next(); partInt && normSet;
+      partInt = (RooAbsReal*) plIter.next(),
+      normSet = (RooArgSet*) nlIter.next()) {
+    const Double_t piVal = partInt->getVal(normSet->getSize() > 0 ? normSet : 0);
+//  cout << "RooProdPdf::calculate(" << GetName() << ") partInt(" << partInt->GetName() << ") = " << piVal << " normSet = " << normSet << " " << (normSet->getSize()>0 ? *normSet : RooArgSet()) << endl ;
+    value *= piVal;
+    if (value <= _cutOff) { break; }
   }
 
   return value ;
@@ -566,10 +555,7 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
 {
   //cout << "RooProdPdf::calculate from cache" << endl ;
 
-  Double_t value(1.0) ;
-
   if (cache._isRearranged) {
-
     if (dologD(Eval)) {
       cxcoutD(Eval) << "RooProdPdf::calculate(" << GetName() << ") rearranged product calculation"
                     << " calculate: num = " << cache._rearrangedNum->GetName() << " = " << cache._rearrangedNum->getVal() << endl ;
@@ -578,25 +564,24 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
 //       cache._rearrangedDen->printComponentTree("",0,5) ;
     }
 
-    value = cache._rearrangedNum->getVal() / cache._rearrangedDen->getVal() ;
-
+    return cache._rearrangedNum->getVal() / cache._rearrangedDen->getVal();
   } else {
-    RooAbsReal* partInt ;
-    RooArgSet* normSet ;
-    RooFIter plIter = cache._partList.fwdIterator() ;
-    RooFIter nlIter = cache._normList.fwdIterator() ;
+    RooAbsReal* partInt;
+    RooArgSet* normSet;
+    RooFIter plIter = cache._partList.fwdIterator();
+    RooFIter nlIter = cache._normList.fwdIterator();
+    Double_t value = 1.0;
     for (partInt = (RooAbsReal*) plIter.next(),
 	normSet = (RooArgSet*) nlIter.next(); partInt && normSet;
       partInt = (RooAbsReal*) plIter.next(),
       normSet = (RooArgSet*) nlIter.next()) {
-      Double_t piVal = partInt->getVal(normSet->getSize() > 0 ? normSet : 0);
+      const Double_t piVal = partInt->getVal(normSet->getSize() > 0 ? normSet : 0);
       value *= piVal ;
       if (value <= _cutOff) break;
     }
-  }
-
 //   cout << "return value = " << value << endl ;
-  return value ;
+    return value ;
+  }
 }
 
 
@@ -1065,25 +1050,25 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
       // prodtmp = product (compTermSet)
       // inttmp = int ( prodtmp ) d (outerIntDeps) _range_isetRangeName
 
-      const char* prodname = makeRGPPName("SPECPROD", compTermSet, outerIntDeps, RooArgSet(), isetRangeName);
-      RooProduct* prodtmp = new RooProduct(prodname, prodname, compTermSet);
+      const std::string prodname = makeRGPPName("SPECPROD", compTermSet, outerIntDeps, RooArgSet(), isetRangeName);
+      RooProduct* prodtmp = new RooProduct(prodname.c_str(), prodname.c_str(), compTermSet);
       cache->_ownedList.addOwned(*prodtmp);
 
-      const char* intname = makeRGPPName("SPECINT", compTermSet, outerIntDeps, RooArgSet(), isetRangeName);
-      RooRealIntegral* inttmp = new RooRealIntegral(intname, intname, *prodtmp, outerIntDeps, 0, 0, isetRangeName);
+      const std::string intname = makeRGPPName("SPECINT", compTermSet, outerIntDeps, RooArgSet(), isetRangeName);
+      RooRealIntegral* inttmp = new RooRealIntegral(intname.c_str(), intname.c_str(), *prodtmp, outerIntDeps, 0, 0, isetRangeName);
       inttmp->setStringAttribute("PROD_TERM_TYPE", "SPECINT");
 
       cache->_ownedList.addOwned(*inttmp);
       cache->_partList.add(*inttmp);
 
       // Product of numerator terms
-      string prodname_num = makeRGPPName("SPECPROD_NUM", compTermNum, RooArgSet(), RooArgSet(), 0);
+      const string prodname_num = makeRGPPName("SPECPROD_NUM", compTermNum, RooArgSet(), RooArgSet(), 0);
       RooProduct* prodtmp_num = new RooProduct(prodname_num.c_str(), prodname_num.c_str(), compTermNum);
       prodtmp_num->addOwnedComponents(compTermNum);
       cache->_ownedList.addOwned(*prodtmp_num);
 
       // Product of denominator terms
-      string prodname_den = makeRGPPName("SPECPROD_DEN", compTermDen, RooArgSet(), RooArgSet(), 0);
+      const string prodname_den = makeRGPPName("SPECPROD_DEN", compTermDen, RooArgSet(), RooArgSet(), 0);
       RooProduct* prodtmp_den = new RooProduct(prodname_den.c_str(), prodname_den.c_str(), compTermDen);
       prodtmp_den->addOwnedComponents(compTermDen);
       cache->_ownedList.addOwned(*prodtmp_den);
@@ -1357,7 +1342,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
 	  RooArgSet tmp(origNumTerm) ;
 	  tmp.add(*specRatio) ;
-	  string pname = makeRGPPName("PROD",tmp,RooArgSet(),RooArgSet(),0) ;
+	  const string pname = makeRGPPName("PROD",tmp,RooArgSet(),RooArgSet(),0) ;
 	  RooProduct* specDenProd = new RooProduct(pname.c_str(),pname.c_str(),tmp) ;
 	  RooAbsReal* specInt(0) ;
 
@@ -1651,8 +1636,8 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
       //---------------------------------------------------------------
 
       // Use auxiliary class RooGenProdProj to calculate this term
-      const char* name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
-      RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet,isetRangeName) ;
+      const std::string name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
+      RooAbsReal* partInt = new RooGenProdProj(name.c_str(),name.c_str(),*term,termISet,termNSet,isetRangeName) ;
       partInt->setStringAttribute("PROD_TERM_TYPE","IIIb") ;
       //partInt->setOperMode(operMode()) ;
 
@@ -1661,10 +1646,10 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
       isOwned=kTRUE ;
       ret[0] = partInt ;
 
-      const char* name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),0) ;
+      const std::string name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),0) ;
 
       // WVE FIX THIS
-      RooProduct* tmp_prod = new RooProduct(name1,name1,*term) ;
+      RooProduct* tmp_prod = new RooProduct(name1.c_str(),name1.c_str(),*term) ;
 
       ret[1] = tmp_prod->createIntegral(termISet,isetRangeName) ;
       ret[2] = tmp_prod->createIntegral(termNSet,normRange()) ;
@@ -1678,8 +1663,8 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
   if (nset && nset->getSize()>0 && term->getSize()>1) {
     // Composite term needs normalized integration
 
-    const char* name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
-    RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet,isetRangeName,normRange()) ;
+    const std::string name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
+    RooAbsReal* partInt = new RooGenProdProj(name.c_str(),name.c_str(),*term,termISet,termNSet,isetRangeName,normRange()) ;
     partInt->setExpensiveObjectCache(expensiveObjectCache()) ;
 
     partInt->setStringAttribute("PROD_TERM_TYPE","IVa") ;
@@ -1690,10 +1675,10 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
     isOwned=kTRUE ;
     ret[0] = partInt ;
 
-    const char* name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),0) ;
+    const std::string name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),0) ;
 
     // WVE FIX THIS
-    RooProduct* tmp_prod = new RooProduct(name1,name1,*term) ;
+    RooProduct* tmp_prod = new RooProduct(name1.c_str(),name1.c_str(),*term) ;
 
     ret[1] = tmp_prod->createIntegral(termISet,isetRangeName) ;
     ret[2] = tmp_prod->createIntegral(termNSet,normRange()) ;
@@ -1768,31 +1753,26 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
 ////////////////////////////////////////////////////////////////////////////////
 /// Make an appropriate automatic name for a RooGenProdProj object in getPartIntList() 
 
-const char* RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, 
+std::string RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset,
 				     const RooArgSet& nset, const char* isetRangeName) const
 {
-  static TString pname ;
-  pname = pfx ;
-  pname.Append("[") ;
+  // Make an appropriate automatic name for a RooGenProdProj object in getPartIntList()
+
+  std::ostringstream os(pfx);
+  os << "[";
 
   RooFIter pIter = term.fwdIterator() ;
-
   // Encode component names
   Bool_t first(kTRUE) ;
   RooAbsPdf* pdf ;
-  while((pdf=(RooAbsPdf*)pIter.next())) {
-    if (first) {
-      first = kFALSE ;
-    } else {
-      pname.Append("_X_") ;
-    }
-    pname.Append(pdf->GetName()) ;
+  while ((pdf=(RooAbsPdf*)pIter.next())) {
+    if (!first) os << "_X_";
+    first = kFALSE;
+    os << pdf->GetName();
   }
-  pname.Append("]") ;
+  os << "]" << integralNameSuffix(iset,&nset,isetRangeName,kTRUE);
 
-  pname.Append(integralNameSuffix(iset,&nset,isetRangeName,kTRUE)) ;
-
-  return pname.Data() ;
+  return os.str();
 }
 
 
