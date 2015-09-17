@@ -3,7 +3,6 @@
 ############################################################################
 
 set(libname GenVector)
-ROOT_USE_PACKAGE(math)
 
 set(headers   Math/Vector2D.h Math/Point2D.h
               Math/Vector3D.h Math/Point3D.h

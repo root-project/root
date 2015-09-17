@@ -11,14 +11,6 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   include(${ROOTSYS}/cmake/modules/StandaloneBuild.cmake)
 endif()
 
-ROOT_USE_PACKAGE(math/mathcore)
-ROOT_USE_PACKAGE(math/minuit)
-ROOT_USE_PACKAGE(math/mlp)
-ROOT_USE_PACKAGE(hist/histpainter)
-ROOT_USE_PACKAGE(tree/treeplayer)
-ROOT_USE_PACKAGE(io/xml) 
-#ROOT_USE_PACKAGE(gui/gui) 
-
 set(headers1 Configurable.h Event.h Factory.h MethodBase.h MethodCompositeBase.h
 	     MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h
 	     MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h

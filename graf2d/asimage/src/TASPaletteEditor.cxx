@@ -9,14 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TASPaletteEditor                                                    //
-//                                                                      //
-//  This is a GUI window to edit a color palette.                       //
-//  It is called by a pull down menu item of TASImage.                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TASPaletteEditor
+//  This is a GUI window to edit a color palette.
+//  It is called by a pull down menu item of TASImage.
+*/
 
 #include "TASImage.h"
 #include "TRootEmbeddedCanvas.h"
@@ -79,7 +75,7 @@ ClassImp(TASPaletteEditor)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Palette editor constructor.
-/// The palette editor aloows the editing of the color palette of the image.
+/// The palette editor allows the editing of the color palette of the image.
 
 TASPaletteEditor::TASPaletteEditor(TAttImage *attImage, UInt_t w, UInt_t h)
    : TPaletteEditor(attImage, w, h), TGMainFrame(0, w, h)
@@ -516,7 +512,7 @@ void TASPaletteEditor::Open()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// All widgeds of the screen are updated with the current palette.
+/// All widgets of the screen are updated with the current palette.
 /// Protected method.
 
 void TASPaletteEditor::UpdateScreen(Bool_t histoUpdate)

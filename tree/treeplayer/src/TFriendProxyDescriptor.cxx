@@ -9,24 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFriendProxyDescriptor                                               //
-//                                                                      //
-// Hold the processed information about a Friend TTree while            //
-// TTreeProxyGenerator is parsing the TTree information.                //
-// Also contains the routine use to generate the appropriate code       //
-// fragment in the result of MakeProxy.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \classTFriendProxyDescriptor
+Hold the processed information about a Friend TTree while
+TTreeProxyGenerator is parsing the TTree information.
+Also contains the routine use to generate the appropriate code
+fragment in the result of MakeProxy.
+*/
 
 #include "TFriendProxyDescriptor.h"
 #include "TBranchProxyDescriptor.h"
 #include "TList.h"
 
-ClassImp(ROOT::TFriendProxyDescriptor);
+ClassImp(ROOT::Internal::TFriendProxyDescriptor);
 
 namespace ROOT {
+namespace Internal {
 
    TFriendProxyDescriptor::TFriendProxyDescriptor(const char *treename,
                                                   const char *aliasname,
@@ -93,4 +90,5 @@ namespace ROOT {
               offset," ",maxVarname,typeName.Data(),GetTitle());
    }
 
-}
+} // namespace Internal
+} // namespace ROOT

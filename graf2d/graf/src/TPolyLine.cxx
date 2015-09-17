@@ -18,24 +18,24 @@
 
 ClassImp(TPolyLine)
 
+/** \class TPolyLine
+A PolyLine is defined by an array on N points in a 2-D space.
 
-//______________________________________________________________________________
-//
-//  a PolyLine is defined by an array on N points in a 2-D space.
-//
-// One can draw the contour of the polyline or/and its fill area.
-// Example:
-//{
-//   Double_t x[5] = {.2,.7,.6,.25,.2};
-//   Double_t y[5] = {.5,.1,.9,.7,.5};
-//   TPolyLine *pline = new TPolyLine(5,x,y);
-//   pline->SetFillColor(38);
-//   pline->SetLineColor(2);
-//   pline->SetLineWidth(4);
-//   pline->Draw("f");
-//   pline->Draw();
-//}
-
+One can draw the contour of the polyline or/and its fill area.
+Example:
+Begin_Macro(source)
+{
+   Double_t x[5] = {.2,.7,.6,.25,.2};
+   Double_t y[5] = {.5,.1,.9,.7,.5};
+   TPolyLine *pline = new TPolyLine(5,x,y);
+   pline->SetFillColor(38);
+   pline->SetLineColor(2);
+   pline->SetLineWidth(4);
+   pline->Draw("f");
+   pline->Draw();
+}
+End_Macro
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PolyLine default constructor.
@@ -47,7 +47,6 @@ TPolyLine::TPolyLine(): TObject()
    fY = 0;
    fLastPoint = -1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PolyLine normal constructor without initialisation.
@@ -68,7 +67,6 @@ TPolyLine::TPolyLine(Int_t n, Option_t *option)
    fX = new Double_t[fN];
    fY = new Double_t[fN];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PolyLine normal constructor (single precision).
@@ -93,7 +91,6 @@ TPolyLine::TPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
    for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i];}
    fLastPoint = fN-1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PolyLine normal constructor (double precision).
@@ -146,7 +143,6 @@ TPolyLine::~TPolyLine()
    if (fY) delete [] fY;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// PolyLine copy constructor.
 
@@ -158,7 +154,6 @@ TPolyLine::TPolyLine(const TPolyLine &polyline) : TObject(polyline), TAttLine(po
    fLastPoint = -1;
    ((TPolyLine&)polyline).Copy(*this);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this polyline to polyline.
@@ -180,7 +175,6 @@ void TPolyLine::Copy(TObject &obj) const
    ((TPolyLine&)obj).fOption = fOption;
    ((TPolyLine&)obj).fLastPoint = fLastPoint;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns closest distance in pixels from point (px, py) to a polyline.
@@ -230,7 +224,6 @@ Int_t TPolyLine::DistancetoPrimitive(Int_t px, Int_t py)
    return distance;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this polyline with its current attributes.
 
@@ -238,7 +231,6 @@ void TPolyLine::Draw(Option_t *option)
 {
    AppendPad(option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this polyline with new coordinates.
@@ -252,7 +244,6 @@ void TPolyLine::DrawPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option
    newpolyline->SetBit(kCanDelete);
    newpolyline->AppendPad(option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
@@ -486,7 +477,6 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// List this polyline with its attributes.
 /// The option string is ignored.
@@ -496,7 +486,6 @@ void TPolyLine::ls(Option_t *) const
    TROOT::IndentLevel();
    printf("TPolyLine  N=%d\n",fN);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Merge polylines in the collection in this polyline
@@ -534,7 +523,6 @@ Int_t TPolyLine::Merge(TCollection *li)
    return npoints;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this polyline with its current attributes.
 
@@ -548,7 +536,6 @@ void TPolyLine::Paint(Option_t *option)
       else                    PaintPolyLine(fLastPoint+1, fX, fY, fOption.Data());
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this polyline with new coordinates.
@@ -577,7 +564,6 @@ void TPolyLine::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *optio
    if (y != yy) delete [] yy;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this polyline with new coordinates in NDC.
 
@@ -588,7 +574,6 @@ void TPolyLine::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *op
    gPad->PaintPolyLineNDC(n,x,y,option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump this polyline with its attributes.
 /// The option string is ignored.
@@ -597,7 +582,6 @@ void TPolyLine::Print(Option_t *) const
 {
    printf("PolyLine  N=%d\n",fN);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
@@ -624,7 +608,6 @@ void TPolyLine::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       <<quote<<option<<quote<<");"<<std::endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set NDC mode on if isNDC = kTRUE, off otherwise
 
@@ -633,7 +616,6 @@ void TPolyLine::SetNDC(Bool_t isNDC)
    ResetBit(kPolyLineNDC);
    if (isNDC) SetBit(kPolyLineNDC);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set point following LastPoint to x, y.
@@ -645,7 +627,6 @@ Int_t TPolyLine::SetNextPoint(Double_t x, Double_t y)
    SetPoint(fLastPoint, x, y);
    return fLastPoint;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set point number n to (x, y)
@@ -679,7 +660,6 @@ void TPolyLine::SetPoint(Int_t n, Double_t x, Double_t y)
    fLastPoint = TMath::Max(fLastPoint,n);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Resize this polyline to size n.
 /// If n <= 0 the current arrays of points are deleted.
@@ -702,7 +682,6 @@ void TPolyLine::SetPolyLine(Int_t n)
       SetPoint(n-1,0,0);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set new values for this polyline (single precision).
@@ -732,7 +711,6 @@ void TPolyLine::SetPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
    fLastPoint = fN-1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set new values for this polyline (double precision).
 ///
@@ -760,7 +738,6 @@ void TPolyLine::SetPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
    fOption = option;
    fLastPoint = fN-1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream a class object.

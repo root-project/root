@@ -21,14 +21,9 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//==============================================================================
-//==============================================================================
-// TEveLineEditor
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Editor for TEveLine class.
+/** \class TEveLineEditor
+Editor for TEveLine class.
+*/
 
 ClassImp(TEveLineEditor);
 
@@ -49,7 +44,7 @@ TEveLineEditor::TEveLineEditor(const TGWindow *p, Int_t width, Int_t height,
 
       fRnrPoints = new TGCheckButton(f, "Draw Marker");
       f->AddFrame(fRnrPoints, new TGLayoutHints(kLHintsLeft, 2,1,0,0));
-      fRnrPoints->Connect("Toggled(Bool_t)"," TEveLineEditor", this, "DoRnrPoints()");
+      fRnrPoints->Connect("Toggled(Bool_t)", "TEveLineEditor", this, "DoRnrPoints()");
 
       fRnrLine  = new TGCheckButton(f, "Draw Line");
       f->AddFrame(fRnrLine, new TGLayoutHints(kLHintsLeft, 1,2,0,0));
@@ -62,8 +57,6 @@ TEveLineEditor::TEveLineEditor(const TGWindow *p, Int_t width, Int_t height,
    fSmooth->Connect("Toggled(Bool_t)", "TEveLineEditor", this, "DoSmooth()");
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -75,8 +68,6 @@ void TEveLineEditor::SetModel(TObject* obj)
    fRnrPoints->SetState(fM->fRnrPoints ? kButtonDown : kButtonUp);
    fSmooth->SetState(fM->fSmooth ? kButtonDown : kButtonUp);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for RnrLine.

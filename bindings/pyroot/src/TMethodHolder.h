@@ -40,7 +40,7 @@ namespace PyROOT {
       virtual PyObject* Call(
          ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 );
 
-      virtual Bool_t Initialize();
+      virtual Bool_t Initialize( TCallContext* ctxt = 0 );
       virtual PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
       virtual Bool_t    ConvertAndSetArgs( PyObject* args, TCallContext* ctxt = 0 );
       virtual PyObject* Execute( void* self, ptrdiff_t offset, TCallContext* ctxt = 0 );
@@ -52,7 +52,7 @@ namespace PyROOT {
       std::string         GetSignatureString();
       std::string         GetReturnTypeName();
 
-      virtual Bool_t InitExecutor_( TExecutor*& );
+      virtual Bool_t InitExecutor_( TExecutor*&, TCallContext* ctxt = 0 );
 
    private:
       void Copy_( const TMethodHolder& );

@@ -9,14 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBasketSQL                                                           //
-//                                                                      //
-// Implement TBasket for a SQL backend                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef TBASKETSQL_CXX
 #define TBASKETSQL_CXX
 
@@ -34,6 +26,10 @@
 ClassImp(TBasketSQL)
 
 namespace std {} using namespace std;
+
+/** \class TBasketSQL
+Implement TBasket for a SQL backend.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -151,8 +147,6 @@ void TBasketSQL::Reset()
 {
    TBasket::Reset();
 }
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// See TBasket::Update.
 
@@ -161,6 +155,5 @@ void TBasketSQL::Update(Int_t, Int_t)
    ((TBufferSQL*)fBufferRef)->ResetOffset();
    fNevBuf++;
 }
-
 
 #endif

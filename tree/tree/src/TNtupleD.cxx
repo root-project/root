@@ -9,22 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TNtupleD                                                             //
-//                                                                      //
-// A simple tree restricted to a list of double variables only.         //
-//                                                                      //
-// Each variable goes to a separate branch.                             //
-//                                                                      //
-//  A Ntuple is created via                                             //
-//     TNtupleD(name,title,varlist,bufsize)                             //
-//  It is filled via:                                                   //
-//     TNtupleD::Fill(*x)  or                                           //
-//     TNtupleD::Fill(v1,v2,v3.....)                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TNtupleD.h"
 #include "TTree.h"
 #include "TBranch.h"
@@ -36,9 +20,24 @@
 
 ClassImp(TNtupleD)
 
+/** \class TNtupleD
+A simple TTree restricted to a list of double variables only.
+
+Each variable goes to a separate branch.
+
+A Ntuple is created via
+~~~ {.cpp}
+    TNtupleD(name,title,varlist,bufsize)
+~~~
+It is filled via:
+~~~ {.cpp}
+    TNtupleD::Fill(*x)  or
+    TNtupleD::Fill(v1,v2,v3.....)
+~~~
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Default constructor for Ntuple*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*        ==============================
+/// Default constructor for Ntuple.
 
 TNtupleD::TNtupleD(): TTree()
 {
@@ -47,17 +46,18 @@ TNtupleD::TNtupleD(): TTree()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*-*Create an Ntuple*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                      ================
-///       The parameter varlist describes the list of the ntuple variables
-///       separated by a colon:
-///         example:  "x:y:z:energy"
-///       For each variable in the list a separate branch is created.
+/// Create an Ntuple.
 ///
-///      NOTE:
-///       -Use TTree to create branches with variables of different data types.
-///       -Use TTree when the number of branches is large (> 100).
-///*-*
+/// The parameter varlist describes the list of the ntuple variables
+/// separated by a colon:
+///
+/// Example:  `x:y:z:energy`
+///
+/// For each variable in the list a separate branch is created.
+///
+/// NOTE:
+///  - Use TTree to create branches with variables of different data types.
+///  - Use TTree when the number of branches is large (> 100).
 
 TNtupleD::TNtupleD(const char *name, const char *title, const char *varlist, Int_t bufsize)
        :TTree(name,title)
@@ -96,8 +96,7 @@ TNtupleD::TNtupleD(const char *name, const char *title, const char *varlist, Int
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*Default destructor for an Ntuple*-*-*-*-*-*-*-*-*-*-*-*
-///*-*        ================================
+/// Default destructor for an Ntuple.
 
 TNtupleD::~TNtupleD()
 {
@@ -139,10 +138,9 @@ void TNtupleD::Browse(TBrowser *b)
    fLeaves.Browse( b );
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Fill a Ntuple with current values in fArgs*-*-*-*-*-*-*
-///*-*              ==========================================
+/// Fill a Ntuple with current values in fArgs.
+///
 /// Note that this function is protected.
 /// Currently called only by TChain::Merge
 
@@ -152,8 +150,7 @@ Int_t TNtupleD::Fill()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Fill a Ntuple with an array of floats*-*-*-*-*-*-*-*-*-*
-///*-*              =====================================
+/// Fill a Ntuple with an array of floats.
 
 Int_t TNtupleD::Fill(const Double_t *x)
 {
@@ -165,10 +162,8 @@ Int_t TNtupleD::Fill(const Double_t *x)
    return TTree::Fill();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Fill a Ntuple: Each Ntuple item is an argument*-*-*-*-*-*-*
-///*-*              ==============================================
+/// Fill a Ntuple: Each Ntuple item is an argument.
 
 Int_t TNtupleD::Fill(Double_t x0,Double_t x1,Double_t x2,Double_t x3,Double_t x4
               ,Double_t x5,Double_t x6,Double_t x7,Double_t x8,Double_t x9
@@ -194,7 +189,7 @@ Int_t TNtupleD::Fill(Double_t x0,Double_t x1,Double_t x2,Double_t x3,Double_t x4
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read from filename as many columns as variables in the ntuple
+/// Read from filename as many columns as variables in the ntuple
 /// the function returns the number of rows found in the file
 /// The second argument "branchDescriptor" is currently not used.
 /// Lines in the input file starting with "#" are ignored.
@@ -226,8 +221,7 @@ Long64_t TNtupleD::ReadStream(std::istream &inputStream, const char * /*branchDe
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*              =========================================
+/// Stream a class object.
 
 void TNtupleD::Streamer(TBuffer &b)
 {

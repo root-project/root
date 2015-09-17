@@ -36,96 +36,115 @@ namespace RooStats {
 
    class ConfInterval; 
 
+
+/**
+
+   \ingroup Roostats
+
+NeymanConstruction is a concrete implementation of the NeymanConstruction interface that, as the name suggests, performs a NeymanConstruction. It produces a RooStats::PointSetInterval, which is a concrete implementation of the ConfInterval interface.
+
+The Neyman Construction is not a uniquely defined statistical technique, it requires that one specify an ordering rule or ordering principle, which is usually incoded by choosing a specific test statistic and limits of integration (corresponding to upper/lower/central limits). As a result, this class must be configured with the corresponding information before it can produce an interval. Common configurations, such as the Feldman-Cousins approach, can be enforced by other light weight classes.
+
+The Neyman Construction considers every point in the parameter space independently, no assumptions are made that the interval is connected or of a particular shape. As a result, the PointSetInterval class is used to represent the result. The user indicate which points in the parameter space to perform the constrution by providing a PointSetInterval instance with the desired points.
+
+This class is fairly light weight, because the choice of parameter points to be considered is factorized and so is the creation of the sampling distribution of the test statistic (which is done by a concrete class implementing the DistributionCreator interface). As a result, this class basically just drives the construction by:
+
+*   using a DistributionCreator to create the SamplingDistribution of a user-defined test statistic for each parameter point of interest,
+*   defining the acceptance region in the data by finding the thresholds on the test statistic such that the integral of the sampling distribution is of the appropriate size and consistent with the limits of integration (eg. upper/lower/central limits),
+*   and finally updating the PointSetInterval based on whether the value of the test statistic evaluated on the data are in the acceptance region.
+
+*/
+
    class NeymanConstruction : public IntervalCalculator{
 
    public:
 
-     //     NeymanConstruction();
+     ///     NeymanConstruction();
      NeymanConstruction(RooAbsData& data, ModelConfig& model);
 
      virtual ~NeymanConstruction();
     
-      // Main interface to get a ConfInterval (will be a PointSetInterval)
+      /// Main interface to get a ConfInterval (will be a PointSetInterval)
      virtual PointSetInterval* GetInterval() const;
 
-      // in addition to interface we also need:
-      // Set the TestStatSampler (eg. ToyMC or FFT, includes choice of TestStatistic)
+      /// in addition to interface we also need:
+      /// Set the TestStatSampler (eg. ToyMC or FFT, includes choice of TestStatistic)
       void SetTestStatSampler(TestStatSampler& sampler) {fTestStatSampler = &sampler;}
-      // fLeftSideTailFraction*fSize defines lower edge of acceptance region.
-      // Unified limits use 0, central limits use 0.5, 
-      // for upper/lower limits it is 0/1 depends on sign of test statistic w.r.t. parameter
+      /// fLeftSideTailFraction*fSize defines lower edge of acceptance region.
+      /// Unified limits use 0, central limits use 0.5, 
+      /// for upper/lower limits it is 0/1 depends on sign of test statistic w.r.t. parameter
       void SetLeftSideTailFraction(Double_t leftSideFraction = 0.) {fLeftSideFraction = leftSideFraction;} 
 
-      // User-defined set of points to test
+      /// User-defined set of points to test
       void SetParameterPointsToTest(RooAbsData& pointsToTest) {
 	fPointsToTest = &pointsToTest;
         fConfBelt = new ConfidenceBelt("ConfBelt",pointsToTest);
       }
-      // This class can make regularly spaced scans based on range stored in RooRealVars.
-      // Choose number of steps for a rastor scan (common for each dimension)
-      //      void SetNumSteps(Int_t);
-      // This class can make regularly spaced scans based on range stored in RooRealVars.
-      // Choose number of steps for a rastor scan (specific for each dimension)
-      //      void SetNumSteps(std::map<RooAbsArg, Int_t>)
+      /// This class can make regularly spaced scans based on range stored in RooRealVars.
+      /// Choose number of steps for a rastor scan (common for each dimension)
+      ///      void SetNumSteps(Int_t);
+      /// This class can make regularly spaced scans based on range stored in RooRealVars.
+      /// Choose number of steps for a rastor scan (specific for each dimension)
+      ///      void SetNumSteps(std::map<RooAbsArg, Int_t>)
 
-      // Get the size of the test (eg. rate of Type I error)
+      /// Get the size of the test (eg. rate of Type I error)
       virtual Double_t Size() const {return fSize;}
 
-      // Get the Confidence level for the test
+      /// Get the Confidence level for the test
       virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}  
 
-      // Set ModelConfig
+      /// Set ModelConfig
       virtual void SetModel(const ModelConfig &model) {fModel = model;}
 
-      // Set the DataSet 
+      /// Set the DataSet 
       virtual void SetData(RooAbsData& data) { fData = data; }
 
-      // Set the Pdf, add to the the workspace if not already there
+      /// Set the Pdf, add to the the workspace if not already there
       virtual void SetPdf(RooAbsPdf& /*pdf*/) { 
         std::cout << "DEPRECATED, use ModelConfig"<<std::endl;
       }  
 
-      // specify the parameters of interest in the interval
+      /// specify the parameters of interest in the interval
       virtual void SetParameters(const RooArgSet& /*set*/) {
         std::cout << "DEPRECATED, use ModelConfig"<<std::endl;
       }
 
-      // specify the nuisance parameters (eg. the rest of the parameters)
+      /// specify the nuisance parameters (eg. the rest of the parameters)
       virtual void SetNuisanceParameters(const RooArgSet& /*set*/) {
         std::cout << "DEPRECATED, use ModelConfig"<<std::endl;
       }
 
-      // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
+      /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) {fSize = size;}
-      // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
+      /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
       virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
 
-      // get confidence belt
+      /// get confidence belt
       ConfidenceBelt* GetConfidenceBelt() {return fConfBelt;}
 
-      // adaptive sampling algorithm to speed up interval caculation
+      /// adaptive sampling algorithm to speed up interval caculation
       void UseAdaptiveSampling(bool flag=true){fAdaptiveSampling=flag;}
 
-      // give user ability to ask for more toys
+      /// give user ability to ask for more toys
       void AdditionalNToysFactor(double fact){fAdditionalNToysFactor = fact;}
 
-      // save teh confidence belt to a file
+      /// save teh confidence belt to a file
       void SaveBeltToFile(bool flag=true){
 	fSaveBeltToFile = flag;
 	if(flag) fCreateBelt = true;
       }
-      // should create confidence belt
+      /// should create confidence belt
       void CreateConfBelt(bool flag=true){fCreateBelt = flag;}
 
-      // Returns instance of TestStatSampler. Use to change properties of
-      // TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
+      /// Returns instance of TestStatSampler. Use to change properties of
+      /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
       TestStatSampler* GetTestStatSampler(void) { return fTestStatSampler; }
 
       
    private:
 
-      Double_t fSize; // size of the test (eg. specified rate of Type I error)
-      RooAbsData& fData; // data set 
+      Double_t fSize; /// size of the test (eg. specified rate of Type I error)
+      RooAbsData& fData; /// data set 
       ModelConfig &fModel;
       /*
       RooAbsPdf * fPdf; // common PDF

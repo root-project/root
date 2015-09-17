@@ -8,39 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-The p-value of the null for a given test statistic is rigorously defined and
-this is the starting point for the following conventions.
-</p>
 
-<h3>Conventions used in this class</h3>
-<p>
-The p-value for the null and alternate are on the <b>same side</b> of the
-observed value of the test statistic. This is the more standard
-convention and avoids confusion when doing inverted tests.
-</p>
-<p>
-For exclusion, we also want the formula
-CLs = CLs+b / CLb to hold which therefore defines our conventions
-for CLs+b and CLb. CLs was specifically invented for exclusion
-and therefore all quantities need be related through the assignments
-as they are for exclusion: <b>CLs+b = p_{s+b}; CLb = p_b</b>. This
-is derived by considering the scenarios of a powerful and not powerful
-inverted test, where for the not so powerful test, CLs must be
-close to one.
-</p>
-<p>
-For results of Hypothesis tests,
-CLs has no similar direct interpretation as for exclusion and can
-be larger than one.
-</p>
-
-END_HTML
-*/
-//
 
 
 #ifndef ROOSTATS_HypoTestResult
@@ -60,41 +28,80 @@ END_HTML
 
 namespace RooStats {
 
+
+/**
+
+   \ingroup Roostats
+
+   HypoTestResult is a base class for results from hypothesis tests.
+   Any tool inheriting from HypoTestCalculator can return a HypoTestResult.
+   As such, it stores a p-value for the null-hypothesis (eg. background-only) 
+   and an alternate hypothesis (eg. signal+background).  
+   The p-values can also be transformed into confidence levels (CLb, CLsplusb) in a trivial way.
+   The ratio of the CLsplusb to CLb is often called CLs, and is considered useful, though it is 
+   not a probability.
+   Finally, the p-value of the null can be transformed into a number of equivalent Gaussian sigma using the 
+   Significance method.
+
+   The p-value of the null for a given test statistic is rigorously defined and
+   this is the starting point for the following conventions.
+   
+### Conventions used in this class
+
+The p-value for the null and alternate are on the **same side** of the
+observed value of the test statistic. This is the more standard
+convention and avoids confusion when doing inverted tests.
+
+For exclusion, we also want the formula
+CLs = CLs+b / CLb to hold which therefore defines our conventions
+for CLs+b and CLb. CLs was specifically invented for exclusion
+and therefore all quantities need be related through the assignments
+as they are for exclusion: **CLs+b = p_{s+b}; CLb = p_b**. This
+is derived by considering the scenarios of a powerful and not powerful
+inverted test, where for the not so powerful test, CLs must be
+close to one.
+
+For results of Hypothesis tests,
+CLs has no similar direct interpretation as for exclusion and can
+be larger than one.
+
+*/
+
    class HypoTestResult : public TNamed {
 
    public:
       
-      // default constructor
+      /// default constructor
       explicit HypoTestResult(const char* name = 0);
       
-      // copy constructo
+      /// copy constructo
       HypoTestResult(const HypoTestResult& other);
 
-      // constructor from name, null and alternate p values 
+      /// constructor from name, null and alternate p values 
       HypoTestResult(const char* name, Double_t nullp, Double_t altp);
 
-      // destructor 
+      /// destructor 
       virtual ~HypoTestResult();
 
-      // assignment operator
+      /// assignment operator
       HypoTestResult & operator=(const HypoTestResult& other);
 
-      // add values from another HypoTestResult
+      /// add values from another HypoTestResult
       virtual void Append(const HypoTestResult *other);
 
-      // Return p-value for null hypothesis
+      /// Return p-value for null hypothesis
       virtual Double_t NullPValue() const { return fNullPValue; }
 
-      // Return p-value for alternate hypothesis
+      /// Return p-value for alternate hypothesis
       virtual Double_t AlternatePValue() const { return fAlternatePValue; }
 
-      // Convert  NullPValue into a "confidence level"
+      /// Convert  NullPValue into a "confidence level"
       virtual Double_t CLb() const { return !fBackgroundIsAlt ? NullPValue() : AlternatePValue(); }
 
-      // Convert  AlternatePValue into a "confidence level"
+      /// Convert  AlternatePValue into a "confidence level"
       virtual Double_t CLsplusb() const { return !fBackgroundIsAlt ? AlternatePValue() : NullPValue(); }
 
-      // CLs is simply CLs+b/CLb (not a method, but a quantity)
+      /// CLs is simply CLs+b/CLb (not a method, but a quantity)
       virtual Double_t CLs() const {
          double thisCLb = CLb();
          if (thisCLb == 0) {
@@ -105,7 +112,7 @@ namespace RooStats {
          return thisCLsb / thisCLb;
       }
 
-      // familiar name for the Null p-value in terms of 1-sided Gaussian significance
+      /// familiar name for the Null p-value in terms of 1-sided Gaussian significance
       virtual Double_t Significance() const {return RooStats::PValueToSignificance( NullPValue() ); }
 
       SamplingDistribution* GetNullDistribution(void) const { return fNullDistr; }

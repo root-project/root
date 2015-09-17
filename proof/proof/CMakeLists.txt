@@ -3,10 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(net/net)
-ROOT_USE_PACKAGE(tree/tree)
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(core/thread)
 include_directories(${CMAKE_SOURCE_DIR}/proof/proofplayer/inc)  # To avoid circular dependencies :-(
 
 ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc inc/*.h)

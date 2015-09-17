@@ -18,16 +18,15 @@
  *****************************************************************************/
 
 
+/**
+   \class SimpleInterval
+   \ingroup Roostats
 
-//_________________________________________________________
-//
-// BEGIN_HTML
-// SimpleInterval is a concrete implementation of the ConfInterval interface.  
-// It implements simple 1-dimensional intervals in a range [a,b].
-// In addition, you can ask it for the upper- or lower-bound.
-// END_HTML
-//
-//
+   SimpleInterval is a concrete implementation of the ConfInterval interface.  
+   It implements simple 1-dimensional intervals in a range [a,b].
+   In addition, you can ask it for the upper- or lower-bound.
+*/
+
 
 #ifndef RooStats_SimpleInterval
 #include "RooStats/SimpleInterval.h"

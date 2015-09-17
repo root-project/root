@@ -10,16 +10,6 @@
 
 
 
-
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// This modules allow to compute in the ToyMcStudy framework the ProfileLikelihood upper limit for each toy-MC sample generated
-
-// END_HTML
-//
-//
-
 #include "Riostream.h"
 
 #include "RooDataSet.h"
@@ -48,8 +38,6 @@ ClassImp(RooStats::UpperLimitMCSModule);
 
 
 using namespace RooStats ;
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

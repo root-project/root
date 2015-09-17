@@ -9,28 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A branch containing and managing a TRefTable for TRef autoloading.   //
-// It loads the TBranch containing a referenced object when requested   //
-// by TRef::GetObject(), so the reference can be resolved. The          //
-// information which branch to load is stored by TRefTable. Once a      //
-// TBranch has read the TBranchRef's current entry it will not be told  //
-// to re-read, in case the use has changed objects read from the        //
-// branch.                                                              //
-//                                                                      //
-//                                                                      //
-// *** LIMITATION ***                                                   //
-// Note that this does NOT allow for autoloading of references spanning //
-// different entries. The TBranchRef's current entry has to correspond  //
-// to the entry of the TBranch containing the referenced object.        //
-//                                                                      //
-// The TRef cannot be stored in a top-level branch which is a           //
-// TBranchObject for the auto-loading to work. E.g. you cannot store    //
-// the TRefs in TObjArray, and create a top-level branch storing this   //
-// TObjArray.                                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBranchRef
+A branch containing and managing a TRefTable for TRef autoloading.
+It loads the TBranch containing a referenced object when requested
+by TRef::GetObject(), so the reference can be resolved. The
+information which branch to load is stored by TRefTable. Once a
+TBranch has read the TBranchRef's current entry it will not be told
+to re-read, in case the use has changed objects read from the
+branch.
+
+*** LIMITATION ***
+Note that this does NOT allow for autoloading of references spanning
+different entries. The TBranchRef's current entry has to correspond
+to the entry of the TBranch containing the referenced object.
+
+The TRef cannot be stored in a top-level branch which is a
+TBranchObject for the auto-loading to work. E.g. you cannot store
+the TRefs in TObjArray, and create a top-level branch storing this
+TObjArray.
+*/
 
 #include "TBranchRef.h"
 #include "TTree.h"
@@ -48,7 +45,6 @@ TBranchRef::TBranchRef(): TBranch(), fRequestedEntry(-1), fRefTable(0)
    fReadLeaves = (ReadLeaves_t)&TBranchRef::ReadLeavesImpl;
    fFillLeaves = (FillLeaves_t)&TBranchRef::FillLeavesImpl;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Main constructor called by TTree::BranchRef.
@@ -81,7 +77,6 @@ TBranchRef::TBranchRef(TTree *tree)
    fReadLeaves = (ReadLeaves_t)&TBranchRef::ReadLeavesImpl;
    fFillLeaves = (FillLeaves_t)&TBranchRef::FillLeavesImpl;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Typical destructor.
@@ -181,11 +176,10 @@ void TBranchRef::FillLeavesImpl(TBuffer &b)
    fRefTable->FillBuffer(b);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///    Existing buffers are deleted
-///    Entries, max and min are reset
-///    TRefTable is cleared.
+/// - Existing buffers are deleted
+/// - Entries, max and min are reset
+/// - TRefTable is cleared.
 
 void TBranchRef::Reset(Option_t *option)
 {
@@ -206,12 +200,11 @@ void TBranchRef::ResetAfterMerge(TFileMergeInfo *info)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Set the current parent branch.
+/// Set the current parent branch.
 ///
 /// This function is called by TBranchElement::GetEntry()
 /// and TBranchElement::Fill() when reading or writing
 /// branches that may contain referenced objects.
-///
 
 Int_t TBranchRef::SetParent(const TObject* object, Int_t branchID)
 {

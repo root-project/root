@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: a94734bd8505d0a8f1833346da666b196a797388 $
+// @(#)root/base:$Id$
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -9,16 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TUrl                                                                 //
-//                                                                      //
-// This class represents a WWW compatible URL.                          //
-// It provides member functions to return the different parts of        //
-// an URL. The supported url format is:                                 //
-//  [proto://][user[:passwd]@]host[:port]/file.ext[#anchor][?options]   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TUrl
+This class represents a WWW compatible URL.
+It provides member functions to return the different parts of
+an URL. The supported url format is:
+~~~ {.cpp}
+  [proto://][user[:passwd]@]host[:port]/file.ext[#anchor][?options]
+~~~
+*/
 
 #include <stdlib.h>
 #include "TUrl.h"
@@ -59,9 +57,9 @@ ClassImp(TUrl)
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse url character string and split in its different subcomponents.
 /// Use IsValid() to check if URL is legal.
-///
+/// ~~~ {.cpp}
 /// url: [proto://][user[:passwd]@]host[:port]/file.ext[?options][#anchor]
-///
+/// ~~~
 /// Known protocols: http, root, proof, ftp, news and any special protocols
 /// defined in the rootrc Url.Special key.
 /// The default protocol is "http", unless defaultIsFile is true in which
@@ -153,7 +151,7 @@ tryfile:
       }
       if (!strncmp(u, s1, l)) {
          if (s1(0) == '/' && s1(l-1) == '/') {
-            // case whith file namespace like: /alien/user/file.root
+            // case with file namespace like: /alien/user/file.root
             fProtocol = s1(1, l-2);
             if (stripoff)
                l--;    // strip off namespace prefix from file name
@@ -496,7 +494,7 @@ const char *TUrl::GetHostFQDN() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the file and its options (the string specified behind the ?).
 /// Convenience function useful when the option is used to pass
-/// authetication/access information for the specified file.
+/// authentication/access information for the specified file.
 
 const char *TUrl::GetFileAndOptions() const
 {

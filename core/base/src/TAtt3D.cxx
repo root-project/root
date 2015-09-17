@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TAtt3D                                                               //
-//                                                                      //
-// Use this attribute class when an object should have 3D capabilities. //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TAtt3D
+Use this attribute class when an object should have 3D capabilities.
+*/
 
 #include "TAtt3D.h"
 

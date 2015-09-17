@@ -35,6 +35,9 @@
 
 /**
    @defgroup QuasiRandom QuasiRandom number generators and distributions
+   Classes for generating QuasiRandom numbers and based on GSL 
+   @ingroup Random
+   @ingroup MathMore
 */
 
 
@@ -50,7 +53,7 @@ namespace Math {
    It must be implemented using as Engine one of the derived classes of
    ROOT::Math::GSLQuasiRandomEngine, like ROOT::Math::GSLQrngSobol
 
-   @ingroup Random
+   @ingroup QuasiRandom
 
 */
 template < class Engine>

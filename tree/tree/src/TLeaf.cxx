@@ -9,11 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TLeaf describes individual elements of a TBranch                   //
-//       See TBranch structure in TTree.                                //
-//////////////////////////////////////////////////////////////////////////
+/** \class TLeaf
+A TLeaf describes individual elements of a TBranch
+See TBranch structure in TTree.
+*/
 
 #include "TLeaf.h"
 #include "TBranch.h"
@@ -69,7 +68,7 @@ TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
+/// Copy constructor.
 
 TLeaf::TLeaf(const TLeaf& lf) :
   TNamed(lf),
@@ -85,7 +84,7 @@ TLeaf::TLeaf(const TLeaf& lf) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignment operator
+/// Assignment operator.
 
 TLeaf& TLeaf::operator=(const TLeaf& lf)
 {
@@ -104,7 +103,7 @@ TLeaf& TLeaf::operator=(const TLeaf& lf)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Destructor.
+/// Destructor.
 
 TLeaf::~TLeaf()
 {
@@ -142,27 +141,26 @@ void TLeaf::Browse(TBrowser* b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Pack leaf elements in Basket output buffer.
+/// Pack leaf elements in Basket output buffer.
 
 void TLeaf::FillBasket(TBuffer &)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return a pointer to the counter of this leaf.
+/// Return a pointer to the counter of this leaf.
 ///
-///  If leaf name has the form var[nelem], where nelem is alphanumeric, then
+/// - If leaf name has the form var[nelem], where nelem is alphanumeric, then
 ///     if nelem is a leaf name, return countval = 1 and the pointer to
 ///          the leaf named nelem, otherwise return 0.
-///  If leaf name has the form var[nelem], where nelem is a non-negative integer, then
+/// - If leaf name has the form var[nelem], where nelem is a non-negative integer, then
 ///     return countval = nelem and a null pointer.
-///  If leaf name has the form of a multi-dimensional array (e.g. var[nelem][nelem2]
+/// - If leaf name has the form of a multi-dimensional array (e.g. var[nelem][nelem2]
 ///     where nelem and nelem2 are non-negative integers) then
 ///     return countval = product of all dimension sizes and a null pointer.
-///  If leaf name has the form var[... (and does not match the previous 2
+/// - If leaf name has the form var[... (and does not match the previous 2
 ///     cases) return countval = -1 and null pointer;
-///  Otherwise return countval = 1 and a null pointer.
-///
+/// - Otherwise return countval = 1 and a null pointer.
 
 TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
 {
@@ -273,7 +271,7 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Return the number of effective elements of this leaf.
+/// Return the number of effective elements of this leaf.
 
 Int_t TLeaf::GetLen() const
 {
@@ -292,14 +290,13 @@ Int_t TLeaf::GetLen() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Helper routine for TLeafX::SetAddress.
+/// Helper routine for TLeafX::SetAddress.
 ///
 /// The return value is non-zero if we owned the old
 /// value buffer and must delete it now.  The size
 /// of the value buffer is recalculated and stored,
 /// and a decision is made whether or not we own the
 /// new value buffer.
-///
 
 Int_t TLeaf::ResetAddress(void* addr, Bool_t calledFromDestructor)
 {
@@ -335,7 +332,7 @@ Int_t TLeaf::ResetAddress(void* addr, Bool_t calledFromDestructor)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Set the leaf count of this leaf.
+/// Set the leaf count of this leaf.
 
 void TLeaf::SetLeafCount(TLeaf *leaf)
 {
@@ -350,7 +347,7 @@ void TLeaf::SetLeafCount(TLeaf *leaf)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Stream a class object.
+/// Stream a class object.
 
 void TLeaf::Streamer(TBuffer &b)
 {

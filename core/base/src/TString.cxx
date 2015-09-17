@@ -9,31 +9,30 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TString                                                              //
-//                                                                      //
-// Basic string class.                                                  //
-//                                                                      //
-// Cannot be stored in a TCollection... use TObjString instead.         //
-//                                                                      //
-// The underlying string is stored as a char* that can be accessed via  //
-// TString::Data().                                                     //
-// TString provides Short String Optimization (SSO) so that short       //
-// strings (<15 on 64-bit and <11 on 32-bit) are contained in the       //
-// TString internal data structure without the need for mallocing the   //
-// required space.                                                      //
-//                                                                      //
-// Substring operations are provided by the TSubString class, which     //
-// holds a reference to the original string and its data, along with    //
-// the offset and length of the substring. To retrieve the substring    //
-// as a TString, construct a TString from it, eg:                       //
-//   root [0] TString s("hello world")                                  //
-//   root [1] TString s2( s(0,5) )                                      //
-//   root [2] s2                                                        //
-//   (class TString)"hello"                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TString
+
+Basic string class.
+
+Cannot be stored in a TCollection... use TObjString instead.
+
+The underlying string is stored as a char* that can be accessed via
+TString::Data().
+TString provides Short String Optimization (SSO) so that short
+strings (<15 on 64-bit and <11 on 32-bit) are contained in the
+TString internal data structure without the need for mallocing the
+required space.
+
+Substring operations are provided by the TSubString class, which
+holds a reference to the original string and its data, along with
+the offset and length of the substring. To retrieve the substring
+as a TString, construct a TString from it, eg:
+~~~ {.cpp}
+   root [0] TString s("hello world")
+   root [1] TString s2( s(0,5) )
+   root [2] s2
+   (class TString)"hello"
+~~~
+*/
 
 #include "RConfig.h"
 #include <stdlib.h>
@@ -68,7 +67,7 @@ ClassImp(TString)
 // Amount to shift hash values to avoid clustering
 const UInt_t kHashShift = 5;
 
-// ------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 //
 // In what follows, fCap is the length of the underlying representation
 // vector. Hence, the capacity for a null terminated string held in this
@@ -81,14 +80,6 @@ const UInt_t kHashShift = 5;
 // terminated and therefore has no embedded nulls.
 //
 // The internal string is always null terminated.
-//
-// ------------------------------------------------------------------------
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TString                                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TString default ctor.
@@ -603,7 +594,6 @@ UInt_t TString::Hash(ECaseCompare cmp) const
    return (cmp == kExact) ? HashCase() : HashFoldCase();
 }
 
-namespace {
    // MurmurHash3 - a blazingly fast public domain hash!
    // See http://code.google.com/p/smhasher/
    // There are two versions, one optimized for 32 bit and one for 64 bit.
@@ -659,6 +649,8 @@ namespace {
 #define ROTL64(x,y)     rotl64(x,y)
 #define BIG_CONSTANT(x) (x##LLU)
 #endif // !defined(_MSC_VER)
+
+namespace {
 
    /////////////////////////////////////////////////////////////////////////////
    /// Block read - if your platform needs to do endian-swapping or can only
@@ -767,19 +759,17 @@ namespace {
       ((uint64_t*)out)[1] = h2;
    }
 
-   /////////////////////////////////////////////////////////////////////////////
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculates hash index from any char string. (static function)
-/// For string:  i = TString::Hash(string,nstring);
-/// For int:     i = TString::Hash(&intword,sizeof(int));
-/// For pointer: i = TString::Hash(&pointer,sizeof(void*));
+///  - For string:  i = TString::Hash(string,nstring);
+///  - For int:     i = TString::Hash(&intword,sizeof(int));
+///  - For pointer: i = TString::Hash(&pointer,sizeof(void*));
 ///
 /// This employs two different hash functions, depending on ntxt:
-///   ntxt == sizeof(void*): a simple bitwise xor to get fast pointer hashes
-///   else: MurmurHash3_x64_128 http://code.google.com/p/smhasher/
+///  - ntxt == sizeof(void*): a simple bitwise xor to get fast pointer hashes
+///  - else: MurmurHash3_x64_128 http://code.google.com/p/smhasher/
 
 UInt_t TString::Hash(const void *txt, Int_t ntxt)
 {
@@ -1194,7 +1184,8 @@ void TString::Clone(Ssiz_t tot)
    }
 }
 
-// ------------------- ROOT I/O ------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+// ROOT I/O
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy string into I/O buffer.
@@ -1365,7 +1356,8 @@ TBuffer &operator<<(TBuffer &buf, const TString *s)
    return buf;
 }
 
-// ------------------- Related global functions --------------------
+////////////////////////////////////////////////////////////////////////////////
+// Related global functions
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compare TString with a char *.
@@ -1530,9 +1522,9 @@ TString operator+(ULong64_t i, const TString &s)
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
-// -------------------- Static Member Functions ----------------------
-
-// ------------------- The static data members access --------------------------
+////////////////////////////////////////////////////////////////////////////////
+// Static Member Functions
+// The static data members access
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1586,22 +1578,15 @@ Ssiz_t TString::MaxWaste(Ssiz_t)
    return 15;
 }
 
+/** \class TSubString
+A zero length substring is legal. It can start
+at any character. It is considered to be "pointing"
+to just before the character.
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TSubString                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-//
-// A zero lengthed substring is legal. It can start
-// at any character. It is considered to be "pointing"
-// to just before the character.
-//
-// A "null" substring is a zero lengthed substring that
-// starts with the nonsense index kNPOS. It can
-// be detected with the member function IsNull().
-//
+A "null" substring is a zero length substring that
+starts with the nonsense index kNPOS. It can
+be detected with the member function IsNull().
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Private constructor.
@@ -1800,7 +1785,7 @@ Bool_t TString::IsAlnum() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns true if all characters in string are digits (0-9) or whitespaces,
+/// Returns true if all characters in string are digits (0-9) or white spaces,
 /// i.e. "123456" and "123 456" are both valid integer strings.
 /// Returns false in case string length is 0 or string contains other
 /// characters or only whitespace.
@@ -1824,12 +1809,14 @@ Bool_t TString::IsDigit() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if string contains a floating point or integer number.
 /// Examples of valid formats are:
+/// ~~~ {.cpp}
 ///    64320
 ///    64 320
 ///    6 4 3 2 0
 ///    6.4320     6,4320
 ///    6.43e20   6.43E20    6,43e20
 ///    6.43e-20  6.43E-20   6,43e-20, -6.43e+20
+/// ~~~
 
 Bool_t TString::IsFloat() const
 {
@@ -1861,7 +1848,7 @@ Bool_t TString::IsFloat() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns true if all characters in string are hexidecimal digits
+/// Returns true if all characters in string are hexadecimal digits
 /// (0-9,a-f,A-F). Returns false in case string length is 0 or string
 /// contains other characters.
 
@@ -1965,7 +1952,7 @@ Int_t TString::Atoi() const
 {
    //any whitespace ?
    Int_t end = Index(" ");
-   //if no whitespaces in string, just use atoi()
+   //if no white spaces in string, just use atoi()
    if (end == -1) return atoi(Data());
    //make temporary string, removing whitespace
    Int_t start = 0;
@@ -1991,7 +1978,7 @@ Long64_t TString::Atoll() const
 {
    //any whitespace ?
    Int_t end = Index(" ");
-   //if no whitespaces in string, just use atoi()
+   //if no white spaces in string, just use atoi()
 #ifndef R__WIN32
    if (end == -1) return atoll(Data());
 #else
@@ -2018,12 +2005,14 @@ Long64_t TString::Atoll() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return floating-point value contained in string.
 /// Examples of valid strings are:
+/// ~~~ {.cpp}
 ///    64320
 ///    64 320
 ///    6 4 3 2 0
 ///    6.4320     6,4320
 ///    6.43e20   6.43E20    6,43e20
 ///    6.43e-20  6.43E-20   6,43e-20
+/// ~~~
 
 Double_t TString::Atof() const
 {
@@ -2056,9 +2045,11 @@ Double_t TString::Atof() const
 /// Thus it is an enhanced version of sprintf (adapted from versions 0.4 of
 /// http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
 /// Usage: the following statement produce the same output, namely "1111"
+/// ~~~ {.cpp}
 ///   std::cout << TString::Itoa(15,2) ;
 ///   std::cout << TString::Itoa(0xF,2) ; /// 0x prefix to handle hex
 ///   std::cout << TString::Itoa(017,2) ; /// 0  prefix to handle oct
+/// ~~~
 /// In case of error returns the "!" string.
 
 TString TString::Itoa(Int_t value, Int_t base)
@@ -2621,36 +2612,24 @@ int strncasecmp(const char *str1, const char *str2, Ssiz_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a TString in the cling interpreter:
 
-std::string cling::printValue(const TString* const /*p*/, const TString* const u,
-                              const cling::Value& /*VPI*/) {
-   TString s = TString::Format("\"%s\"[%d]", u->Data(), (int)u->Length());
+std::string cling::printValue(const TString &val) {
+   TString s = TString::Format("\"%s\"[%d]", val.Data(), (int)val.Length());
    return s.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a TString in the cling interpreter:
 
-std::string cling::printValue(const TSubString* const /*p*/, const TSubString* const u,
-                              const cling::Value& /*VPI*/) {
-   TString s = TString::Format("\"%.*s\"[%d]", (int)u->Length(), u->Data(), (int)u->Length());
+std::string cling::printValue(const TSubString &val) {
+   TString s = TString::Format("\"%.*s\"[%d]", (int)val.Length(), val.Data(), (int)val.Length());
    return s.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a TString in the cling interpreter:
 
-std::string cling::printValue(const std::string* const /*p*/, const std::string* const u,
-                              const cling::Value& /*VPI*/) {
-   TString s = TString::Format("\"%s\"[%d]", u->c_str(), (int)u->length());
-   return s.Data();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print a TString in the cling interpreter:
-
-std::string cling::printValue(const std::string_view* const /*p*/, const std::string_view* const u,
-                              const cling::Value& /*VPI*/) {
-   std::string val(*u);
-   TString s = TString::Format("\"%s\"[%d]", val.c_str(), (int)u->length());
+std::string cling::printValue(const std::string_view &val) {
+   std::string str(val);
+   TString s = TString::Format("\"%s\"[%d]", str.c_str(), (int)val.length());
    return s.Data();
 }

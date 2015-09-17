@@ -11,49 +11,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-PdfProposal is a concrete implementation of the ProposalFunction interface.
-It proposes points across the parameter space in the distribution of the
-given PDF.
-</p>
-<p>
-To make Propose(xPrime, x) dependent on x, configure with
-PdfProposal::AddMapping(varToUpdate, valueToUse).  For example, suppose we have:
-</p>
 
-<p>
-// our parameter
-RooRealVar p("p", "p", 5, 0, 10);
-
-// create mean and sigma for gaussian proposal function
-RooRealVar meanP("meanP", "meanP", 0, 10);
-RooRealVar sigma("sigma", "sigma", 1, 0, 5);
-RooGaussian pGaussian("pGaussian", "pGaussian", p, meanP, sigma);
-
-// configure proposal function
-PdfProposal pdfProposal(pGaussian);
-pdfProposal.AddMapping(meanP, p); // each call of Propose(xPrime, x), meanP in
-                                  // the proposal function will be updated to
-                                  // the value of p in x.  this will center the
-                                  // proposal function about x's p when
-                                  // proposing for xPrime
-
-// To improve performance, PdfProposal has the ability to cache a specified
-// number of proposals. If you don't call this function, the default cache size
-// is 1, which can be slow.
-pdfProposal.SetCacheSize(desiredCacheSize);
-</p>
-
-<p>
-PdfProposal currently uses a fixed cache size. Adaptive caching methods are in the works
-for future versions.
-</p>
-
-END_HTML
-*/
-//_________________________________________________
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"

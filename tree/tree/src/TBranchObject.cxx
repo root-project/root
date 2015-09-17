@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBranchObject                                                        //
-//                                                                      //
-// A Branch for the case of an object                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBranchObject
+A Branch for the case of an object.
+*/
 
 #include "TBranchObject.h"
 
@@ -196,12 +192,13 @@ Int_t TBranchObject::Fill()
 ////////////////////////////////////////////////////////////////////////////////
 /// Read all branches of a BranchObject and return total number of bytes.
 ///
-///   If entry = 0 take current entry number + 1
-///   If entry < 0 reset entry number to 0
+/// - If entry = 0 take current entry number + 1
+/// - If entry < 0 reset entry number to 0
 ///
-///  The function returns the number of bytes read from the input buffer.
-///  If entry does not exist  the function returns 0.
-///  If an I/O error occurs,  the function returns -1.
+/// The function returns the number of bytes read from the input buffer.
+///
+/// - If entry does not exist  the function returns 0.
+/// - If an I/O error occurs,  the function returns -1.
 
 Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
 {
@@ -292,8 +289,8 @@ void TBranchObject::Print(Option_t* option) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset a branch.
 ///
-/// Existing buffers are deleted.
-/// Entries, max and min are reset.
+/// - Existing buffers are deleted.
+/// - Entries, max and min are reset.
 
 void TBranchObject::Reset(Option_t* option)
 {
@@ -499,23 +496,22 @@ void TBranchObject::SetAddress(void* add)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the AutoDelete bit.
 ///
-///  This function can be used to instruct Root in TBranchObject::ReadBasket
-///  to not delete the object referenced by a branchobject before reading a
-///  new entry. By default, the object is deleted.
-///  If autodel is kTRUE, this existing object will be deleted, a new object
-///    created by the default constructor, then object->Streamer called.
-///  If autodel is kFALSE, the existing object is not deleted. Root assumes
-///    that the user is taking care of deleting any internal object or array
-///    This can be done in Streamer itself.
-///  If this branch has sub-branches, the function sets autodel for these
-///  branches as well.
-///  We STRONGLY suggest to activate this option by default when you create
-///  the top level branch. This will make the read phase more efficient
-///  because it minimizes the numbers of new/delete operations.
-///  Once this option has been set and the Tree is written to a file, it is
-///  not necessary to specify the option again when reading, unless you
-///  want to set the opposite mode.
-///
+/// This function can be used to instruct Root in TBranchObject::ReadBasket
+/// to not delete the object referenced by a branchobject before reading a
+/// new entry. By default, the object is deleted.
+/// - If autodel is kTRUE, this existing object will be deleted, a new object
+///     created by the default constructor, then object->Streamer called.
+/// - If autodel is kFALSE, the existing object is not deleted. Root assumes
+///     that the user is taking care of deleting any internal object or array
+///     This can be done in Streamer itself.
+/// - If this branch has sub-branches, the function sets autodel for these
+/// branches as well.
+/// We STRONGLY suggest to activate this option by default when you create
+/// the top level branch. This will make the read phase more efficient
+/// because it minimizes the numbers of new/delete operations.
+/// Once this option has been set and the Tree is written to a file, it is
+/// not necessary to specify the option again when reading, unless you
+/// want to set the opposite mode.
 
 void TBranchObject::SetAutoDelete(Bool_t autodel)
 {

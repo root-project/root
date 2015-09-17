@@ -1392,7 +1392,7 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
       }
 
       GetFullyQualifiedTypeName(typenameStr, fieldType, astContext);
-      nameType[field_iter->getName().str()] = ROOT::TSchemaType(typenameStr.c_str(),dims.str().c_str());
+      nameType[field_iter->getName().str()] = ROOT::Internal::TSchemaType(typenameStr.c_str(),dims.str().c_str());
    }
 
    // And now the base classes
@@ -1401,7 +1401,7 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
        iter != end;
        ++iter){
       std::string basename( iter->getType()->getAsCXXRecordDecl()->getNameAsString() ); // Intentionally using only the unqualified name.
-      nameType[basename] = ROOT::TSchemaType(basename.c_str(),"");
+      nameType[basename] = ROOT::Internal::TSchemaType(basename.c_str(),"");
    }
 }
 
@@ -1837,7 +1837,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          if (filename[i]=='\\') filename[i]='/';
       }
    }
-   finalString << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << "\n" << "                  typeid(" << csymbol << "), DefineBehavior(ptr, ptr)," << "\n" << "                  ";
+   finalString << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl)
+      << "," << "\n" << "                  typeid(" << csymbol
+      << "), ::ROOT::Internal::DefineBehavior(ptr, ptr)," << "\n" << "                  ";
 
    if (ClassInfo__HasMethod(decl,"Dictionary",interp) && !IsTemplate(*decl)) {
       finalString << "&" << csymbol << "::Dictionary, ";
@@ -1880,7 +1882,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       finalString << "      instance.SetResetAfterMerge(&reset_" << mappedname.c_str() << ");" << "\n";
    }
    if (bset) {
-      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << "Pushback" << "<TStdBitsetHelper< " << classname.c_str() << " > >()));" << "\n";
+      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << "Pushback" << "<Internal::TStdBitsetHelper< " << classname.c_str() << " > >()));" << "\n";
 
       needCollectionProxy = true;
    } else if (stl != 0 &&
@@ -1930,17 +1932,17 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    /////////////////////////////////////////////////////////////////////////////
 
    if( (rulesIt1 != ROOT::gReadRules.end() && rulesIt1->second.size()>0) || (rulesIt2 != ROOT::gReadRawRules.end()  && rulesIt2->second.size()>0) ) {
-      finalString << "\n" << "      ROOT::TSchemaHelper* rule;" << "\n";
+      finalString << "\n" << "      ROOT::Internal::TSchemaHelper* rule;" << "\n";
    }
 
    if( rulesIt1 != ROOT::gReadRules.end() ) {
-      finalString << "\n" << "      // the io read rules" << "\n" << "      std::vector<ROOT::TSchemaHelper> readrules(" << rulesIt1->second.size() << ");" << "\n";
+      finalString << "\n" << "      // the io read rules" << "\n" << "      std::vector<ROOT::Internal::TSchemaHelper> readrules(" << rulesIt1->second.size() << ");" << "\n";
       ROOT::WriteSchemaList( rulesIt1->second, "readrules", finalString );
       finalString << "      instance.SetReadRules( readrules );" << "\n";
    }
 
    if( rulesIt2 != ROOT::gReadRawRules.end() ) {
-      finalString << "\n" << "      // the io read raw rules" << "\n" << "      std::vector<ROOT::TSchemaHelper> readrawrules(" << rulesIt2->second.size() << ");" << "\n";
+      finalString << "\n" << "      // the io read raw rules" << "\n" << "      std::vector<ROOT::Internal::TSchemaHelper> readrawrules(" << rulesIt2->second.size() << ");" << "\n";
       ROOT::WriteSchemaList( rulesIt2->second, "readrawrules", finalString );
       finalString << "      instance.SetReadRawRules( readrawrules );" << "\n";
    }
@@ -2315,7 +2317,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
          finalString << args;
          finalString << " : ";
       } else {
-         finalString << "::new((::ROOT::TOperatorNewHelper*)p) ";
+         finalString << "::new((::ROOT::Internal::TOperatorNewHelper*)p) ";
          finalString << classname.c_str();
          finalString << args;
          finalString << " : ";
@@ -2335,7 +2337,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
             finalString << classname.c_str();
             finalString << "[nElements] : ";
          } else {
-            finalString << "::new((::ROOT::TOperatorNewHelper*)p) ";
+            finalString << "::new((::ROOT::Internal::TOperatorNewHelper*)p) ";
             finalString << classname.c_str();
             finalString << "[nElements] : ";
          }
@@ -2401,7 +2403,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
    {
       int k = ROOT::TMetaUtils::IsSTLContainer(*iter);
       if (k!=0) {
-         RStl::Instance().GenerateTClassFor( iter->getType(), interp, normCtxt);
+         Internal::RStl::Instance().GenerateTClassFor( iter->getType(), interp, normCtxt);
       }
    }
 
@@ -2428,7 +2430,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
          //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
          //          fprintf(stderr," %s\n",R__TrueName(**field_iter) );
          clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(field_iter->getType()),0);
-         RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
+         Internal::RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
       }
    }
 }
@@ -2672,8 +2674,8 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
    std::string fullname;
    ROOT::TMetaUtils::GetQualifiedName(fullname,cl);
    if (TClassEdit::IsSTLCont(fullname.c_str()) ) {
-     RStl::Instance().GenerateTClassFor(cl.GetNormalizedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()), interp, normCtxt);
-     return;
+      Internal::RStl::Instance().GenerateTClassFor(cl.GetNormalizedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()), interp, normCtxt);
+      return;
    }
 
    if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"Streamer",interp)) {

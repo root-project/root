@@ -304,8 +304,8 @@ public:
    };
 
 protected:
-   typedef ROOT::TCollectionProxyInfo::Environ<char[64]> Env_t;
-   typedef ROOT::TCollectionProxyInfo::EnvironBase EnvironBase_t;
+   typedef ROOT::Detail::TCollectionProxyInfo::Environ<char[64]> Env_t;
+   typedef ROOT::Detail::TCollectionProxyInfo::EnvironBase EnvironBase_t;
    typedef std::vector<TStaging*>          Staged_t;  // Collection of pre-allocated staged array for associative containers.
    typedef std::vector<EnvironBase_t*>     Proxies_t;
    mutable TObjArray *fReadMemberWise;                                   //Array of bundle of TStreamerInfoActions to stream out (read)
@@ -377,7 +377,7 @@ private:
 public:
    // Initializing constructor
    TGenCollectionProxy(Info_t typ, size_t iter_size);
-   TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info, TClass *cl);
+   TGenCollectionProxy(const ROOT::Detail::TCollectionProxyInfo &info, TClass *cl);
 
    // Standard destructor.
    virtual ~TGenCollectionProxy();

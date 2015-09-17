@@ -15,9 +15,9 @@
 #include "TGLabel.h"
 #include "TEveGValuators.h"
 
-//______________________________________________________________________________
-// GUI editor for TEveArrow.
-//
+/** \class TEveArrowEditor
+GUI editor for TEveArrow.
+*/
 
 ClassImp(TEveArrowEditor);
 

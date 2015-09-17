@@ -18,20 +18,18 @@
 #include "TVirtualX.h"
 #include "TPoint.h"
 
-
 ClassImp(TWbox)
 
-
-//______________________________________________________________________________
-//
-// a TWbox is a TBox with a bordersize and a bordermode.
-//
-//Begin_Html
-/*
-<img src="gif/wbox.gif">
+/** \class TWbox
+A TWbox is a TBox with a bordersize and a bordermode.
+Example:
+Begin_Macro(source)
+{
+   TWbox *twb = new TWbox(.1,.1,.9,.9,kRed+2,5,1);
+   twb->Draw();
+}
+End_Macro
 */
-//End_Html
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// wbox default constructor.
@@ -42,15 +40,14 @@ TWbox::TWbox(): TBox()
    fBorderMode  = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// wbox normal constructor.
 ///
 /// a WBOX is a box with a bordersize and a bordermode
 /// the bordersize is in pixels
-/// bordermode = -1 box looks as it is behind the screen
-/// bordermode = 0  no special effects
-/// bordermode = 1  box looks as it is in front of the screen
+///  - bordermode = -1 box looks as it is behind the screen
+///  - bordermode = 0  no special effects
+///  - bordermode = 1  box looks as it is in front of the screen
 
 TWbox::TWbox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
              Color_t color ,Short_t bordersize ,Short_t bordermode)
@@ -62,14 +59,12 @@ TWbox::TWbox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    SetFillStyle(1001);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// wbox default destructor.
 
 TWbox::~TWbox()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// wbox copy constructor.
@@ -81,7 +76,6 @@ TWbox::TWbox(const TWbox &wbox) : TBox(wbox)
    ((TWbox&)wbox).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this wbox to wbox.
 
@@ -92,7 +86,6 @@ void TWbox::Copy(TObject &obj) const
    ((TWbox&)obj).fBorderMode  = fBorderMode;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this wbox with its current attributes.
 
@@ -100,7 +93,6 @@ void TWbox::Draw(Option_t *option)
 {
    AppendPad(option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this wbox with new coordinates.
@@ -113,7 +105,6 @@ void TWbox::DrawWbox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    newwbox->AppendPad();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
@@ -124,7 +115,6 @@ void TWbox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    TBox::ExecuteEvent(event, px, py);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this wbox with its current attributes.
 
@@ -132,7 +122,6 @@ void TWbox::Paint(Option_t *)
 {
    PaintWbox(fX1, fY1, fX2, fY2, GetFillColor(), fBorderSize, fBorderMode);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this wbox with new coordinates.
@@ -147,7 +136,6 @@ void TWbox::PaintWbox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    if (!IsTransparent())
       PaintFrame(x1, y1, x2, y2, color, bordersize, bordermode, kTRUE);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint a 3D frame around a box.
@@ -217,7 +205,6 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    gPad->PaintBorderPS(xl, yl, xt, yt, bordermode, bordersize,
                          GetDarkColor(), GetLightColor());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out

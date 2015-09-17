@@ -87,7 +87,7 @@ public:
    virtual ~TAxis();
    TAxis& operator=(const TAxis&);
 
-   Bool_t     CanExtend() const { return (fBits2 & kCanExtend);  } 
+   Bool_t     CanExtend() const { return (fBits2 & kCanExtend);  }
    void       SetCanExtend(Bool_t canExtend) { fBits2 = canExtend ? (fBits2 | kCanExtend) : (fBits2 & ~kCanExtend); }
    void       SetNoAlphanumeric(Bool_t noalpha = kTRUE) {
       fBits2 = noalpha ? (fBits2 | kNotAlpha) : (fBits2 & ~kNotAlpha);
@@ -96,8 +96,8 @@ public:
          SetAlphanumeric(kFALSE);
       }
    }
-   void       CenterLabels(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterLabels
-   void       CenterTitle(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterTitle
+   void               CenterLabels(Bool_t center=kTRUE);
+   void               CenterTitle(Bool_t center=kTRUE);
    const char        *ChooseTimeFormat(Double_t axislength=0);
    virtual void       Copy(TObject &axis) const;
    virtual void       Delete(Option_t * /*option*/ ="") { }
@@ -167,55 +167,61 @@ public:
    ClassDef(TAxis,9)  //Axis class
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Center axis labels. If center = kTRUE axis labels will be centered
+/// (hori axes only) on the bin center default is to center on the primary tick marks
+/// This option does not make sense if there are more bins than tick marks
+
 inline void TAxis::CenterLabels(Bool_t center)
 {
-   //   if center = kTRUE axis labels will be centered (hori axes only) on the bin center
-   //   default is to center on the primary tick marks
-   //   This option does not make sense if there are more bins than tick marks
    SetBit(kCenterLabels, center);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Center axis title. If center = kTRUE axis title will be centered
+/// default is right adjusted
+
 inline void TAxis::CenterTitle(Bool_t center)
 {
-   //   if center = kTRUE axis title will be centered
-   //   default is right adjusted
    SetBit(kCenterTitle, center);
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate title by 180 degrees. By default the title is drawn right adjusted.
+/// If rotate is TRUE, the title is left adjusted at the end of the axis and rotated by 180 degrees
+
 inline void TAxis::RotateTitle(Bool_t rotate)
 {
-   // rotate title by 180 degrees
-   // by default the title is drawn right adjusted.
-   // if rotate is TRUE, the title is left adjusted at the end of the axis and rotated by 180 degrees
    SetBit(kRotateTitle, rotate);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the decimals flag
+/// By default, blank characters are stripped, and then the label is correctly aligned.
+/// If the dot is the last character of the string, it is also stripped, unless this option is specified.
+
 inline void TAxis::SetDecimals(Bool_t dot) {
-   // sets the decimals flag
-   // by default, blank characters are stripped, and then the label is correctly aligned.
-   // If the dot is the last character of the string, it is also stripped, unless this option is specified.
    SetBit(kDecimals, dot);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the kMoreLogLabels bit flag
+/// When this option is selected more labels are drawn when in log scale and there is a small number
+/// of decades  (<3).
+/// The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
+
 inline void TAxis::SetMoreLogLabels(Bool_t more)
 {
-   // Set the kMoreLogLabels bit flag
-   // When this option is selected more labels are drawn when in log scale and there is a small number of decades  (<3).
-   // The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
-   SetBit(kMoreLogLabels, more);
+    SetBit(kMoreLogLabels, more);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the NoExponent flag
+/// By default, an exponent of the form 10^N is used when the label value are either all very small or very large.
+/// The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
+
 inline void TAxis::SetNoExponent(Bool_t noExponent)
 {
-   // Set the NoExponent flag
-   // By default, an exponent of the form 10^N is used when the label value are either all very small or very large.
-   // The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
    SetBit(kNoExponent, noExponent);
 }
 

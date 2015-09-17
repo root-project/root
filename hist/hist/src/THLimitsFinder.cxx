@@ -29,6 +29,11 @@ THLimitsFinder *THLimitsFinder::fgLimitsFinder = 0;
 
 ClassImp(THLimitsFinder)
 
+/** \class THLimitsFinder
+    \ingroup Hist
+Class to find nice axis limits
+*/ 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 THLimitsFinder::THLimitsFinder()

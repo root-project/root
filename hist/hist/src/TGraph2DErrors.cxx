@@ -22,17 +22,16 @@
 
 ClassImp(TGraph2DErrors)
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class TGraph2DErrors
+    \ingroup Hist 
+Graph 2D class with errors.
 
-/* Begin_Html
-<center><h2>Graph 2D class with errors</h2></center>
 A TGraph2DErrors is a TGraph2D with errors. It behaves like a TGraph2D and has
 the same drawing options.
-<p>
-The <tt>"ERR"</tt> drawing option allows to display the error bars. The
+
+The **"ERR"** drawing option allows to display the error bars. The
 following example shows how to use it:
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c = new TCanvas("c","Graph2DErrors example",0,0,600,600);

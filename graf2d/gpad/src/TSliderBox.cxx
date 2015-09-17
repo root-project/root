@@ -18,15 +18,10 @@
 
 ClassImp(TSliderBox)
 
-//______________________________________________________________________________
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSliderBox                                                           //
-//                                                                      //
-//  The moving box in a TSlider                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
+/** \class TSliderBox
+The moving box in a TSlider
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SliderBox default constructor.
@@ -35,7 +30,6 @@ TSliderBox::TSliderBox(): TWbox()
 {
    fSlider = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SliderBox normal constructor.
@@ -46,14 +40,12 @@ TSliderBox::TSliderBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Color
    fSlider = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// SliderBox default destructor.
 
 TSliderBox::~TSliderBox()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interaction with a slider.
@@ -290,7 +282,6 @@ again:
       obj->ExecuteEvent(event,0,0);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out

@@ -17,10 +17,9 @@
 
 #include "TMath.h"
 
-//______________________________________________________________________________
-//
-// A class encapsulating GL rendering of TEveFrameBox via a static
-// meber function.
+/** \class TEveFrameBoxGL
+A class encapsulating GL rendering of TEveFrameBox via a static member function.
+*/
 
 ClassImp(TEveFrameBoxGL);
 

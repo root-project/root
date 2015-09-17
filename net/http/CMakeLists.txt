@@ -3,10 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(core)
-ROOT_USE_PACKAGE(tree/tree)
-ROOT_USE_PACKAGE(io/xml)
-
 ROOT_GLOB_HEADERS(headers inc/*.h)
 ROOT_GLOB_SOURCES(sources src/*.cxx civetweb/civetweb.c)
 

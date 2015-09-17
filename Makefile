@@ -90,7 +90,7 @@ MODULES       = build interpreter/llvm interpreter/cling core/metautils \
                 math/foam math/splot math/smatrix io/sql \
                 geom/geombuilder hist/spectrum hist/spectrumpainter \
                 gui/fitpanel proof/proof proof/proofplayer \
-                gui/sessionviewer gui/guihtml gui/recorder
+                gui/sessionviewer gui/guihtml gui/recorder core/multiproc
 
 ifeq ($(ARCH),win32)
 MODULES      += core/winnt graf2d/win32gdk

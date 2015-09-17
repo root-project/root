@@ -239,7 +239,7 @@ TObject *THashTable::FindObject(const TObject *obj) const
 /// One can iterate this list "manually" to find, e.g. objects with
 /// the same name.
 
-TList *THashTable::GetListForObject(const char *name) const
+const TList *THashTable::GetListForObject(const char *name) const
 {
    return fCont[GetHashValue(name)];
 }
@@ -249,7 +249,7 @@ TList *THashTable::GetListForObject(const char *name) const
 /// One can iterate this list "manually" to find, e.g. identical
 /// objects.
 
-TList *THashTable::GetListForObject(const TObject *obj) const
+const TList *THashTable::GetListForObject(const TObject *obj) const
 {
    if (IsArgNull("GetListForObject", obj)) return 0;
    return fCont[GetHashValue(obj)];

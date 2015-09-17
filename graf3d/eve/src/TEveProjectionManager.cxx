@@ -23,19 +23,13 @@
 
 #include <list>
 
-//==============================================================================
-//==============================================================================
-// TEveProjectionManager
-//==============================================================================
+/** \class TEveProjectionManager
+Manager class for steering of projections and managing projected objects.
 
-//______________________________________________________________________________
-//
-// Manager class for steering of projections and managing projected
-// objects.
-//
-// Recursively projects TEveElement's and draws axis in the projected
-// scene.  It enables to interactivly set TEveProjection parameters
-// and updates projected scene accordingly.
+Recursively projects TEveElement's and draws axis in the projected
+scene. It enables to interactively set TEveProjection parameters
+and updates projected scene accordingly.
+*/
 
 ClassImp(TEveProjectionManager);
 
@@ -89,7 +83,7 @@ void TEveProjectionManager::RemoveDependent(TEveElement* el)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Updates name to have consitent information with prjection.
+/// Updates name to have consistent information with projection.
 
 void TEveProjectionManager::UpdateName()
 {
@@ -311,7 +305,7 @@ TEveElement* TEveProjectionManager::SubImportElements(TEveElement* el,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Recursively import childer elements of el and apply projection
+/// Recursively import children elements of el and apply projection
 /// to the newly imported objects.
 ///
 /// The proj_parent argument should be a projected replica of

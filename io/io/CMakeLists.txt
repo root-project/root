@@ -4,15 +4,13 @@
 
 set(libname RIO)
 
-ROOT_USE_PACKAGE(core)
-ROOT_USE_PACKAGE(core/metautils)
-ROOT_USE_PACKAGE(core/thread)
-ROOT_USE_PACKAGE(math/mathcore)
-
-
 ROOT_GENERATE_DICTIONARY(G__IO *.h STAGE1 MODULE ${libname} LINKDEF LinkDef.h)
 
-ROOT_OBJECT_LIBRARY(RIOObjs G__IO.cxx  *.cxx)
+if(root7)
+    ROOT_GLOB_SOURCES(root7src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/src/*.cxx)
+endif()
+
+ROOT_OBJECT_LIBRARY(RIOObjs G__IO.cxx  ${root7src} *.cxx)
 ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:RIOObjs>
                                LIBRARIES ${CMAKE_DL_LIBS}
                                DEPENDENCIES Core Thread)

@@ -67,9 +67,10 @@ friend class TGWin32;
 friend class TMathTextRenderer;
 
 public:
-////////////////////////////////////////////////////////////////////////////////
-/// @class TTGlyph
-/// @brief TTF helper class containing glyphs description.
+
+/** \class TTGlyph
+TTF helper class containing glyphs description.
+*/
 
    class TTGlyph {
    public:

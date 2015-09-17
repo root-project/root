@@ -196,23 +196,23 @@ namespace {
    PyObject* buf_typecode( PyObject* pyobject, void* )
    {
       if ( PyObject_TypeCheck( pyobject, &PyBoolBuffer_Type ) )
-         return PyBytes_FromString( (char*)"b" );
+         return PyROOT_PyUnicode_FromString( (char*)"b" );
       else if ( PyObject_TypeCheck( pyobject, &PyShortBuffer_Type ) )
-         return PyBytes_FromString( (char*)"h" );
+         return PyROOT_PyUnicode_FromString( (char*)"h" );
       else if ( PyObject_TypeCheck( pyobject, &PyUShortBuffer_Type ) )
-         return PyBytes_FromString( (char*)"H" );
+         return PyROOT_PyUnicode_FromString( (char*)"H" );
       else if ( PyObject_TypeCheck( pyobject, &PyIntBuffer_Type ) )
-         return PyBytes_FromString( (char*)"i" );
+         return PyROOT_PyUnicode_FromString( (char*)"i" );
       else if ( PyObject_TypeCheck( pyobject, &PyUIntBuffer_Type ) )
-         return PyBytes_FromString( (char*)"I" );
+         return PyROOT_PyUnicode_FromString( (char*)"I" );
       else if ( PyObject_TypeCheck( pyobject, &PyLongBuffer_Type ) )
-         return PyBytes_FromString( (char*)"l" );
+         return PyROOT_PyUnicode_FromString( (char*)"l" );
       else if ( PyObject_TypeCheck( pyobject, &PyULongBuffer_Type ) )
-         return PyBytes_FromString( (char*)"L" );
+         return PyROOT_PyUnicode_FromString( (char*)"L" );
       else if ( PyObject_TypeCheck( pyobject, &PyFloatBuffer_Type ) )
-         return PyBytes_FromString( (char*)"f" );
+         return PyROOT_PyUnicode_FromString( (char*)"f" );
       else if ( PyObject_TypeCheck( pyobject, &PyDoubleBuffer_Type ) )
-         return PyBytes_FromString( (char*)"d" );
+         return PyROOT_PyUnicode_FromString( (char*)"d" );
 
       PyErr_SetString( PyExc_TypeError, "received unknown buffer object" );
       return 0;

@@ -27,6 +27,8 @@
  fitting and data modeling.
  Included are also adapter classes, such as  functors, to wrap generic callable C++ objects
  in the desired interface.
+
+@ingroup MathCore
 */
 
 //typedefs and tags definitions
@@ -39,7 +41,8 @@ namespace ROOT {
 namespace Math {
 
 /**
-   @defgroup GenFunc Interfaces for generic function evaluation
+   @defgroup GenFunc Generic Function Evaluation Interfaces
+   Interface classes for evaluation of function object classes in one or multi-dimensions. 
    @ingroup CppFunctions
 */
 

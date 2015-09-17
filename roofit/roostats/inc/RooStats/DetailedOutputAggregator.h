@@ -15,27 +15,20 @@
 #include "TString.h"
 #endif
 
-//_________________________________________________
-/*
-   BEGIN_HTML
-   <p>
-   This class is designed to aid in the construction of RooDataSets and RooArgSets,
-   particularly those naturally arising in fitting operations.
 
-   Typically, the usage of this class is as follows:
-   <ol>
-   <li> create DetailedOutputAggregator instance </li>
-   <li> use AppendArgSet to add value sets to be stored as one row of the dataset </li>
-   <li> call CommitSet when an entire row's worth of values has been added </li>
-   <li> repeat steps 2 and 3 until all rows have been added </li>
-   <li> call GetAsDataSet to extract result RooDataSet </li>
-   </ol>
+/**
 
-   </p>
-   END_HTML
-   */
-//
+This class is designed to aid in the construction of RooDataSets and RooArgSets, particularly those naturally arising in fitting operations. Typically, the usage of this class is as follows:
 
+1.  create DetailedOutputAggregator instance
+2.  use AppendArgSet to add value sets to be stored as one row of the dataset
+3.  call CommitSet when an entire row's worth of values has been added
+4.  repeat steps 2 and 3 until all rows have been added
+5.  call GetAsDataSet to extract result RooDataSet
+
+\ingroup Roostats
+
+*/
 
 class RooAbsCollection; 
 class RooFitResult;

@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBuffer                                                              //
-//                                                                      //
-// Buffer base class used for serializing objects.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBuffer
+Buffer base class used for serializing objects.
+*/
 
 #include "TBuffer.h"
 #include "TClass.h"
@@ -84,6 +80,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 /// TBuffer::kInitialSize (1024) bytes. An external buffer can be passed
 /// to TBuffer via the buf argument. By default this buffer will be adopted
 /// unless adopt is false.
+///
 /// If the new buffer is _not_ adopted and no memory allocation routine
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
@@ -132,11 +129,11 @@ TBuffer::~TBuffer()
    fParent = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Automatically calculate a new size and expand the buffer to fit at least size_needed.
 /// The goals is to minimize the number of memory allocation and the memory allocation
 /// which avoiding too much memory wastage.
+///
 /// If the size_needed is larger than the current size, the policy
 /// is to expand to double the current size or the size_needed which ever is largest.
 
@@ -158,6 +155,7 @@ void TBuffer::AutoExpand(Int_t size_needed)
 /// If the TBuffer owned the previous buffer, it will be deleted prior
 /// to accepting the new buffer. By default the new buffer will be
 /// adopted unless adopt is false.
+///
 /// If the new buffer is _not_ adopted and no memory allocation routine
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
@@ -201,7 +199,7 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
 void TBuffer::Expand(Int_t newsize, Bool_t copy)
 {
    Int_t l  = Length();
-   if ( l > newsize ) {
+   if ( (l > newsize) && copy ) {
       newsize = l;
    }
    if ( (fMode&kWrite)!=0 ) {
@@ -250,7 +248,7 @@ ReAllocCharFun_t TBuffer::GetReAllocFunc() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set which memory reallocation method to use.  If reallocafunc is null,
-/// reset it to the defaul value (TStorage::ReAlloc)
+/// reset it to the default value (TStorage::ReAlloc)
 
 void  TBuffer::SetReAllocFunc(ReAllocCharFun_t reallocfunc )
 {
@@ -308,7 +306,7 @@ TClass *TBuffer::GetClass(const char *className)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the current PRocessID.
+/// Return the current Process-ID.
 
 TProcessID *TBuffer::ReadProcessID(UShort_t pidf)
 {

@@ -18,6 +18,13 @@
 
 #include <Math/IFunction.h>
 
+/**
+    @defgroup Deriv Numerical Differentiation
+    Classes for numerical differentiation
+    @ingroup NumAlgo
+*/
+
+
 namespace ROOT {
 namespace Math {
 

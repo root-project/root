@@ -2,13 +2,6 @@
 # CMakeLists.txt file for building ROOT graf3d/eve package
 ############################################################################
 
-ROOT_USE_PACKAGE(gui/ged)
-ROOT_USE_PACKAGE(graf3d/gl)
-ROOT_USE_PACKAGE(geom/geom)
-ROOT_USE_PACKAGE(math/physics)
-ROOT_USE_PACKAGE(montecarlo/eg)
-ROOT_USE_PACKAGE(graf3d/glew)
-
 include_directories(${OPENGL_INCLUDE_DIR})
 
 set(headers1 TEveBrowser.h TEveChunkManager.h TEveCompound.h

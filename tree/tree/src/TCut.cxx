@@ -9,30 +9,31 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCut                                                                 //
-//                                                                      //
-//  A specialized string object used for TTree selections.              //
-//  A TCut object has a name and a title. It does not add any data      //
-//  members compared to a TNamed. It only add a set of operators to     //
-//  facilitate logical string concatenation. For example, assume        //
-//     cut1 = "x<1"  and cut2 = "y>2"                                   //
-//  then                                                                //
-//     cut1 && cut2 will be the string "(x<1)&&(y>2)"                   //
-//                                                                      //
-//  Operators =, +=, +, *, !, &&, || overloaded.                        //
-//                                                                      //
-//   Examples of use:                                                   //
-//     Root > TCut c1 = "x<1"                                           //
-//     Root > TCut c2 = "y<0"                                           //
-//     Root > TCut c3 = c1&&c2                                          //
-//     Root > ntuple.Draw("x", c1)                                      //
-//     Root > ntuple.Draw("x", c1||"x>0")                               //
-//     Root > ntuple.Draw("x", c1&&c2)                                  //
-//     Root > ntuple.Draw("x", "(x+y)"*(c1&&c2))                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TCut
+A specialized string object used for TTree selections.
+A TCut object has a name and a title. It does not add any data
+members compared to a TNamed. It only add a set of operators to
+facilitate logical string concatenation. For example, assume
+~~~ {.cpp}
+    cut1 = "x<1"  and cut2 = "y>2"
+~~~
+then
+~~~ {.cpp}
+    cut1 && cut2 will be the string "(x<1)&&(y>2)"
+~~~
+Operators =, +=, +, *, !, &&, || overloaded.
+
+Examples of use:
+~~~ {.cpp}
+    Root > TCut c1 = "x<1"
+    Root > TCut c2 = "y<0"
+    Root > TCut c3 = c1&&c2
+    Root > ntuple.Draw("x", c1)
+    Root > ntuple.Draw("x", c1||"x>0")
+    Root > ntuple.Draw("x", c1&&c2)
+    Root > ntuple.Draw("x", "(x+y)"*(c1&&c2))
+~~~
+*/
 
 #include "TCut.h"
 

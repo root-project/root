@@ -17,9 +17,9 @@
 #include "TGLRnrCtx.h"
 #include "TGLUtil.h"
 
-//______________________________________________________________________________
-// Description of TEveRGBAPaletteOverlay
-//
+/** \class TEveRGBAPaletteOverlay
+Description of TEveRGBAPaletteOverlay
+*/
 
 ClassImp(TEveRGBAPaletteOverlay);
 
@@ -42,10 +42,11 @@ TEveRGBAPaletteOverlay::TEveRGBAPaletteOverlay(TEveRGBAPalette* p, Float_t posx,
    fAxisPainter.SetLabelAlign(TGLFont::kCenterH, TGLFont::kBottom);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Render the overlay.
+
 void TEveRGBAPaletteOverlay::Render(TGLRnrCtx& rnrCtx)
 {
-   // Render the overlay.
-
    const Double_t ca_min = fPalette->GetCAMinAsDouble();
    const Double_t ca_max = fPalette->GetCAMaxAsDouble();
 
@@ -71,7 +72,7 @@ void TEveRGBAPaletteOverlay::Render(TGLRnrCtx& rnrCtx)
    glPushMatrix();
    glLoadIdentity();
 
-   // postion pallette
+   // position palette
    glTranslatef(fPosX, fPosY, 0);
 
    // colored quads

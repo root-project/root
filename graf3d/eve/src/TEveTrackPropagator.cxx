@@ -18,39 +18,32 @@
 
 #include <cassert>
 
-//==============================================================================
-// TEveMagFiled classes -- documentation only
-//==============================================================================
+/** \class TEveMagField
+Abstract base-class for interfacing to magnetic field needed by the
+TEveTrackPropagator.
+See sub-classes for two simple implementations.
 
-//______________________________________________________________________________
-//
-// Abstract base-class for interfacing to magnetic field needed by the
-// TEveTrackPropagator.
-// See sub-classes for two simple implementations.
-//
-// NOTE: Magnetic field direction convention is inverted.
+NOTE: Magnetic field direction convention is inverted.
+*/
 
 ClassImp(TEveMagField);
 
-//______________________________________________________________________________
-//
-// Implements constant magnetic field, given by a vector fB.
-//
-// NOTE: Magnetic field direction convention is inverted.
+/** \class TEveMagFieldConst
+Implements constant magnetic field, given by a vector fB.
+
+NOTE: Magnetic field direction convention is inverted.
+*/
 
 ClassImp(TEveMagFieldConst);
 
-//______________________________________________________________________________
-//
-// Implements constant magnetic filed that switches on given axial radius fR2
-// from vector fBIn to fBOut.
-//
-// NOTE: Magnetic field direction convention is inverted.
+/** \class TEveMagFieldDuo
+Implements constant magnetic filed that switches on given axial radius fR2
+from vector fBIn to fBOut.
+
+NOTE: Magnetic field direction convention is inverted.
+*/
 
 ClassImp(TEveMagFieldDuo);
-
-
-//==============================================================================
 
 namespace
 {
@@ -189,30 +182,24 @@ void TEveTrackPropagator::Helix_t::Step(const TEveVector4D& v, const TEveVectorD
    }
 }
 
+/** \class TEveTrackPropagator
+Holding structure for a number of track rendering parameters.
+Calculates path taking into account the parameters.
 
-//==============================================================================
-// TEveTrackPropagator
-//==============================================================================
+NOTE: Magnetic field direction convention is inverted.
 
-//______________________________________________________________________________
-//
-// Holding structure for a number of track rendering parameters.
-// Calculates path taking into account the parameters.
-//
-// NOTE: Magnetic field direction convention is inverted.
-//
-// This is decoupled from TEveTrack/TEveTrackList to allow sharing of the
-// Propagator among several instances. Back references are kept so the tracks
-// can be recreated when the parameters change.
-//
-// TEveTrackList has Get/Set methods for RnrStlye. TEveTrackEditor and
-// TEveTrackListEditor provide editor access.
-//
-// Enum EProjTrackBreaking_e and member fProjTrackBreaking specify whether 2D
-// projected tracks get broken into several segments when the projected space
-// consists of separate domains (like Rho-Z). The track-breaking is enabled by
-// default.
-//
+This is decoupled from TEveTrack/TEveTrackList to allow sharing of the
+Propagator among several instances. Back references are kept so the tracks
+can be recreated when the parameters change.
+
+TEveTrackList has Get/Set methods for RnrStlye. TEveTrackEditor and
+TEveTrackListEditor provide editor access.
+
+Enum EProjTrackBreaking_e and member fProjTrackBreaking specify whether 2D
+projected tracks get broken into several segments when the projected space
+consists of separate domains (like Rho-Z). The track-breaking is enabled by
+default.
+*/
 
 ClassImp(TEveTrackPropagator);
 
@@ -224,6 +211,7 @@ Double_t             TEveTrackPropagator::fgEditorMaxR  = 2000;
 Double_t             TEveTrackPropagator::fgEditorMaxZ  = 4000;
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
 
 TEveTrackPropagator::TEveTrackPropagator(const char* n, const char* t,
                                          TEveMagField *field, Bool_t own_field) :
@@ -250,8 +238,6 @@ TEveTrackPropagator::TEveTrackPropagator(const char* n, const char* t,
 
    fV()
 {
-   // Default constructor.
-
    fPMAtt.SetMarkerColor(kYellow);
    fPMAtt.SetMarkerStyle(2);
    fPMAtt.SetMarkerSize(2);
@@ -318,8 +304,6 @@ void TEveTrackPropagator::ElementChanged(Bool_t update_scenes, Bool_t redraw)
    }
    TEveElementList::ElementChanged(update_scenes, redraw);
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize internal data-members for given particle parameters.
@@ -395,7 +379,8 @@ Bool_t TEveTrackPropagator::GoToVertex(TEveVectorD& v, TEveVectorD& p)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Propagate particle with momentum p to line with start point s and vector r to the second point.
+/// Propagate particle with momentum p to line with start point s and vector r
+/// to the second point.
 
 Bool_t TEveTrackPropagator::GoToLineSegment(const TEveVectorD& s, const TEveVectorD& r, TEveVectorD& p)
 {
@@ -681,8 +666,9 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVectorD& v, TEveVectorD& p)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Propagate charged particle with momentum p to line segment with point s and vector r to the second point.
-/// It is expected that Update() with full-update was called before. Returns kFALSE if hits bounds.
+/// Propagate charged particle with momentum p to line segment with point s and
+/// vector r to the second point. It is expected that Update() with full-update
+/// was called before. Returns kFALSE if hits bounds.
 
 Bool_t TEveTrackPropagator::LoopToLineSegment(const TEveVectorD& s, const TEveVectorD& r, TEveVectorD& p)
 {
@@ -819,7 +805,7 @@ Bool_t TEveTrackPropagator::LineToVertex(TEveVectorD& v)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Propagatate neutral particle with momentum p to bounds.
+/// Propagate neutral particle with momentum p to bounds.
 
 void TEveTrackPropagator::LineToBounds(TEveVectorD& p)
 {
@@ -928,12 +914,12 @@ Bool_t TEveTrackPropagator::LineIntersectPlane(const TEveVectorD& p,
 /// Current track position is used as starting point.
 ///
 /// Args:
-///  p        - track momentum to use for extrapolation
-///  point    - a point on a plane
-///  normal   - normal of the plane
-///  itsect   - output, point of intersection
+///  - p        - track momentum to use for extrapolation
+///  - point    - a point on a plane
+///  - normal   - normal of the plane
+///  - itsect   - output, point of intersection
 /// Returns:
-///  kFALSE if intersection can not be found, kTRUE otherwise.
+///  - kFALSE if intersection can not be found, kTRUE otherwise.
 
 Bool_t TEveTrackPropagator::IntersectPlane(const TEveVectorD& p,
                                            const TEveVectorD& point,
@@ -959,7 +945,7 @@ void TEveTrackPropagator::ClosestPointFromVertexToLineSegment(const TEveVectorD&
    TEveVectorD dir = v - s;
    TEveVectorD b1  = r * rMagInv;
 
-   // paralell distance
+   // parallel distance
    Double_t dot     = dir.Dot(b1);
    TEveVectorD dirI = dot * b1;
 
@@ -1009,8 +995,6 @@ void TEveTrackPropagator::FillPointSet(TEvePointSet* ps) const
       ps->SetNextPoint(v.fX, v.fY, v.fZ);
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Rebuild all tracks using this render-style.

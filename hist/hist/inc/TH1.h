@@ -438,6 +438,10 @@ protected:
    virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { return fSumw2.fN ? fSumw2.fArray[bin] : RetrieveBinContent(bin); }
 };
 
+namespace cling {
+  std::string printValue(TH1 *val);
+}
+
 //________________________________________________________________________
 
 class TH1C : public TH1, public TArrayC {

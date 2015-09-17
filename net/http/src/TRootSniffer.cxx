@@ -26,6 +26,7 @@
 #include "TFunction.h"
 #include "TMethodArg.h"
 #include "TMethodCall.h"
+#include "TRealData.h"
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TBaseClass.h"
@@ -38,6 +39,7 @@
 
 #include <stdlib.h>
 #include <vector>
+#include <string.h>
 
 const char *item_prop_kind = "_kind";
 const char *item_prop_more = "_more";
@@ -228,8 +230,21 @@ Bool_t TRootSnifferScanRec::IsReadyForResult() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set results of scanning
+/// when member should be specified, use SetFoundResult instead
 
 Bool_t TRootSnifferScanRec::SetResult(void *obj, TClass *cl, TDataMember *member)
+{
+   if (member==0) return SetFoundResult(obj, cl);
+
+   fStore->Error("SetResult", "When member specified, pointer on object (not member) should be provided; use SetFoundResult");
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// set results of scanning
+/// when member specified, obj is pointer on object to which member belongs
+
+Bool_t TRootSnifferScanRec::SetFoundResult(void *obj, TClass *cl, TDataMember *member)
 {
    if (Done()) return kTRUE;
 
@@ -239,6 +254,7 @@ Bool_t TRootSnifferScanRec::SetResult(void *obj, TClass *cl, TDataMember *member
 
    return Done();
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns current depth of scanned hierarchy
@@ -370,7 +386,7 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
 
    if (topelement && sniffer->GetAutoLoad())
       SetField(item_prop_autoload, sniffer->GetAutoLoad());
-   
+
    return kTRUE;
 }
 
@@ -578,36 +594,24 @@ Int_t TRootSniffer::CheckRestriction(const char* full_item_name)
 /// scan object data members
 /// some members like enum or static members will be excluded
 
-void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
-                                      char *ptr, unsigned long int cloffset)
+void TRootSniffer::ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char *ptr)
 {
    if ((cl == 0) || (ptr == 0) || rec.Done()) return;
 
    // ensure that real class data (including parents) exists
    if (!(cl->Property() & kIsAbstract)) cl->BuildRealData();
 
-   // first of all expand base classes
-   TIter cliter(cl->GetListOfBases());
+   // scan only real data
    TObject *obj = 0;
-   while ((obj = cliter()) != 0) {
-      TBaseClass *baseclass = dynamic_cast<TBaseClass *>(obj);
-      if (baseclass == 0) continue;
-      TClass *bclass = baseclass->GetClassPointer();
-      if (bclass == 0) continue;
-
-      // all parent classes scanned within same hierarchy level
-      // this is how normal object streaming works
-      ScanObjectMemebers(rec, bclass, ptr, cloffset + baseclass->GetDelta());
-      if (rec.Done()) break;
-   }
-
-   // than expand data members
-   TIter iter(cl->GetListOfDataMembers());
+   TIter iter(cl->GetListOfRealData());
    while ((obj = iter()) != 0) {
-      TDataMember *member = dynamic_cast<TDataMember *>(obj);
+      TRealData *rdata = dynamic_cast<TRealData *>(obj);
+      if ((rdata == 0) || strchr(rdata->GetName(),'.')) continue;
+
+      TDataMember *member = rdata->GetDataMember();
       // exclude enum or static variables
       if ((member == 0) || (member->Property() & (kIsStatic | kIsEnum | kIsUnion))) continue;
-      char *member_ptr = ptr + cloffset + member->GetOffset();
+      char *member_ptr = ptr + rdata->GetThisOffset();
 
       if (member->IsaPointer()) member_ptr = *((char **) member_ptr);
 
@@ -619,14 +623,12 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
                        gROOT->GetClass(member->GetTypeName());
 
          Int_t coll_offset = mcl ? mcl->GetBaseClassOffset(TCollection::Class()) : -1;
-
-         Bool_t iscollection = (coll_offset >= 0);
-         if (iscollection) {
+         if (coll_offset >= 0) {
             chld.SetField(item_prop_more, "true", kFALSE);
             chld.fHasMore = kTRUE;
          }
 
-         if (chld.SetResult(member_ptr, mcl, member)) break;
+         if (chld.SetFoundResult(ptr, cl, member)) break;
 
          const char *title = member->GetTitle();
          if ((title != 0) && (strlen(title) != 0))
@@ -644,18 +646,26 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
             }
             dim.Append("]");
             chld.SetField(item_prop_arraydim, dim, kFALSE);
+         } else
+         if (member->GetArrayIndex()!=0) {
+            TRealData *idata = cl->GetRealData(member->GetArrayIndex());
+            TDataMember *imember = (idata!=0) ? idata->GetDataMember() : 0;
+            if ((imember!=0) && (strcmp(imember->GetTrueTypeName(),"int")==0)) {
+               Int_t arraylen = *((int *) (ptr + idata->GetThisOffset()));
+               chld.SetField(item_prop_arraydim, TString::Format("[%d]", arraylen), kFALSE);
+            }
          }
 
          chld.SetRootClass(mcl);
 
          if (chld.CanExpandItem()) {
-            if (iscollection) {
+            if (coll_offset >= 0) {
                // chld.SetField("#members", "true", kFALSE);
                ScanCollection(chld, (TCollection *)(member_ptr + coll_offset));
             }
          }
 
-         if (chld.SetResult(member_ptr, mcl, member)) break;
+         if (chld.SetFoundResult(ptr, cl, member)) break;
       }
    }
 }
@@ -717,7 +727,7 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
    } else if (obj->InheritsFrom(TBranch::Class())) {
       ScanCollection(rec, ((TBranch *) obj)->GetListOfLeaves());
    } else if (rec.CanExpandItem()) {
-      ScanObjectMemebers(rec, obj->IsA(), (char *) obj, 0);
+      ScanObjectMembers(rec, obj->IsA(), (char *) obj);
    }
 }
 
@@ -835,6 +845,17 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
                   }
                } else {
                   obj_class = TClass::GetClass(key->GetClassName());
+                  if (obj_class && obj_class->InheritsFrom(TTree::Class())) {
+                     if (rec.CanExpandItem()) {
+                        // it is requested to expand tree element - read it
+                        obj = key->ReadObj();
+                        if (obj) obj_class = obj->IsA();
+                     } else {
+                        rec.SetField("_player", "JSROOT.drawTreePlayerKey");
+                        rec.SetField("_prereq", "jq2d");
+                        // rec.SetField("_more", "true"); // one could allow to extend
+                     }
+                  }
                }
             }
 
@@ -958,14 +979,30 @@ void *TRootSniffer::FindInHierarchy(const char *path, TClass **cl,
 
    ScanRoot(rec);
 
-   if (cl) *cl = store.GetResClass();
-   if (member) *member = store.GetResMember();
+   TDataMember *res_member = store.GetResMember();
+   TClass *res_cl = store.GetResClass();
+   void *res = store.GetResPtr();
+
+   if ((res_member!=0) && (res_cl!=0) && (member==0)) {
+      res_cl = (res_member->IsBasic() || res_member->IsSTLContainer()) ? 0 :
+                gROOT->GetClass(res_member->GetTypeName());
+      TRealData *rdata = res_cl->GetRealData(res_member->GetName());
+      if (rdata) {
+         res = (char *) res + rdata->GetThisOffset();
+         if (res_member->IsaPointer()) res = *((char **) res);
+      } else {
+         res = 0; // should never happen
+      }
+   }
+
+   if (cl) *cl = res_cl;
+   if (member) *member = res_member;
    if (chld) *chld = store.GetResNumChilds();
 
    // remember current restriction
    fCurrentRestrict = store.GetResRestrict();
 
-   return store.GetResPtr();
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1096,10 +1133,7 @@ Bool_t TRootSniffer::ProduceJson(const char *path, const char *options,
    void *obj_ptr = FindInHierarchy(path, &obj_cl, &member);
    if ((obj_ptr == 0) || ((obj_cl == 0) && (member == 0))) return kFALSE;
 
-   if (member == 0)
-      res = TBufferJSON::ConvertToJSON(obj_ptr, obj_cl, compact >= 0 ? compact : 0);
-   else
-      res = TBufferJSON::ConvertToJSON(obj_ptr, member, compact >= 0 ? compact : 1);
+   res = TBufferJSON::ConvertToJSON(obj_ptr, obj_cl, compact >= 0 ? compact : 0, member ? member->GetName() : 0);
 
    return res.Length() > 0;
 }

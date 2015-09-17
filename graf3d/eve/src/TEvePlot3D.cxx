@@ -12,10 +12,9 @@
 #include "TEvePlot3D.h"
 #include "TEveTrans.h"
 
-
-//______________________________________________________________________________
-// Description of TEvePlot3D
-//
+/** \class TEvePlot3D
+Description of TEvePlot3D
+*/
 
 ClassImp(TEvePlot3D);
 

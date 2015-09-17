@@ -11,9 +11,6 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   include(${ROOTSYS}/cmake/modules/StandaloneBuild.cmake)
 endif()
 
-ROOT_USE_PACKAGE(tmva/tmva) 
-ROOT_USE_PACKAGE(gui/gui) 
-
 set(headers1 annconvergencetest.h  deviations.h mvaeffs.h PlotFoams.h  TMVAGui.h
 	 BDTControlPlots.h  correlationscatters.h efficiencies.h  mvas.h probas.h 
 	 BDT.h   correlationscattersMultiClass.h  likelihoodrefs.h  mvasMulticlass.h  regression_averagedevs.h  TMVAMultiClassGui.h

@@ -9,56 +9,60 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-//                R O O T top level object description
-//
-//    The TROOT object is the entry point to the ROOT system.
-//    The single instance of TROOT is accessible via the global gROOT.
-//    Using the gROOT pointer one has access to basically every object
-//    created in a ROOT based program. The TROOT object is essentially a
-//    container of several lists pointing to the main ROOT objects.
-//
-//    The following lists are accessible from gROOT object:
-//       gROOT->GetListOfClasses
-//       gROOT->GetListOfColors
-//       gROOT->GetListOfTypes
-//       gROOT->GetListOfGlobals
-//       gROOT->GetListOfGlobalFunctions
-//       gROOT->GetListOfFiles
-//       gROOT->GetListOfMappedFiles
-//       gROOT->GetListOfSockets
-//       gROOT->GetListOfSecContexts
-//       gROOT->GetListOfCanvases
-//       gROOT->GetListOfStyles
-//       gROOT->GetListOfFunctions
-//       gROOT->GetListOfSpecials (for example graphical cuts)
-//       gROOT->GetListOfGeometries
-//       gROOT->GetListOfBrowsers
-//       gROOT->GetListOfCleanups
-//       gROOT->GetListOfMessageHandlers
-//
-//   The TROOT class provides also many useful services:
-//     - Get pointer to an object in any of the lists above
-//     - Time utilities TROOT::Time
-//
-//   The ROOT object must be created as a static object. An example
-//   of a main program creating an interactive version is shown below:
-//
-//---------------------Example of a main program--------------------------------
-//
-//       #include "TRint.h"
-//
-//       int main(int argc, char **argv)
-//       {
-//          TRint *theApp = new TRint("ROOT example", &argc, argv);
-//
-//          // Init Intrinsics, build all windows, and enter event loop
-//          theApp->Run();
-//
-//          return(0);
-//       }
-//-----------------------End of Main program--------------------------------
-////////////////////////////////////////////////////////////////////////////////
+/** \class TROOT
+ROOT top level object description.
+
+   The TROOT object is the entry point to the ROOT system.
+   The single instance of TROOT is accessible via the global gROOT.
+   Using the gROOT pointer one has access to basically every object
+   created in a ROOT based program. The TROOT object is essentially a
+   container of several lists pointing to the main ROOT objects.
+
+   The following lists are accessible from gROOT object:
+
+~~~ {.cpp}
+      gROOT->GetListOfClasses
+      gROOT->GetListOfColors
+      gROOT->GetListOfTypes
+      gROOT->GetListOfGlobals
+      gROOT->GetListOfGlobalFunctions
+      gROOT->GetListOfFiles
+      gROOT->GetListOfMappedFiles
+      gROOT->GetListOfSockets
+      gROOT->GetListOfSecContexts
+      gROOT->GetListOfCanvases
+      gROOT->GetListOfStyles
+      gROOT->GetListOfFunctions
+      gROOT->GetListOfSpecials (for example graphical cuts)
+      gROOT->GetListOfGeometries
+      gROOT->GetListOfBrowsers
+      gROOT->GetListOfCleanups
+      gROOT->GetListOfMessageHandlers
+~~~
+
+  The TROOT class provides also many useful services:
+    - Get pointer to an object in any of the lists above
+    - Time utilities TROOT::Time
+
+  The ROOT object must be created as a static object. An example
+  of a main program creating an interactive version is shown below:
+
+### Example of a main program
+
+~~~ {.cpp}
+      #include "TRint.h"
+
+      int main(int argc, char **argv)
+      {
+         TRint *theApp = new TRint("ROOT example", &argc, argv);
+
+         // Init Intrinsics, build all windows, and enter event loop
+         theApp->Run();
+
+         return(0);
+      }
+~~~
+*/
 
 #include "RConfig.h"
 #include "RConfigure.h"
@@ -152,7 +156,7 @@ static void *gInterpreterLib = 0;
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
 
-// For accesing TThread::Tsd indirectly.
+// For accessing TThread::Tsd indirectly.
 void **(*gThreadTsd)(void*,Int_t) = 0;
 
 //-------- Names of next three routines are a small homage to CMZ --------------
@@ -317,10 +321,10 @@ namespace ROOT {
 
    // Initially this function pointer's value is & GetROOT1 whose role is to
    // create and initialize the TROOT object itself.
-   // At the very end of the TROOT constructor the value of the funtion pointer
+   // At the very end of the TROOT constructor the value of the function pointer
    // is switch to & GetROOT2 whose role is to initialize the interpreter.
 
-   // This mechanism was primarly intented to fix the issues with order in which
+   // This mechanism was primarily intended to fix the issues with order in which
    // global TROOT and LLVM globals are initialized. TROOT was initializing
    // Cling, but Cling could not be used yet due to LLVM globals not being
    // initialized yet.  The solution is to delay initializing the interpreter in
@@ -371,7 +375,7 @@ TROOT *ROOT::gROOTLocal = ROOT::GetROOT();
 
 // Global debug flag (set to > 0 to get debug output).
 // Can be set either via the interpreter (gDebug is exported to CINT),
-// via the rootrc resouce "Root.Debug", via the shell environment variable
+// via the rootrc resource "Root.Debug", via the shell environment variable
 // ROOTDEBUG, or via the debugger.
 Int_t gDebug;
 
@@ -452,13 +456,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    // Initialize Operating System interface
    InitSystem();
-
-#ifndef ROOTPREFIX
-   if (!gSystem->Getenv("ROOTSYS")) {
-      fprintf(stderr, "Fatal in <TROOT::TROOT>: ROOTSYS not set. Set it before trying to run.\n");
-      exit(1);
-   }
-#endif
 
    TDirectory::Build();
 
@@ -642,7 +639,7 @@ TROOT::~TROOT()
       // already been deleted during the destruction phase
       gGlobalMutex = 0;
 
-      // Return when error occured in TCling, i.e. when setup file(s) are
+      // Return when error occurred in TCling, i.e. when setup file(s) are
       // out of date
       if (!fVersionInt) return;
 
@@ -720,7 +717,7 @@ TROOT::~TROOT()
       // On some 'newer' platform (Fedora Core 17+, Ubuntu 12), the
       // initialization order is (by default?) is 'wrong' and so we can't
       // delete the interpreter now .. because any of the static in the
-      // interpreter's libray have already been deleted.
+      // interpreter's library have already been deleted.
       // On the link line, we must list the most dependent .o file
       // and end with the least dependent (LLVM libraries), unfortunately,
       // Fedora Core 17+ or Ubuntu 12 will also execute the initialization
@@ -822,7 +819,7 @@ namespace {
          }
          cursor = cursor->Next();
       };
-      // Now were done, clear the list but do not delete the objecs as
+      // Now were done, clear the list but do not delete the objects as
       // they have been moved to the list of closed objects and must be
       // deleted from there in order to avoid a double delete from a
       // use objects (on the interpreter stack).
@@ -890,7 +887,7 @@ void TROOT::CloseFiles()
          }
          // Now were done, clear the list
          fSockets->Clear();
-         // Readd the one we did not close
+         // Read the one we did not close
          cursor = notclosed.FirstLink();
          while (cursor) {
             static_cast<TList*>(fSockets)->AddLast(cursor->GetObject());
@@ -1083,7 +1080,7 @@ TObject *TROOT::FindObjectAnyFile(const char *name) const
    TIter next(GetListOfFiles());
    while ((d = (TDirectory*)next())) {
       // Call explicitly TDirectory::FindObject to restrict the search to the
-      // arlready in memory object.
+      // already in memory object.
       TObject *obj = d->TDirectory::FindObject(name);
       if (obj) return obj;
    }
@@ -1111,7 +1108,7 @@ const char *TROOT::FindObjectClassName(const char *name) const
 /// The function returns the first occurence of the object in the list
 /// of folders. The returned string points to a static char array in TROOT.
 /// If this function is called in a loop or recursively, it is the
-/// user's responsability to copy this string in their area.
+/// user's responsibility to copy this string in their area.
 
 const char *TROOT::FindObjectPathName(const TObject *) const
 {
@@ -1477,16 +1474,19 @@ TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
 /// currently defined.
 ///
 /// The list is populated on demand.  Calling
+/// ~~~ {.cpp}
 ///    gROOT->GetListOfTypes()->FindObject(nameoftype);
+/// ~~~
 /// will return the TDataType corresponding to 'nameoftype'.  If the
 /// TDataType is not already in the list itself and the type does exist,
 /// a new TDataType will be created and added to the list.
 ///
 /// Calling
+/// ~~~ {.cpp}
 ///    gROOT->GetListOfTypes()->ls(); // or Print()
-/// list only the typedefs that have been previously accessed throught the
+/// ~~~
+/// list only the typedefs that have been previously accessed through the
 /// list (plus the builtins types).
-///
 
 TCollection *TROOT::GetListOfTypes(Bool_t /* load */)
 {
@@ -2097,10 +2097,10 @@ Bool_t &GetReadingObject() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Deprecated (will be removed in next release).
 
 Bool_t TROOT::ReadingObject() const
 {
-   /* Deprecated (will be removed in next release) */
    return GetReadingObject();
 }
 
@@ -2494,7 +2494,7 @@ const char**& TROOT::GetExtraInterpreterArgs() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the tuorials directory in the installtion. Static utility function.
+/// Get the tutorials directory in the installation. Static utility function.
 
 const char *TROOT::GetTutorialsDir()
 {

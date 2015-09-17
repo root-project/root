@@ -27,26 +27,23 @@
 #include "TEnv.h"
 #include "TSystem.h"
 
-//==============================================================================
-//==============================================================================
-// TEveViewer
-//==============================================================================
+/** \class TEveViewer
+ Eve representation of TGLViewer.
 
-//______________________________________________________________________________
-//
-// Eve representation of TGLViewer.
-//
-// The gl-viewer is owned by this class and is deleted in destructor.
-//
-// The frame is not deleted, it is expected that the gl-viewer implementation
-// will delete that. TGLSAViewer and TGEmbeddedViewer both do so.
-// This could be an optional argument to SetGLViewer. A frame could be
-// passed as well.
-//
-// When stand-alone viewer is requested, it will come up with menu-hiding
-// enabled by default. If you dislike this, add the following line to rootrc
-// file (or set corresponding gEnv entry in application initialization):
-//   Eve.Viewer.HideMenus: off
+The gl-viewer is owned by this class and is deleted in destructor.
+
+The frame is not deleted, it is expected that the gl-viewer implementation
+will delete that. TGLSAViewer and TGEmbeddedViewer both do so.
+This could be an optional argument to SetGLViewer. A frame could be
+passed as well.
+
+When stand-alone viewer is requested, it will come up with menu-hiding
+enabled by default. If you dislike this, add the following line to rootrc
+file (or set corresponding gEnv entry in application initialization):
+~~~ {.cpp}
+   Eve.Viewer.HideMenus: off
+~~~
+*/
 
 ClassImp(TEveViewer);
 
@@ -55,6 +52,7 @@ Bool_t TEveViewer::fgRecreateGlOnDockOps = kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
+///
 /// The base-class TEveWindowFrame is constructed without a frame so
 /// a default composite-frame is instantiated and stored in fGUIFrame.
 /// Cleanup is set to no-cleanup as viewers need to be zapped with some
@@ -86,8 +84,6 @@ TEveViewer::~TEveViewer()
    fGLViewerFrame->ReparentWindow(gClient->GetDefaultRoot());
    TTimer::SingleShot(150, "TGLViewer", fGLViewer, "Delete()");
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize static data-members according to running conditions.
@@ -130,8 +126,6 @@ void TEveViewer::PostDock()
    }
    TEveWindowFrame::PostDock();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return TEveViewer icon.
@@ -260,8 +254,6 @@ switch_stereo:
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add 'scene' to the list of scenes.
 
@@ -327,15 +319,9 @@ Bool_t TEveViewer::HandleElementPaste(TEveElement* el)
    }
 }
 
-
-/******************************************************************************/
-/******************************************************************************/
-// TEveViewerList
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// List of Viewers providing common operations on TEveViewer collections.
+/** \class TEveViewerList
+List of Viewers providing common operations on TEveViewer collections.
+*/
 
 ClassImp(TEveViewerList);
 
@@ -362,11 +348,9 @@ TEveViewerList::~TEveViewerList()
    Disconnect();
 }
 
-//==============================================================================
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Call base-class implementation.
-/// If compund is open and compound of the new element is not set,
+/// If compound is open and compound of the new element is not set,
 /// the el's compound is set to this.
 
 void TEveViewerList::AddElement(TEveElement* el)
@@ -396,8 +380,6 @@ void TEveViewerList::RemoveElementsLocal()
 
    TEveElementList::RemoveElementsLocal();
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Connect to TGLViewer class-signals.
@@ -447,8 +429,6 @@ void TEveViewerList::Disconnect()
                         this, "OnUnClicked(TObject*,UInt_t,UInt_t)");
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Repaint viewers that are tagged as changed.
 
@@ -459,8 +439,6 @@ void TEveViewerList::RepaintChangedViewers(Bool_t resetCameras, Bool_t dropLogic
       TGLViewer* glv = ((TEveViewer*)*i)->GetGLViewer();
       if (glv->IsChanged())
       {
-         // printf(" TEveViewer '%s' changed ... reqesting draw.\n", (*i)->GetObject()->GetName());
-
          if (resetCameras) glv->PostSceneBuildSetup(kTRUE);
          if (dropLogicals) glv->SetSmartRefresh(kFALSE);
 
@@ -479,8 +457,6 @@ void TEveViewerList::RepaintAllViewers(Bool_t resetCameras, Bool_t dropLogicals)
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TGLViewer* glv = ((TEveViewer*)*i)->GetGLViewer();
-
-      // printf(" TEveViewer '%s' sending redraw reqest.\n", (*i)->GetObject()->GetName());
 
       if (resetCameras) glv->PostSceneBuildSetup(kTRUE);
       if (dropLogicals) glv->SetSmartRefresh(kFALSE);
@@ -503,8 +479,6 @@ void TEveViewerList::DeleteAnnotations()
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Callback done from a TEveScene destructor allowing proper
 /// removal of the scene from affected viewers.
@@ -524,11 +498,6 @@ void TEveViewerList::SceneDestructing(TEveScene* scene)
       }
    }
 }
-
-
-/******************************************************************************/
-// Processing of events from TGLViewers.
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Show / hide tooltip for various MouseOver events.
@@ -557,7 +526,7 @@ void TEveViewerList::HandleTooltip()
 /// Slot for global TGLViewer::MouseOver() signal.
 ///
 /// The attempt is made to determine the TEveElement being
-/// represented by the physical shape and global higlight is updated
+/// represented by the physical shape and global highlight is updated
 /// accordingly.
 ///
 /// If TEveElement::IsPickable() returns false, the element is not

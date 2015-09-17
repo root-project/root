@@ -9,14 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualPerfStats                                                    //
-//                                                                      //
-// Provides the interface for the PROOF internal performance measurment //
-// and event tracing.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TVirtualPerfStats
+Provides the interface for the PROOF internal performance measurement
+and event tracing.
+*/
 
 
 #include "TVirtualPerfStats.h"

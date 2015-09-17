@@ -9,27 +9,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TImageDump                                                           //
-//                                                                      //
-// save canvas as an image (GIF, JPEG, PNG, XPM, TIFF etc.)             //
-// in batch mode.  Example:                                             //
-//                                                                      //
-//         $ root -b                                                    //
-//         root [0] .x hsimple.C                                        //
-//         root [1] c1->Print("c1.gif");                                //
-//                                                                      //
-// TImageDump can be used in any mode (batch, interactive) as follows   //
-//                                                                      //
-//    TCanvas *c1;                                                      //
-//    TImageDump *imgdump = new TImageDump("test.png");                 //
-//    c1->Paint();                                                      //
-//    imgdump->Close();                                                 //
-//                                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TImageDump
+Save canvas as an image (GIF, JPEG, PNG, XPM, TIFF etc.).
 
+Example:
+~~~ {.cpp}
+         $ root -b
+         root [0] .x hsimple.C
+         root [1] c1->Print("c1.gif");
+~~~
+TImageDump can be used in any mode (batch, interactive) as follows
+~~~ {.cpp}
+         TCanvas *c1;
+         TImageDump *imgdump = new TImageDump("test.png");
+         c1->Paint();
+         imgdump->Close();
+~~~
+*/
 
 #include "TImageDump.h"
 #include "TImage.h"
@@ -50,9 +46,8 @@
 
 ClassImp(TImageDump)
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Default SVG constructor
+/// Default constructor
 
 TImageDump::TImageDump() : TVirtualPS()
 {
@@ -66,12 +61,12 @@ TImageDump::TImageDump() : TVirtualPS()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize batch image interface
 ///
-///  fname : image file name
+/// fname : image file name
 ///
-///    The possible workstation types are:
-///  111 - Portrait
-///  112 - Landscape
-///  114 - preview, keep in memory (do not write on delete)
+/// The possible workstation types are:
+///  - 111 - Portrait
+///  - 112 - Landscape
+///  - 114 - preview, keep in memory (do not write on delete)
 
 TImageDump::TImageDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
@@ -189,8 +184,8 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a Frame around a box
 ///
-/// mode = -1  the box looks as it is behind the screen
-/// mode =  1  the box looks as it is in front of the screen
+///  - mode = -1  the box looks as it is behind the screen
+///  - mode =  1  the box looks as it is in front of the screen
 /// border is the border size in already pre-computed dark is the
 /// color for the dark part of the frame light is the color for the light
 /// part of the frame
@@ -448,8 +443,8 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 /// This function defines a path with xw and yw and draw it according the
 /// value of nn:
 ///
-///  If nn > 0 a line is drawn.
-///  If nn < 0 a closed polygon is drawn.
+///  - If nn > 0 a line is drawn.
+///  - If nn < 0 a closed polygon is drawn.
 
 void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 {
@@ -617,6 +612,7 @@ void TImageDump::DrawPS(Int_t, Float_t *, Float_t *)
       return;
    }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// draw dashed polyline
 
@@ -655,8 +651,8 @@ void TImageDump::NewPage()
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw text
 ///
-/// x: x position of the text
-/// y: y position of the text
+///  - x: x position of the text
+///  - y: y position of the text
 
 void TImageDump::Text(Double_t x, Double_t y, const char *chars)
 {
@@ -675,12 +671,11 @@ void TImageDump::Text(Double_t x, Double_t y, const char *chars)
    fImage->DrawText(&t, XtoPixel(x), YtoPixel(y));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw text
 ///
-/// x: x position of the text
-/// y: y position of the text
+///  - x: x position of the text
+///  - y: y position of the text
 
 void TImageDump::Text(Double_t x, Double_t y, const wchar_t *chars)
 {
@@ -741,7 +736,7 @@ void TImageDump::CellArrayBegin(Int_t w, Int_t h, Double_t x1, Double_t x2,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Cell array fill
+/// Cell array fill
 
 void TImageDump::CellArrayFill(Int_t r, Int_t g, Int_t b)
 {
@@ -754,7 +749,7 @@ void TImageDump::CellArrayFill(Int_t r, Int_t g, Int_t b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Cell array end
+/// Cell array end
 
 void TImageDump::CellArrayEnd()
 {
@@ -782,9 +777,9 @@ void TImageDump::CellArrayEnd()
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color with its R G B components
 ///
-///  r: % of red in [0,1]
-///  g: % of green in [0,1]
-///  b: % of blue in [0,1]
+///  - r: % of red in [0,1]
+///  - g: % of green in [0,1]
+///  - b: % of blue in [0,1]
 
 void TImageDump::SetColor(Float_t /*r*/, Float_t /*g*/, Float_t /*b*/)
 {

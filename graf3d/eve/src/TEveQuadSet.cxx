@@ -23,24 +23,24 @@
 #include "TROOT.h"
 #include "TRandom.h"
 
-//______________________________________________________________________________
-// TEveQuadSet
-//
-// Supports various internal formats that result in rendering of a
-// set of planar (lines, rectangles, hegagons with shared normal) objects.
-//
-// Names of internal structures and their variables use A, B and C as
-// names for coordinate value-holders. Typical assignment is A->X,
-// B->Y, C->Z but each render mode can override this convention and
-// impose y or x as a fixed (third or C) coordinate. Alphabetic order
-// is obeyed in this correspondence.
-//
-// For quad modes the deltas are expected to be positive.
-// For line modes negative deltas are ok.
+/** \class TEveQuadSet
+Supports various internal formats that result in rendering of a
+set of planar (lines, rectangles, hexagons with shared normal) objects.
+
+Names of internal structures and their variables use A, B and C as
+names for coordinate value-holders. Typical assignment is A->X,
+B->Y, C->Z but each render mode can override this convention and
+impose y or x as a fixed (third or C) coordinate. Alphabetic order
+is obeyed in this correspondence.
+
+For quad modes the deltas are expected to be positive.
+For line modes negative deltas are ok.
+*/
 
 ClassImp(TEveQuadSet);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveQuadSet::TEveQuadSet(const char* n, const char* t) :
    TEveDigitSet   (n, t),
@@ -50,10 +50,10 @@ TEveQuadSet::TEveQuadSet(const char* n, const char* t) :
    fDefHeight (1),
    fDefCoord  (0)
 {
-   // Constructor.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveQuadSet::TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
                          const char* n, const char* t) :
@@ -64,12 +64,8 @@ TEveQuadSet::TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
    fDefHeight (1),
    fDefCoord  (0)
 {
-   // Constructor.
-
    Reset(quadType, valIsCol, chunkSize);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return size of given atom type.
@@ -100,8 +96,6 @@ Int_t TEveQuadSet::SizeofAtom(TEveQuadSet::EQuadType_e qt)
    return 0;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear the quad-set and reset the basic parameters.
 
@@ -115,8 +109,6 @@ void TEveQuadSet::Reset(TEveQuadSet::EQuadType_e quadType, Bool_t valIsCol,
       ReleaseIds();
    fPlex.Reset(SizeofAtom(fQuadType), chunkSize);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a quad specified with 4 vertices.
@@ -251,8 +243,6 @@ void TEveQuadSet::AddHexagon(Float_t a, Float_t b, Float_t c, Float_t r)
          throw(eH + "expect line quad-type.");
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill bounding-box information. Virtual from TAttBBox.

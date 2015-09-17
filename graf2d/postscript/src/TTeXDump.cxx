@@ -31,29 +31,27 @@
 
 ClassImp(TTeXDump)
 
+/** \class TTeXDump
+Interface to TeX.
 
-////////////////////////////////////////////////////////////////////////////////
-
-/*Begin_Html
-<center><h2>TTeXDump: Graphics interface to TeX</h2></center>
 This class allow to generate <b>PGF/TikZ</b> vector graphics output
 which can be included in TeX and LaTeX documents.
-<p>
+
 PGF is a TeX macro package for generating graphics. It is platform
 and format-independent and works together with the most important TeX
 backend drivers, including pdftex and dvips. It comes with a
 user-friendly syntax layer called TikZ.
-<p>
+
 To generate a such file it is enough to do:
-<pre>
+~~~ {.cpp}
    gStyle->SetPaperSize(10.,10.);
    hpx->Draw();
    gPad->Print("hpx.tex");
-</pre>
+~~~
 
-<p>Then, the generated file (<tt>hpx.tex</tt>) can be included in a
-LaTeX document (<tt>simple.tex</tt>) in the following way:
-<pre>
+Then, the generated file (`hpx.tex`) can be included in a
+LaTeX document (`simple.tex`) in the following way:
+~~~ {.cpp}
 \documentclass{article}
 \usepackage{tikz}
 \usetikzlibrary{patterns}
@@ -66,23 +64,21 @@ The following image as been generated using the TTeXDump class:
 \par
 \input{hpx.tex}
 \end{document}
-</pre>
+~~~
 
 Note the three directives needed at the top of the LaTeX file:
-<pre>
+~~~ {.cpp}
 \usepackage{tikz}
 \usetikzlibrary{patterns}
 \usetikzlibrary{plotmarks}
-</pre>
+~~~
 
 Then including the picture in the document is done with the
-<tt>\input<\tt> directive.
+`\input` directive.
 
-<p> The command <tt>pdflatex simple.tex</tt> will generate the
-corresponding pdf file <tt>simple.pdf</tt>.
-
-End_Html */
-
+ The command `pdflatex simple.tex` will generate the
+corresponding pdf file `simple.pdf`.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TeX constructor
@@ -103,15 +99,14 @@ TTeXDump::TTeXDump() : TVirtualPS()
    fLineScale    = 0.;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the TeX interface
 ///
-///  fname : TeX file name
-///  wtype : TeX workstation type. Not used in the TeX driver. But as TTeXDump
-///          inherits from TVirtualPS it should be kept. Anyway it is not
-///          necessary to specify this parameter at creation time because it
-///          has a default value (which is ignore in the TeX case).
+///  --fname : TeX file name
+///  - wtype : TeX workstation type. Not used in the TeX driver. But as TTeXDump
+///            inherits from TVirtualPS it should be kept. Anyway it is not
+///            necessary to specify this parameter at creation time because it
+///            has a default value (which is ignore in the TeX case).
 
 TTeXDump::TTeXDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
@@ -130,7 +125,6 @@ TTeXDump::TTeXDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 
    Open(fname, wtype);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a TeX file
@@ -181,7 +175,6 @@ void TTeXDump::Open(const char *fname, Int_t wtype)
    NewPage();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TeX destructor
 
@@ -189,7 +182,6 @@ TTeXDump::~TTeXDump()
 {
    Close();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Close a TeX file
@@ -208,7 +200,6 @@ void TTeXDump::Close(Option_t *)
    gVirtualPS = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate an already open TeX file
 
@@ -225,7 +216,6 @@ void TTeXDump::On()
    gVirtualPS = this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Deactivate an already open TeX file
 
@@ -233,7 +223,6 @@ void TTeXDump::Off()
 {
    gVirtualPS = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a Box
@@ -328,7 +317,6 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a Frame around a box
 ///
@@ -344,38 +332,35 @@ void TTeXDump::DrawFrame(Double_t, Double_t, Double_t, Double_t,
    Warning("DrawFrame", "not yet implemented");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a PolyLine
 ///
 ///  Draw a polyline through  the points  xy.
-///  If NN=1 moves only to point x,y.
-///  If NN=0 the x,y are  written in the TeX file
-///     according to the current transformation.
-///  If NN>0 the line is clipped as a line.
-///  If NN<0 the line is clipped as a fill area.
+///  - If NN=1 moves only to point x,y.
+///  - If NN=0 the x,y are  written in the TeX file
+///       according to the current transformation.
+///  - If NN>0 the line is clipped as a line.
+///  - If NN<0 the line is clipped as a fill area.
 
 void TTeXDump::DrawPolyLine(Int_t, TPoints *)
 {
    Warning("DrawPolyLine", "not yet implemented");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a PolyLine in NDC space
 ///
 ///  Draw a polyline through  the points  xy.
-///  If NN=1 moves only to point x,y.
-///  If NN=0 the x,y are  written in the TeX file
-///     according to the current transformation.
-///  If NN>0 the line is clipped as a line.
-///  If NN<0 the line is clipped as a fill area.
+///  - If NN=1 moves only to point x,y.
+///  - If NN=0 the x,y are  written in the TeX file
+///       according to the current transformation.
+///  - If NN>0 the line is clipped as a line.
+///  - If NN<0 the line is clipped as a fill area.
 
 void TTeXDump::DrawPolyLineNDC(Int_t, TPoints *)
 {
    Warning("DrawPolyLineNDC", "not yet implemented");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint PolyMarker
@@ -384,7 +369,6 @@ void TTeXDump::DrawPolyMarker(Int_t, Float_t *, Float_t *)
 {
    Warning("DrawPolyMarker", "not yet implemented");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint PolyMarker
@@ -489,13 +473,12 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    PrintStr("] plot coordinates {\\P};}");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This function defines a path with xw and yw and draw it according the
 /// value of nn:
 ///
-///  If nn>0 a line is drawn.
-///  If nn<0 a closed polygon is drawn.
+///  - If nn>0 a line is drawn.
+///  - If nn<0 a closed polygon is drawn.
 
 void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 {
@@ -595,7 +578,6 @@ void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Start the TeX page. This function starts the tikzpicture environment
 
@@ -617,7 +599,6 @@ void TTeXDump::NewPage()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the range for the paper in centimetres
 
@@ -629,7 +610,6 @@ void TTeXDump::Range(Float_t xsize, Float_t ysize)
    fRange = kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for fill areas
 
@@ -639,7 +619,6 @@ void TTeXDump::SetFillColor( Color_t cindex )
    if (gStyle->GetFillColor() <= 0) cindex = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for lines
 
@@ -648,20 +627,18 @@ void TTeXDump::SetLineColor( Color_t cindex )
    fLineColor = cindex;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the line style
 ///
-/// linestyle = 2 dashed
-///           = 3 dotted
-///           = 4 dash-dotted
-///           = else solid (1 in is used most of the time)
+///  - linestyle = 2 dashed
+///  - linestyle = 3 dotted
+///  - linestyle = 4 dash-dotted
+///  - linestyle = else solid (1 in is used most of the time)
 
 void TTeXDump::SetLineStyle(Style_t linestyle)
 {
    fLineStyle = linestyle;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the lines width.
@@ -679,7 +656,6 @@ void TTeXDump::SetMarkerSize( Size_t msize)
    fMarkerSize = msize;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for markers.
 
@@ -687,7 +663,6 @@ void TTeXDump::SetMarkerColor( Color_t cindex)
 {
    fMarkerColor = cindex;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color with its color index
@@ -702,13 +677,12 @@ void TTeXDump::SetColor(Int_t color)
    fCurrentAlpha = col->GetAlpha();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color with its R G B components
 ///
-///  r: % of red in [0,1]
-///  g: % of green in [0,1]
-///  b: % of blue in [0,1]
+///  - r: % of red in [0,1]
+///  - g: % of green in [0,1]
+///  - b: % of blue in [0,1]
 
 void TTeXDump::SetColor(Float_t r, Float_t g, Float_t b)
 {
@@ -727,7 +701,6 @@ void TTeXDump::SetColor(Float_t r, Float_t g, Float_t b)
    PrintFast(2,"};");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for text
 
@@ -736,13 +709,12 @@ void TTeXDump::SetTextColor( Color_t cindex )
    fTextColor = cindex;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw text
 ///
-/// xx: x position of the text
-/// yy: y position of the text
-/// chars: text to be drawn
+///  - xx: x position of the text
+///  - yy: y position of the text
+///  - chars: text to be drawn
 
 void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
 {
@@ -802,7 +774,6 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    PrintFast(2,"};");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters in NDC
 
@@ -813,7 +784,6 @@ void TTeXDump::TextNDC(Double_t u, Double_t v, const char *chars)
    Text(x, y, chars);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert U from NDC coordinate to TeX
 
@@ -822,7 +792,6 @@ Float_t TTeXDump::UtoTeX(Double_t u)
    Double_t cm = fXsize*(gPad->GetAbsXlowNDC() + u*gPad->GetAbsWNDC());
    return cm;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert V from NDC coordinate to TeX
@@ -833,7 +802,6 @@ Float_t TTeXDump::VtoTeX(Double_t v)
    return cm;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert X from world coordinate to TeX
 
@@ -842,7 +810,6 @@ Float_t TTeXDump::XtoTeX(Double_t x)
    Double_t u = (x - gPad->GetX1())/(gPad->GetX2() - gPad->GetX1());
    return  UtoTeX(u);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert Y from world coordinate to TeX
@@ -853,7 +820,6 @@ Float_t TTeXDump::YtoTeX(Double_t y)
    return  VtoTeX(v);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Begin the Cell Array painting
 
@@ -863,7 +829,6 @@ void TTeXDump::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
    Warning("CellArrayBegin", "not yet implemented");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the Cell Array
 
@@ -872,7 +837,6 @@ void TTeXDump::CellArrayFill(Int_t, Int_t, Int_t)
    Warning("CellArrayFill", "not yet implemented");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// End the Cell Array painting
 
@@ -880,7 +844,6 @@ void TTeXDump::CellArrayEnd()
 {
    Warning("CellArrayEnd", "not yet implemented");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Not needed in TeX case

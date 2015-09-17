@@ -24,15 +24,15 @@
 ClassImp(TGroupButton)
 
 
-//______________________________________________________________________________
-//
-//  A TGroupButton object is a specialized TButton used in a group of Buttons.
-//  When a button from a group of TGroupButtons is selected, all other buttons
-//  from the group with the same name are disabled.
-//
-//  For examples of use of TGroupButton objects, see:
-//    TAttFillCanvas, TAttLineCanvas, TAttTextCanvas and TAttMarkerCanvas.
+/** \class TGroupButton
 
+A TGroupButton object is a specialized TButton used in a group of Buttons.
+When a button from a group of TGroupButtons is selected, all other buttons
+from the group with the same name are disabled.
+
+For examples of use of TGroupButton objects, see:
+AttFillCanvas, TAttLineCanvas, TAttTextCanvas and TAttMarkerCanvas.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// GroupButton default constructor.
@@ -41,7 +41,6 @@ TGroupButton::TGroupButton(): TButton()
 {
    SetFraming();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// GroupButton normal constructor.
@@ -53,14 +52,12 @@ TGroupButton::TGroupButton(const char *groupname, const char *title, const char 
    SetFraming();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// GroupButton default destructor.
 
 TGroupButton::~TGroupButton()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Display Color Table in an attribute canvas.
@@ -91,13 +88,12 @@ void TGroupButton::DisplayColorTable(const char *action, Double_t x0, Double_t y
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action of this button.
 ///
-///   If an object has been selected before executing the APPLY button
-///   in the control canvas, The member function and its parameters
-///   for this object is executed via the interpreter.
+/// If an object has been selected before executing the APPLY button
+/// in the control canvas, The member function and its parameters
+/// for this object is executed via the interpreter.
 
 void TGroupButton::ExecuteAction()
 {
@@ -143,11 +139,10 @@ void TGroupButton::ExecuteAction()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
-///  This member function is called when a Button object is clicked.
+/// This member function is called when a Button object is clicked.
 
 void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
@@ -214,7 +209,6 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out

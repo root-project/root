@@ -206,7 +206,18 @@ void TCling__DEBUG__printName(clang::Decl* D) {
       printf("%s\n", name.c_str());
    }
 }
-
+//______________________________________________________________________________
+// These functions are helpers for testing issues directly rather than
+// relying on side effects.
+// This is used for the test for ROOT-7462/ROOT-6070
+bool TCling__TEST_isInvalidDecl(clang::Decl* D) {
+   return D->isInvalidDecl();
+}
+bool TCling__TEST_isInvalidDecl(ClassInfo_t *input) {
+   TClingClassInfo *info( (TClingClassInfo*) input);
+   assert(info && info->IsValid());
+   return info->GetDecl()->isInvalidDecl();
+}
 
 using namespace std;
 using namespace clang;
@@ -1091,7 +1102,7 @@ TCling::TCling(const char *name, const char *title)
       TCling::AddIncludePath((interpInclude.substr(2) + "/cling").c_str());
 
       // Add the current path to the include path
-      TCling::AddIncludePath(".");
+      // TCling::AddIncludePath(".");
 
       // Add the root include directory and etc/ to list searched by default.
       TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());

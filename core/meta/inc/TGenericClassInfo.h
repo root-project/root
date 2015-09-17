@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/meta:$Id$
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -25,19 +25,20 @@ class TVirtualIsAProxy;
 //class TClass;
 //class TClassStreamer;
 //class TVirtualCollectionProxy;
-//class TCollectionProxyInfo;
 
 
 namespace ROOT {
 
-   class TCollectionProxyInfo;
+   namespace Detail {
+      class TCollectionProxyInfo;
+   }
 
    class TGenericClassInfo {
       // This class in not inlined because it is used is non time critical
       // section (the dictionaries) and inline would lead to too much
       // repetition of the code (once per class!).
 
-      const TInitBehavior        *fAction;
+      const Internal::TInitBehavior *fAction;
       TClass                     *fClass;
       const char                 *fClassName;
       const char                 *fDeclFileName;
@@ -62,37 +63,37 @@ namespace ROOT {
       TVirtualCollectionProxy    *fCollectionProxy;
       Int_t                       fSizeof;
       Int_t                       fPragmaBits;
-      TCollectionProxyInfo       *fCollectionProxyInfo;
-      TCollectionProxyInfo       *fCollectionStreamerInfo;
-      std::vector<ROOT::TSchemaHelper>  fReadRules;
-      std::vector<ROOT::TSchemaHelper>  fReadRawRules;
+      Detail::TCollectionProxyInfo *fCollectionProxyInfo;
+      Detail::TCollectionProxyInfo *fCollectionStreamerInfo;
+      std::vector<ROOT::Internal::TSchemaHelper>  fReadRules;
+      std::vector<ROOT::Internal::TSchemaHelper>  fReadRawRules;
 
    public:
       TGenericClassInfo(const char *fullClassname,
                        const char *declFileName, Int_t declFileLine,
-                       const type_info &info, const TInitBehavior *action,
+                       const type_info &info, const Internal::TInitBehavior *action,
                        DictFuncPtr_t dictionary,
                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                        const char *declFileName, Int_t declFileLine,
-                       const type_info &info, const TInitBehavior *action,
+                       const type_info &info, const Internal::TInitBehavior *action,
                        DictFuncPtr_t dictionary,
                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                         const char *declFileName, Int_t declFileLine,
-                        const TInitBehavior *action,
+                        const Internal::TInitBehavior *action,
                         DictFuncPtr_t dictionary, Int_t pragmabits);
 
       void Init(Int_t pragmabits);
       ~TGenericClassInfo();
 
-      const TInitBehavior              &GetAction() const;
+      const Internal::TInitBehavior    &GetAction() const;
       TClass                           *GetClass();
       const char                       *GetClassName() const;
-      TCollectionProxyInfo             *GetCollectionProxyInfo() const;
-      TCollectionProxyInfo             *GetCollectionStreamerInfo() const;
+      Detail::TCollectionProxyInfo     *GetCollectionProxyInfo() const;
+      Detail::TCollectionProxyInfo     *GetCollectionStreamerInfo() const;
       const char                       *GetDeclFileName() const;
       Int_t                             GetDeclFileLine() const;
       DelFunc_t                         GetDelete() const;
@@ -105,16 +106,16 @@ namespace ROOT {
       TVirtualIsAProxy                 *GetIsA() const;
       NewFunc_t                         GetNew() const;
       NewArrFunc_t                      GetNewArray() const;
-      const std::vector<ROOT::TSchemaHelper> &GetReadRawRules() const;
-      const std::vector<ROOT::TSchemaHelper> &GetReadRules() const;
+      const std::vector<ROOT::Internal::TSchemaHelper> &GetReadRawRules() const;
+      const std::vector<ROOT::Internal::TSchemaHelper> &GetReadRules() const;
       Int_t                             GetVersion() const;
 
       TClass                           *IsA(const void *obj);
 
       Short_t                           AdoptStreamer(TClassStreamer*);
       Short_t                           AdoptCollectionProxy(TVirtualCollectionProxy*);
-      void                              AdoptCollectionProxyInfo(TCollectionProxyInfo*);
-      void                              AdoptCollectionStreamerInfo(TCollectionProxyInfo*);
+      void                              AdoptCollectionProxyInfo(Detail::TCollectionProxyInfo*);
+      void                              AdoptCollectionStreamerInfo(Detail::TCollectionProxyInfo*);
       Int_t                             SetDeclFile(const char *file, Int_t line);
       void                              SetDelete(DelFunc_t deleteFunc);
       void                              SetDeleteArray(DelArrFunc_t deleteArrayFunc);
@@ -126,8 +127,8 @@ namespace ROOT {
       void                              SetResetAfterMerge(ResetAfterMergeFunc_t);
       void                              SetNew(NewFunc_t newFunc);
       void                              SetNewArray(NewArrFunc_t newArrayFunc);
-      void                              SetReadRawRules( const std::vector<ROOT::TSchemaHelper>& rules );
-      void                              SetReadRules( const std::vector<ROOT::TSchemaHelper>& rules );
+      void                              SetReadRawRules( const std::vector<ROOT::Internal::TSchemaHelper>& rules );
+      void                              SetReadRules( const std::vector<ROOT::Internal::TSchemaHelper>& rules );
       Short_t                           SetStreamer(ClassStreamerFunc_t);
       void                              SetStreamerFunc(ClassStreamerFunc_t);
       void                              SetConvStreamerFunc(ClassConvStreamerFunc_t);
@@ -135,7 +136,7 @@ namespace ROOT {
 
       //   protected:
    private:
-      void CreateRuleSet( std::vector<ROOT::TSchemaHelper>& vect, Bool_t ProcessReadRules );
+      void CreateRuleSet( std::vector<ROOT::Internal::TSchemaHelper>& vect, Bool_t ProcessReadRules );
       TGenericClassInfo(const TGenericClassInfo&); // Not implemented
       TGenericClassInfo& operator=(const TGenericClassInfo&); // Not implemented
 

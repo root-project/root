@@ -26,14 +26,6 @@ namespace ROOT {
    }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// TFractionFitter
-//
-// Fits MC fractions to data histogram (a la HMCMLL, see R. Barlow and C. Beeston,
-// Comp. Phys. Comm. 77 (1993) 219-228, and http://www.hep.man.ac.uk/~roger/hfrac.f).
-//
-///////////////////////////////////////////////////////////////////////////////
-
 class TFractionFitter: public TObject {
 public:
    TFractionFitter();

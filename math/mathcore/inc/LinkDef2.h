@@ -40,6 +40,22 @@
 #pragma link C++ class TRandom2+;
 #pragma link C++ class TRandom3-;
 
+#pragma link C++ class ROOT::Math::TRandomEngine+;
+#pragma link C++ class ROOT::Math::LCGEngine+;
+#pragma link C++ class ROOT::Math::MersenneTwisterEngine+;
+#pragma link C++ class ROOT::Math::MixMaxEngine+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::LCGEngine>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::MersenneTwisterEngine>+;
+#pragma link C++ class ROOT::Math::Random<ROOT::Math::MixMaxEngine>+;
+
+
+#pragma link C++ typedef ROOT::Math::RandomMixMax;
+#pragma link C++ typedef ROOT::Math::RandomMT19937;
+
+// #pragma link C++ class TRandomNew3+;
+
+
+
 #pragma link C++ class TStatistic+;
 
 
@@ -48,6 +64,7 @@
 #pragma link C++ typedef TKDTreeID;
 #pragma link C++ typedef TKDTreeIF;
 #pragma link C++ class TKDTreeBinning+;
+
 
 // ROOT::Math namespace
 #pragma link C++ typedef ROOT::Math::IGenFunction;
@@ -129,6 +146,9 @@
 #pragma link C++ class ROOT::Math::GoFTest+;
 #pragma link C++ class std::vector<std::vector<double> >+;
 
+#pragma link C++ class ROOT::Math::Delaunay2D+;
+
+
 #pragma link C++ class ROOT::Math::TDataPoint<1,Float_t>+;
 #pragma link C++ typedef ROOT::Math::TDataPoint1F;
 #pragma link C++ class ROOT::Math::TDataPoint<1,Double_t>+;
@@ -140,6 +160,8 @@
 //N.B. use old streamer (do not use +) for KDTree class because it will not work on Windows
 // to work one would need to change the internal classes from private to public
 #pragma link C++ class ROOT::Math::KDTree<ROOT::Math::TDataPoint1D>;
+
+
 
 #include "LinkDef_Func.h"
 

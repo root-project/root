@@ -78,7 +78,7 @@ public:
       return (THn*) CreateHnAny(name, title, hn, kFALSE /*THn*/, -1);
    }
 
-   ROOT::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const;
+   ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const;
    Long64_t GetNbins() const { return GetArray().GetNbins(); }
 
    Long64_t GetBin(const Int_t* idx) const {
@@ -206,34 +206,35 @@ protected:
 
 
 //______________________________________________________________________________
-//
-// Templated implementation of the abstract base THn.
-// All functionality and the interfaces to be used are in THn!
-//
-// THn does not know how to store any bin content itself. Instead, this
-// is delegated to the derived, templated class: the template parameter decides
-// what the format for the bin content is. The actual storage is delegated to
-// TNDArrayT<T>.
-//
-// Typedefs exist for template parematers with ROOT's generic types:
-//
-//   Templated name        Typedef       Bin content type
-//   THnT<Char_t>          THnC          Char_t
-//   THnT<Short_t>         THnS          Short_t
-//   THnT<Int_t>           THnI          Int_t
-//   THnT<Long_t>          THnL          Long_t
-//   THnT<Float_t>         THnF          Float_t
-//   THnT<Double_t>        THnD          Double_t
-//
-// We recommend to use THnC wherever possible, and to map its value space
-// of 256 possible values to e.g. float values outside the class. This saves an
-// enourmous amount of memory. Only if more than 256 values need to be
-// distinguished should e.g. THnS or even THnF be chosen.
-//
-// Implementation detail: the derived, templated class is kept extremely small
-// on purpose. That way the (templated thus inlined) uses of this class will
-// only create a small amount of machine code, in contrast to e.g. STL.
-//______________________________________________________________________________
+/** \class THnT
+ Templated implementation of the abstract base THn.
+ All functionality and the interfaces to be used are in THn!
+
+ THn does not know how to store any bin content itself. Instead, this
+ is delegated to the derived, templated class: the template parameter decides
+ what the format for the bin content is. The actual storage is delegated to
+ TNDArrayT<T>.
+
+ Typedefs exist for template parematers with ROOT's generic types:
+
+ Templated name   |     Typedef   |    Bin content type
+ -----------------|---------------|--------------------
+   THnT<Char_t>   |       THnC    |     Char_t
+   THnT<Short_t>  |       THnS    |     Short_t
+   THnT<Int_t>    |       THnI    |     Int_t
+   THnT<Long_t>   |       THnL    |     Long_t
+   THnT<Float_t>  |       THnF    |     Float_t
+   THnT<Double_t> |       THnD    |     Double_t
+
+ We recommend to use THnC wherever possible, and to map its value space
+ of 256 possible values to e.g. float values outside the class. This saves an
+ enourmous amount of memory. Only if more than 256 values need to be
+ distinguished should e.g. THnS or even THnF be chosen.
+
+ Implementation detail: the derived, templated class is kept extremely small
+ on purpose. That way the (templated thus inlined) uses of this class will
+ only create a small amount of machine code, in contrast to e.g. STL.
+*/
 
 template <typename T>
 class THnT: public THn {

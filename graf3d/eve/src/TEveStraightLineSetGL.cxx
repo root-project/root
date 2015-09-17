@@ -16,14 +16,9 @@
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
 
-//==============================================================================
-//==============================================================================
-// TEveStraightLineSetGL
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// GL-renderer for TEveStraightLineSet class.
+/** \class TEveStraightLineSetGL
+GL-renderer for TEveStraightLineSet class.
+*/
 
 ClassImp(TEveStraightLineSetGL);
 
@@ -35,8 +30,6 @@ TEveStraightLineSetGL::TEveStraightLineSetGL() : TGLObject(), fM(0)
    // fDLCache = false; // Disable display list.
    fMultiColor = kTRUE;
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
@@ -65,8 +58,6 @@ Bool_t TEveStraightLineSetGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
    if (rnrCtx.Selection()) return kFALSE;
    return TGLObject::ShouldDLCache(rnrCtx);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw function for TEveStraightLineSetGL. Skips line-pass of outline mode.
@@ -191,8 +182,6 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    if (mL.GetDepthTest() == kFALSE && rnrCtx.Selection() == kFALSE)
       glPopAttrib();
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process results of the secondary selection.

@@ -1,27 +1,32 @@
 // @(#)root/mathcore:$Id$
 // Author: Peter Malzacher   31/08/99
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TRandom3
-//
-// Random number generator class based on
-//   M. Matsumoto and T. Nishimura,
-//   Mersenne Twister: A 623-diminsionally equidistributed
-//   uniform pseudorandom number generator
-//   ACM Transactions on Modeling and Computer Simulation,
-//   Vol. 8, No. 1, January 1998, pp 3--30.
-//
-// For more information see the Mersenne Twister homepage
-//   http://www.math.keio.ac.jp/~matumoto/emt.html
-//
-// Advantage: large period 2**19937-1
-//            relativly fast
-//              (only two times slower than TRandom, but
-//               two times faster than TRandom2)
-// Drawback:  a relative large internal state of 624 integers
-//
-//
+/**
+
+\class TRandom3
+
+Random number generator class based on
+  M. Matsumoto and T. Nishimura,
+  Mersenne Twister: A 623-diminsionally equidistributed
+  uniform pseudorandom number generator
+  ACM Transactions on Modeling and Computer Simulation,
+  Vol. 8, No. 1, January 1998, pp 3--30.
+
+For more information see the Mersenne Twister homepage
+  [http://www.math.keio.ac.jp/~matumoto/emt.html]
+
+Advantage: 
+
+-  large period 2**19937 -1
+-  relativly fast (slightly slower than TRandom1 and TRandom2 but much faster than TRandom1)
+
+Drawback:  a relative large internal state of 624 integers
+
+@ingroup Random
+
+*/
+
+//////////////////////////////////////////////////////////////////////
 // Aug.99 ROOT implementation based on CLHEP by P.Malzacher
 //
 // the original code contains the following copyright notice:

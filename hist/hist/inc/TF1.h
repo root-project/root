@@ -134,8 +134,22 @@ private:
    std::vector<std::string> fParNames;   // parameter names
 };
 
+namespace ROOT {
+   namespace Internal { 
+      /// Internal class used by TF1 for defining 
+      /// template specialization for different TF1 constructors
+      template<class Func>
+      struct TF1Builder {
+         static void Build(TF1 * f, Func func);
+      };
+   }
+}
+
 
 class TF1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
+
+   template<class Func>
+   friend struct ROOT::Internal::TF1Builder;
 
 protected:
    Double_t    fXmin;        //Lower bounds for the range
@@ -182,7 +196,7 @@ protected:
    virtual TH1 *DoCreateHistogram(Double_t xmin, Double_t xmax, Bool_t recreate = kFALSE);
 
    enum {
-       kNotGlobal   = BIT(10)  // don't register in global list of functions
+      kNotGlobal   = BIT(10),  // don't register in global list of functions
    };
 
 public:
@@ -211,25 +225,8 @@ public:
    // xmin and xmax specify the plotting range,  npar is the number of parameters.
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <typename Func>
-   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1 ) :
-      TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
-      fXmin(xmin), fXmax(xmax),
-      fNpar(npar), fNdim(ndim),
-      fNpx(100), fType(1),
-      fNpfits(0), fNDF(0), fChisquare(0),
-      fMinimum(-1111), fMaximum(-1111),
-      fParErrors(std::vector<Double_t>(npar)),
-      fParMin(std::vector<Double_t>(npar)),
-      fParMax(std::vector<Double_t>(npar)),
-      fParent(0), fHistogram(0),
-      fMethodCall(0),
-      fNormalized(false), fNormIntegral(0),
-      fFunctor(ROOT::Math::ParamFunctor(f)),
-      fFormula(0),
-      fParams(new TF1Parameters(npar) )
-   {
-      DoInitialize();
-   }
+   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1 );
+   
    // backward compatible interface
    template <typename Func>
    TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *   ) :
@@ -307,7 +304,7 @@ public:
    TF1& operator=(const TF1 &rhs);
    virtual   ~TF1();
    virtual void     AddParameter(const TString &name, Double_t value) { if (fFormula) fFormula->AddParameter(name,value); }
-   //virtual void     AddParameters(const pair<TString,Double_t> *pairs, Int_t size) { fFormula->AddParameters(pairs,size); }
+   // virtual void     AddParameters(const pair<TString,Double_t> *pairs, Int_t size) { fFormula->AddParameters(pairs,size); }
    // virtual void     AddVariable(const TString &name, Double_t value = 0) { if (fFormula) fFormula->AddVariable(name,value); }
    // virtual void     AddVariables(const TString *vars, Int_t size) { if (fFormula) fFormula->AddVariables(vars,size); }
    virtual Bool_t   AddToGlobalList(Bool_t on = kTRUE);
@@ -325,7 +322,6 @@ public:
    virtual void     DrawF1(Double_t xmin, Double_t xmax, Option_t *option="");
    virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);
-   // for using TF1 as a callable object (functor)
    virtual Double_t operator()(Double_t x, Double_t y=0, Double_t z = 0, Double_t t = 0) const;
    virtual Double_t operator()(const Double_t *x, const Double_t *params=0);
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
@@ -396,10 +392,9 @@ public:
    virtual Double_t IntegralOneDim(Double_t a, Double_t b, Double_t epsrel, Double_t epsabs, Double_t &err);
    virtual Double_t IntegralError(Double_t a, Double_t b, const Double_t *params=0, const Double_t *covmat=0, Double_t epsilon=1.E-2);
    virtual Double_t IntegralError(Int_t n, const Double_t * a, const Double_t * b, const Double_t *params=0, const Double_t *covmat=0, Double_t epsilon=1.E-2);
-   //virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params=0);
+   // virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params=0);
    virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params=0, Double_t epsilon=1e-12);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t maxpts, Double_t epsrel, Double_t epsabs ,Double_t &relerr,Int_t &nfnevl, Int_t &ifail);
-   // for backward compatibility
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t /*minpts*/, Int_t maxpts, Double_t epsrel, Double_t &relerr,Int_t &nfnevl, Int_t &ifail) {
       return  IntegralMultiple(n,a,b,maxpts, epsrel, epsrel, relerr, nfnevl, ifail);
    }
@@ -481,6 +476,53 @@ public:
    ClassDef(TF1,9)  //The Parametric 1-D function
 };
 
+///ctor implementation
+template <typename Func>
+TF1::TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim ) :
+   TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
+   fXmin(xmin), fXmax(xmax),
+   fNpar(npar), fNdim(ndim),
+   fNpx(100), fType(1),
+   fNpfits(0), fNDF(0), fChisquare(0),
+   fMinimum(-1111), fMaximum(-1111),
+   fParErrors(std::vector<Double_t>(npar)),
+   fParMin(std::vector<Double_t>(npar)),
+   fParMax(std::vector<Double_t>(npar)),
+   fParent(0), fHistogram(0),
+   fMethodCall(0),
+   fNormalized(false), fNormIntegral(0),
+   //fFunctor(ROOT::Math::ParamFunctor(f)),
+   fFormula(0),
+   fParams(0)
+{
+   ROOT::Internal::TF1Builder<Func>::Build(this,f); 
+   DoInitialize();
+}
+
+namespace ROOT {
+   namespace Internal {
+
+      template<class Func>
+      void TF1Builder<Func>::Build(TF1 * f, Func func) {
+         f->fType = 1; 
+         f->fFunctor = ROOT::Math::ParamFunctor(func);
+         f->fParams = new TF1Parameters(f->fNpar);
+      }
+      /// TF1 building from a string
+      /// used to build a TFormula based on a lambda function
+      template<>
+      struct TF1Builder<const char *> {
+         static void Build(TF1 * f, const char * formula) {
+            f->fType = 0; 
+            f->fFormula = new TFormula("tf1lambda",formula,f->fNdim,f->fNpar,false);
+         }
+      };
+   }
+}
+   
+
+
+
 inline Double_t TF1::operator()(Double_t x, Double_t y, Double_t z, Double_t t) const
    { return Eval(x,y,z,t); }
 inline Double_t TF1::operator()(const Double_t *x, const Double_t *params)
@@ -508,5 +550,8 @@ void TF1::SetFunction( PtrObj& p, MemFn memFn )   {
    fType = 1;
    fFunctor = ROOT::Math::ParamFunctor(p,memFn);
 }
+
+
+
 
 #endif

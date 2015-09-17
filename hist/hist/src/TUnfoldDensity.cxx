@@ -6,110 +6,104 @@
 //  History:
 //    Version 17.0, support for density regularisation, complex binning schemes, tau scan
 
-//////////////////////////////////////////////////////////////////////////
-//
-//  TUnfoldDensity : public TUnfoldSys : public TUnfold
-//
-//  TUnfold is used to decompose a measurement y into several sources x
-//  given the measurement uncertainties and a matrix of migrations A
-//
-//  More details are described with the documentation of TUnfold.
-//
-//  For most applications, it is best to use TUnfoldDensity
-//  instead of using TUnfoldSys or TUnfold
-//
-//  If you use this software, please consider the following citation
-//       S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]
-//
-//  More documentation and updates are available on
-//      http://www.desy.de/~sschmitt
-//
-//
-//  As compared to TUnfold, TUndolfDensity adds the following functionality
-//    * background subtraction (see documentation of TUnfoldSys)
-//    * error propagation (see documentation of TUnfoldSys)
-//    * regularisation schemes respecting the bin widths
-//    * support for complex, multidimensional input distributions
-//
-//  Complex binning schemes are imposed on the measurements y and
-//  on the result vector x with the help of the class TUnfoldBinning
-//  The components of x or y are part of multi-dimensional distributions.
-//  The bin widths along the relevant directions in these distributions
-//  are used to calculate bin densities (number of events divided by bin width)
-//  or to calculate derivatives taking into account the proper distance of
-//  adjacent bin centers
-//
-//  Complex binning schemes
-//  =======================
-//  in literature on unfolding, the "standard" test case is a
-//  one-dimensional distribution without underflow or overflow bins.
-//  The migration matrix is almost diagonal.
-//
-//  This "standard" case is rarely realized for real problems.
-//
-//  Often one has to deal with multi-dimensional input distributions.
-//  In addition, there are underflow and overflow bins
-//  or other background bins, possibly determined with the help of auxillary
-//  measurements
-//
-//  In TUnfoldDensity, such complex binning schemes are handled with the help
-//  of the class TUnfoldBinning. For each vector there is a tree
-//  structure. The tree nodes hold multi-dimensiopnal distributions
-//
-//  For example, the "measurement" tree could have two leaves, one for
-//  the primary distribution and one for auxillary measurements
-//
-//  Similarly, the "truth" tree could have two leaves, one for the
-//  signal and one for the background.
-//
-//  each of the leaves may then have a multi-dimensional distribution.
-//
-//  The class TUnfoldBinning takes care to map all bins of the
-//  "measurement" to the one-dimensional vector y.
-//  Similarly, the "truth" bins are mapped to the vector x.
-//
-//  Choice of the regularisation
-//  ============================
-//  In TUnfoldDensity, two methods are implemented to determine tau**2
-//    (1)  ScanLcurve()  locate the tau where the L-curve plot has a "kink"
-//      this function is implemented in the TUnfold class
-//    (2)  ScanTau() finds the solution such that some variable
-//           (e.g. global correlation coefficient) is minimized
-//      this function is implemented in the TUnfoldDensity class,
-//      such that the variable could be made depend on the binning scheme
-//
-//  Each of the algorithms has its own advantages and disadvantages
-//
-//  The algorithm (1) does not work if the input data are too similar to the
-//  MC prediction, that is unfolding with tau=0 gives a least-square sum
-//  of zero. Typical no-go cases of the L-curve scan are:
-//    (a) the number of measurements is too small (e.g. ny=nx)
-//    (b) the input data have no statistical fluctuations
-//         [identical MC events are used to fill the matrix of migrations
-//          and the vector y]
-//
-//  The algorithm (2) only works if the variable does have a real minimum
-//  as a function of tau.
-//  If global correlations are minimized, the situation is as follows:
-//  The matrix of migration typically introduces negative correlations.
-//   The area constraint introduces some positive correlation.
-//   Regularisation on the "size" introduces no correlation.
-//   Regularisation on 1st or 2nd derivatives adds positive correlations.
-//   For this reason, "size" regularisation does not work well with
-//   the tau-scan: the higher tau, the smaller rho, but there is no minimum.
-//   In contrast, the tau-scan is expected to work well with 1st or 2nd
-//   derivative regularisation, because at some point the negative
-//   correlations from migrations are approximately cancelled by the
-//   positive correlations from the regularisation conditions.
-//
-//  whichever algorithm is used, the output has to be checked:
-//  (1) The L-curve should have approximate L-shape
-//       and the final choice of tau should not be at the very edge of the
-//       scanned region
-//  (2) The scan result should have a well-defined minimum and the
-//       final choice of tau should sit right in the minimum
-//
-////////////////////////////////////////////////////////////////////////////
+/** \class TUnfoldBinning
+ \ingroup Hist
+  TUnfold is used to decompose a measurement y into several sources x
+  given the measurement uncertainties and a matrix of migrations A
+
+  More details are described with the documentation of TUnfold.
+
+  For most applications, it is best to use TUnfoldDensity
+  instead of using TUnfoldSys or TUnfold
+
+  If you use this software, please consider the following citation
+       S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]
+
+  More documentation and updates are available on
+      http://www.desy.de/~sschmitt
+
+  As compared to TUnfold, TUndolfDensity adds the following functionality
+    * background subtraction (see documentation of TUnfoldSys)
+    * error propagation (see documentation of TUnfoldSys)
+    * regularisation schemes respecting the bin widths
+    * support for complex, multidimensional input distributions
+
+  Complex binning schemes are imposed on the measurements y and
+  on the result vector x with the help of the class TUnfoldBinning
+  The components of x or y are part of multi-dimensional distributions.
+  The bin widths along the relevant directions in these distributions
+  are used to calculate bin densities (number of events divided by bin width)
+  or to calculate derivatives taking into account the proper distance of
+  adjacent bin centers
+
+  ## Complex binning schemes
+  in literature on unfolding, the "standard" test case is a
+  one-dimensional distribution without underflow or overflow bins.
+  The migration matrix is almost diagonal.
+
+  This "standard" case is rarely realized for real problems.
+
+  Often one has to deal with multi-dimensional input distributions.
+  In addition, there are underflow and overflow bins
+  or other background bins, possibly determined with the help of auxillary
+  measurements
+
+  In TUnfoldDensity, such complex binning schemes are handled with the help
+  of the class TUnfoldBinning. For each vector there is a tree
+  structure. The tree nodes hold multi-dimensiopnal distributions
+
+  For example, the "measurement" tree could have two leaves, one for
+  the primary distribution and one for auxillary measurements
+
+  Similarly, the "truth" tree could have two leaves, one for the
+  signal and one for the background.
+
+  each of the leaves may then have a multi-dimensional distribution.
+
+  The class TUnfoldBinning takes care to map all bins of the
+  "measurement" to the one-dimensional vector y.
+  Similarly, the "truth" bins are mapped to the vector x.
+
+  ## Choice of the regularisation
+  In TUnfoldDensity, two methods are implemented to determine tau**2
+    1.  ScanLcurve()  locate the tau where the L-curve plot has a "kink"
+      this function is implemented in the TUnfold class
+    2.  ScanTau() finds the solution such that some variable
+           (e.g. global correlation coefficient) is minimized
+      this function is implemented in the TUnfoldDensity class,
+      such that the variable could be made depend on the binning scheme
+
+  Each of the algorithms has its own advantages and disadvantages
+
+  The algorithm (1) does not work if the input data are too similar to the
+  MC prediction, that is unfolding with tau=0 gives a least-square sum
+  of zero. Typical no-go cases of the L-curve scan are:
+    - (a) the number of measurements is too small (e.g. ny=nx)
+    - (b) the input data have no statistical fluctuations
+         [identical MC events are used to fill the matrix of migrations
+          and the vector y]
+
+  The algorithm (2) only works if the variable does have a real minimum
+  as a function of tau.
+  If global correlations are minimized, the situation is as follows:
+  The matrix of migration typically introduces negative correlations.
+   The area constraint introduces some positive correlation.
+   Regularisation on the "size" introduces no correlation.
+   Regularisation on 1st or 2nd derivatives adds positive correlations.
+   For this reason, "size" regularisation does not work well with
+   the tau-scan: the higher tau, the smaller rho, but there is no minimum.
+   In contrast, the tau-scan is expected to work well with 1st or 2nd
+   derivative regularisation, because at some point the negative
+   correlations from migrations are approximately cancelled by the
+   positive correlations from the regularisation conditions.
+
+  whichever algorithm is used, the output has to be checked:
+  1. The L-curve should have approximate L-shape
+       and the final choice of tau should not be at the very edge of the
+       scanned region
+  2. The scan result should have a well-defined minimum and the
+       final choice of tau should sit right in the minimum
+*/
 
 /*
   This file is part of TUnfold.

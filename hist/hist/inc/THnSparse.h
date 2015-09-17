@@ -102,7 +102,7 @@ class THnSparse: public THnBase {
    Int_t GetChunkSize() const { return fChunkSize; }
    Int_t GetNChunks() const { return fBinContent.GetEntriesFast(); }
 
-   ROOT::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const;
+   ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const;
 
    Long64_t GetNbins() const { return fFilledBins; }
    void SetFilledBins(Long64_t nbins) { fFilledBins = nbins; }
@@ -184,34 +184,36 @@ class THnSparse: public THnBase {
 
 
 //______________________________________________________________________________
-//
-// Templated implementation of the abstract base THnSparse.
-// All functionality and the interfaces to be used are in THnSparse!
-//
-// THnSparse does not know how to store any bin content itself. Instead, this
-// is delegated to the derived, templated class: the template parameter decides
-// what the format for the bin content is. In fact it even defines the array
-// itself; possible implementations probably derive from TArray.
-//
-// Typedefs exist for template parematers with ROOT's generic types:
-//
-//   Templated name        Typedef       Bin content type
-//   THnSparseT<TArrayC>   THnSparseC    Char_t
-//   THnSparseT<TArrayS>   THnSparseS    Short_t
-//   THnSparseT<TArrayI>   THnSparseI    Int_t
-//   THnSparseT<TArrayL>   THnSparseL    Long_t
-//   THnSparseT<TArrayF>   THnSparseF    Float_t
-//   THnSparseT<TArrayD>   THnSparseD    Double_t
-//
-// We recommend to use THnSparseC wherever possible, and to map its value space
-// of 256 possible values to e.g. float values outside the class. This saves an
-// enourmous amount of memory. Only if more than 256 values need to be
-// distinguished should e.g. THnSparseS or even THnSparseF be chosen.
-//
-// Implementation detail: the derived, templated class is kept extremely small
-// on purpose. That way the (templated thus inlined) uses of this class will
-// only create a small amount of machine code, in contrast to e.g. STL.
-//______________________________________________________________________________
+/** \class THnSparseT
+ Templated implementation of the abstract base THnSparse.
+ All functionality and the interfaces to be used are in THnSparse!
+
+ THnSparse does not know how to store any bin content itself. Instead, this
+ is delegated to the derived, templated class: the template parameter decides
+ what the format for the bin content is. In fact it even defines the array
+ itself; possible implementations probably derive from TArray.
+
+ Typedefs exist for template parematers with ROOT's generic types:
+
+ Templated name   |    Typedef   |    Bin content type
+ -----------------|--------------|--------------------
+ THnSparseT<TArrayC> |  THnSparseC  |  Char_t
+ THnSparseT<TArrayS> |  THnSparseS  |  Short_t
+ THnSparseT<TArrayI> |  THnSparseI  |  Int_t
+ THnSparseT<TArrayL> |  THnSparseL  |  Long_t
+ THnSparseT<TArrayF> |  THnSparseF  |  Float_t
+ THnSparseT<TArrayD> |  THnSparseD  |  Double_t
+
+ We recommend to use THnSparseC wherever possible, and to map its value space
+ of 256 possible values to e.g. float values outside the class. This saves an
+ enourmous amount of memory. Only if more than 256 values need to be
+ distinguished should e.g. THnSparseS or even THnSparseF be chosen.
+
+ Implementation detail: the derived, templated class is kept extremely small
+ on purpose. That way the (templated thus inlined) uses of this class will
+ only create a small amount of machine code, in contrast to e.g. STL.
+*/
+
 
 template <class CONT>
 class THnSparseT: public THnSparse {

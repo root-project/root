@@ -28,17 +28,25 @@
 
 ClassImp(TH2)
 
+/** \addtogroup Hist
+@{
+\class TH2C \brief tomato 2-D histogram with a bype per channel (see TH1 documentation)
+\class TH2S \brief tomato 2-D histogram with a short per channel (see TH1 documentation)
+\class TH2I \brief tomato 2-D histogram with a int per channel (see TH1 documentation)}
+\class TH2F \brief tomato 2-D histogram with a float per channel (see TH1 documentation)}
+\class TH2D \brief tomato 2-D histogram with a double per channel (see TH1 documentation)}
+@}
+*/ 
 
-//______________________________________________________________________________
-//
-// Service class for 2-Dim histogram classes
-//
-//  TH2C a 2-D histogram with one byte per cell (char)
-//  TH2S a 2-D histogram with two bytes per cell (short integer)
-//  TH2I a 2-D histogram with four bytes per cell (32 bits integer)
-//  TH2F a 2-D histogram with four bytes per cell (float)
-//  TH2D a 2-D histogram with eight bytes per cell (double)
-//
+/** \class TH2
+ Service class for 2-Dim histogram classes
+
+- TH2C a 2-D histogram with one byte per cell (char)
+- TH2S a 2-D histogram with two bytes per cell (short integer)
+- TH2I a 2-D histogram with four bytes per cell (32 bits integer)
+- TH2F a 2-D histogram with four bytes per cell (float)
+- TH2D a 2-D histogram with eight bytes per cell (double)
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -2861,7 +2861,7 @@ void waves()
 
    const Int_t colNum = 30;
    Int_t palette[colNum];
-   Int_t color_offset = 1001;
+   Int_t color_offset = 2001;
    for (Int_t i=0;i<colNum;i++) {
       new TColor(color_offset+i
       ,    pow(i/((colNum)*1.0),0.3)

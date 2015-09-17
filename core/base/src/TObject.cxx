@@ -9,22 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TObject                                                              //
-//                                                                      //
-// Mother of all ROOT objects.                                          //
-//                                                                      //
-// The TObject class provides default behaviour and protocol for all    //
-// objects in the ROOT system. It provides protocol for object I/O,     //
-// error handling, sorting, inspection, printing, drawing, etc.         //
-// Every object which inherits from TObject can be stored in the        //
-// ROOT collection classes.                                             //
-// TObject's bits can be used as flags, bits 0 - 13 and 24-31 are       //
-// reserved as  global bits while bits 14 - 23 can be used in different //
-// class hierarchies (watch out for overlaps).                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TObject
+
+Mother of all ROOT objects.
+
+The TObject class provides default behaviour and protocol for all
+objects in the ROOT system. It provides protocol for object I/O,
+error handling, sorting, inspection, printing, drawing, etc.
+Every object which inherits from TObject can be stored in the
+ROOT collection classes.
+
+TObject's bits can be used as flags, bits 0 - 13 and 24-31 are
+reserved as  global bits while bits 14 - 23 can be used in different
+class hierarchies (watch out for overlaps).
+*/
 
 #include <string.h>
 #if !defined(WIN32) && !defined(__MWERKS__) && !defined(R__SOLARIS)
@@ -32,6 +30,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <sstream>
 
 #include "Varargs.h"
 #include "Riostream.h"
@@ -264,15 +263,11 @@ void TObject::Draw(Option_t *option)
 /// Member functions overridden by B are shown in class A with a blue line
 /// crossing-out the corresponding member function.
 /// The following picture is the class inheritance tree of class TPaveLabel:
-///Begin_Html
+///
+/// \image html base_object.png
 
 void TObject::DrawClass() const
 {
-   /*
-   <img src="gif/drawclass.gif">
-   */
-   //End_Html
-
    IsA()->Draw();
 }
 
@@ -309,6 +304,7 @@ TObject *TObject::DrawClone(Option_t *option) const
 /// If a data member is a pointer, the pointer value is printed
 ///
 /// The following output is the Dump of a TArrow object:
+/// ~~~ {.cpp}
 ///   fAngle                   0           Arrow opening angle (degrees)
 ///   fArrowSize               0.2         Arrow Size
 ///   fOption.*fData
@@ -323,6 +319,7 @@ TObject *TObject::DrawClone(Option_t *option) const
 ///   fLineWidth               1           line width
 ///   fFillColor               19          fill area color
 ///   fFillStyle               1001        fill area style
+/// ~~~
 
 void TObject::Dump() const
 {
@@ -349,8 +346,9 @@ void TObject::Execute(const char *method, const char *params, Int_t *error)
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute method on this object with parameters stored in the TObjArray.
 /// The TObjArray should contain an argv vector like:
-///
+/// ~~~ {.cpp}
 ///  argv[0] ... argv[n] = the list of TObjString parameters
+/// ~~~
 
 void TObject::Execute(TMethod *method, TObjArray *params, Int_t *error)
 {
@@ -375,7 +373,7 @@ void TObject::ExecuteEvent(Int_t, Int_t, Int_t)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Must be redefined in derived classes.
-/// This function is typycally used with TCollections, but can also be used
+/// This function is typically used with TCollections, but can also be used
 /// to find an object by name inside this object.
 
 TObject *TObject::FindObject(const char *) const
@@ -385,7 +383,7 @@ TObject *TObject::FindObject(const char *) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Must be redefined in derived classes.
-/// This function is typycally used with TCollections, but can also be used
+/// This function is typically used with TCollections, but can also be used
 /// to find an object inside this object.
 
 TObject *TObject::FindObject(const TObject *) const
@@ -505,15 +503,10 @@ Bool_t TObject::InheritsFrom(const TClass *cl) const
 /// In addition pointers to other objects can be followed.
 ///
 /// The following picture is the Inspect of a histogram object:
-///Begin_Html
+/// \image html base_inspect.png
 
 void TObject::Inspect() const
 {
-   /*
-   <img src="gif/hpxinspect.gif">
-   */
-   //End_Html
-
    gGuiFactory->CreateInspectorImp(this, 400, 200);
 }
 
@@ -552,7 +545,7 @@ void TObject::ls(Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method must be overridden to handle object notifcation.
+/// This method must be overridden to handle object notification.
 
 Bool_t TObject::Notify()
 {
@@ -618,7 +611,7 @@ Int_t TObject::Read(const char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Recursively remove this object from a list. Typically implemented
-/// by classes that can contain mulitple references to a same object.
+/// by classes that can contain multiple references to a same object.
 
 void TObject::RecursiveRemove(TObject *)
 {
@@ -769,18 +762,18 @@ void TObject::UseCurrentStyle()
 ///
 /// Writing an object to a file involves the following steps:
 ///
-///  -Creation of a support TKey object in the current directory.
-///   The TKey object creates a TBuffer object.
+///  - Creation of a support TKey object in the current directory.
+///    The TKey object creates a TBuffer object.
 ///
-///  -The TBuffer object is filled via the class::Streamer function.
+///  - The TBuffer object is filled via the class::Streamer function.
 ///
-///  -If the file is compressed (default) a second buffer is created to
-///   hold the compressed buffer.
+///  - If the file is compressed (default) a second buffer is created to
+///    hold the compressed buffer.
 ///
-///  -Reservation of the corresponding space in the file by looking
-///   in the TFree list of free blocks of the file.
+///  - Reservation of the corresponding space in the file by looking
+///    in the TFree list of free blocks of the file.
 ///
-///  -The buffer is written to the file.
+///  - The buffer is written to the file.
 ///
 ///  Bufsize can be given to force a given buffer size to write this object.
 ///  By default, the buffersize will be taken from the average buffer size
@@ -790,8 +783,7 @@ void TObject::UseCurrentStyle()
 ///  If name is not given, the name of the key will be the name as returned
 ///  by GetName().
 ///
-///  The option can be a combination of:
-///    kSingleKey, kOverwrite or kWriteDelete
+///  The option can be a combination of: kSingleKey, kOverwrite or kWriteDelete
 ///  Using the kOverwrite option a previous key with the same name is
 ///  overwritten. The previous key is deleted before writing the new object.
 ///  Using the kWriteDelete option a previous key with the same name is
@@ -881,10 +873,6 @@ void TObject::Streamer(TBuffer &R__b)
    }
 }
 
-//______________________________________________________________________________
-
-//---- error handling ----------------------------------------------------------
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to ErrorHandler (protected).
 
@@ -899,7 +887,7 @@ void TObject::DoError(int level, const char *location, const char *fmt, va_list 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Issue info message. Use "location" to specify the method where the
-/// warning occured. Accepts standard printf formatting arguments.
+/// warning occurred. Accepts standard printf formatting arguments.
 
 void TObject::Info(const char *location, const char *va_(fmt), ...) const
 {
@@ -911,7 +899,7 @@ void TObject::Info(const char *location, const char *va_(fmt), ...) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Issue warning message. Use "location" to specify the method where the
-/// warning occured. Accepts standard printf formatting arguments.
+/// warning occurred. Accepts standard printf formatting arguments.
 
 void TObject::Warning(const char *location, const char *va_(fmt), ...) const
 {
@@ -925,7 +913,7 @@ void TObject::Warning(const char *location, const char *va_(fmt), ...) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Issue error message. Use "location" to specify the method where the
-/// error occured. Accepts standard printf formatting arguments.
+/// error occurred. Accepts standard printf formatting arguments.
 
 void TObject::Error(const char *location, const char *va_(fmt), ...) const
 {
@@ -939,7 +927,7 @@ void TObject::Error(const char *location, const char *va_(fmt), ...) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Issue system error message. Use "location" to specify the method where
-/// the system error occured. Accepts standard printf formatting arguments.
+/// the system error occurred. Accepts standard printf formatting arguments.
 
 void TObject::SysError(const char *location, const char *va_(fmt), ...) const
 {
@@ -953,7 +941,7 @@ void TObject::SysError(const char *location, const char *va_(fmt), ...) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Issue fatal error message. Use "location" to specify the method where the
-/// fatal error occured. Accepts standard printf formatting arguments.
+/// fatal error occurred. Accepts standard printf formatting arguments.
 
 void TObject::Fatal(const char *location, const char *va_(fmt), ...) const
 {
@@ -998,10 +986,6 @@ void TObject::Obsolete(const char *method, const char *asOfVers, const char *rem
    ::Obsolete(Form("%s::%s", classname, method), asOfVers, removedFromVers);
 }
 
-
-
-//----------------- Static data members access ---------------------------------
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get status of object stat flag.
 
@@ -1018,7 +1002,7 @@ void TObject::SetObjectStat(Bool_t stat)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///return destructor only flag
+/// Return destructor only flag
 
 Long_t TObject::GetDtorOnly()
 {
@@ -1026,7 +1010,7 @@ Long_t TObject::GetDtorOnly()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///set destructor only flag
+/// Set destructor only flag
 
 void TObject::SetDtorOnly(void *obj)
 {
@@ -1034,7 +1018,7 @@ void TObject::SetDtorOnly(void *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///operator delete
+/// Operator delete
 
 void TObject::operator delete(void *ptr)
 {
@@ -1045,7 +1029,7 @@ void TObject::operator delete(void *ptr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///operator delete []
+/// Operator delete []
 
 void TObject::operator delete[](void *ptr)
 {
@@ -1053,6 +1037,15 @@ void TObject::operator delete[](void *ptr)
       TStorage::ObjectDealloc(ptr);
    else
       fgDtorOnly = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print value overload
+
+std::string cling::printValue(TObject *val) {
+   std::ostringstream strm;
+   strm << "Name: " << val->GetName() << " Title: " << val->GetTitle();
+   return strm.str();
 }
 
 #ifdef R__PLACEMENTDELETE

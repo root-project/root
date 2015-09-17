@@ -12,14 +12,10 @@
 #include "TEveFrameBox.h"
 #include "TColor.h"
 
-//==============================================================================
-// TEveFrameBox
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Description of a 2D or 3D frame that can be used to visually group
-// a set of objects.
+/** \class TEveFrameBox
+Description of a 2D or 3D frame that can be used to visually group
+a set of objects.
+*/
 
 ClassImp(TEveFrameBox);
 
@@ -49,8 +45,6 @@ TEveFrameBox::~TEveFrameBox()
 {
    delete [] fFramePoints;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Setup for axis-aligned rectangle with one corner at x, y, z and
@@ -91,8 +85,8 @@ void TEveFrameBox::SetAAQuadXZ(Float_t x,  Float_t y, Float_t z,
 ////////////////////////////////////////////////////////////////////////////////
 /// Setup frame with explicitly given corner coordinates.
 /// Arguments:
-///   pointArr - array containing the 3D points
-///   nPoint   - number of points, size of array divided by 3
+///  - pointArr - array containing the 3D points
+///  - nPoint   - number of points, size of array divided by 3
 
 void TEveFrameBox::SetQuadByPoints(const Float_t* pointArr, Int_t nPoints)
 {
@@ -153,8 +147,6 @@ void TEveFrameBox::SetAABoxCenterHalfSize(Float_t x,  Float_t y,  Float_t z,
    p[0] = x - dx;  p[1] = y - dy;  p[2] = z + dz;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color of the frame.
 
@@ -183,8 +175,6 @@ void TEveFrameBox::SetFrameColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
    fFrameRGBA[2] = b;
    fFrameRGBA[3] = a;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color of the background polygon.

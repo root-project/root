@@ -28,10 +28,9 @@
 
 ClassImp(TH2Poly)
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>TH2Poly: 2D Histogram with Polygonal Bins</h2></center>
+/** \class TH2Poly 
+    \ingroup Hist
+2D Histogram with Polygonal Bins
 
 <h3>Overview</h3>
 <tt>TH2Poly</tt> is a 2D Histogram class (TH2) allowing to define polygonal
@@ -143,7 +142,7 @@ filling, it also adds a constant time delay into the code. When <tt>Fill()</tt>
 is to be called many times, it is more efficient to divide the histogram into
 a large number cells. However, if the histogram is to be filled only a few
 times, it is better to divide into a small number of cells.
-End_Html */
+*/
 
 
 
@@ -1242,6 +1241,11 @@ void TH2Poly::SetFloat(Bool_t flag)
 {
    fFloat = flag;
 }
+
+
+/** \class TH2PolyBin
+Helper class to represent a bin in the TH2Poly histogram
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

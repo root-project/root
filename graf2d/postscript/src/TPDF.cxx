@@ -9,21 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class TPDF
+Interface to PDF.
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>TPDF: Graphics interface to PDF</h2></center>
 Like PostScript, PDF is a vector graphics output format allowing a very high
 graphics output quality. The functionalities provided by this class are very
 similar to those provided by <tt>TPostScript</tt>.
-<p>
+
 Compare to PostScript output, the PDF files are usually smaller because some
 parts of them can be compressed.
-<p>
+
 PDF also allows to define table of contents. This facility can be used in ROOT.
 The following example shows how to proceed:
-<pre>
+~~~ {.cpp}
 {
    TCanvas* canvas = new TCanvas("canvas");
    TH1F* histo = new TH1F("histo","test 1",10,0.,10.);
@@ -44,10 +42,10 @@ The following example shows how to proceed:
    histo->Draw();
    canvas->Print("plots.pdf)","Title:The fourth bin content is 2");
 }
-</pre>
+~~~
 Each character string following the keyword "Title:" makes a new entry in
 the table of contents.
-End_Html */
+*/
 
 #ifdef WIN32
 #pragma optimize("",off)
@@ -95,13 +93,6 @@ const Int_t kNumberOfFonts = 15;
 
 ClassImp(TPDF)
 
-
-//______________________________________________________________________________
-//
-// PDF driver
-//
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default PDF constructor
 
@@ -130,15 +121,14 @@ TPDF::TPDF() : TVirtualPS()
    SetTitle("PDF");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the PDF interface
 ///
-///  fname : PDF file name
-///  wtype : PDF workstation type. Not used in the PDF driver. But as TPDF
-///          inherits from TVirtualPS it should be kept. Anyway it is not
-///          necessary to specify this parameter at creation time because it
-///          has a default value (which is ignore in the PDF case).
+///  - fname : PDF file name
+///  - wtype : PDF workstation type. Not used in the PDF driver. But as TPDF
+///            inherits from TVirtualPS it should be kept. Anyway it is not
+///            necessary to specify this parameter at creation time because it
+///            has a default value (which is ignore in the PDF case).
 
 TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
@@ -164,7 +154,6 @@ TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    Open(fname, wtype);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default PDF destructor
 
@@ -175,7 +164,6 @@ TPDF::~TPDF()
    if (fObjPos) delete [] fObjPos;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Begin the Cell Array painting
 
@@ -185,7 +173,6 @@ void TPDF::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
    Warning("TPDF::CellArrayBegin", "not yet implemented");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the Cell Array
 
@@ -194,7 +181,6 @@ void TPDF::CellArrayFill(Int_t, Int_t, Int_t)
    Warning("TPDF::CellArrayFill", "not yet implemented");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// End the Cell Array painting
 
@@ -202,7 +188,6 @@ void TPDF::CellArrayEnd()
 {
    Warning("TPDF::CellArrayEnd", "not yet implemented");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Close a PDF file
@@ -356,7 +341,6 @@ void TPDF::Close(Option_t *)
    gVirtualPS = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a Box
 
@@ -417,15 +401,14 @@ void TPDF::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a Frame around a box
 ///
-/// mode = -1  box looks as it is behind the screen
-/// mode =  1  box looks as it is in front of the screen
-/// border is the border size in already precomputed PDF units
-/// dark  is the color for the dark part of the frame
-/// light is the color for the light part of the frame
+///  - mode = -1  box looks as it is behind the screen
+///  - mode =  1  box looks as it is in front of the screen
+///  - border is the border size in already precomputed PDF units
+///  - dark  is the color for the dark part of the frame
+///  - light is the color for the light part of the frame
 
 void TPDF::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
                             Int_t mode, Int_t border, Int_t dark, Int_t light)
@@ -464,7 +447,6 @@ void TPDF::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    PrintFast(3," f*");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw Fill area with hatch styles
 
@@ -472,7 +454,6 @@ void TPDF::DrawHatch(Float_t, Float_t, Int_t, Float_t *, Float_t *)
 {
    Warning("DrawHatch", "hatch fill style not yet implemented");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw Fill area with hatch styles
@@ -482,16 +463,16 @@ void TPDF::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
    Warning("DrawHatch", "hatch fill style not yet implemented");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a PolyLine
 ///
 ///  Draw a polyline through  the points xy.
-///  If NN=1 moves only to point x,y.
-///  If NN=0 the x,y are  written  in the PDF file
-///     according to the current transformation.
-///  If NN>0 the line is clipped as a line.
-///  If NN<0 the line is clipped as a fill area.
+///
+///  - If NN=1 moves only to point x,y.
+///  - If NN=0 the x,y are  written  in the PDF file
+///       according to the current transformation.
+///  - If NN>0 the line is clipped as a line.
+///  - If NN<0 the line is clipped as a fill area.
 
 void TPDF::DrawPolyLine(Int_t nn, TPoints *xy)
 {
@@ -535,7 +516,6 @@ void TPDF::DrawPolyLine(Int_t nn, TPoints *xy)
    SetLineStyle(linestylesav);
    SetLineWidth(linewidthsav);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a PolyLine in NDC space
@@ -589,7 +569,6 @@ void TPDF::DrawPolyLineNDC(Int_t nn, TPoints *xy)
    SetLineStyle(linestylesav);
    SetLineWidth(linewidthsav);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw markers at the n WC points xw, yw
@@ -731,7 +710,6 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    SetLineWidth(linewidthsav);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw markers at the n WC points xw, yw
 
@@ -872,16 +850,15 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    SetLineWidth(linewidthsav);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a PolyLine
 ///
 ///  Draw a polyline through the points xw,yw.
-///  If nn=1 moves only to point xw,yw.
-///  If nn=0 the XW(1) and YW(1) are  written  in the PDF file
-///          according to the current NT.
-///  If nn>0 the line is clipped as a line.
-///  If nn<0 the line is clipped as a fill area.
+///  - If nn=1 moves only to point xw,yw.
+///  - If nn=0 the XW(1) and YW(1) are  written  in the PDF file
+///            according to the current NT.
+///  - If nn>0 the line is clipped as a line.
+///  - If nn<0 the line is clipped as a fill area.
 
 void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
 {
@@ -959,16 +936,16 @@ void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
    SetLineWidth(linewidthsav);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a PolyLine
 ///
 /// Draw a polyline through  the points xw,yw.
-/// If nn=1 moves only to point xw,yw.
-/// If nn=0 the xw(1) and YW(1) are  written  in the PDF file
-///         according to the current NT.
-/// If nn>0 the line is clipped as a line.
-/// If nn<0 the line is clipped as a fill area.
+///
+///  - If nn=1 moves only to point xw,yw.
+///  - If nn=0 the xw(1) and YW(1) are  written  in the PDF file
+///            according to the current NT.
+///  - If nn>0 the line is clipped as a line.
+///  - If nn<0 the line is clipped as a fill area.
 
 void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 {
@@ -1046,7 +1023,6 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    SetLineWidth(linewidthsav);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Font encoding
 
@@ -1079,7 +1055,6 @@ void TPDF::FontEncode()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a line to a new position
 
@@ -1090,7 +1065,6 @@ void TPDF::LineTo(Double_t x, Double_t y)
    PrintFast(2," l");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Move to a new position
 
@@ -1100,7 +1074,6 @@ void TPDF::MoveTo(Double_t x, Double_t y)
    WriteReal(y);
    PrintFast(2," m");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new object in the PDF file
@@ -1124,7 +1097,6 @@ void TPDF::NewObject(Int_t n)
    PrintStr(" 0 obj");
    PrintStr("@");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Start a new PDF page.
@@ -1295,7 +1267,6 @@ void TPDF::NewPage()
    if (fPageOrientation == 2) PrintStr(" 0 1 -1 0 0 0 cm");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Deactivate an already open PDF file
 
@@ -1303,7 +1274,6 @@ void TPDF::Off()
 {
    gVirtualPS = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate an already open PDF file
@@ -1320,7 +1290,6 @@ void TPDF::On()
    }
    gVirtualPS = this;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a PDF file
@@ -1902,7 +1871,6 @@ void TPDF::PrintStr(const char *str)
    TVirtualPS::PrintStr(str);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fast version of Print
 
@@ -1921,7 +1889,6 @@ void TPDF::PrintFast(Int_t len, const char *str)
 
    TVirtualPS::PrintFast(len, str);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the range for the paper in centimetres
@@ -1976,7 +1943,6 @@ void TPDF::Range(Float_t xsize, Float_t ysize)
    fRange = kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the alpha channel value.
 
@@ -1997,7 +1963,6 @@ void TPDF::SetAlpha(Float_t a)
    PrintStr(Form(" /ca%3.2f gs /CA%3.2f gs",fAlpha,fAlpha));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color with its color index.
 
@@ -2015,13 +1980,12 @@ void TPDF::SetColor(Int_t color)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color with its R G B components:
 ///
-///  r: % of red in [0,1]
-///  g: % of green in [0,1]
-///  b: % of blue in [0,1]
+///  - r: % of red in [0,1]
+///  - g: % of green in [0,1]
+///  - b: % of blue in [0,1]
 
 void TPDF::SetColor(Float_t r, Float_t g, Float_t b)
 {
@@ -2072,7 +2036,6 @@ void TPDF::SetColor(Float_t r, Float_t g, Float_t b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for fill areas
 
@@ -2081,7 +2044,6 @@ void TPDF::SetFillColor( Color_t cindex )
    fFillColor = cindex;
    if (gStyle->GetFillColor() <= 0) cindex = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the fill patterns (1 to 25) for fill areas
@@ -2120,7 +2082,6 @@ void TPDF::SetFillPatterns(Int_t ipat, Int_t color)
    PrintStr(cpat);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for lines
 
@@ -2129,14 +2090,13 @@ void TPDF::SetLineColor( Color_t cindex )
    fLineColor = cindex;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the line style
 ///
-/// linestyle = 2 dashed
-///           = 3 dotted
-///           = 4 dash-dotted
-///           = else solid (1 in is used most of the time)
+///  - linestyle = 2 dashed
+///  - linestyle = 3 dotted
+///  - linestyle = 4 dash-dotted
+///  - linestyle = else solid (1 in is used most of the time)
 
 void TPDF::SetLineStyle(Style_t linestyle)
 {
@@ -2154,7 +2114,6 @@ void TPDF::SetLineStyle(Style_t linestyle)
    PrintFast(5,"] 0 d");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the line width
 
@@ -2168,7 +2127,6 @@ void TPDF::SetLineWidth(Width_t linewidth)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for markers.
 
@@ -2176,7 +2134,6 @@ void TPDF::SetMarkerColor( Color_t cindex )
 {
    fMarkerColor = cindex;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for text
@@ -2186,13 +2143,12 @@ void TPDF::SetTextColor( Color_t cindex )
    fTextColor = cindex;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw text
 ///
-/// xx: x position of the text
-/// yy: y position of the text
-/// chars: text to be drawn
+///  - xx: x position of the text
+///  - yy: y position of the text
+///  - chars: text to be drawn
 
 void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
 {
@@ -2381,17 +2337,15 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    if (kerning) delete [] charDeltas;
 }
 
-
-void TPDF::Text(Double_t, Double_t, const wchar_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters
 ///
-/// This routine writes the string chars into a PostScript file
+/// This method writes the string chars into a PostScript file
 /// at position xx,yy in world coordinates.
 
+void TPDF::Text(Double_t, Double_t, const wchar_t *)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters in NDC
@@ -2403,7 +2357,6 @@ void TPDF::TextNDC(Double_t u, Double_t v, const char *chars)
    Text(x, y, chars);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters in NDC
 
@@ -2414,7 +2367,6 @@ void TPDF::TextNDC(Double_t u, Double_t v, const wchar_t *chars)
    Text(x, y, chars);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert U from NDC coordinate to PDF
 
@@ -2423,7 +2375,6 @@ Double_t TPDF::UtoPDF(Double_t u)
    Double_t cm = fXsize*(gPad->GetAbsXlowNDC() + u*gPad->GetAbsWNDC());
    return 72*cm/2.54;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert V from NDC coordinate to PDF
@@ -2434,7 +2385,6 @@ Double_t TPDF::VtoPDF(Double_t v)
    return 72*cm/2.54;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert X from world coordinate to PDF
 
@@ -2444,7 +2394,6 @@ Double_t TPDF::XtoPDF(Double_t x)
    return  UtoPDF(u);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert Y from world coordinate to PDF
 
@@ -2453,7 +2402,6 @@ Double_t TPDF::YtoPDF(Double_t y)
    Double_t v = (y - gPad->GetY1())/(gPad->GetY2() - gPad->GetY1());
    return  VtoPDF(v);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the buffer in a compressed way

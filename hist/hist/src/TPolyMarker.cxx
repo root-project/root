@@ -19,13 +19,13 @@
 ClassImp(TPolyMarker)
 
 
-//______________________________________________________________________________
-//
-//  a PolyMarker is defined by an array on N points in a 2-D space.
-// At each point x[i], y[i] a marker is drawn.
-// Marker attributes are managed by TAttMarker.
-// See TMarker for the list of possible marker types.
-//
+/** \class TPolyMarker
+    \ingroup Hist
+A PolyMarker is defined by an array on N points in a 2-D space.
+At each point x[i], y[i] a marker is drawn.
+Marker attributes are managed by TAttMarker.
+See TMarker for the list of possible marker types.
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

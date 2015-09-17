@@ -9,15 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBranchProxy                                                         //
-//
-// Base class for all the proxy object.  It includes the imeplemtation
-// of the autoloading of branches as well as all the generic setup
-// routine.
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class Detail::TBranchProxy
+Base class for all the proxy object. It includes the imeplemtation
+of the autoloading of branches as well as all the generic setup routine.
+*/
 
 #include "TBranchProxy.h"
 #include "TLeaf.h"
@@ -25,9 +20,11 @@
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 
-ClassImp(ROOT::TBranchProxy);
+ClassImp(ROOT::Detail::TBranchProxy);
 
-ROOT::TBranchProxy::TBranchProxy() :
+using namespace ROOT::Internal;
+
+ROOT::Detail::TBranchProxy::TBranchProxy() :
    fDirector(0), fInitialized(false), fBranchName(""), fParent(0),
    fDataMember(""), fIsMember(false), fIsClone(false), fIsaPointer(0),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
@@ -37,7 +34,7 @@ ROOT::TBranchProxy::TBranchProxy() :
    // Constructor.
 };
 
-ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char* top,
+ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char* top,
                                  const char* name) :
    fDirector(boss), fInitialized(false), fBranchName(top), fParent(0),
    fDataMember(""), fIsMember(false), fIsClone(false), fIsaPointer(false),
@@ -54,7 +51,7 @@ ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char* top,
    boss->Attach(this);
 }
 
-ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char *top, const char *name, const char *membername) :
+ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char *top, const char *name, const char *membername) :
    fDirector(boss), fInitialized(false),  fBranchName(top), fParent(0),
    fDataMember(membername), fIsMember(true), fIsClone(false), fIsaPointer(false),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
@@ -72,7 +69,7 @@ ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char *top, co
    boss->Attach(this);
 }
 
-ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top,
+ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBranchProxy *parent, const char* membername, const char* top,
                                  const char* name) :
    fDirector(boss), fInitialized(false),  fBranchName(top), fParent(parent),
    fDataMember(membername), fIsMember(true), fIsClone(false), fIsaPointer(false),
@@ -91,7 +88,7 @@ ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *paren
    boss->Attach(this);
 }
 
-ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername) :
+ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername) :
    fDirector(boss), fInitialized(false),  fBranchName(branch->GetName()), fParent(0),
    fDataMember(membername), fIsMember(membername != 0 && membername[0]), fIsClone(false), fIsaPointer(false),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
@@ -103,12 +100,12 @@ ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* branch, co
    boss->Attach(this);
 }
 
-ROOT::TBranchProxy::~TBranchProxy()
+ROOT::Detail::TBranchProxy::~TBranchProxy()
 {
    // Typical Destructor
 }
 
-void ROOT::TBranchProxy::Reset()
+void ROOT::Detail::TBranchProxy::Reset()
 {
    // Completely reset the object.
 
@@ -127,7 +124,7 @@ void ROOT::TBranchProxy::Reset()
    fCurrentTreeNumber = -1;
 }
 
-void ROOT::TBranchProxy::Print()
+void ROOT::Detail::TBranchProxy::Print()
 {
    // Display the content of the object
 
@@ -137,7 +134,7 @@ void ROOT::TBranchProxy::Print()
    if (fBranchCount) std::cout << "fBranchCount " << fBranchCount << std::endl;
 }
 
-Bool_t ROOT::TBranchProxy::Setup()
+Bool_t ROOT::Detail::TBranchProxy::Setup()
 {
    // Initialize/cache the necessary information.
 

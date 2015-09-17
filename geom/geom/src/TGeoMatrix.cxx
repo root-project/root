@@ -337,6 +337,7 @@ void TGeoMatrix::GetHomogenousMatrix(Double_t *hmat) const
          hmatrix  += 5;
       }
    }
+   hmatrix[15] = 1.;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

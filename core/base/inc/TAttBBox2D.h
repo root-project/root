@@ -12,18 +12,6 @@
 #ifndef ROOT_TAttBBox2D
 #define ROOT_TAttBBox2D
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TAttBBox2D                                                           //
-//                                                                      //
-// Abstract base class for elements drawn in the editor.                //
-// Classes inhereting from TAttBBox2D implementing the TAttBBox2D       //
-// virtual classes, and using TPad::ShowGuideLines in ExecuteEvent      //
-// will autimatically get the guide lines drawn when moved in the pad.  //
-// All methods work with pixel coordinates.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
 #endif

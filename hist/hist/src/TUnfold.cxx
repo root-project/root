@@ -25,242 +25,223 @@
 //    Version 1, added ScanLcurve() method
 //    Version 0, stable version of basic unfolding algorithm
 
-////////////////////////////////////////////////////////////////////////
-//
-//  TUnfold is used to decompose a measurement y into several sources x
-//  given the measurement uncertainties and a matrix of migrations A
-//
-//  *************************************************************
-//  * For most applications, it is better to use TUnfoldDensity *
-//  * instead of using TUnfoldSys or TUnfold                    *
-//  *************************************************************
-//
-//  If you use this software, please consider the following citation
-//       S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]
-//
-//  More documentation and updates are available on
-//      http://www.desy.de/~sschmitt
-//
-//
-//  A short summary of the algorithm is given in the following:
-//
-//  the "best" x matching the measurement y within errors
-//  is determined by minimizing the function
-//    L1+L2+L3
-//
-//  where
-//   L1 = (y-Ax)# Vyy^-1 (y-Ax)
-//   L2 = tau^2 (L(x-x0))# L(x-x0)
-//   L3 = lambda sum_i(y_i -(Ax)_i)
-//
-//  [the notation # means that the matrix is transposed ]
-//
-//  The term L1 is familiar from a least-square minimisation
-//  The term L2 defines the regularisation (smootheness condition on x),
-//    where the parameter tau^2 gives the strength of teh regularisation
-//  The term L3 is an optional area constraint with Lagrangian parameter
-//    lambda, ensuring that that the normalisation of x is consistent with the
-//    normalisation of y
-//
-//  The method can be applied to a very large number of problems,
-//  where the measured distribution y is a linear superposition
-//  of several Monte Carlo shapes
-//
-// Input from measurement:
-// -----------------------
-//   y: vector of measured quantities  (dimension ny)
-//   Vyy: covariance matrix for y (dimension ny x ny)
-//        in many cases V is diagonal and calculated from the errors of y
-//
-// From simulation:
-// ----------------
-//   A: migration matrix               (dimension ny x nx)
-//
-// Result
-// ------
-//   x: unknown underlying distribution (dimension nx)
-//      The error matrix of x, V_xx, is also determined
-//
-// Regularisation
-// --------------
-//   tau: parameter, defining the regularisation strength
-//   L: matrix of regularisation conditions (dimension nl x nx)
-//        depends on the structure of the input data
-//   x0: bias distribution, from simulation
-//
-// Preservation of the area
-// ------------------------
-//   lambda: lagrangian multiplier
-//   y_i: one component of the vector y
-//   (Ax)_i: one component of the vector Ax
-//
-//
-// Determination of the unfolding result x:
-//
-//   (a) not constrained: minimisation is performed as a function of x
-//         for fixed lambda=0
-//  or
-//   (b) constrained: stationary point is found as a function of x and lambda
-//
-// The constraint can be useful to reduce biases on the result x
-// in cases where the vector y follows non-Gaussian probability densities
-// (example: Poisson statistics at counting experiments in particle physics)
-//
-// Some random examples:
-// ======================
-//   (1) measure a cross-section as a function of, say, E_T(detector)
-//        and unfold it to obtain the underlying distribution E_T(generator)
-//   (2) measure a lifetime distribution and unfold the contributions from
-//        different flavours
-//   (3) measure the transverse mass and decay angle
-//        and unfold for the true mass distribution plus background
-//
-// Documentation
-// =============
-// Some technical documentation is available here:
-//   http://www.desy.de/~sschmitt
-//
-// Note:
-//   For most applications it is better to use the derived class
-//     TUnfoldSys or even better TUnfoldDensity
-//
-//  TUnfoldSys extends the functionality of TUnfold
-//             such that systematic errors are propagated to teh result
-//             and that the unfolding can be done with proper background
-//             subtraction
-//
-//  TUnfoldDensity extends further the functionality of TUnfoldSys
-//                 complex binning schemes are supported
-//                 The binning of input histograms is handeld consistently:
-//                  (1) the regularisation may be done by density,
-//                      i.e respecting the bin widths
-//                  (2) methods are provided which preserve the proper binning
-//                      of the result histograms
-//
-// Implementation
-// ==============
-// The result of the unfolding is calculated as follows:
-//
-//    Lsquared = L#L            regularisation conditions squared
-//
-//    epsilon_j = sum_i A_ij    vector of efficiencies
-//
-//    E^-1  = ((A# Vyy^-1 A)+tau^2 Lsquared)
-//
-//    x = E (A# Vyy^-1 y + tau^2 Lsquared x0 +lambda/2 * epsilon) is the result
-//
-// The derivatives
-//    dx_k/dy_i
-//    dx_k/dA_ij
-//    dx_k/d(tau^2)
-// are calculated for further usage.
-//
-// The covariance matrix V_xx is calculated as:
-//    Vxx_ij = sum_kl dx_i/dy_k Vyy_kl dx_j/dy_l
-//
-// Warning:
-// ========
-//  The algorithm is based on "standard" matrix inversion, with the
-//  known limitations in numerical accuracy and computing cost for
-//  matrices with large dimensions.
-//
-//  Thus the algorithm should not used for large dimensions of x and y
-//    nx should not be much larger than 200
-//    ny should not be much larger than 1000
-//
-//
-// Proper choice of tau
-// ====================
-// One of the difficult questions is about the choice of tau.
-// The method implemented in TUnfold is the L-curve method:
-// a two-dimensional curve is plotted
-//   x-axis: log10(chisquare)
-//   y-axis: log10(regularisation condition)
-// In many cases this curve has an L-shape. The best choice of tau is in the
-// kink of the L
-//
-// Within TUnfold a simple version of the L-curve analysis is available.
-// It tests a given number of points in a predefined tau-range and searches
-// for the maximum of the curvature in the L-curve (kink position).
-// if no tau range is given, the range of the scan is determined automatically
-//
-//  A nice overview of the L-curve method is given in:
-//   The L-curve and Its Use in the Numerical Treatment of Inverse Problems
-//   (2000) by P. C. Hansen, in Computational Inverse Problems in
-//   Electrocardiology, ed. P. Johnston,
-//   Advances in Computational Bioengineering
-//   http://www.imm.dtu.dk/~pch/TR/Lcurve.ps
-//
-// Alternative Regularisation conditions
-// =====================================
-// Regularisation is needed for most unfolding problems, in order to avoid
-// large oscillations and large correlations on the output bins.
-// It means that some extra conditions are applied on the output bins
-//
-// Within TUnfold these conditions are posed on the difference (x-x0), where
-//    x:  unfolding output
-//    x0: the bias distribution, by default calculated from
-//        the input matrix A. There is a method SetBias() to change the
-//        bias distribution.
-//        The 3rd argument to DoUnfold() is a scale factor applied to the bias
-//          bias_default[j] = sum_i A[i][j]
-//          x0[j] = scaleBias*bias[j]
-//        The scale factor can be used to
-//         (a) completely suppress the bias by setting it to zero
-//         (b) compensate differences in the normalisation between data
-//             and Monte Carlo
-//
-// If the regularisation is strong, i.e. large parameter tau,
-// then the distribution x or its derivatives will look like the bias
-// distribution. If the parameter tau is small, the distribution x is
-// independent of the bias.
-//
-// Three basic types of regularisation are implemented in TUnfold
-//
-//    condition            regularisation
-//  ------------------------------------------------------
-//    kRegModeNone         none
-//    kRegModeSize         minimize the size of (x-x0)
-//    kRegModeDerivative   minimize the 1st derivative of (x-x0)
-//    kRegModeCurvature    minimize the 2nd derivative of (x-x0)
-//
-// kRegModeSize is the regularisation scheme which often is found in
-// literature. The second derivative is often named curvature.
-// Sometimes the bias is not discussed,  equivalent to a bias scale factor
-// of zero.
-//
-// The regularisation schemes kRegModeDerivative and
-// kRegModeCurvature have the nice feature that they create correlations
-// between x-bins, whereas the non-regularized unfolding tends to create
-// negative correlations between bins. For these regularisation schemes the
-// parameter tau could be tuned such that the correlations are smallest,
-// as an alternative to the L-curve method.
-//
-// If kRegModeSize is chosen or if x is a smooth function through all bins,
-// the regularisation condition can be set on all bins together by giving
-// the appropriate argument in the constructor (see examples above).
-//
-// If x is composed of independent groups of bins (for example,
-// signal and background binning in two variables), it may be necessary to
-// set regularisation conditions for the individual groups of bins.
-// In this case,  give  kRegModeNone  in the constructor and specify
-// the bin grouping with calls to
-//          RegularizeBins()   specify a 1-dimensional group of bins
-//          RegularizeBins2D() specify a 2-dimensional group of bins
-//
-// Note, the class TUnfoldDensity provides an automatic setup of complex
-// regularisation schemes
-//
-// For ultimate flexibility, the regularisation condition can be set on each
-// bin individually
-//  -> give  kRegModeNone  in the constructor and use
-//      RegularizeSize()        regularize one bin
-//      RegularizeDerivative()  regularize the slope given by two bins
-//      RegularizeCurvature()   regularize the curvature given by three bins
-//      AddRegularisationCondition()
-//                              define an arbitrary regulatisation condition
-//
-///////////////////////////////////////////////////////////////////////////
+/** \class TUnfold
+    \ingroup Hist
+ TUnfold is used to decompose a measurement y into several sources x
+ given the measurement uncertainties and a matrix of migrations A
+
+ **For most applications, it is better to use TUnfoldDensity
+ instead of using TUnfoldSys or TUnfold**
+
+ If you use this software, please consider the following citation
+      S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]
+
+ More documentation and updates are available on
+     http://www.desy.de/~sschmitt
+
+ A short summary of the algorithm is given in the following:
+ the "best" x matching the measurement y within errors
+ is determined by minimizing the function
+   L1+L2+L3
+
+ where
+  L1 = (y-Ax)# Vyy^-1 (y-Ax)
+  L2 = tau^2 (L(x-x0))# L(x-x0)
+  L3 = lambda sum_i(y_i -(Ax)_i)
+
+ [the notation # means that the matrix is transposed ]
+
+ The term L1 is familiar from a least-square minimisation
+ The term L2 defines the regularisation (smootheness condition on x),
+   where the parameter tau^2 gives the strength of teh regularisation
+ The term L3 is an optional area constraint with Lagrangian parameter
+   lambda, ensuring that that the normalisation of x is consistent with the
+   normalisation of y
+
+ The method can be applied to a very large number of problems,
+ where the measured distribution y is a linear superposition
+ of several Monte Carlo shapes
+
+ ## Input from measurement:
+  y: vector of measured quantities  (dimension ny)
+  Vyy: covariance matrix for y (dimension ny x ny)
+       in many cases V is diagonal and calculated from the errors of y
+
+ ## From simulation:
+  A: migration matrix               (dimension ny x nx)
+
+ ## Result
+  x: unknown underlying distribution (dimension nx)
+     The error matrix of x, V_xx, is also determined
+
+ ## Regularisation
+  tau: parameter, defining the regularisation strength
+  L: matrix of regularisation conditions (dimension nl x nx)
+       depends on the structure of the input data
+  x0: bias distribution, from simulation
+
+ ## Preservation of the area
+  lambda: lagrangian multiplier
+  y_i: one component of the vector y
+  (Ax)_i: one component of the vector Ax
+
+
+ Determination of the unfolding result x:
+  - (a) not constrained: minimisation is performed as a function of x
+        for fixed lambda=0
+  - (b) constrained: stationary point is found as a function of x and lambda
+
+ The constraint can be useful to reduce biases on the result x
+ in cases where the vector y follows non-Gaussian probability densities
+ (example: Poisson statistics at counting experiments in particle physics)
+
+ Some random examples:
+  1. measure a cross-section as a function of, say, E_T(detector)
+       and unfold it to obtain the underlying distribution E_T(generator)
+  2. measure a lifetime distribution and unfold the contributions from
+       different flavours
+  3. measure the transverse mass and decay angle
+       and unfold for the true mass distribution plus background
+
+ ## Documentation
+ Some technical documentation is available here:
+  http://www.desy.de/~sschmitt
+
+ Note:
+
+ For most applications it is better to use the derived class
+    TUnfoldSys or even better TUnfoldDensity
+
+ TUnfoldSys extends the functionality of TUnfold
+            such that systematic errors are propagated to teh result
+            and that the unfolding can be done with proper background
+            subtraction
+
+ TUnfoldDensity extends further the functionality of TUnfoldSys
+                complex binning schemes are supported
+                The binning of input histograms is handeld consistently:
+                 (1) the regularisation may be done by density,
+                     i.e respecting the bin widths
+                 (2) methods are provided which preserve the proper binning
+                     of the result histograms
+ ## Implementation
+ The result of the unfolding is calculated as follows:
+
+ Lsquared = L#L            regularisation conditions squared
+
+   epsilon_j = sum_i A_ij    vector of efficiencies
+
+   E^-1  = ((A# Vyy^-1 A)+tau^2 Lsquared)
+
+   x = E (A# Vyy^-1 y + tau^2 Lsquared x0 +lambda/2 * epsilon) is the result
+
+ The derivatives
+   dx_k/dy_i
+   dx_k/dA_ij
+   dx_k/d(tau^2)
+ are calculated for further usage.
+
+ The covariance matrix V_xx is calculated as:
+   Vxx_ij = sum_kl dx_i/dy_k Vyy_kl dx_j/dy_l
+
+ ## Warning:
+ The algorithm is based on "standard" matrix inversion, with the
+ known limitations in numerical accuracy and computing cost for
+ matrices with large dimensions.
+
+ Thus the algorithm should not used for large dimensions of x and y
+   nx should not be much larger than 200
+   ny should not be much larger than 1000
+
+## Proper choice of tau
+ One of the difficult questions is about the choice of tau.
+ The method implemented in TUnfold is the L-curve method:
+ a two-dimensional curve is plotted
+ x-axis: log10(chisquare)
+ y-axis: log10(regularisation condition)
+ In many cases this curve has an L-shape. The best choice of tau is in the
+ kink of the L
+
+ Within TUnfold a simple version of the L-curve analysis is available.
+ It tests a given number of points in a predefined tau-range and searches
+ for the maximum of the curvature in the L-curve (kink position).
+ if no tau range is given, the range of the scan is determined automatically
+
+ A nice overview of the L-curve method is given in:
+  The L-curve and Its Use in the Numerical Treatment of Inverse Problems
+  (2000) by P. C. Hansen, in Computational Inverse Problems in
+  Electrocardiology, ed. P. Johnston,
+  Advances in Computational Bioengineering
+  http://www.imm.dtu.dk/~pch/TR/Lcurve.ps
+
+ ## Alternative Regularisation conditions
+ Regularisation is needed for most unfolding problems, in order to avoid
+ large oscillations and large correlations on the output bins.
+ It means that some extra conditions are applied on the output bins
+
+ Within TUnfold these conditions are posed on the difference (x-x0), where
+   x:  unfolding output
+   x0: the bias distribution, by default calculated from
+       the input matrix A. There is a method SetBias() to change the
+       bias distribution.
+       The 3rd argument to DoUnfold() is a scale factor applied to the bias
+         bias_default[j] = sum_i A[i][j]
+         x0[j] = scaleBias*bias[j]
+       The scale factor can be used to
+        (a) completely suppress the bias by setting it to zero
+        (b) compensate differences in the normalisation between data
+            and Monte Carlo
+
+ If the regularisation is strong, i.e. large parameter tau,
+ then the distribution x or its derivatives will look like the bias
+ distribution. If the parameter tau is small, the distribution x is
+ independent of the bias.
+
+ Three basic types of regularisation are implemented in TUnfold
+
+   condition      |      regularisation
+ -----------------|------------------------------------
+   kRegModeNone       |  none
+   kRegModeSize       |  minimize the size of (x-x0)
+   kRegModeDerivative |  minimize the 1st derivative of (x-x0)
+   kRegModeCurvature  |  minimize the 2nd derivative of (x-x0)
+
+ kRegModeSize is the regularisation scheme which often is found in
+ literature. The second derivative is often named curvature.
+ Sometimes the bias is not discussed,  equivalent to a bias scale factor
+ of zero.
+
+ The regularisation schemes kRegModeDerivative and
+ kRegModeCurvature have the nice feature that they create correlations
+ between x-bins, whereas the non-regularized unfolding tends to create
+ negative correlations between bins. For these regularisation schemes the
+ parameter tau could be tuned such that the correlations are smallest,
+ as an alternative to the L-curve method.
+
+ If kRegModeSize is chosen or if x is a smooth function through all bins,
+ the regularisation condition can be set on all bins together by giving
+ the appropriate argument in the constructor (see examples above).
+
+ If x is composed of independent groups of bins (for example,
+ signal and background binning in two variables), it may be necessary to
+ set regularisation conditions for the individual groups of bins.
+ In this case,  give  kRegModeNone  in the constructor and specify
+ the bin grouping with calls to
+         RegularizeBins()   specify a 1-dimensional group of bins
+         RegularizeBins2D() specify a 2-dimensional group of bins
+
+  Note, the class TUnfoldDensity provides an automatic setup of complex
+ regularisation schemes
+
+ For ultimate flexibility, the regularisation condition can be set on each
+ bin individually
+ -> give  kRegModeNone  in the constructor and use
+       RegularizeSize()        regularize one bin
+       RegularizeDerivative()  regularize the slope given by two bins
+       RegularizeCurvature()   regularize the curvature given by three bins
+       AddRegularisationCondition()
+                             define an arbitrary regulatisation condition
+*/
 
 /*
  This file is part of TUnfold.

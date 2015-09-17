@@ -23,6 +23,7 @@ class TTree;
 class TVirtualStreamerInfo;
 
 namespace ROOT {
+namespace Internal {
 
    class TBranchProxyDescriptor;
 
@@ -84,6 +85,7 @@ namespace ROOT {
       ClassDef(TBranchProxyClassDescriptor,0); // Class to cache the information we gathered about the branch and its content
    };
 
-}
+} // namespace Internal
+} // namespace ROOT
 
 #endif

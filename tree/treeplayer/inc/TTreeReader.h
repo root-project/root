@@ -40,7 +40,9 @@ class TDirectory;
 class TFileCollection;
 
 namespace ROOT {
+namespace Internal {
    class TBranchProxyDirector;
+}
 }
 
 class TTreeReader: public TObject {
@@ -169,12 +171,12 @@ public:
 
 protected:
    void Initialize();
-   ROOT::TNamedBranchProxy* FindProxy(const char* branchname) const {
-      return (ROOT::TNamedBranchProxy*) fProxies.FindObject(branchname); }
+   ROOT::Internal::TNamedBranchProxy* FindProxy(const char* branchname) const {
+      return (ROOT::Internal::TNamedBranchProxy*) fProxies.FindObject(branchname); }
    TCollection* GetProxies() { return &fProxies; }
 
-   void RegisterValueReader(ROOT::TTreeReaderValueBase* reader);
-   void DeregisterValueReader(ROOT::TTreeReaderValueBase* reader);
+   void RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
+   void DeregisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
 
    EEntryStatus SetEntryBase(Long64_t entry, Bool_t local);
 
@@ -187,12 +189,12 @@ private:
    TTree* fTree; // tree that's read
    TDirectory* fDirectory; // directory (or current file for chains)
    EEntryStatus fEntryStatus; // status of most recent read request
-   ROOT::TBranchProxyDirector* fDirector; // proxying director, owned
-   std::deque<ROOT::TTreeReaderValueBase*> fValues; // readers that use our director
+   ROOT::Internal::TBranchProxyDirector* fDirector; // proxying director, owned
+   std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; // readers that use our director
    THashTable   fProxies; //attached ROOT::TNamedBranchProxies; owned
 
-   friend class ROOT::TTreeReaderValueBase;
-   friend class ROOT::TTreeReaderArrayBase;
+   friend class ROOT::Internal::TTreeReaderValueBase;
+   friend class ROOT::Internal::TTreeReaderArrayBase;
 
    ClassDef(TTreeReader, 0); // A simple interface to read trees
 };

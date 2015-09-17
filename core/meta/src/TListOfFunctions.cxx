@@ -283,7 +283,7 @@ TFunction *TListOfFunctions::Get(DeclId_t id)
 
    // Let's see if this is a reload ...
    const char *name = gInterpreter->MethodInfo_Name(m);
-   if (TList* bucketForMethod = fUnloaded->GetListForObject(name)) {
+   if (const TList* bucketForMethod = fUnloaded->GetListForObject(name)) {
       TString mangledName( gInterpreter->MethodInfo_GetMangledName(m) );
       TIter    next(bucketForMethod);
       TFunction *uf;

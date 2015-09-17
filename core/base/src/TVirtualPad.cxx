@@ -14,10 +14,9 @@
 #include "TClass.h"
 #include "TThreadSlots.h"
 
-//______________________________________________________________________________
-//
-//  TVirtualPad is an abstract base class for the Pad and Canvas classes.
-//
+/** \class TVirtualPad
+TVirtualPad is an abstract base class for the Pad and Canvas classes.
+*/
 
 Size3D gVarSize3D;
 Size3D* gFuncSize3D(){ return &gVarSize3D; }

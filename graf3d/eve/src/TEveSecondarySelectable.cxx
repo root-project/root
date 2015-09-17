@@ -14,22 +14,25 @@
 
 #include "TGLSelectRecord.h"
 
-//______________________________________________________________________________
-//
-// Semi-abstract interface for classes supporting secondary-selection.
-//
-// Element class that inherits from this, should also implement the
-// following virtuals from TEveElement:
-//    virtual void UnSelected();
-//    virtual void UnHighlighted();
-// and clear corresponding selection-set from there.
-//
-// To support tooltips for sub-elements, implement:
-//    virtual TString TEveElement::GetHighlightTooltip();
-// and return tooltip for the entry in the fHighlightedSet.
-// There should always be a single entry there.
-// See TEveDigitSet for an example.
+/** \class TEveSecondarySelectable
+Semi-abstract interface for classes supporting secondary-selection.
 
+Element class that inherits from this, should also implement the
+following virtual methods from TEveElement:
+~~~ {.cpp}
+    virtual void UnSelected();
+    virtual void UnHighlighted();
+~~~
+and clear corresponding selection-set from there.
+
+To support tooltips for sub-elements, implement:
+~~~ {.cpp}
+    virtual TString TEveElement::GetHighlightTooltip();
+~~~
+and return tooltip for the entry in the fHighlightedSet.
+There should always be a single entry there.
+See TEveDigitSet for an example.
+*/
 
 ClassImp(TEveSecondarySelectable);
 

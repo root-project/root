@@ -84,6 +84,12 @@ if(cxx14)
     set(cxx14 OFF CACHE BOOL "" FORCE)
   endif()
 endif()
+if(root7)
+  if(NOT cxx14)
+    message(STATUS "ROOT7 interfaces require cxx14 which is disabled. Switching OFF root7 option")
+    set(root7 OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
 
 #---Check for libcxx option------------------------------------------------------------
 if(libcxx)

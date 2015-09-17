@@ -15,9 +15,9 @@
 #include "TInterpreter.h"
 
 //______________________________________________________________________________
-// TEveEventManager
-//
-// Base class for event management and navigation.
+/** \class TEveEventManager
+Base class for event management and navigation.
+*/
 
 ClassImp(TEveEventManager)
 
@@ -29,8 +29,6 @@ TEveEventManager::TEveEventManager(const char* n, const char* t) :
    fNewEventCommands()
 {
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual function to be called after a new event is loaded.

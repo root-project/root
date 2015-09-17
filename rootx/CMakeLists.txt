@@ -3,7 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(core)
 if(x11)
   include_directories(${X11_INCLUDE_DIR})
   ROOT_EXECUTABLE(root *.cxx  ${CMAKE_SOURCE_DIR}/core/clib/src/strlcpy.c

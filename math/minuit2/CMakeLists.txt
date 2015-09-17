@@ -2,9 +2,6 @@
 # CMakeLists.txt file for building ROOT math/minuit2 package
 ############################################################################
 
-ROOT_USE_PACKAGE(math/mathcore)
-ROOT_USE_PACKAGE(hist/hist)
-
 add_definitions(-DWARNINGMSG -DUSE_ROOT_ERROR)
 
 #---Deal with the parallel option on Minuit2. Probably it should be done using a build 'option' and not

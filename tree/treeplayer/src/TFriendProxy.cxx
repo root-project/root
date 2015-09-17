@@ -9,28 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFriendProxy                                                         //
-//                                                                      //
-// Concrete implementation of the proxy around a Friend Tree.           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TFriendProxy
+Concrete implementation of the proxy around a Friend Tree.
+*/
 
 #include "TFriendProxy.h"
 #include "TTree.h"
 #include "TList.h"
 #include "TFriendElement.h"
 
-ClassImp(ROOT::TFriendProxy);
+ClassImp(ROOT::Internal::TFriendProxy);
 
 namespace ROOT {
+namespace Internal {
 
-   /////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 
-   TFriendProxy::TFriendProxy() : fDirector(0,-1), fIndex(-1)
-   {
-   }
+TFriendProxy::TFriendProxy() : fDirector(0,-1), fIndex(-1)
+{
+}
 
    /////////////////////////////////////////////////////////////////////////////
    /// Constructor.
@@ -78,4 +75,6 @@ namespace ROOT {
          fDirector.SetTree(0);
       }
    }
-}
+
+} // namespace Internal
+} // namespace ROOT

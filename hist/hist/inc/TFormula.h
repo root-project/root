@@ -61,6 +61,7 @@ public:
       return fName == rhv.fName && fBody == rhv.fBody && fNargs == rhv.fNargs;
    }
 };
+
 class TFormulaVariable
 {
 public:
@@ -80,9 +81,7 @@ public:
    }
 };
 
-// Functor defining the parameter order
 struct TFormulaParamOrder {
-   // comparison function
    bool operator() (const TString& a, const TString& b) const;
 };
 
@@ -96,13 +95,14 @@ private:
    TString           fClingInput;           //! input function passed to Cling
    std::vector<Double_t>  fClingVariables;       //!  cached variables
    std::vector<Double_t>  fClingParameters;      //  parameter values
-   Bool_t            fReadyToExecute;       //!
+   Bool_t            fReadyToExecute;       //! trasient to force initialization
    Bool_t            fClingInitialized;  //!  transient to force re-initialization
    Bool_t            fAllParametersSetted;    // flag to control if all parameters are setted
    TMethodCall*      fMethod;        //! pointer to methocall
    TString           fClingName;     //! unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
 
    TInterpreter::CallFuncIFacePtr_t::Generic_t fFuncPtr;   //!  function pointer
+   void *   fLambdaPtr;                                    //!  pointer to the lambda function
 
    void     InputFormulaIntoCling();
    Bool_t   PrepareEvalMethod();
@@ -111,6 +111,7 @@ private:
    void     HandleParametrizedFunctions(TString &formula);
    void     HandleExponentiation(TString &formula);
    void     HandleLinear(TString &formula);
+   Bool_t   InitLambdaExpression(const char * formula);
    static Bool_t   IsDefaultVariableName(const TString &name);
 protected:
 
@@ -129,6 +130,7 @@ protected:
    static Bool_t IsBracket(const char c);
    static Bool_t IsFunctionNameChar(const char c);
    static Bool_t IsScientificNotation(const TString & formula, int ipos);
+   static Bool_t IsHexadecimal(const TString & formula, int ipos);
    void   ExtractFunctors(TString &formula);
    void   PreProcessFormula(TString &formula);
    void   ProcessFormula(TString &formula);
@@ -141,19 +143,21 @@ protected:
    Double_t       DoEval(const Double_t * x, const Double_t * p = nullptr) const;
 
    enum {
-      kNotGlobal     = BIT(10),  // don't store in gROOT->GetListOfFunction (it should be protected)
+      kNotGlobal     = BIT(10)  // don't store in gROOT->GetListOfFunction (it should be protected)
    };
 
 public:
 
    enum {
-      kNormalized    = BIT(14),   // set to true if the TFormula (ex gausn) is normalized
-      kLinear        = BIT(16)    //set to true if the TFormula is for linear fitting
+      kNormalized    = BIT(14),    // set to true if the TFormula (ex gausn) is normalized
+      kLinear        = BIT(16),    //set to true if the TFormula is for linear fitting
+      kLambda        = BIT(17)     // set to true if TFormula has been build with a lambda  
    };
                   TFormula();
    virtual        ~TFormula();
    TFormula&      operator=(const TFormula &rhs);
    TFormula(const char *name, const char * formula = "", bool addToGlobList = true);
+   TFormula(const char *name, const char * formula, int ndim, int npar, bool addToGlobList = true);
                   TFormula(const TFormula &formula);
    //               TFormula(const char *name, Int_t nparams, Int_t ndims);
 

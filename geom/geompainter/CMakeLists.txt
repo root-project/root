@@ -5,11 +5,6 @@
 
 set(libname GeomPainter)
 
-ROOT_USE_PACKAGE(geom/geom)
-ROOT_USE_PACKAGE(graf3d/g3d)
-ROOT_USE_PACKAGE(tree/tree)
-
-
 ROOT_GENERATE_DICTIONARY(G__${libname} T*.h MODULE ${libname} LINKDEF LinkDef.h)
 
 

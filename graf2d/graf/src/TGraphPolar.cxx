@@ -9,10 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
-////////////////////////////////////////////////////////////////////////////////
-/*! \class TGraphPolar
-\brief To draw a polar graph.
+/** \class TGraphPolar
+To draw a polar graph.
 
 TGraphPolar creates a polar graph (including error bars). A TGraphPolar is
 a TGraphErrors represented in polar coordinates.
@@ -52,16 +50,15 @@ Begin_Macro(source)
 
    return CPol;
 }
-End_Macro */
+End_Macro
+*/
 
 #include "TROOT.h"
 #include "TGraphPolar.h"
 #include "TGraphPolargram.h"
 #include "TVirtualPad.h"
 
-
 ClassImp(TGraphPolar);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphPolar default constructor.
@@ -70,7 +67,6 @@ TGraphPolar::TGraphPolar() : TGraphErrors(),
              fOptionAxis(kFALSE),fPolargram(0),fXpol(0),fYpol(0)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphPolar constructor.
@@ -89,7 +85,6 @@ TGraphPolar::TGraphPolar(Int_t n, const Double_t* theta, const Double_t* r,
    SetEditable(kFALSE);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphPolar destructor.
 
@@ -98,7 +93,6 @@ TGraphPolar::~TGraphPolar()
    delete []fXpol;
    delete []fYpol;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw TGraphPolar.
@@ -119,7 +113,6 @@ void TGraphPolar::Draw(Option_t* options)
    AppendPad(opt);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return points in polar coordinates.
 
@@ -128,7 +121,6 @@ Double_t *TGraphPolar::GetXpol()
    if (!fXpol) fXpol = new Double_t[fNpoints];
    return fXpol;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return points in polar coordinates.
@@ -139,7 +131,6 @@ Double_t *TGraphPolar::GetYpol()
    return fYpol;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set maximum Polar.
 
@@ -147,7 +138,6 @@ void TGraphPolar::SetMaxPolar(Double_t maximum)
 {
    if (fPolargram) fPolargram->ChangeRangePolar(fPolargram->GetTMin(),maximum);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set maximum radial at the intersection of the positive X axis part and
@@ -158,7 +148,6 @@ void TGraphPolar::SetMaxRadial(Double_t maximum)
    if (fPolargram) fPolargram->SetRangeRadial(fPolargram->GetRMin(),maximum);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set minimum Polar.
 
@@ -166,7 +155,6 @@ void TGraphPolar::SetMinPolar(Double_t minimum)
 {
    if (fPolargram) fPolargram->ChangeRangePolar(minimum, fPolargram->GetTMax());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set minimum radial in the center of the circle.

@@ -29,21 +29,17 @@
 ClassImp(TPaveText)
 
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>TPaveText : to draw a pave with text</h2></center>
+/** \class TPaveText
 A PaveText is a Pave (see TPave) with text, lines or/and boxes inside.
-Line (and boxes) are positionned in the pave using coordinates relative to
+
+Line (and boxes) are positioned in the pave using coordinates relative to
 the pave (%).
-<p>
+
 Example:
-End_Html
 Begin_Macro(source)
 ../../../tutorials/graphics/pavetext.C
-End_Macro */
-
-
+End_Macro
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// pavetext default constructor.
@@ -55,23 +51,22 @@ TPaveText::TPaveText(): TPave(), TAttText()
    fLongest = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// PaveText normal constructor.
 ///
 /// A PaveText is a Pave with several lines of text
 ///
-///  option = "TR" Top and Right shadows are drawn.
-///  option = "TL" Top and Left shadows are drawn.
-///  option = "BR" Bottom and Right shadows are drawn.
-///  option = "BL" Bottom and Left shadows are drawn.
+///  - option = "TR" Top and Right shadows are drawn.
+///  - option = "TL" Top and Left shadows are drawn.
+///  - option = "BR" Bottom and Right shadows are drawn.
+///  - option = "BL" Bottom and Left shadows are drawn.
 ///
 ///  If none of these four above options is specified the default the
 ///  option "BR" will be used to draw the border. To produces a pave
 ///  without any border it is enough to specify the option "NB" (no border).
 ///
-///  option = "NDC" x1,y1,x2,y2 are given in NDC
-///  option = "ARC" corners are rounded
+///  - option = "NDC" x1,y1,x2,y2 are given in NDC
+///  - option = "ARC" corners are rounded
 ///
 /// In case of option "ARC", the corner radius is specified
 /// via TPave::SetCornerRadius(rad) where rad is given in percent
@@ -89,7 +84,6 @@ TPaveText::TPaveText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_
    fLongest = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// pavetext default destructor.
 
@@ -100,7 +94,6 @@ TPaveText::~TPaveText()
    delete fLines;
    fLines = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// pavetext copy constructor.
@@ -145,7 +138,6 @@ TBox *TPaveText::AddBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    return newbox;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new graphics line to this pavetext.
 
@@ -158,7 +150,6 @@ TLine *TPaveText::AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    fLines->Add(newline);
    return newline;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new Text line to this pavetext at given coordinates.
@@ -178,7 +169,6 @@ TText *TPaveText::AddText(Double_t x1, Double_t y1, const char *text)
    return newtext;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new Text line to this pavetext.
 
@@ -186,7 +176,6 @@ TText *TPaveText::AddText(const char *text)
 {
    return AddText(0,0,text);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear all lines in this pavetext.
@@ -197,7 +186,6 @@ void TPaveText::Clear(Option_t *)
    fLines->Delete();
    fLongest = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete text at the mouse position.
@@ -214,7 +202,6 @@ void TPaveText::DeleteText()
    delete obj;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this pavetext with its current attributes.
 
@@ -227,7 +214,6 @@ void TPaveText::Draw(Option_t *option)
    AppendPad(opt);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw lines in filename in this pavetext.
 
@@ -237,7 +223,6 @@ void TPaveText::DrawFile(const char *filename, Option_t *option)
 
    AppendPad(option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Edit text at the mouse position.
@@ -258,7 +243,6 @@ void TPaveText::EditText()
    text->SetTextAttributes();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get Pointer to line number in this pavetext.
 
@@ -274,7 +258,6 @@ TText *TPaveText::GetLine(Int_t number) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get Pointer to first containing string text in this pavetext.
 
@@ -287,7 +270,6 @@ TText *TPaveText::GetLineWith(const char *text) const
    }
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get object pointed by the mouse in this pavetext.
@@ -354,9 +336,8 @@ TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///  return number of text lines (ignoring Tlines, etc)
+///  return number of text lines (ignoring TLine, etc)
 
 Int_t TPaveText::GetSize() const
 {
@@ -369,9 +350,8 @@ Int_t TPaveText::GetSize() const
    return nlines;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a new lineine at the mouse position.
+/// Add a new line at the mouse position.
 
 void TPaveText::InsertLine()
 {
@@ -386,7 +366,6 @@ void TPaveText::InsertLine()
       else               fLines->AddAfter(obj,newline);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new Text line at the mouse position.
@@ -404,7 +383,6 @@ void TPaveText::InsertText(const char *text)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this pavetext with its current attributes.
 
@@ -415,7 +393,6 @@ void TPaveText::Paint(Option_t *option)
    TPave::PaintPave(fX1,fY1,fX2,fY2,GetBorderSize(),option);
    PaintPrimitives(kPaveText);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint list of primitives in this pavetext.
@@ -580,7 +557,6 @@ void TPaveText::PaintPrimitives(Int_t mode)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump this pavetext with its attributes.
 
@@ -589,7 +565,6 @@ void TPaveText::Print(Option_t *option) const
    TPave::Print(option);
    if (fLines) fLines->Print();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read lines of filename in this pavetext.
@@ -673,7 +648,6 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
    file.close();
    delete [] fname;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save lines of this pavetext as C++ statements on output stream out
@@ -830,7 +804,6 @@ void TPaveText::SaveLines(std::ostream &out, const char *name)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
@@ -866,7 +839,6 @@ void TPaveText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   pt->Draw();"<<std::endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set attribute option for all lines containing string text.
 ///
@@ -889,7 +861,6 @@ void TPaveText::SetAllWith(const char *text, Option_t *option, Double_t value)
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TPaveText.

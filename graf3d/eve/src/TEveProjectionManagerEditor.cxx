@@ -17,18 +17,14 @@
 #include "TGComboBox.h"
 #include "TGLabel.h"
 
-//==============================================================================
-// TEveProjectionManagerEditor
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// GUI editor for TEveProjectionManager class.
-//
+/** \class TEveProjectionManagerEditor
+GUI editor for TEveProjectionManager class.
+*/
 
 ClassImp(TEveProjectionManagerEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
                                                          Int_t width, Int_t height,
@@ -47,8 +43,6 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
    fCenterY(0),
    fCenterZ(0)
 {
-   // Constructor.
-
    MakeTitle("TEveProjection");
    {
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
@@ -134,7 +128,7 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
    fMaxTrackStep->SetLabelWidth(labelW);
    fMaxTrackStep->Build();
    fMaxTrackStep->SetLimits(1, 100, 100, TGNumberFormat::kNESRealOne);
-   fMaxTrackStep->SetToolTip("Maximum step between two consequtive track-points to avoid artefacts due to projective distortions.\nTaken into account automatically during projection procedure.");
+   fMaxTrackStep->SetToolTip("Maximum step between two consecutive track-points to avoid artefacts due to projective distortions.\nTaken into account automatically during projection procedure.");
    fMaxTrackStep->Connect("ValueSet(Double_t)", "TEveProjectionManagerEditor",
                          this, "DoMaxTrackStep()");
    AddFrame(fMaxTrackStep, new TGLayoutHints(kLHintsTop, 1, 1, 1, 3));

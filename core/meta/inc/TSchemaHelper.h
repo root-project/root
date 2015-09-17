@@ -12,7 +12,7 @@
 // This include must be outside of the code guard because
 // Rtypes.h includes TGenericClassInfo.h which includes
 // TSchemaHelper.h (this header file) and really need the
-// definition of ROOT::TSchemaHelper.   So in this case,
+// definition of ROOT::Internal::TSchemaHelper.   So in this case,
 // we need the indirect #include to really do the declaration
 // and the direct #include to be a noop.
 #ifndef ROOT_Rtypes
@@ -24,8 +24,8 @@
 
 #include <string>
 
-namespace ROOT
-{
+namespace ROOT {
+namespace Internal {
    struct TSchemaHelper
    {
       TSchemaHelper(): fTarget(), fSourceClass(),
@@ -51,6 +51,7 @@ namespace ROOT
 
       TSchemaHelper& operator=(const TSchemaHelper &) {return *this;} // Not implemented
    };
+}
 }
 
 #endif // ROOT_TSchemaHelper

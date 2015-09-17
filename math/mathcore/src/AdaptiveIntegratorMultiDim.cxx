@@ -28,8 +28,8 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double rel
    fFun(0)
 {
    // constructor - without passing a function
-   if (fAbsTol <= 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance();
-   if (fRelTol <= 0) fRelTol = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance();
+   if (fAbsTol < 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance();
+   if (fRelTol < 0) fRelTol = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance();
    if (fMaxPts == 0) fMaxPts = ROOT::Math::IntegratorMultiDimOptions::DefaultNCalls();
    if (fSize   == 0) fSize = ROOT::Math::IntegratorMultiDimOptions::DefaultWKSize();
 }
@@ -49,8 +49,8 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim( const IMultiGenFunction 
 {
    // constructur passing a multi-dimensional function interface
    // constructor - without passing a function
-   if (fAbsTol <= 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance();
-   if (fRelTol <= 0) fRelTol = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance();
+   if (fAbsTol < 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance();
+   if (fRelTol < 0) fRelTol = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance();
    if (fMaxPts == 0) fMaxPts = ROOT::Math::IntegratorMultiDimOptions::DefaultNCalls();
    if (fSize   == 0) fSize = ROOT::Math::IntegratorMultiDimOptions::DefaultWKSize();
 }
@@ -334,7 +334,22 @@ L160: //to divide or not
          fStatus = 1;
    }
    //..and accuracy appropriare
-   if ( ( relerr < epsrel || abserr < epsabs ) && ifncls >= minpts) fStatus = 0;  // We do not use the absolute error.
+   // should not use absolute tolerance especially for sharp peaks
+   if ( ( relerr < epsrel || abserr < epsabs ) && ifncls >= minpts) fStatus = 0;  
+
+#ifdef DEBUG   
+   if (ifncls >= minpts) {
+      if (relerr < epsrel ) {
+         printf("relative tol reached for value %20.10g an rel error %20.10g  \n",aresult, relerr);
+         fStatus = 0;  // We do not use the absolute error.
+      }
+      if (abserr < epsabs ) { 
+         printf("Absolute tol reached for value %20.10g and abs error %20.10g  \n",aresult, abserr);
+         fStatus = 0;  // We do not use the absolute error.
+      }
+   }
+#endif
+   
    if (fStatus == 3) {
       ldv = kTRUE;
       isbrgn  = irgnst;

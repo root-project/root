@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-// TControlBarImp                                                      //
-//                                                                     //
-// ABC describing GUI independent control bar                          //
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
+/** \class TControlBarImp
+ABC describing GUI independent control bar
+*/
 
 #include "TControlBarImp.h"
 

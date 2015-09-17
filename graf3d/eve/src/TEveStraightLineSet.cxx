@@ -14,19 +14,14 @@
 #include "TRandom.h"
 #include "TEveProjectionManager.h"
 
-
-//==============================================================================
-//==============================================================================
-// TEveStraightLineSet
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Set of straight lines with optional markers along the lines.
+/** \class TEveStraightLineSet
+Set of straight lines with optional markers along the lines.
+*/
 
 ClassImp(TEveStraightLineSet);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveStraightLineSet::TEveStraightLineSet(const char* n, const char* t):
    TEveElement (),
@@ -41,8 +36,6 @@ TEveStraightLineSet::TEveStraightLineSet(const char* n, const char* t):
    fDepthTest     (kTRUE),
    fLastLine      (0)
 {
-   // Constructor.
-
    InitMainTrans();
    fPickable = kTRUE;
 
@@ -51,8 +44,6 @@ TEveStraightLineSet::TEveStraightLineSet(const char* n, const char* t):
    fMarkerColor  = 2;
    fMarkerStyle  = 20;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a line.
@@ -130,8 +121,6 @@ TEveStraightLineSet::AddMarker(Int_t line_id, Float_t pos)
                     line_id);
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy visualization parameters from element el.
 
@@ -165,8 +154,6 @@ void TEveStraightLineSet::WriteVizParams(std::ostream& out, const TString& var)
    out << t << "SetDepthTest("  << ToString(fDepthTest)  << ");\n";
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return class of projected object.
 /// Virtual from TEveProjectable.
@@ -175,8 +162,6 @@ TClass* TEveStraightLineSet::ProjectedClass(const TEveProjection*) const
 {
    return TEveStraightLineSetProjected::Class();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute bounding-box.
@@ -204,8 +189,6 @@ void TEveStraightLineSet::ComputeBBox()
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the line-set.
 
@@ -214,15 +197,9 @@ void TEveStraightLineSet::Paint(Option_t*)
    PaintStandard(this);
 }
 
-
-//==============================================================================
-//==============================================================================
-// TEveStraightLineSetProjected
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Projected replica of a TEveStraightLineSet.
+/** \class TEveStraightLineSetProjected
+Projected replica of a TEveStraightLineSet.
+*/
 
 ClassImp(TEveStraightLineSetProjected);
 
@@ -233,8 +210,6 @@ TEveStraightLineSetProjected::TEveStraightLineSetProjected() :
    TEveStraightLineSet(), TEveProjected ()
 {
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set projection manager and model object.

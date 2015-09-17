@@ -24,6 +24,8 @@
 /**
    TUnuranBaseDist, base class for Unuran distribution classees such as
    TUnuranContDist (for one-dimension) or TUnuranMultiContDist (multi-dimension)
+
+   \ingroup Unnuran
 */
 ///////////////////////////////////////////////////////////////////////
 class TUnuranBaseDist  {

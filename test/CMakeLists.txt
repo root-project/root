@@ -273,6 +273,10 @@ if(ROOT_davix_FOUND)
   ROOT_ADD_TEST(test-stressIOPlugins-http COMMAND stressIOPlugins http FAILREGEX "FAILED|Error in")
 endif()
 
+#--delaunay----------------------------------------------------------------------------------
+ROOT_EXECUTABLE(delaunayTriangulation delaunayTriangulation.cxx LIBRARIES Hist)
+ROOT_ADD_TEST(test-delaunay COMMAND delaunayTriangulation)
+
 #--TestTformula------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(TFormulaTests TFormulaTests.cxx LIBRARIES Hist RIO)
 ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error in")
@@ -285,4 +289,9 @@ if(ROOT_tbb_FOUND)
   if(builtin_tbb)
     add_dependencies(testTBB TBB)
   endif()
+endif()
+
+#--g2root------------------------------------------------------------------------------------------
+if(TARGET g2root)
+  ROOT_ADD_TEST(test-g2root COMMAND g2root)
 endif()

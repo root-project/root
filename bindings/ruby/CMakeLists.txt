@@ -1,8 +1,6 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT bindings/ruby package
 ############################################################################
-ROOT_USE_PACKAGE(math/mathcore)
-ROOT_USE_PACKAGE(tree/tree)
 include_directories(${RUBY_INCLUDE_DIRS})
 
 ROOT_GENERATE_DICTIONARY(G__Ruby *.h MODULE Ruby LINKDEF LinkDef.h)

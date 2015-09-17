@@ -41,82 +41,64 @@ const Double_t kDefWeight = 1;
 ClassImp(TEfficiency)
 
 ////////////////////////////////////////////////////////////////////////////////
+/** \class TEfficiency
+    \ingroup Hist 
+    \brief Class to handle efficiency histograms
 
-/*****************************************************************************
-Begin_Html
-<center><h2>TEfficiency - a class to handle efficiency
-histograms</h2></center>
-<ol style="list-style-type: upper-roman;">
-<li><a href="#over">Overview</a></li>
-<li><a href="#create">Creating a TEfficiency object</a></li>
-<li><a href="#fill">Fill in events</a></li>
-<li><a href="#stat">Statistic options</a></li>
-<ol><li><a href="#compare">Coverage probabilities for different methods</a></li></ol>
-<li><a href="#cm">Merging and combining TEfficiency objects</a></li>
- <ol>
- <li><a href="#merge">When should I use merging?</a></li>
- <li><a href="#comb">When should I use combining?</a></li>
- </ol>
- <li><a href="#other">Further operations</a>
- <ol>
- <li><a href="#histo">Information about the internal histograms</a></li>
- <li><a href="#fit">Fitting</a></li>
- <li><a href="#draw">Draw a TEfficiency object</a></li>
- </ol>
- <li><a href="#class">TEfficiency class</a></li>
- </ol>
+## I. Overview
+This class handles the calculation of efficiencies and their uncertainties. It
+provides several statistical methods for calculating frequentist and bayesian
+confidence intervals as well as a function for combining several efficiencies.
 
- <h3><a name="over">I. Overview</a></h3>
- This class handles the calculation of efficiencies and their uncertainties. It
- provides several statistical methods for calculating frequentist and bayesian
- confidence intervals as well as a function for combining several efficiencies.
- <br />
- Efficiencies have a lot of applications and meanings but in principle they can
- be described by the fraction of good/passed events k out of sample containing
- N events. One is usually interested in the dependency of the efficiency on other
- (binned) variables. The number of passed and total events is therefore stored
- internally in two histograms (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:fTotalHistogram">fTotalHistogram</a> and
- <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:fPassedHistogram">fPassedHistogram</a>). Then the
- efficiency as well as its upper and lower error an be calculated for each bin
- individually.<br />
- As the efficiency can be regarded as a parameter of a binomial distribution, the
- number of pass ed and total events must always be integer numbers. Therefore a
- filling with weights is not possible however you can assign a global weight to each
- TEfficiency object (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetWeight">SetWeight</a>). It is necessary to create one TEfficiency object
- for each weight if you investigate a process involving different weights. This
- procedure needs more effort but enables you to re-use the filled object in cases
- where you want to change one or more weights. This would not be possible if all
- events with different weights were filled in the same histogram.
+Efficiencies have a lot of applications and meanings but in principle they can
+be described by the fraction of good/passed events k out of sample containing
+N events. One is usually interested in the dependency of the efficiency on other
+(binned) variables. The number of passed and total events is therefore stored
+internally in two histograms (TEfficiency::fTotalHistogram and TEfficiency::fPassedHistogram).
+Then the efficiency as well as its upper and lower error an be calculated for each bin
+individually.
 
- <h3><a name="create">II. Creating a TEfficiency object</a></h3>
- If you start a new analysis, it is highly recommended to use the TEfficiency class
- from the beginning. You can then use one of the constructors for fixed or
- variable bin size and your desired dimension. These constructors append the
- created TEfficiency object to the current directory. So it will be written
- automatically to a file during the next <a href="http://root.cern.ch/root/html/TFile.html#TFile:Write">TFile::Write</a> command.
- <div class="code"><pre>
- <b>Example:</b>
- create a twodimensional TEfficiency object with
- - name = "eff"
- - title = "my efficiency"
- - axistitles: x, y and LaTeX formated epsilon as label for Z axis
- - 10 bins with constant bin width (= 1) along X axis starting at 0 (lower edge
- from first bin) upto 10 (upper edge of last bin)
- - 20 bins with constant bin width (= 0.5) along Y axis starting at -5 (lower
- edge from first bin) upto 5 (upper edge of last bin)
-TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;y;#epsilon",10,0,10,20,-5,5);
-</pre></div><div class="clear" />
+As the efficiency can be regarded as a parameter of a binomial distribution, the
+number of pass ed and total events must always be integer numbers. Therefore a
+filling with weights is not possible however you can assign a global weight to each
+TEfficiency object (TEfficiency::SetWeight).
+It is necessary to create one TEfficiency object
+for each weight if you investigate a process involving different weights. This
+procedure needs more effort but enables you to re-use the filled object in cases
+where you want to change one or more weights. This would not be possible if all
+events with different weights were filled in the same histogram.
+
+## II. Creating a TEfficiency object
+If you start a new analysis, it is highly recommended to use the TEfficiency class
+from the beginning. You can then use one of the constructors for fixed or
+variable bin size and your desired dimension. These constructors append the
+created TEfficiency object to the current directory. So it will be written
+automatically to a file during the next TFile:Write command.
+
+Example: create a twodimensional TEfficiency object with
+- name = "eff"
+- title = "my efficiency"
+- axistitles: x, y and LaTeX formated epsilon as label for Z axis
+- 10 bins with constant bin width (= 1) along X axis starting at 0 (lower edge
+  from first bin) upto 10 (upper edge of last bin)
+- 20 bins with constant bin width (= 0.5) along Y axis starting at -5 (lower
+  edge from first bin) upto 5 (upper edge of last bin)
+
+        TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;y;#epsilon",10,0,10,20,-5,5);
+
 If you already have two histograms filled with the number of passed and total
-events, you will use the constructor <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:TEfficiency%1">TEfficiency(const TH1& passed,const TH1& total)</a>
+events, you will use the constructor TEfficiency(const TH1& passed,const TH1& total)
 to construct the TEfficiency object. The histograms "passed" and "total" have
-to fullfill the conditions  mentioned in <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:CheckConsistency">CheckConsistency</a>, otherwise the construction will fail.
-As the histograms already exist, the new TEfficiency is by default <b>not</b> attached
+to fullfill the conditions  mentioned in TEfficiency::CheckConsistency, otherwise the construction will fail.
+As the histograms already exist, the new TEfficiency is by default **not** attached
 to the current directory to avoid duplication of data. If you want to store the
-new object anyway, you can either write it directly by calling <a href="http://root.cern.ch/root/html/TObject.html#TObject:Write">Write</a> or attach it to a directory using <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetDirectory">SetDirectory</a>.
-This also applies for TEfficiency objects created by the copy constructor <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:TEfficiency%8">TEfficiency(const TEfficiency& rEff)</a>.
-<div class="code">
-<pre>
-<b>Example 1:</b>
+new object anyway, you can either write it directly by calling TObject::Write or attach it to a directory using TEfficiency::SetDirectory.
+This also applies for TEfficiency objects created by the copy constructor TEfficiency::TEfficiency(const TEfficiency& rEff).
+
+
+### Example 1
+
+~~~~~~~~~~~~~~~{.cpp}
 TEfficiency* pEff = 0;
 TFile* pFile = new TFile("myfile.root","recreate");
 
@@ -128,8 +110,11 @@ if(TEfficiency::CheckConsistency(h_pass,h_total))
   // AND pEff will be attached to the current directory
   pEff->Write();
 }
+~~~~~~~~~~~~~~~
 
-<b>Example 2:</b>
+### Example 2
+
+~~~~~~~~~~~~~~~{.cpp}
 TEfficiency* pEff = 0;
 TFile* pFile = new TFile("myfile.root","recreate");
 
@@ -142,20 +127,19 @@ if(TEfficiency::CheckConsistency(h_pass,h_total))
   //now all objects in gDirectory will be written to "myfile.root"
   pFile->Write();
 }
-</pre>
-</div><div class="clear" />
+~~~~~~~~~~~~~~~
+
 In the case that you already have two filled histograms and you only want to
-plot them as a graph, you should rather use <a href="http://root.cern.ch/root/html/TGraphAsymmErrors.html#TGraphAsymmErrors:TGraphAsymmErrors%8">TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass,const TH1* total,Option_t* opt)</a>
+plot them as a graph, you should rather use TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass,const TH1* total,Option_t* opt)
 to create a graph object.
 
-<h3><a name="fill">III. Filling with events</a></h3>
-   You can fill the TEfficiency object by calling the <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Fill">Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z)</a> method.
-   The boolean flag "bPassed" indicates whether the current event is a good
-   (both histograms are filled) or not (only <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:fTotalHistogram">fTotalHistogram</a> is filled).
-   The variables x,y and z determine the bin which is filled. For lower
-   dimensions the z- or even the y-value may be omitted.
-   End_Html
-   Begin_Macro(source)
+## III. Filling with events
+You can fill the TEfficiency object by calling the TEfficiency::Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z) method.
+The boolean flag "bPassed" indicates whether the current event is a good
+   (both histograms are filled) or not (only TEfficiency::fTotalHistogram is filled).
+The variables x,y and z determine the bin which is filled. For lower dimensions the z- or even the y-value may be omitted.
+
+Begin_Macro(source)
 {
    //canvas only needed for this documentation
    TCanvas* c1 = new TCanvas("example","",600,400);
@@ -182,157 +166,87 @@ to create a graph object.
    //only for this documentation
    return c1;
 }
-   End_Macro
-   Begin_Html
-   You can also set the number of passed or total events for a bin directly by
-   using the <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetPassedEvents">SetPassedEvents</a> or <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetTotalEvents">SetTotalEvents</a> method.
+End_Macro
 
-<h3><a name="stat">IV. Statistic options</a></h3>
-   The calculation of the estimated efficiency depends on the chosen statistic
-   option. Let k denotes the number of passed events and N the number of total
-   events.<br />
-   <b>Frequentist methods</b><br />
-   The expectation value of the number of passed events is given by the true
-   efficiency times the total number of events. One can estimate the efficiency
-   by replacing the expected number of passed events by the observed number of
-   passed events. End_Html
-   Begin_Latex
-#LT k #GT = #epsilon #times N    #Rightarrow    #hat{#varepsilon} = #frac{k}{N}
-   End_Latex
-   Begin_Html
-   <b>Bayesian methods</b><br />
-   In bayesian statistics a likelihood-function (how probable is it to get the
-   observed data assuming a true efficiency) and a prior probability (what is the
-   probability that a certain true efficiency is actually realised) are used to
-   determine a posterior probability by using Bayes theorem. At the moment, only
-   beta distributions (have 2 free parameters) are supported as prior
-   probabilities.
-   End_Html
-   Begin_Latex(separator='=',align='rl')
-      P(#epsilon | k ; N) = #frac{1}{norm} #times P(k | #epsilon ; N) #times Prior(#epsilon)
-      P(k | #epsilon ; N) = Binomial(N,k) #times #epsilon^{k} #times (1 - #epsilon)^{N - k} ... binomial distribution
-      Prior(#epsilon) = #frac{1}{B(#alpha,#beta)} #times #epsilon ^{#alpha - 1} #times (1 - #epsilon)^{#beta - 1} #equiv Beta(#epsilon; #alpha,#beta)
-#Rightarrow P(#epsilon | k ; N) = #frac{1}{norm'} #times #epsilon^{k + #alpha - 1} #times (1 - #epsilon)^{N - k + #beta - 1} #equiv Beta(#epsilon; k + #alpha, N - k + #beta)
-   End_Latex
-   Begin_Html
-   By default the expectation value of this posterior distribution is used as estimator for the efficiency:
-   End_Html
-   Begin_Latex
-#hat{#varepsilon} = #frac{k + #alpha}{N + #alpha + #beta}
-   End_Latex
-   Begin_Html
-   Optionally the mode can also be used as value for the estimated efficiency. This can be done by calling SetBit(kPosteriorMode) or
-   <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetPosteriorMode">SetPosteriorMode</a>. In this case the estimated efficiency is:
-   End_Html
-   Begin_Latex
-#hat{#varepsilon} = #frac{k + #alpha -1}{N + #alpha + #beta - 2}
-   End_Latex
-   Begin_Html
-   In the case of a uniform prior distribution, B(x,1,1), the posterior mode is k/n, equivalent to the frequentist estimate (the maximum likelihood value).
+You can also set the number of passed or total events for a bin directly by
+using the TEfficiency::SetPassedEvents or TEfficiency::SetTotalEvents method.
+
+## IV. Statistic options
+The calculation of the estimated efficiency depends on the chosen statistic
+option. Let k denotes the number of passed events and N the number of total
+events.
+ 
+###Frequentist methods
+The expectation value of the number of passed events is given by the true
+efficiency times the total number of events. One can estimate the efficiency
+by replacing the expected number of passed events by the observed number of
+passed events.
+
+\f[
+      k = \epsilon \times N    \Rightarrow    \hat{\varepsilon} = \frac{k}{N}
+\f]
+
+### Bayesian methods
+In bayesian statistics a likelihood-function (how probable is it to get the
+observed data assuming a true efficiency) and a prior probability (what is the
+probability that a certain true efficiency is actually realised) are used to
+determine a posterior probability by using Bayes theorem. At the moment, only
+beta distributions (have 2 free parameters) are supported as prior
+probabilities.
+
+\f{eqnarray*}{
+ P(\epsilon | k ; N) &=& \frac{1}{norm} \times P(k | \epsilon ; N) \times Prior(\epsilon) \\
+ P(k | \epsilon ; N) &=& Binomial(N,k) \times \epsilon^{k} \times (1 - \epsilon)^{N - k} ...\  binomial\ distribution \\
+ Prior(\epsilon) &=& \frac{1}{B(\alpha,\beta)} \times \epsilon ^{\alpha - 1} \times (1 - \epsilon)^{\beta - 1} \equiv Beta(\epsilon; \alpha,\beta) \\
+ \Rightarrow P(\epsilon | k ; N) &=& \frac{1}{norm'} \times \epsilon^{k + \alpha - 1} \times (1 - \epsilon)^{N - k + \beta - 1} \equiv Beta(\epsilon; k + \alpha, N - k + \beta)
+\f}
+
+By default the expectation value of this posterior distribution is used as estimator for the efficiency:
+
+\f[
+      \hat{\varepsilon} = \frac{k + \alpha}{N + \alpha + \beta}
+\f]
+
+Optionally the mode can also be used as value for the estimated efficiency. This can be done by calling 
+SetBit(kPosteriorMode) or TEfficiency::SetPosteriorMode. In this case the estimated efficiency is:
+
+\f[
+       \hat{\varepsilon} = \frac{k + \alpha -1}{N + \alpha + \beta - 2}
+\f]
+
+In the case of a uniform prior distribution, B(x,1,1), the posterior mode is k/n, equivalent to the frequentist 
+estimate (the maximum likelihood value).
 
 The statistic options also specifiy which confidence interval is used for calculating
 the uncertainties of the efficiency. The following properties define the error
 calculation:
-<ul>
-<li><b>fConfLevel:</b> desired confidence level: 0 < fConfLevel < 1 (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetConfidenceLevel">GetConfidenceLevel</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetConfidenceLevel">SetConfidenceLevel</a>)</li>
-<li><b>fStatisticOption:</b> defines which method is used to calculate the boundaries of the confidence interval (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetStatisticOption">SetStatisticOption</a>)</li>
-<li><b>fBeta_alpha, fBeta_beta:</b> parameters for the prior distribution which is only used in the bayesian case (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetBetaAlpha">GetBetaAlpha</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetBetaBeta">GetBetaBeta</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetBetaAlpha">SetBetaAlpha</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetBetaBeta">SetBetaBeta</a>)</li>
-<li><b>kIsBayesian:</b> flag whether bayesian statistics are used or not (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:UsesBayesianStat">UsesBayesianStat</a>)</li>
-<li><b>kShortestInterval:</b> flag whether shortest interval (instead of central one) are used in case of Bayesian statistics  (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:UsesShortestInterval">UsesShortestInterval</a>). Normally shortest interval should be used in combination with the mode (see <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:UsesPosteriorMode">UsesPosteriorMode</a>)</li>
-<li><b>fWeight:</b> global weight for this TEfficiency object which is used during combining or merging with other TEfficiency objects(<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetWeight">GetWeight</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetWeight">SetWeight</a>)</li>
-</ul>
-   In the following table the implemented confidence intervals are listed
-   with their corresponding statistic option. For more details on the calculation,
-   please have a look at the the mentioned functions.<br /><br />
-<table align="center" border="1" cellpadding="5" rules="rows" vspace="10">
-   <caption align="bottom">implemented confidence intervals and their options</caption>
-   <tr>
-   <th>name</th><th>statistic option</th><th>function</th><th>kIsBayesian</th><th>parameters</th>
-   </tr>
-   <tr>
-   <td>Clopper-Pearson</td><td>kFCP</td>
-   <td>
-    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:ClopperPearson">ClopperPearson</a>
-   </td>
-   <td>false</td>
-   <td>
-     <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
-   </td>
-   </tr>
-   <tr>
-   <td>normal approximation</td><td>kFNormal</td>
-   <td>
-    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Normal">Normal</a>
-   </td>
-   <td>false</td>
-   <td>
-     <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
-   </td>
-   </tr>
-   <tr>
-   <td>Wilson</td><td>kFWilson</td>
-   <td>
-    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Wilson">Wilson</a>
-   </td>
-   <td>false</td>
-   <td>
-     <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
-   </td>
-   </tr>
-   <tr>
-   <td>Agresti-Coull</td><td>kFAC</td>
-   <td>
-    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:AgrestiCoull">AgrestiCoull</a>
-   </td>
-   <td>false</td>
-   <td>
-     <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
-   </td>
-   </tr>
-   <tr>
-   <td>Feldman-Cousins</td><td>kFFC</td>
-   <td>
-    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:FeldmanCousins">FeldmanCousins</a>
-   </td>
-   <td>false</td>
-   <td>
-     <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
-   </td>
-   </tr>
-   <tr>
-   <td>Jeffrey</td><td>kBJeffrey</td>
-   <td>
-    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Bayesian">Bayesian</a>
-   </td>
-   <td>true</td>
-   <td>
-     <ul><li>total events</li><li>passed events</li><li>confidence level</li><li>fBeta_alpha = 0.5</li><li>fBeta_beta = 0.5</li></ul>
-   </td>
-   </tr>
-   <td>Uniform prior</td><td>kBUniform</td>
-   <td>
-    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Bayesian">Bayesian</a>
-   </td>
-   <td>true</td>
-   <td>
-     <ul><li>total events</li><li>passed events</li><li>confidence level</li><li>fBeta_alpha = 1</li><li>fBeta_beta = 1</li></ul>
-   </td>
-   </tr>
-   <td>custom prior</td><td>kBBayesian</td>
-   <td>
-    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Bayesian">Bayesian</a>
-   </td>
-   <td>true</td>
-   <td>
-     <ul><li>total events</li><li>passed events</li><li>confidence level</li><li>fBeta_alpha</li><li>fBeta_beta</li></ul>
-   </td>
-   </tr>
-   </table>
-   <br />
-   The following example demonstrates the effect of different statistic options and
-   confidence levels.
-   End_Html
-   Begin_Macro(source)
+- **fConfLevel:** desired confidence level: 0 < fConfLevel < 1 (TEfficiency::GetConfidenceLevel / TEfficiency::SetConfidenceLevel)
+- **fStatisticOption** defines which method is used to calculate the boundaries of the confidence interval (TEfficiency::SetStatisticOption)
+- **fBeta_alpha, fBeta_beta:** parameters for the prior distribution which is only used in the bayesian case (TEfficiency::GetBetaAlpha / TEfficiency::GetBetaBeta / TEfficiency::SetBetaAlpha / TEfficiency::SetBetaBeta)
+- **kIsBayesian:** flag whether bayesian statistics are used or not (TEfficiency::UsesBayesianStat)
+- **kShortestInterval:** flag whether shortest interval (instead of central one) are used in case of Bayesian statistics  (TEfficiency::UsesShortestInterval). Normally shortest interval should be used in combination with the mode (see TEfficiency::UsesPosteriorMode)
+- **fWeight:** global weight for this TEfficiency object which is used during combining or merging with other TEfficiency objects(TEfficiency::GetWeight / TEfficiency::SetWeight)
+
+In the following table the implemented confidence intervals are listed
+with their corresponding statistic option. For more details on the calculation,
+please have a look at the the mentioned functions.
+
+
+| name             | statistic option | function            | kIsBayesian | parameters |
+|------------------|------------------|---------------------|-------------|------------|
+| Clopper-Pearson | kFCP          | TEfficiency::ClopperPearson |false |total events, passed events, confidence level |
+| normal approximation | kFNormal | TEfficiency::Normal | false | total events, passed events, confidence level |
+| Wilson | kFWilson | TEfficiency::Wilson | false | total events, passed events, confidence level |
+| Agresti-Coull | kFAC | TEfficiency::AgrestiCoull | false | total events, passed events. confidence level |
+| Feldman-Cousins | kFFC | TEfficiency::FeldmanCousins | false | total events, passed events, confidence level |
+| Jeffrey | kBJeffrey | TEfficiency::Bayesian | true | total events, passed events, confidence level, fBeta_alpha = 0.5, fBeta_beta = 0.5 |
+| Uniform prior | kBUniform |TEfficiency::Bayesian | true |total events, passed events, confidence level, fBeta_alpha = 1, fBeta_beta = 1 |
+| custom prior | kBBayesian |TEfficiency::Bayesian | true |total events, passed events, confidence level, fBeta_alpha, fBeta_beta |
+
+The following example demonstrates the effect of different statistic options and
+confidence levels.
+
+Begin_Macro(source)
 {
    //canvas only needed for the documentation
    TCanvas* c1 = new TCanvas("c1","",600,400);
@@ -406,14 +320,14 @@ calculation:
    c1->cd(0);
    return c1;
 }
-   End_Macro
-   Begin_Html
-   The prior probability of the efficiency in bayesian statistics can be given
-   in terms of a beta distribution. The beta distribution has to positive shape
-   parameters. The resulting priors for different combinations of these shape
-   parameters are shown in the plot below.
-   End_Html
-   Begin_Macro(source)
+End_Macro
+
+The prior probability of the efficiency in bayesian statistics can be given
+in terms of a beta distribution. The beta distribution has to positive shape
+parameters. The resulting priors for different combinations of these shape
+parameters are shown in the plot below.
+
+Begin_Macro(source)
    {
       //canvas only needed for the documentation
       TCanvas* c1 = new TCanvas("c1","",600,400);
@@ -449,13 +363,13 @@ calculation:
       //only for this documentation
       return c1;
    }
-   End_Macro
-   Begin_Html
+End_Macro
 
-   <h4><a name="compare">IV.1 Coverage probabilities for different methods</a></h4>
-   The following pictures illustrate the actual coverage probability for the
-   different values of the true efficiency and the total number of events when a
-   confidence level of 95% is desired.
+
+## IV.1 Coverage probabilities for different methods
+The following pictures illustrate the actual coverage probability for the
+different values of the true efficiency and the total number of events when a
+confidence level of 95% is desired.
    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/normal95.gif" alt="normal approximation" width="600" height="400" /></p>
    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/wilson95.gif" alt="wilson" width="600" height="400" /></p>
    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/ac95.gif" alt="agresti coull" width="600" height="400" /></p>
@@ -463,124 +377,135 @@ calculation:
    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/uni95.gif" alt="uniform prior" width="600" height="400" /></p>
    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/jeffrey95.gif" alt="jeffrey prior" width="600" height="400" /></p>
 
-   The average (over all possible true efficiencies) coverage probability for
-   different number of total events is shown in the next picture.
-   <p><img src="http://root.cern.ch/drupal/sites/default/files/images/av_cov.png" alt="average coverage" width="600" height="400" /></p>
-   <h3><a name="cm">V. Merging and combining TEfficiency objects</a></h3>
-   In many applications the efficiency should be calculated for an inhomogenous
-   sample in the sense that it contains events with different weights. In order
-   to be able to determine the correct overall efficiency, it is necessary to
-   use for each subsample (= all events with the same weight) a different
-   TEfficiency object. After finsihing your analysis you can then construct the
-   overall efficiency with its uncertainty.<br />
-   This procedure has the advantage that you can change the weight of one
-   subsample easily without rerunning the whole analysis. On the other hand more
-   efford is needed to handle several TEfficiency objects instead of one
-   histogram. In the case of many different or even continuously distributed
-   weights this approach becomes cumbersome. One possibility to overcome this
-   problem is the usage of binned weights.<br /><br />
-   <b>Example</b><br />
-   In high particle physics weights arises from the fact that you want to
-   normalise your results to a certain reference value. A very common formula for
-   calculating weights is End_Html
-   Begin_Latex(separator='-')
-   w = #frac{#sigma L}{N_{gen} #epsilon_{trig}} - #sigma ... cross section
-   - L ... luminosity
-   - N_{gen} ... number of generated events
-   - #epsilon_{trig} ... (known) trigger efficiency
-   End_Latex
-   Begin_Html
-   The reason for different weights can therefore be:<ul>
-   <li>different processes</li>
-   <li>other integrated luminosity</li>
-   <li>varying trigger efficiency</li>
-   <li>different sample sizes</li>
-   <li>...</li>
-   <li>or even combination of them</li>
-   </ul>
-   Depending on the actual meaning of different weights in your case, you
-   should either merge or combine them to get the overall efficiency.
+The average (over all possible true efficiencies) coverage probability for
+different number of total events is shown in the next picture.
+<p><img src="http://root.cern.ch/drupal/sites/default/files/images/av_cov.png" alt="average coverage" width="600" height="400" /></p>
 
-   <h4><a name="merge">V.1 When should I use merging?</a></h4>
-   If the weights are artificial and do not represent real alternative hypotheses,
-   you should merge the different TEfficiency objects. That means especially for
-   the bayesian case that the prior probability should be the same for all merged
-   TEfficiency objects. The merging can be done by invoking one of the following
-   operations:
-   <ul>
-   <li> <b>eff1</b>.<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Add">Add</a>(eff2)</li>
-   <li> <b>eff1</b> <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:operator+=">+=</a> eff2</li>
-   <li> <b>eff</b> = eff1 + eff2</li>
-   </ul>
-   The result of the merging is stored in the TEfficiency object which is marked
-   bold above. The contents of the internal histograms of both TEfficiency
-   objects are added and a new weight is assigned. The statistic options are not
-   changed.
-   End_Html
-   Begin_Latex #frac{1}{w_{new}} = #frac{1}{w_{1}} + #frac{1}{w_{2}}End_Latex
-   Begin_Html
-   <b>Example:</b><br />
-   If you use two samples with different numbers of generated events for the same
-   process and you want to normalise both to the same integrated luminosity and
-   trigger efficiency, the different weights then arise just from the fact that
-   you have different numbers of events. The TEfficiency objects should be merged
-   because the samples do not represent true alternatives. You expect the same
-   result as if you would have a big sample with all events in it.
-   End_Html
-   Begin_Latex
-   w_{1} = #frac{#sigma L}{#epsilon N_{1}}, w_{2} = #frac{#sigma L}{#epsilon N_{2}} #Rightarrow w_{new} = #frac{#sigma L}{#epsilon (N_{1} + N_{2})} = #frac{1}{#frac{1}{w_{1}} + #frac{1}{w_{2}}}
-   End_Latex
-   Begin_Html
+## V. Merging and combining TEfficiency objects
+In many applications the efficiency should be calculated for an inhomogenous
+sample in the sense that it contains events with different weights. In order
+to be able to determine the correct overall efficiency, it is necessary to
+use for each subsample (= all events with the same weight) a different
+TEfficiency object. After finsihing your analysis you can then construct the
+overall efficiency with its uncertainty.
 
-   <h4><a name="comb">V.2 When should I use combining?</a></h4>
+This procedure has the advantage that you can change the weight of one
+subsample easily without rerunning the whole analysis. On the other hand more
+efford is needed to handle several TEfficiency objects instead of one
+histogram. In the case of many different or even continuously distributed
+weights this approach becomes cumbersome. One possibility to overcome this
+problem is the usage of binned weights.
+ 
+### Example
+In particle physics weights arises from the fact that you want to
+normalise your results to a certain reference value. A very common formula for
+calculating weights is
+
+\f{eqnarray*}{
+   w &=& \frac{\sigma L}{N_{gen} \epsilon_{trig}} \\
+     &-& \sigma ...\ cross\ section \\
+     &-& L ...\ luminosity \\
+     &-& N_{gen}\ ... number\ of\ generated\ events \\
+     &-& \epsilon_{trig}\ ...\ (known)\ trigger\ efficiency \\
+\f}
+
+The reason for different weights can therefore be:
+- different processes
+- other integrated luminosity
+- varying trigger efficiency
+- different sample sizes
+- ...
+- or even combination of them
+
+Depending on the actual meaning of different weights in your case, you
+should either merge or combine them to get the overall efficiency.
+
+### V.1 When should I use merging?
+If the weights are artificial and do not represent real alternative hypotheses,
+you should merge the different TEfficiency objects. That means especially for
+the bayesian case that the prior probability should be the same for all merged
+TEfficiency objects. The merging can be done by invoking one of the following
+operations:
+- eff1.Add(eff2)
+- eff1 += eff2
+- eff1 = eff1 + eff2
+
+The result of the merging is stored in the TEfficiency object which is marked
+bold above. The contents of the internal histograms of both TEfficiency
+objects are added and a new weight is assigned. The statistic options are not
+changed.
+
+\f[
+   \frac{1}{w_{new}} = \frac{1}{w_{1}} + \frac{1}{w_{2}}
+\f]
+
+### Example:
+If you use two samples with different numbers of generated events for the same
+process and you want to normalise both to the same integrated luminosity and
+trigger efficiency, the different weights then arise just from the fact that
+you have different numbers of events. The TEfficiency objects should be merged
+because the samples do not represent true alternatives. You expect the same
+result as if you would have a big sample with all events in it.
+
+\f[
+   w_{1} = \frac{\sigma L}{\epsilon N_{1}}, w_{2} = \frac{\sigma L}{\epsilon N_{2}} \Rightarrow w_{new} = \frac{\sigma L}{\epsilon (N_{1} + N_{2})} = \frac{1}{\frac{1}{w_{1}} + \frac{1}{w_{2}}}
+\f]
+
+### V.2 When should I use combining?
 You should combine TEfficiency objects whenever the weights represent
 alternatives processes for the efficiency. As the combination of two TEfficiency
 objects is not always consistent with the representation by two internal
 histograms, the result is not stored in a TEfficiency object but a TGraphAsymmErrors
 is returned which shows the estimated combined efficiency and its uncertainty
-for each bin. At the moment the combination method <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Combine">Combine </a>only supports combination of 1-dimensional efficiencies in a bayesian approach.<br />
-For calculating the combined efficiency and its uncertainty for each bin only Bayesian statistics is used. No frequentists methods are presently
-supported for computing the combined efficiency and its confidence interval.
-In the case of the Bayesian statistics a combined posterior is constructed taking into account the weight of each TEfficiency object. The same prior is used
-for all the TEfficiency objects.
-End_Html
-Begin_Latex
-P_{comb}(#epsilon | {w_{i}}, {k_{i}} , {N_{i}}) = #frac{1}{norm} #prod_{i}{L(k_{i} | N_{i}, #epsilon)}^{w_{i}} #Pi( #epsilon )
-L(k_{i} | N_{i}, #epsilon) is the likelihood function for the sample i ( a Binomial distribution)
-#Pi( #epsilon) is the prior, a beta distribution B(#epsilon, #alpha, #beta).
-The resulting combined posterior is
-P_{comb}(#epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(#epsilon, #sum_{i}{ w_{i} k_{i}} + #alpha, #sum_{i}{ w_{i}(n_{i}-k_{i})}+#beta)
-#hat{#varepsilon} = #int_{0}^{1} #epsilon #times P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon
-confidence level = 1 - #alpha
-#frac{#alpha}{2} = #int_{0}^{#epsilon_{low}} P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon ... defines lower boundary
-1- #frac{#alpha}{2} = #int_{0}^{#epsilon_{up}} P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon ... defines upper boundary
-End_Latex
-Begin_Html
-<b>Example:</b><br />
+for each bin. 
+At the moment the combination method TEfficiency::Combine only supports combination of 1-dimensional 
+efficiencies in a bayesian approach.
+ 
+
+For calculating the combined efficiency and its uncertainty for each bin only Bayesian statistics 
+is used. No frequentists methods are presently supported for computing the combined efficiency and
+its confidence interval.
+In the case of the Bayesian statistics a combined posterior is constructed taking into account the 
+weight of each TEfficiency object. The same prior is used for all the TEfficiency objects.
+
+\f{eqnarray*}{
+  P_{comb}(\epsilon | {w_{i}}, {k_{i}} , {N_{i}}) = \frac{1}{norm} \prod_{i}{L(k_{i} | N_{i}, \epsilon)}^{w_{i}} \Pi( \epsilon )\\
+L(k_{i} | N_{i}, \epsilon)\ is\ the\ likelihood\ function\ for\ the\ sample\ i\ (a\ Binomial\ distribution)\\
+\Pi( \epsilon) is\ the\ prior,\ a\ beta\ distribution\ B(\epsilon, \alpha, \beta).\\
+The resulting combined posterior is \\
+P_{comb}(\epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(\epsilon, \sum_{i}{ w_{i} k_{i}} + \alpha, \sum_{i}{ w_{i}(n_{i}-k_{i})}+\beta) \\
+\hat{\varepsilon} = \int_{0}^{1} \epsilon \times P_{comb}(\epsilon | {k_{i}} , {N_{i}}) d\epsilon \\
+confidence\ level = 1 - \alpha \\
+\frac{\alpha}{2} = \int_{0}^{\epsilon_{low}} P_{comb}(\epsilon | {k_{i}} , {N_{i}}) d\epsilon ...\ defines\ lower\ boundary \\
+1- \frac{\alpha}{2} = \int_{0}^{\epsilon_{up}} P_{comb}(\epsilon | {k_{i}} , {N_{i}}) d\epsilon ...\ defines\ upper\ boundary
+\f}
+
+
+###Example:
 If you use cuts to select electrons which can originate from two different
 processes, you can determine the selection efficiency for each process. The
 overall selection efficiency is then the combined efficiency. The weights to be used in the
 combination should be the probability that an
 electron comes from the corresponding process.
-End_Html
-Begin_Latex
-p_{1} = #frac{#sigma_{1}}{#sigma_{1} + #sigma_{2}} = #frac{N_{1}w_{1}}{N_{1}w_{1} + N_{2}w_{2}}
-p_{2} = #frac{#sigma_{2}}{#sigma_{1} + #sigma_{2}} = #frac{N_{2}w_{2}}{N_{1}w_{1} + N_{2}w_{2}}
-End_Latex
-Begin_Html
-<h3><a name="other">VI. Further operations</a></h3>
 
-<h4><a name="histo">VI.1 Information about the internal histograms</a></h4>
-The methods <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetPassedHistogram">GetPassedHistogram</a> and <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetTotalHistogram">GetTotalHistogram</a>
+\f[
+p_{1} = \frac{\sigma_{1}}{\sigma_{1} + \sigma_{2}} = \frac{N_{1}w_{1}}{N_{1}w_{1} + N_{2}w_{2}}\\
+p_{2} = \frac{\sigma_{2}}{\sigma_{1} + \sigma_{2}} = \frac{N_{2}w_{2}}{N_{1}w_{1} + N_{2}w_{2}}
+\f]
+
+## VI. Further operations
+
+### VI.Information about the internal histograms
+The methods TEfficiency::GetPassedHistogram and TEfficiency::GetTotalHistogram
 return a constant pointer to the internal histograms. They can be used to
 obtain information about the internal histograms (e.g. the binning, number of passed / total events in a bin, mean values...).
-One can obtain a clone of the internal histograms by calling <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetCopyPassedHisto">GetCopyPassedHisto</a> or <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetCopyTotalHisto">GetCopyTotalHisto</a>.
+One can obtain a clone of the internal histograms by calling TEfficiency::GetCopyPassedHisto or TEfficiency::GetCopyTotalHisto.
 The returned histograms are completely independent from the current
 TEfficiency object. By default, they are not attached to a directory to
 avoid the duplication of data and the user is responsible for deleting them.
-<div class="code">
-<pre>
-<b>Example:</b>
+
+
+~~~~~~~~~~~~~~~{.cpp}
 //open a root file which contains a TEfficiency object
 TFile* pFile = new TFile("myfile.root","update");
 
@@ -600,11 +525,11 @@ clone->Write();
 //delete histogram object
 delete clone;
 clone = 0;
-</pre>
-</div><div class="clear" />
+~~~~~~~~~~~~~~~
+
 It is also possible to set the internal total or passed histogram by using the
-methods <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetPassedHistogram">SetPassedHistogram</a> or
-<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetTotalHistogram">SetTotalHistogram</a>.
+methods TEfficiency::SetPassedHistogram or TEfficiency::SetTotalHistogram.
+
 In order to ensure the validity of the TEfficiency object, the consistency of the
 new histogram and the stored histogram is checked. It sometimes might be
 impossible to change the histograms in a consistent way. Therefore one can force
@@ -612,16 +537,17 @@ the replacement by passing the option "f". Then the user has to ensure that the
 other internal histogram is replaced as well and that the TEfficiency object is
 in a valid state.
 
-   <h4><a name="fit">VI.2 Fitting</a></h4>
-   The efficiency can be fitted using the <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Fit">Fit</a> function which uses internally the <a href="http://root.cern.ch/root/html/TBinomialEfficiencyFitter.html#TBinomialEfficiencyFitter:Fit">TBinomialEfficiencyFitter::Fit</a> method.
-   As this method is using a maximum-likelihood-fit, it is necessary to initialise
-   the given fit function with reasonable start values.
-   The resulting fit function is attached to the list of associated functions and
-   will be drawn automatically during the next <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Draw">Draw</a> command.
-   The list of associated function can be modified by using the pointer returned
-   by <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetListOfFunctions">GetListOfFunctions</a>.
-   End_Html
-   Begin_Macro(source)
+### VI.2 Fitting
+The efficiency can be fitted using the TEfficiency::Fit function which uses
+internally the TBinomialEfficiencyFitter::Fit method.
+As this method is using a maximum-likelihood-fit, it is necessary to initialise
+the given fit function with reasonable start values.
+The resulting fit function is attached to the list of associated functions and
+will be drawn automatically during the next TEfficiency::Draw command.
+The list of associated function can be modified by using the pointer returned
+by TEfficiency::GetListOfFunctions.
+
+Begin_Macro(source)
 {
    //canvas only needed for this documentation
    TCanvas* c1 = new TCanvas("example","",600,400);
@@ -660,20 +586,15 @@ in a valid state.
    //only for this documentation
    return c1;
 }
-   End_Macro
-   Begin_Html
+End_Macro
 
-   <h4><a name="draw">VI.3 Draw a TEfficiency object</a></h4>
-   A TEfficiency object can be drawn by calling the usual <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Draw">Draw</a> method.
-   At the moment drawing is only supported for 1- and 2-dimensional TEfficiency
-   objects. In the 1-dimensional case you can use the same options as for the <br />
-   <a href="http://root.cern.ch/root/html/TGraph.html#TGraph:Draw">TGraphAsymmErrors::Draw</a>
-   method. For 2-dimensional TEfficiency objects you can pass the same options as
-   for a <a href="http://root.cern.ch/root/html/TH1.html#TH1:Draw">TH2::Draw</a> object.
+### VI.3 Draw a TEfficiency object
+A TEfficiency object can be drawn by calling the usual TEfficiency::Draw method.
+At the moment drawing is only supported for 1- and 2-dimensional TEfficiency objects. 
+In the 1-dimensional case you can use the same options as for the TGraphAsymmErrors::Draw
+method. For 2-dimensional TEfficiency objects you can pass the same options as
+for a TH2::Draw object.
 
-   <h3 style="margin-bottom:-3em;"><a name="class">VII. TEfficiency class</a></h3>
-
-End_Html
 ********************************************************************************/
 //______________________________________________________________________________
 
@@ -1103,22 +1024,23 @@ TEfficiency::~TEfficiency()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///calculates the boundaries for the frequentist Agresti-Coull interval
+/// Calculates the boundaries for the frequentist Agresti-Coull interval
 ///
-///Input: - total : number of total events
-///       - passed: 0 <= number of passed events <= total
-///       - level : confidence level
-///       - bUpper: true  - upper boundary is returned
-///                 false - lower boundary is returned
+/// \param total number of total events
+/// \param passed 0 <= number of passed events <= total
+/// \param level  confidence level
+/// \param bUpper true  - upper boundary is returned
+///               false - lower boundary is returned
 ///
-///calculation:
-///Begin_Latex(separator='=',align='rl')
-/// #alpha = 1 - #frac{level}{2}
-/// #kappa = #Phi^{-1}(1 - #alpha,1) ... normal quantile function
-/// mode = #frac{passed + #frac{#kappa^{2}}{2}}{total + #kappa^{2}}
-/// #Delta = #kappa * #sqrt{#frac{mode * (1 - mode)}{total + #kappa^{2}}}
-/// return =  max(0,mode - #Delta) or min(1,mode + #Delta)
-///End_Latex
+/** 
+   \f{eqnarray*}{
+     \alpha &=& 1 - \frac{level}{2} \\
+     \kappa &=& \Phi^{-1}(1 - \alpha,1)\ ... normal\ quantile\ function\\
+     mode &=& \frac{passed + \frac{\kappa^{2}}{2}}{total + \kappa^{2}}\\
+     \Delta &=& \kappa * \sqrt{\frac{mode * (1 - mode)}{total + \kappa^{2}}}\\
+     return &=&  max(0,mode - \Delta)\ or\ min(1,mode + \Delta)
+   \f}
+ **/
 
 Double_t TEfficiency::AgrestiCoull(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
 {
@@ -1135,15 +1057,13 @@ Double_t TEfficiency::AgrestiCoull(Int_t total,Int_t passed,Double_t level,Bool_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///calculates the boundaries for the frequentist Feldman-Cousins interval
+/// Calculates the boundaries for the frequentist Feldman-Cousins interval
 ///
-///Input: - total : number of total events
-///       - passed: 0 <= number of passed events <= total
-///       - level : confidence level
-///       - bUpper: true  - upper boundary is returned
-///                 false - lower boundary is returned
-///
-///
+/// \param total number of total events
+/// \param passed 0 <= number of passed events <= total
+/// \param level confidence level
+/// \param bUpper: true  - upper boundary is returned
+///                false - lower boundary is returned
 
 Double_t TEfficiency::FeldmanCousins(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
 {
@@ -1154,31 +1074,32 @@ Double_t TEfficiency::FeldmanCousins(Int_t total,Int_t passed,Double_t level,Boo
    }
    return (bUpper) ? upper : lower;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the interval boundaries using the frequentist methods of Feldman-Cousins
+///
+/// \param[in] total number of total events
+/// \param[in] passed 0 <= number of passed events <= total
+/// \param[in] level  confidence level
+/// \param[out] lower lower boundary returned on exit
+/// \param[out] upper lower boundary returned on exit
+/// \return a flag with the status of the calculation
+///
+/// Calculation:
+///
+/// The Feldman-Cousins is a frequentist method where the interval is estimated using a Neyman construction where the ordering
+/// is based on the likelihood ratio:
+/// \f[
+///   LR =  \frac{Binomial(k | N, \epsilon)}{Binomial(k | N, \hat{\epsilon} ) }
+/// \f]
+/// See G. J. Feldman and R. D. Cousins, Phys. Rev. D57 (1998) 3873
+/// and   R. D. Cousins, K. E. Hymes, J. Tucker, Nuclear Instruments and Methods in Physics Research A 612 (2010) 388
+///
+/// Implemented using classes developed by Jordan Tucker and Luca Lista
+/// See File hist/hist/src/TEfficiencyHelper.h
+
 Bool_t TEfficiency::FeldmanCousinsInterval(Int_t total,Int_t passed,Double_t level,Double_t & lower, Double_t & upper)
 {
-   //calculates the interval boundaries using the frequentist methods of Feldman-Cousins
-   //
-   //Input: - total : number of total events
-   //       - passed: 0 <= number of passed events <= total
-   //       - level : confidence level
-   //Output:
-   //       - lower :  lower boundary returned on exit
-   //       - upper :  lower boundary returned on exit
-   //
-   //Return a flag with the status of the calculation
-   //
-   // Calculation:
-   // The Feldman-Cousins is a frequentist method where the interval is estimated using a Neyman construction where the ordering
-   // is based on the likelihood ratio:
-   //Begin_Latex(separator='=',align='rl')
-   // LR =  #frac{Binomial(k | N, #epsilon)}{Binomial(k | N, #hat{#epsilon} ) }
-   //End_Latex
-   //See G. J. Feldman and R. D. Cousins, Phys. Rev. D57 (1998) 3873
-   // and   R. D. Cousins, K. E. Hymes, J. Tucker, Nuclear Instruments and Methods in Physics Research A 612 (2010) 388
-   //
-   // Implemented using classes developed by Jordan Tucker and Luca Lista
-   // See File hist/hist/src/TEfficiencyHelper.h
-   //
    FeldmanCousinsBinomialInterval fc;
    double alpha = 1.-level;
    fc.Init(alpha);
@@ -1189,40 +1110,52 @@ Bool_t TEfficiency::FeldmanCousinsInterval(Int_t total,Int_t passed,Double_t lev
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///calculates the boundaries for a Bayesian confidence interval (shortest or central interval depending on the option)
+/// Calculates the boundaries for a Bayesian confidence interval (shortest or central interval depending on the option)
 ///
-///Input: - total : number of total events
-///       - passed: 0 <= number of passed events <= total
-///       - level : confidence level
-///       - alpha : shape parameter > 0 for the prior distribution (fBeta_alpha)
-///       - beta  : shape parameter > 0 for the prior distribution (fBeta_beta)
-///       - bUpper: true  - upper boundary is returned
-///                 false - lower boundary is returned
+/// \param[in] total number of total events
+/// \param[in] passed 0 <= number of passed events <= total
+/// \param[in] level  confidence level
+/// \param[in] alpha  shape parameter > 0 for the prior distribution (fBeta_alpha)
+/// \param[in] beta  shape parameter > 0 for the prior distribution (fBeta_beta)
+/// \param[in] bUpper
+///            - true  - upper boundary is returned
+///            - false - lower boundary is returned
+/// \param[in] bShortest ??
 ///
-///Note: In the case central confidence interval is calculated.
+/// Note: In the case central confidence interval is calculated.
 ///      when passed = 0 (or passed = total) the lower (or upper)
 ///      interval values will be larger than 0 (or smaller than 1).
 ///
-///Calculation:
+/// Calculation:
 ///
-///The posterior probability in bayesian statistics is given by:
-///Begin_Latex P(#varepsilon |k,N) #propto L(#varepsilon|k,N) #times Prior(#varepsilon)End_Latex
-///As an efficiency can be interpreted as probability of a positive outcome of
-///a Bernoullli trial the likelihood function is given by the binomial
-///distribution:
-///Begin_Latex L(#varepsilon|k,N) = Binomial(N,k) #varepsilon ^{k} (1 - #varepsilon)^{N-k}End_Latex
-///At the moment only beta distributions are supported as prior probabilities
-///of the efficiency (Begin_Latex #scale[0.8]{B(#alpha,#beta)}End_Latex is the beta function):
-///Begin_Latex Prior(#varepsilon) = #frac{1}{B(#alpha,#beta)} #varepsilon ^{#alpha - 1} (1 - #varepsilon)^{#beta - 1}End_Latex
-///The posterior probability is therefore again given by a beta distribution:
-///Begin_Latex P(#varepsilon |k,N) #propto #varepsilon ^{k + #alpha - 1} (1 - #varepsilon)^{N - k + #beta - 1} End_Latex
-///In case of central intervals
-///the lower boundary for the equal-tailed confidence interval is given by the
-///inverse cumulative (= quantile) function for the quantile Begin_Latex #frac{1 - level}{2} End_Latex.
-///The upper boundary for the equal-tailed confidence interval is given by the
-///inverse cumulative (= quantile) function for the quantile Begin_Latex #frac{1 + level}{2} End_Latex.
-///Hence it is the solution Begin_Latex #varepsilon End_Latex of the following equation:
-///Begin_Latex I_{#varepsilon}(k + #alpha,N - k + #beta) = #frac{1}{norm} #int_{0}^{#varepsilon} dt t^{k + #alpha - 1} (1 - t)^{N - k + #beta - 1} =  #frac{1 #pm level}{2} End_Latex
+/// The posterior probability in bayesian statistics is given by:
+/// \f[
+///    P(\varepsilon |k,N) \propto L(\varepsilon|k,N) \times Prior(\varepsilon)
+/// \f]
+/// As an efficiency can be interpreted as probability of a positive outcome of
+/// a Bernoullli trial the likelihood function is given by the binomial
+/// distribution:
+/// \f[
+///   L(\varepsilon|k,N) = Binomial(N,k) \varepsilon ^{k} (1 - \varepsilon)^{N-k}
+/// \f]
+/// At the moment only beta distributions are supported as prior probabilities
+/// of the efficiency (\f$ B(\alpha,\beta)\f$ is the beta function):
+/// \f[
+///   Prior(\varepsilon) = \frac{1}{B(\alpha,\beta)} \varepsilon ^{\alpha - 1} (1 - \varepsilon)^{\beta - 1}
+/// \f]
+/// The posterior probability is therefore again given by a beta distribution:
+/// \f[
+///   P(\varepsilon |k,N) \propto \varepsilon ^{k + \alpha - 1} (1 - \varepsilon)^{N - k + \beta - 1}
+/// \f]
+/// In case of central intervals
+/// the lower boundary for the equal-tailed confidence interval is given by the
+/// inverse cumulative (= quantile) function for the quantile \f$ \frac{1 - level}{2} \f$.
+/// The upper boundary for the equal-tailed confidence interval is given by the
+/// inverse cumulative (= quantile) function for the quantile \f$ \frac{1 + level}{2} \f$.
+/// Hence it is the solution \f$ \varepsilon \f$ of the following equation:
+/// \f[
+///   I_{\varepsilon}(k + \alpha,N - k + \beta) = \frac{1}{norm} \int_{0}^{\varepsilon} dt t^{k + \alpha - 1} (1 - t)^{N - k + \beta - 1} =  \frac{1 \pm level}{2}
+/// \f]
 /// In the case of shortest interval the minimum interval aorund the mode is found by minimizing the length of all intervals whith the
 /// given probability content. See TEfficiency::BetaShortestInterval
 
@@ -1240,15 +1173,15 @@ Double_t TEfficiency::Bayesian(Int_t total,Int_t passed,Double_t level,Double_t 
    else
       return BetaCentralInterval(level, a, b, bUpper);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-///calculates the boundaries for a central confidence interval for a Beta distribution
+/// Calculates the boundaries for a central confidence interval for a Beta distribution
 ///
-///Input: - level : confidence level
-///       -    a  : parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
-///       -    b  : parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta
-///       - bUpper: true  - upper boundary is returned
-///                 false - lower boundary is returned
-///
+/// \param[in] level  confidence level
+/// \param[in] a  parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
+/// \param[in] b  parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta
+/// \param[in] bUpper true  - upper boundary is returned
+///                   false - lower boundary is returned
 
 Double_t TEfficiency::BetaCentralInterval(Double_t level,Double_t a,Double_t b,Bool_t bUpper)
 {
@@ -1294,16 +1227,15 @@ struct Beta_interval_length {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-///calculates the boundaries for a shortest confidence interval for a Beta  distribution
+/// Calculates the boundaries for a shortest confidence interval for a Beta  distribution
 ///
-///Input: - level : confidence level
-///       -    a  : parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
-///       -    b  : parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta
-///       - bUpper: true  - upper boundary is returned
-///                 false - lower boundary is returned
+/// \param[in] level  confidence level
+/// \param[in] a  parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
+/// \param[in] b  parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta
+/// \param[out] upper upper boundary is returned
+/// \param[out] lower lower boundary is returned
 ///
-///
-///The lower/upper boundary are then obtained by finding the shortest interval of the beta distribbution
+/// The lower/upper boundary are then obtained by finding the shortest interval of the beta distribbution
 /// contained the desired probability level.
 /// The length of all possible intervals is minimized in order to find the shortest one
 
@@ -1355,10 +1287,10 @@ Bool_t TEfficiency::BetaShortestInterval(Double_t level,Double_t a,Double_t b, D
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// compute the mean (average) of the beta distribution
+/// Compute the mean (average) of the beta distribution
 ///
-///Input:    a  : parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
-///          b  : parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta
+/// \param[in] a  parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
+/// \param[in] b  parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta
 ///
 
 Double_t TEfficiency::BetaMean(Double_t a,Double_t b)
@@ -1373,16 +1305,16 @@ Double_t TEfficiency::BetaMean(Double_t a,Double_t b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// compute the mode of the beta distribution
+/// Compute the mode of the beta distribution
 ///
-///Input:    a  : parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
-///          b  : parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta
+/// \param[in] a  parameter > 0 for the beta distribution (for a posterior is passed + prior_alpha
+/// \param[in] b  parameter > 0 for the beta distribution (for a posterior is (total-passed) + prior_beta
 ///
 /// note the mode is defined for a Beta(a,b) only if (a,b)>1 (a = passed+alpha; b = total-passed+beta)
 /// return then the following in case (a,b) < 1:
-///  if (a==b) return 0.5 (it is really undefined)
-///  if (a < b) return 0;
-///  if (a > b) return 1;
+/// - if (a==b) return 0.5 (it is really undefined)
+/// - if (a < b) return 0;
+/// - if (a > b) return 1;
 
 Double_t TEfficiency::BetaMode(Double_t a,Double_t b)
 {
@@ -1401,12 +1333,12 @@ Double_t TEfficiency::BetaMode(Double_t a,Double_t b)
    return mode;
 }
 ////////////////////////////////////////////////////////////////////////////////
-///building standard data structure of a TEfficiency object
+/// Building standard data structure of a TEfficiency object
 ///
-///Notes: - calls: SetName(name), SetTitle(title)
-///       - set the statistic option to the default (kFCP)
-///       - appends this object to the current directory
-///         SetDirectory(gDirectory)
+/// Notes:
+/// - calls: SetName(name), SetTitle(title)
+/// - set the statistic option to the default (kFCP)
+/// - appends this object to the current directory SetDirectory(gDirectory)
 
 void TEfficiency::Build(const char* name,const char* title)
 {
@@ -1426,9 +1358,9 @@ void TEfficiency::Build(const char* name,const char* title)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///checks binning for each axis
+/// Checks binning for each axis
 ///
-///It is assumed that the passed histograms have the same dimension.
+/// It is assumed that the passed histograms have the same dimension.
 
 Bool_t TEfficiency::CheckBinning(const TH1& pass,const TH1& total)
 {
@@ -1476,14 +1408,14 @@ Bool_t TEfficiency::CheckBinning(const TH1& pass,const TH1& total)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///checks the consistence of the given histograms
+/// Checks the consistence of the given histograms
 ///
-///The histograms are considered as consistent if:
-///- both have the same dimension
-///- both have the same binning
-///- pass.GetBinContent(i) <= total.GetBinContent(i) for each bin i
+/// The histograms are considered as consistent if:
+/// - both have the same dimension
+/// - both have the same binning
+/// - pass.GetBinContent(i) <= total.GetBinContent(i) for each bin i
 ///
-///Option: - w: The check for unit weights is skipped and therefore histograms
+/// Option: - w: The check for unit weights is skipped and therefore histograms
 ///             filled with weights are accepted.
 
 Bool_t TEfficiency::CheckConsistency(const TH1& pass,const TH1& total,Option_t* opt)
@@ -1507,17 +1439,17 @@ Bool_t TEfficiency::CheckConsistency(const TH1& pass,const TH1& total,Option_t* 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///checks whether bin contents are compatible with binomial statistics
+/// Checks whether bin contents are compatible with binomial statistics
 ///
-///The following inequality has to be valid for each bin i:
+/// The following inequality has to be valid for each bin i:
 /// total.GetBinContent(i) >= pass.GetBinContent(i)
 ///
-///and the histogram have to be filled with unit weights.
+/// and the histogram have to be filled with unit weights.
 ///
-///Option: - w: Do not check for unit weights -> accept histograms filled with
+/// Option: - w: Do not check for unit weights -> accept histograms filled with
 ///             weights
 ///
-///Note: - It is assumed that both histograms have the same dimension and
+/// Note: - It is assumed that both histograms have the same dimension and
 ///        binning.
 
 Bool_t TEfficiency::CheckEntries(const TH1& pass,const TH1& total,Option_t* opt)
@@ -1735,46 +1667,48 @@ void TEfficiency::FillHistogram(TH2 * hist ) const
 
 }
 ////////////////////////////////////////////////////////////////////////////////
-///calculates the boundaries for the frequentist Clopper-Pearson interval
+/// Calculates the boundaries for the frequentist Clopper-Pearson interval
 ///
-///This interval is recommended by the PDG.
+/// This interval is recommended by the PDG.
 ///
-///Input: - total : number of total events
-///       - passed: 0 <= number of passed events <= total
-///       - level : confidence level
-///       - bUpper: true  - upper boundary is returned
-///                 false - lower boundary is returned
+/// \param[in] total number of total events
+/// \param[in] passed 0 <= number of passed events <= total
+/// \param[in] level confidence level
+/// \param[in] bUpper true  - upper boundary is returned
+///                  ;false - lower boundary is returned
 ///
-///calculation:
+/// Calculation:
 ///
-///The lower boundary of the Clopper-Pearson interval is the "exact" inversion
-///of the test:
-///Begin_Latex(separator='=',align='rl')
-///P(x #geq passed; total) = #frac{1 - level}{2}
-///P(x #geq passed; total) = 1 - P(x #leq passed - 1; total)
-/// = 1 - #frac{1}{norm} * #int_{0}^{1 - #varepsilon} t^{total - passed} (1 - t)^{passed - 1} dt
-/// = 1 - #frac{1}{norm} * #int_{#varepsilon}^{1} t^{passed - 1} (1 - t)^{total - passed} dt
-/// = #frac{1}{norm} * #int_{0}^{#varepsilon} t^{passed - 1} (1 - t)^{total - passed} dt
-/// = I_{#varepsilon}(passed,total - passed + 1)
-///End_Latex
-///The lower boundary is therfore given by the Begin_Latex #frac{1 - level}{2}End_Latex quantile
-///of the beta distribution.
+/// The lower boundary of the Clopper-Pearson interval is the "exact" inversion
+/// of the test:
+/** \f{eqnarray*}{
+      P(x \geq passed; total) &=& \frac{1 - level}{2}\\
+      P(x \geq passed; total) &=& 1 - P(x \leq passed - 1; total)\\
+      &=& 1 - \frac{1}{norm} * \int_{0}^{1 - \varepsilon} t^{total - passed} (1 - t)^{passed - 1} dt\\
+      &=& 1 - \frac{1}{norm} * \int_{\varepsilon}^{1} t^{passed - 1} (1 - t)^{total - passed} dt\\
+      &=& \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed - 1} (1 - t)^{total - passed} dt\\
+      &=& I_{\varepsilon}(passed,total - passed + 1)
+    \f}
+**/
+/// The lower boundary is therfore given by the \f$ \frac{1 - level}{2}\f$ quantile
+/// of the beta distribution.
 ///
-///The upper boundary of the Clopper-Pearson interval is the "exact" inversion
-///of the test:
-///Begin_Latex(separator='=',align='rl')
-///P(x #leq passed; total) = #frac{1 - level}{2}
-///P(x #leq passed; total) = #frac{1}{norm} * #int_{0}^{1 - #varepsilon} t^{total - passed - 1} (1 - t)^{passed} dt
-/// = #frac{1}{norm} * #int_{#varepsilon}^{1} t^{passed} (1 - t)^{total - passed - 1} dt
-/// = 1 - #frac{1}{norm} * #int_{0}^{#varepsilon} t^{passed} (1 - t)^{total - passed - 1} dt
-/// #Rightarrow 1 - #frac{1 - level}{2} = #frac{1}{norm} * #int_{0}^{#varepsilon} t^{passed} (1 - t)^{total - passed -1} dt
-/// #frac{1 + level}{2} = I_{#varepsilon}(passed + 1,total - passed)
-///End_Latex
-///The upper boundary is therfore given by the Begin_Latex #frac{1 + level}{2}End_Latex quantile
-///of the beta distribution.
+/// The upper boundary of the Clopper-Pearson interval is the "exact" inversion
+/// of the test:
+/** \f{eqnarray*}{
+      P(x \leq passed; total) &=& \frac{1 - level}{2}\\
+      P(x \leq passed; total) &=& \frac{1}{norm} * \int_{0}^{1 - \varepsilon} t^{total - passed - 1} (1 - t)^{passed} dt\\
+      &=& \frac{1}{norm} * \int_{\varepsilon}^{1} t^{passed} (1 - t)^{total - passed - 1} dt\\
+      &=& 1 - \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed} (1 - t)^{total - passed - 1} dt\\
+      \Rightarrow 1 - \frac{1 - level}{2} &=& \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed} (1 - t)^{total - passed -1} dt\\
+      \frac{1 + level}{2} &=& I_{\varepsilon}(passed + 1,total - passed)
+    \f}
+**/
+/// The upper boundary is therfore given by the \f$\frac{1 + level}{2}\f$ quantile
+/// of the beta distribution.
 ///
-///Note: The connection between the binomial distribution and the regularized
-///      incomplete beta function Begin_Latex I_{#varepsilon}(#alpha,#beta)End_Latex has been used.
+/// Note: The connection between the binomial distribution and the regularized
+///      incomplete beta function \f$ I_{\varepsilon}(\alpha,\beta)\f$ has been used.
 
 Double_t TEfficiency::ClopperPearson(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
 {
@@ -1785,52 +1719,46 @@ Double_t TEfficiency::ClopperPearson(Int_t total,Int_t passed,Double_t level,Boo
       return ((passed == 0) ? 0.0 : ROOT::Math::beta_quantile(alpha,passed,total-passed+1.0));
 }
 ////////////////////////////////////////////////////////////////////////////////
-///calculates the combined efficiency and its uncertainties
+/// Calculates the combined efficiency and its uncertainties
 ///
-///This method does a bayesian combination of the given samples.
+/// This method does a bayesian combination of the given samples.
 ///
-///Input:
-///- up     : contains the upper limit of the confidence interval afterwards
-///- low    : contains the lower limit of the confidence interval afterwards
-///- n      : number of samples which are combined
-///- pass   : array of length n containing the number of passed events
-///- total  : array of length n containing the corresponding numbers of total
-///           events
-///- alpha  : shape parameters for the beta distribution as prior
-///- beta   : shape parameters for the beta distribution as prior
-///- level  : desired confidence level
-///- w      : weights for each sample; if not given, all samples get the weight 1
+/// \param[in] up  contains the upper limit of the confidence interval afterwards
+/// \param[in] low  contains the lower limit of the confidence interval afterwards
+/// \param[in] n    number of samples which are combined
+/// \param[in] pass array of length n containing the number of passed events
+/// \param[in] total array of length n containing the corresponding numbers of total events
+/// \param[in] alpha  shape parameters for the beta distribution as prior
+/// \param[in] beta   shape parameters for the beta distribution as prior
+/// \param[in] level  desired confidence level
+/// \param[in] w weights for each sample; if not given, all samples get the weight 1
 ///           The weights do not need to be normalized, since they are internally renormalized
 ///           to the number of effective entries.
-///- options:
+/// \param[in] opt
+///   -  mode : The mode is returned instead of the mean of the posterior as best value
+///             When using the mode the shortest interval is also computed instead of the central one
+///   -  shortest: compute shortest interval (done by default if mode option is set)
+///   -  central: compute central interval (done by default if mode option is NOT set)
 ///
-/// + mode : The mode is returned instead of the mean of the posterior as best value
-///          When using the mode the shortest interval is also computed instead of the central one
-/// + shortest: compute shortest interval (done by default if mode option is set)
-/// + central: compute central interval (done by default if mode option is NOT set)
+/// Calculation:
 ///
-///Begin_Html
-///Calculation:
-///<ol>
-///<li>The combined posterior distributions is calculated from the Bayes theorem assuming a common prior Beta distribution.
-///     It is easy to proof that the combined posterior is then:</li>
-///Begin_Latex(separator='=',align='rl')
-///P_{comb}(#epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(#epsilon, #sum_{i}{ w_{i} k_{i}} + #alpha, #sum_{i}{ w_{i}(n_{i}-k_{i})}+#beta)
-///w_{i} = weight for each sample renormalized to the effective entries
-///w^{'}_{i} =  w_{i} #frac{ #sum_{i} {w_{i} } } { #sum_{i} {w_{i}^{2} } }
-///End_Latex
-///Begin_Html
-///<li>The estimated efficiency is the mode (or the mean) of the obtained posterior distribution </li>
-///End_Html
-///Begin_Html
-///<li>The boundaries of the confidence interval for a confidence level (1 - a)
-///are given by the a/2 and 1-a/2 quantiles of the resulting cumulative
-///distribution.</li>
-///</ol>
-///End_Html
-///Example (uniform prior distribution):
-///Begin_Macro(source)
-///{
+/// The combined posterior distributions is calculated from the Bayes theorem assuming a common prior Beta distribution.
+///     It is easy to proof that the combined posterior is then:
+/** \f{eqnarray*}{
+      P_{comb}(\epsilon |{w_{i}}; {k_{i}}; {N_{i}}) &=& B(\epsilon, \sum_{i}{ w_{i} k_{i}} + \alpha, \sum_{i}{ w_{i}(n_{i}-k_{i})}+\beta)\\
+      w_{i} &=& weight\ for\ each\ sample\ renormalized\ to\ the\ effective\ entries\\
+      w^{'}_{i} &=&  w_{i} \frac{ \sum_{i} {w_{i} } } { \sum_{i} {w_{i}^{2} } }
+    \f}
+**/
+/// The estimated efficiency is the mode (or the mean) of the obtained posterior distribution
+///
+/// The boundaries of the confidence interval for a confidence level (1 - a)
+/// are given by the a/2 and 1-a/2 quantiles of the resulting cumulative
+/// distribution.
+///
+/// Example (uniform prior distribution):
+/// Begin_Macro(source)
+/// {
 ///  TCanvas* c1 = new TCanvas("c1","",600,800);
 ///  c1->Divide(1,2);
 ///  c1->SetFillStyle(1001);
@@ -1871,8 +1799,8 @@ Double_t TEfficiency::ClopperPearson(Int_t total,Int_t passed,Double_t level,Boo
 ///
 ///  c1->cd(0);
 ///  return c1;
-///}
-///End_Macro
+/// }
+/// End_Macro
 
 Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
                               const Int_t* pass,const Int_t* total,
@@ -1934,37 +1862,35 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
 
 }
 ////////////////////////////////////////////////////////////////////////////////
-///combines a list of 1-dimensional TEfficiency objects
+/// Combines a list of 1-dimensional TEfficiency objects
 ///
-///A TGraphAsymmErrors object is returned which contains the estimated
-///efficiency and its uncertainty for each bin.
-///If the combination fails, a zero pointer is returned.
+/// A TGraphAsymmErrors object is returned which contains the estimated
+/// efficiency and its uncertainty for each bin.
+/// If the combination fails, a zero pointer is returned.
 ///
-///At the moment the combining is only implemented for bayesian statistics.
+/// At the moment the combining is only implemented for bayesian statistics.
 ///
-///Input:
-///- pList  : list containing TEfficiency objects which should be combined
-///           only one-dimensional efficiencies are taken into account
-///- options
-/// + s     : strict combining; only TEfficiency objects with the same beta
+/// \param[in] pList list containing TEfficiency objects which should be combined
+///            only one-dimensional efficiencies are taken into account
+/// \param[in] option
+/// - s     : strict combining; only TEfficiency objects with the same beta
 ///           prior and the flag kIsBayesian == true are combined
 ///           If not specified the prior parameter of the first TEfficiency object is used
-/// + v     : verbose mode; print information about combining
-/// + cl=x  : set confidence level (0 < cl < 1). If not specified, the
+/// - v     : verbose mode; print information about combining
+/// - cl=x  : set confidence level (0 < cl < 1). If not specified, the
 ///           confidence level of the first TEfficiency object is used.
-/// + mode    Use mode of combined posterior as estimated value for the efficiency
-/// + shortest: compute shortest interval (done by default if mode option is set)
-/// + central: compute central interval (done by default if mode option is NOT set)
-///
-///- n      : number of weights (has to be the number of one-dimensional
-///           TEfficiency objects in pList)
-///           If no weights are passed, the internal weights GetWeight() of
-///           the given TEfficiency objects are used.
-///- w      : array of length n with weights for each TEfficiency object in
+/// - mode    Use mode of combined posterior as estimated value for the efficiency
+/// - shortest: compute shortest interval (done by default if mode option is set)
+/// - central: compute central interval (done by default if mode option is NOT set)
+/// \param[in] n number of weights (has to be the number of one-dimensional
+///            TEfficiency objects in pList)
+///            If no weights are passed, the internal weights GetWeight() of
+///            the given TEfficiency objects are used.
+/// \param[in] w array of length n with weights for each TEfficiency object in
 ///           pList (w[0] correspond to pList->First ... w[n-1] -> pList->Last)
 ///           The weights do not have to be normalised.
 ///
-///For each bin the calculation is done by the Combine(double&, double& ...) method.
+/// For each bin the calculation is done by the Combine(double&, double& ...) method.
 
 TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
                                         Int_t n,const Double_t* w)
@@ -2160,15 +2086,15 @@ Int_t TEfficiency::DistancetoPrimitive(Int_t px, Int_t py)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///draws the current TEfficiency object
+/// Draws the current TEfficiency object
 ///
-///options:
-///- 1-dimensional case: same options as TGraphAsymmErrors::Draw()
-///    but as default "AP" is used
-///- 2-dimensional case: same options as TH2::Draw()
-///- 3-dimensional case: not yet supported
+/// \param[in] opt
+///  - 1-dimensional case: same options as TGraphAsymmErrors::Draw()
+///     but as default "AP" is used
+///  - 2-dimensional case: same options as TH2::Draw()
+///  - 3-dimensional case: not yet supported
 ///
-/// specific TEfficiency drawing options:
+/// Specific TEfficiency drawing options:
 /// - E0 - plot bins where the total number of passed events is zero
 ///      (the error interval will be [0,1] )
 
@@ -2212,14 +2138,14 @@ void TEfficiency::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///This function is used for filling the two histograms.
+/// This function is used for filling the two histograms.
 ///
-///Input: bPassed - flag whether the current event passed the selection
-///                 true: both histograms are filled
-///                 false: only the total histogram is filled
-///       x       - x value
-///       y       - y value (use default=0 for 1-D efficiencies)
-///       z       - z value (use default=0 for 2-D or 1-D efficiencies)
+/// \param[in] bPassed flag whether the current event passed the selection
+///                 - true: both histograms are filled
+///                 - false: only the total histogram is filled
+/// \param[in] x x-value
+/// \param[in] y y-value (use default=0 for 1-D efficiencies)
+/// \param[in] z z-value (use default=0 for 2-D or 1-D efficiencies)
 
 void TEfficiency::Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z)
 {
@@ -2245,15 +2171,15 @@ void TEfficiency::Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z)
 ////////////////////////////////////////////////////////////////////////////////
 ///This function is used for filling the two histograms with a weight.
 ///
-///Input: bPassed - flag whether the current event passed the selection
-///                 true: both histograms are filled
-///                 false: only the total histogram is filled
-///       weight  - weight for the event
-///       x       - x value
-///       y       - y value (use default=0 for 1-D efficiencies)
-///       z       - z value (use default=0 for 2-D or 1-D efficiencies)
+/// \param[in] bPassed flag whether the current event passed the selection
+///                 - true: both histograms are filled
+///                 - false: only the total histogram is filled
+/// \param[in] weight weight for the event
+/// \param[in] x x-value
+/// \param[in] y y-value (use default=0 for 1-D efficiencies)
+/// \param[in] z z-value (use default=0 for 2-D or 1-D efficiencies)
 ///
-///Note: - this function will call SetUseWeightedEvents if it was not called by the user before
+/// Note: - this function will call SetUseWeightedEvents if it was not called by the user before
 
 void TEfficiency::FillWeighted(Bool_t bPassed,Double_t weight,Double_t x,Double_t y,Double_t z)
 {
@@ -2283,11 +2209,11 @@ void TEfficiency::FillWeighted(Bool_t bPassed,Double_t weight,Double_t x,Double_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///returns the global bin number containing the given values
+/// Returns the global bin number containing the given values
 ///
-///Note: - values which belong to dimensions higher than the current dimension
-///        of the TEfficiency object are ignored (i.e. for 1-dimensional
-///        efficiencies only the x-value is considered)
+/// Note: - values which belong to dimensions higher than the current dimension
+///         of the TEfficiency object are ignored (i.e. for 1-dimensional
+///         efficiencies only the x-value is considered)
 
 Int_t TEfficiency::FindFixBin(Double_t x,Double_t y,Double_t z) const
 {
@@ -2304,13 +2230,14 @@ Int_t TEfficiency::FindFixBin(Double_t x,Double_t y,Double_t z) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///fits the efficiency using the TBinomialEfficiencyFitter class
+/// Fits the efficiency using the TBinomialEfficiencyFitter class
 ///
-///The resulting fit function is added to the list of associated functions.
+/// The resulting fit function is added to the list of associated functions.
 ///
-///Options: - "+": previous fitted functions in the list are kept, by default
-///                all functions in the list are deleted
-///         - for more fitting options see TBinomialEfficiencyFitter::Fit
+/// Options:
+/// - "+": previous fitted functions in the list are kept, by default
+///   all functions in the list are deleted
+/// - for more fitting options see TBinomialEfficiencyFitter::Fit
 
 Int_t TEfficiency::Fit(TF1* f1,Option_t* opt)
 {
@@ -2352,9 +2279,10 @@ Int_t TEfficiency::Fit(TF1* f1,Option_t* opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///returns a cloned version of fPassedHistogram
+/// Returns a cloned version of fPassedHistogram
 ///
-///Notes: - The histogram is filled with unit weights. You might want to scale
+/// Notes:
+///       - The histogram is filled with unit weights. You might want to scale
 ///         it with the global weight GetWeight().
 ///       - The returned object is owned by the user who has to care about the
 ///         deletion of the new TH1 object.
@@ -2362,16 +2290,14 @@ Int_t TEfficiency::Fit(TF1* f1,Option_t* opt)
 ///         to avoid duplication of data. If you want to store it automatically
 ///         during the next TFile::Write() command, you have to attach it to
 ///         the corresponding directory.
-///Begin_html
-///<div class="code"><pre>
+///
+/// ~~~~~~~{.cpp}
 ///  TFile* pFile = new TFile("passed.root","update");
 ///  TEfficiency* pEff = (TEfficiency*)gDirectory->Get("my_eff");
 ///  TH1* copy = pEff->GetCopyPassedHisto();
 ///  copy->SetDirectory(gDirectory);
 ///  pFile->Write();
-///</pre></div>
-///<div class="clear"></div>
-///End_Html
+/// ~~~~~~~
 
 TH1* TEfficiency::GetCopyPassedHisto() const
 {
@@ -2384,9 +2310,10 @@ TH1* TEfficiency::GetCopyPassedHisto() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///returns a cloned version of fTotalHistogram
+/// Returns a cloned version of fTotalHistogram
 ///
-///Notes: - The histogram is filled with unit weights. You might want to scale
+/// Notes:
+///       - The histogram is filled with unit weights. You might want to scale
 ///         it with the global weight GetWeight().
 ///       - The returned object is owned by the user who has to care about the
 ///         deletion of the new TH1 object.
@@ -2394,16 +2321,14 @@ TH1* TEfficiency::GetCopyPassedHisto() const
 ///         to avoid duplication of data. If you want to store it automatically
 ///         during the next TFile::Write() command, you have to attach it to
 ///         the corresponding directory.
-///Begin_Html
-///<div class="code"><pre>
+///
+/// ~~~~~~~{.cpp}
 ///  TFile* pFile = new TFile("total.root","update");
 ///  TEfficiency* pEff = (TEfficiency*)gDirectory->Get("my_eff");
 ///  TH1* copy = pEff->GetCopyTotalHisto();
 ///  copy->SetDirectory(gDirectory);
 ///  pFile->Write();
-///</pre></div>
-///<div class="clear"></div>
-///End_Html
+/// ~~~~~~~
 
 TH1* TEfficiency::GetCopyTotalHisto() const
 {
@@ -2424,20 +2349,20 @@ Int_t TEfficiency::GetDimension() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///returns the efficiency in the given global bin
+/// Returns the efficiency in the given global bin
 ///
-///Note: - The estimated efficiency depends on the chosen statistic option:
+/// Note:
+///      - The estimated efficiency depends on the chosen statistic option:
 ///        for frequentist ones:
-///        Begin_Latex #hat{#varepsilon} = #frac{passed}{total} End_Latex
+///        \f$ \hat{\varepsilon} = \frac{passed}{total} \f$
 ///        for bayesian ones the expectation value of the resulting posterior
 ///        distribution is returned:
-///        Begin_Latex #hat{#varepsilon} = #frac{passed + #alpha}{total + #alpha + #beta} End_Latex
+///        \f$ \hat{\varepsilon} = \frac{passed + \alpha}{total + \alpha + \beta} \f$
 ///        If the bit kPosteriorMode is set (or the method TEfficiency::UsePosteriorMode() has been called ) the
 ///        mode (most probable value) of the posterior is returned:
-///        Begin_Latex #hat{#varepsilon} = #frac{passed + #alpha -1}{total + #alpha + #beta -2} End_Latex
-///
-///      - If the denominator is equal to 0, an efficiency of 0 is returned.
-///      - When  Begin_Latex passed + #alpha < 1 End_Latex or Begin_Latex total - passed + #beta < 1 End_latex the above
+///        \f$ \hat{\varepsilon} = \frac{passed + \alpha -1}{total + \alpha + \beta -2} \f$
+///       - If the denominator is equal to 0, an efficiency of 0 is returned.
+///       - When \f$ passed + \alpha < 1 \f$ or \f$ total - passed + \beta < 1 \f$ the above
 ///        formula for the mode is not valid. In these cases values the estimated efficiency is 0 or 1.
 
 Double_t TEfficiency::GetEfficiency(Int_t bin) const
@@ -2482,14 +2407,14 @@ Double_t TEfficiency::GetEfficiency(Int_t bin) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///returns the lower error on the efficiency in the given global bin
+/// Returns the lower error on the efficiency in the given global bin
 ///
-///The result depends on the current confidence level fConfLevel and the
-///chosen statistic option fStatisticOption. See SetStatisticOption(Int_t) for
-///more details.
+/// The result depends on the current confidence level fConfLevel and the
+/// chosen statistic option fStatisticOption. See SetStatisticOption(Int_t) for
+/// more details.
 ///
-///Note: If the histograms are filled with weights, only bayesian methods and the
-///      normal approximation are supported.
+/// Note: If the histograms are filled with weights, only bayesian methods and the
+///       normal approximation are supported.
 
 Double_t TEfficiency::GetEfficiencyErrorLow(Int_t bin) const
 {
@@ -2562,14 +2487,14 @@ Double_t TEfficiency::GetEfficiencyErrorLow(Int_t bin) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///returns the upper error on the efficiency in the given global bin
+/// Returns the upper error on the efficiency in the given global bin
 ///
-///The result depends on the current confidence level fConfLevel and the
-///chosen statistic option fStatisticOption. See SetStatisticOption(Int_t) for
-///more details.
+/// The result depends on the current confidence level fConfLevel and the
+/// chosen statistic option fStatisticOption. See SetStatisticOption(Int_t) for
+/// more details.
 ///
-///Note: If the histograms are filled with weights, only bayesian methods and the
-///      normal approximation are supported.
+/// Note: If the histograms are filled with weights, only bayesian methods and the
+///       normal approximation are supported.
 
 Double_t TEfficiency::GetEfficiencyErrorUp(Int_t bin) const
 {
@@ -2641,13 +2566,13 @@ Double_t TEfficiency::GetEfficiencyErrorUp(Int_t bin) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///returns the global bin number which can be used as argument for the
-///following functions:
+/// Returns the global bin number which can be used as argument for the
+/// following functions:
 ///
 /// - GetEfficiency(bin), GetEfficiencyErrorLow(bin), GetEfficiencyErrorUp(bin)
 /// - SetPassedEvents(bin), SetTotalEvents(bin)
 ///
-///see TH1::GetBin() for conventions on numbering bins
+/// see TH1::GetBin() for conventions on numbering bins
 
 Int_t TEfficiency::GetGlobalBin(Int_t binx,Int_t biny,Int_t binz) const
 {
@@ -2662,17 +2587,17 @@ TList* TEfficiency::GetListOfFunctions()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///merges the TEfficiency objects in the given list to the given
-///TEfficiency object using the operator+=(TEfficiency&)
+/// Merges the TEfficiency objects in the given list to the given
+/// TEfficiency object using the operator+=(TEfficiency&)
 ///
-///The merged result is stored in the current object. The statistic options and
-///the confidence level are taken from the current object.
+/// The merged result is stored in the current object. The statistic options and
+/// the confidence level are taken from the current object.
 ///
-///This function should be used when all TEfficiency objects correspond to
-///the same process.
+/// This function should be used when all TEfficiency objects correspond to
+/// the same process.
 ///
-///The new weight is set according to:
-///Begin_Latex #frac{1}{w_{new}} = #sum_{i} \frac{1}{w_{i}}End_Latex
+/// The new weight is set according to:
+/// \f$  \frac{1}{w_{new}} = \sum_{i} \frac{1}{w_{i}} \f$
 
 Long64_t TEfficiency::Merge(TCollection* pList)
 {
@@ -2691,21 +2616,23 @@ Long64_t TEfficiency::Merge(TCollection* pList)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///returns the confidence limits for the efficiency supposing that the
-///efficiency follows a normal distribution with the rms below
+/// Returns the confidence limits for the efficiency supposing that the
+/// efficiency follows a normal distribution with the rms below
 ///
-///Input: - total : number of total events
-///       - passed: 0 <= number of passed events <= total
-///       - level : confidence level
-///       - bUpper: true  - upper boundary is returned
-///                 false - lower boundary is returned
+/// \param[in] total number of total events
+/// \param[in] passed 0 <= number of passed events <= total
+/// \param[in] level  confidence level
+/// \param[in] bUpper
+///                 - true  - upper boundary is returned
+///                 - false - lower boundary is returned
 ///
-///calculation:
-///Begin_Latex(separator='=',align='rl')
-/// #hat{#varepsilon} = #frac{passed}{total}
-/// #sigma_{#varepsilon} = #sqrt{#frac{#hat{#varepsilon} (1 - #hat{#varepsilon})}{total}}
-/// #varepsilon_{low} = #hat{#varepsilon} #pm #Phi^{-1}(#frac{level}{2},#sigma_{#varepsilon})
-///End_Latex
+/// Calculation:
+/** \f{eqnarray*}{
+      \hat{\varepsilon} &=& \frac{passed}{total}\\
+      \sigma_{\varepsilon} &=& \sqrt{\frac{\hat{\varepsilon} (1 - \hat{\varepsilon})}{total}}\\
+      \varepsilon_{low} &=& \hat{\varepsilon} \pm \Phi^{-1}(\frac{level}{2},\sigma_{\varepsilon})
+    \f}
+**/
 
 Double_t TEfficiency::Normal(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
 {
@@ -2722,17 +2649,17 @@ Double_t TEfficiency::Normal(Int_t total,Int_t passed,Double_t level,Bool_t bUpp
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///adds the histograms of another TEfficiency object to current histograms
+/// Adds the histograms of another TEfficiency object to current histograms
 ///
-///The statistic options and the confidence level remain unchanged.
+/// The statistic options and the confidence level remain unchanged.
 ///
-///fTotalHistogram += rhs.fTotalHistogram;
-///fPassedHistogram += rhs.fPassedHistogram;
+/// fTotalHistogram += rhs.fTotalHistogram;
+/// fPassedHistogram += rhs.fPassedHistogram;
 ///
-///calculates a new weight:
-///current weight of this TEfficiency object = Begin_Latex w_{1} End_Latex
-///weight of rhs = Begin_Latex w_{2} End_Latex
-///Begin_Latex w_{new} = \frac{w_{1} \times w_{2}}{w_{1} + w_{2}}End_Latex
+/// calculates a new weight:
+/// current weight of this TEfficiency object = \f$ w_{1} \f$
+/// weight of rhs = \f$ w_{2} \f$
+/// \f$ w_{new} = \frac{w_{1} \times w_{2}}{w_{1} + w_{2}} \f$
 
 TEfficiency& TEfficiency::operator+=(const TEfficiency& rhs)
 {
@@ -2768,13 +2695,13 @@ TEfficiency& TEfficiency::operator+=(const TEfficiency& rhs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignment operator
+/// Assignment operator
 ///
-///The histograms, statistic option, confidence level, weight and paint styles
-///of rhs are copied to the this TEfficiency object.
+/// The histograms, statistic option, confidence level, weight and paint styles
+/// of rhs are copied to the this TEfficiency object.
 ///
-///Note: - The list of associated functions is not copied. After this
-///        operation the list of associated functions is empty.
+/// Note: - The list of associated functions is not copied. After this
+///         operation the list of associated functions is empty.
 
 TEfficiency& TEfficiency::operator=(const TEfficiency& rhs)
 {
@@ -2817,9 +2744,9 @@ TEfficiency& TEfficiency::operator=(const TEfficiency& rhs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///paints this TEfficiency object
+/// Paints this TEfficiency object
 ///
-///For details on the possible option see Draw(Option_t*)
+/// For details on the possible option see Draw(Option_t*)
 ///
 /// Note for 1D classes
 /// In 1D the TEfficiency uses a TGraphAsymmErrors for drawing
@@ -2888,7 +2815,7 @@ void TEfficiency::Paint(const Option_t* opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///have histograms fixed bins along each axis?
+/// Have histograms fixed bins along each axis?
 
 void TEfficiency::SavePrimitive(std::ostream& out,Option_t* opt)
 {
@@ -3055,14 +2982,14 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets the shape parameter Begin_Latex \alpha End_Latex
+/// Sets the shape parameter &alpha;
 ///
-///The prior probability of the efficiency is given by the beta distribution:
-///Begin_Latex
-/// f(\varepsilon;\alpha;\beta) = \frac{1}{B(\alpha,\beta)} \varepsilon^{\alpha-1} (1 - \varepsilon)^{\beta-1}
-///End_Latex
+/// The prior probability of the efficiency is given by the beta distribution:
+/// \f[
+///   f(\varepsilon;\alpha;\beta) = \frac{1}{B(\alpha,\beta)} \varepsilon^{\alpha-1} (1 - \varepsilon)^{\beta-1}
+/// \f]
 ///
-///Note: - both shape parameters have to be positive (i.e. > 0)
+/// Note: - both shape parameters have to be positive (i.e. > 0)
 
 void TEfficiency::SetBetaAlpha(Double_t alpha)
 {
@@ -3073,14 +3000,14 @@ void TEfficiency::SetBetaAlpha(Double_t alpha)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets the shape parameter Begin_Latex \beta End_Latex
+/// Sets the shape parameter &beta;
 ///
-///The prior probability of the efficiency is given by the beta distribution:
-///Begin_Latex
-/// f(\varepsilon;\alpha,\beta) = \frac{1}{B(\alpha,\beta)} \varepsilon^{\alpha-1} (1 - \varepsilon)^{\beta-1}
-///End_Latex
+/// The prior probability of the efficiency is given by the beta distribution:
+/// \f[
+///   f(\varepsilon;\alpha,\beta) = \frac{1}{B(\alpha,\beta)} \varepsilon^{\alpha-1} (1 - \varepsilon)^{\beta-1}
+/// \f]
 ///
-///Note: - both shape parameters have to be positive (i.e. > 0)
+/// Note: - both shape parameters have to be positive (i.e. > 0)
 
 void TEfficiency::SetBetaBeta(Double_t beta)
 {
@@ -3091,16 +3018,17 @@ void TEfficiency::SetBetaBeta(Double_t beta)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets different  shape parameter Begin_Latex \alpha and \beta End_Latex
+/// Sets different  shape parameter &alpha; and &beta;
 /// for the prior distribution for each bin. By default the global parameter are used if they are not set
 /// for the specific bin
-///The prior probability of the efficiency is given by the beta distribution:
-///Begin_Latex
-/// f(\varepsilon;\alpha;\beta) = \frac{1}{B(\alpha,\beta)} \varepsilon^{\alpha-1} (1 - \varepsilon)^{\beta-1}
-///End_Latex
+/// The prior probability of the efficiency is given by the beta distribution:
+/// \f[
+///   f(\varepsilon;\alpha;\beta) = \frac{1}{B(\alpha,\beta)} \varepsilon^{\alpha-1} (1 - \varepsilon)^{\beta-1}
+/// \f]
 ///
-///Note: - both shape parameters have to be positive (i.e. > 0)
-///      - bin gives the global bin number (cf. GetGlobalBin)
+/// Note:
+/// - both shape parameters have to be positive (i.e. > 0)
+/// - bin gives the global bin number (cf. GetGlobalBin)
 
 void TEfficiency::SetBetaBinParameters(Int_t bin, Double_t alpha, Double_t beta)
 {
@@ -3120,7 +3048,7 @@ void TEfficiency::SetBetaBinParameters(Int_t bin, Double_t alpha, Double_t beta)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set the bins for the underlined passed and total histograms
+/// Set the bins for the underlined passed and total histograms
 /// If the class have been already filled the previous contents will be lost
 
 Bool_t TEfficiency::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
@@ -3140,7 +3068,7 @@ Bool_t TEfficiency::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set the bins for the underlined passed and total histograms
+/// Set the bins for the underlined passed and total histograms
 /// If the class have been already filled the previous contents will be lost
 
 Bool_t TEfficiency::SetBins(Int_t nx, const Double_t *xBins)
@@ -3160,7 +3088,7 @@ Bool_t TEfficiency::SetBins(Int_t nx, const Double_t *xBins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set the bins for the underlined passed and total histograms
+/// Set the bins for the underlined passed and total histograms
 /// If the class have been already filled the previous contents will be lost
 
 Bool_t TEfficiency::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax)
@@ -3180,7 +3108,7 @@ Bool_t TEfficiency::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set the bins for the underlined passed and total histograms
+/// Set the bins for the underlined passed and total histograms
 /// If the class have been already filled the previous contents will be lost
 
 Bool_t TEfficiency::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins)
@@ -3200,7 +3128,7 @@ Bool_t TEfficiency::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set the bins for the underlined passed and total histograms
+/// Set the bins for the underlined passed and total histograms
 /// If the class have been already filled the previous contents will be lost
 
 Bool_t TEfficiency::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax,
@@ -3221,7 +3149,7 @@ Bool_t TEfficiency::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set the bins for the underlined passed and total histograms
+/// Set the bins for the underlined passed and total histograms
 /// If the class have been already filled the previous contents will be lost
 
 Bool_t TEfficiency::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins, Int_t nz,
@@ -3242,7 +3170,7 @@ Bool_t TEfficiency::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets the confidence level (0 < level < 1)
+/// Sets the confidence level (0 < level < 1)
 /// The default value is 1-sigma :~ 0.683
 
 void TEfficiency::SetConfidenceLevel(Double_t level)
@@ -3254,13 +3182,13 @@ void TEfficiency::SetConfidenceLevel(Double_t level)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets the directory holding this TEfficiency object
+/// Sets the directory holding this TEfficiency object
 ///
-///A reference to this TEfficiency object is removed from the current
-///directory (if it exists) and a new reference to this TEfficiency object is
-///added to the given directory.
+/// A reference to this TEfficiency object is removed from the current
+/// directory (if it exists) and a new reference to this TEfficiency object is
+/// added to the given directory.
 ///
-///Notes: - If the given directory is 0, the TEfficiency object does not
+/// Notes: - If the given directory is 0, the TEfficiency object does not
 ///         belong to any directory and will not be written to file during the
 ///         next TFile::Write() command.
 
@@ -3276,9 +3204,9 @@ void TEfficiency::SetDirectory(TDirectory* dir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets the name
+/// Sets the name
 ///
-///Note: The names of the internal histograms are set to "name + _total" and
+/// Note: The names of the internal histograms are set to "name + _total" and
 ///      "name + _passed" respectively.
 
 void TEfficiency::SetName(const char* name)
@@ -3293,12 +3221,12 @@ void TEfficiency::SetName(const char* name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets the number of passed events in the given global bin
+/// Sets the number of passed events in the given global bin
 ///
-///returns "true" if the number of passed events has been updated
-///otherwise "false" ist returned
+/// returns "true" if the number of passed events has been updated
+/// otherwise "false" ist returned
 ///
-///Note: - requires: 0 <= events <= fTotalHistogram->GetBinContent(bin)
+/// Note: - requires: 0 <= events <= fTotalHistogram->GetBinContent(bin)
 
 Bool_t TEfficiency::SetPassedEvents(Int_t bin,Int_t events)
 {
@@ -3313,17 +3241,18 @@ Bool_t TEfficiency::SetPassedEvents(Int_t bin,Int_t events)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets the histogram containing the passed events
+/// Sets the histogram containing the passed events
 ///
-///The given histogram is cloned and stored internally as histogram containing
-///the passed events. The given histogram has to be consistent with the current
-///fTotalHistogram (see CheckConsistency(const TH1&,const TH1&)).
-///The method returns whether the fPassedHistogram has been replaced (true) or
-///not (false).
+/// The given histogram is cloned and stored internally as histogram containing
+/// the passed events. The given histogram has to be consistent with the current
+/// fTotalHistogram (see CheckConsistency(const TH1&,const TH1&)).
+/// The method returns whether the fPassedHistogram has been replaced (true) or
+/// not (false).
 ///
-///Note: The list of associated functions fFunctions is cleared.
+/// Note: The list of associated functions fFunctions is cleared.
 ///
-///Option: - "f": force the replacement without checking the consistency
+/// Option:
+/// - "f": force the replacement without checking the consistency
 ///               This can lead to inconsistent histograms and useless results
 ///               or unexpected behaviour. But sometimes it might be the only
 ///               way to change the histograms. If you use this option, you
@@ -3365,31 +3294,31 @@ Bool_t TEfficiency::SetPassedHistogram(const TH1& rPassed,Option_t* opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets the statistic option which affects the calculation of the confidence interval
+/// Sets the statistic option which affects the calculation of the confidence interval
 ///
-///Options:
-///- kFCP (=0)(default): using the Clopper-Pearson interval (recommended by PDG)
-///                      sets kIsBayesian = false
-///                      see also ClopperPearson
-///- kFNormal   (=1)   : using the normal approximation
-///                      sets kIsBayesian = false
-///                      see also Normal
-///- kFWilson   (=2)   : using the Wilson interval
-///                      sets kIsBayesian = false
-///                      see also Wilson
-///- kFAC       (=3)   : using the Agresti-Coull interval
-///                      sets kIsBayesian = false
-///                      see also AgrestiCoull
-///- kFFC       (=4)   : using the Feldman-Cousins frequentist method
-///                      sets kIsBayesian = false
-///                      see also FeldmanCousins
-///- kBJeffrey  (=5)   : using the Jeffrey interval
-///                      sets kIsBayesian = true, fBeta_alpha = 0.5 and fBeta_beta = 0.5
-///                      see also Bayesian
-///- kBUniform  (=6)   : using a uniform prior
-///                      sets kIsBayesian = true, fBeta_alpha = 1 and fBeta_beta = 1
-///                      see also Bayesian
-///- kBBayesian (=7)   : using a custom prior defined by fBeta_alpha and fBeta_beta
+/// Options:
+/// - kFCP (=0)(default): using the Clopper-Pearson interval (recommended by PDG)
+///                       sets kIsBayesian = false
+///                       see also ClopperPearson
+/// - kFNormal   (=1)   : using the normal approximation
+///                       sets kIsBayesian = false
+///                       see also Normal
+/// - kFWilson   (=2)   : using the Wilson interval
+///                       sets kIsBayesian = false
+///                       see also Wilson
+/// - kFAC       (=3)   : using the Agresti-Coull interval
+///                       sets kIsBayesian = false
+///                       see also AgrestiCoull
+/// - kFFC       (=4)   : using the Feldman-Cousins frequentist method
+///                       sets kIsBayesian = false
+///                       see also FeldmanCousins
+/// - kBJeffrey  (=5)   : using the Jeffrey interval
+///                       sets kIsBayesian = true, fBeta_alpha = 0.5 and fBeta_beta = 0.5
+///                       see also Bayesian
+/// - kBUniform  (=6)   : using a uniform prior
+///                       sets kIsBayesian = true, fBeta_alpha = 1 and fBeta_beta = 1
+///                       see also Bayesian
+/// - kBBayesian (=7)   : using a custom prior defined by fBeta_alpha and fBeta_beta
 ///                      sets kIsBayesian = true
 ///                      see also Bayesian
 
@@ -3442,20 +3371,16 @@ void TEfficiency::SetStatisticOption(EStatOption option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets the title
+/// Sets the title
 ///
-///Notes: - The titles of the internal histograms are set to "title + (total)"
+/// Notes:
+///       - The titles of the internal histograms are set to "title + (total)"
 ///         or "title + (passed)" respectively.
 ///       - It is possible to label the axis of the histograms as usual (see
 ///         TH1::SetTitle).
 ///
-///Example: Setting the title to "My Efficiency" and label the axis
-///Begin_Html
-///<div class="code"><pre>
-///pEff->SetTitle("My Efficiency;x label;eff");
-///</pre></div>
-///<div class="clear"></div>
-///End_Html
+/// Example: Setting the title to "My Efficiency" and label the axis
+///     pEff->SetTitle("My Efficiency;x label;eff");
 
 void TEfficiency::SetTitle(const char* title)
 {
@@ -3484,12 +3409,12 @@ void TEfficiency::SetTitle(const char* title)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets the number of total events in the given global bin
+/// Sets the number of total events in the given global bin
 ///
-///returns "true" if the number of total events has been updated
-///otherwise "false" ist returned
+/// returns "true" if the number of total events has been updated
+/// otherwise "false" ist returned
 ///
-///Note: - requires: fPassedHistogram->GetBinContent(bin) <= events
+/// Note: - requires: fPassedHistogram->GetBinContent(bin) <= events
 
 Bool_t TEfficiency::SetTotalEvents(Int_t bin,Int_t events)
 {
@@ -3504,17 +3429,18 @@ Bool_t TEfficiency::SetTotalEvents(Int_t bin,Int_t events)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets the histogram containing all events
+/// Sets the histogram containing all events
 ///
-///The given histogram is cloned and stored internally as histogram containing
-///all events. The given histogram has to be consistent with the current
-///fPassedHistogram (see CheckConsistency(const TH1&,const TH1&)).
-///The method returns whether the fTotalHistogram has been replaced (true) or
-///not (false).
+/// The given histogram is cloned and stored internally as histogram containing
+/// all events. The given histogram has to be consistent with the current
+/// fPassedHistogram (see CheckConsistency(const TH1&,const TH1&)).
+/// The method returns whether the fTotalHistogram has been replaced (true) or
+/// not (false).
 ///
-///Note: The list of associated functions fFunctions is cleared.
+/// Note: The list of associated functions fFunctions is cleared.
 ///
-///Option: - "f": force the replacement without checking the consistency
+/// Option:
+/// - "f": force the replacement without checking the consistency
 ///               This can lead to inconsistent histograms and useless results
 ///               or unexpected behaviour. But sometimes it might be the only
 ///               way to change the histograms. If you use this option, you
@@ -3565,9 +3491,9 @@ void TEfficiency::SetUseWeightedEvents()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///sets the global weight for this TEfficiency object
+/// Sets the global weight for this TEfficiency object
 ///
-///Note: - weight has to be positive ( > 0)
+/// Note: - weight has to be positive ( > 0)
 
 void TEfficiency::SetWeight(Double_t weight)
 {
@@ -3578,22 +3504,24 @@ void TEfficiency::SetWeight(Double_t weight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///calculates the boundaries for the frequentist Wilson interval
+/// Calculates the boundaries for the frequentist Wilson interval
 ///
-///Input: - total : number of total events
-///       - passed: 0 <= number of passed events <= total
-///       - level : confidence level
-///       - bUpper: true  - upper boundary is returned
-///                 false - lower boundary is returned
+/// \param[in] total number of total events
+/// \param[in] passed 0 <= number of passed events <= total
+/// \param[in] level  confidence level
+/// \param[in] bUpper
+///                 - true  - upper boundary is returned
+///                 - false - lower boundary is returned
 ///
-///calculation:
-///Begin_Latex(separator='=',align='rl')
-/// #alpha = 1 - #frac{level}{2}
-/// #kappa = #Phi^{-1}(1 - #alpha,1) ... normal quantile function
-/// mode = #frac{passed + #frac{#kappa^{2}}{2}}{total + #kappa^{2}}
-/// #Delta = #frac{#kappa}{total + #kappa^{2}} * #sqrt{passed (1 - #frac{passed}{total}) + #frac{#kappa^{2}}{4}}
-/// return = max(0,mode - #Delta) or min(1,mode + #Delta)
-///End_Latex
+/// Calculation:
+/** \f{eqnarray*}{
+      \alpha &=& 1 - \frac{level}{2}\\
+      \kappa &=& \Phi^{-1}(1 - \alpha,1) ...\ normal\ quantile\ function\\
+      mode &=& \frac{passed + \frac{\kappa^{2}}{2}}{total + \kappa^{2}}\\
+      \Delta &=& \frac{\kappa}{total + \kappa^{2}} * \sqrt{passed (1 - \frac{passed}{total}) + \frac{\kappa^{2}}{4}}\\
+      return &=& max(0,mode - \Delta)\ or\ min(1,mode + \Delta)
+     \f}
+**/ 
 
 Double_t TEfficiency::Wilson(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
 {
@@ -3612,7 +3540,7 @@ Double_t TEfficiency::Wilson(Int_t total,Int_t passed,Double_t level,Bool_t bUpp
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// addition operator
+/// Addition operator
 ///
 /// adds the corresponding histograms:
 /// lhs.GetTotalHistogram() + rhs.GetTotalHistogram()

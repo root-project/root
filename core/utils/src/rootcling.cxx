@@ -406,7 +406,7 @@ static void GetCurrentDirectory(std::string &output)
 /// If that's not what the caller wants, she should pass -I to rootcling and a
 /// different relative path to the header files.
 
-static std::string GetRelocatableHeaderName(const char *header, const std::string &currentDirectory)
+static std::string GetRelocatableHeaderName(const std::string &header, const std::string &currentDirectory)
 {
    std::string result(header);
 
@@ -1088,7 +1088,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
    //        fprintf(stderr,"Add %s (%d) which is also %s\n",
    //                m.Type()->Name(), stltype, m.Type()->TrueName() );
    clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(m.getType()), 0);
-   RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
+   Internal::RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
 
    if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
 
@@ -1529,7 +1529,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
       if (filename[i] == '\\') filename[i] = '/';
    }
    dictStream << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << std::endl
-              << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
+              << "                     ::ROOT::Internal::DefineBehavior((void*)0,(void*)0)," << std::endl
               << "                     ";
 
    if (Namespace__HasMethod(cl, "Dictionary", interp)) {
@@ -2016,7 +2016,7 @@ void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
          ++iter) {
       int k = ROOT::TMetaUtils::IsSTLContainer(*iter);
       if (k != 0) {
-         RStl::Instance().GenerateTClassFor(iter->getType(), interp, normCtxt);
+         Internal::RStl::Instance().GenerateTClassFor(iter->getType(), interp, normCtxt);
       }
    }
 
@@ -2691,7 +2691,7 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
          }
          rootmapFile << "\n";
       }
-      rootmapFile << "[" << rootmapLibName << " ]\n";
+      rootmapFile << "[ " << rootmapLibName << " ]\n";
 
       // Loop on selected classes and insert them in the rootmap
       if (!classesNames.empty()) {
@@ -3070,7 +3070,7 @@ int GenerateFullDict(std::ostream &dictStream,
          if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */)) {
             // Register the collections
             // coverity[fun_call_w_exception] - that's just fine.
-            RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
+            Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
          } else {
             ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
             EmitStreamerInfo(selClass.GetNormalizedName());
@@ -3098,7 +3098,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
    // LINKDEF SELECTION LOOP
    // Loop to get the shadow class for the class marked 'RequestOnlyTClass' (but not the
-   // STL class which is done via RStl::Instance().WriteClassInit(0);
+   // STL class which is done via Internal::RStl::Instance().WriteClassInit(0);
    // and the ClassInit
 
    for (auto const & selClass : scan.fSelectedClasses) {
@@ -3126,7 +3126,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
    // Loop on the registered collections internally
    // coverity[fun_call_w_exception] - that's just fine.
-   ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy, EmitStreamerInfo);
+   ROOT::Internal::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy, EmitStreamerInfo);
 
 #ifndef ROOT_STAGE1_BUILD
    EmitTypedefs(scan.fSelectedTypedefs);
@@ -3739,11 +3739,11 @@ int ShouldIgnoreClingArgument(const std::string& argument)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if the argument is a sane cling argument. Performing the following checks:
-/// 1) It does not start with "--".
+/// 1) It does not start with "--" and is not the --param option.
 
 bool IsCorrectClingArgument(const std::string& argument)
 {
-   if (ROOT::TMetaUtils::BeginsWith(argument,"--")) return false;
+   if (ROOT::TMetaUtils::BeginsWith(argument,"--") && !ROOT::TMetaUtils::BeginsWith(argument,"--param")) return false;
    return true;
 }
 
@@ -3962,7 +3962,7 @@ int RootCling(int argc,
 
    std::vector<std::string> clingArgs;
    clingArgs.push_back(argv[0]);
-   clingArgs.push_back("-I.");
+   clingArgs.push_back("-iquote.");
 
    // Is this needed at all or just historical?
    if (! IsPointerTClassCopy<std::vector<int>::iterator>::kVal) {
@@ -4273,16 +4273,25 @@ int RootCling(int argc,
 
             bool isSelectionFile = IsSelectionFile(argv[i]);
 
-            std::string header(isSelectionFile ? argv[i] : GetRelocatableHeaderName(argv[i], currentDirectory));
+            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
+            std::string fullheader(argv[i]);
             // Strip any trailing + which is only used by GeneratedLinkdef.h which currently
             // use directly argv.
-            if (header[header.length() - 1] == '+') {
-               header.erase(header.length() - 1);
+            if (fullheader[fullheader.length() - 1] == '+') {
+               fullheader.erase(fullheader.length() - 1);
             }
+            std::string header(isSelectionFile ? fullheader : GetRelocatableHeaderName(fullheader, currentDirectory));
 
             interpPragmaSource += std::string("#include \"") + header + "\"\n";
             if (!isSelectionFile) {
-               includeForSource += std::string("#include \"") + header + "\"\n";
+               // In order to not have to add the equivelent to -I${PWD} to the
+               // command line, include the complete file name, even if it is a
+               // full pathname, when we write it down in the dictionary.
+               // Note: have -I${PWD} means in that (at least in the case of
+               // ACLiC) we inadvertently pick local file that have the same
+               // name as system header (e.g. new or list) and -iquote has not
+               // equivalent on some platforms.
+               includeForSource += std::string("#include \"") + fullheader + "\"\n";
                pcmArgs.push_back(header);
             } else if (!IsSelectionXml(argv[i])) {
                interpreterDeclarations += std::string("#include \"") + header + "\"\n";
@@ -4762,8 +4771,9 @@ int RootCling(int argc,
    std::string rootmapLibName = std::accumulate(rootmapLibNames.begin(),
                                 rootmapLibNames.end(),
                                 std::string(),
-   [](const std::string & a, const std::string & b) {
-      return a + " " + b;
+   [](const std::string & a, const std::string & b) -> std::string {
+      if (a.empty()) return b;
+      else return a + " " + b;
    });
 
    bool rootMapNeeded = !rootmapFileName.empty() || !rootmapLibName.empty();
@@ -5699,8 +5709,8 @@ int GenReflex(int argc, char **argv)
       if (!ROOT::TMetaUtils::EndsWith(targetLibName, gLibraryExtension)) {
          ROOT::TMetaUtils::Error("",
                                  "Invalid target library extension: filename is %s and extension %s is expected!\n",
-                                 gLibraryExtension.c_str(),
-                                 targetLibName.c_str());
+                                 targetLibName.c_str(),
+                                 gLibraryExtension.c_str());
       }
       // Target lib has precedence over rootmap lib
       if (options[ROOTMAP]) {

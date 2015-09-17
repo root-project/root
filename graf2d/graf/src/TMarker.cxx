@@ -25,11 +25,9 @@
 ClassImp(TMarker)
 
 
-//______________________________________________________________________________
-//
-// Manages Markers. Marker attributes are managed by TAttMarker.
-//
-
+/** \class TMarker
+Manages Markers. Marker attributes are managed by TAttMarker.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Marker default constructor.
@@ -39,7 +37,6 @@ TMarker::TMarker(): TObject(), TAttMarker()
    fX = 0;
    fY = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Marker normal constructor.
@@ -52,14 +49,12 @@ TMarker::TMarker(Double_t x, Double_t y, Int_t marker)
    fMarkerStyle = marker;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Marker default destructor.
 
 TMarker::~TMarker()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Marker copy constructor.
@@ -71,7 +66,6 @@ TMarker::TMarker(const TMarker &marker) : TObject(marker), TAttMarker(marker), T
    ((TMarker&)marker).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this marker to marker.
 
@@ -82,7 +76,6 @@ void TMarker::Copy(TObject &obj) const
    ((TMarker&)obj).fX = fX;
    ((TMarker&)obj).fY = fY;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Display the table of markers with their numbers.
@@ -113,7 +106,6 @@ void TMarker::DisplayMarkerTypes()
    delete text;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a marker.
 ///
@@ -139,7 +131,6 @@ Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this marker with its current attributes.
 
@@ -148,7 +139,6 @@ void TMarker::Draw(Option_t *option)
    AppendPad(option);
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this marker with new coordinates.
@@ -160,7 +150,6 @@ void TMarker::DrawMarker(Double_t x, Double_t y)
    newmarker->SetBit(kCanDelete);
    newmarker->AppendPad();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
@@ -215,7 +204,7 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Up:
       if (opaque) {
-         if (ndcsav) {
+         if (ndcsav && !this->TestBit(kMarkerNDC)) {
             this->SetX((fX - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
             this->SetY((fY - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
             this->SetNDC();
@@ -241,7 +230,6 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// List this marker with its attributes.
 
@@ -250,7 +238,6 @@ void TMarker::ls(Option_t *) const
    TROOT::IndentLevel();
    printf("Marker  X=%f Y=%f marker type=%d\n",fX,fY,fMarkerStyle);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this marker with its current attributes.
@@ -266,7 +253,6 @@ void TMarker::Paint(Option_t *)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this marker with new coordinates.
 
@@ -276,14 +262,12 @@ void TMarker::PaintMarker(Double_t x, Double_t y)
    gPad->PaintPolyMarker(-1,&x,&y,"");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this marker with new coordinates in NDC.
 
 void TMarker::PaintMarkerNDC(Double_t, Double_t)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump this marker with its attributes.
@@ -296,7 +280,6 @@ void TMarker::Print(Option_t *) const
    if (GetMarkerSize()  != 1) printf(" MarkerSize=%f",GetMarkerSize());
    printf("\n");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
@@ -315,7 +298,6 @@ void TMarker::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   marker->Draw();"<<std::endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set NDC mode on if isNDC = kTRUE, off otherwise
 
@@ -324,7 +306,6 @@ void TMarker::SetNDC(Bool_t isNDC)
    ResetBit(kMarkerNDC);
    if (isNDC) SetBit(kMarkerNDC);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TMarker.
@@ -403,7 +384,7 @@ void TMarker::SetBBoxCenterY(const Int_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set lefthandside of BoundingBox to a value
+/// Set left hand side of BoundingBox to a value
 /// (resize in x direction on left)
 
 void TMarker::SetBBoxX1(const Int_t x)
@@ -413,7 +394,7 @@ void TMarker::SetBBoxX1(const Int_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set righthandside of BoundingBox to a value
+/// Set right hand side of BoundingBox to a value
 /// (resize in x direction on right)
 
 void TMarker::SetBBoxX2(const Int_t x)

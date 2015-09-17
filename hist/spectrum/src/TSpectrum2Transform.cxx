@@ -31,6 +31,30 @@
 //     (2001) 307.                                                         //
 //____________________________________________________________________________
 
+/** \class TSpectrum2Transform
+ \ingroup Hist
+ \brief Advanced 2-dimentional orthogonal transform functions
+ \author Miroslav Morhac
+
+ The original code in C has been repackaged as a C++ class by R.Brun
+
+   The algorithms in this class have been published in the following
+   references:
+
+   1. C.V. Hampton, B. Lian, Wm. C. McHarris: Fast-Fourier-transform
+       spectral enhancement techniques for gamma-ray spectroscopy.NIM A353
+       (1994) 280-284.
+   2. Morhac M., Matousek V., New adaptive Cosine-Walsh  transform and
+       its application to nuclear data compression, IEEE Transactions on
+       Signal Processing 48 (2000) 2693.
+   3. Morhac M., Matousek V., Data compression using new fast adaptive
+       Cosine-Haar transforms, Digital Signal Processing 8 (1998) 63.
+   4. Morhac M., Matousek V.: Multidimensional nuclear data compression
+       using fast adaptive Walsh-Haar transform. Acta Physica Slovaca 51
+      (2001) 307.
+ 
+ */
+
 #include "TSpectrum2Transform.h"
 #include "TMath.h"
 

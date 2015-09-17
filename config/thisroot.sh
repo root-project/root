@@ -70,6 +70,10 @@ if [ -n "${old_rootsys}" ] ; then
       drop_from_path $MANPATH ${old_rootsys}/man
       MANPATH=$newpath
    fi
+   if [ -n "${CMAKE_PREFIX_PATH}" ]; then
+      drop_from_path $CMAKE_PREFIX_PATH ${old_rootsys}
+      CMAKE_PREFIX_PATH=$newpath
+   fi
 fi
 
 if [ -z "${MANPATH}" ]; then
@@ -122,6 +126,13 @@ if [ -z "${MANPATH}" ]; then
 else
    MANPATH=`dirname @mandir@`:$MANPATH; export MANPATH
 fi
+
+if [ -z "${CMAKE_PREFIX_PATH}" ]; then
+   CMAKE_PREFIX_PATH=$ROOTSYS; export CMAKE_PREFIX_PATH       # Linux, ELF HP-UX
+else
+   CMAKE_PREFIX_PATH=$ROOTSYS:$CMAKE_PREFIX_PATH; export CMAKE_PREFIX_PATH
+fi
+
 
 if [ "x`root-config --arch | grep -v win32gcc | grep -i win32`" != "x" ]; then
   ROOTSYS="`cygpath -w $ROOTSYS`"

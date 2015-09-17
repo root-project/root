@@ -9,19 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPRegexp                                                             //
-//                                                                      //
-// C++ Wrapper for the "Perl Compatible Regular Expressions" library    //
-//  The PCRE lib can be found at:                                       //
-//              http://www.pcre.org/                                    //
-//                                                                      //
-// Extensive documentation about Regular expressions in Perl can be     //
-// found at :                                                           //
-//              http://perldoc.perl.org/perlre.html                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/* \class TPRegexp
+
+C++ Wrapper for the "Perl Compatible Regular Expressions" library
+ The PCRE lib can be found at: http://www.pcre.org/
+
+Extensive documentation about Regular expressions in Perl can be
+found at : http://perldoc.perl.org/perlre.html
+*/
 
 #include "Riostream.h"
 #include "TPRegexp.h"
@@ -88,7 +83,7 @@ TPRegexp::~TPRegexp()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignement operator.
+/// Assignment operator.
 
 TPRegexp &TPRegexp::operator=(const TPRegexp &p)
 {
@@ -354,17 +349,18 @@ Int_t TPRegexp::Match(const TString &s, const TString &mods, Int_t start,
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns a TObjArray of matched substrings as TObjString's.
 /// The TObjArray is owner of the objects and must be deleted by the user.
-/// The first entry is the full matched pattern, followed by the subpatterns.
+/// The first entry is the full matched pattern, followed by the sub-patterns.
 /// If a pattern was not matched, it will return an empty substring:
-///
+/// ~~~ {.cpp}
 /// TObjArray *subStrL = TPRegexp("(a|(z))(bc)").MatchS("abc");
 /// for (Int_t i = 0; i < subStrL->GetLast()+1; i++) {
 ///    const TString subStr = ((TObjString *)subStrL->At(i))->GetString();
 ///    std::cout << "\"" << subStr << "\" ";
 /// }
 /// std::cout << subStr << std::endl;
-///
+/// ~~~
 /// produces:  "abc" "a" "" "bc"
+///
 /// For meaning of mods see ParseMods().
 
 TObjArray *TPRegexp::MatchS(const TString &s, const TString &mods,
@@ -460,12 +456,13 @@ Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
 /// Substitute replaces the string s by a new string in which matching
 /// patterns are replaced by the replacePattern string. The number of
 /// substitutions are returned.
-///
+/// ~~~ {.cpp}
 /// TString s("aap noot mies");
 /// const Int_t nrSub = TPRegexp("(\\w*) noot (\\w*)").Substitute(s,"$2 noot $1");
 /// std::cout << nrSub << " \"" << s << "\"" <<std::endl;
-///
+/// ~~~
 /// produces: 2 "mies noot aap"
+///
 /// For meaning of mods see ParseMods().
 
 Int_t TPRegexp::Substitute(TString &s, const TString &replacePattern,
@@ -509,15 +506,15 @@ void TPRegexp::SetThrowAtCompileError(Bool_t throwp)
    fgThrowAtCompileError = throwp;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TString member functions, put here so the linker will include        //
-// them only if regular expressions are used.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// TString member functions, put here so the linker will include              //
+// them only if regular expressions are used.                                 //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find the first occurance of the regexp in string and return the position.
+/// Find the first occurrence of the regexp in string and return the position.
 /// Start is the offset at which the search should start.
 
 Ssiz_t TString::Index(TPRegexp& r, Ssiz_t start) const
@@ -531,7 +528,7 @@ Ssiz_t TString::Index(TPRegexp& r, Ssiz_t start) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find the first occurance of the regexp in string and return the position.
+/// Find the first occurrence of the regexp in string and return the position.
 /// Extent is length of the matched string and start is the offset at which
 /// the matching should start.
 
@@ -567,20 +564,17 @@ TSubString TString::operator()(TPRegexp& r) const
 }
 
 
-//////////////////////////////////////////////////////////////////////////
-// TPMERegexp
-//////////////////////////////////////////////////////////////////////////
+/** \class TPMERegexp
 
-//______________________________________________________________________________
-//
-// Wrapper for PCRE library (Perl Compatible Regular Expressions).
-// Based on PME - PCRE Made Easy by Zachary Hansen.
-//
-// Supports main Perl operations using regular expressions (Match,
-// Substitute and Split). To retrieve the results one can simply use
-// operator[] returning a TString.
-//
-// See $ROOTSYS/tutorials/regexp_pme.C for examples.
+Wrapper for PCRE library (Perl Compatible Regular Expressions).
+Based on PME - PCRE Made Easy by Zachary Hansen.
+
+Supports main Perl operations using regular expressions (Match,
+Substitute and Split). To retrieve the results one can simply use
+operator[] returning a TString.
+
+See $ROOTSYS/tutorials/regexp_pme.C for examples.
+*/
 
 ClassImp(TPMERegexp);
 
@@ -599,8 +593,8 @@ TPMERegexp::TPMERegexp() :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor:
-///  s    - string to compile into regular expression
-///  opts - perl-style character flags to be set on TPME object
+/// \param[in] s      string to compile into regular expression
+/// \param[in] opts   perl-style character flags to be set on TPME object
 
 TPMERegexp::TPMERegexp(const TString& s, const TString& opts, Int_t nMatchMax) :
    TPRegexp(s),
@@ -615,8 +609,8 @@ TPMERegexp::TPMERegexp(const TString& s, const TString& opts, Int_t nMatchMax) :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor:
-///  s    - string to copmile into regular expression
-///  opts - PCRE-style option flags to be set on TPME object
+/// \param[in] s      string to compile into regular expression
+/// \param[in] opts   PCRE-style option flags to be set on TPME object
 
 TPMERegexp::TPMERegexp(const TString& s, UInt_t opts, Int_t nMatchMax) :
    TPRegexp(s),
@@ -645,7 +639,7 @@ TPMERegexp::TPMERegexp(const TPMERegexp& r) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reset the patteren and options.
+/// Reset the pattern and options.
 /// If 'nMatchMax' other than -1 (the default) is passed, it is also set.
 
 void TPMERegexp::Reset(const TString& s, const TString& opts, Int_t nMatchMax)
@@ -654,7 +648,7 @@ void TPMERegexp::Reset(const TString& s, const TString& opts, Int_t nMatchMax)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reset the patteren and options.
+/// Reset the pattern and options.
 /// If 'nMatchMax' other than -1 (the default) is passed, it is also set.
 
 void TPMERegexp::Reset(const TString& s, UInt_t opts, Int_t nMatchMax)
@@ -699,10 +693,9 @@ void TPMERegexp::ResetGlobalState()
 ////////////////////////////////////////////////////////////////////////////////
 /// Runs a match on s against the regex 'this' was created with.
 ///
-/// Args:
-///  s        - string to match against
-///  start    - offset at which to start matching
-/// Returns:  - number of matches found
+/// \param[in] s         string to match against
+/// \param[in] start     offset at which to start matching
+/// \return              number of matches found
 
 Int_t TPMERegexp::Match(const TString& s, UInt_t start)
 {
@@ -753,14 +746,13 @@ Int_t TPMERegexp::Match(const TString& s, UInt_t start)
 /// A pattern matching the null string will split the value of EXPR
 /// into separate characters at each point it matches that way.
 ///
-/// Args:
-///  s         - string to split
-///  maxfields - maximum number of fields to be split out.  0 means
-///              split all fields, but discard any trailing empty bits.
-///              Negative means split all fields and keep trailing empty bits.
-///              Positive means keep up to N fields including any empty fields
-///              less than N. Anything remaining is in the last field.
-/// Returns:   - number of fields found
+/// \param[in] s           string to split
+/// \param[in] maxfields   maximum number of fields to be split out.  0 means
+///                        split all fields, but discard any trailing empty bits.
+///                        Negative means split all fields and keep trailing empty bits.
+///                        Positive means keep up to N fields including any empty fields
+///                        less than N. Anything remaining is in the last field.
+/// \return                number of fields found
 
 Int_t TPMERegexp::Split(const TString& s, Int_t maxfields)
 {
@@ -865,11 +857,11 @@ Int_t TPMERegexp::Split(const TString& s, Int_t maxfields)
 ///
 /// After the substitution, another pass is made over the resulting
 /// string and the following special tokens are interpreted:
-/// \l - lowercase next char,
-/// \u - uppercase next char,
-/// \L - lowercase till \E,
-/// \U - uppercase till \E, and
-/// \E - end case modification.
+///  - \l - lowercase next char,
+///  - \u - uppercase next char,
+///  - \L - lowercase till \E,
+///  - \U - uppercase till \E, and
+///  - \E - end case modification.
 
 Int_t TPMERegexp::Substitute(TString& s, const TString& r, Bool_t doDollarSubst)
 {
@@ -945,24 +937,17 @@ void TPMERegexp::Print(Option_t* option)
 }
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStringToken                                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TStringToken
+Provides iteration through tokens of a given string.
 
-//______________________________________________________________________________
-//
-// Provides iteration through tokens of a given string:
-//
-// - fFullStr     stores the string to be split. It is never modified.
-// - fSplitRe     is the perl-re that is used to separete the tokens.
-// - fReturnVoid  if true, empty strings will be returned.
-//
-// Current token is stored in the TString base-class.
-// During construction no match is done, use NextToken() to get the first
-// and all subsequent tokens.
-//
+  - fFullStr     stores the string to be split. It is never modified.
+  - fSplitRe     is the perl-re that is used to separate the tokens.
+  - fReturnVoid  if true, empty strings will be returned.
+
+Current token is stored in the TString base-class.
+During construction no match is done, use NextToken() to get the first
+and all subsequent tokens.
+*/
 
 ClassImp(TStringToken)
 

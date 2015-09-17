@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBufferSQL                                                           //
-//                                                                      //
-// Implement TBuffer for a SQL backend                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBufferSQL
+Implement TBuffer for a SQL backend.
+*/
 
 #include <stdio.h>
 #include "Riostream.h"
@@ -71,7 +67,7 @@ TBufferSQL::TBufferSQL() : TBufferFile(), fColumnVec(0),fInsertQuery(0),fRowPtr(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructo.
+/// Destructor.
 
 TBufferSQL::~TBufferSQL()
 {
@@ -147,7 +143,6 @@ void TBufferSQL::ReadDouble(Double_t &d)
 
    if (fIter != fColumnVec->end()) ++fIter;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator<<
@@ -744,7 +739,7 @@ void     TBufferSQL::ReadFastArrayFloat16(Float_t  *, Int_t , TStreamerElement *
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Float16_t from buffer
+/// Read array of Float16_t from buffer
 
 void TBufferSQL::ReadFastArrayWithFactor(Float_t  *, Int_t , Double_t /* factor */, Double_t /* minvalue */)
 {
@@ -752,7 +747,7 @@ void TBufferSQL::ReadFastArrayWithFactor(Float_t  *, Int_t , Double_t /* factor 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Float16_t from buffer
+/// Read array of Float16_t from buffer
 
 void TBufferSQL::ReadFastArrayWithNbits(Float_t  *, Int_t , Int_t /*nbits*/)
 {
@@ -760,14 +755,15 @@ void TBufferSQL::ReadFastArrayWithNbits(Float_t  *, Int_t , Int_t /*nbits*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Double32_t from buffer
+/// Read array of Double32_t from buffer
 
 void TBufferSQL::ReadFastArrayWithFactor(Double_t  *, Int_t , Double_t /* factor */, Double_t /* minvalue */)
 {
    Fatal("ReadFastArrayWithFactor(Double_t  *, Int_t, Double_t, Double_t)","Not implemented yet");
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Double32_t from buffer
+/// Read array of Double32_t from buffer
 
 void TBufferSQL::ReadFastArrayWithNbits(Double_t  *, Int_t , Int_t /*nbits*/)
 {
@@ -824,8 +820,6 @@ void TBufferSQL::insert_test(const char* dsn, const char* usr,
       printf("\n\n\nConnection NOT Successful\n\n\n");
    else
       printf("\n\n\nConnection Sucessful\n\n\n");
-
-
 
    stmt = con->CreateStatement(0, odbc::ResultSet::CONCUR_READ_ONLY);
 

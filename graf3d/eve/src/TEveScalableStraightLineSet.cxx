@@ -12,16 +12,10 @@
 #include "TEveScalableStraightLineSet.h"
 #include "TEveChunkManager.h"
 
-//==============================================================================
-//==============================================================================
-// TEveScalableStraightLineSet
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Straight-line-set with extra scaling, useful for projectables that need
-// to be scaled in accordance with an external object.
-
+/** \class TEveScalableStraightLineSet
+Straight-line-set with extra scaling, useful for projectables that need
+to be scaled in accordance with an external object.
+*/
 
 ClassImp(TEveScalableStraightLineSet);
 

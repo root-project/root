@@ -60,7 +60,7 @@ IntegrationOneDim::Type IntegratorOneDim::GetType(const char *name) {
    if (typeName == "ADAPTIVE") return IntegrationOneDim::kADAPTIVE;
    if (typeName == "ADAPTIVESINGULAR") return IntegrationOneDim::kADAPTIVESINGULAR;
    if (typeName == "NONADAPTIVE") return IntegrationOneDim::kNONADAPTIVE;
-   if (!typeName.empty()) MATH_WARN_MSG("IntegratorOneDim::GetType","Invalid type name specified - return default " );
+   if (!typeName.empty()) MATH_WARN_MSG("IntegratorOneDim::GetType","Invalid type name specified - use default integrator" );
    return IntegrationOneDim::kDEFAULT;
 }
 
@@ -84,7 +84,7 @@ IntegrationMultiDim::Type IntegratorMultiDim::GetType(const char *name) {
    if (typeName == "VEGAS") return IntegrationMultiDim::kVEGAS;
    if (typeName == "MISER") return IntegrationMultiDim::kMISER;
    if (typeName == "PLAIN") return IntegrationMultiDim::kPLAIN;
-   if (!typeName.empty()) MATH_WARN_MSG("IntegratorMultiDim::GetType","Invalid type name specified - return default " );
+   if (!typeName.empty()) MATH_WARN_MSG("IntegratorMultiDim::GetType","Invalid type name specified - use default integrator " );
    return IntegrationMultiDim::kDEFAULT;
 }
 
@@ -116,8 +116,8 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
    // create the concrete class for one-dimensional integration. Use the plug-in manager if needed
 
    if (type == IntegrationOneDim::kDEFAULT) type = IntegratorOneDimOptions::DefaultIntegratorType();
-   if (absTol <= 0) absTol = IntegratorOneDimOptions::DefaultAbsTolerance();
-   if (relTol <= 0) relTol = IntegratorOneDimOptions::DefaultRelTolerance();
+   if (absTol < 0) absTol = IntegratorOneDimOptions::DefaultAbsTolerance();
+   if (relTol < 0) relTol = IntegratorOneDimOptions::DefaultRelTolerance();
    if (size <= 0)  size = IntegratorOneDimOptions::DefaultWKSize();
    if (rule <= 0)  rule = IntegratorOneDimOptions::DefaultNPoints();
    //if (ncall  <= 0) ncall  = IntegratorOneDimOptions::DefaultNCalls();
@@ -186,8 +186,8 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
 #endif   
    
    if (type == IntegrationMultiDim::kDEFAULT) type = GetType(IntegratorMultiDimOptions::DefaultIntegrator().c_str());
-   if (absTol <= 0) absTol = IntegratorMultiDimOptions::DefaultAbsTolerance();
-   if (relTol <= 0) relTol = IntegratorMultiDimOptions::DefaultRelTolerance();
+   if (absTol < 0) absTol = IntegratorMultiDimOptions::DefaultAbsTolerance();
+   if (relTol < 0) relTol = IntegratorMultiDimOptions::DefaultRelTolerance();
    if (ncall  <= 0) ncall  = IntegratorMultiDimOptions::DefaultNCalls();
    unsigned int size = IntegratorMultiDimOptions::DefaultWKSize();
 

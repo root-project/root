@@ -20,23 +20,18 @@
 #include "TMath.h"
 #include "TPoint.h"
 
-
 ClassImp(TBox)
 
-
-////////////////////////////////////////////////////////////////////////////////
-/*! \class TBox
-\brief Create a Box.
+/** \class TBox
+Create a Box.
 
 A box is defined by :
 
 - Its bottom left coordinates x1,y1
 - Its top right coordinates x2,y2
 
-A box has line attributes (see TAttLine) and fill area attributes
-(see TAttFill).
+A box has line attributes (see TAttLine) and fill area attributes (see TAttFill).
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Box default constructor.
@@ -50,7 +45,6 @@ TBox::TBox(): TObject(), TAttLine(), TAttFill()
    fY2       = 0.;
    fResizing = kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Box standard constructor.
@@ -66,7 +60,6 @@ TBox::TBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    fTip = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Box destructor.
 
@@ -77,7 +70,6 @@ TBox::~TBox()
       gPad->DeleteToolTip(fTip);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Box copy constructor.
@@ -91,7 +83,6 @@ TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box), TAttBB
    fResizing = kTRUE;
    ((TBox&)box).TBox::Copy(*this);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator.
@@ -112,7 +103,6 @@ TBox& TBox::operator=(const TBox& b)
    return *this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy a Box.
 
@@ -128,7 +118,6 @@ void TBox::Copy(TObject &obj) const
    ((TBox&)obj).fResizing = fResizing;
    ((TBox&)obj).fTip = 0;   //FIXME
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a box.
@@ -176,7 +165,6 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
    return distance - Int_t(0.5*fLineWidth);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this box with its current attributes.
 /// if the box has no fill style (ie fill style=0), the box contour is drawn
@@ -188,7 +176,6 @@ void TBox::Draw(Option_t *option)
    AppendPad(option);
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this box with new coordinates.
@@ -202,7 +189,6 @@ TBox *TBox::DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
    newbox->AppendPad();
    return newbox;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
@@ -591,7 +577,6 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Hide tool tip depending on the event type. Typically tool tips
 /// are hidden when event is not a kMouseEnter and not a kMouseMotion
@@ -603,7 +588,6 @@ void TBox::HideToolTip(Int_t event)
       gPad->CloseToolTip(fTip);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Function which returns 1 if point x,y lies inside the box, 0 otherwise.
 
@@ -614,7 +598,6 @@ Int_t TBox::IsInside(Double_t x, Double_t y) const
    return 1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// List this box with its attributes.
 
@@ -624,7 +607,6 @@ void TBox::ls(Option_t *) const
    printf("%s  X1= %f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),fX1,fY1,fX2,fY2);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this box with its current attributes.
 
@@ -632,7 +614,6 @@ void TBox::Paint(Option_t *option)
 {
    PaintBox(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2),option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this box with new coordinates.
@@ -652,7 +633,6 @@ void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump this box with its attributes.
 
@@ -666,7 +646,6 @@ void TBox::Print(Option_t *) const
    if (GetFillStyle() != 0) printf(" FillStyle=%d",GetFillStyle());
    printf("\n");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
@@ -685,7 +664,6 @@ void TBox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
    out<<"   box->Draw();"<<std::endl;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set tool tip text associated with this box. The delay is in
@@ -707,7 +685,6 @@ void TBox::SetToolTipText(const char *text, Long_t delayms)
    if (text && strlen(text))
       fTip = gPad->CreateToolTip(this, text, delayms);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TBox.
@@ -762,7 +739,6 @@ Rectangle_t TBox::GetBBox()
    return (BBox);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the center of the Box as TPoint in pixels
 
@@ -773,7 +749,6 @@ TPoint TBox::GetBBoxCenter()
    p.SetY(gPad->YtoPixel(TMath::Min(fY1,fY2)+0.5*(TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2))));
    return(p);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set center of the Box
@@ -800,7 +775,6 @@ void TBox::SetBBoxCenter(const TPoint &p)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set X coordinate of the center of the Box
 
@@ -816,7 +790,6 @@ void TBox::SetBBoxCenterX(const Int_t x)
       this->SetX1(gPad->PixeltoX(x)+0.5*w);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set Y coordinate of the center of the Box
@@ -835,7 +808,7 @@ void TBox::SetBBoxCenterY(const Int_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set lefthandside of BoundingBox to a value
+/// Set left hand side of BoundingBox to a value
 /// (resize in x direction on left)
 
 void TBox::SetBBoxX1(const Int_t x)
@@ -844,7 +817,7 @@ void TBox::SetBBoxX1(const Int_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set righthandside of BoundingBox to a value
+/// Set right hand side of BoundingBox to a value
 /// (resize in x direction on right)
 
 void TBox::SetBBoxX2(const Int_t x)

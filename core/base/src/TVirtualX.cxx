@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualX                                                            //
-//                                                                      //
-// Semi-Abstract base class defining a generic interface to the         //
-// underlying, low level, graphics system (X11, Win32, MacOS).          //
-// An instance of TVirtualX itself defines a batch interface to the     //
-// graphics system.                                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TVirtualX
+Semi-Abstract base class defining a generic interface to the
+underlying, low level, graphics system (X11, Win32, MacOS).
+An instance of TVirtualX itself defines a batch interface to the
+graphics system.
+*/
 
 #include "TVirtualX.h"
 #include "TString.h"
@@ -73,10 +69,10 @@ void TVirtualX::GetWindowAttributes(Window_t /*id*/, WindowAttributes_t &attr)
 /// If the color name is not in the Host Portable Character Encoding,
 /// the result is implementation dependent.
 ///
-/// cmap  - the colormap
-/// cname - the color name string; use of uppercase or lowercase
-///         does not matter
-/// color - returns the exact color value for later use
+/// \param [in] cmap    the colormap
+/// \param [in] cname   the color name string; use of uppercase or lowercase
+///            does not matter
+/// \param [in] color   returns the exact color value for later use
 ///
 /// The ColorStruct_t structure is set to default. Let system think we
 /// could parse color.
@@ -101,8 +97,8 @@ Bool_t TVirtualX::ParseColor(Colormap_t /*cmap*/, const char * /*cname*/,
 /// The pixel value is set to default. Let system think we could allocate
 /// color.
 ///
-/// cmap  - the colormap
-/// color - specifies and returns the values actually used in the cmap
+/// \param [in] cmap    the colormap
+/// \param [in] color   specifies and returns the values actually used in the cmap
 
 Bool_t TVirtualX::AllocColor(Colormap_t /*cmap*/, ColorStruct_t &color)
 {
@@ -115,8 +111,8 @@ Bool_t TVirtualX::AllocColor(Colormap_t /*cmap*/, ColorStruct_t &color)
 ///
 /// The color components are set to default.
 ///
-/// cmap  - the colormap
-/// color - specifies and returns the RGB values for the pixel specified
+/// \param [in] cmap    the colormap
+/// \param [in] color   specifies and returns the RGB values for the pixel specified
 ///         in the structure
 
 void TVirtualX::QueryColor(Colormap_t /*cmap*/, ColorStruct_t &color)
@@ -258,9 +254,9 @@ void TVirtualX::FlushOpenGLBuffer(Handle_t /*ctx*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draws a box between [x1,y1] and [x2,y2] according to the "mode".
 ///
-/// mode  - drawing mode:
-///         mode = 0 hollow  (kHollow)
-///         mode = 1 solid   (kSolid)
+///  \param [in] mode   drawing mode:
+///        - mode = 0 hollow  (kHollow)
+///        - mode = 1 solid   (kSolid)
 
 void TVirtualX::DrawBox(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/,
                         EBoxMode /*mode*/)
@@ -268,14 +264,14 @@ void TVirtualX::DrawBox(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draws a cell array. The drawing is done with the pixel presicion
+/// Draws a cell array. The drawing is done with the pixel precision
 /// if (x2-x1)/nx (or y) is not a exact pixel number the position of
-/// the top rigth corner may be wrong.
+/// the top right corner may be wrong.
 ///
-/// x1,y1 - left down corner
-/// x2,y2 - right up corner
-/// nx,ny - array size
-/// ic    - array
+/// \param [in] x1,y1   left down corner
+/// \param [in] x2,y2   right up corner
+/// \param [in] nx,ny   array size
+/// \param [in] ic      array
 
 void TVirtualX::DrawCellArray(Int_t /*x1*/, Int_t /*y1*/,
                               Int_t /*x2*/, Int_t /*y2*/,
@@ -286,8 +282,8 @@ void TVirtualX::DrawCellArray(Int_t /*x1*/, Int_t /*y1*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Fills area described by the polygon.
 ///
-/// n       - number of points
-/// xy(2,n) - list of points
+/// \param [in] n         number of points
+/// \param [in] xy(2,n)   list of points
 
 void TVirtualX::DrawFillArea(Int_t /*n*/, TPoint * /*xy*/)
 {
@@ -296,8 +292,8 @@ void TVirtualX::DrawFillArea(Int_t /*n*/, TPoint * /*xy*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draws a line.
 ///
-/// x1,y1 - begin of line
-/// x2,y2 - end of line
+/// \param [in] x1,y1   begin of line
+/// \param [in] x2,y2   end of line
 
 void TVirtualX::DrawLine(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/)
 {
@@ -306,8 +302,8 @@ void TVirtualX::DrawLine(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draws a line through all points in the list.
 ///
-/// n  - number of points
-/// xy - list of points
+/// \param [in] n    number of points
+/// \param [in] xy   list of points
 
 void TVirtualX::DrawPolyLine(Int_t /*n*/, TPoint * /*xy*/)
 {
@@ -316,8 +312,8 @@ void TVirtualX::DrawPolyLine(Int_t /*n*/, TPoint * /*xy*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draws "n" markers with the current attributes at position [x,y].
 ///
-/// n  - number of markers to draw
-/// xy - an array of x,y marker coordinates
+/// \param [in] n    number of markers to draw
+/// \param [in] xy   an array of x,y marker coordinates
 
 void TVirtualX::DrawPolyMarker(Int_t /*n*/, TPoint * /*xy*/)
 {
@@ -326,13 +322,13 @@ void TVirtualX::DrawPolyMarker(Int_t /*n*/, TPoint * /*xy*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draws a text string using current font.
 ///
-/// x,y   - text position
-/// angle - text angle
-/// mgn   - magnification factor
-/// text  - text string
-/// mode  - drawing mode:
-///         mode = 0 the background is not drawn (kClear)
-///         mode = 1 the background is drawn (kOpaque)
+/// \param [in] x,y     text position
+/// \param [in] angle   text angle
+/// \param [in] mgn     magnification factor
+/// \param [in] text    text string
+/// \param [in] mode    drawing mode:
+///           - mode = 0 the background is not drawn (kClear)
+///           - mode = 1 the background is drawn (kOpaque)
 
 void TVirtualX::DrawText(Int_t /*x*/, Int_t /*y*/, Float_t /*angle*/,
                          Float_t /*mgn*/, const char * /*text*/,
@@ -343,13 +339,13 @@ void TVirtualX::DrawText(Int_t /*x*/, Int_t /*y*/, Float_t /*angle*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Draws a text string using current font.
 ///
-/// x,y   - text position
-/// angle - text angle
-/// mgn   - magnification factor
-/// text  - text string
-/// mode  - drawing mode:
-///         mode = 0 the background is not drawn (kClear)
-///         mode = 1 the background is drawn (kOpaque)
+/// \param [in] x,y     text position
+/// \param [in] angle   text angle
+/// \param [in] mgn     magnification factor
+/// \param [in] text    text string
+/// \param [in] mode    drawing mode:
+///           - mode = 0 the background is not drawn (kClear)
+///           - mode = 1 the background is drawn (kOpaque)
 
 void TVirtualX::DrawText(Int_t /*x*/, Int_t /*y*/, Float_t /*angle*/,
                          Float_t /*mgn*/, const wchar_t * /*text*/,
@@ -384,10 +380,10 @@ void TVirtualX::GetCharacterUp(Float_t &chupx, Float_t &chupy)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns position and size of window "wid".
 ///
-/// wid  - window identifier
-///        if wid < 0 the size of the display is returned
-/// x, y - returned window position
-/// w, h - returned window size
+/// \param [in] wid    window identifier
+///                    if wid < 0 the size of the display is returned
+/// \param [in] x, y   returned window position
+/// \param [in] w, h   returned window size
 
 void TVirtualX::GetGeometry(Int_t /*wid*/, Int_t &x, Int_t &y,
                             UInt_t &w, UInt_t &h)
@@ -439,9 +435,9 @@ void TVirtualX::GetRGB(Int_t /*index*/, Float_t &r, Float_t &g, Float_t &b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the size of the specified character string "mess".
 ///
-/// w    - the text width
-/// h    - the text height
-/// mess - the string
+/// \param [in] w      the text width
+/// \param [in] h      the text height
+/// \param [in] mess   the string
 
 void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char * /*mess*/)
 {
@@ -451,9 +447,9 @@ void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char * /*mess*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the size of the specified character string "mess".
 ///
-/// w    - the text width
-/// h    - the text height
-/// mess - the string
+/// \param [in] w      the text width
+/// \param [in] h      the text height
+/// \param [in] mess   the string
 
 void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t * /*mess*/)
 {
@@ -517,7 +513,7 @@ Bool_t TVirtualX::HasTTFonts() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the X11 window identifier.
 ///
-/// wid - workstation identifier (input)
+/// \param [in] wid   workstation identifier (input)
 
 Window_t TVirtualX::GetWindowID(Int_t /*wid*/)
 {
@@ -536,7 +532,7 @@ Int_t TVirtualX::InitWindow(ULong_t /*window*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Registers a window created by Qt as a ROOT window
 ///
-/// w, h - the width and height, which define the window size
+/// \param [in] w, h   the width and height, which define the window size
 
 Int_t TVirtualX::AddWindow(ULong_t /*qwid*/, UInt_t /*w*/, UInt_t /*h*/)
 {
@@ -546,7 +542,7 @@ Int_t TVirtualX::AddWindow(ULong_t /*qwid*/, UInt_t /*w*/, UInt_t /*h*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Registers a pixmap created by TGLManager as a ROOT pixmap
 ///
-/// w, h - the width and height, which define the pixmap size
+/// \param [in] w, h   the width and height, which define the pixmap size
 
 Int_t TVirtualX::AddPixmap(ULong_t /*pixind*/, UInt_t /*w*/, UInt_t /*h*/)
 {
@@ -566,8 +562,8 @@ void TVirtualX::RemoveWindow(ULong_t /*qwid*/)
 /// It does not change the window's size, raise the window, or change
 /// the mapping state of the window.
 ///
-/// x, y - coordinates, which define the new position of the window
-///        relative to its parent.
+/// \param [in] x, y   coordinates, which define the new position of the window
+///                    relative to its parent.
 
 void TVirtualX::MoveWindow(Int_t /*wid*/, Int_t /*x*/, Int_t /*y*/)
 {
@@ -601,30 +597,31 @@ Pixmap_t TVirtualX::ReadGIF(Int_t /*x0*/, Int_t /*y0*/, const char * /*file*/,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Requests Locator position.
-/// x,y  - cursor position at moment of button press (output)
-/// ctyp - cursor type (input)
-///        ctyp = 1 tracking cross
-///        ctyp = 2 cross-hair
-///        ctyp = 3 rubber circle
-///        ctyp = 4 rubber band
-///        ctyp = 5 rubber rectangle
 ///
-/// mode - input mode
-///        mode = 0 request
-///        mode = 1 sample
+/// \param [in] x,y    cursor position at moment of button press (output)
+/// \param [in] ctyp   cursor type (input)
+///       - ctyp = 1 tracking cross
+///       - ctyp = 2 cross-hair
+///       - ctyp = 3 rubber circle
+///       - ctyp = 4 rubber band
+///       - ctyp = 5 rubber rectangle
 ///
-/// The returned value is:
-///        in request mode:
-///                       1 = left is pressed
-///                       2 = middle is pressed
-///                       3 = right is pressed
-///        in sample mode:
-///                       11 = left is released
-///                       12 = middle is released
-///                       13 = right is released
-///                       -1 = nothing is pressed or released
-///                       -2 = leave the window
-///                     else = keycode (keyboard is pressed)
+/// \param [in] mode   input mode
+///       - mode = 0 request
+///       - mode = 1 sample
+///
+/// \return
+///       - in request mode:
+///                     -  1 = left is pressed
+///                     -  2 = middle is pressed
+///                     -  3 = right is pressed
+///       - in sample mode:
+///                     -  11 = left is released
+///                     -  12 = middle is released
+///                     -  13 = right is released
+///                     -  -1 = nothing is pressed or released
+///                     -  -2 = leave the window
+///                     - else = keycode (keyboard is pressed)
 
 Int_t TVirtualX::RequestLocator(Int_t /*mode*/, Int_t /*ctyp*/,
                                 Int_t &x, Int_t &y)
@@ -637,8 +634,8 @@ Int_t TVirtualX::RequestLocator(Int_t /*mode*/, Int_t /*ctyp*/,
 /// Requests string: text is displayed and can be edited with Emacs-like
 /// keybinding. Returns termination code (0 for ESC, 1 for RETURN)
 ///
-/// x,y  - position where text is displayed
-/// text - displayed text (as input), edited text (as output)
+/// \param [in] x,y    position where text is displayed
+/// \param [in] text   displayed text (as input), edited text (as output)
 
 Int_t TVirtualX::RequestString(Int_t /*x*/, Int_t /*y*/, char *text)
 {
@@ -649,9 +646,9 @@ Int_t TVirtualX::RequestString(Int_t /*x*/, Int_t /*y*/, char *text)
 ////////////////////////////////////////////////////////////////////////////////
 /// Rescales the window "wid".
 ///
-/// wid - window identifier
-/// w   - the width
-/// h   - the heigth
+/// \param [in] wid   window identifier
+/// \param [in] w     the width
+/// \param [in] h     the height
 
 void TVirtualX::RescaleWindow(Int_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/)
 {
@@ -660,7 +657,7 @@ void TVirtualX::RescaleWindow(Int_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Resizes the specified pixmap "wid".
 ///
-/// w, h - the width and height which define the pixmap dimensions
+/// \param [in] w, h   the width and height which define the pixmap dimensions
 
 Int_t TVirtualX::ResizePixmap(Int_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/)
 {
@@ -705,9 +702,9 @@ void TVirtualX::SetClipOFF(Int_t /*wid*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets clipping region for the window "wid".
 ///
-/// wid  - window indentifier
-/// x, y - origin of clipping rectangle
-/// w, h - the clipping rectangle dimensions
+/// \param [in] wid    window identifier
+/// \param [in] x, y   origin of clipping rectangle
+/// \param [in] w, h   the clipping rectangle dimensions
 
 void TVirtualX::SetClipRegion(Int_t /*wid*/, Int_t /*x*/, Int_t /*y*/,
                               UInt_t /*w*/, UInt_t /*h*/)
@@ -724,11 +721,12 @@ void TVirtualX::SetCursor(Int_t /*win*/, ECursor /*cursor*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the double buffer on/off on the window "wid".
-/// wid  - window identifier.
-///        999 means all opened windows.
-/// mode - the on/off switch
-///        mode = 1 double buffer is on
-///        mode = 0 double buffer is off
+///
+/// \param [in] wid    window identifier.
+///       - 999 means all opened windows.
+/// \param [in] mode   the on/off switch
+///       - mode = 1 double buffer is on
+///       - mode = 0 double buffer is off
 
 void TVirtualX::SetDoubleBuffer(Int_t /*wid*/, Int_t /*mode*/)
 {
@@ -751,10 +749,11 @@ void TVirtualX::SetDoubleBufferON()
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the drawing mode.
 ///
-/// mode = 1 copy
-/// mode = 2 xor
-/// mode = 3 invert
-/// mode = 4 set the suitable mode for cursor echo according to the vendor
+/// \param [in] mode    drawing mode.
+///       - mode = 1 copy
+///       - mode = 2 xor
+///       - mode = 3 invert
+///       - mode = 4 set the suitable mode for cursor echo according to the vendor
 
 void TVirtualX::SetDrawMode(EDrawMode /*mode*/)
 {
@@ -770,8 +769,8 @@ void TVirtualX::SetFillColor(Color_t /*cindex*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets fill area style.
 ///
-/// style - compound fill area interior style
-///         style = 1000 * interiorstyle + styleindex
+/// \param [in] style   compound fill area interior style
+///        - style = 1000 * interiorstyle + styleindex
 
 void TVirtualX::SetFillStyle(Style_t /*style*/)
 {
@@ -787,12 +786,12 @@ void TVirtualX::SetLineColor(Color_t /*cindex*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the line type.
 ///
-/// n       - length of the dash list
-///           n <= 0 use solid lines
-///           n >  0 use dashed lines described by dash(n)
+/// \param [in] n         length of the dash list
+///          - n <= 0 use solid lines
+///          - n >  0 use dashed lines described by dash(n)
 ///                 e.g. n = 4,dash = (6,3,1,3) gives a dashed-dotted line
 ///                 with dash length 6 and a gap of 7 between dashes
-/// dash(n) - dash segment lengths
+/// \param [in] dash(n)   dash segment lengths
 
 void TVirtualX::SetLineType(Int_t /*n*/, Int_t * /*dash*/)
 {
@@ -801,10 +800,11 @@ void TVirtualX::SetLineType(Int_t /*n*/, Int_t * /*dash*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the line style.
 ///
-/// linestyle <= 1 solid
-/// linestyle  = 2 dashed
-/// linestyle  = 3 dotted
-/// linestyle  = 4 dashed-dotted
+/// \param [in] linestyle   line style.
+///        - linestyle <= 1 solid
+///        - linestyle  = 2 dashed
+///        - linestyle  = 3 dotted
+///        - linestyle  = 4 dashed-dotted
 
 void TVirtualX::SetLineStyle(Style_t /*linestyle*/)
 {
@@ -813,7 +813,7 @@ void TVirtualX::SetLineStyle(Style_t /*linestyle*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the line width.
 ///
-/// width - the line width in pixels
+/// \param [in] width   the line width in pixels
 
 void TVirtualX::SetLineWidth(Width_t /*width*/)
 {
@@ -829,7 +829,7 @@ void TVirtualX::SetMarkerColor(Color_t /*cindex*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets marker size index.
 ///
-/// markersize - the marker scale factor
+/// \param [in] markersize   the marker scale factor
 
 void TVirtualX::SetMarkerSize(Float_t /*markersize*/)
 {
@@ -856,8 +856,8 @@ void TVirtualX::SetOpacity(Int_t /*percent*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets color intensities the specified color index "cindex".
 ///
-/// cindex  - color index
-/// r, g, b - the red, green, blue intensities between 0.0 and 1.0
+/// \param [in] cindex    color index
+/// \param [in] r, g, b   the red, green, blue intensities between 0.0 and 1.0
 
 void TVirtualX::SetRGB(Int_t /*cindex*/, Float_t /*r*/, Float_t /*g*/,
                        Float_t /*b*/)
@@ -867,8 +867,9 @@ void TVirtualX::SetRGB(Int_t /*cindex*/, Float_t /*r*/, Float_t /*g*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the text alignment.
 ///
-/// talign = txalh horizontal text alignment
-/// talign = txalv vertical text alignment
+/// \param [in] talign   text alignment.
+///        - talign = txalh horizontal text alignment
+///        - talign = txalv vertical text alignment
 
 void TVirtualX::SetTextAlign(Short_t /*talign*/)
 {
@@ -885,9 +886,9 @@ void TVirtualX::SetTextColor(Color_t /*cindex*/)
 /// Sets text font to specified name "fontname".This function returns 0 if
 /// the specified font is found, 1 if it is not.
 ///
-/// mode - loading flag
-///        mode = 0 search if the font exist (kCheck)
-///        mode = 1 search the font and load it if it exists (kLoad)
+/// \param [in] mode   loading flag
+///       - mode = 0 search if the font exist (kCheck)
+///       - mode = 1 search the font and load it if it exists (kLoad)
 
 Int_t TVirtualX::SetTextFont(char * /*fontname*/, ETextSetMode /*mode*/)
 {
@@ -917,9 +918,10 @@ void TVirtualX::SetTextSize(Float_t /*textsize*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set synchronisation on or off.
-/// mode : synchronisation on/off
-///    mode=1  on
-///    mode<>0 off
+///
+/// \param [in] mode   synchronisation on/off
+///    - mode=1  on
+///    - mode<>0 off
 
 void TVirtualX::Sync(Int_t /*mode*/)
 {
@@ -928,8 +930,10 @@ void TVirtualX::Sync(Int_t /*mode*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Updates or synchronises client and server once (not permanent).
 /// according to "mode".
-///    mode = 1 update
-///    mode = 0 sync
+///
+/// \param [in] mode   update mode.
+///        - mode = 1 update
+///        - mode = 0 sync
 
 void TVirtualX::UpdateWindow(Int_t /*mode*/)
 {
@@ -937,8 +941,10 @@ void TVirtualX::UpdateWindow(Int_t /*mode*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the pointer position.
-/// ix - new X coordinate of pointer
-/// iy - new Y coordinate of pointer
+///
+/// \param [in] ix   new X coordinate of pointer
+/// \param [in] iy   new Y coordinate of pointer
+///
 /// Coordinates are relative to the origin of the window id
 /// or to the origin of the current window if id == 0.
 
@@ -958,9 +964,9 @@ Int_t TVirtualX::WriteGIF(char * /*name*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Writes the pixmap "wid" in the bitmap file "pxname".
 ///
-/// wid    - the pixmap address
-/// w, h   - the width and height of the pixmap.
-/// pxname - the file name
+/// \param [in] wid      the pixmap address
+/// \param [in] w, h     the width and height of the pixmap.
+/// \param [in] pxname   the file name
 
 void TVirtualX::WritePixmap(Int_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/,
                             char * /*pxname*/)
@@ -1042,7 +1048,7 @@ void TVirtualX::LowerWindow(Window_t /*id*/)
 /// It does not change the window's size, raise the window, or change
 /// the mapping state of the window.
 ///
-/// x, y - coordinates, which define the new position of the window
+/// \param [in] x, y   coordinates, which define the new position of the window
 ///        relative to its parent.
 
 void TVirtualX::MoveWindow(Window_t /*id*/, Int_t /*x*/, Int_t /*y*/)
@@ -1053,10 +1059,10 @@ void TVirtualX::MoveWindow(Window_t /*id*/, Int_t /*x*/, Int_t /*y*/)
 /// Changes the size and location of the specified window "id" without
 /// raising it.
 ///
-/// x, y - coordinates, which define the new position of the window
-///        relative to its parent.
-/// w, h - the width and height, which define the interior size of
-///        the window
+/// \param [in] x, y   coordinates, which define the new position of the window
+///           relative to its parent.
+/// \param [in] w, h   the width and height, which define the interior size of
+///           the window
 
 void TVirtualX::MoveResizeWindow(Window_t /*id*/, Int_t /*x*/, Int_t /*y*/,
                                    UInt_t /*w*/, UInt_t /*h*/)
@@ -1068,8 +1074,8 @@ void TVirtualX::MoveResizeWindow(Window_t /*id*/, Int_t /*x*/, Int_t /*y*/,
 /// including its borders. This function does not change the window's
 /// upper-left coordinate.
 ///
-/// w, h - the width and height, which are the interior dimensions of
-///        the window after the call completes.
+/// \param [in] w, h   the width and height, which are the interior dimensions of
+///           the window after the call completes.
 
 void TVirtualX::ResizeWindow(Window_t /*id*/, UInt_t /*w*/, UInt_t /*h*/)
 {
@@ -1137,18 +1143,18 @@ void TVirtualX::SetWindowBackgroundPixmap(Window_t /*id*/, Pixmap_t /*pxm*/)
 /// horizontal and the Y axis vertical with the origin [0,0] at the
 /// upper-left corner. Each window and pixmap has its own coordinate system.
 ///
-/// parent - the parent window
-/// x, y   - coordinates, the top-left outside corner of the window's
-///          borders; relative to the inside of the parent window's borders
-/// w, h   - width and height of the created window; do not include the
-///          created window's borders
-/// border - the border pixel value of the window
-/// depth  - the window's depth
-/// clss   - the created window's class; can be InputOutput, InputOnly, or
-///          CopyFromParent
-/// visual - the visual type
-/// attr   - the structure from which the values are to be taken.
-/// wtype  - the window type
+/// \param [in] parent   the parent window
+/// \param [in] x, y     coordinates, the top-left outside corner of the window's
+///             borders; relative to the inside of the parent window's borders
+/// \param [in] w, h     width and height of the created window; do not include the
+///             created window's borders
+/// \param [in] border   the border pixel value of the window
+/// \param [in] depth    the window's depth
+/// \param [in] clss     the created window's class; can be InputOutput, InputOnly, or
+///             CopyFromParent
+/// \param [in] visual   the visual type
+/// \param [in] attr     the structure from which the values are to be taken.
+/// \param [in] wtype    the window type
 
 Window_t TVirtualX::CreateWindow(Window_t /*parent*/, Int_t /*x*/, Int_t /*y*/,
                                  UInt_t /*w*/, UInt_t /*h*/,
@@ -1163,7 +1169,8 @@ Window_t TVirtualX::CreateWindow(Window_t /*parent*/, Int_t /*x*/, Int_t /*y*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Opens connection to display server (if such a thing exist on the
 /// current platform). The encoding and interpretation of the display
-/// name
+/// name.
+///
 /// On X11 this method returns on success the X display socket descriptor
 /// >0, 0 in case of batch mode, and <0 in case of failure (cannot connect
 /// to display dpyName).
@@ -1181,7 +1188,7 @@ void TVirtualX::CloseDisplay()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns handle to display (might be usefull in some cases where
+/// Returns handle to display (might be useful in some cases where
 /// direct X11 manipulation outside of TVirtualX is needed, e.g. GL
 /// interface).
 
@@ -1193,7 +1200,7 @@ Display_t TVirtualX::GetDisplay() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns handle to visual.
 ///
-/// Might be usefull in some cases where direct X11 manipulation outside
+/// Might be useful in some cases where direct X11 manipulation outside
 /// of TVirtualX is needed, e.g. GL interface.
 
 Visual_t TVirtualX::GetVisual() const
@@ -1204,7 +1211,7 @@ Visual_t TVirtualX::GetVisual() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns screen number.
 ///
-/// Might be usefull in some cases where direct X11 manipulation outside
+/// Might be useful in some cases where direct X11 manipulation outside
 /// of TVirtualX is needed, e.g. GL interface.
 
 Int_t TVirtualX::GetScreen() const
@@ -1224,7 +1231,7 @@ Int_t TVirtualX::GetDepth() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns handle to colormap.
 ///
-/// Might be usefull in some cases where direct X11 manipulation outside
+/// Might be useful in some cases where direct X11 manipulation outside
 /// of TVirtualX is needed, e.g. GL interface.
 
 Colormap_t TVirtualX::GetColormap() const
@@ -1282,7 +1289,7 @@ FontH_t TVirtualX::GetFontHandle(FontStruct_t /*fs*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Explicitely deletes the font structure "fs" obtained via LoadQueryFont().
+/// Explicitly deletes the font structure "fs" obtained via LoadQueryFont().
 
 void TVirtualX::DeleteFont(FontStruct_t /*fs*/)
 {
@@ -1303,8 +1310,9 @@ GContext_t TVirtualX::CreateGC(Drawable_t /*id*/, GCValues_t * /*gval*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Changes the components specified by the mask in gval for the specified GC.
 ///
-/// GContext_t gc   - specifies the GC to be changed
-/// GCValues_t gval - specifies the mask and the values to be set
+/// \param [in] gc     specifies the GC to be changed
+/// \param [in] gval   specifies the mask and the values to be set
+///
 /// (see also the GCValues_t structure)
 
 void TVirtualX::ChangeGC(GContext_t /*gc*/, GCValues_t * /*gval*/)
@@ -1330,12 +1338,13 @@ void TVirtualX::DeleteGC(GContext_t /*gc*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates the specified cursor. (just return cursor from cursor pool).
 /// The cursor can be:
-///
+/// ~~~ {.cpp}
 /// kBottomLeft, kBottomRight, kTopLeft,  kTopRight,
 /// kBottomSide, kLeftSide,    kTopSide,  kRightSide,
 /// kMove,       kCross,       kArrowHor, kArrowVer,
 /// kHand,       kRotate,      kPointer,  kArrowRight,
 /// kCaret,      kWatch
+/// ~~~
 
 Cursor_t TVirtualX::CreateCursor(ECursor /*cursor*/)
 {
@@ -1364,12 +1373,12 @@ Pixmap_t TVirtualX::CreatePixmap(Drawable_t /*id*/, UInt_t /*w*/, UInt_t /*h*/)
 /// arguments must be nonzero. The depth argument must be one of the depths
 /// supported by the screen of the specified drawable.
 ///
-/// id            - specifies which screen the pixmap is created on
-/// bitmap        - the data in bitmap format
-/// width, height - define the dimensions of the pixmap
-/// forecolor     - the foreground pixel values to use
-/// backcolor     - the background pixel values to use
-/// depth         - the depth of the pixmap
+/// \param [in] id              specifies which screen the pixmap is created on
+/// \param [in] bitmap          the data in bitmap format
+/// \param [in] width, height   define the dimensions of the pixmap
+/// \param [in] forecolor       the foreground pixel values to use
+/// \param [in] backcolor       the background pixel values to use
+/// \param [in] depth           the depth of the pixmap
 
 Pixmap_t TVirtualX::CreatePixmap(Drawable_t /*id*/, const char * /*bitmap*/,
                                  UInt_t /*width*/, UInt_t /*height*/,
@@ -1382,9 +1391,9 @@ Pixmap_t TVirtualX::CreatePixmap(Drawable_t /*id*/, const char * /*bitmap*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates a bitmap (i.e. pixmap with depth 1) from the bitmap data.
 ///
-/// id            - specifies which screen the pixmap is created on
-/// bitmap        - the data in bitmap format
-/// width, height - define the dimensions of the pixmap
+/// \param [in] id              specifies which screen the pixmap is created on
+/// \param [in] bitmap          the data in bitmap format
+/// \param [in] width, height   define the dimensions of the pixmap
 
 Pixmap_t TVirtualX::CreateBitmap(Drawable_t /*id*/, const char * /*bitmap*/,
                                  UInt_t /*width*/, UInt_t /*height*/)
@@ -1393,7 +1402,7 @@ Pixmap_t TVirtualX::CreateBitmap(Drawable_t /*id*/, const char * /*bitmap*/,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Explicitely deletes the pixmap resource "pmap".
+/// Explicitly deletes the pixmap resource "pmap".
 
 void TVirtualX::DeletePixmap(Pixmap_t /*pmap*/)
 {
@@ -1452,12 +1461,12 @@ void TVirtualX::DeletePictureData(void * /*data*/)
 /// others are the odd dashes. Each element in the "dash_list" array
 /// specifies the length (in pixels) of a segment of the pattern.
 ///
-/// gc        - specifies the GC (see GCValues_t structure)
-/// offset    - the phase of the pattern for the dashed line-style you
-///             want to set for the specified GC.
-/// dash_list - the dash-list for the dashed line-style you want to set
-///             for the specified GC
-/// n         - the number of elements in dash_list
+/// \param [in] gc          specifies the GC (see GCValues_t structure)
+/// \param [in] offset      the phase of the pattern for the dashed line-style you
+///                want to set for the specified GC.
+/// \param [in] dash_list   the dash-list for the dashed line-style you want to set
+///                for the specified GC
+/// \param [in] n           the number of elements in dash_list
 /// (see also the GCValues_t structure)
 
 void TVirtualX::SetDashes(GContext_t /*gc*/, Int_t /*offset*/,
@@ -1482,7 +1491,7 @@ Int_t TVirtualX::EventsPending()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sets the sound bell. Percent is loudness from -100% .. 100%.
+/// Sets the sound bell. Percent is loudness from -100% to 100%.
 
 void TVirtualX::Bell(Int_t /*percent*/)
 {
@@ -1492,13 +1501,13 @@ void TVirtualX::Bell(Int_t /*percent*/)
 /// Combines the specified rectangle of "src" with the specified rectangle
 /// of "dest" according to the "gc".
 ///
-/// src_x, src_y   - specify the x and y coordinates, which are relative
-///                  to the origin of the source rectangle and specify
-///                  upper-left corner.
-/// width, height  - the width and height, which are the dimensions of both
-///                  the source and destination rectangles                                                                   //
-/// dest_x, dest_y - specify the upper-left corner of the destination
-///                  rectangle
+/// \param [in] src_x, src_y     specify the x and y coordinates, which are relative
+///                     to the origin of the source rectangle and specify
+///                     upper-left corner.
+/// \param [in] width, height    the width and height, which are the dimensions of both
+///                     the source and destination rectangles
+/// \param [in] dest_x, dest_y   specify the upper-left corner of the destination
+///                     rectangle
 ///
 /// GC components in use: function, plane-mask, subwindow-mode,
 /// graphics-exposure, clip-x-origin, clip-y-origin, and clip-mask.
@@ -1527,14 +1536,14 @@ void TVirtualX::ChangeWindowAttributes(Window_t /*id*/,
 /// Alters the property for the specified window and causes the X server
 /// to generate a PropertyNotify event on that window.
 ///
-/// id       - the window whose property you want to change
-/// property - specifies the property name
-/// type     - the type of the property; the X server does not
-///            interpret the type but simply passes it back to
-///            an application that might ask about the window
-///            properties
-/// data     - the property data
-/// len      - the length of the specified data format
+/// \param [in] id         the window whose property you want to change
+/// \param [in] property   specifies the property name
+/// \param [in] type       the type of the property; the X server does not
+///               interpret the type but simply passes it back to
+///               an application that might ask about the window
+///               properties
+/// \param [in] data       the property data
+/// \param [in] len        the length of the specified data format
 
 void TVirtualX::ChangeProperty(Window_t /*id*/, Atom_t /*property*/,
                                Atom_t /*type*/, UChar_t * /*data*/,
@@ -1549,6 +1558,7 @@ void TVirtualX::ChangeProperty(Window_t /*id*/, Atom_t /*property*/,
 /// GC components in use: function, plane-mask, line-width, line-style,
 /// cap-style, fill-style, subwindow-mode, clip-x-origin, clip-y-origin,
 /// and clip-mask.
+///
 /// GC mode-dependent components: foreground, background, tile, stipple,
 /// tile-stipple-x-origin, tile-stipple-y-origin, dash-offset, dash-list.
 /// (see also the GCValues_t structure)
@@ -1562,9 +1572,9 @@ void TVirtualX::DrawLine(Drawable_t /*id*/, GContext_t /*gc*/,
 /// Paints a rectangular area in the specified window "id" according to
 /// the specified dimensions with the window's background pixel or pixmap.
 ///
-/// id - specifies the window
-/// x, y - coordinates, which are relative to the origin
-/// w, h - the width and height which define the rectangle dimensions
+/// \param [in] id   specifies the window
+/// \param [in] x, y   coordinates, which are relative to the origin
+/// \param [in] w, h   the width and height which define the rectangle dimensions
 
 void TVirtualX::ClearArea(Window_t /*id*/, Int_t /*x*/, Int_t /*y*/,
                           UInt_t /*w*/, UInt_t /*h*/)
@@ -1617,23 +1627,24 @@ void TVirtualX::SetKeyAutoRepeat(Bool_t /*on = kTRUE*/)
 /// to the time at which the key was pressed (as transmitted in the
 /// KeyPress event), and the KeyPress event is reported if all of the
 /// following conditions are true:
-///    - the keyboard is not grabbed and the specified key (which can
-///      itself be a modifier key) is logically pressed when the
-///      specified modifier keys are logically down, and no other
-///      modifier keys are logically down;
-///    - either the grab window "id" is an ancestor of (or is) the focus
-///      window, or "id" is a descendant of the focus window and contains
-///      the pointer;
-///    - a passive grab on the same key combination does not exist on any
-///      ancestor of grab_window
 ///
-/// id       - window id
-/// keycode  - specifies the KeyCode or AnyKey
-/// modifier - specifies the set of keymasks or AnyModifier; the mask is
-///            the bitwise inclusive OR of the valid keymask bits
-/// grab     - a switch between grab/ungrab key
-///            grab = kTRUE  grab the key and modifier
-///            grab = kFALSE ungrab the key and modifier
+///  - the keyboard is not grabbed and the specified key (which can
+///    itself be a modifier key) is logically pressed when the
+///    specified modifier keys are logically down, and no other
+///    modifier keys are logically down;
+///  - either the grab window "id" is an ancestor of (or is) the focus
+///    window, or "id" is a descendant of the focus window and contains
+///    the pointer;
+///  - a passive grab on the same key combination does not exist on any
+///    ancestor of grab_window
+///
+/// \param [in] id         window id
+/// \param [in] keycode    specifies the KeyCode or AnyKey
+/// \param [in] modifier   specifies the set of keymasks or AnyModifier; the mask is
+///               the bitwise inclusive OR of the valid keymask bits
+/// \param [in] grab       a switch between grab/ungrab key
+///               grab = kTRUE  grab the key and modifier
+///               grab = kFALSE ungrab the key and modifier
 
 void TVirtualX::GrabKey(Window_t /*id*/, Int_t /*keycode*/, UInt_t /*modifier*/,
                         Bool_t /*grab = kTRUE*/)
@@ -1643,7 +1654,7 @@ void TVirtualX::GrabKey(Window_t /*id*/, Int_t /*keycode*/, UInt_t /*modifier*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Establishes a passive grab on a certain mouse button. That is, when a
 /// certain mouse button is hit while certain modifier's (Shift, Control,
-/// Meta, Alt) are active then the mouse will be grabed for window id.
+/// Meta, Alt) are active then the mouse will be grabbed for window id.
 /// When grab is false, ungrab the mouse button for this button and modifier.
 
 void TVirtualX::GrabButton(Window_t /*id*/, EMouseButton /*button*/,
@@ -1712,8 +1723,8 @@ void TVirtualX::SetWMPosition(Window_t /*id*/, Int_t /*x*/, Int_t /*y*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Tells window manager the desired size of window "id".
 ///
-/// w - the width
-/// h - the height
+/// \param [in] w   the width
+/// \param [in] h   the height
 
 void TVirtualX::SetWMSize(Window_t /*id*/, UInt_t /*w*/, UInt_t /*h*/)
 {
@@ -1723,10 +1734,10 @@ void TVirtualX::SetWMSize(Window_t /*id*/, UInt_t /*w*/, UInt_t /*h*/)
 /// Gives the window manager minimum and maximum size hints of the window
 /// "id". Also specify via "winc" and "hinc" the resize increments.
 ///
-/// wmin, hmin - specify the minimum window size
-/// wmax, hmax - specify the maximum window size
-/// winc, hinc - define an arithmetic progression of sizes into which
-///              the window to be resized (minimum to maximum)
+/// \param [in] wmin, hmin   specify the minimum window size
+/// \param [in] wmax, hmax   specify the maximum window size
+/// \param [in] winc, hinc   define an arithmetic progression of sizes into which
+///                 the window to be resized (minimum to maximum)
 
 void TVirtualX::SetWMSizeHints(Window_t /*id*/, UInt_t /*wmin*/, UInt_t /*hmin*/,
                                UInt_t /*wmax*/, UInt_t /*hmax*/,
@@ -1755,12 +1766,12 @@ void TVirtualX::SetWMTransientHint(Window_t /*id*/, Window_t /*main_id*/)
 /// Each character image, as defined by the font in the GC, is treated as an
 /// additional mask for a fill operation on the drawable.
 ///
-/// id   - the drawable
-/// gc   - the GC
-/// x, y - coordinates, which are relative to the origin of the specified
-///        drawable and define the origin of the first character
-/// s    - the character string
-/// len  - the number of characters in the string argument
+/// \param [in] id     the drawable
+/// \param [in] gc     the GC
+/// \param [in] x, y   coordinates, which are relative to the origin of the specified
+///           drawable and define the origin of the first character
+/// \param [in] s      the character string
+/// \param [in] len    the number of characters in the string argument
 ///
 /// GC components in use: function, plane-mask, fill-style, font,
 /// subwindow-mode, clip-x-origin, clip-y-origin, and clip-mask.
@@ -1839,7 +1850,7 @@ void TVirtualX::ClearWindow(Window_t /*id*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Converts the "keysym" to the appropriate keycode. For example,
 /// keysym is a letter and keycode is the matching keyboard key (which
-/// is dependend on the current keyboard mapping). If the specified
+/// is dependent on the current keyboard mapping). If the specified
 /// "keysym" is not defined for any keycode, returns zero.
 
 Int_t TVirtualX::KeysymToKeycode(UInt_t /*keysym*/)
@@ -1881,8 +1892,9 @@ void TVirtualX::DrawRectangle(Drawable_t /*id*/, GContext_t /*gc*/,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draws multiple line segments. Each line is specified by a pair of points.
-/// Segment_t *seg - specifies an array of segments
-/// Int_t nseg     - specifies the number of segments in the array
+///
+/// \param [in] *seg   specifies an array of segments
+/// \param [in] nseg   specifies the number of segments in the array
 ///
 /// GC components in use: function, plane-mask, line-width, line-style,
 /// cap-style, join-style, fill-style, subwindow-mode, clip-x-origin,
@@ -1898,7 +1910,7 @@ void TVirtualX::DrawSegments(Drawable_t /*id*/, GContext_t /*gc*/,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Defines which input events the window is interested in. By default
-/// events are propageted up the window stack. This mask can also be
+/// events are propagated up the window stack. This mask can also be
 /// set at window creation time via the SetWindowAttributes_t::fEventMask
 /// attribute.
 
@@ -1959,11 +1971,11 @@ void TVirtualX::ConvertPrimarySelection(Window_t /*id*/, Atom_t /*clipboard*/,
 /// keyboard mapping). In "buf" a null terminated ASCII string is returned
 /// representing the string that is currently mapped to the key code.
 ///
-/// event  - specifies the event structure to be used
-/// buf    - returns the translated characters
-/// buflen - the length of the buffer
-/// keysym - returns the "keysym" computed from the event
-///          if this argument is not NULL
+/// \param [in] event    specifies the event structure to be used
+/// \param [in] buf      returns the translated characters
+/// \param [in] buflen   the length of the buffer
+/// \param [in] keysym   returns the "keysym" computed from the event
+///             if this argument is not NULL
 
 void TVirtualX::LookupString(Event_t * /*event*/, char * /*buf*/,
                              Int_t /*buflen*/, UInt_t &keysym)
@@ -1977,13 +1989,13 @@ void TVirtualX::LookupString(Event_t * /*event*/, char * /*buf*/,
 /// source window's origin and returns these coordinates to "dest_x" and
 /// "dest_y" relative to the destination window's origin.
 ///
-/// src            - the source window
-/// dest           - the destination window
-/// src_x, src_y   - coordinates within the source window
-/// dest_x, dest_y - coordinates within the destination window
-/// child          - returns the child of "dest" if the coordinates
-///                  are contained in a mapped child of the destination
-///                  window; otherwise, child is set to 0
+/// \param [in] src              the source window
+/// \param [in] dest             the destination window
+/// \param [in] src_x, src_y     coordinates within the source window
+/// \param [in] dest_x, dest_y   coordinates within the destination window
+/// \param [in] child            returns the child of "dest" if the coordinates
+///                     are contained in a mapped child of the destination
+///                     window; otherwise, child is set to 0
 
 void TVirtualX::TranslateCoordinates(Window_t /*src*/, Window_t /*dest*/,
                                      Int_t /*src_x*/, Int_t /*src_y*/,
@@ -1997,9 +2009,9 @@ void TVirtualX::TranslateCoordinates(Window_t /*src*/, Window_t /*dest*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the location and the size of window "id"
 ///
-/// x, y - coordinates of the upper-left outer corner relative to the
-///        parent window's origin
-/// w, h - the inside size of the window, not including the border
+/// \param [in] x, y   coordinates of the upper-left outer corner relative to the
+///           parent window's origin
+/// \param [in] w, h   the inside size of the window, not including the border
 
 void TVirtualX::GetWindowSize(Drawable_t /*id*/, Int_t &x, Int_t &y,
                               UInt_t &w, UInt_t &h)
@@ -2013,8 +2025,8 @@ void TVirtualX::GetWindowSize(Drawable_t /*id*/, Int_t &x, Int_t &y,
 /// automatically if the last point in the list does not coincide with the
 /// first point.
 ///
-/// Point_t *points - specifies an array of points
-/// Int_t npnt      - specifies the number of points in the array
+/// \param [in] Point_t *points   specifies an array of points
+/// \param [in] Int_t npnt        specifies the number of points in the array
 ///
 /// GC components in use: function, plane-mask, fill-style, fill-rule,
 /// subwindow-mode, clip-x-origin, clip-y-origin, and clip-mask.  GC
@@ -2030,15 +2042,15 @@ void TVirtualX::FillPolygon(Window_t /*id*/, GContext_t /*gc*/, Point_t *
 /// Returns the root window the pointer is logically on and the pointer
 /// coordinates relative to the root window's origin.
 ///
-/// id             - specifies the window
-/// rotw           - the root window that the pointer is in
-/// childw         - the child window that the pointer is located in, if any
-/// root_x, root_y - the pointer coordinates relative to the root window's
-///                  origin
-/// win_x, win_y   - the pointer coordinates relative to the specified
-///                  window "id"
-/// mask           - the current state of the modifier keys and pointer
-///                  buttons
+/// \param [in] id               specifies the window
+/// \param [in] rotw             the root window that the pointer is in
+/// \param [in] childw           the child window that the pointer is located in, if any
+/// \param [in] root_x, root_y   the pointer coordinates relative to the root window's
+///                     origin
+/// \param [in] win_x, win_y     the pointer coordinates relative to the specified
+///                     window "id"
+/// \param [in] mask             the current state of the modifier keys and pointer
+///                     buttons
 
 void TVirtualX::QueryPointer(Window_t /*id*/, Window_t &rootw, Window_t &childw,
                              Int_t &root_x, Int_t &root_y, Int_t &win_x,
@@ -2053,8 +2065,9 @@ void TVirtualX::QueryPointer(Window_t /*id*/, Window_t &rootw, Window_t &childw,
 /// Sets the foreground color for the specified GC (shortcut for ChangeGC
 /// with only foreground mask set).
 ///
-/// gc         - specifies the GC
-/// foreground - the foreground you want to set
+/// \param [in] gc           specifies the GC
+/// \param [in] foreground   the foreground you want to set
+///
 /// (see also the GCValues_t structure)
 
 void TVirtualX::SetForeground(GContext_t /*gc*/, ULong_t /*foreground*/)
@@ -2100,9 +2113,9 @@ void TVirtualX::DestroyRegion(Region_t /*reg*/)
 /// Updates the destination region from a union of the specified rectangle
 /// and the specified source region.
 ///
-/// rect - specifies the rectangle
-/// src  - specifies the source region to be used
-/// dest - returns the destination region
+/// \param [in] rect   specifies the rectangle
+/// \param [in] src    specifies the source region to be used
+/// \param [in] dest   returns the destination region
 
 void TVirtualX::UnionRectWithRegion(Rectangle_t * /*rect*/, Region_t /*src*/,
                                     Region_t /*dest*/)
@@ -2112,9 +2125,9 @@ void TVirtualX::UnionRectWithRegion(Rectangle_t * /*rect*/, Region_t /*src*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns a region for the polygon defined by the points array.
 ///
-/// points  - specifies an array of points
-/// np      - specifies the number of points in the polygon
-/// winding - specifies the winding-rule is set (kTRUE) or not(kFALSE)
+/// \param [in] points    specifies an array of points
+/// \param [in] np        specifies the number of points in the polygon
+/// \param [in] winding   specifies the winding-rule is set (kTRUE) or not(kFALSE)
 
 Region_t TVirtualX::PolygonRegion(Point_t * /*points*/, Int_t /*np*/,
                                   Bool_t /*winding*/)
@@ -2125,9 +2138,9 @@ Region_t TVirtualX::PolygonRegion(Point_t * /*points*/, Int_t /*np*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes the union of two regions.
 ///
-/// rega, regb - specify the two regions with which you want to perform
-///              the computation
-/// result     - returns the result of the computation
+/// \param [in] rega, regb   specify the two regions with which you want to perform
+///                 the computation
+/// \param [in] result       returns the result of the computation
 
 void TVirtualX::UnionRegion(Region_t /*rega*/, Region_t /*regb*/,
                             Region_t /*result*/)
@@ -2137,9 +2150,9 @@ void TVirtualX::UnionRegion(Region_t /*rega*/, Region_t /*regb*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes the intersection of two regions.
 ///
-/// rega, regb - specify the two regions with which you want to perform
-///              the computation
-/// result     - returns the result of the computation
+/// \param [in] rega, regb   specify the two regions with which you want to perform
+///                 the computation
+/// \param [in] result       returns the result of the computation
 
 void TVirtualX::IntersectRegion(Region_t /*rega*/, Region_t /*regb*/,
                                 Region_t /*result*/)
@@ -2158,9 +2171,9 @@ void TVirtualX::SubtractRegion(Region_t /*rega*/, Region_t /*regb*/,
 /// Calculates the difference between the union and intersection of
 /// two regions.
 ///
-/// rega, regb - specify the two regions with which you want to perform
-///              the computation
-/// result     - returns the result of the computation
+/// \param [in] rega, regb   specify the two regions with which you want to perform
+///                 the computation
+/// \param [in] result       returns the result of the computation
 
 void TVirtualX::XorRegion(Region_t /*rega*/, Region_t /*regb*/,
                           Region_t /*result*/)
@@ -2207,10 +2220,10 @@ void TVirtualX::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
 /// dependent. Use of uppercase or lowercase does not matter. Each returned
 /// string is null-terminated.
 ///
-/// fontname - specifies the null-terminated pattern string that can
-///            contain wildcard characters
-/// max      - specifies the maximum number of names to be returned
-/// count    - returns the actual number of font names
+/// \param [in] fontname   specifies the null-terminated pattern string that can
+///               contain wildcard characters
+/// \param [in] max        specifies the maximum number of names to be returned
+/// \param [in] count      returns the actual number of font names
 
 char **TVirtualX::ListFonts(const char * /*fontname*/, Int_t /*max*/, Int_t &/*count*/)
 {
@@ -2227,8 +2240,8 @@ void TVirtualX::FreeFontNames(char ** /*fontlist*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Allocates the memory needed for an drawable.
 ///
-/// width  - the width of the image, in pixels
-/// height - the height of the image, in pixels
+/// \param [in] width    the width of the image, in pixels
+/// \param [in] height   the height of the image, in pixels
 
 Drawable_t TVirtualX::CreateImage(UInt_t /*width*/, UInt_t /*height*/)
 {
@@ -2247,9 +2260,9 @@ void TVirtualX::GetImageSize(Drawable_t /*id*/, UInt_t &/*width*/,
 /// Overwrites the pixel in the image with the specified pixel value.
 /// The image must contain the x and y coordinates.
 ///
-/// id    - specifies the image
-/// x, y  - coordinates
-/// pixel - the new pixel value
+/// \param [in] id      specifies the image
+/// \param [in] x, y    coordinates
+/// \param [in] pixel   the new pixel value
 
 void TVirtualX::PutPixel(Drawable_t /*id*/, Int_t /*x*/, Int_t /*y*/,
                          ULong_t /*pixel*/)
@@ -2261,15 +2274,15 @@ void TVirtualX::PutPixel(Drawable_t /*id*/, Int_t /*x*/, Int_t /*y*/,
 /// section of the image defined by the x, y, width, and height arguments
 /// is drawn on the specified part of the drawable.
 ///
-/// id   - the drawable
-/// gc   - the GC
-/// img  - the image you want combined with the rectangle
-/// dx   - the offset in X from the left edge of the image
-/// dy   - the offset in Y from the top edge of the image
-/// x, y - coordinates, which are relative to the origin of the
-///        drawable and are the coordinates of the subimage
-/// w, h - the width and height of the subimage, which define the
-///        rectangle dimensions
+/// \param [in] id     the drawable
+/// \param [in] gc     the GC
+/// \param [in] img    the image you want combined with the rectangle
+/// \param [in] dx     the offset in X from the left edge of the image
+/// \param [in] dy     the offset in Y from the top edge of the image
+/// \param [in] x, y   coordinates, which are relative to the origin of the
+///           drawable and are the coordinates of the subimage
+/// \param [in] w, h   the width and height of the subimage, which define the
+///           rectangle dimensions
 ///
 /// GC components in use: function, plane-mask, subwindow-mode,
 /// clip-x-origin, clip-y-origin, and clip-mask.
@@ -2300,7 +2313,10 @@ Window_t TVirtualX::GetCurrentWindow() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns an array of pixels created from a part of drawable (defined by x, y, w, h)
 /// in format:
+///
+/// ~~~ {.cpp}
 /// b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+/// ~~~
 ///
 /// Pixels are numbered from left to right and from top to bottom.
 /// By default all pixels from the whole drawable are returned.
@@ -2314,8 +2330,11 @@ unsigned char *TVirtualX::GetColorBits(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// create pixmap from RGB data. RGB data is in format :
+/// create pixmap from RGB data. RGB data is in format:
+///
+/// ~~~ {.cpp}
 /// b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+/// ~~~
 ///
 /// Pixels are numbered from left to right and from top to bottom.
 /// Note that data must be 32-bit aligned
@@ -2327,7 +2346,7 @@ Pixmap_t TVirtualX::CreatePixmapFromData(unsigned char * /*bits*/, UInt_t /*widt
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The Nonrectangular Window Shape Extension adds nonrectangular
+/// The Non-rectangular Window Shape Extension adds non-rectangular
 /// windows to the System.
 /// This allows for making shaped (partially transparent) windows
 

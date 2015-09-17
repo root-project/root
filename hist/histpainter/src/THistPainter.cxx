@@ -48,7 +48,7 @@
 #include "TColor.h"
 #include "TPainter3dAlgorithms.h"
 #include "TGraph2DPainter.h"
-#include "TGraphDelaunay.h"
+#include "TGraphDelaunay2D.h"
 #include "TView.h"
 #include "TMath.h"
 #include "TRandom2.h"
@@ -66,6 +66,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /*! \class THistPainter
+\ingroup Hist
 \brief The histogram painter class. Implements all histograms' drawing's options.
 
 - [Introduction](#HP00)
@@ -389,7 +390,7 @@ some combinations must be use with care.
 #### <a name="HP060a"></a> Limitations
 
 - It does not work when combined with the `LEGO` and `SURF` options unless the
-  histogram plotted with the option `SAME` has <u>exactly</u> the same
+  histogram plotted with the option `SAME` has exactly the same
   ranges on the X, Y and Z axis as the currently drawn histogram. To superimpose
   lego plots [histograms' stacks](#HP26) should be used.</li>
 
@@ -928,7 +929,7 @@ Combined with the option `COL`, the option `Z` allows to
 display the color palette defined by `gStyle->SetPalette()`.
 
 In the following example, the histogram has only positive bins; the empty
-bins (containing 0) <u>are not drawn</u>.
+bins (containing 0) are not drawn.
 
 Begin_Macro(source)
 {
@@ -939,27 +940,34 @@ Begin_Macro(source)
       gRandom->Rannor(px,py);
       hcol1->Fill(px,5*py);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hcol1->Draw("COLZ");
    return c1;
 }
 End_Macro
 
-In the following example, the histogram has some negative bins; the empty
-bins (containing 0) <u>are drawn</u>.
+In the first plot of following example, the histogram has some negative bins;
+the empty bins (containing 0) are drawn. In some cases one wants to not draw
+empty bins (containing 0) of histograms having a negative minimum. The option
+`1`, used to produce the second plot in the following picture, allows to do that.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *hcol2 = new TH2F("hcol2","Option COLor example ",40,-4,4,40,-20,20);
+   TCanvas *c1 = new TCanvas("c1","c1",600,600);
+   c1->Divide(1,2);
+   TH2F *hcol23 = new TH2F("hcol2","Option COLZ example ",40,-4,4,40,-20,20);
+   TH2F *hcol24 = new TH2F("hcol2","Option COLZ1 example ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
-      hcol2->Fill(px,5*py);
+      hcol23->Fill(px,5*py);
+      hcol24->Fill(px,5*py);
    }
-   hcol2->Fill(0.,0.,-200.);
-   gStyle->SetPalette(57);
-   hcol2->Draw("COLZ");
+   hcol23->Fill(0.,0.,-200.);
+   hcol24->Fill(0.,0.,-200.);
+   gStyle->SetPalette(kBird);
+   c1->cd(1); hcol23->Draw("COLZ");
+   c1->cd(2); hcol24->Draw("COLZ1");
    return c1;
 }
 End_Macro
@@ -988,7 +996,7 @@ Begin_Macro(source)
    }
    hcol21->SetBit(TH1::kNoStats);
    hcol22->SetBit(TH1::kNoStats);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    c1->cd(1); hcol21->Draw("COLZ");
    c1->cd(2); hcol22->Draw("COLZ0");
    hcol22->SetMaximum(100);
@@ -1008,7 +1016,7 @@ Begin_Macro(source)
       gRandom->Rannor(px,py);
       hcol1->Fill(px,py);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hcol1->Draw("COLZPOL");
    return c1;
 }
@@ -1204,7 +1212,7 @@ Begin_Macro(source)
       hcontz->Fill(px-1,5*py);
       hcontz->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hcontz->Draw("CONTZ");
    return c1;
 }
@@ -1226,7 +1234,7 @@ Begin_Macro(source)
       hcont1->Fill(px-1,5*py);
       hcont1->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hcont1->Draw("CONT1Z");
    return c1;
 }
@@ -1286,7 +1294,7 @@ Begin_Macro(source)
       hcont4->Fill(px-1,5*py);
       hcont4->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hcont4->Draw("CONT4Z");
    return c1;
 }
@@ -1446,7 +1454,7 @@ Begin_Macro(source)
       hlego2->Fill(px-1,5*py);
       hlego2->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hlego2->Draw("LEGO2Z");
    return c2;
 }
@@ -1503,7 +1511,7 @@ the option `Z` allows to display the color palette defined by
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    TH2F *hsurf1 = new TH2F("hsurf1","Option SURF1 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -1525,7 +1533,7 @@ to show the cell contents. Combined with the option `SURF2`, the option
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    TH2F *hsurf2 = new TH2F("hsurf2","Option SURF2 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -1547,7 +1555,7 @@ to display the color palette defined by `gStyle->SetPalette()`.
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    TH2F *hsurf3 = new TH2F("hsurf3","Option SURF3 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -1587,7 +1595,7 @@ The following example shows a 2D histogram plotted with the option
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    TH2F *hsurf5 = new TH2F("hsurf4","Option SURF5 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -1610,7 +1618,7 @@ to display the color palette defined by `gStyle->SetPalette()`.
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    TH2F *hsurf7 = new TH2F("hsurf3","Option SURF7 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -1640,7 +1648,7 @@ Begin_Macro(source)
          hsc->SetBinContent(bx, by, exp(-x*x)*exp(-y*y));
       }
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    hsc->Draw("surf2");
    hsc->Draw("CONT1 SAME");
    return c20;
@@ -1705,7 +1713,7 @@ Begin_Macro(source)
       hscc->Fill(px-1,5*py);
       hscc->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    c4->cd(1); hscc->Draw("SURF1 CYL");
    c4->cd(2); TH2F *hspc = (TH2F*) hscc->DrawClone("SURF1 POL");
    hspc->SetTitle("Polar coordinates");
@@ -1846,7 +1854,7 @@ Begin_Macro(source)
    Double_t fy[] = {0.01, -0.5, -0.5, 3};
    Double_t fw[] = {3, 1, 1, 1.5};
    h2p->FillN(4, fx, fy, fw);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    h2p->Draw("col");
    return ch2p1;
 }
@@ -1916,7 +1924,7 @@ Begin_Macro(source)
    for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    p->Draw("COLZ L");
    return ch2p2;
 }
@@ -2138,6 +2146,8 @@ Begin_Macro(source)
    hs->Add(h3);
 
    hs->Draw("nostackb");
+   hs->GetXaxis()->SetNdivisions(-10);
+   cst0->SetGridx();
    return cst0;
 }
 End_Macro
@@ -2940,16 +2950,23 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 TList *THistPainter::GetContourList(Double_t contour) const
 {
 
-   TGraphDelaunay *dt;
 
-   // Check if fH contains a TGraphDelaunay
+
+   // Check if fH contains a TGraphDelaunay2D
    TList *hl = fH->GetListOfFunctions();
-   dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
-   if (!dt) return 0;
+   TGraphDelaunay2D *dt = (TGraphDelaunay2D*)hl->FindObject("TGraphDelaunay2D");
+   // try with the old painter
+   TGraphDelaunay *dtOld = nullptr;
+   if (!dt) dtOld =  (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
+
+   if (!dt && !dtOld) return nullptr;
 
    gCurrentHist = fH;
 
-   if (!fGraph2DPainter) ((THistPainter*)this)->fGraph2DPainter = new TGraph2DPainter(dt);
+   if (!fGraph2DPainter) {
+      if (dt) ((THistPainter*)this)->fGraph2DPainter = new TGraph2DPainter(dt);
+      else ((THistPainter*)this)->fGraph2DPainter = new TGraph2DPainter(dtOld);
+   }
 
    return fGraph2DPainter->GetContourList(contour);
 }
@@ -3334,10 +3351,11 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (l) {
       strncpy(l,"    ",4);
       if (hdim>1) {
-         Hoption.Color  = 2;
+         Hoption.Color  = 1;
          Hoption.Scat   = 0;
          Hoption.Zscale = 1;
-         l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
+         l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  strncpy(l," ",1); }
+         l = strstr(chopt,"1");  if (l) { Hoption.Color = 2;  strncpy(l," ",1); }
       } else {
          Hoption.Hist = 1;
       }
@@ -3348,7 +3366,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (hdim>1) {
          Hoption.Color = 1;
          Hoption.Scat  = 0;
-         l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
+         l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  strncpy(l," ",1); }
+         l = strstr(chopt,"1");  if (l) { Hoption.Color = 2;  strncpy(l," ",1); }
       } else {
          Hoption.Hist = 1;
       }
@@ -4418,6 +4437,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
    h2->TAttMarker::Modify();
 
    // Candle plot along X
+   Double_t xb1,xb2,yb1,yb2,xl1,xl2,yl1,yl2,xl3,yl3,xp1,yp1;
    if (Hoption.Candle == 1) {
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast; i++) {
          x = fXaxis->GetBinLowEdge(i);
@@ -4425,25 +4445,50 @@ void THistPainter::PaintCandlePlot(Option_t *)
          hp = h2->ProjectionY("_px", i, i);
          if (hp->GetEntries() !=0) {
             hp->GetQuantiles(5, quantiles, prob);
-            ypm[0] = hp->GetMean();
-
+            yp1 = hp->GetMean();
+            xb1 = x+m1*w;
+            xb2 = x+(1-m1)*w;
+            yb1 = quantiles[1];
+            yb2 = quantiles[3];
+            xl1 = x+m2*w;
+            xl2 = x+(1-m2)*w;
+            yl1 = quantiles[0];
+            yl2 = quantiles[4];
+            yl3 = quantiles[2];
+            xp1 = x+w/2.;
+            if (Hoption.Logy) {
+               if (yb1 > 0)  yb1  = TMath::Log10(yb1); else continue;
+               if (yb2 > 0)  yb2  = TMath::Log10(yb2); else continue;
+               if (yl1 > 0)  yl1  = TMath::Log10(yl1); else continue;
+               if (yl2 > 0)  yl2  = TMath::Log10(yl2); else continue;
+               if (yl3 > 0)  yl3  = TMath::Log10(yl3); else continue;
+               if (yp1 > 0)  yp1  = TMath::Log10(yp1); else continue;
+            }
+            if (Hoption.Logx) {
+               if (xb1 > 0)  xb1  = TMath::Log10(xb1); else continue;
+               if (xb2 > 0)  xb2  = TMath::Log10(xb2); else continue;
+               if (xl1 > 0)  xl1  = TMath::Log10(xl1); else continue;
+               if (xl2 > 0)  xl2  = TMath::Log10(xl2); else continue;
+               if (xp1 > 0)  xp1  = TMath::Log10(xp1); else continue;
+            }
+            ypm[0] = yp1;
             h2->SetLineStyle(1);
             h2->TAttLine::Modify();
-            gPad->PaintBox(x+m1*w,  quantiles[1], x+(1-m1)*w, quantiles[3]);
-            gPad->PaintLine(x+m2*w, quantiles[0], x+(1-m2)*w, quantiles[0]);
-            gPad->PaintLine(x+m2*w, quantiles[4], x+(1-m2)*w, quantiles[4]);
+            gPad->PaintBox (xb1, yb1, xb2, yb2);
+            gPad->PaintLine(xl1, yl1, xl2, yl1);
+            gPad->PaintLine(xl1, yl2, xl2, yl2);
             h2->SetLineWidth(3*widthsav);
             h2->TAttLine::Modify();
-            gPad->PaintLine(x+m1*w, quantiles[2], x+(1-m1)*w, quantiles[2]);
+            gPad->PaintLine(xb1, yl3, xb2, yl3);
             h2->SetLineWidth(widthsav);
             h2->TAttLine::Modify();
 
             h2->SetLineStyle(2);
             h2->TAttLine::Modify();
-            gPad->PaintLine(x+w/2., quantiles[3], x+w/2., quantiles[4]);
-            gPad->PaintLine(x+w/2., quantiles[0], x+w/2., quantiles[1]);
+            gPad->PaintLine(xp1, yb2, xp1, yl2);
+            gPad->PaintLine(xp1, yl1, xp1, yb1);
 
-            xpm[0] = x+w/2;
+            xpm[0] = xp1;
             gPad->PaintPolyMarker(1,xpm,ypm);
          }
       }
@@ -4455,25 +4500,53 @@ void THistPainter::PaintCandlePlot(Option_t *)
          hp = h2->ProjectionX("_py", i, i);
          if (hp->GetEntries() !=0) {
             hp->GetQuantiles(5, quantiles, prob);
-            xpm[0] = hp->GetMean();
-
+            xp1 = hp->GetMean();
+            yb1 = y+m1*w;
+            yb2 = y+(1-m1)*w;
+            xb1 = quantiles[1];
+            xb2 = quantiles[3];
+            yl1 = y+m2*w;
+            yl2 = y+(1-m2)*w;
+            xl1 = quantiles[0];
+            xl2 = quantiles[4];
+            xl3 = quantiles[2];
+            yp1 = y+w/2.;
+            if (Hoption.Logx) {
+               if (xb1 > 0)  xb1  = TMath::Log10(xb1); else continue;
+               if (xb2 > 0)  xb2  = TMath::Log10(xb2); else continue;
+               if (xl1 > 0)  xl1  = TMath::Log10(xl1); else continue;
+               if (xl2 > 0)  xl2  = TMath::Log10(xl2); else continue;
+               if (xl3 > 0)  xl3  = TMath::Log10(xl3); else continue;
+               if (xp1 > 0)  xp1  = TMath::Log10(xp1); else continue;
+            }
+            if (Hoption.Logy) {
+               if (yb1 > 0)  yb1  = TMath::Log10(yb1); else continue;
+               if (yb2 > 0)  yb2  = TMath::Log10(yb2); else continue;
+               if (yl1 > 0)  yl1  = TMath::Log10(yl1); else continue;
+               if (yl2 > 0)  yl2  = TMath::Log10(yl2); else continue;
+               if (yp1 > 0)  yp1  = TMath::Log10(yp1); else continue;
+            }
+            xpm[0] = xp1;
             h2->SetLineStyle(1);
             h2->TAttLine::Modify();
-            gPad->PaintBox(quantiles[1],  y+m1*w, quantiles[3], y+(1-m1)*w);
-            gPad->PaintLine(quantiles[0], y+m2*w, quantiles[0], y+(1-m2)*w);
-            gPad->PaintLine(quantiles[4], y+m2*w, quantiles[4], y+(1-m2)*w);
+
+            gPad->PaintBox (xb1, yb1, xb2, yb2);
+            gPad->PaintLine(xl1, yl1, xl1, yl2);
+            gPad->PaintLine(xl2, yl1, xl2, yl2);
+
             h2->SetLineWidth(3*widthsav);
             h2->TAttLine::Modify();
-            gPad->PaintLine(quantiles[2], y+m1*w, quantiles[2], y+(1-m1)*w);
+            gPad->PaintLine(xl3, yb1, xl3, yb2);
+
             h2->SetLineWidth(widthsav);
             h2->TAttLine::Modify();
 
             h2->SetLineStyle(2);
             h2->TAttLine::Modify();
-            gPad->PaintLine(quantiles[3], y+w/2., quantiles[4], y+w/2.);
-            gPad->PaintLine(quantiles[0], y+w/2., quantiles[1], y+w/2.);
+            gPad->PaintLine(xb2, yp1, xl2, yp1);
+            gPad->PaintLine(xl1, yp1, xb1, yp1);
 
-            ypm[0] = y+w/2;
+            ypm[0] = yp1;
             gPad->PaintPolyMarker(1,xpm,ypm);
          }
       }
@@ -4673,7 +4746,10 @@ void THistPainter::PaintColorLevels(Option_t *)
          } else {
             // don't draw the empty bins for non-profile histograms
             // with positive content
-            if (z == 0 && (zmin >= 0 || Hoption.Logz)) continue;
+            if (z == 0) {
+               if (zmin >= 0 || Hoption.Logz) continue;
+               if (Hoption.Color == 2) continue;
+            }
          }
 
          if (Hoption.Logz) {
@@ -4790,11 +4866,16 @@ void THistPainter::PaintContour(Option_t *option)
    }
 
    if (Hoption.Contour == 15) {
-      TGraphDelaunay *dt;
+      TGraphDelaunay2D *dt = nullptr;
+      TGraphDelaunay *dtOld = nullptr;
       TList *hl = fH->GetListOfFunctions();
-      dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
-      if (!dt) return;
-      if (!fGraph2DPainter) fGraph2DPainter = new TGraph2DPainter(dt);
+      dt = (TGraphDelaunay2D*)hl->FindObject("TGraphDelaunay2D");
+      if (!dt) dtOld = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
+      if (!dt && !dtOld) return;
+      if (!fGraph2DPainter) {
+         if (dt) fGraph2DPainter = new TGraph2DPainter(dt);
+         else fGraph2DPainter = new TGraph2DPainter(dtOld);
+      }
       fGraph2DPainter->Paint(option);
       return;
    }
@@ -7920,15 +8001,20 @@ void THistPainter::PaintSurface(Option_t *)
 void THistPainter::PaintTriangles(Option_t *option)
 {
 
-   TGraphDelaunay *dt;
+   TGraphDelaunay2D *dt = nullptr;
+   TGraphDelaunay *dtOld = nullptr;
 
-   // Check if fH contains a TGraphDelaunay
+   // Check if fH contains a TGraphDelaunay2D
    TList *hl = fH->GetListOfFunctions();
-   dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
-   if (!dt) return;
+   dt = (TGraphDelaunay2D*)hl->FindObject("TGraphDelaunay2D");
+   if (!dt) dtOld = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
+   if (!dt && !dtOld) return;
 
    // If needed, create a TGraph2DPainter
-   if (!fGraph2DPainter) fGraph2DPainter = new TGraph2DPainter(dt);
+   if (!fGraph2DPainter) {
+      if (dt) fGraph2DPainter = new TGraph2DPainter(dt);
+      else fGraph2DPainter = new TGraph2DPainter(dtOld);
+   }
 
    // Define the 3D view
    if (Hparam.zmin == 0 && Hparam.zmax == 0) {Hparam.zmin = -1; Hparam.zmax = 1;}

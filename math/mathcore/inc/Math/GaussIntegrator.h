@@ -48,8 +48,10 @@ public:
    /** Destructor */
    virtual ~GaussIntegrator();
 
-   /** Default Constructor. */
-   GaussIntegrator(double absTol = 0, double relTol = 0);
+   /** Default Constructor. 
+       If the tolerance are not given, use default values specified in  ROOT::Math::IntegratorOneDimOptions
+    */
+   GaussIntegrator(double absTol = -1, double relTol = -1);
 
 
    /** Static function: set the fgAbsValue flag.

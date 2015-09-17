@@ -455,6 +455,72 @@ bool test27() {
    ok &= (f5.Eval(2) == f6.Eval(2) );
    return ok;
 }
+
+bool test28() {
+   bool ok = true; 
+   // test composition of two functions
+   TF1 fsin("fsin", "[0]*sin(x)", 0., 10.);
+   fsin.SetParNames( "sin");
+   fsin.SetParameter( 0, 2.1);
+
+   TF1  fcos("fcos", "[0]*cos(x)", 0., 10.);
+   fcos.SetParNames( "cos");
+   fcos.SetParameter( 0, 1.1);
+
+   TF1 fsincos("fsc", "fsin+fcos");
+
+   // keep same order in evaluation
+   TF1 f0("f0",[](double *x, double *p){ return p[1]*sin(x[0]) + p[0]*cos(x[0]);},0.,10.,2);
+   f0.SetParameters(1.1,2.1);
+   ok &= (fsincos.Eval(2) == f0.Eval(2) );
+   return ok;
+
+}
+
+bool test29() {
+   // test hexadecimal numbers 
+   bool ok = true; 
+   TF1 f1("f1","x+[0]*0xaf");
+   f1.SetParameter(0,2);
+   ok &= (f1.Eval(3) == (3.+2*175.) );
+
+   TF1 f2("f2","0x64^2+x");
+   ok &= (f2.Eval(1) == 10001 );
+
+   TF1 f3("f3","x^0x000c+1");
+   ok &= (f3.Eval(2) == 4097 );
+
+   return ok; 
+
+}
+
+bool test30() {
+// handle -- (++ is in linear expressions)
+   bool ok = true;    
+   TF1 f1("f1","x--[0]");
+   f1.SetParameter(0,2);
+   ok &= (f1.Eval(3) == 5. );
+
+   return ok; 
+
+}
+
+bool test31() {
+// test whitespaces in par name and cloning
+   bool ok = true;    
+   TF1 f1("f1","x*[0]");
+   f1.SetParameter(0,2);
+   f1.SetParName(0,"First Param");
+   auto f2 = (TF1*) f1.Clone();
+   
+   ok &= (f1.Eval(3) == f2->Eval(3) );
+   ok &= (TString(f1.GetParName(0) ) == TString(f2->GetParName(0) ) );
+
+   return ok; 
+
+}
+
+
    
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
@@ -500,6 +566,10 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test25() ) { PrintError(itest); }
    IncrTest(itest); if (!test26() ) { PrintError(itest); }
    IncrTest(itest); if (!test27() ) { PrintError(itest); }
+   IncrTest(itest); if (!test28() ) { PrintError(itest); }
+   IncrTest(itest); if (!test29() ) { PrintError(itest); }
+   IncrTest(itest); if (!test30() ) { PrintError(itest); }
+   IncrTest(itest); if (!test31() ) { PrintError(itest); }
 
    std::cout << ".\n";
     

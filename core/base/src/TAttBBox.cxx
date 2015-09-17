@@ -12,13 +12,11 @@
 
 #include "TAttBBox.h"
 
-
-//______________________________________________________________________
-// TAttBBox
-//
-// Helper for management of bounding-box information.
-// Optionally used by classes that use direct OpenGL rendering
-// via <Class>GL class.
+/** \class TAttBBox
+Helper for management of bounding-box information.
+Optionally used by classes that use direct OpenGL rendering
+via <Class>GL class.
+*/
 
 ClassImp(TAttBBox)
 
@@ -35,8 +33,8 @@ void TAttBBox::BBoxInit(Float_t infinity)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create cube of volume (2*epsiolon)^3 at (x,y,z).
-/// epsilon iz zero by default.
+/// Create cube of volume (2*epsilon)^3 at (x,y,z).
+/// epsilon is zero by default.
 
 void TAttBBox::BBoxZero(Float_t epsilon, Float_t x, Float_t y, Float_t z)
 {

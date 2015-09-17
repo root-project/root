@@ -65,6 +65,7 @@ protected:
    Double_t    fZout;             // fHistogram bin height for points lying outside the interpolated area
    TList      *fFunctions;        // Pointer to list of functions (fits and user)
    TH2D       *fHistogram;        //!2D histogram of z values linearly interpolated on the triangles
+   TObject    *fDelaunay;         //! Pointer to Delaunay interpolator object
    TDirectory *fDirectory;        //!Pointer to directory holding this 2D graph
    TVirtualHistPainter *fPainter; //!Pointer to histogram painter
 
@@ -73,6 +74,11 @@ protected:
 private:
 
    Bool_t      fUserHisto;   // True when SetHistogram has been called
+
+   enum {
+      kOldInterpolation =  BIT(15)
+   };
+
 
 protected:
 
@@ -156,6 +162,7 @@ public:
    void                  SetNpy(Int_t npx=40); // *MENU*
    virtual void          SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*
    virtual void          SetTitle(const char *title=""); // *MENU*
+
 
    ClassDef(TGraph2D,1)  //Set of n x[n],y[n],z[n] points with 3-d graphics including Delaunay triangulation
 };

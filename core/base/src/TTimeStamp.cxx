@@ -9,32 +9,31 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-// The TTimeStamp encapsulates seconds and ns since EPOCH
-//
-// This extends (and isolates) struct timespec
-//    struct timespec
-//       {
-//          time_t   tv_sec;   /* seconds */
-//          long     tv_nsec;  /* nanoseconds */
-//       }
-//    time_t seconds is relative to Jan 1, 1970 00:00:00 UTC
-//
-// No accounting of leap seconds is made.
-//
-// Due to ROOT/CINT limitations TTimeStamp does not explicitly
-// hold a timespec struct; attempting to do so means the Streamer
-// must be hand written.  Instead we have chosen to simply contain
-// similar fields within the private area of this class.
-//
-// NOTE: the use of time_t (and its default implementation as a 32 int)
-//       implies overflow conditions occurs somewhere around
-//       Jan 18, 19:14:07, 2038.
-//       If this experiment is still going when it becomes significant
-//       someone will have to deal with it.
-//
-//////////////////////////////////////////////////////////////////////////
+/** \class TTimeStamp
+The TTimeStamp encapsulates seconds and ns since EPOCH
+
+This extends (and isolates) struct timespec
+~~~ {.cpp}
+   struct timespec
+      {
+         time_t   tv_sec;   // seconds
+         long     tv_nsec;  // nanoseconds
+      }
+   time_t seconds is relative to Jan 1, 1970 00:00:00 UTC
+~~~
+No accounting of leap seconds is made.
+
+Due to ROOT/CINT limitations TTimeStamp does not explicitly
+hold a timespec struct; attempting to do so means the Streamer
+must be hand written.  Instead we have chosen to simply contain
+similar fields within the private area of this class.
+
+NOTE: the use of time_t (and its default implementation as a 32 int)
+      implies overflow conditions occurs somewhere around
+      `Jan 18, 19:14:07, 2038`.
+      If this experiment is still going when it becomes significant
+      someone will have to deal with it.
+*/
 
 #include "TTimeStamp.h"
 #include "TMath.h"
@@ -88,7 +87,7 @@ TBuffer &operator<<(TBuffer &buf, const TTimeStamp &ts)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor. Create a TTimeStamp and set it to the current time
-/// (as best possible). The nanosecond part is faked so that subsequenct
+/// (as best possible). The nanosecond part is faked so that subsequent
 /// calls simply add 1 to ensure that sequential calls are distinct
 /// (and sortable).
 
@@ -103,10 +102,14 @@ TTimeStamp::TTimeStamp()
 /// If !isUTC then it is assumed to be the standard local time zone.
 ///
 /// If local time is PST then one can use
+/// ~~~ {.cpp}
 ///    TTimeStamp(year,month,day,hour,min,sec,nsec,kFALSE,0);
+/// ~~~
 /// or
+/// ~~~ {.cpp}
 ///    Int_t secOffset = 8*60*60;
 ///    TTimeStamp(year,month,day,hour,min,sec,nsec,kTRUE,8*60*60);
+/// ~~~
 
 TTimeStamp::TTimeStamp(UInt_t year, UInt_t month,
                        UInt_t day,  UInt_t hour,
@@ -164,7 +167,7 @@ Double_t TTimeStamp::AsGMST(Double_t UT1Offset) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return Greenwich apparant sidereal time (GAST) in hour-angle. Return
+/// Return Greenwich apparent sidereal time (GAST) in hour-angle. Return
 /// value will always be between 0 and 24 (hours). Sidereal time is most
 /// accurately calculated from UT1. If fSec and fNanoSec are in UTC (which
 /// they are by default), the optional argument UT1Offset can be supplied (in
@@ -204,7 +207,7 @@ Double_t TTimeStamp::AsLMST(Double_t Longitude, Double_t UT1Offset) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return local apparant sidereal time (LAST) in hour-angle, given a
+/// Return local apparent sidereal time (LAST) in hour-angle, given a
 /// longitude in degrees. Return value will always be between 0 and 24
 /// (hours). Sidereal time is most accurately calculated from UT1. If fSec
 /// and fNanoSec are in UTC (which they are by default), the optional
@@ -230,15 +233,18 @@ Double_t TTimeStamp::AsLAST(Double_t Longitude, Double_t UT1Offset) const
 /// (can be applied to default or compact format).
 ///
 /// Default format is RFC822 compliant:
+/// ~~~ {.cpp}
 ///   "Mon, 02 Jan 2001 18:11:12 +0000 (GMT) +999999999 nsec"
 ///   "Mon, 02 Jan 2001 10:11:12 -0800 (PST) +999999999 nsec"
+/// ~~~
 ///
 /// Option "c" compact is (almost) ISO 8601 compliant:
-///   "2001-01-02 18:11:12.9999999999Z"
-///   "2001-01-02 10:11:12.9999999999-0800"  if PST
+///  - "2001-01-02 18:11:12.9999999999Z"
+///  - "2001-01-02 10:11:12.9999999999-0800"  if PST
 ///      * uses "-" as date separator as specified in ISO 8601
 ///      * uses "." rather than preferred "," for decimal separator
 ///      * -HHMM is the difference between local and UTC (if behind, + if ahead).
+///
 ///   The "-HHMM" is replaced with "Z" if given as UTC.
 ///   To be strictly conforming it should use "T" instead of the
 ///   blank separating the date and time.
@@ -279,7 +285,7 @@ const Char_t *TTimeStamp::AsString(Option_t *option) const
    const Char_t *kISO8601  = "%Y-%m-%d %H:%M:%S.#9.9ld%z";
    const Char_t *kISO8601Z = "%Y-%m-%d %H:%M:%S.#9.9ldZ";
 #else
-   // otherwise only %Z is guarenteed to be defind
+   // otherwise only %Z is guaranteed to be defined
    const Char_t *kRFC822   = "%a, %d %b %Y %H:%M:%S %Z +#9ld nsec";
    const Char_t *kISO8601  = "%Y-%m-%d %H:%M:%S.#9.9ld%Z";
    const Char_t *kISO8601Z = "%Y-%m-%d %H:%M:%S.#9.9ldZ";
@@ -579,12 +585,13 @@ void TTimeStamp::Set()
 /// hours, min, sec run from 0 to 23, 59, 59 respectively,
 /// secOffset provides method for adjusting for alternative timezones
 ///
+/// ~~~ {.cpp}
 /// "year"  |    0    1 ... 37 | 38...69   |   70 .. 100  101 ..  137
 /// true    | 2000 2001   2037 | undefined | 1970   2000 2001 .. 2037
 ///
 /// "year"  | 138...1969 | 1970 .. 2037 | ...
 /// true    | undefined  | 1970 .. 2037 | undefined
-///
+/// ~~~
 
 void TTimeStamp::Set(Int_t year, Int_t month, Int_t day,
                      Int_t hour, Int_t min, Int_t sec,
@@ -625,17 +632,19 @@ void TTimeStamp::Set(Int_t year, Int_t month, Int_t day,
 /// Set date/time from integers of the form [yy]YYMMDD and HHMMSS,
 /// assume UTC (UTC) components:
 ///
+/// ~~~ {.cpp}
 ///  MM: 01=January .. 12=December
 ///  DD: 01 .. 31
 ///
 ///  HH: 00=midnight .. 23
 ///  MM: 00 .. 59
 ///  SS: 00 .. 69
+/// ~~~
 ///
-/// Date must be in format 980418 or 19980418
+///  - Date must be in format 980418 or 19980418
 ///                       1001127 or 20001127  (i.e. year 100 = 2000),
-/// time must be in format 224512 (second precision),
-/// date must be >= 700101.
+///  - time must be in format 224512 (second precision),
+///  - date must be >= 700101.
 
 void TTimeStamp::Set(Int_t date, Int_t time, Int_t nsec,
                      Bool_t isUTC, Int_t secOffset)
@@ -868,6 +877,7 @@ Bool_t TTimeStamp::IsLeapYear(Int_t year)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print out the "tm" structure:
+/// ~~~ {.cpp}
 /// tmstruct.tm_year = year;    // years since 1900
 /// tmstruct.tm_mon  = month-1; // months since Jan [0,11]
 /// tmstruct.tm_mday = day;     // day of the month [1,31]
@@ -877,6 +887,7 @@ Bool_t TTimeStamp::IsLeapYear(Int_t year)
 /// tmstruct.tm_wday            // day of week [0,6]
 /// tmstruct.tm_yday            // days in year [0,365]
 /// tmstruct.tm_isdst           // DST [-1/0/1]  (unknown,false,true)
+/// ~~~
 
 void TTimeStamp::DumpTMStruct(const tm_t &tmstruct)
 {

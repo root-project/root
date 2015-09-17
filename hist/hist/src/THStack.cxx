@@ -28,31 +28,31 @@ ClassImp(THStack)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Begin_Html
-<center><h2>The Histogram stack class</h2></center>
+/** \class THStack
+    \ingroup Hist
+The Histogram stack class
 
-A <t>THStack</tt> is a collection of <tt>TH1</tt> or <tt>TH2</tt> histograms.
-Using <tt>THStack::Draw()</tt> the histogram collection is drawn in one go according
+A THStack is a collection of TH1 or TH2 histograms.
+Using THStack::Draw() the histogram collection is drawn in one go according
 to the drawing option.
-<p>
-<tt>THStack::Add()</tt> allows to add a new histogram to the list.
-The <tt>THStack</tt> does not own the objects in the list.
-<p>
+
+THStack::Add() allows to add a new histogram to the list.
+The THStack does not own the objects in the list.
+
 By default (if no option drawing option is specified), histograms will be paint
-stacked on top of each other. <tt>TH2</tt are stacked as lego plots.
-<p>
-If option <tt>"nostack"</tt> is specified the histograms are not drawn on top
-of each other but as they would if drawn using the option <tt>"same"</tt>.
-<p>
-If option <tt>"nostackb"</tt> is specified the histograms are drawn next to
+stacked on top of each other. TH2 are stacked as lego plots.
+
+If option "nostack" is specified the histograms are not drawn on top
+of each other but as they would if drawn using the option "same".
+
+If option "nostackb" is specified the histograms are drawn next to
 each other as bar charts.
-<p>
+
 In all cases The axis range is computed automatically along the X and Y axis in
 order to show the complete histogram collection.
-<p>
+
 Example;
 
-End_Html
 Begin_Macro(source)
 {
    THStack *hs = new THStack("hs","");
@@ -78,18 +78,15 @@ Begin_Macro(source)
    return cs;
 }
 End_Macro
-Begin_Html
 
 A more complex example:
 
-End_Html
 Begin_Macro(source)
 ../../../tutorials/hist/hstack.C
 End_Macro
-Begin_Html
 
 Note that picking is supported for all drawing modes.
-End_Html */
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

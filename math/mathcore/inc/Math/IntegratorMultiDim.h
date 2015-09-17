@@ -74,7 +74,7 @@ public:
        In case no parameter  values are passed the default ones used in IntegratorMultiDimOptions are used
     */
    explicit
-   IntegratorMultiDim(IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = 0, double relTol = 0, unsigned int ncall = 0) :
+   IntegratorMultiDim(IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int ncall = 0) :
       fIntegrator(0), fFunc(0)
    {
        fIntegrator = CreateIntegrator(type, absTol, relTol, ncall);
@@ -89,7 +89,7 @@ public:
        @param ncall  number of function calls (apply only to MC integratioon methods)
     */
    explicit
-   IntegratorMultiDim(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = 0, double relTol = 0, unsigned int ncall = 0) :
+   IntegratorMultiDim(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int ncall = 0) :
       fIntegrator(0), fFunc(0)
    {
       fIntegrator = CreateIntegrator(type, absTol, relTol, ncall);

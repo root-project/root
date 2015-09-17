@@ -30,29 +30,22 @@ Bool_t TDirectory::fgAddDirectory = kTRUE;
 
 const Int_t  kMaxLen = 2048;
 
-//______________________________________________________________________________
-//Begin_Html
-/*
-<img src="gif/tdirectory_classtree.gif">
+/** \class TDirectory
+Describe directory structure in memory.
 */
-//End_Html
 
 ClassImp(TDirectory)
 
-//______________________________________________________________________________
-//
-
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*Directory default constructor-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                    =============================
+/// Directory default constructor.
 
-   TDirectory::TDirectory() : TNamed(), fMother(0),fList(0),fContext(0)
+TDirectory::TDirectory() : TNamed(), fMother(0),fList(0),fContext(0)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-* Create a new Directory *-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                     ======================
+/// Create a new Directory.
+///
 ///  A new directory with name,title is created in the current directory
 ///  The directory header information is immediately saved in the file
 ///  A new key is added in the parent directory
@@ -62,7 +55,6 @@ ClassImp(TDirectory)
 ///  In this case, classname must be the name of the derived class.
 ///
 ///  Note that the directory name cannot contain slashes.
-///
 
 TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classname*/, TDirectory* initMotherDir)
    : TNamed(name, title), fMother(0), fList(0),fContext(0)
@@ -133,7 +125,9 @@ TDirectory::~TDirectory()
 /// to the list of objects in the directory dir.
 ///
 ///  NOTE that this is a static function. To call it, use;
+/// ~~~ {.cpp}
 ///     TDirectory::AddDirectory
+/// ~~~
 
 void TDirectory::AddDirectory(Bool_t add)
 {
@@ -141,7 +135,7 @@ void TDirectory::AddDirectory(Bool_t add)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///static function: see TDirectory::AddDirectory for more comments
+/// Static function: see TDirectory::AddDirectory for more comments
 
 Bool_t TDirectory::AddDirectoryStatus()
 {
@@ -195,8 +189,7 @@ void TDirectory::Browse(TBrowser *b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*Initialise directory to defaults*-*-*-*-*-*-*-*-*-*
-///*-*                    ================================
+/// Initialise directory to defaults.
 
 void TDirectory::Build(TFile* /*motherFile*/, TDirectory* motherDir)
 {
@@ -332,12 +325,11 @@ TDirectory *&TDirectory::CurrentDirectory()
 ////////////////////////////////////////////////////////////////////////////////
 /// Find a directory using apath.
 /// It apath is null or empty, returns "this" directory.
-/// Otherwie use apath to find a directory.
-/// The absolute path syntax is:
-///    file.root:/dir1/dir2
+/// Otherwise use apath to find a directory.
+/// The absolute path syntax is: `file.root:/dir1/dir2`
+///
 /// where file.root is the file and /dir1/dir2 the desired subdirectory
-/// in the file. Relative syntax is relative to "this" directory. E.g:
-/// ../aa.
+/// in the file. Relative syntax is relative to "this" directory. E.g: `../aa`.
 /// Returns 0 in case path does not exist.
 /// If printError is true, use Error with 'funcname' to issue an error message.
 
@@ -429,10 +421,10 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current directory to "this" directory . Using path one can
 /// change the current directory to "path". The absolute path syntax is:
-/// file.root:/dir1/dir2
+/// `file.root:/dir1/dir2`
 /// where file.root is the file and /dir1/dir2 the desired subdirectory
 /// in the file. Relative syntax is relative to "this" directory. E.g:
-/// ../aa. Returns kTRUE in case of success.
+/// `../aa`. Returns kTRUE in case of success.
 
 Bool_t TDirectory::cd(const char *path)
 {
@@ -442,10 +434,10 @@ Bool_t TDirectory::cd(const char *path)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current directory to "this" directory . Using path one can
 /// change the current directory to "path". The absolute path syntax is:
-/// file.root:/dir1/dir2
+/// `file.root:/dir1/dir2`
 /// where file.root is the file and /dir1/dir2 the desired subdirectory
 /// in the file. Relative syntax is relative to "this" directory. E.g:
-/// ../aa. Returns kFALSE in case path does not exist.
+/// `../aa`. Returns kFALSE in case path does not exist.
 
 Bool_t TDirectory::cd1(const char *apath)
 {
@@ -466,10 +458,10 @@ Bool_t TDirectory::cd1(const char *apath)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current directory to "path". The absolute path syntax is:
-/// file.root:/dir1/dir2
-/// where file.root is the file and /dir1/dir2 the desired subdirectory
+/// `file.root:/dir1/dir2`
+/// where file.root is the file and `/dir1/dir2 the desired subdirectory
 /// in the file. Relative syntax is relative to the current directory
-/// gDirectory, e.g.: ../aa. Returns kTRUE in case of success.
+/// gDirectory, e.g.: `../aa`. Returns kTRUE in case of success.
 
 Bool_t TDirectory::Cd(const char *path)
 {
@@ -478,8 +470,8 @@ Bool_t TDirectory::Cd(const char *path)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current directory to "path". The path syntax is:
-/// file.root:/dir1/dir2
-/// where file.root is the file and /dir1/dir2 the desired subdirectory
+/// `file.root:/dir1/dir2`
+/// where file.root is the file and `/dir1/dir2` the desired subdirectory
 /// in the file. Returns kFALSE in case path does not exist.
 
 Bool_t TDirectory::Cd1(const char *apath)
@@ -498,8 +490,7 @@ Bool_t TDirectory::Cd1(const char *apath)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*Delete all objects from a Directory list-*-*-*-*-*
-///*-*    =======================================
+/// Delete all objects from a Directory list.
 
 void TDirectory::Clear(Option_t *)
 {
@@ -508,7 +499,7 @@ void TDirectory::Clear(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Delete all objects from memory and directory structure itself.
+/// Delete all objects from memory and directory structure itself.
 
 void TDirectory::Close(Option_t *)
 {
@@ -537,7 +528,7 @@ void TDirectory::Close(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Delete all objects from memory.
+/// Delete all objects from memory.
 
 void TDirectory::DeleteAll(Option_t *)
 {
@@ -545,27 +536,26 @@ void TDirectory::DeleteAll(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-* Delete Objects or/and keys in a directory *-*-*-*-*-*-*-*
-///*-*             =========================================
-///   namecycle has the format name;cycle
-///   namecycle = "" same as namecycle ="T*"
-///   name  = * means all
-///   cycle = * means all cycles (memory and keys)
-///   cycle = "" or cycle = 9999 ==> apply to a memory object
-///   When name=* use T* to delete subdirectories also
+/// Delete Objects or/and keys in a directory.
 ///
-///   To delete one directory, you must specify the directory cycle,
-///      eg.  file.Delete("dir1;1");
+///  - namecycle has the format name;cycle
+///  - namecycle = "" same as namecycle ="T*"
+///  - name  = * means all
+///  - cycle = * means all cycles (memory and keys)
+///  - cycle = "" or cycle = 9999 ==> apply to a memory object
+///    When name=* use T* to delete subdirectories also
 ///
-///   examples:
-///     foo   : delete object named foo in memory
-///     foo*  : delete all objects with a name starting with foo
-///     foo;1 : delete cycle 1 of foo on file
-///     foo;* : delete all cycles of foo on file and also from memory
-///     *;2   : delete all objects on file having the cycle 2
-///     *;*   : delete all objects from memory and file
-///    T*;*   : delete all objects from memory and file and all subdirectories
+/// To delete one directory, you must specify the directory cycle,
+/// eg.  `file.Delete("dir1;1");`
 ///
+/// examples:
+///  - foo   : delete object named foo in memory
+///  - foo*  : delete all objects with a name starting with foo
+///  - foo;1 : delete cycle 1 of foo on file
+///  - foo;* : delete all cycles of foo on file and also from memory
+///  - *;2   : delete all objects on file having the cycle 2
+///  - *;*   : delete all objects from memory and file
+///  - T*;*  : delete all objects from memory and file and all subdirectories
 
 void TDirectory::Delete(const char *namecycle)
 {
@@ -619,10 +609,9 @@ void TDirectory::Delete(const char *namecycle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*Fill Graphics Structure and Paint*-*-*-*-*-*-*-*-*-*
-///*-*                    =================================
-/// Loop on all objects (memory or file) and all subdirectories
+/// Fill Graphics Structure and Paint.
 ///
+/// Loop on all objects (memory or file) and all subdirectories
 
 void TDirectory::Draw(Option_t *option)
 {
@@ -673,16 +662,16 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  return pointer to object identified by namecycle
+/// Return pointer to object identified by namecycle.
 ///
 ///   namecycle has the format name;cycle
-///   name  = * is illegal, cycle = * is illegal
-///   cycle = "" or cycle = 9999 ==> apply to a memory object
+///  - name  = * is illegal, cycle = * is illegal
+///  - cycle = "" or cycle = 9999 ==> apply to a memory object
 ///
-///   examples:
-///     foo   : get object named foo in memory
-///             if object is not in memory, try with highest cycle from file
-///     foo;1 : get cycle 1 of foo on file
+/// examples:
+///  - foo   : get object named foo in memory
+///                if object is not in memory, try with highest cycle from file
+///  - foo;1 : get cycle 1 of foo on file
 ///
 ///  The retrieved object should in principle derive from TObject.
 ///  If not, the function TDirectory::GetObject should be called.
@@ -691,27 +680,35 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
 ///  is the actual type of the object).
 ///
 ///  NOTE:
+///
 ///  The method GetObject offer better protection and avoid the need
 ///  for any cast:
+/// ~~~ {.cpp}
 ///      MyClass *obj;
 ///      directory->GetObject("some object",obj);
 ///      if (obj) { ... the object exist and inherits from MyClass ... }
-///
+/// ~~~
 ///  VERY IMPORTANT NOTE:
+///
 ///  In case the class of this object derives from TObject but not
 ///  as a first inheritance, one must use dynamic_cast<>().
 ///  Example 1: Normal case:
+/// ~~~ {.cpp}
 ///      class MyClass : public TObject, public AnotherClass
+/// ~~~
 ///   then on return, one can do:
+/// ~~~ {.cpp}
 ///      MyClass *obj = (MyClass*)directory->Get("some object of MyClass");
-///
+/// ~~~
 ///  Example 2: Special case:
+/// ~~~ {.cpp}
 ///      class MyClass : public AnotherClass, public TObject
+/// ~~~
 ///  then on return, one must do:
+/// ~~~ {.cpp}
 ///      MyClass *obj = dynamic_cast<MyClass*>(directory->Get("some object of MyClass"));
-///
+/// ~~~
 ///  Of course, dynamic_cast<> can also be used in the example 1.
-///
 
 TObject *TDirectory::Get(const char *namecycle)
 {
@@ -753,17 +750,20 @@ TObject *TDirectory::Get(const char *namecycle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return pointer to object identified by namecycle.
+/// Return pointer to object identified by namecycle.
 /// The returned object may or may not derive from TObject.
 ///
-///   namecycle has the format name;cycle
-///   name  = * is illegal, cycle = * is illegal
-///   cycle = "" or cycle = 9999 ==> apply to a memory object
+///  - namecycle has the format name;cycle
+///  - name  = * is illegal, cycle = * is illegal
+///  - cycle = "" or cycle = 9999 ==> apply to a memory object
 ///
 ///  VERY IMPORTANT NOTE:
+///
 ///  The calling application must cast the returned object to
 ///  the final type, e.g.
+/// ~~~ {.cpp}
 ///      MyClass *obj = (MyClass*)directory->GetObject("some object of MyClass");
+/// ~~~
 
 void *TDirectory::GetObjectUnchecked(const char *namecycle)
 {
@@ -780,23 +780,27 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const char* classname)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return pointer to object identified by namecycle if and only if the actual
+/// Return pointer to object identified by namecycle if and only if the actual
 /// object is a type suitable to be stored as a pointer to a "expectedClass"
 /// If expectedClass is null, no check is performed.
 ///
 ///   namecycle has the format name;cycle
-///   name  = * is illegal, cycle = * is illegal
-///   cycle = "" or cycle = 9999 ==> apply to a memory object
+///  - name  = * is illegal, cycle = * is illegal
+///  - cycle = "" or cycle = 9999 ==> apply to a memory object
 ///
 ///  VERY IMPORTANT NOTE:
+///
 ///  The calling application must cast the returned pointer to
 ///  the type described by the 2 arguments (i.e. cl):
+/// ~~~ {.cpp}
 ///      MyClass *obj = (MyClass*)directory->GetObjectChecked("some object of MyClass","MyClass"));
-///
+/// ~~~
 ///  Note: We recommend using the method TDirectory::GetObject:
+/// ~~{.cpp}~
 ///      MyClass *obj = 0;
 ///      directory->GetObject("some object inheriting from MyClass",obj);
 ///      if (obj) { ... we found what we are looking for ... }
+/// ~~~
 
 void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expectedClass)
 {
@@ -901,7 +905,7 @@ const char *TDirectory::GetPath() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// recursive method to fill full path for directory
+/// Recursive method to fill full path for directory.
 
 void TDirectory::FillFullPath(TString& buf) const
 {
@@ -925,12 +929,14 @@ void TDirectory::FillFullPath(TString& buf) const
 ///
 /// For example the step to the steps to create first a/b/c and then a/b/d without receiving
 /// and errors are:
+/// ~~~ {.cpp}
 ///    TFile * file = new TFile("afile","RECREATE");
 ///    file->mkdir("a");
 ///    file->cd("a");
 ///    gDirectory->mkdir("b");
 ///    gDirectory->cd("b");
 ///    gDirectory->mkdir("d");
+/// ~~~
 
 TDirectory *TDirectory::mkdir(const char *name, const char *title)
 {
@@ -969,10 +975,9 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
 ///  Subdirectories are listed first, then objects in memory.
 ///
 ///  The option can has the following format:
-///     [<regexp>]
+///      [<regexp>]
 ///  The <regexp> will be used to match the name of the objects.
 ///  By default memory and disk objects are listed.
-///
 
 void TDirectory::ls(Option_t *option) const
 {

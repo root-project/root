@@ -16,33 +16,31 @@
 ClassImp(TGraphDelaunay)
 
 
-//______________________________________________________________________________
-//
-// TGraphDelaunay generates a Delaunay triangulation of a TGraph2D. This
-// triangulation code derives from an implementation done by Luke Jones
-// (Royal Holloway, University of London) in April 2002 in the PAW context.
-//
-// This software cannot be guaranteed to work under all circumstances. They
-// were originally written to work with a few hundred points in an XY space
-// with similar X and Y ranges.
-//
-// Definition of Delaunay triangulation (After B. Delaunay):
-// For a set S of points in the Euclidean plane, the unique triangulation DT(S)
-// of S such that no point in S is inside the circumcircle of any triangle in
-// DT(S). DT(S) is the dual of the Voronoi diagram of S. If n is the number of
-// points in S, the Voronoi diagram of S is the partitioning of the plane
-// containing S points into n convex polygons such that each polygon contains
-// exactly one point and every point in a given polygon is closer to its
-// central point than to any other. A Voronoi diagram is sometimes also known
-// as a Dirichlet tessellation.
-//Begin_Html
-/*
-<img src="gif/dtvd.gif">
-<br>
-<a href="http://www.cs.cornell.edu/Info/People/chew/Delaunay.html">This applet</a>
-gives a nice practical view of Delaunay triangulation and Voronoi diagram.
+/** \class TGraphDelaunay
+    \ingroup Hist
+TGraphDelaunay generates a Delaunay triangulation of a TGraph2D. This
+triangulation code derives from an implementation done by Luke Jones
+(Royal Holloway, University of London) in April 2002 in the PAW context.
+
+This software cannot be guaranteed to work under all circumstances. They
+were originally written to work with a few hundred points in an XY space
+with similar X and Y ranges.
+
+Definition of Delaunay triangulation (After B. Delaunay):
+For a set S of points in the Euclidean plane, the unique triangulation DT(S)
+of S such that no point in S is inside the circumcircle of any triangle in
+DT(S). DT(S) is the dual of the Voronoi diagram of S. If n is the number of
+points in S, the Voronoi diagram of S is the partitioning of the plane
+containing S points into n convex polygons such that each polygon contains
+exactly one point and every point in a given polygon is closer to its
+central point than to any other. A Voronoi diagram is sometimes also known
+as a Dirichlet tessellation.
+
+\image html tgraph2d_delaunay.gif
+
+[This applet](http://www.cs.cornell.edu/Info/People/chew/Delaunay.html) gives a nice 
+practical view of Delaunay triangulation and Voronoi diagram.
 */
-//End_Html
 
 
 ////////////////////////////////////////////////////////////////////////////////

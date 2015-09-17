@@ -30,7 +30,7 @@
 
 #include <vector>
 
-/**
+/*
     TVirtualFitter backward compatibility implementation using new ROOT::Fit::Fitter
 */
 
@@ -78,7 +78,6 @@ public:
    virtual Double_t *GetCovarianceMatrix() const;
    virtual Double_t  GetCovarianceMatrixElement(Int_t i, Int_t j) const;
    virtual Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const;
-   //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
    virtual Int_t     GetNumberTotalParameters() const;
    virtual Int_t     GetNumberFreeParameters() const;
 
@@ -89,7 +88,6 @@ public:
    virtual Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const;
    virtual Double_t  GetSumLog(Int_t i);
 
-   //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
    virtual Bool_t    IsFixed(Int_t ipar) const ;
 
    virtual void      PrintResults(Int_t level, Double_t amin) const;
@@ -102,9 +100,6 @@ public:
    virtual void      SetFCN(void * );
    // for using interpreted function passed by the user
    virtual void SetMethodCall(TMethodCall * m) { fMethodCall = m; }
-
-   ///!!!! new method (of this interface)
-
 
    // get reference to Fit configuration (NOTE: it will be invalid when class is deleted)
    ROOT::Fit::FitConfig & GetFitConfig()  { return fFitter->Config(); }
@@ -127,9 +122,9 @@ public:
    // scan likelihood value of  parameter and fill the given graph.
    bool  Scan(unsigned int ipar, TGraph * gr, double xmin = 0, double xmax = 0);
 
-//    // scan likelihood value for two  parameters and fill the given graph.
-//    bool  Scan2D(unsigned int ipar, unsigned int jpar, TGraph2D * gr,
-//                         double xmin = 0, double xmax = 0, double ymin = 0, double ymax = 0);
+   //    scan likelihood value for two  parameters and fill the given graph.
+   //    bool  Scan2D(unsigned int ipar, unsigned int jpar, TGraph2D * gr,
+   //                         double xmin = 0, double xmax = 0, double ymin = 0, double ymax = 0);
 
    // create contour of two parameters around the minimum
    // pass as option confidence level:  default is a value of 0.683
@@ -144,15 +139,10 @@ public:
 
 protected:
 
-   // internal methods
-
    bool ValidParameterIndex(int ipar) const;
-
    void DoSetDimension();
 
-
 private:
-
 
    //ROOT::Fit::FitData * fFitData;
    std::shared_ptr<ROOT::Fit::FitData>  fFitData;  //! data of the fit 

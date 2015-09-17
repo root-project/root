@@ -5,11 +5,6 @@
 
 set(libname TreePlayer)
 
-ROOT_USE_PACKAGE(tree/tree)
-ROOT_USE_PACKAGE(gui/gui)
-ROOT_USE_PACKAGE(graf3d/g3d)
-
-
 ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 

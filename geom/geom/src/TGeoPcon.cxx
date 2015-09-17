@@ -282,7 +282,14 @@ Double_t TGeoPcon::Capacity() const
 void TGeoPcon::ComputeBBox()
 {
    for (Int_t isec=0; isec<fNz-1; isec++) {
-      if (TMath::Abs(fZ[isec]-fZ[isec+1]) < TGeoShape::Tolerance()) fZ[isec+1]=fZ[isec];
+      if (TMath::Abs(fZ[isec]-fZ[isec+1]) < TGeoShape::Tolerance()) {
+         fZ[isec+1]=fZ[isec];
+         if (IsSameWithinTolerance(fRmin[isec], fRmin[isec+1]) && 
+             IsSameWithinTolerance(fRmax[isec], fRmax[isec+1])) {
+            InspectShape();
+            Error("ComputeBBox", "Duplicated section %d/%d for shape %s", isec, isec+1, GetName());
+         }
+      }
       if (fZ[isec]>fZ[isec+1]) {
          InspectShape();
          Fatal("ComputeBBox", "Wrong section order");

@@ -9,12 +9,6 @@
  *************************************************************************/
 
 
-/**
-   HypoTestInverterResult class: holds the array of hypothesis test results and compute a confidence interval.
-   Based on the RatioFinder code available in the RooStatsCms package developed by Gregory Schott and Danilo Piparo
-   Ported and adapted to RooStats by Gregory Schott
-   Some contributions to this class have been written by Matthias Wolf (error estimation)
-**/
 
 
 // include header file of this class 
@@ -620,7 +614,7 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
 
    brf.SetFunction(wf,xmin,xmax);
    brf.SetNpx(20);
-   bool ret = brf.Solve(100, 1.E-6, 1.E-6);
+   bool ret = brf.Solve(100, 1.E-16, 1.E-6);
    if (!ret) { 
       ooccoutE(this,Eval) << "HypoTestInverterResult - interpolation failed - return inf" << std::endl;
          return TMath::Infinity();

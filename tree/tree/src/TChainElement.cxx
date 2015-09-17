@@ -9,11 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TChainElement describes a component of a TChain.                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TChainElement
+A TChainElement describes a component of a TChain.
+*/
 
 #include "TTree.h"
 #include "TChainElement.h"

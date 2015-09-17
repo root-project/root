@@ -12,17 +12,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-<p>
-HLFactory is an High Level model Factory allows you to
-describe your models in a configuration file
-(<i>datacards</i>) acting as an interface with the RooFactoryWSTool.
-Moreover it provides tools for the combination of models and datasets.
-</p>
-
-END_HTML
-*/
 
 #include <iostream>
 #include <fstream>

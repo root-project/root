@@ -22,9 +22,9 @@
 #include "TGColorDialog.h"
 
 
-//______________________________________________________________________________
-// GUI editor for TEveShape.
-//
+/** \class TEveShapeEditor
+GUI editor for TEveShape.
+*/
 
 ClassImp(TEveShapeEditor);
 
@@ -69,13 +69,11 @@ TEveShapeEditor::TEveShapeEditor(const TGWindow *p, Int_t width, Int_t height,
 
       fHighlightFrame = new TGCheckButton(f, "Highlight Frame");
       f->AddFrame(fHighlightFrame, new TGLayoutHints(kLHintsLeft, 2,1,0,0));
-      fHighlightFrame->Connect("Toggled(Bool_t)"," TEveShapeEditor", this, "DoHighlightFrame()");
+      fHighlightFrame->Connect("Toggled(Bool_t)", "TEveShapeEditor", this, "DoHighlightFrame()");
 
       AddFrame(f, new TGLayoutHints(kLHintsTop, 0,0,2,1));
    }
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
@@ -89,8 +87,6 @@ void TEveShapeEditor::SetModel(TObject* obj)
    fDrawFrame     ->SetState(fM->fDrawFrame      ? kButtonDown : kButtonUp);
    fHighlightFrame->SetState(fM->fHighlightFrame ? kButtonDown : kButtonUp);
 }
-
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for setting line with of polygon outline.

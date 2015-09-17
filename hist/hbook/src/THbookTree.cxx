@@ -9,43 +9,44 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THbookTree                                                           //
-//                                                                      //
-// A wrapper class supporting Hbook ntuples (CWN and RWN).              //
-// The normal TTree calls can be used, including TTree::Draw().         //
-// Data read directly from the Hbook file via THbookFile.               //
-//                                                                      //
-// IMPORTANT NOTE                                                       //
-// When setting the branch address (via THbookTree::SetBranchAddress)   //
-// for a branch in an Hbook block containing several names, eg          //
-//    Hbook block SELEVN with the following variables:                  //
-// ******************************************************************   //
-//  *      1   * R*4  *         *              * SELEVN   * WGGS        //
-//  *      2   * R*4  *         *              * SELEVN   * AM12        //
-//  *      3   * R*4  *         *              * SELEVN   * AM34        //
-//  *      4   * R*4  *         *              * SELEVN   * AM14        //
-//  *      5   * R*4  *         *              * SELEVN   * AM32        //
-//  *      6   * R*4  *         *              * SELEVN   * PtPI(4)     //
-//  *      7   * R*4  *         *              * SELEVN   * PHIPI(4)    //
-//  *      8   * R*4  *         *              * SELEVN   * THTPI(4)    //
-// one must define a C struct like:                                     //
-//   struct {                                                           //
-//      Float_t Wggs;                                                   //
-//      Float_t Am12;                                                   //
-//      Float_t Am34;                                                   //
-//      Float_t Am14;                                                   //
-//      Float_t Am32;                                                   //
-//      Float_t Ptpi[4];                                                //
-//      Float_t Phipi[4];                                               //
-//      Float_t Thtpi[4];                                               //
-//   } event;                                                           //
-//                                                                      //
-// and set ONLY the first variable address with:                        //
-//    h96->SetBranchAddress("Wggs",&event.Wggs);                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class THbookTree
+    \ingroup Hist
+ A wrapper class supporting Hbook ntuples (CWN and RWN).
+ The normal TTree calls can be used, including TTree::Draw().
+ Data read directly from the Hbook file via THbookFile.
+
+ IMPORTANT NOTE
+ When setting the branch address (via THbookTree::SetBranchAddress)
+ for a branch in an Hbook block containing several names, eg
+ Hbook block SELEVN with the following variables:
+
+~~~
+ ******************************************************************
+ *      1   * R*4  *         *              * SELEVN   * WGGS
+ *      2   * R*4  *         *              * SELEVN   * AM12
+ *      3   * R*4  *         *              * SELEVN   * AM34
+ *      4   * R*4  *         *              * SELEVN   * AM14
+ *      5   * R*4  *         *              * SELEVN   * AM32
+ *      6   * R*4  *         *              * SELEVN   * PtPI(4)
+ *      7   * R*4  *         *              * SELEVN   * PHIPI(4)
+ *      8   * R*4  *         *              * SELEVN   * THTPI(4)
+
+ one must define a C struct like:
+  struct {
+     Float_t Wggs;
+     Float_t Am12;
+     Float_t Am34;
+     Float_t Am14;
+     Float_t Am32;
+     Float_t Ptpi[4];
+     Float_t Phipi[4];
+     Float_t Thtpi[4];
+  } event;
+
+ and set ONLY the first variable address with:
+    h96->SetBranchAddress("Wggs",&event.Wggs);
+~~~
+*/
 
 #include "THbookTree.h"
 #include "THbookBranch.h"

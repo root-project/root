@@ -122,9 +122,9 @@ int main(int argc, char *argv[])
          if (gLineString.BeginsWith("class"))    gInClassDef = kTRUE;
          if (gLineString.Index("ClassDef") >= 0) gInClassDef = kFALSE;
 
-         if (gInClassDef && gLineString.Index("//") >= 0) {
-            gLineString.ReplaceAll("//","///<");
-         }
+//         if (gInClassDef && gLineString.Index("//") >= 0) {
+//            gLineString.ReplaceAll("//","///<");
+//         }
 
          printf("%s",gLineString.Data());
       }
@@ -138,7 +138,10 @@ int main(int argc, char *argv[])
          gLineString = gLine;
          StandardizeKeywords();
 
-         if (gLineString.Index("/*! \\class") >= 0) gClass = kTRUE;
+         if (gLineString.Index("/*! \\class") >= 0 ||
+             gLineString.Index("/// \\class") >= 0 ||
+             gLineString.Index("/** \\class") >= 0 ||
+             gLineString.Index("///! \\class") >= 0) gClass = kTRUE;
 
          if (gLineString.Index("begin_html") >= 0) {
             if (!gClass) {

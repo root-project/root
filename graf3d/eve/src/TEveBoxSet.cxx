@@ -14,33 +14,29 @@
 
 #include "TRandom.h"
 
-//==============================================================================
-// TEveBoxSet
-//==============================================================================
+/** \class TEveBoxSet
+Collection of 3D primitives (fixed-size boxes, boxes of different
+sizes, or arbitrary sexto-epipeds, cones). Each primitive can be assigned
+a signal value and a TRef.
 
-//______________________________________________________________________________
-//
-// Collection of 3D primitives (fixed-size boxes, boxes of different
-// sizes, or arbitrary sexto-epipeds, cones); each primitive can be assigned
-// a signal value and a TRef.
-//
-// A collection of 3D-markers. The way how they are defined depends
-// on the fBoxType data-member.
-//   kBT_FreeBox         arbitrary box: specify 8*(x,y,z) box corners
-//   kBT_AABox           axis-aligned box: specify (x,y,z) and (w, h, d)
-//   kBT_AABoxFixedDim   axis-aligned box w/ fixed dimensions: specify (x,y,z)
-//                       also set fDefWidth, fDefHeight and fDefDepth
-//   kBT_Cone            cone defined with position, axis-vector and radius
-//   EllipticCone        conew with elliptic base (specify another radius and angle in deg)
-//
-// Each primitive can be assigned:
-// a) Color or signal value. Thresholds and signal-to-color mapping
-//    can then be set dynamically via the TEveRGBAPalette class.
-// b) External TObject* (stored as TRef).
-//
-// See also base-class TEveDigitSet for more information.
-// Tutorial: tutorials/eve/boxset_test.C
+A collection of 3D-markers. The way how they are defined depends
+on the fBoxType data-member.
+  - kBT_FreeBox         arbitrary box: specify 8*(x,y,z) box corners
+  - kBT_AABox           axis-aligned box: specify (x,y,z) and (w, h, d)
+  - kBT_AABoxFixedDim   axis-aligned box w/ fixed dimensions: specify (x,y,z)
+                         also set fDefWidth, fDefHeight and fDefDepth
+  - kBT_Cone            cone defined with position, axis-vector and radius
+  - EllipticCone        cone with elliptic base (specify another radius and angle in deg)
 
+Each primitive can be assigned:
+
+  1. Color or signal value. Thresholds and signal-to-color mapping
+     can then be set dynamically via the TEveRGBAPalette class.
+  2. External TObject* (stored as TRef).
+
+See also base-class TEveDigitSet for more information.
+Tutorial: tutorials/eve/boxset_test.C
+*/
 
 ClassImp(TEveBoxSet);
 
@@ -64,8 +60,6 @@ TEveBoxSet::TEveBoxSet(const char* n, const char* t) :
    fDisableLighting = kFALSE;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return size of data-structure describing a box of type bt.
 
@@ -84,8 +78,6 @@ Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::EBoxType_e bt)
    }
    return 0;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the data containers to zero size.
@@ -111,8 +103,6 @@ void TEveBoxSet::Reset()
       ReleaseIds();
    fPlex.Reset(SizeofAtom(fBoxType), TMath::Max(fPlex.N(), 64));
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new box from a set of 8 vertices.
@@ -189,7 +179,7 @@ void TEveBoxSet::AddEllipticCone(const TEveVector& pos, const TEveVector& dir,
    static const TEveException eH("TEveBoxSet::AddEllipticCone ");
 
    if (fBoxType != kBT_EllipticCone)
-      throw(eH + "expect ellicptic-cone box-type.");
+      throw(eH + "expect elliptic-cone box-type.");
 
    BEllipticCone_t* cone = (BEllipticCone_t*) NewDigit();
    cone->fPos = pos;
@@ -198,8 +188,6 @@ void TEveBoxSet::AddEllipticCone(const TEveVector& pos, const TEveVector& dir,
    cone->fR2  = r2;
    cone->fAngle = angle;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill bounding-box information of the base-class TAttBBox (virtual method).
@@ -298,8 +286,6 @@ void TEveBoxSet::ComputeBBox()
 
    } // end switch box-type
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the structure with a random set of boxes.

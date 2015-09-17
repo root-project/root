@@ -12,21 +12,17 @@
 #include "TEveBox.h"
 #include "TEveProjectionManager.h"
 
-//==============================================================================
-// TEveBox
-//==============================================================================
+/** \class TEveBox
+3D box with arbitrary vertices (cuboid).
+Vertices 0-3 specify the "bottom" rectangle in clockwise direction and
+vertices 4-7 the "top" rectangle so that 4 is above 0, 5 above 1 and so on.
 
-//______________________________________________________________________________
-//
-// 3D box with arbitrary vertices (cuboid).
-// Vertices 0-3 specify the "bottom" rectangle in clockwise direction and
-// vertices 4-7 the "top" rectangle so that 4 is above 0, 5 above 1 and so on.
-//
-// If vertices are provided some local coordinates the transformation matrix
-// of the element should also be set (but then the memory usage is increased
-// by the size of the TEveTrans object).
-//
-// Currently only supports 3D -> 2D projections.
+If vertices are provided some local coordinates the transformation matrix
+of the element should also be set (but then the memory usage is increased
+by the size of the TEveTrans object).
+
+Currently only supports 3D -> 2D projections.
+*/
 
 ClassImp(TEveBox);
 
@@ -76,7 +72,6 @@ void TEveBox::SetVertices(const Float_t* vs)
    ResetBBox();
 }
 
-//==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute bounding-box of the data.
@@ -101,13 +96,9 @@ TClass* TEveBox::ProjectedClass(const TEveProjection*) const
 }
 
 
-//==============================================================================
-// TEveBoxProjected
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Projection of TEveBox.
+/** \class TEveBoxProjected
+Projection of TEveBox.
+*/
 
 ClassImp(TEveBoxProjected);
 

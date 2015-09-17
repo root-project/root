@@ -32,20 +32,22 @@
 
 ClassImp(TSpider)
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class TSpider
+Spider class.
 
-/* Begin_Html
-<center><h2>Spider class</h2></center>
-A spider view is a handy way to visualize a set of data stored in a TTree. It draws as
-many polar axes as selected data members. For each of them, it draws on the axis
-the position of the present event between the min and max of the data member.
-Two modes are availables:
-<ul>
-<li> The spider view: With each points on the axes is drawn a polyline.</li>
-<li> The segment view: For each data member is drawn an arc segment with the radius corresponding to the event.</li>
-</ul>
-The spider plot is available from the treeviewer called by "atree->StartViewer()", or simply by calling its constructor and defining the variables to display.
-End_Html
+A spider view is a handy way to visualize a set of data stored in a TTree.
+It draws as many polar axes as selected data members. For each of them, it draws
+on the axis the position of the present event between the min and max of the
+data member. Two modes are available:
+
+  - The spider view: With each points on the axes is drawn a polyline.
+  - The segment view: For each data member is drawn an arc segment with the
+    radius corresponding to the event.
+
+The spider plot is available from the treeviewer called by
+"atree->StartViewer()", or simply by calling its constructor and defining the
+variables to display.
+
 Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1","TSpider example",200,10,700,700);
@@ -66,7 +68,6 @@ Begin_Macro(source)
 }
 End_Macro
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -103,9 +104,11 @@ TSpider::TSpider()
    fFormulas = NULL;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor. Options are:
+///  - "average"
+///  - "showrange"
+///  - "segment"
 
 TSpider::TSpider(TTree* tree ,const char *varexp, const char *selection,
                                Option_t *option, Long64_t nentries, Long64_t firstentry)
@@ -164,7 +167,6 @@ TSpider::TSpider(TTree* tree ,const char *varexp, const char *selection,
    InitVariables(firstentry,nentries);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -197,7 +199,6 @@ TSpider::~TSpider()
    if (fCanvas) fCanvas->cd(0);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Allow to superpose several spider views.
 
@@ -206,7 +207,6 @@ void TSpider::AddSuperposed(TSpider* sp)
    if(!fSuperposed) fSuperposed=new TList();
    fSuperposed->Add(sp);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a variable to the plot from its expression.
@@ -346,7 +346,6 @@ void TSpider::AddVariable(const char* varexp)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete a variable from its expression.
 
@@ -433,7 +432,6 @@ void TSpider::DeleteVariable(const char* varexp)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the distance to the spider.
 
@@ -448,7 +446,6 @@ Int_t TSpider::DistancetoPrimitive(Int_t px, Int_t py)
       return 0;
    else return 9999;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the spider.
@@ -488,7 +485,6 @@ void TSpider::Draw(Option_t *options)
    if (fCanvas) fCanvas->Selected(fCanvas,this,1);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the Polygon representing the average value of the variables.
 
@@ -527,7 +523,6 @@ void TSpider::DrawPolyAverage(Option_t* /*options*/)
    delete [] y;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the polygon representing the current entry.
 
@@ -558,7 +553,6 @@ void TSpider::DrawPoly(Option_t* /*options*/)
    delete [] y;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the slices of the segment plot.
 
@@ -584,7 +578,6 @@ void TSpider::DrawSlices(Option_t* options)
    }
    fPolyList->Add(li);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the slices representing the average for the segment plot.
@@ -617,7 +610,6 @@ void TSpider::DrawSlicesAverage(Option_t* /*options*/)
    for(ui=0;ui<fNcols;++ui) fAverageSlices[ui]->Draw();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the LineStyle of the average.
 
@@ -627,7 +619,6 @@ Style_t TSpider::GetAverageLineStyle() const
    else if(fAveragePoly) return fAveragePoly->GetLineStyle();
    else return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the LineColor of the average.
@@ -639,7 +630,6 @@ Color_t TSpider::GetAverageLineColor() const
    else return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the LineWidth of the average.
 
@@ -650,9 +640,8 @@ Width_t TSpider::GetAverageLineWidth() const
    else return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the FillColor of the average.
+/// Get the Fill Color of the average.
 
 Color_t TSpider::GetAverageFillColor() const
 {
@@ -660,7 +649,6 @@ Color_t TSpider::GetAverageFillColor() const
    else if(fAveragePoly) return fAveragePoly->GetFillColor();
    else return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the FillStyle of the average.
@@ -672,7 +660,6 @@ Style_t TSpider::GetAverageFillStyle() const
    else return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the corresponding event.
 
@@ -681,7 +668,6 @@ void TSpider::ExecuteEvent(Int_t /*event*/,Int_t /*px*/, Int_t /*py*/)
    if (!gPad) return;
    gPad->SetCursor(kHand);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find the alignement rule to apply for TText::SetTextAlign(Short_t).
@@ -712,7 +698,6 @@ Int_t TSpider::FindTextAlign(Double_t angle)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine the orientation of the polar labels according to their angle.
 
@@ -733,7 +718,6 @@ Double_t TSpider::FindTextAngle(Double_t angle)
    else return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// return the number of entries to be processed
 /// this function checks that nentries is not bigger than the number
@@ -753,7 +737,6 @@ Long64_t TSpider::GetEntriesToProcess(Long64_t firstentry, Long64_t nentries) co
    return nentries;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Go to a specified entry.
 
@@ -763,7 +746,6 @@ void TSpider::GotoEntry(Long64_t e)
    fEntry = e;
    SetCurrentEntries();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Go to the next entries.
@@ -775,9 +757,8 @@ void TSpider::GotoNext()
    SetCurrentEntries();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Go to the prevous entries.
+/// Go to the previous entries.
 
 void TSpider::GotoPrevious()
 {
@@ -785,7 +766,6 @@ void TSpider::GotoPrevious()
    else fEntry -= fTree->GetScanField();
    SetCurrentEntries();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Go to the next entry.
@@ -797,7 +777,6 @@ void TSpider::GotoFollowing()
    SetCurrentEntries();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Go to the last entry.
 
@@ -807,7 +786,6 @@ void TSpider::GotoPreceding()
    --fEntry;
    SetCurrentEntries();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if the arrays size is enough and reallocate them if not.
@@ -846,7 +824,6 @@ void TSpider::InitArrays(Int_t newsize)
       fAve = memave;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse the tree to set the min, max and average value of each variable of fVar.
@@ -934,7 +911,6 @@ void TSpider::InitVariables(Long64_t firstentry, Long64_t nentries)
    if (notSkipped) {for(ui=0;ui<fNcols;++ui) fAve[ui]/=notSkipped;}
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the spider.
 
@@ -982,7 +958,6 @@ void TSpider::Paint(Option_t* options)
    delete txt;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the LineStyle of the average.
 
@@ -994,7 +969,6 @@ void TSpider::SetAverageLineStyle(Style_t sty)
       for(ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetLineStyle(sty);
    } else if(fAveragePoly) fAveragePoly->SetLineStyle(sty);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the LineColor of the average.
@@ -1008,7 +982,6 @@ void TSpider::SetAverageLineColor(Color_t col)
    } else if(fAveragePoly) fAveragePoly->SetLineColor(col);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the LineWidth of the average.
 
@@ -1021,9 +994,8 @@ void TSpider::SetAverageLineWidth(Width_t wid)
    } else if(fAveragePoly) fAveragePoly->SetLineWidth(wid);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the FillColor of the average.
+/// Set the Fill Color of the average.
 
 void TSpider::SetAverageFillColor(Color_t col)
 {
@@ -1033,7 +1005,6 @@ void TSpider::SetAverageFillColor(Color_t col)
       for(ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetFillColor(col);
    } else if(fAveragePoly) fAveragePoly->SetFillColor(col);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the FillStyle of the average.
@@ -1046,7 +1017,6 @@ void TSpider::SetAverageFillStyle(Style_t sty)
       for(ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetFillStyle(sty);
    } else if(fAveragePoly) fAveragePoly->SetFillStyle(sty);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Display or not the average.
@@ -1089,7 +1059,6 @@ void TSpider::SetDisplayAverage(Bool_t disp)
       fCanvas->Update();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the current selected entries.
@@ -1161,7 +1130,6 @@ void TSpider::SetCurrentEntries()
    if(fPolyList) UpdateView();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set line style.
 
@@ -1177,7 +1145,6 @@ void TSpider::SetLineStyle(Style_t sty)
       } else ((TPolyLine*)fPolyList->At(ui))->SetLineStyle(sty);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set lin color.
@@ -1195,7 +1162,6 @@ void TSpider::SetLineColor(Color_t col)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///Set line width.
 
@@ -1211,7 +1177,6 @@ void TSpider::SetLineWidth(Width_t wid)
       } else ((TPolyLine*)fPolyList->At(ui))->SetLineWidth(wid);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set fill color.
@@ -1229,7 +1194,6 @@ void TSpider::SetFillColor(Color_t col)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set fill style.
 
@@ -1246,7 +1210,6 @@ void TSpider::SetFillStyle(Style_t sty)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set number of radial divisions.
 
@@ -1256,9 +1219,8 @@ void TSpider::SetNdivRadial(Int_t ndiv)
    fPolargram->SetNdivRadial(ndiv);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the X number of subpads.
+/// Set the X number of sub pads.
 
 void TSpider::SetNx(UInt_t nx)
 {
@@ -1334,9 +1296,8 @@ void TSpider::SetNx(UInt_t nx)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the Y number of subpads.
+/// Set the Y number of sub pads.
 
 void TSpider::SetNy(UInt_t ny)
 {
@@ -1411,7 +1372,6 @@ void TSpider::SetNy(UInt_t ny)
       fAveragePoly->SetFillStyle(fs);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the segment display or not.
@@ -1499,9 +1459,6 @@ void TSpider::SetSegmentDisplay(Bool_t seg)
    }
 }
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compile selection expression if there is one.
 
@@ -1514,7 +1471,6 @@ void TSpider::SetSelectionExpression(const char* selection)
       fFormulas->Add(fSelect);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compile the variables expression from the given string varexp.
@@ -1554,7 +1510,6 @@ void TSpider::SetVariablesExpression(const char* varexp)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TreeFormulaManager to coordinate the formulas.
 
@@ -1586,7 +1541,6 @@ void TSpider::SyncFormulas()
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update the polylines or the arcs for the current entries.

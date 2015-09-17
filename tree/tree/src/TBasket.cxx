@@ -38,11 +38,11 @@ const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest
 
 ClassImp(TBasket)
 
-//_______________________________________________________________________
-//
-//  Manages buffers for branches of a Tree.
-//  See picture in TTree.
-//
+/** \class TBasket
+Manages buffers for branches of a Tree.
+
+See picture in TTree.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default contructor.
@@ -184,7 +184,6 @@ void TBasket::DeleteEntryOffset()
    fEntryOffset = 0;
    fNevBufSize  = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Drop buffers of this basket if it is not the current basket.
@@ -916,7 +915,6 @@ void TBasket::Update(Int_t offset, Int_t skipped)
 /// The function returns the number of bytes committed to the memory.
 /// If a write error occurs, the number of bytes returned is -1.
 /// If no data are written, the number of bytes returned is 0.
-///
 
 Int_t TBasket::WriteBuffer()
 {

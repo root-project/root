@@ -4,7 +4,6 @@
 ############################################################################
 set(libname GX11)
 
-ROOT_USE_PACKAGE(core)
 include_directories(${X11_INCLUDE_DIR})
 
 ROOT_GENERATE_DICTIONARY(G__${libname} T*.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")

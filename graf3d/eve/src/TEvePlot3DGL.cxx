@@ -16,9 +16,9 @@
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
-// OpenGL renderer class for TEvePlot3D.
-//
+/** \class TEvePlot3DGL
+OpenGL renderer class for TEvePlot3D.
+*/
 
 ClassImp(TEvePlot3DGL);
 
@@ -30,8 +30,6 @@ TEvePlot3DGL::TEvePlot3DGL() :
 {
    fDLCache = kFALSE; // Disable display list.
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
@@ -52,8 +50,6 @@ void TEvePlot3DGL::SetBBox()
    //SetAxisAlignedBBox(((TEvePlot3D*)fExternalObj)->AssertBBox());
    fBoundingBox = fPlotLogical->BoundingBox();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Render with OpenGL.

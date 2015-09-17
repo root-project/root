@@ -56,82 +56,51 @@ const Size_t kDefaultCanvasSize   = 20;
 ClassImpQ(TCanvas)
 
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* Begin_Html
-<center><h2>The Canvas class</h2></center>
+/** \class TCanvas
+The Canvas class.
 
 A Canvas is an area mapped to a window directly under the control of the display
 manager. A ROOT session may have several canvases open at any given time.
-<p>
-A Canvas may be subdivided into independent graphical areas: the <b>Pads</b>.
+
+A Canvas may be subdivided into independent graphical areas: the __Pads__.
 A canvas has a default pad which has the name of the canvas itself.
 An example of a Canvas layout is sketched in the picture below.
 
-<pre>
-     ***********************************************************************
-     *                       Menus bar for Canvas                          *
-     ***********************************************************************
-     *                                                                     *
-     *  ************************************    *************************  *
-     *  *                                  *    *                       *  *
-     *  *                                  *    *                       *  *
-     *  *                                  *    *                       *  *
-     *  *                                  *    *                       *  *
-     *  *                                  *    *                       *  *
-     *  *                                  *    *                       *  *
-     *  *              Pad 1               *    *        Pad 2          *  *
-     *  *                                  *    *                       *  *
-     *  *                                  *    *                       *  *
-     *  *                                  *    *                       *  *
-     *  *                                  *    *                       *  *
-     *  *                                  *    *                       *  *
-     *  *                                  *    *                       *  *
-     *  ************************************    *************************  *
-     *                                                                     *
-     ***********************************************************************
-</pre>
+\image html gpad_canvas.png
 
 This canvas contains two pads named P1 and P2. Both Canvas, P1 and P2 can be
 moved, grown, shrinked using the normal rules of the Display manager.
-<p>
-The image below shows a canvas with 4 pads:
-
-<center>
-<img src="gif/canvas_layout.gif">
-</center>
 
 Once objects have been drawn in a canvas, they can be edited/moved by pointing
 directly to them. The cursor shape is changed to suggest the type of action that
 one can do on this object. Clicking with the right mouse button on an object
 pops-up a contextmenu with a complete list of actions possible on this object.
-<p>
+
 A graphical editor may be started from the canvas "View" menu under the menu
 entry "Toolbar".
-<p>
+
 An interactive HELP is available by clicking on the HELP button at the top right
 of the canvas. It gives a short explanation about the canvas' menus.
-<p>
-A canvas may be automatically divided into pads via <tt>TPad::Divide</tt>.
-<p>
+
+A canvas may be automatically divided into pads via `TPad::Divide`.
+
 At creation time, in interactive mode, the canvas size defines the size of the
 canvas window (including the window manager's decoration). To define precisely
 the graphics area size of a canvas, the following four lines of code should be
 used:
-<pre>
+~~~ {.cpp}
    {
       Double_t w = 600;
       Double_t h = 600;
       TCanvas * c1 = new TCanvas("c", "c", w, h);
       c->SetWindowSize(w + (w - c->GetWw()), h + (h - c->GetWh()));
    }
-</pre>
+~~~
 in batch mode simply do:
-<pre>
+~~~ {.cpp}
       c->SetCanvasSize(w,h);
-</pre>
-End_Html */
-
+~~~
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Canvas default constructor.
@@ -200,7 +169,7 @@ void TCanvas::Constructor()
 /// which is placed in a TGFrame. This ctor is only called via the
 /// TRootEmbeddedCanvas class.
 ///
-///  If "name" starts with "gl" the canvas is ready to receive GL output.
+/// If "name" starts with "gl" the canvas is ready to receive GL output.
 
 TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fDoubleBuffer(0)
 {
@@ -236,16 +205,16 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fD
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Create a new canvas with a predefined size form.
-///  If form < 0  the menubar is not shown.
+/// Create a new canvas with a predefined size form.
+/// If form < 0  the menubar is not shown.
 ///
-///  form = 1    700x500 at 10,10 (set by TStyle::SetCanvasDefH,W,X,Y)
-///  form = 2    500x500 at 20,20
-///  form = 3    500x500 at 30,30
-///  form = 4    500x500 at 40,40
-///  form = 5    500x500 at 50,50
+/// - form = 1    700x500 at 10,10 (set by TStyle::SetCanvasDefH,W,X,Y)
+/// - form = 2    500x500 at 20,20
+/// - form = 3    500x500 at 30,30
+/// - form = 4    500x500 at 40,40
+/// - form = 5    500x500 at 50,50
 ///
-///  If "name" starts with "gl" the canvas is ready to receive GL output.
+/// If "name" starts with "gl" the canvas is ready to receive GL output.
 
 TCanvas::TCanvas(const char *name, const char *title, Int_t form) : TPad(), fDoubleBuffer(0)
 {
@@ -256,14 +225,14 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t form) : TPad(), fDou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Create a new canvas with a predefined size form.
-///  If form < 0  the menubar is not shown.
+/// Create a new canvas with a predefined size form.
+/// If form < 0  the menubar is not shown.
 ///
-///  form = 1    700x500 at 10,10 (set by TStyle::SetCanvasDefH,W,X,Y)
-///  form = 2    500x500 at 20,20
-///  form = 3    500x500 at 30,30
-///  form = 4    500x500 at 40,40
-///  form = 5    500x500 at 50,50
+/// - form = 1    700x500 at 10,10 (set by TStyle::SetCanvasDefH,W,X,Y)
+/// - form = 2    500x500 at 20,20
+/// - form = 3    500x500 at 30,30
+/// - form = 4    500x500 at 40,40
+/// - form = 5    500x500 at 50,50
 
 void TCanvas::Constructor(const char *name, const char *title, Int_t form)
 {
@@ -340,13 +309,13 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Create a new canvas at a random position.
+/// Create a new canvas at a random position.
 ///
-///  ww is the canvas size in pixels along X
-///      (if ww < 0  the menubar is not shown)
-///  wh is the canvas size in pixels along Y
+/// \param[in] ww  is the canvas size in pixels along X
+///                (if ww < 0  the menubar is not shown)
+/// \param[in] wh  is the canvas size in pixels along Y
 ///
-///  If "name" starts with "gl" the canvas is ready to receive GL output.
+/// If "name" starts with "gl" the canvas is ready to receive GL output.
 
 TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad(), fDoubleBuffer(0)
 {
@@ -357,11 +326,11 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Create a new canvas at a random position.
+/// Create a new canvas at a random position.
 ///
-///  ww is the canvas size in pixels along X
-///      (if ww < 0  the menubar is not shown)
-///  wh is the canvas size in pixels along Y
+/// \param[in] ww  is the canvas size in pixels along X
+///                (if ww < 0  the menubar is not shown)
+/// \param[in] wh  is the canvas size in pixels along Y
 
 void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t wh)
 {
@@ -417,14 +386,14 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Create a new canvas.
+/// Create a new canvas.
 ///
-///  wtopx,wtopy are the pixel coordinates of the top left corner of
-///  the canvas (if wtopx < 0) the menubar is not shown)
-///  ww is the canvas size in pixels along X
-///  wh is the canvas size in pixels along Y
+/// \param[in] wtopx,wtopy  are the pixel coordinates of the top left corner of
+/// \param[in] the          canvas  (if wtopx < 0) the menubar is not shown)
+/// \param[in] ww           is the canvas size in pixels along X
+/// \param[in] wh           is the canvas size in pixels along Y
 ///
-///  If "name" starts with "gl" the canvas is ready to receive GL output.
+/// If "name" starts with "gl" the canvas is ready to receive GL output.
 
 TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh)
         : TPad(), fDoubleBuffer(0)
@@ -436,12 +405,12 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Create a new canvas.
+/// Create a new canvas.
 ///
-///  wtopx,wtopy are the pixel coordinates of the top left corner of
-///  the canvas (if wtopx < 0) the menubar is not shown)
-///  ww is the canvas size in pixels along X
-///  wh is the canvas size in pixels along Y
+/// \param[in] wtopx,wtopy  are the pixel coordinates of the top left corner of
+/// \param[in] the          canvas  (if wtopx < 0) the menubar is not shown)
+/// \param[in] ww           is the canvas size in pixels along X
+/// \param[in] wh           is the canvas size in pixels along Y
 
 void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
                           Int_t wtopy, Int_t ww, Int_t wh)
@@ -544,6 +513,7 @@ void TCanvas::Init()
    fEventX          = -1;
    fEventY          = -1;
    fContextMenu     = 0;
+   fDrawn           = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -692,8 +662,8 @@ TVirtualPad *TCanvas::cd(Int_t subpadnumber)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove all primitives from the canvas.
-/// If option "D" is specified, direct subpads are cleared but not deleted.
-/// This option is not recursive, i.e. pads in direct subpads are deleted.
+/// If option "D" is specified, direct sub-pads are cleared but not deleted.
+/// This option is not recursive, i.e. pads in direct sub-pads are deleted.
 
 void TCanvas::Clear(Option_t *option)
 {
@@ -744,7 +714,7 @@ void TCanvas::Closed()
 ////////////////////////////////////////////////////////////////////////////////
 /// Close canvas.
 ///
-///  Delete window/pads data structure
+/// Delete window/pads data structure
 
 void TCanvas::Close(Option_t *option)
 {
@@ -803,12 +773,14 @@ void TCanvas::CopyPixmaps()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Draw a canvas.
-///  If a canvas with the name is already on the screen, the canvas is repainted.
-///  This function is useful when a canvas object has been saved in a Root file.
-///  One can then do:
+/// Draw a canvas.
+/// If a canvas with the name is already on the screen, the canvas is repainted.
+/// This function is useful when a canvas object has been saved in a Root file.
+/// One can then do:
+/// ~~~ {.cpp}
 ///     Root > Tfile f("file.root");
 ///     Root > canvas.Draw();
+/// ~~~
 
 void TCanvas::Draw(Option_t *)
 {
@@ -817,6 +789,8 @@ void TCanvas::Draw(Option_t *)
    // library static initializer.
    if (gApplication)
       gApplication->InitializeGraphics();
+
+   fDrawn = kTRUE;
 
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(GetName());
    if (old == this) {
@@ -932,8 +906,8 @@ TObject *TCanvas::DrawClonePad()
 ////////////////////////////////////////////////////////////////////////////////
 /// Report name and title of primitive below the cursor.
 ///
-///    This function is called when the option "Event Status"
-///    in the canvas menu "Options" is selected.
+/// This function is called when the option "Event Status"
+/// in the canvas menu "Options" is selected.
 
 void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected)
 {
@@ -1028,11 +1002,11 @@ void TCanvas::EnterLeave(TPad *prevSelPad, TObject *prevSelObj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
-///  This member function must be implemented to realize the action
-///  corresponding to the mouse click on the object in the canvas
+/// This member function must be implemented to realize the action
+/// corresponding to the mouse click on the object in the canvas
 ///
-///  Only handle mouse motion events in TCanvas, all other events are
-///  ignored for the time being
+/// Only handle mouse motion events in TCanvas, all other events are
+/// ignored for the time being
 
 void TCanvas::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
@@ -1147,7 +1121,7 @@ Int_t TCanvas::GetWindowTopY()
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle Input Events.
 ///
-///  Handle input events, like button up/down in current canvas.
+/// Handle input events, like button up/down in current canvas.
 
 void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 {
@@ -1207,7 +1181,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       // 3x3 pixels of the first button down, button up finishes action
 
    case kButton1Down:
-      // find pad in which input occured
+      // find pad in which input occurred
       pad = Pick(px, py, prevSelObj);
       if (!pad) return;
 
@@ -1275,7 +1249,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 //*-*----------------------------------------------------------------------
 
    case kButton2Down:
-      // find pad in which input occured
+      // find pad in which input occurred
       pad = Pick(px, py, prevSelObj);
       if (!pad) return;
 
@@ -1439,10 +1413,11 @@ TCanvas *TCanvas::MakeDefCanvas()
 ////////////////////////////////////////////////////////////////////////////////
 /// Set option to move objects/pads in a canvas.
 ///
-///  if set = 1 (default) graphics objects are moved in opaque mode
-///         = 0 only the outline of objects is drawn when moving them
-///  The option opaque produces the best effect. It requires however a
-///  a reasonably fast workstation or response time.
+///  - set = 1 (default) graphics objects are moved in opaque mode
+///  - set = 0 only the outline of objects is drawn when moving them
+///
+/// The option opaque produces the best effect. It requires however a
+/// a reasonably fast workstation or response time.
 
 void TCanvas::MoveOpaque(Int_t set)
 {
@@ -1622,10 +1597,11 @@ void TCanvas::Resize(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set option to resize objects/pads in a canvas.
 ///
-///  if set = 1 (default) graphics objects are resized in opaque mode
-///         = 0 only the outline of objects is drawn when resizing them
-///  The option opaque produces the best effect. It requires however a
-///  a reasonably fast workstation or response time.
+///  - set = 1 (default) graphics objects are resized in opaque mode
+///  - set = 0 only the outline of objects is drawn when resizing them
+///
+/// The option opaque produces the best effect. It requires however a
+/// a reasonably fast workstation or response time.
 
 void TCanvas::ResizeOpaque(Int_t set)
 {
@@ -1687,7 +1663,7 @@ void TCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 /// Save primitives in this canvas as a C++ macro file.
 /// This function loops on all the canvas primitives and for each primitive
 /// calls the object SavePrimitive function.
-/// When outputing floating point numbers, the default precision is 7 digits.
+/// When outputting floating point numbers, the default precision is 7 digits.
 /// The precision can be changed (via system.rootrc) by changing the value
 /// of the environment variable "Canvas.SavePrecision"
 
@@ -1845,7 +1821,7 @@ void TCanvas::SetBatch(Bool_t batch)
 /// Set Width and Height of canvas to ww and wh respectively
 /// If ww and/or wh are greater than the current canvas window
 /// a scroll bar is automatically generated.
-/// Use this function to zoom in a canvas and naviguate via
+/// Use this function to zoom in a canvas and navigate via
 /// the scroll bars.
 
 void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
@@ -1935,20 +1911,22 @@ void TCanvas::SetTitle(const char *title)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the canvas scale in centimeters.
 ///
-///  This information is used by PostScript to set the page size.
-///  xsize  = size of the canvas in centimeters along X
-///  ysize  = size of the canvas in centimeters along Y
-///   if xsize and ysize are not equal to 0, then the scale factors will
-///   be computed to keep the ratio ysize/xsize independently of the canvas
-///   size (parts of the physical canvas will be unused).
+/// This information is used by PostScript to set the page size.
 ///
-///   if xsize = 0 and ysize is not zero, then xsize will be computed
-///      to fit to the current canvas scale. If the canvas is resized,
-///      a new value for xsize will be recomputed. In this case the aspect
-///      ratio is not preserved.
+/// \param[in] xsize   size of the canvas in centimeters along X
+/// \param[in] ysize   size of the canvas in centimeters along Y
 ///
-///   if both xsize = 0 and ysize = 0, then the scaling is automatic.
-///   the largest dimension will be allocated a size of 20 centimeters.
+///  if xsize and ysize are not equal to 0, then the scale factors will
+///  be computed to keep the ratio ysize/xsize independently of the canvas
+///  size (parts of the physical canvas will be unused).
+///
+///  if xsize = 0 and ysize is not zero, then xsize will be computed
+///     to fit to the current canvas scale. If the canvas is resized,
+///     a new value for xsize will be recomputed. In this case the aspect
+///     ratio is not preserved.
+///
+///  if both xsize = 0 and ysize = 0, then the scaling is automatic.
+///  the largest dimension will be allocated a size of 20 centimeters.
 
 void TCanvas::Size(Float_t xsize, Float_t ysize)
 {

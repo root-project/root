@@ -16,11 +16,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-ProfileInspector : 
-
-Utility class to plot conditional MLE of nuisance parameters vs. Parameters of Interest
-*/
 
 #include "RooStats/ProfileInspector.h"
 #include "RooRealVar.h"

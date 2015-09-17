@@ -9,227 +9,215 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class TPostScript
+Interface to PostScript.
 
-////////////////////////////////////////////////////////////////////////////////
+To generate a Postscript (or encapsulated ps) file corresponding to
+a single image in a canvas, you can:
 
-/* Begin_Html
- <center><h2>TPostScript: Graphics interface to PostScript</h2></center>
- This code was initially developed in the context of HIGZ and PAW
- by Olivier Couet and Pierre Juillot. It has been converted to a C++ class by
- Rene Brun.
+  - Select the <B>Print PostScript</B> item in the canvas <B>File</B> menu.
+    By default, a Postscript file with the name of the canvas.ps is generated.
+  - Click in the canvas area, near the edges, with the right mouse button
+    and select the <B>Print</B> item. You can select the name of the Postscript
+    file. If the file name is xxx.ps, you will generate a Postscript file named
+    xxx.ps. If the file name is xxx.eps, you generate an encapsulated Postscript
+    file instead.
+  - In your program (or macro), you can type:
+~~~ {.cpp}
+    c1->Print("xxx.ps")</B> or <B>c1->Print("xxx.eps").
+~~~
+    This will generate a file corresponding to the picture in the canvas
+    pointed by `c1`.
+~~~ {.cpp}
+    pad1->Print("xxx.ps");
+~~~
+    prints only the picture in the pad pointed by `pad1`.
 
- <P>To generate a Postscript (or encapsulated ps) file corresponding to
- a single image in a canvas, you can:
+The size of the Postscript picture, by default, is computed to keep the aspect
+ratio of the picture on the screen, where the size along x is always 20cm. You
+can set the size of the PostScript picture before generating the picture
+with a command such as:
 
- <UL>
- <LI>Select the <B>Print PostScript</B> item in the canvas <B>File</B> menu.
- By default, a Postscript file with the name of the canvas.ps is generated.
+~~~ {.cpp}
+    TPostScript myps("myfile.ps",111)
+    myps.Range(xsize,ysize);
+    object->Draw();
+    myps.Close();
+~~~
+You can set the default paper size with:
+ ~~~ {.cpp}
+    gStyle->SetPaperSize(xsize,ysize);
+ ~~~
+You can resume writing again in this file with `myps.Open();`.
+Note that you may have several Postscript files opened simultaneously.
 
- <br>
- <LI>Click in the canvas area, near the edges, with the right mouse button
- and select the <B>Print</B> item. You can select the name of the Postscript
- file. If the file name is xxx.ps, you will generate a Postscript file named
- xxx.ps. If the file name is xxx.eps, you generate an encapsulated Postscript
- file instead.
- <br>
+ ## Output type
 
- <LI>In your program (or macro), you can type:
+The output type allows to define how the PostScript output will looks like.
+It allows to define the page format (A4, Legal etc..), the orientation
+(Portrait, Landscape) and the number of images (zones) per page.
+The output type has the following form:
 
- <P><TT><B>
- c1-&gt;Print(&quot;xxx.ps&quot;)</B> or <B>c1-&gt;Print(&quot;xxx.eps&quot;)
- </B></TT>
+~~~ {.cpp}
+    [Format][Nx][Ny][Type]
+~~~
 
- <P>This will generate a file corresponding to the picture in the canvas
- pointed by <tt><B>c1</B></tt>.
+Where:
 
- <P><TT><B>pad1-&gt;Print(&quot;xxx.ps&quot;)</B></TT>
+  - Format : Is an integer between 0 and 99 defining the page format:
+~~~ {.cpp}
+    Format = 3 the paper is in the standard A3 format.
+    Format = n (1<n<98) is an An format.
+    Format = 4 and Format=0 are the same and define an A4 page.
+    The A0 format is selected by Format=99.
+    The US format Letter is selected by Format = 100.
+    The US format Legal is selected by Format = 200.
+    The US format Ledger is selected by Format = 300.
+~~~
+  - Nx, Ny : Specify respectively the number of zones on the x and y axis.
+    Nx and Ny are integers between 1 and 9.
+  - Type : Can be equal to:
+    -  1 : Portrait mode with a small margin at the bottom of the page.
+    -  2 : Landscape mode with a small margin at the bottom of the page.
+    -  4 : Portrait mode with a large margin at the bottom of the page.
+    -  5 : Landscape mode with a large margin at the bottom of the page.
+           The large margin is useful for some PostScript printers (very often
+           for the colour printers) as they need more space to grip the paper
+           for mechanical reasons. Note that some PostScript colour printers
+           can also use the so called special A4 format permitting the full
+           usage of the A4 area; in this case larger margins are not necessary
+           and Type=1 or 2 can be used.
+    -  3 : Encapsulated PostScript. This Type permits the generation of files
+           which can be included in other documents, for example in LaTeX files.
 
- <P>prints only the picture in the pad pointed by <tt><B>pad1</B></tt>. The size
- of the Postscript picture, by default, is computed to keep the aspect ratio
- of the picture on the screen, where the size along x is always 20cm. You
- can set the size of the PostScript picture before generating the picture
- with a command such as:
+## Making several pictures in the same Postscript file: case 1
 
- <PRE>
- TPostScript myps(&quot;myfile.ps&quot;,111)
- myps.Range(xsize,ysize);
- object-&gt;Draw();
- myps.Close();
- </PRE>
+The following macro is an example illustrating how to open a Postscript
+file and draw several pictures. The generation of a new Postscript page
+is automatic when `TCanvas::Clear` is called by `object->Draw()`.
 
- <P>You can set the default paper size with:
- <PRE>
- gStyle-&gt;SetPaperSize(xsize,ysize);
- </PRE>
- <P>You can resume writing again in this file with <tt><B>myps.Open();</B></tt>.
- Note that you may have several Postscript files opened simultaneously.
- </UL>
+ ~~~ {.cpp}
+     {
+        TFile f("hsimple.root");
+        TCanvas c1("c1","canvas",800,600);
 
- <H2>Output type</H2>
+        // select postscript output type
+        // type = 111   portrait  ps
+        // type = 112   landscape ps
+        // type = 113   eps
+        Int_t type = 111;
 
- The output type allows to define how the PostScript output will looks like.
- It allows to define the page format (A4, Legal etc..), the orientation
- (Portrait, Landscape) and the number of images (zones) per page.
- The output type has the following form:
- <pre>
- [Format][Nx][Ny][Type]
- </pre>
- Where:
- <ul>
- <li> Format : Is an integer between 0 and 99 defining the page format.
- Example:
- <br> Format = 3 the paper is in the standard A3 format.
- <br> Format = n (1<n<98) is an An format.
- <br> Format = 4 and Format=0 are the same and define an A4 page.
- <br> The A0 format is selected by Format=99.
- <br> The US format Letter is selected by Format = 100.
- <br> The US format Legal is selected by Format = 200.
- <br> The US format Ledger is selected by Format = 300.
+        // create a postscript file and set the paper size
+        TPostScript ps("test.ps",type);
+        ps.Range(16,24);  //set x,y of printed page
 
- <li> Nx, Ny : Specify respectively the number of zones on the x and y axis.
- Nx and Ny are integers between 1 and 9.
+        // draw 3 histograms from file hsimple.root on separate pages
+        hpx->Draw();
+        c1.Update();      //force drawing in a macro
+        hprof->Draw();
+        c1.Update();
+        hpx->Draw("lego1");
+        c1.Update();
+        ps.Close();
+     }
+ ~~~
 
- <li> Type : Can be equal to:
- <ul>
- <li> 1 : Portrait mode with a small margin at the bottom of the page.
- <li> 2 : Landscape mode with a small margin at the bottom of the page.
- <li> 4 : Portrait mode with a large margin at the bottom of the page.
- <li> 5 : Landscape mode with a large margin at the bottom of the page.
- The large margin is useful for some PostScript printers (very often
- for the colour printers) as they need more space to grip the paper
- for mechanical reasons. Note that some PostScript colour printers
- can also use the so called special A4 format permitting the full
- usage of the A4 area; in this case larger margins are not necessary
- and Type=1 or 2 can be used.
- <li> 3 : Encapsulated PostScript. This Type permits the generation of files
- which can be included in other documents, for example in LaTeX
- files.
- </ul>
- </ul>
+## Making several pictures in the same Postscript file: case 2
 
- <H2>Making several pictures in the same Postscript file: case 1</H2>
- <P>The following macro is an example illustrating how to open a Postscript
- file and draw several pictures. The generation of a new Postscript page
- is automatic when <tt><B>TCanvas::Clear</B></tt> is called by
- <tt><b>object-&gt;Draw()</b></tt>.
- <PRE>
- {
- TFile f(&quot;hsimple.root&quot;);
- TCanvas c1(&quot;c1&quot;,&quot;canvas&quot;,800,600);
+This example shows 2 pages. The canvas is divided.
+`TPostScript::NewPage` must be called before starting a new
+picture.`object->Draw` does not clear the canvas in this case
+because we clear only the pads and not the main canvas.
+Note that `c1->Update` must be called at the end of the first picture.
 
- <b>// select postscript output type</b>
- <b>// type = 111   portrait  ps</b>
- <b>// type = 112   landscape ps</b>
- <b>// type = 113   eps</b>
- Int_t type = 111;
+~~~ {.cpp}
+     {
+        TFile *f1 = new TFile("hsimple.root");
+        TCanvas *c1 = new TCanvas("c1");
+        TPostScript *ps = new TPostScript("file.ps",112);
+        c1->Divide(2,1);
+        // picture 1
+        ps->NewPage();
+        c1->cd(1);
+        hpx->Draw();
+        c1->cd(2);
+        hprof->Draw();
+        c1->Update();
 
- <b>// create a postscript file and set the paper size</b>
- TPostScript ps(&quot;test.ps&quot;,type);
- ps.Range(16,24);  //set x,y of printed page
+        // picture 2
+        ps->NewPage();
+        c1->cd(1);
+        hpxpy->Draw();
+        c1->cd(2);
+        ntuple->Draw("px");
+        c1->Update();
+        ps->Close();
 
- <b>// draw 3 histograms from file hsimple.root on separate pages</b>
- hpx-&gt;Draw();
- c1.Update();      //force drawing in a macro
- hprof-&gt;Draw();
- c1.Update();
- hpx-&gt;Draw(&quot;lego1&quot;);
- c1.Update();
- ps.Close();
- }
- </PRE>
+        // invoke Postscript viewer
+        gSystem->Exec("gs file.ps");
+     }
+ ~~~
 
- <H2>Making several pictures in the same Postscript file: case 2</H2>
- <P>This example shows 2 pages. The canvas is divided.
- <tt><B>TPostScript::NewPage</B></tt> must be called before starting a new
- picture.<tt><b>object-&gt;Draw</b></tt> does not clear the canvas in this case
- because we clear only the pads and not the main canvas.
- Note that <tt><b>c1-&gt;Update</b></tt> must be called at the end of the first
- picture.
- <PRE>
- {
- TFile *f1 = new TFile("hsimple.root");
- TCanvas *c1 = new TCanvas("c1");
- TPostScript *ps = new TPostScript("file.ps",112);
- c1-&gt;Divide(2,1);
- <b>// picture 1</b>
- ps-&gt;NewPage();
- c1-&gt;cd(1);
- hpx-&gt;Draw();
- c1-&gt;cd(2);
- hprof-&gt;Draw();
- c1-&gt;Update();
+## Making several pictures in the same Postscript file: case 3
+This is the recommended way. If the Postscript file name finishes with
+"(", the file remains opened (it is not closed). If the Postscript file name
+finishes with ")" and the file has been opened with "(", the file is closed.
 
- <b>// picture 2</b>
- ps-&gt;NewPage();
- c1-&gt;cd(1);
- hpxpy-&gt;Draw();
- c1-&gt;cd(2);
- ntuple-&gt;Draw("px");
- c1-&gt;Update();
- ps-&gt;Close();
+Example:
+ ~~~ {.cpp}
+     {
+        TCanvas c1("c1");
+        h1.Draw();
+        c1.Print("c1.ps(");  // write canvas and keep the ps file open
+        h2.Draw();
+        c1.Print("c1.ps");   // canvas is added to "c1.ps"
+        h3.Draw();
+        c1.Print("c1.ps)");  // canvas is added to "c1.ps" and ps file is closed
+     }
+ ~~~
+The `TCanvas::Print("file.ps(")` mechanism is very useful, but it can
+be a little inconvenient to have the action of opening/closing a file being
+atomic with printing a page. Particularly if pages are being generated in some
+loop one needs to detect the special cases of first and last page and then
+munge the argument to Print() accordingly.
+The "[" and "]" can be used instead of "(" and ")" as shown below.
 
- <b>// invoke Postscript viewer</b>
- gSystem-&gt;Exec("gs file.ps");
- }
- </PRE>
+Example:
+ ~~~ {.cpp}
+     c1.Print("file.ps[");        // No actual print, just open file.ps
 
- <H2>Making several pictures in the same Postscript file: case 3</H2>
- <b>This is the recommended way</b>. If the Postscript file name finishes with
- "(", the file remains opened (it is not closed). If the Postscript file name
- finishes with ")" and the file has been opened with "(", the file is closed.
- <P>Example:
- <PRE>
- {
- TCanvas c1("c1");
- h1.Draw();
- c1.Print("c1.ps(");  // write canvas and keep the ps file open
- h2.Draw();
- c1.Print("c1.ps");   // canvas is added to "c1.ps"
- h3.Draw();
- c1.Print("c1.ps)");  // canvas is added to "c1.ps" and ps file is closed
- }
- </PRE>
- The <tt>TCanvas::Print("file.ps(")</tt> mechanism is very useful, but it can
- be a little inconvenient to have the action of opening/closing a file being
- atomic with printing a page. Particularly if pages are being generated in some
- loop one needs to detect the special cases of first and last page and then
- munge the argument to Print() accordingly.
- <BR>The "[" and "]" can be used instead of "(" and ")" as shown below.
- <P>Example:
- <PRE>
- c1.Print("file.ps[");        // No actual print, just open file.ps
+     for (int i=0; i<10; ++i) {
+        // fill canvas for context i
+        // ...
 
- for (int i=0; i<10; ++i) {
- // fill canvas for context i
- // ...
+        c1.Print("file.ps");      // Actually print canvas to the file
+     }
 
- c1.Print("file.ps");      // Actually print canvas to the file
- }
+     c1.Print("file.ps]");        // No actual print, just close the file
+ ~~~
 
- c1.Print("file.ps]");        // No actual print, just close the file
- </PRE>
+ ## Color Model
 
- <H2>Color Model</H2>
- TPostScript support two color model RGB and CMYK. CMY and CMYK models are
- subtractive color models unlike RGB which is an additive. They are mainly
- used for printing purposes. CMY means Cyan Magenta Yellow to convert RGB
- to CMY it is enough to do: C=1-R, M=1-G and Y=1-B. CMYK has one more
- component K (black). The conversion from RGB to CMYK is:
- <PRE>
- Double_t Black   = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
- Double_t Cyan    = (1-Red-Black)/(1-Black);
- Double_t Magenta = (1-Green-Black)/(1-Black);
- Double_t Yellow  = (1-Blue-Black)/(1-Black);
- </PRE>
- CMYK add the black component which allows to have a better quality for black
- printing. PostScript support the CMYK model.
- <br>
- To change the color model use gStyle->SetColorModelPS(c).
- <ul>
- <li> c = 0 means TPostScript will use RGB color model (default)
- <li> c = 1 means TPostScript will use CMYK color model
- </ul>
- End_Html */
+TPostScript support two color model RGB and CMYK. CMY and CMYK models are
+subtractive color models unlike RGB which is an additive. They are mainly
+used for printing purposes. CMY means Cyan Magenta Yellow to convert RGB
+to CMY it is enough to do: C=1-R, M=1-G and Y=1-B. CMYK has one more
+component K (black). The conversion from RGB to CMYK is:
+
+ ~~~ {.cpp}
+     Double_t Black   = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
+     Double_t Cyan    = (1-Red-Black)/(1-Black);
+     Double_t Magenta = (1-Green-Black)/(1-Black);
+     Double_t Yellow  = (1-Blue-Black)/(1-Black);
+ ~~~
+CMYK add the black component which allows to have a better quality for black
+printing. PostScript support the CMYK model.
+
+To change the color model use gStyle->SetColorModelPS(c).
+
+  - c = 0 means TPostScript will use RGB color model (default)
+  - c = 1 means TPostScript will use CMYK color model
+*/
 
 #ifdef WIN32
 #pragma optimize("",off)
@@ -264,7 +252,6 @@ static Bool_t MustEmbed[32];
 Int_t TPostScript::fgLineJoin = 0;
 
 ClassImp(TPostScript)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default PostScript constructor
@@ -335,18 +322,17 @@ TPostScript::TPostScript() : TVirtualPS()
    SetTitle("PS");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the PostScript interface
 ///
-///  fname : PostScript file name
-///  wtype : PostScript workstation type
+///  - fname : PostScript file name
+///  - wtype : PostScript workstation type
 ///
 ///
 ///  The possible workstation types are:
-///     111 ps  Portrait
-///     112 ps  Landscape
-///     113 eps
+///    - 111 ps  Portrait
+///    - 112 ps  Landscape
+///    - 113 eps
 
 TPostScript::TPostScript(const char *fname, Int_t wtype)
 :TVirtualPS(fname, wtype)
@@ -355,7 +341,6 @@ TPostScript::TPostScript(const char *fname, Int_t wtype)
    SetTitle("PS");
    Open(fname, wtype);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a PostScript file
@@ -432,7 +417,6 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    if (fType == 113) NewPage();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default PostScript destructor
 
@@ -440,7 +424,6 @@ TPostScript::~TPostScript()
 {
    Close();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Close a PostScript file
@@ -518,7 +501,6 @@ void TPostScript::Close(Option_t *)
    gVirtualPS = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate an already open PostScript file
 
@@ -532,7 +514,6 @@ void TPostScript::On()
    gVirtualPS = this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Deactivate an already open PostScript file
 
@@ -541,25 +522,24 @@ void TPostScript::Off()
    gVirtualPS = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a Cell Array
 ///
 /// Drawing a PostScript Cell Array is in fact done thanks to three
 /// procedures: CellArrayBegin, CellArrayFill, and CellArrayEnd.
 ///
-/// CellArrayBegin: Initiate the Cell Array by writing the necessary
-///                 PostScript procedures and the initial values of the
-///                 required parameters. The input parameters are:
-///                 W: number of boxes along the width.
-///                 H: number of boxes along the height
-///                 x1,x2,y1,y2: First box coordinates.
-/// CellArrayFill:  Is called for each box of the Cell Array. The first
-///                 box is the top left one and the last box is the
-///                 bottom right one. The input parameters are the Red,
-///                 Green, and Blue components of the box colour. These
-///                 Levels are between 0 and 255.
-/// CellArrayEnd:   Finishes the Cell Array.
+///  - CellArrayBegin: Initiate the Cell Array by writing the necessary
+///                    PostScript procedures and the initial values of the
+///                    required parameters. The input parameters are:
+///                    - W: number of boxes along the width.
+///                    - H: number of boxes along the height
+///                    - x1,x2,y1,y2: First box coordinates.
+///  - CellArrayFill:  Is called for each box of the Cell Array. The first
+///                    box is the top left one and the last box is the
+///                    bottom right one. The input parameters are the Red,
+///                    Green, and Blue components of the box colour. These
+///                    Levels are between 0 and 255.
+///  - CellArrayEnd:   Finishes the Cell Array.
 ///
 /// PostScript cannot handle arrays larger than 65535. So the Cell Array
 /// is drawn in several pieces.
@@ -585,7 +565,7 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t /*H*/, Double_t x1, Double_t x2,
    fNbCellLine = 0;
    fMaxLines = 40000/(3*fNbCellW);
 
-   // Define some paremeters
+   // Define some parameters
    PrintStr("@/WT"); WriteReal(wt)          ; PrintStr(" def"); // Cells width
    PrintStr(" /HT"); WriteReal(ht)          ; PrintStr(" def"); // Cells height
    PrintStr(" /XS"); WriteInteger(ix1)      ; PrintStr(" def"); // X start
@@ -634,7 +614,6 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t /*H*/, Double_t x1, Double_t x2,
    PrintStr(" /CT [");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the Cell Array
 
@@ -673,7 +652,6 @@ void TPostScript::CellArrayFill(Int_t r, Int_t g, Int_t b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// End the Cell Array painting
 
@@ -684,7 +662,6 @@ void TPostScript::CellArrayEnd()
    WriteInteger(fNbCellLine);
    PrintStr(" def DrawCT ");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Define the markers
@@ -719,7 +696,6 @@ void TPostScript::DefineMarkers()
    PrintStr("/m2 {mp x y w2 sub m 0 w d x w2 sub y m w 0 d s} def@");
    PrintStr("/m5 {mp x w2 sub y w2 sub m w w d x w2 sub y w2 add m w w neg d s} def@");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a Box
@@ -777,15 +753,14 @@ void TPostScript::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a Frame around a box
 ///
-/// mode = -1  box looks as it is behind the screen
-/// mode =  1  box looks as it is in front of the screen
-/// border is the border size in already precomputed PostScript units
-/// dark  is the color for the dark part of the frame
-/// light is the color for the light part of the frame
+///  - mode = -1  box looks as it is behind the screen
+///  - mode =  1  box looks as it is in front of the screen
+///  - border is the border size in already precomputed PostScript units
+///  - dark  is the color for the dark part of the frame
+///  - light is the color for the light part of the frame
 
 void TPostScript::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
                             Int_t mode, Int_t border, Int_t dark, Int_t light)
@@ -895,16 +870,15 @@ void TPostScript::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    PrintFast(2," f");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a PolyLine
 ///
 ///  Draw a polyline through  the points xy.
-///  If nn=1 moves only to point x,y.
-///  If nn=0 the x,y are  written  in the PostScript file
-///          according to the current transformation.
-///  If nn>0 the line is clipped as a line.
-///  If nn<0 the line is clipped as a fill area.
+///  - If nn=1 moves only to point x,y.
+///  - If nn=0 the x,y are  written  in the PostScript file
+///            according to the current transformation.
+///  - If nn>0 the line is clipped as a line.
+///  - If nn<0 the line is clipped as a fill area.
 
 void TPostScript::DrawPolyLine(Int_t nn, TPoints *xy)
 {
@@ -980,16 +954,15 @@ END:
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a PolyLine in NDC space
 ///
 ///  Draw a polyline through the points xy.
-///  If nn=1 moves only to point x,y.
-///  If nn=0 the x,y are  written  in the PostScript file
-///          according to the current transformation.
-///  If nn>0 the line is clipped as a line.
-///  If nn<0 the line is clipped as a fill area.
+///  - If nn=1 moves only to point x,y.
+///  - If nn=0 the x,y are  written  in the PostScript file
+///            according to the current transformation.
+///  - If nn>0 the line is clipped as a line.
+///  - If nn<0 the line is clipped as a fill area.
 
 void TPostScript::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 {
@@ -1065,7 +1038,6 @@ END:
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw markers at the n WC points x, y
 
@@ -1138,7 +1110,6 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    SetLineStyle(linestylesav);
    SetLineWidth(linewidthsav);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw markers at the n WC points x, y
@@ -1213,16 +1184,15 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    SetLineWidth(linewidthsav);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a PolyLine
 ///
 ///  Draw a polyline through the points xw,yw.
-///  If nn=1 moves only to point xw,yw.
-///  If nn=0 the XW(1) and YW(1) are  written  in the PostScript file
-///          according to the current NT.
-///  If nn>0 the line is clipped as a line.
-///  If nn<0 the line is clipped as a fill area.
+///  - If nn=1 moves only to point xw,yw.
+///  - If nn=0 the XW(1) and YW(1) are  written  in the PostScript file
+///            according to the current NT.
+///  - If nn>0 the line is clipped as a line.
+///  - If nn<0 the line is clipped as a fill area.
 
 void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
 {
@@ -1325,16 +1295,15 @@ END:
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a PolyLine
 ///
 /// Draw a polyline through  the points xw,yw.
-/// If nn=1 moves only to point xw,yw.
-/// If nn=0 the xw(1) and YW(1) are  written  in the PostScript file
-///         according to the current NT.
-/// If nn>0 the line is clipped as a line.
-/// If nn<0 the line is clipped as a fill area.
+///  - If nn=1 moves only to point xw,yw.
+///  - If nn=0 the xw(1) and YW(1) are  written  in the PostScript file
+///    ---     according to the current NT.
+///  - If nn>0 the line is clipped as a line.
+///  - If nn<0 the line is clipped as a fill area.
 
 void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 {
@@ -1437,7 +1406,6 @@ END:
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw Fill area with hatch styles
 
@@ -1446,7 +1414,6 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Float_t *, Float_t *)
    Warning("DrawHatch", "hatch fill style not yet implemented");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw Fill area with hatch styles
 
@@ -1454,7 +1421,6 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 {
    Warning("DrawHatch", "hatch fill style not yet implemented");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1490,7 +1456,6 @@ Bool_t TPostScript::FontEmbedType1(const char *filename)
    return false;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TPostScript::FontEmbedType2(const char *filename)
@@ -1522,7 +1487,6 @@ Bool_t TPostScript::FontEmbedType2(const char *filename)
 
    return false;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1556,7 +1520,6 @@ Bool_t TPostScript::FontEmbedType42(const char *filename)
 
    return false;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Embed font in PS file.
@@ -1652,7 +1615,6 @@ void TPostScript::FontEmbed(void)
    fFontEmbed = kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Font Re-encoding
 
@@ -1683,69 +1645,40 @@ void TPostScript::FontEncode()
    PrintStr(" ] {ISOLatin1Encoding reEncode } forall");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// PostScript Initialisation
 ///
-/// This routine initialize the following PostScript procedures:
+/// This method initialize the following PostScript procedures:
 ///
-/// +------------+------------------+-----------------------------------+
 /// | Macro Name | Input parameters |            Explanation            |
-/// +------------+------------------+-----------------------------------+
+/// |------------|------------------|-----------------------------------|
 /// |     l      | x y              | Draw a line to the x y position   |
-/// +------------+------------------+-----------------------------------+
 /// |     m      | x y              | Move to the position x y          |
-/// +------------+------------------+-----------------------------------+
 /// |     box    | dx dy x y        | Define a box                      |
-/// +------------+------------------+-----------------------------------+
 /// |     bl     | dx dy x y        | Draw a line box                   |
-/// +------------+------------------+-----------------------------------+
 /// |     bf     | dx dy x y        | Draw a filled box                 |
-/// +------------+------------------+-----------------------------------+
 /// |     t      | x y              | Translate                         |
-/// +------------+------------------+-----------------------------------+
 /// |     r      | angle            | Rotate                            |
-/// +------------+------------------+-----------------------------------+
 /// |     rl     | i j              | Roll the stack                    |
-/// +------------+------------------+-----------------------------------+
 /// |     d      | x y              | Draw a relative line to x y       |
-/// +------------+------------------+-----------------------------------+
 /// |     X      | x                | Draw a relative line to x (y=0)   |
-/// +------------+------------------+-----------------------------------+
 /// |     Y      | y                | Draw a relative line to y (x=0)   |
-/// +------------+------------------+-----------------------------------+
 /// |     rm     | x y              | Move relatively to x y            |
-/// +------------+------------------+-----------------------------------+
 /// |     gr     |                  | Restore the graphic context       |
-/// +------------+------------------+-----------------------------------+
 /// |     lw     | lwidth           | Set line width to lwidth          |
-/// +------------+------------------+-----------------------------------+
 /// |     sd     | [] 0             | Set dash line define by []        |
-/// +------------+------------------+-----------------------------------+
 /// |     s      |                  | Stroke mode                       |
-/// +------------+------------------+-----------------------------------+
 /// |     c      | r g b            | Set rgb color to r g b            |
-/// +------------+------------------+-----------------------------------+
 /// |     cl     |                  | Close path                        |
-/// +------------+------------------+-----------------------------------+
 /// |     f      |                  | Fill the last describe path       |
-/// +------------+------------------+-----------------------------------+
 /// |     mXX    | x y              | Draw the marker type XX at (x,y)  |
-/// +------------+------------------+-----------------------------------+
 /// |     Zone   | ix iy            | Define the current zone           |
-/// +------------+------------------+-----------------------------------+
 /// |     black  |                  | The color is black                |
-/// +------------+------------------+-----------------------------------+
 /// |     C      | dx dy x y        | Clipping on                       |
-/// +------------+------------------+-----------------------------------+
 /// |     NC     |                  | Clipping off                      |
-/// +------------+------------------+-----------------------------------+
 /// |     R      |                  | repeat                            |
-/// +------------+------------------+-----------------------------------+
 /// |     ita    |                  | Used to make the symbols italic   |
-/// +------------+------------------+-----------------------------------+
 /// |     K      |                  | kshow                             |
-/// +------------+------------------+-----------------------------------+
 
 void TPostScript::Initialize()
 {
@@ -2002,7 +1935,6 @@ void TPostScript::Initialize()
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Move to a new position
 
@@ -2020,7 +1952,6 @@ void TPostScript::MovePS(Int_t ix, Int_t iy)
       PrintFast(2," Y");
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Move to a new PostScript page
@@ -2061,7 +1992,6 @@ void TPostScript::NewPage()
    }
    Zone();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the range for the paper in centimeters
@@ -2119,7 +2049,6 @@ void TPostScript::Range(Float_t xsize, Float_t ysize)
    fRange = kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute number of gsaves for restore
 /// This allows to write the correct number of grestore at the
@@ -2131,7 +2060,6 @@ void TPostScript::SaveRestore(Int_t flag)
    else           { PrintFast(4," gr ");     fSave--; }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for fill areas
 
@@ -2141,7 +2069,6 @@ void TPostScript::SetFillColor( Color_t cindex )
    if (gStyle->GetFillColor() <= 0) cindex = 0;
    SetColor(Int_t(cindex));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Patterns definition
@@ -2466,7 +2393,6 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
    PrintFast(9," setcolor");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for lines
 
@@ -2475,7 +2401,6 @@ void TPostScript::SetLineColor( Color_t cindex )
    fLineColor = cindex;
    SetColor(Int_t(cindex));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the value of the global parameter TPostScript::fgLineJoin.
@@ -2487,29 +2412,25 @@ void TPostScript::SetLineColor( Color_t cindex )
 ///   - 2 (bevel join)
 /// The default value is 0 (miter join).
 ///
-///Begin_Html
+/// \image html postscript_1.png
+///
+/// To change the line join behaviour just do:
+/// ~~~ {cpp}
+/// TPostScript::SetLineJoin(2); // Set the PS line join to bevel.
+/// ~~~
 
 void TPostScript::SetLineJoin( Int_t linejoin )
 {
-   /*
-    <img src="gif/linejoin.gif">
-    */
-   //End_Html
-   //
-   // To change the line join behaviour just do:
-   // TPostScript::SetLineJoin(2); // Set the PS line join to bevel.
-
    fgLineJoin = linejoin;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the line style
 ///
-///   linestyle = 2 dashed
-///             = 3  dotted
-///             = 4  dash-dotted
-///              else = solid
+///  - linestyle = 2 dashed
+///  - linestyle = 3  dotted
+///  - linestyle = 4  dash-dotted
+///  - linestyle = else = solid
 ///
 /// See TStyle::SetLineStyleString for style definition
 
@@ -2524,7 +2445,6 @@ void TPostScript::SetLineStyle(Style_t linestyle)
    PrintFast(6,"] 0 sd");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the line width
 
@@ -2538,7 +2458,6 @@ void TPostScript::SetLineWidth(Width_t linewidth)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for markers
 
@@ -2547,7 +2466,6 @@ void TPostScript::SetMarkerColor( Color_t cindex )
    fMarkerColor = cindex;
    SetColor(Int_t(cindex));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the current color.
@@ -2562,7 +2480,6 @@ void TPostScript::SetColor(Int_t color)
    else
       SetColor(1., 1., 1.);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set directly current color (don't go via TColor).
@@ -2596,7 +2513,6 @@ void TPostScript::SetColor(Float_t r, Float_t g, Float_t b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for text
 
@@ -2607,11 +2523,10 @@ void TPostScript::SetTextColor( Color_t cindex )
    SetColor( Int_t(cindex) );
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters
 ///
-/// This routine writes the string chars into a PostScript file
+/// This method writes the string chars into a PostScript file
 /// at position xx,yy in world coordinates.
 
 void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
@@ -2813,11 +2728,10 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    SaveRestore(-1);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters
 ///
-/// This routine writes the string chars into a PostScript file
+/// This method writes the string chars into a PostScript file
 /// at position xx,yy in world coordinates.
 
 void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
@@ -2980,7 +2894,6 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
    SaveRestore(-1);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters in NDC
 
@@ -2990,7 +2903,6 @@ void TPostScript::TextNDC(Double_t u, Double_t v, const char *chars)
    Double_t y = gPad->GetY1() + v*(gPad->GetY2() - gPad->GetY1());
    Text(x, y, chars);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters in NDC
@@ -3002,7 +2914,6 @@ void TPostScript::TextNDC(Double_t u, Double_t v, const wchar_t *chars)
    Text(x, y, chars);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert U from NDC coordinate to PostScript
 
@@ -3011,7 +2922,6 @@ Int_t TPostScript::UtoPS(Double_t u)
    Double_t cm = fXsize*(gPad->GetAbsXlowNDC() + u*gPad->GetAbsWNDC());
    return Int_t(0.5 + 288*cm/2.54);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert V from NDC coordinate to PostScript
@@ -3022,7 +2932,6 @@ Int_t TPostScript::VtoPS(Double_t v)
    return Int_t(0.5 + 288*cm/2.54);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert X from world coordinate to PostScript
 
@@ -3032,7 +2941,6 @@ Int_t TPostScript::XtoPS(Double_t x)
    return  UtoPS(u);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert Y from world coordinate to PostScript
 
@@ -3041,7 +2949,6 @@ Int_t TPostScript::YtoPS(Double_t y)
    Double_t v = (y - gPad->GetY1())/(gPad->GetY2() - gPad->GetY1());
    return  VtoPS(v);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the PostScript page in zones

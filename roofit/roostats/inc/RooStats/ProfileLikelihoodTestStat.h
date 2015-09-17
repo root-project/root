@@ -12,22 +12,6 @@
 #ifndef ROOSTATS_ProfileLikelihoodTestStat
 #define ROOSTATS_ProfileLikelihoodTestStat
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-ProfileLikelihoodTestStat is an implementation of the TestStatistic interface that calculates the profile
-likelihood ratio at a particular parameter point given a dataset.  It does not constitute a statistical test, for that one may either use:
-<ul>
- <li> the ProfileLikelihoodCalculator that relies on asymptotic properties of the Profile Likelihood Ratio</li>
- <li> the Neyman Construction classes with this class as a test statistic</li>
- <li> the Hybrid Calculator class with this class as a test statistic</li>
-</ul>
-
-</p>
-END_HTML
-*/
-//
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -56,6 +40,19 @@ END_HTML
 
 
 namespace RooStats {
+
+/**
+
+
+ProfileLikelihoodTestStat is an implementation of the TestStatistic interface that calculates the profile likelihood ratio at a particular parameter point given a dataset. It does not constitute a statistical test, for that one may either use:
+
+*   the ProfileLikelihoodCalculator that relies on asymptotic properties of the Profile Likelihood Ratio
+*   the Neyman Construction classes with this class as a test statistic
+*   the Hybrid Calculator class with this class as a test statistic
+
+\ingroup Roostats
+
+*/
 
   class ProfileLikelihoodTestStat : public TestStatistic{
 

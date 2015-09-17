@@ -570,6 +570,8 @@ void TFitParametersDialog::SetParameters()
 {
    fFunc->SetRange(fRangexmin, fRangexmax);
    for (Int_t i = 0; i < fNP; i++ ) {
+      // first make sure the current value is up to date
+      fParVal[i]->GetNumberEntry()->ReturnPressed();
       if (fParFix[i]->GetState() == kButtonDown) {
          fFunc->SetParameter(i, fParVal[i]->GetNumber());
          fFunc->FixParameter(i, fParVal[i]->GetNumber());

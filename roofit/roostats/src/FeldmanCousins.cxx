@@ -9,26 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-
-/*
-BEGIN_HTML
-<p>
-The FeldmanCousins class (like the Feldman-Cousins technique) is essentially a specific configuration
- of the more general NeymanConstruction.  It is a concrete implementation of the IntervalCalculator interface that, which uses the NeymanConstruction in a particular way.  As the name suggests, it returns a ConfidenceInterval.  In particular, it produces a RooStats::PointSetInterval, which is a concrete implementation of the ConfInterval interface.  
-</p>
-<p>
-The Neyman Construction is not a uniquely defined statistical technique, it requires that one specify an ordering rule 
-or ordering principle, which is usually incoded by choosing a specific test statistic and limits of integration 
-(corresponding to upper/lower/central limits).  As a result, this class must be configured with the corresponding
-information before it can produce an interval.  
-</p>
-<p>In the case of the Feldman-Cousins approach, the ordering principle is the likelihood ratio -- motivated
-by the Neyman-Pearson lemma.  When nuisance parameters are involved, the profile likelihood ratio is the natural generalization.  One may either choose to perform the construction over the full space of the nuisance parameters, or restrict the nusiance parameters to their conditional MLE (eg. profiled values). 
-</p>
-END_HTML
-*/
-//
 
 #ifndef RooStats_FeldmanCousins
 #include "RooStats/FeldmanCousins.h"

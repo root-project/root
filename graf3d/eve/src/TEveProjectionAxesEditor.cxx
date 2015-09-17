@@ -18,9 +18,9 @@
 #include "TGLabel.h"
 #include "TG3DLine.h"
 
-//______________________________________________________________________________
-// GUI editor for TEveProjectionAxes.
-//
+/** \class TEveProjectionAxesEditor
+GUI editor for TEveProjectionAxes.
+*/
 
 ClassImp(TEveProjectionAxesEditor);
 
@@ -104,19 +104,17 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
 
       fDrawOrigin = new TGCheckButton(hf1, "DrawOrigin");
       hf1->AddFrame(fDrawOrigin, new TGLayoutHints(kLHintsLeft, 2,1,0,4));
-      fDrawOrigin->Connect("Toggled(Bool_t)"," TEveProjectionAxesEditor", this, "DoDrawOrigin()");
+      fDrawOrigin->Connect("Toggled(Bool_t)", "TEveProjectionAxesEditor", this, "DoDrawOrigin()");
 
 
       fDrawCenter = new TGCheckButton(hf1, "DrawCenter");
       hf1->AddFrame(fDrawCenter, new TGLayoutHints(kLHintsLeft, 2,1,0,4));
-      fDrawCenter->Connect("Toggled(Bool_t)"," TEveProjectionAxesEditor", this, "DoDrawCenter()");
+      fDrawCenter->Connect("Toggled(Bool_t)", "TEveProjectionAxesEditor", this, "DoDrawCenter()");
 
       fCenterFrame->AddFrame(hf1, new TGLayoutHints(kLHintsTop, 0,0,0,0));
 
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.

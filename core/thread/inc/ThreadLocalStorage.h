@@ -95,7 +95,10 @@
 #      define R__HAS___THREAD
 #    endif
 
-#  elif defined(__GNUG__) && (__GNUC__ <= 4 && __GNUC_MINOR__ < 80)
+#  elif defined(__INTEL_COMPILER)
+#    define R__HAS__THREAD
+
+#  elif defined(__GNUG__) && (__GNUC__ <= 4 && __GNUC_MINOR__ < 8)
     // The C++11 thread_local keyword is supported in GCC only since 4.8
 #    define R__HAS___THREAD
 #  else

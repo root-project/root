@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSelectorDraw                                                        //
-//                                                                      //
-// A specialized TSelector for TTree::Draw.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSelectorDraw
+A specialized TSelector for TTree::Draw.
+*/
 
 #include "TSelectorDraw.h"
 #include "TROOT.h"
@@ -935,20 +931,25 @@ void TSelectorDraw::ClearFormula()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compile input variables and selection expression.
 ///
-///  varexp is an expression of the general form e1:e2:e3
-///    where e1,etc is a formula referencing a combination of the columns
-///  Example:
+/// varexp is an expression of the general form e1:e2:e3
+/// where e1,etc is a formula referencing a combination of the columns
+///
+/// Example:
+///
 ///     varexp = x  simplest case: draw a 1-Dim distribution of column named x
 ///            = sqrt(x)         : draw distribution of sqrt(x)
 ///            = x*y/z
 ///            = y:sqrt(x) 2-Dim dsitribution of y versus sqrt(x)
 ///
-///  selection is an expression with a combination of the columns
-///  Example:
-///      selection = "x<y && sqrt(z)>3.2"
-///       in a selection all the C++ operators are authorized
+/// selection is an expression with a combination of the columns
 ///
-///  Return kFALSE if any of the variable is not compilable.
+/// Example:
+///
+///     selection = "x<y && sqrt(z)>3.2"
+///
+/// in a selection all the C++ operators are authorized
+///
+/// Return kFALSE if any of the variable is not compilable.
 
 Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection)
 {
@@ -1021,17 +1022,23 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
 /// Return the last values corresponding to the i-th component
 /// of the formula being processed (where the component are ':' separated).
 /// The actual number of entries is:
+///
 ///     GetSelectedRows() % tree->GetEstimate()
+///
 /// Note GetSelectedRows currently returns the actual number of values plotted
 /// and thus if the formula contains arrays, this number might be greater than
 /// the number of entries in the trees.
+///
 /// By default TTree::Draw creates the arrays obtained
-///    with all GetVal and GetW with a length corresponding to the
-///    parameter fEstimate. By default fEstimate=10000 and can be modified
-///    via TTree::SetEstimate. A possible recipee is to do
-///       tree->SetEstimate(tree->GetEntries());
-///    You must call SetEstimate if the expected number of selected rows
-///    is greater than 10000.
+/// with all GetVal and GetW with a length corresponding to the
+/// parameter fEstimate. By default fEstimate=10000 and can be modified
+/// via TTree::SetEstimate. A possible recipee is to do
+///
+///     tree->SetEstimate(tree->GetEntries());
+///
+/// You must call SetEstimate if the expected number of selected rows
+/// is greater than 10000.
+///
 /// See TTree::Draw for additional details.
 
 Double_t* TSelectorDraw::GetVal(Int_t i) const

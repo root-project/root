@@ -47,6 +47,8 @@
    @defgroup GenVector GenVector
    Generic 2D, 3D and 4D vectors classes and their transformations (rotations). More information is available at the
    home page for \ref Vector
+
+   @ingroup Math
  */
 
 

@@ -11,15 +11,14 @@
 
 #include "TEveChunkManager.h"
 
-//______________________________________________________________________________
-//
-// Vector-like container with chunked memory allocation.
-//
-// Allocation chunk can accommodate fN atoms of byte-size fS each.
-// The chunks themselves are TArrayCs and are stored in a std::vector<TArrayC*>.
-// Holes in the structure are not supported, neither is removal of atoms.
-// The structure can be Refit() to occupy a single contiguous array.
-//
+/** \class TEveChunkManager
+Vector-like container with chunked memory allocation.
+
+Allocation chunk can accommodate fN atoms of byte-size fS each.
+The chunks themselves are TArrayCs and are stored in a std::vector<TArrayC*>.
+Holes in the structure are not supported, neither is removal of atoms.
+The structure can be Refit() to occupy a single contiguous array.
+*/
 
 ClassImp(TEveChunkManager);
 ClassImp(TEveChunkManager::iterator);
@@ -61,8 +60,6 @@ TEveChunkManager::~TEveChunkManager()
    ReleaseChunks();
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Empty the container and reset it with given atom and chunk sizes.
 
@@ -97,8 +94,6 @@ void TEveChunkManager::Refit()
    fChunks.push_back(one);
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Allocate a new memory chunk and register it.
 
@@ -109,8 +104,6 @@ Char_t* TEveChunkManager::NewChunk()
    fCapacity += fN;
    return fChunks.back()->fArray;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Go to next atom.

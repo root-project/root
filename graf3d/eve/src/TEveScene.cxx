@@ -22,21 +22,15 @@
 #include "TList.h"
 #include "TExMap.h"
 
+/** \class TEveScene
+Eve representation of TGLScene.
+The GLScene is owned by this class - it is created on construction
+time and deleted at destruction.
 
-//==============================================================================
-//==============================================================================
-// TEveScene
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Eve representation of TGLScene.
-// The GLScene is owned by this class - it is created on construction
-// time and deleted at destruction.
-//
-// Normally all objects are positioned directly in global scene-space.
-// By setting the fHierarchical flag, positions of children get
-// calculated by multiplying the transformation matrices of all parents.
+Normally all objects are positioned directly in global scene-space.
+By setting the fHierarchical flag, positions of children get
+calculated by multiplying the transformation matrices of all parents.
+*/
 
 ClassImp(TEveScene);
 
@@ -91,8 +85,6 @@ TEveScene::~TEveScene()
    delete fPad;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual from TEveElement; here we simply append this scene to
 /// the list.
@@ -101,8 +93,6 @@ void TEveScene::CollectSceneParents(List_t& scenes)
 {
    scenes.push_back(this);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Repaint the scene.
@@ -180,8 +170,6 @@ void TEveScene::RetransHierarchicallyRecurse(TEveElement* el, const TEveTrans& t
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set scene's name.
 
@@ -202,8 +190,6 @@ void TEveScene::Paint(Option_t* option)
          (*i)->PadPaint(option);
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove element from the scene.
@@ -229,8 +215,6 @@ void TEveScene::DestroyElementRenderers(TObject* rnrObj)
    fGLScene->EndUpdate(changed, changed);
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return icon for scene.
 
@@ -239,15 +223,9 @@ const TGPicture* TEveScene::GetListTreeIcon(Bool_t)
    return TEveElement::fgListTreeIcons[2];
 }
 
-
-//==============================================================================
-//==============================================================================
-// TEveSceneList
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// List of Scenes providing common operations on TEveScene collections.
+/** \class TEveSceneList
+List of Scenes providing common operations on TEveScene collections.
+*/
 
 ClassImp(TEveSceneList);
 
@@ -274,8 +252,6 @@ void TEveSceneList::DestroyScenes()
       s->DestroyOrWarn();
    }
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Repaint scenes that are tagged as changed.
@@ -304,8 +280,7 @@ void TEveSceneList::RepaintAllScenes(Bool_t dropLogicals)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Loop over all scenes and remove all instances of element from
-/// them.
+/// Loop over all scenes and remove all instances of element from them.
 
 void TEveSceneList::DestroyElementRenderers(TEveElement* element)
 {
@@ -320,9 +295,9 @@ void TEveSceneList::DestroyElementRenderers(TEveElement* element)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop over all scenes and update them accordingly:
-///   a) if scene is marked as changed, it is repainted;
-///   b) otherwise iteration is done over the set of stamped elements and
-///      their physical/logical shapes are updated accordingly.
+///  1. if scene is marked as changed, it is repainted;
+///  2. otherwise iteration is done over the set of stamped elements and
+///     their physical/logical shapes are updated accordingly.
 ///
 /// This allows much finer update granularity without resetting of
 /// complex GL-viewer and GL-scene state.

@@ -11,26 +11,22 @@
 
 #include "TEvePathMark.h"
 
-//==============================================================================
-// TEvePathMark
-//==============================================================================
+/** \class TEvePathMarkT
+Special-point on track:
 
-//______________________________________________________________________________
-//
-// Special-point on track:
-//  kDaughter  - daughter creation; fP is momentum of the daughter, it is subtracted from
-//               momentum of the track
-//  kReference - position/momentum reference
-//  kDecay     - decay point, fP not used
-//  kCluster2D - measurement with large error in one direction (like strip detectors):
-//               fP - normal to detector plane,
-//               fE - large error direction, must be normalized.
-//               Track is propagated to plane and correction in fE direction is discarded.
-//  kLineSegment - line segment with vertex fV and vector fE
-//               fV - first point of line segment
-//               fP - normal to detector plane,
-//               fE - vector from fV to the second vertex of line segment
-
+  - kDaughter  : daughter creation; fP is momentum of the daughter, it is subtracted from
+                 momentum of the track
+  - kReference : position/momentum reference
+  - kDecay     : decay point, fP not used
+  - kCluster2D : measurement with large error in one direction (like strip detectors):
+                  - fP - normal to detector plane,
+                  - fE - large error direction, must be normalized.
+                  - Track is propagated to plane and correction in fE direction is discarded.
+  - kLineSegment : line segment with vertex fV and vector fE
+                  - fV - first point of line segment
+                  - fP - normal to detector plane,
+                  - fE - vector from fV to the second vertex of line segment
+*/
 
 ClassImp(TEvePathMarkT<Float_t>);
 ClassImp(TEvePathMarkT<Double_t>);

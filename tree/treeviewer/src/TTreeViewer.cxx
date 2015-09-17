@@ -9,156 +9,170 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TreeViewer is a graphic user interface designed to handle ROOT trees and to
-// take advantage of TTree class features.
-//
-// It uses ROOT native GUI widgets adapted for 'drag and drop' functionality.
-// in the same session.
-// The following capabilities are making the viewer a helpful tool for analysis:
-//  - several trees may be opened in the same session;
-//  - branches and leaves can be easily browsed or scanned;
-//  - fast drawing of branch expressions by double-clicking;
-//  - new variables/selections easy to compose with the built-in editor;
-//  - histograms can be composed by dragging leaves or user-defined expressions
-//  to X, Y and Z axis items;
-//  - the tree entries to be processed can be selected with a double slider;
-//  - selections can be defined and activated by dragging them to the 'Cut' item;
-//  - all expressions can be aliased and aliases can be used in composing others;
-//  - input/output event lists easy to handle;
-//  - menu with histogram drawing options;
-//  - user commands may be executed within the viewer and the current command
-//  can be echoed;
-//  - current 'Draw' event loop is reflected by a progress bar and may be
-//  interrupted by the user;
-//  - all widgets have self-explaining tool tips and/or context menus;
-//  - expressions/leaves can be dragged to a 'scan box' and scanned by
-//  double-clicking this item. The result can be redirected to an ASCII file;
-//
-// The layout has the following items:
-//
-//  - a menu bar with entries : File, Edit, Run, Options and Help;
-//  - a toolbar in the upper part where you can issue user commands, change
-//  the drawing option and the histogram name, three check buttons Hist, Rec
-//  and Scan.HIST toggles histogram drawing mode, REC enables recording of the
-//  last command issued and SCAN enables redirecting of TTree::Scan command in
-//  an ASCII file (see -Scanning expressions-);
-//  - a button bar in the lower part with : buttons DRAW/STOP that issue histogram
-//  drawing and stop the current command respectively, two text widgets where
-//  input and output event lists can be specified, a message box and a RESET
-//  button on the right that clear edited expression content (see Editing...)
-//  - a tree-type list on the main left panel where you can select among trees or
-//  branches. The tree/branch will be detailed in the right panel.
-//  Mapped trees are provided with context menus, activated by right-clicking;
-//  - a view-type list on the right panel. The first column contain X, Y and
-//  Z expression items, an optional cut and ten optional editable expressions.
-//  Expressions and leaf-type items can be dragged or deleted. A right click on
-//  the list-box or item activates context menus.
-//
-// Opening a new tree and saving a session :
-//
-//   To open a new tree in the viewer use <File/Open tree file> menu
-// The content of the file (keys) will be listed. Use <SetTreeName> function
-// from the context menu of the right panel, entering a tree name among those
-// listed.
-//   To save the current session, use <File/Save> menu or the <SaveSource>
-// function from the context menu of the right panel (to specify the name of the
-// file - name.C)
-//   To open a previously saved session for the tree MyTree, first open MyTree
-// in the browser, then use <File/Open session> menu.
-//
-// Dragging items:
-//
-// Items that can be dragged from the list in the right : expressions and
-// leaves. Dragging an item and dropping to another will copy the content of first
-// to the last (leaf->expression, expression->expression). Items far to the right
-// side of the list can be easily dragged to the left (where expressions are
-// placed) by dragging them to the left at least 10 pixels.
-//
-// Editing expressions
-//
-//   Any editable expression from the right panel has two components : a
-// true name (that will be used when TTree::Draw() commands are issued) and an
-// alias. The visible name is the alias. Aliases of user defined expressions have
-// a leading ~ and may be used in new expressions. Expressions containing boolean
-// operators have a specific icon and may be dragged to the active cut (scissors
-// item) position.
-//    The expression editor can be activated by double-clicking empty expression,
-// using <EditExpression> from the selected expression context menu or using
-// <Edit/Expression> menu.
-//    The editor will pop-up in the left part, but it can be moved.
-// The editor usage is the following :
-//   - you can write C expressions made of leaf names by hand or you can insert
-//   any item from the right panel by clicking on it (recommandable);
-//   - you can click on other expressions/leaves to paste them in the editor;
-//   - you should write the item alias by hand since it not only make the expression
-//  meaningfull, but it also highly improve the layout for big expressions
-//   - you may redefine an old alias - the other expressions depending on it will
-//   be modified accordingly. An alias must not be the leading string of other aliases.
-//  When Draw commands are issued, the name of the corresponding histogram axes
-//  will become the aliases of the expressions.
-//
-// User commands can be issued directly from the textbox labeled "Command"
-// from the upper-left toolbar by typing and pressing Enter at the end.
-//   Another way is from the right panel context menu : ExecuteCommand.
-// All commands can be interrupted at any time by pressing the STOP button
-// from the bottom-left
-// You can toggle recording of the current command in the history file by
-// checking the Rec button from the top-right
-//
-// Context menus
-//
-//   You can activate context menus by right-clicking on items or inside the
-// right panel.
-// Context menus for mapped items from the left tree-type list :
-//   The items from the left that are provided with context menus are tree and
-// branch items. You can directly activate the *MENU* marked methods of TTree
-// from this menu.
-// Context menu for the right panel :
-//   A general context menu is acivated if the user right-clicks the right panel.
-//   Commands are :
-//   - EmptyAll        : clears the content of all expressions;
-//   - ExecuteCommand  : execute a ROOT command;
-//   - MakeSelector    : equivalent of TTree::MakeSelector();
-//   - NewExpression   : add an expression item in the right panel;
-//   - Process         : equivalent of TTree::Process();
-//   - SaveSource      : save the current session as a C++ macro;
-//   - SetScanFileName : define a name for the file where TTree::Scan command
-//   is redirected when the <Scan> button is checked;
-//   - SetTreeName     : open a new tree whith this name in the viewer;
-//   A specific context menu is activated if expressions/leaves are right-clicked.
-//   Commands are :
-//   - Draw            : draw a histogram for this item;
-//   - EditExpression  : pops-up the expression editor;
-//   - Empty           : empty the name and alias of this item;
-//   - RemoveItem      : removes clicked item from the list;
-//   - Scan            : scan this expression;
-//   - SetExpression   : edit name and alias for this item by hand;
-//
-// Starting the viewer
-//
-//   1) From the TBrowser :
-//  Select a tree in the TBrowser, then call the StartViewer() method from its
-// context menu (right-click on the tree).
-//   2) From the command line :
-//  Start a ROOT session in the directory where you have your tree.
-// You will need first to load the library for TTreeViewer and optionally other
-// libraries for user defined classes (you can do this later in the session) :
-//    root [0] gSystem->Load(\"TTreeViewer\");
-// Supposing you have the tree MyTree in the file MyFile, you can do :
-//    root [1] TFile file(\"Myfile\");
-//    root [2] new TTreeViewer(\"Mytree\");
-// or :
-//    root [2] TreeViewer *tv = new TTreeViewer();
-//    root [3] tv->SetTreeName(\"Mytree\");
-//
-//Begin_Html
-/*
-<img src="treeview.gif">
+/** \class TTreeViewer
+A graphic user interface designed to handle ROOT trees and to take advantage of
+TTree class features.
+
+It uses ROOT native GUI widgets adapted for 'drag and drop' functionality.
+in the same session.
+
+### The following capabilities are making the viewer a helpful tool for analysis:
+
+ - several trees may be opened in the same session;
+ - branches and leaves can be easily browsed or scanned;
+ - fast drawing of branch expressions by double-clicking;
+ - new variables/selections easy to compose with the built-in editor;
+ - histograms can be composed by dragging leaves or user-defined expressions
+   to X, Y and Z axis items;
+ - the tree entries to be processed can be selected with a double slider;
+ - selections can be defined and activated by dragging them to the 'Cut' item;
+ - all expressions can be aliased and aliases can be used in composing others;
+ - input/output event lists easy to handle;
+ - menu with histogram drawing options;
+ - user commands may be executed within the viewer and the current command
+   can be echoed;
+ - current 'Draw' event loop is reflected by a progress bar and may be
+   interrupted by the user;
+ - all widgets have self-explaining tool tips and/or context menus;
+ - expressions/leaves can be dragged to a 'scan box' and scanned by
+ double-clicking this item. The result can be redirected to an ASCII file;
+
+### The layout has the following items:
+
+ - a menu bar with entries : File, Edit, Run, Options and Help;
+ - a toolbar in the upper part where you can issue user commands, change
+   the drawing option and the histogram name, three check buttons Hist, Rec
+   and Scan.HIST toggles histogram drawing mode, REC enables recording of the
+   last command issued and SCAN enables redirecting of TTree::Scan command in
+   an ASCII file (see -Scanning expressions-);
+ - a button bar in the lower part with : buttons DRAW/STOP that issue histogram
+   drawing and stop the current command respectively, two text widgets where
+   input and output event lists can be specified, a message box and a RESET
+   button on the right that clear edited expression content (see Editing...)
+ - a tree-type list on the main left panel where you can select among trees or
+   branches. The tree/branch will be detailed in the right panel.
+   Mapped trees are provided with context menus, activated by right-clicking;
+ - a view-type list on the right panel. The first column contain X, Y and
+   Z expression items, an optional cut and ten optional editable expressions.
+   Expressions and leaf-type items can be dragged or deleted. A right click on
+   the list-box or item activates context menus.
+
+### Opening a new tree and saving a session :
+
+  To open a new tree in the viewer use <File/Open tree file> menu
+The content of the file (keys) will be listed. Use <SetTreeName> function
+from the context menu of the right panel, entering a tree name among those
+listed.
+
+  To save the current session, use <File/Save> menu or the <SaveSource>
+function from the context menu of the right panel (to specify the name of the
+file - name.C)
+
+  To open a previously saved session for the tree MyTree, first open MyTree
+in the browser, then use <File/Open session> menu.
+
+### Dragging items:
+
+Items that can be dragged from the list in the right : expressions and
+leaves. Dragging an item and dropping to another will copy the content of first
+to the last (leaf->expression, expression->expression). Items far to the right
+side of the list can be easily dragged to the left (where expressions are
+placed) by dragging them to the left at least 10 pixels.
+
+### Editing expressions:
+
+  Any editable expression from the right panel has two components : a
+true name (that will be used when TTree::Draw() commands are issued) and an
+alias. The visible name is the alias. Aliases of user defined expressions have
+a leading ~ and may be used in new expressions. Expressions containing boolean
+operators have a specific icon and may be dragged to the active cut (scissors
+item) position.
+
+   The expression editor can be activated by double-clicking empty expression,
+using <EditExpression> from the selected expression context menu or using
+<Edit/Expression> menu.
+
+   The editor will pop-up in the left part, but it can be moved.
+The editor usage is the following :
+
+  - you can write C expressions made of leaf names by hand or you can insert
+    any item from the right panel by clicking on it (recommandable);
+  - you can click on other expressions/leaves to paste them in the editor;
+  - you should write the item alias by hand since it not only make the
+    expression meaningful, but it also highly improve the layout for big
+    expressions
+  - you may redefine an old alias - the other expressions depending on it will
+    be modified accordingly. An alias must not be the leading string of other
+    aliases. When Draw commands are issued, the name of the corresponding
+    histogram axes will become the aliases of the expressions.
+
+User commands can be issued directly from the textbox labeled "Command"
+from the upper-left toolbar by typing and pressing Enter at the end.
+
+  Another way is from the right panel context menu : ExecuteCommand.
+All commands can be interrupted at any time by pressing the STOP button
+from the bottom-left
+You can toggle recording of the current command in the history file by
+checking the Rec button from the top-right
+
+### Context menus
+
+  You can activate context menus by right-clicking on items or inside the
+right panel.
+
+Context menus for mapped items from the left tree-type list :
+  The items from the left that are provided with context menus are tree and
+branch items. You can directly activate the *MENU* marked methods of TTree
+from this menu.
+
+Context menu for the right panel:
+
+  A general context menu is activated if the user right-clicks the right panel.
+
+  Commands are :
+  - EmptyAll        : clears the content of all expressions;
+  - ExecuteCommand  : execute a ROOT command;
+  - MakeSelector    : equivalent of TTree::MakeSelector();
+  - NewExpression   : add an expression item in the right panel;
+  - Process         : equivalent of TTree::Process();
+  - SaveSource      : save the current session as a C++ macro;
+  - SetScanFileName : define a name for the file where TTree::Scan command
+    is redirected when the <Scan> button is checked;
+  - SetTreeName     : open a new tree with this name in the viewer;
+
+  A specific context menu is activated if expressions/leaves are right-clicked.
+
+  Commands are :
+  - Draw            : draw a histogram for this item;
+  - EditExpression  : pops-up the expression editor;
+  - Empty           : empty the name and alias of this item;
+  - RemoveItem      : removes clicked item from the list;
+  - Scan            : scan this expression;
+  - SetExpression   : edit name and alias for this item by hand;
+
+Starting the viewer
+
+  1. From the TBrowser: Select a tree in the TBrowser, then call the
+     StartViewer() method from its context menu (right-click on the tree).
+  2. From the command line: Start a ROOT session in the directory where you have
+  your tree. You will need first to load the library for TTreeViewer and
+  optionally other libraries for user defined classes (you can do this later in
+  the session) :
+~~~ {.cpp}
+   root [0] gSystem->Load(\"TTreeViewer\");
+~~~
+Supposing you have the tree MyTree in the file MyFile, you can do :
+~~~ {.cpp}
+   root [1] TFile file("Myfile");
+   root [2] new TTreeViewer("Mytree");
+~~~
+or :
+~~~ {.cpp}
+   root [2] TTreeViewer *tv = new TTreeViewer();
+   root [3] tv->SetTreeName("Mytree");
+~~~
+\image html ttree_treeview.png
 */
-//End_Html
-//
 
 #include "RConfigure.h"
 
@@ -1220,6 +1234,7 @@ TTreeViewer::~TTreeViewer()
    delete fTimer;
    delete fSession;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Enable/disable session buttons.
 
@@ -1519,7 +1534,6 @@ void TTreeViewer::ExecuteDraw()
    }
    if (gPad) gPad->Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a spider plot for the selected entries.
@@ -2311,6 +2325,7 @@ void TTreeViewer::ExecuteCommand(const char* command, Bool_t fast)
    // make sure that 'draw on double-click' flag is reset
    fVarDraw = kFALSE;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Scan the selected options from option menu.
 
@@ -2853,6 +2868,7 @@ void TTreeViewer::SetHistogramTitle(const char *title)
       gPad->Update();
    }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// user defined command for current record
 
@@ -2861,6 +2877,7 @@ void TTreeViewer::SetUserCode(const char *code, Bool_t autoexec)
    TTVRecord *rec = fSession->GetCurrent();
    if (rec) rec->SetUserCode(code, autoexec);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Updates combo box to current session entries.
 

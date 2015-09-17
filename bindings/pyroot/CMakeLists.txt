@@ -1,8 +1,6 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT bindings/pyroot package
 ############################################################################
-ROOT_USE_PACKAGE(math/mathcore)
-ROOT_USE_PACKAGE(tree/tree)
 include_directories(${PYTHON_INCLUDE_DIRS})
 
 ROOT_GENERATE_DICTIONARY(G__PyROOT *.h MODULE PyROOT LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
@@ -20,7 +18,7 @@ if(WIN32)
 endif()
 ROOT_LINKER_LIBRARY(PyROOT *.cxx G__PyROOT.cxx LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES})
 
-if(WIN32)
+if(MSVC)
   add_custom_command(TARGET PyROOT POST_BUILD
                      COMMAND link -dll -nologo -IGNORE:4001 -machine:ix86 -export:initlibPyROOT
                     $<TARGET_LINKER_FILE:PyROOT> -nodefaultlib kernel32.lib msvcrt.lib

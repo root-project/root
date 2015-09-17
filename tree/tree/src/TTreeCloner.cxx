@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTreeCloner                                                          //
-//                                                                      //
-// Class implementing or helping  the various TTree cloning method      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTreeCloner
+Class implementing or helping  the various TTree cloning method
+*/
 
 #include "TBasket.h"
 #include "TBranch.h"
@@ -75,9 +71,10 @@ Bool_t TTreeCloner::CompareEntry::operator()(UInt_t i1, UInt_t i2)
 /// the disk more often.
 ///
 /// There is currently 3 supported sorting order:
-///    SortBasketsByOffset (the default)
-///    SortBasketsByBranch
-///    SortBasketsByEntry
+///
+///     SortBasketsByOffset (the default)
+///     SortBasketsByBranch
+///     SortBasketsByEntry
 ///
 /// When using SortBasketsByOffset the baskets are written in
 /// the output file in the same order as in the original file
@@ -99,7 +96,6 @@ Bool_t TTreeCloner::CompareEntry::operator()(UInt_t i1, UInt_t i2)
 /// This means that on the file the baskets will be in the order
 /// in which they will be needed when reading the whole tree
 /// sequentially.
-///
 
 TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options) :
    fWarningMsg(),

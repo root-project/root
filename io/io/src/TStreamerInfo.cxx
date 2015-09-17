@@ -278,7 +278,7 @@ void TStreamerInfo::Build()
 
    Bool_t needAllocClass = kFALSE;
    Bool_t wasCompiled = fComp != 0;
-   const ROOT::TSchemaMatch* rules = 0;
+   const ROOT::Internal::TSchemaMatch* rules = 0;
    if (fClass->GetSchemaRules()) {
        rules = fClass->GetSchemaRules()->FindRules(fClass->GetName(), fClassVersion);
    }
@@ -1663,7 +1663,7 @@ void TStreamerInfo::BuildOld()
    // Get schema rules for this class
    /////////////////////////////////////////////////////////////////////////////
 
-   const ROOT::TSchemaMatch*   rules   = 0;
+   const ROOT::Internal::TSchemaMatch*   rules   = 0;
    const ROOT::TSchemaRuleSet* ruleSet = fClass->GetSchemaRules();
 
    rules = (ruleSet ? ruleSet->FindRules( GetName(), fOnFileClassVersion, fCheckSum ) : 0);
@@ -2763,6 +2763,25 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
 
          } else if (!otherBaseClass->IsVersioned() && localBase->GetBaseCheckSum() != otherBaseClass->GetCheckSum()) {
             TVirtualStreamerInfo *localBaseInfo = otherBaseClass->FindStreamerInfo(localBase->GetBaseCheckSum());
+            if (!localBaseInfo) {
+               // We are likely in the situation where the base class comes after the derived
+               // class in the TFile's list of StreamerInfo, so it has not yet been loaded,
+               // let's see if it is there.
+               const TList *list = file->GetStreamerInfoCache();
+               localBaseInfo = list ? (TStreamerInfo*)list->FindObject(localBase->GetName()) : 0;
+            }
+            if (!localBaseInfo) {
+               TString msg;
+               msg.Form("   The StreamerInfo of the base class %s (of class %s) read from %s%s\n"
+                        "   refers to a checksum (%x) that can not be found neither in memory nor in the file.\n",
+                        otherBaseClass->GetName(), localClass.Data(),
+                        file ? "file " : "", file ? file->GetName() : "",
+                        localBase->GetBaseCheckSum()
+                        );
+               TStreamerBase *otherBase = (TStreamerBase*)cl->GetStreamerInfo()->GetElements()->FindObject(otherClass);
+               otherBase->SetErrorMessage(msg);
+               continue;
+            }
             if (localBaseInfo->CompareContent(otherBaseClass,0,kFALSE,kFALSE,file) ) {
                // They are equivalent, no problem.
                continue;

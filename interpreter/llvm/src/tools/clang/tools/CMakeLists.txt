@@ -1,7 +1,4 @@
 add_subdirectory(diagtool)
-add_subdirectory(driver)
-add_subdirectory(clang-format)
-add_subdirectory(clang-format-vs)
 
 add_subdirectory(c-index-test)
 add_subdirectory(libclang)
@@ -13,6 +10,15 @@ endif()
 
 if(CLANG_ENABLE_STATIC_ANALYZER)
   add_subdirectory(clang-check)
+endif()
+
+if(CLANG_ENABLE_FORMAT)
+  add_subdirectory(clang-format)
+  add_subdirectory(clang-format-vs)
+endif()
+
+if(CLANG_ENABLE_COMPILER)
+  add_subdirectory(driver)
 endif()
 
 # We support checking out the clang-tools-extra repository into the 'extra'

@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBranchProxyDescriptor                                               //
-//                                                                      //
-// Hold the processed information about a TBranch while                 //
-// TTreeProxyGenerator is parsing the TTree information.                //
-// Also contains the routine use to generate the appropriate code       //
-// fragment in the result of MakeProxy.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBranchProxyDescriptor
+/Hold the processed information about a TBranch while
+/TTreeProxyGenerator is parsing the TTree information.
+/Also contains the routine use to generate the appropriate code
+/fragment in the result of MakeProxy.
+*/
 
 #include "TBranchProxyDescriptor.h"
 
@@ -30,9 +26,10 @@
 #include "TFormLeafInfo.h"
 #include <ctype.h>
 
-ClassImp(ROOT::TBranchProxyDescriptor);
+ClassImp(ROOT::Internal::TBranchProxyDescriptor);
 
 namespace ROOT {
+namespace Internal {
 
    TBranchProxyDescriptor::TBranchProxyDescriptor(const char *dataname,
                                                   const char *type,
@@ -150,4 +147,6 @@ namespace ROOT {
 
       }
    }
-}
+
+} // namespace Internal
+} // namespace ROOT

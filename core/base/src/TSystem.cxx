@@ -9,19 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSystem                                                              //
-//                                                                      //
-// Abstract base class defining a generic interface to the underlying   //
-// Operating System.                                                    //
-// This is not an ABC in the strict sense of the (C++) word. For        //
-// every member function there is an implementation (often not more     //
-// than a call to AbstractMethod() which prints a warning saying        //
-// that the method should be overridden in a derived class), which      //
-// allows a simple partial implementation for new OS'es.                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSystem
+
+Abstract base class defining a generic interface to the underlying
+Operating System.
+This is not an ABC in the strict sense of the (C++) word. For
+every member function there is an implementation (often not more
+than a call to AbstractMethod() which prints a warning saying
+that the method should be overridden in a derived class), which
+allows a simple partial implementation for new OS'es.
+*/
 
 #ifdef WIN32
 #include <io.h>
@@ -321,7 +318,7 @@ void TSystem::NotifyApplicationCreated()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Beep for duration milliseconds with a tone of freqency freq.
+/// Beep for duration milliseconds with a tone of frequency freq.
 /// Defaults to printing the '\a' character to stdout.
 /// If freq or duration is <0 respectively, use default value.
 /// If setDefault is set, only set the frequency and duration as
@@ -1185,7 +1182,7 @@ again:
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Expand a pathname getting rid of special shell characaters like ~.$, etc.
+/// Expand a pathname getting rid of special shell characters like ~.$, etc.
 /// For Unix/Win32 compatibility use $(XXX) instead of $XXX when using
 /// environment variables in a pathname. If compatibility is not an issue
 /// you can use on Unix directly $XXX.
@@ -1196,7 +1193,7 @@ Bool_t TSystem::ExpandPathName(TString&)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Expand a pathname getting rid of special shell characaters like ~.$, etc.
+/// Expand a pathname getting rid of special shell characters like ~.$, etc.
 /// For Unix/Win32 compatibility use $(XXX) instead of $XXX when using
 /// environment variables in a pathname. If compatibility is not an issue
 /// you can use on Unix directly $XXX. The user must delete returned string.
@@ -1301,11 +1298,11 @@ int TSystem::Unlink(const char *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get info about a file: id, size, flags, modification time.
-/// Id      is (statbuf.st_dev << 24) + statbuf.st_ino
-/// Size    is the file size
-/// Flags   is file type: 0 is regular file, bit 0 set executable,
-///                       bit 1 set directory, bit 2 set special file
-///                       (socket, fifo, pipe, etc.)
+///  - Id      is (statbuf.st_dev << 24) + statbuf.st_ino
+///  - Size    is the file size
+///  - Flags   is file type: 0 is regular file, bit 0 set executable,
+///                          bit 1 set directory, bit 2 set special file
+///                          (socket, fifo, pipe, etc.)
 /// Modtime is modification time.
 /// The function returns 0 in case of success and 1 if the file could
 /// not be stat'ed.
@@ -1331,11 +1328,11 @@ int TSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get info about a file: id, size, flags, modification time.
-/// Id      is (statbuf.st_dev << 24) + statbuf.st_ino
-/// Size    is the file size
-/// Flags   is file type: 0 is regular file, bit 0 set executable,
-///                       bit 1 set directory, bit 2 set special file
-///                       (socket, fifo, pipe, etc.)
+///  - Id      is (statbuf.st_dev << 24) + statbuf.st_ino
+///  - Size    is the file size
+///  - Flags   is file type: 0 is regular file, bit 0 set executable,
+///                          bit 1 set directory, bit 2 set special file
+///                          (socket, fifo, pipe, etc.)
 /// Modtime is modification time.
 /// The function returns 0 in case of success and 1 if the file could
 /// not be stat'ed.
@@ -1530,7 +1527,7 @@ UserGroup_t *TSystem::GetUserInfo(const char * /*user*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns all group info in the UserGroup_t structure. The only active
 /// fields in the UserGroup_t structure for this call are:
-///    fGid and fGroup
+///  - fGid and fGroup
 /// The returned structure must be deleted by the user. In case of
 /// error 0 is returned.
 
@@ -1543,7 +1540,7 @@ UserGroup_t *TSystem::GetGroupInfo(Int_t /*gid*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns all group info in the UserGroup_t structure. The only active
 /// fields in the UserGroup_t structure for this call are:
-///    fGid and fGroup
+///  - fGid and fGroup
 /// If group = 0, returns current user's group. The returned structure
 /// must be deleted by the user. In case of error 0 is returned.
 
@@ -1617,6 +1614,7 @@ void TSystem::Closelog()
 /// file ("a", default) or the file be truncated before ("w").
 /// The implementations of this function save internally the current state into
 /// a static structure.
+///
 /// The call can be made reentrant by specifying the opaque structure pointed
 /// by 'h', which is filled with the relevant information. The handle 'h'
 /// obtained on the first call must then be used in any subsequent call,
@@ -1760,8 +1758,8 @@ static bool R__MatchFilename(const char *left, const char *right)
 /// or in case of error and -2 in case of version mismatch.
 /// When entry is specified the loaded lib is
 /// searched for this entry point (return -1 when entry does not exist,
-/// 0 otherwise). When the system flag is kTRUE, the library is consisdered
-/// a permanent systen library that should not be unloaded during the
+/// 0 otherwise). When the system flag is kTRUE, the library is considered
+/// a permanent system library that should not be unloaded during the
 /// course of the session.
 
 int TSystem::Load(const char *module, const char *entry, Bool_t system)
@@ -2023,12 +2021,12 @@ const char *TSystem::GetLinkedLibraries()
 /// This list is of a format suitable for a linker, i.e it may contain
 /// -Lpathname and/or -lNameOfLib.
 /// Option can be any of:
-///   S: shared libraries loaded at the start of the executable, because
-///      they were specified on the link line.
-///   D: shared libraries dynamically loaded after the start of the program.
+///  - S: shared libraries loaded at the start of the executable, because
+///       they were specified on the link line.
+///  - D: shared libraries dynamically loaded after the start of the program.
 /// For MacOS only:
-///   L: list the .dylib rather than the .so (this is intended for linking)
-///      This options is not the default
+///  - L: list the .dylib rather than the .so (this is intended for linking)
+///       This options is not the default
 
 const char *TSystem::GetLibraries(const char *regexp, const char *options,
                                   Bool_t isRegexp)
@@ -2516,11 +2514,12 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    }
    builddep += " -Y -- ";
 #ifndef ROOTINCDIR
-   TString rootsys = gSystem->Getenv("ROOTSYS");
+   TString rootsysInclude = gSystem->Getenv("ROOTSYS");
+   rootsysInclude += "/include";
 #else
-   TString rootsys = ROOTINCDIR;
+   TString rootsysInclude = ROOTINCDIR;
 #endif
-   builddep += " \"-I"+rootsys+"/include\" "; // cflags
+   builddep += " \"-I"+rootsysInclude+"\" "; // cflags
    builddep += includes;
    builddep += defines;
    builddep += " -- \"";
@@ -2559,7 +2558,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
          adddictdep += " ";
          delete [] clingdictversion;
       } else {
-         R__AddPath(adddictdep,rootsys+"/include/clingdictversion.h ");
+         R__AddPath(adddictdep,rootsysInclude+"/clingdictversion.h ");
       }
    }
 #endif
@@ -2569,8 +2568,6 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
        "TMemberInspector.h","TError.h","RtypesImp.h","TIsAProxy.h",
        "TFileMergeInfo.h","TCollectionProxyInfo.h"};
 
-      TString rootsysInclude(rootsys);
-      rootsysInclude += "/include/";
       for (unsigned int h=0; h < sizeof(dictHeaders)/sizeof(dictHeaders[0]); ++h)
       {
          char *rootVersion = gSystem->Which(incPath,dictHeaders[h]);
@@ -2579,7 +2576,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
             adddictdep += " ";
             delete [] rootVersion;
          } else {
-            R__AddPath(adddictdep,rootsysInclude + dictHeaders[h]);
+            R__AddPath(adddictdep,rootsysInclude + "/" + dictHeaders[h]);
          }
       }
    }
@@ -2618,15 +2615,15 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
 /// in case of error.
 ///
 /// The possible options are:
-///     k : keep the shared library after the session end.
-///     f : force recompilation.
-///     g : compile with debug symbol
-///     O : optimized the code
-///     c : compile only, do not attempt to load the library.
-///     s : silence all informational output
-///     v : output all information output
-///     d : debug ACLiC, keep all the output files.
-///     - : if buildir is set, use a flat structure (see buildir below)
+///    - k : keep the shared library after the session end.
+///    - f : force recompilation.
+///    - g : compile with debug symbol
+///    - O : optimized the code
+///    - c : compile only, do not attempt to load the library.
+///    - s : silence all informational output
+///    - v : output all information output
+///    - d : debug ACLiC, keep all the output files.
+///    - - : if buildir is set, use a flat structure (see buildir below)
 ///
 /// If library_specified is specified, CompileMacro generates the file
 /// "library_specified".soext where soext is the shared library extension for
@@ -2668,15 +2665,17 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
 /// compiler to create a shared library from its C++ macro (scripts).
 /// Currently in order to execute a script, a user has to type at the root
 /// prompt
-///
+/// ~~~ {.cpp}
 ///  .X myfunc.C(arg1,arg2)
-///
+/// ~~~
 /// We allow them to type:
-///
+/// ~~~ {.cpp}
 ///  .X myfunc.C++(arg1,arg2)
+///  ~~~
 /// or
+/// ~~~ {.cpp}
 ///  .X myfunc.C+(arg1,arg2)
-///
+/// ~~~
 /// In which case an external compiler will be called to create a shared
 /// library.  This shared library will then be loaded and the function
 /// myfunc will be called with the two arguments.  With '++' the shared library
@@ -2693,11 +2692,11 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
 /// TSystem::SetIncludePath().
 /// A good default will be provided so that a typical user session should be at
 /// most:
-///
+/// ~~~ {.cpp}
 /// root[1] gSystem->SetIncludePath("-I$ROOTSYS/include
 /// -I$HOME/mypackage/include");
 /// root[2] .x myfunc.C++(10,20);
-///
+/// ~~~
 /// The user may sometimes try to compile a script before it has loaded all the
 /// needed shared libraries.  In this case we want to be helpfull and output a
 /// list of the unresolved symbols. So if the loading of the created shared
@@ -2711,23 +2710,22 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
 /// to the script compiler. However, the information about
 /// the libraries that have been selected at link time by the application
 /// builder (like the root libraries for root.exe) are not available and need
-/// to be explictly listed in fLinkedLibs (either by default or by a call to
+/// to be explicitly listed in fLinkedLibs (either by default or by a call to
 /// TSystem::SetLinkedLibs()).
 ///
 /// To simplify customization we could also add to the .rootrc support for the
 /// variables
-///
+/// ~~~ {.cpp}
 /// Unix.*.Root.IncludePath:     -I$ROOTSYS/include
 /// WinNT.*.Root.IncludePath:    -I%ROOTSYS%/include
 ///
 /// Unix.*.Root.LinkedLibs:      -L$ROOTSYS/lib -lBase ....
 /// WinNT.*.Root.LinkedLibs:     %ROOTSYS%/lib/*.lib msvcrt.lib ....
-///
+/// ~~~
 /// And also support for MakeSharedLibs() and MakeExe().
 ///
 /// (the ... have to be replaced by the actual values and are here only to
 /// shorten this comment).
-///
 
 int TSystem::CompileMacro(const char *filename, Option_t *opt,
                           const char *library_specified,
@@ -2796,7 +2794,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    incPath.Prepend(":.:");
    incPath.Prepend(WorkingDirectory());
 
-   // ======= Get the right file names for the dictionnary and the shared library
+   // ======= Get the right file names for the dictionary and the shared library
    TString expFileName(filename);
    ExpandPathName( expFileName );
    TString library = expFileName;
@@ -2965,15 +2963,15 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          pos = rel_inc.Index(includes,&len);
       }
    }
-   includes += " -I\"" + build_loc;
-   includes += "\" -I\"";
-   includes += WorkingDirectory();
-   if (includes[includes.Length()-1] == '\\') {
-      // The current directory is (most likely) the root of a windows drive and
-      // has a trailing \ which would espace the quote if left by itself.
-      includes += '\\';
-   }
-   includes += "\"";
+   //includes += " -I\"" + build_loc;
+   //includes += "\" -I\"";
+   //includes += WorkingDirectory();
+//   if (includes[includes.Length()-1] == '\\') {
+//      // The current directory is (most likely) the root of a windows drive and
+//      // has a trailing \ which would espace the quote if left by itself.
+//      includes += '\\';
+//   }
+//   includes += "\"";
    if (gEnv) {
       TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
       includes.Append(" ").Append(fromConfig).Append(" ");
@@ -3044,7 +3042,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          // We need to check the dependencies
          FILE * depfile = fopen(depfilename.Data(),"r");
          if (depfile==0) {
-            // there is no acessible dependency file, let's assume the library has been
+            // there is no accessible dependency file, let's assume the library has been
             // modified
             modified = kTRUE;
             recompile = kTRUE;
@@ -3265,7 +3263,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    AssignAndDelete( dict, ConcatFileName( build_loc, dict ) );
    TString dicth = dict;
    TString dictObj = dict;
-   dict += "cxx"; //no need to keep the extention of the original file, any extension will do
+   dict += "cxx"; //no need to keep the extension of the original file, any extension will do
    dicth += "h";
    dictObj += fObjExt;
 
@@ -3475,7 +3473,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // ======= Calculate the libraries for linking:
    TString linkLibraries;
    /*
-     this is intentionally disabled until it can become usefull
+     this is intentionally disabled until it can become useful
      if (gEnv) {
         linkLibraries =  gEnv->GetValue("ACLiC.Libraries","");
         linkLibraries.Prepend(" ");
@@ -3529,7 +3527,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // But in this case compiler may output the name of the dictionary file
    // and of the fakeMain file while it compiles it. (this would be useless
    // confusing output).
-   // We could also the fake main routine to the end of the dictionnary file
+   // We could also the fake main routine to the end of the dictionary file
    // however compilation would fail if a main is already there
    // (like stress.cxx)
    // dict.Append(" ").Append(fakeMain);
@@ -3691,9 +3689,9 @@ const char *TSystem::GetFlagsOpt() const
 ////////////////////////////////////////////////////////////////////////////////
 /// AclicMode indicates whether the library should be built in
 /// debug mode or optimized.  The values are:
-/// TSystem::kDefault : compile the same as the current ROOT
-/// TSystem::kDebug : compiled in debug mode
-/// TSystem::kOpt : optimized the library
+///  - TSystem::kDefault : compile the same as the current ROOT
+///  - TSystem::kDebug : compiled in debug mode
+///  - TSystem::kOpt : optimized the library
 
 TSystem::EAclicMode TSystem::GetAclicMode() const
 {
@@ -3769,6 +3767,7 @@ const char *TSystem::GetObjExt() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the location where ACLiC will create libraries and use as
 /// a scratch area.
+///
 /// If isflast is flase, then the libraries are actually stored in
 /// sub-directories of 'build_dir' including the full pathname of the
 /// script.  If the script is location at /full/path/name/macro.C
@@ -3806,9 +3805,9 @@ void TSystem::SetFlagsOpt(const char *flags)
 ////////////////////////////////////////////////////////////////////////////////
 /// AclicMode indicates whether the library should be built in
 /// debug mode or optimized.  The values are:
-/// TSystem::kDefault : compile the same as the current ROOT
-/// TSystem::kDebug : compiled in debug mode
-/// TSystem::kOpt : optimized the library
+///  - TSystem::kDefault : compile the same as the current ROOT
+///  - TSystem::kDebug : compiled in debug mode
+///  - TSystem::kOpt : optimized the library
 
 void TSystem::SetAclicMode(EAclicMode mode)
 {
@@ -3820,9 +3819,11 @@ void TSystem::SetAclicMode(EAclicMode mode)
 /// used to create an executable. This creation is used as a means to output
 /// a list of unresolved symbols, when loading a shared library has failed.
 /// The required variable is $ExeName rather than $SharedLib, e.g.:
+/// ~~~ {.cpp}
 /// gSystem->SetMakeExe(
 /// "g++ -Wall -fPIC $IncludePath $SourceFiles
 ///  -o $ExeName $LinkedLibs -L/usr/X11R6/lib -lX11 -lm -ldl -rdynamic");
+/// ~~~
 
 void TSystem::SetMakeExe(const char *directives)
 {
@@ -3836,7 +3837,7 @@ void TSystem::SetMakeExe(const char *directives)
 /// the use of ';' to separate several instructions. However, shell specific
 /// construct should be avoided. In particular this description can contain
 /// environment variables, like $ROOTSYS (or %ROOTSYS% on windows).
-///
+///  ~~~ {.cpp}
 /// Five special variables will be expanded before execution:
 ///   Variable name       Expands to
 ///   -------------       ----------
@@ -3851,8 +3852,9 @@ void TSystem::SetMakeExe(const char *directives)
 ///                       their extension changed to .o or .obj
 ///   $Opt                location of the optimization/debug options
 ///                       set fFlagsDebug and fFlagsOpt
-///
+/// ~~~
 /// e.g.:
+///  ~~~ {.cpp}
 /// gSystem->SetMakeSharedLib(
 /// "KCC -n32 --strict $IncludePath -K0 \$Opt $SourceFile
 ///  --no_exceptions --signed_chars --display_error_number
@@ -3873,6 +3875,7 @@ void TSystem::SetMakeExe(const char *directives)
 ///  -D_WINDOWS $IncludePath $SourceFile
 ///  /link -PDB:NONE /NODEFAULTLIB /INCREMENTAL:NO /RELEASE /NOLOGO
 ///  $LinkedLibs -entry:_DllMainCRTStartup@12 -dll /out:$SharedLib")
+///  ~~~
 
 void TSystem::SetMakeSharedLib(const char *directives)
 {
@@ -3906,11 +3909,17 @@ void TSystem::AddLinkedLibs(const char *linkedLib)
 /// IncludePath should contain the list of compiler flags to indicate where
 /// to find user defined header files. It is used to expand $IncludePath in
 /// the directives given to SetMakeSharedLib() and SetMakeExe(), e.g.:
+/// ~~~ {.cpp}
 ///    gSystem->SetInclude("-I$ROOTSYS/include -Imydirectory/include");
+///  ~~~
 /// the default value of IncludePath on Unix is:
+///  ~~~ {.cpp}
 ///    "-I$ROOTSYS/include "
+///  ~~~
 /// and on Windows:
+///  ~~~ {.cpp}
 ///    "/I%ROOTSYS%/include "
+///  ~~~
 
 void TSystem::SetIncludePath(const char *includePath)
 {
@@ -3921,7 +3930,7 @@ void TSystem::SetIncludePath(const char *includePath)
 /// LinkedLibs should contain the library directory and list of libraries
 /// needed to recreate the current executable. It is used to expand $LinkedLibs
 /// in the directives given to SetMakeSharedLib() and SetMakeExe()
-/// The default value on Unix is: root-config --glibs
+/// The default value on Unix is: `root-config --glibs`
 
 void  TSystem::SetLinkedLibs(const char *linkedLibs)
 {
@@ -3932,6 +3941,7 @@ void  TSystem::SetLinkedLibs(const char *linkedLibs)
 /// The 'suffix' will be appended to the name of a script loaded by ACLiC
 /// and used to locate any eventual additional linkdef information that
 /// ACLiC should used to produce the dictionary.
+///
 /// So by default, when doing .L MyScript.cxx, ACLiC will look
 /// for a file name MyScript_linkdef and having one of the .h (.hpp,
 /// etc.) extensions.  If such a file exist, it will be added to
@@ -3965,9 +3975,11 @@ void TSystem::SetObjExt(const char *ObjExt)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This method split a filename of the form:
+///  ~~~ {.cpp}
 ///   [path/]macro.C[+|++[k|f|g|O|c|s|d|v|-]][(args)].
+///  ~~~
 /// It stores the ACliC mode [+|++[options]] in 'mode',
-/// the arguments (including paranthesis) in arg
+/// the arguments (including parenthesis) in arg
 /// and the I/O indirection in io
 
 TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,

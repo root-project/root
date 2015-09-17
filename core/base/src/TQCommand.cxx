@@ -9,99 +9,95 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// The Command design pattern is based on the idea, that all editing    //
-// in an application is done by creating instances of command objects.  //
-// Command objects apply changes to the edited object and then are      //
-// stored  on a command stack. Furthermore, each command knows how to   //
-// undo its changes to bring the edited object back to its previous     //
-// state. As long as the application only uses command objects to       //
-// change the state of the edited object, it is possible to undo        //
-// a sequence of commands by traversing the command stack downwards and //
-// calling the "undo" method of each command in turn. It is also        //
-// possible to redo a sequence of commands by traversing the command    //
-// stack upwards and calling the "redo" method of each command.         //
-//                                                                      //
-//                                                                      //
-// Examples:                                                            //
-//                                                                      //
-// 1. Create a new command                                              //
-//                                                                      //
-// TQCommand *com = new TQCommand("TH1", hpx, "SetFillColor(Color_t)"   //
-//                                "SetFillColor(Color_t)");             //
-//                                                                      //
-// 1st parameter - the name of class                                    //
-// 2nd parameter - object                                               //
-// 3rd parameter - the name of do/redo method                           //
-// 4th parameter - the name of undo method                              //
-//                                                                      //
-// Since redo,undo methods are the same, undo name can be omitted, e.g. //
-//                                                                      //
-// TQCommand *com = new TQCommand("TH1", hpx, "SetFillColor(Color_t)"); //
-//                                                                      //
-// For objects derived from TObject class name can be omitted, e.g.     //
-//                                                                      //
-//    TQCommand *com = new TQCommand(hpx, "SetFillColor(Color_t)");     //
-//                                                                      //
-// 2. Setting undo, redo parameters.                                    //
-//                                                                      //
-//    Color_t old_color = hpx->GetFillColor();                          //
-//    Color_t new_color = 4;  // blue color                             //
-//                                                                      //
-//    com->SetRedoArgs(1, new_color);                                   //
-//    com->SetUndoArgs(1, old_color);                                   //
-//                                                                      //
-// 1st argument - the number of undo, redo parameters                   //
-// the other arguments - undo, redo values                              //
-//                                                                      //
-// Since the number of undo,redo parameters is the same one can use     //
-//                                                                      //
-//    com->SetArgs(1, new_color, old_color);                            //
-//                                                                      //
-// 3. Undo, redo method execution                                       //
-//                                                                      //
-//    com->Redo(); // execute redo method                               //
-//    com->Undo(); // execute undo method                               //
-//                                                                      //
-// 4. Merged commands                                                   //
-//                                                                      //
-// It possible to group several commands together so an end user        //
-// can undo and redo them with one command.                             //
-//                                                                      //
-//    TQCommand *update = new TQCommand(gPad, "Modified()");            //
-//    com->Add(update);                                                 //
-//                                                                      //
-// 5. Macro commands                                                    //
-//                                                                      //
-// "Merging" allows to create macro commands, e.g.                      //
-//                                                                      //
-//    TQCommand *macro = new TQCommand("my macro");                     //
-//    macro->Add(com1);                                                 //
-//    macro->Add(com2);                                                 //
-//    ...                                                               //
-//                                                                      //
-// During Redo operation commands composing macro command are executed  //
-// sequentially in direct  order (first in first out). During Undo,     //
-// they are executed in reverse order (last in first out).              //
-//                                                                      //
-// 6. Undo manager.                                                     //
-//                                                                      //
-// TQUndoManager is recorder of undo and redo operations. This is       //
-// command history list which can be traversed backwards and upwards    //
-// performing undo and redo operations.                                 //
-// To register command TQUndoManager::Add(TObject*) method is used.     //
-//                                                                      //
-//    TQUndoManager *history = new TQUndoManager();                     //
-//    history->Add(com);                                                //
-//                                                                      //
-// TQUndoManager::Add automatically invokes execution of command's      //
-// Redo method.                                                         //
-//                                                                      //
-// Use TQUndoManager::Undo to undo commands in  history list.           //
-// Redo is Undo for undo action. Use TQUndoManager::Redo method for that//
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TQCommand
+The Command design pattern is based on the idea, that all editing
+in an application is done by creating instances of command objects.
+Command objects apply changes to the edited object and then are
+stored  on a command stack. Furthermore, each command knows how to
+undo its changes to bring the edited object back to its previous
+state. As long as the application only uses command objects to
+change the state of the edited object, it is possible to undo
+a sequence of commands by traversing the command stack downwards and
+calling the "undo" method of each command in turn. It is also
+possible to redo a sequence of commands by traversing the command
+stack upwards and calling the "redo" method of each command.
+
+
+Examples:
+
+1. Create a new command
+~~~ {.cpp}
+   TQCommand *com = new TQCommand("TH1", hpx, "SetFillColor(Color_t)"
+                                "SetFillColor(Color_t)");
+~~~
+   - 1st parameter - the name of class
+   - 2nd parameter - object
+   - 3rd parameter - the name of do/redo method
+   - 4th parameter - the name of undo method
+   Since redo,undo methods are the same, undo name can be omitted, e.g.
+~~~ {.cpp}
+   TQCommand *com = new TQCommand("TH1", hpx, "SetFillColor(Color_t)");
+~~~
+   For objects derived from TObject class name can be omitted, e.g.
+~~~ {.cpp}
+   TQCommand *com = new TQCommand(hpx, "SetFillColor(Color_t)");
+~~~
+
+2. Setting undo, redo parameters.
+~~~ {.cpp}
+   Color_t old_color = hpx->GetFillColor();
+   Color_t new_color = 4;  // blue color
+
+   com->SetRedoArgs(1, new_color);
+   com->SetUndoArgs(1, old_color);
+~~~
+   1st argument - the number of undo, redo parameters
+   the other arguments - undo, redo values
+   Since the number of undo,redo parameters is the same one can use
+~~~ {.cpp}
+   com->SetArgs(1, new_color, old_color);
+~~~
+
+3. Undo, redo method execution
+~~~ {.cpp}
+   com->Redo(); // execute redo method
+   com->Undo(); // execute undo method
+~~~
+
+4. Merged commands
+   It possible to group several commands together so an end user
+   can undo and redo them with one command.
+~~~ {.cpp}
+   TQCommand *update = new TQCommand(gPad, "Modified()");
+   com->Add(update);
+~~~
+
+5. Macro commands
+   "Merging" allows to create macro commands, e.g.
+~~~ {.cpp}
+   TQCommand *macro = new TQCommand("my macro");
+   macro->Add(com1);
+   macro->Add(com2);
+   ...
+~~~
+   During Redo operation commands composing macro command are executed
+   sequentially in direct  order (first in first out). During Undo,
+   they are executed in reverse order (last in first out).
+
+6. Undo manager.
+   TQUndoManager is recorder of undo and redo operations. This is
+   command history list which can be traversed backwards and upwards
+   performing undo and redo operations.
+   To register command TQUndoManager::Add(TObject*) method is used.
+~~~ {.cpp}
+   TQUndoManager *history = new TQUndoManager();
+   history->Add(com);
+~~~
+   TQUndoManager::Add automatically invokes execution of command's Redo method.
+
+Use TQUndoManager::Undo to undo commands in  history list.
+Redo is Undo for undo action. Use TQUndoManager::Redo method for that
+*/
 
 #include "Varargs.h"
 #include "TQCommand.h"
@@ -116,8 +112,7 @@ ClassImp(TQUndoManager)
 static TQCommand *gActiveCommand = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-/// common protected method used in several constructors
+/// Common protected method used in several constructors
 
 void TQCommand::Init(const char *clname, void *obj, const char *redo, const char *undo)
 {
@@ -156,13 +151,16 @@ void TQCommand::Init(const char *clname, void *obj, const char *redo, const char
 ///       '=' must precede to argument value.
 ///
 ///  Example:
-///    TQCommand("TPad", gPad, "SetEditable(=kTRUE)", "SetEditable(=kFALSE)");
-///
-///    - undo method can be same as redo one. In that case undo parameter
-///       can be omitted.
+/// ~~~ {cpp}
+///   TQCommand("TPad", gPad, "SetEditable(=kTRUE)", "SetEditable(=kFALSE)");
+/// ~~~
+///   undo method can be same as redo one. In that case undo parameter
+///   can be omitted.
 ///
 ///  Example:
-///    TQCommand("TPad", gPad, "SetFillStyle(Style_t)");
+/// ~~~ {cpp}
+///   TQCommand("TPad", gPad, "SetFillStyle(Style_t)");
+/// ~~~
 
 TQCommand::TQCommand(const char *clname, void *obj, const char *redo,
                      const char *undo) : TList(), TQObject()
@@ -179,17 +177,21 @@ TQCommand::TQCommand(const char *clname, void *obj, const char *redo,
 ///     3. undo - method or function to undo operation
 ///
 /// Comments:
-///    - to specify default arguments for redo/undo method/function
-///       '=' must precede to argument value.
+///   to specify default arguments for redo/undo method/function
+///   '=' must precede to argument value.
 ///
 ///  Example:
+/// ~~~ {cpp}
 ///    TQCommand(gPad, "SetEditable(=kTRUE)", "SetEditable(=kFALSE)");
+/// ~~~
 ///
-///    - undo method can be same as redo one. In that case "undo"
-///       can parameter be omitted.
+///   undo method can be same as redo one. In that case "undo"
+///   can parameter be omitted.
 ///
 ///  Example:
+/// ~~~ {cpp}
 ///    TQCommand(gPad, "SetFillStyle(Style_t)");
+/// ~~~
 
 TQCommand::TQCommand(TObject *obj, const char *redo, const char *undo) :
            TList(), TQObject()
@@ -259,13 +261,14 @@ TQCommand::~TQCommand()
 /// during execution of Redo function.
 ///
 /// Example:
-///    For redo actions like TGTextEdit::DelChar() it is not possible to
-///    know ahead what character will be deleted.
-///    To set arguments for undo action ( e.g. TGTextEdit::InsChar(char)),
-///    one needs to call TQCommand::SetUndoArgs(1, character) from
-///    inside of TGTextEdit::DelChar() method, i.e.
-///
+///   For redo actions like TGTextEdit::DelChar() it is not possible to
+///   know ahead what character will be deleted.
+///   To set arguments for undo action ( e.g. TGTextEdit::InsChar(char)),
+///   one needs to call TQCommand::SetUndoArgs(1, character) from
+///   inside of TGTextEdit::DelChar() method, i.e.
+/// ~~~ {.cpp}
 ///    TQCommand::GetCommand()->SetUndoArgs(1, somechar);
+/// ~~~
 
 TQCommand *TQCommand::GetCommand()
 {
@@ -345,9 +348,9 @@ Long64_t TQCommand::Merge(TCollection *collection,TFileMergeInfo*)
 /// Add command to the list of merged commands.
 ///
 /// Option string can contain substrings:
-///  "compress" - try to compress input command
-///  "radd" - execute redo action of input command
-///  "uadd" - execute undo action of input command
+///  - "compress" - try to compress input command
+///  - "radd" - execute redo action of input command
+///  - "uadd" - execute undo action of input command
 
 void TQCommand::Add(TObject *obj, Option_t *opt)
 {
@@ -385,9 +388,9 @@ Bool_t TQCommand::CanCompress(TQCommand *c) const
 /// Compress command. Compression is analogous to arithmetic "addition operation".
 ///
 /// Note:
-///    - The compressed command will be deleted.
-///    - Execution Compress method invokes Redo action with new redo arguments
-///      inheritied from compressed command.
+///   - The compressed command will be deleted.
+///   - Execution Compress method invokes Redo action with new redo arguments
+///     inherited from compressed command.
 ///
 /// More complicated commands might want to override this function.
 
@@ -449,7 +452,9 @@ Bool_t TQCommand::IsSetter() const
 ///    SetArgs(number_of_params, redo_params, undo_params)
 ///
 /// Example:
+/// ~~~ {.cpp}
 ///     move_command->SetArgs(2, 100, 100, 200, 200);
+/// ~~~
 ///      2 params, (100,100) - do/redo position, (200,200) - undo position
 
 void TQCommand::SetArgs(Int_t narg, ...)
@@ -491,7 +496,9 @@ void TQCommand::SetArgs(Int_t narg, ...)
 ///    SetRedoArgs(number_of_params, params)
 ///
 /// Example:
+/// ~~~ {.cpp}
 ///     move_command->SetRedoArgs(2, 100, 100);
+/// ~~~
 
 void TQCommand::SetRedoArgs(Int_t narg, ...)
 {
@@ -523,7 +530,9 @@ void TQCommand::SetRedoArgs(Int_t narg, ...)
 ///    SetUndoArgs(number_of_params, params)
 ///
 /// Example:
+/// ~~~ {.cpp}
 ///     move_command->SetUndoArgs(2, 200, 200);
+/// ~~~
 
 void TQCommand::SetUndoArgs(Int_t narg, ...)
 {
@@ -561,7 +570,7 @@ Bool_t TQCommand::CanRedo() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns kTRUE if Undo action is possible, kFALSE if it's not.
-/// By default, only single tial undo action is possible.
+/// By default, only single trial undo action is possible.
 
 Bool_t TQCommand::CanUndo() const
 {
@@ -569,7 +578,7 @@ Bool_t TQCommand::CanUndo() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute command and then smerged commands
+/// Execute command and then merge commands
 
 void TQCommand::Redo(Option_t *)
 {
@@ -606,7 +615,7 @@ void TQCommand::Redo(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Unexecute all merged commands and the command.
+/// Un-execute all merged commands and the command.
 /// Merged commands are executed in reverse order.
 
 void TQCommand::Undo(Option_t *)
@@ -753,7 +762,7 @@ Int_t TQCommand::GetNUargs() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns an object for which undo redo acions are applied
+/// Returns an object for which undo redo actions are applied
 
 void *TQCommand::GetObject() const
 {
@@ -841,7 +850,10 @@ void TQCommand::PrintCollectionHeader(Option_t* /*option*/) const
    printf("%d %s\n", fStatus, GetName());
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/** \class TQUndoManager
+Recorder of operations for undo and redo
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
@@ -924,8 +936,8 @@ void  TQUndoManager::SetLogging(Bool_t on)
 /// Command's redo action will be executed.
 ///
 /// option string can contain the following substrings:
-///    "merge" - input command will be merged
-///    "compress" - input command will be compressed
+///  - "merge" - input command will be merged
+///  - "compress" - input command will be compressed
 
 void TQUndoManager::Add(TObject *obj, Option_t *opt)
 {

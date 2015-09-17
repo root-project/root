@@ -35,13 +35,9 @@
 #include <algorithm>
 #include <string>
 
-//==============================================================================
-// TEveUtil
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Standard utility functions for Eve.
+/** \class TEveUtil
+Standard utility functions for Eve.
+*/
 
 ClassImp(TEveUtil);
 
@@ -118,8 +114,6 @@ void TEveUtil::SetupGUI()
                                        "tmacro_s.xpm", "tmacro_t.xpm", "");
 }
 
-/******************************************************************************/
-
 namespace
 {
 ////////////////////////////////////////////////////////////////////////////////
@@ -188,10 +182,6 @@ void TEveUtil::LoadMacro(const char* mac)
       gROOT->LoadMacro(mac);
    }
 }
-
-/******************************************************************************/
-// Color management
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill col with RGBA values corresponding to index ci. If alpha
@@ -347,10 +337,6 @@ void TEveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
       gEve->FullRedraw3D();
 }
 
-/******************************************************************************/
-// Math utilities
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if interval Q is contained within interval M for U1 variables.
 /// It is assumed that all values are within the [-2pi, 2pi] interval and
@@ -413,13 +399,10 @@ Float_t TEveUtil::GetFraction(Float_t minM, Float_t maxM, Float_t minQ, Float_t 
    return 0;
 }
 
-/******************************************************************************/
-// TEveException
-/******************************************************************************/
 
-//______________________________________________________________________________
-//
-// Exception class thrown by TEve classes and macros.
+/** \class TEveException
+Exception class thrown by TEve classes and macros.
+*/
 
 ClassImp(TEveException);
 
@@ -450,14 +433,10 @@ TEveException operator+(const TEveException &s1,  const char *s2)
 { TEveException r(s1); r += s2; return r; }
 
 
-/******************************************************************************/
-// TEvePadHolder
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// Exception safe wrapper for setting gPad.
-// Optionally calls gPad->Modified()/Update() in destructor.
+/** \class TEvePadHolder
+Exception safe wrapper for setting gPad.
+Optionally calls gPad->Modified()/Update() in destructor.
+*/
 
 ClassImp(TEvePadHolder);
 
@@ -486,16 +465,11 @@ TEvePadHolder::~TEvePadHolder()
    gPad = fOldPad;
 }
 
-
-/******************************************************************************/
-// TEveGeoManagerHolder
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// Exception safe wrapper for setting gGeoManager.
-// Functionality to lock-unlock via setting of a static lock in
-// TGeoManager should be added (new feature of TGeoManager).
+/** \class TEveGeoManagerHolder
+Exception safe wrapper for setting gGeoManager.
+Functionality to lock-unlock via setting of a static lock in
+TGeoManager should be added (new feature of TGeoManager).
+*/
 
 ClassImp(TEveGeoManagerHolder);
 
@@ -544,27 +518,17 @@ TEveGeoManagerHolder::~TEveGeoManagerHolder()
    }
 }
 
-
-/******************************************************************************/
-// TEveRefCnt
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// Base-class for reference-counted objects.
-// By default the object is destroyed when zero referece-count is reached.
+/** \class TEveRefCnt
+Base-class for reference-counted objects.
+By default the object is destroyed when zero reference-count is reached.
+*/
 
 ClassImp(TEveRefCnt);
 
-
-/******************************************************************************/
-// TEveRefBackPtr
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// Base-class for reference-counted objects with reverse references to
-// TEveElement objects.
+/** \class TEveRefBackPtr
+Base-class for reference-counted objects with reverse references to
+TEveElement objects.
+*/
 
 ClassImp(TEveRefBackPtr);
 
@@ -605,10 +569,8 @@ TEveRefBackPtr& TEveRefBackPtr::operator=(const TEveRefBackPtr&)
    return *this;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Increase reference cound and add re to the list of back-references.
+/// Increase reference count and add re to the list of back-references.
 
 void TEveRefBackPtr::IncRefCount(TEveElement* re)
 {
@@ -617,7 +579,7 @@ void TEveRefBackPtr::IncRefCount(TEveElement* re)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Decrease reference cound and remove re from the list of back-references.
+/// Decrease reference count and remove re from the list of back-references.
 
 void TEveRefBackPtr::DecRefCount(TEveElement* re)
 {
@@ -634,10 +596,8 @@ void TEveRefBackPtr::DecRefCount(TEveElement* re)
    }
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Add givem stamps to elements in the list of reverse references.
+/// Add given stamps to elements in the list of reverse references.
 
 void TEveRefBackPtr::StampBackPtrElements(UChar_t stamps)
 {

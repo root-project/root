@@ -48,9 +48,11 @@ namespace Math {
 
    class GSLMultiRootBaseSolver;
 
+   /** @defgroup MultiRoot  Multidimensional ROOT finding 
+       Classes for finding the roots of a multi-dimensional system. 
+       @ingroup NumAlgo
+   */
 
-
-//________________________________________________________________________________________________________
   /**
      Class for  Multidimensional root finding algorithms bassed on GSL. This class is used to solve a
      non-linear system of equations:
@@ -101,7 +103,7 @@ namespace Math {
    /**
       enumeration specifying the types of GSL multi root finders
       requiring the derivatives
-      @ingroup MultiRoot
+
    */
     enum EDerivType {
        kHybridSJ,
@@ -112,7 +114,7 @@ namespace Math {
     /**
        enumeration specifying the types of GSL multi root finders
        which do not require the derivatives
-       @ingroup MultiRoot
+
     */
     enum EType {
        kHybridS,

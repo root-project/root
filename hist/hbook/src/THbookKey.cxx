@@ -15,6 +15,11 @@
 
 ClassImp(THbookKey)
 
+/** \class THbookKey
+    \ingroup Hist
+    \brief HBOOK Key
+*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///constructor

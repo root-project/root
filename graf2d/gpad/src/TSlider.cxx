@@ -18,85 +18,86 @@
 
 ClassImp(TSlider)
 
-//______________________________________________________________________________
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSlider                                                              //
-//                                                                      //
-//  A TSlider object is a specialized TPad including a TSliderBox object//
-//  The TSliderBox can be moved in the pad.                             //
-//  Slider drawing options include the possibility to change the slider //
-//  starting and ending positions or only one of them.                  //
-//                                                                      //
-//  The current slider position can be retrieved via the functions      //
-//     TSlider::GetMinimum and TSlider::GetMaximum                      //
-//  These two functions return numbers in the range [0,1].              //
-//                                                                      //
-//  if a method has been set (via SetMethod), the expression  is        //
-//  executed via the interpreter when the button 1 is released.         //
-//                                                                      //
-//  if no method has been set, and an object is referenced (SetObject   //
-//  has been called), while the slider is being moved/resized,          //
-//  the object ExecuteEvent function is called.                         //                                                //
-//                                                                      //
-//  Example 1 using SetMethod    macro xyslider.C                       //
-//  =========================                                           //
-//{                                                                     //
-//   //Example of macro featuring two sliders                           //
-//   TFile *f = new TFile("hsimple.root");                              //
-//   TH2F *hpxpy = (TH2F*)f->Get("hpxpy");                              //
-//   TCanvas *c1 = new TCanvas("c1");                                   //
-//   TPad *pad = new TPad("pad","lego pad",0.1,0.1,0.98,0.98);          //
-//   pad->SetFillColor(33);                                             //
-//   pad->Draw();                                                       //
-//   pad->cd();                                                         //
-//   gStyle->SetFrameFillColor(42);                                     //
-//   hpxpy->SetFillColor(46);                                           //
-//   hpxpy->Draw("lego1");                                              //
-//   c1->cd();                                                          //
-//                                                                      //
-//   //Create two sliders in main canvas. When button1                  //
-//   //of the mouse will be released, action.C will be called           //
-//   TSlider *xslider = new TSlider("xslider","x",0.1,0.02,0.98,0.08);  //
-//   xslider->SetMethod(".x action.C");                                 //
-//   TSlider *yslider = new TSlider("yslider","y",0.02,0.1,0.06,0.98);  //
-//   yslider->SetMethod(".x action.C");                                 //
-//}                                                                     //
-//                                                                      //
-//            macro action.C                                            //
-//{                                                                     //
-//   Int_t nx = hpxpy->GetXaxis()->GetNbins();                          //
-//   Int_t ny = hpxpy->GetYaxis()->GetNbins();                          //
-//   Int_t binxmin = nx*xslider->GetMinimum();                          //
-//   Int_t binxmax = nx*xslider->GetMaximum();                          //
-//   hpxpy->GetXaxis()->SetRange(binxmin,binxmax);                      //
-//   Int_t binymin = ny*yslider->GetMinimum();                          //
-//   Int_t binymax = ny*yslider->GetMaximum();                          //
-//   hpxpy->GetYaxis()->SetRange(binymin,binymax);                      //
-//   pad->cd();                                                         //
-//   hpxpy->Draw("lego1");                                              //
-//   c1->Update();                                                      //
-//}                                                                     //
-//    The canvas and the sliders created in the above macro are shown   //
-//    in the picture below.                                             //
-//Begin_Html                                                            //
-/*
-<img src="gif/xyslider.gif">
-*/
-//End_Html
-//                                                                      //
-//  Example 2 using SetObject    macro xyslider.C                       //
-//  =========================                                           //
-//                                                                      //
-//  Same example as above. Instead of SetMethod:                        //
-//    Myclass *obj = new Myclass(); // Myclass derived from TObject     //
-//    xslider->SetObject(obj);                                          //
-//    yslider->SetObject(obj);                                          //
-//                                                                      //
-//    When the slider will be changed, MyClass::ExecuteEvent will be    //
-//    called with px=0 and py = 0                                       //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSlider
 
+ A TSlider object is a specialized TPad including a TSliderBox object
+ The TSliderBox can be moved in the pad.
+
+Slider drawing options include the possibility to change the slider
+starting and ending positions or only one of them.
+
+The current slider position can be retrieved via the functions
+TSlider::GetMinimum and TSlider::GetMaximum
+ These two functions return numbers in the range [0,1].
+
+If a method has been set (via TSlider::SetMethod), the expression  is
+executed via the interpreter when the button 1 is released.
+
+  if no method has been set, and an object is referenced (TSlider::SetObject
+  has been called), while the slider is being moved/resized,
+  the object ExecuteEvent function is called.
+
+### Example 1 using TSlider::SetMethod
+
+#### macro xyslider.C
+
+~~~ {.cpp}
+void xyslider()
+{
+   // Example of macro featuring two sliders
+   TFile *f = new TFile("hsimple.root");
+   TH2F *hpxpy = (TH2F*)f->Get("hpxpy");
+   TCanvas *c1 = new TCanvas("c1");
+   TPad *pad = new TPad("pad","Color plot pad",0.1,0.1,0.98,0.98);
+   pad->Draw();
+   pad->cd();
+   hpxpy->Draw("COLZ");
+   c1->cd();
+
+   // Create two sliders in main canvas. When button1 will be released
+   // the macro action.C will be called.
+   TSlider *xslider = new TSlider("xslider","x",0.1,0.02,0.98,0.08);
+   xslider->SetMethod(".x action.C");
+   TSlider *yslider = new TSlider("yslider","y",0.02,0.1,0.06,0.98);
+   yslider->SetMethod(".x action.C");
+}
+~~~
+
+#### macro action.C
+~~~ {.cpp}
+void action()
+{
+   Int_t nx = hpxpy->GetXaxis()->GetNbins();
+   Int_t ny = hpxpy->GetYaxis()->GetNbins();
+   Int_t binxmin = nx*xslider->GetMinimum();
+   Int_t binxmax = nx*xslider->GetMaximum();
+   hpxpy->GetXaxis()->SetRange(binxmin,binxmax);
+   Int_t binymin = ny*yslider->GetMinimum();
+   Int_t binymax = ny*yslider->GetMaximum();
+   hpxpy->GetYaxis()->SetRange(binymin,binymax);
+   pad->cd();
+   hpxpy->Draw("COLZ");
+   c1->Update();
+}
+~~~
+
+The canvas and the sliders created in the above macro are shown in the picture
+below.
+
+\image html gpad_slider.png
+
+### Example 2 using TSlider::SetObject    macro xyslider.C
+
+  Same example as above. Instead of TSlider::SetMethod:
+~~~ {.cpp}
+    Myclass *obj = new Myclass(); // Myclass derived from TObject
+    xslider->SetObject(obj);
+    yslider->SetObject(obj);
+~~~
+
+When the slider will be changed, MyClass::ExecuteEvent will be called with px=0
+and py = 0
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// slider default constructor.
@@ -108,7 +109,6 @@ TSlider::TSlider(): TPad()
    fMinimum = 0;
    fMaximum = 1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slider normal constructor.
@@ -144,14 +144,12 @@ TSlider::TSlider(const char *name, const char *title, Double_t x1, Double_t y1,D
    AppendPad();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// slider default destructor.
 
 TSlider::~TSlider()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this slider with its current attributes.
@@ -160,7 +158,6 @@ void TSlider::Paint(Option_t *option)
 {
    TPad::Paint(option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
@@ -200,10 +197,8 @@ void TSlider::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    padsav->cd();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Set Slider range in [0,1]*-*-*-*-*
-///*-*                  =========================
+/// Set Slider range in [0,1]
 
 void TSlider::SetRange(Double_t xmin, Double_t xmax)
 {

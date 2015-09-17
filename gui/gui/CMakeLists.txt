@@ -2,9 +2,6 @@
 # CMakeLists.txt file for building ROOT gui/gui package
 ############################################################################
 
-ROOT_USE_PACKAGE(hist/hist)
-ROOT_USE_PACKAGE(net/net)
-ROOT_USE_PACKAGE(core/rint)
 include_directories(${CMAKE_SOURCE_DIR}/gui/ged/inc)
 
 set(libname Gui)

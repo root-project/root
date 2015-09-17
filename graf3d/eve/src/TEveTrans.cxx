@@ -39,30 +39,30 @@
 #define F32 11
 #define F33 15
 
-//______________________________________________________________________________
-//
-// TEveTrans is a 4x4 transformation matrix for homogeneous coordinates
-// stored internaly in a column-major order to allow direct usage by
-// GL. The element type is Double32_t as statically the floats would
-// be precise enough but continuous operations on the matrix must
-// retain precision of column vectors.
-//
-// Cartan angles are stored in fA[1-3] (+z, -y, +x). They are
-// recalculated on demand.
-//
-// Direct  element access (first two should be used with care):
-// operator[i]    direct access to elements,   i:0->15
-// CM(i,j)        element 4*j + i;           i,j:0->3    { CM ~ c-matrix }
-// operator(i,j)  element 4*(j-1) + i - 1    i,j:1->4
-//
-// Column-vector access:
-// USet Get/SetBaseVec(), Get/SetPos() and Arr[XYZT]() methods.
-//
-// For all methods taking the matrix indices:
-// 1->X, 2->Y, 3->Z; 4->Position (if applicable). 0 reserved for time.
-//
-// Shorthands in method-names:
-// LF ~ LocalFrame; PF ~ ParentFrame; IP ~ InPlace
+/** \class TEveTrans
+TEveTrans is a 4x4 transformation matrix for homogeneous coordinates
+stored internally in a column-major order to allow direct usage by
+GL. The element type is Double32_t as statically the floats would
+be precise enough but continuous operations on the matrix must
+retain precision of column vectors.
+
+Cartan angles are stored in fA[1-3] (+z, -y, +x). They are
+recalculated on demand.
+
+Direct  element access (first two should be used with care):
+  - operator[i]    direct access to elements,   i:0->15
+  - CM(i,j)        element 4*j + i;           i,j:0->3    { CM ~ c-matrix }
+  - operator(i,j)  element 4*(j-1) + i - 1    i,j:1->4
+
+Column-vector access:
+USet Get/SetBaseVec(), Get/SetPos() and Arr[XYZT]() methods.
+
+For all methods taking the matrix indices:
+1->X, 2->Y, 3->Z; 4->Position (if applicable). 0 reserved for time.
+
+Shorthands in method-names:
+LF ~ LocalFrame; PF ~ ParentFrame; IP ~ InPlace
+*/
 
 ClassImp(TEveTrans);
 
@@ -121,8 +121,6 @@ TEveTrans::TEveTrans(const Float_t arr[16]) :
 {
    SetFromArray(arr);
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset matrix to unity.
@@ -210,7 +208,8 @@ void TEveTrans::SetupRotation(Int_t i, Int_t j, Double_t f)
 /// A function for creating a rotation matrix that rotates a vector called
 /// "from" into another vector called "to".
 /// Input : from[3], to[3] which both must be *normalized* non-zero vectors
-/// Output: mtx[3][3] -- a 3x3 matrix in colum-major form
+/// Output: mtx[3][3] -- a 3x3 matrix in column-major form
+///
 /// Authors: Tomas Möller, John Hughes
 ///          "Efficiently Building a Matrix to Rotate One Vector to Another"
 ///          Journal of Graphics Tools, 4(4):1-4, 1999
@@ -294,12 +293,6 @@ void TEveTrans::SetupFromToVec(const TEveVector& from, const TEveVector& to)
    }
 }
 
-/******************************************************************************/
-
-// OrtoNorm3 and Invert are near the bottom.
-
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiply from left: this = t * this.
 
@@ -343,8 +336,6 @@ TEveTrans TEveTrans::operator*(const TEveTrans& t)
    return b;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Transpose 3x3 rotation sub-matrix.
 
@@ -356,10 +347,6 @@ void TEveTrans::TransposeRotationPart()
    x = fM[F12]; fM[F12] = fM[F21]; fM[F21] = x;
    fAsOK = kFALSE;
 }
-
-/******************************************************************************/
-// Move & Rotate
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Move in local-frame along axis with index ai.
@@ -400,8 +387,6 @@ void TEveTrans::RotateLF(Int_t i1, Int_t i2, Double_t amount)
    fAsOK = kFALSE;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Move in parent-frame along axis index ai.
 
@@ -441,8 +426,6 @@ void TEveTrans::RotatePF(Int_t i1, Int_t i2, Double_t amount)
    fAsOK = kFALSE;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Move in a's coord-system along axis-index ai.
 
@@ -480,10 +463,6 @@ void TEveTrans::Rotate(const TEveTrans& a, Int_t i1, Int_t i2, Double_t amount)
    fAsOK = kFALSE;
 }
 
-/******************************************************************************/
-// Base-vector interface
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set base-vector with index b.
 
@@ -519,10 +498,6 @@ void TEveTrans::GetBaseVec(Int_t b, TVector3& v) const
    const Double_t* col = fM + 4*--b;
    v.SetXYZ(col[0], col[1], col[2]);
 }
-
-/******************************************************************************/
-// Position interface
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set position (base-vec 4).
@@ -583,10 +558,6 @@ TVector3 TEveTrans::GetPos() const
    return TVector3(fM[F03], fM[F13], fM[F23]);
 }
 
-/******************************************************************************/
-// Cardan angle interface
-/******************************************************************************/
-
 namespace
 {
 inline void clamp_angle(Float_t& a)
@@ -622,7 +593,7 @@ void TEveTrans::SetRotByAngles(Float_t a1, Float_t a2, Float_t a3)
 /// Pattern consists of "XxYyZz" characters.
 /// eg: x means rotate about x axis, X means rotate in negative direction
 /// xYz -> R_x(a3) * R_y(-a2) * R_z(a1); (standard Gled representation)
-/// Note that angles and pattern elements have inversed order!
+/// Note that angles and pattern elements have inverted order!
 ///
 /// Implements Eulerian/Cardanian angles in a uniform way.
 
@@ -667,10 +638,6 @@ void TEveTrans::GetRotAngles(Float_t* x) const
    }
    x[0] = fA1; x[1] = fA2; x[2] = fA3;
 }
-
-/******************************************************************************/
-// Scaling
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Scale matrix. Translation part untouched.
@@ -753,11 +720,6 @@ void TEveTrans::SetScaleZ(Double_t sz)
    sz /= TMath::Sqrt( fM[F02]*fM[F02] + fM[F12]*fM[F12] + fM[F22]*fM[F22] );
    fM[F02] *= sz; fM[F12] *= sz; fM[F22] *= sz;
 }
-
-
-/******************************************************************************/
-// Operations on vectors
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiply vector in-place.
@@ -855,10 +817,6 @@ TVector3 TEveTrans::Rotate(const TVector3& v) const
                    fM[F20]*v.x() + fM[F21]*v.y() + fM[F22]*v.z());
 }
 
-/******************************************************************************/
-// Normalization, ortogonalization
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Norm 3-vector in column col.
 
@@ -895,10 +853,6 @@ void TEveTrans::OrtoNorm3()
    // Cross-product faster than the following.
    // Orto3Column(3,1); Orto3Column(3,2); Norm3Column(3);
 }
-
-/******************************************************************************/
-// Inversion
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Invert matrix.
@@ -981,8 +935,6 @@ Double_t TEveTrans::Invert()
    return det;
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TEveTrans.
 
@@ -995,9 +947,6 @@ void TEveTrans::Streamer(TBuffer &R__b)
       TEveTrans::Class()->WriteBuffer(R__b, this);
    }
 }
-
-/******************************************************************************/
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print in reasonable format.
@@ -1023,10 +972,6 @@ std::ostream& operator<<(std::ostream& s, const TEveTrans& t)
          s << t(i,j) << ((j==4) ? "\n" : "\t");
    return s;
 }
-
-/******************************************************************************/
-// TEveUtil stuff
-/******************************************************************************/
 
 #include "TGeoMatrix.h"
 #include "TBuffer3D.h"
@@ -1120,7 +1065,7 @@ void TEveTrans::SetBuffer3D(TBuffer3D& buff)
 /// Test if the transformation is a scale.
 /// To be used by ROOT TGLObject descendants that potentially need to
 /// use GL_NORMALIZE.
-/// The low/high limits are expected to be squares of acutal limits.
+/// The low/high limits are expected to be squares of actual limits.
 ///
 /// Ideally this should be done by the TGLViewer [but is not].
 

@@ -118,10 +118,20 @@ Double_t RooSpHarmonic::evaluate() const
     return n;
 }
 
+//_____________________________________________________________________________
 namespace {
-    bool fullRange(const RooRealProxy& x ,const char* range)  {
-      return ( x.min(range) == x.min() && x.max(range) == x.max() ) ; 
+  Bool_t fullRange(const RooRealProxy& x, const char* range, Bool_t phi)
+  {
+    if (phi) {
+      return range == 0 || strlen(range) == 0
+          ? std::fabs(x.max() - x.min() - TMath::TwoPi()) < 1.e-8
+          : std::fabs(x.max(range) - x.min(range) - TMath::TwoPi()) < 1.e-8;
     }
+
+    return range == 0 || strlen(range) == 0
+        ? std::fabs(x.min() + 1.) < 1.e-8 && std::fabs(x.max() - 1.) < 1.e-8
+        : std::fabs(x.min(range) + 1.) < 1.e-8 && std::fabs(x.max(range) - 1.) < 1.e-8;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,12 +140,12 @@ namespace {
 
 Int_t RooSpHarmonic::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
-  bool noRange  = ( rangeName == 0 || strlen(rangeName)==0 );
-  bool phiOK    = ( noRange || fullRange(_phi,rangeName) );
-  bool cthetaOK = ( noRange || fullRange(_ctheta,rangeName) );
-  if (cthetaOK && phiOK && matchArgs(allVars, analVars, _ctheta,_phi)) return 3;
-  if (            phiOK && matchArgs(allVars, analVars,         _phi)) return 2;
-  return RooLegendre::getAnalyticalIntegral(allVars,analVars,rangeName);
+  // we don't support indefinite integrals... maybe one day, when there is a use for it.....
+  Bool_t cthetaOK = fullRange(_ctheta, rangeName, kFALSE);
+  Bool_t phiOK    = fullRange(_phi,    rangeName, kTRUE );
+  if (cthetaOK && phiOK && matchArgs(allVars, analVars, _ctheta, _phi)) return 3;
+  if (            phiOK && matchArgs(allVars, analVars,          _phi)) return 2;
+  return RooLegendre::getAnalyticalIntegral(allVars, analVars, rangeName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -26,14 +26,10 @@
 
 #include <cassert>
 
-//==============================================================================
-// TEveCaloViz
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Base class for calorimeter data visualization.
-// See TEveCalo2D and TEveCalo3D for concrete implementations.
+/** \class TEveCaloViz
+Base class for calorimeter data visualization.
+See TEveCalo2D and TEveCalo3D for concrete implementations.
+*/
 
 ClassImp(TEveCaloViz);
 
@@ -93,7 +89,7 @@ Float_t TEveCaloViz::GetDataSliceThreshold(Int_t slice) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Management of selection state and ownership of selected cell list
-/// is done in TEveCaloData. This is a reason selection is forwared to it.
+/// is done in TEveCaloData. This is a reason selection is forwarded to it.
 
 TEveElement* TEveCaloViz::ForwardSelection()
 {
@@ -102,7 +98,7 @@ TEveElement* TEveCaloViz::ForwardSelection()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Management of selection state and ownership of selected cell list
-/// is done in TEveCaloData. We still want GUI editor to disply
+/// is done in TEveCaloData. We still want GUI editor to display
 /// concrete calo-viz object.
 
 TEveElement* TEveCaloViz::ForwardEdit()
@@ -319,7 +315,7 @@ Bool_t TEveCaloViz::CellInEtaPhiRng(TEveCaloData::CellData_t& cellData) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assign paramteres from given model.
+/// Assign parameters from given model.
 
 void TEveCaloViz::AssignCaloVizParameters(TEveCaloViz* m)
 {
@@ -432,17 +428,14 @@ void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice, Float_t& outH) co
    }
 }
 
-
-//==============================================================================
-// TEveCalo3D
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Visualization of a calorimeter event data in 3D.
+/** \class TEveCalo3D
+Visualization of a calorimeter event data in 3D.
+*/
 
 ClassImp(TEveCalo3D);
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveCalo3D::TEveCalo3D(TEveCaloData* d, const char* n, const char* t):
    TEveCaloViz(d, n, t),
@@ -453,9 +446,6 @@ TEveCalo3D::TEveCalo3D(TEveCaloData* d, const char* n, const char* t):
    fFrameColor        (kGray+1),
    fFrameTransparency (80)
 {
-
-   // Constructor.
-
    fCanEditMainColor        = kTRUE;
    fCanEditMainTransparency = kTRUE;
    fMainColorPtr = &fFrameColor;
@@ -490,14 +480,9 @@ void TEveCalo3D::ComputeBBox()
    fBBox[5] =  fEndCapPosF + th;
 }
 
-
-//==============================================================================
-// TEveCalo2D
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Visualization of a calorimeter event data in 2D.
+/** \class TEveCalo2D
+Visualization of a calorimeter event data in 2D.
+*/
 
 ClassImp(TEveCalo2D);
 
@@ -659,7 +644,7 @@ void TEveCalo2D::BuildCellIdCache()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sort slected cells in eta or phi bins for selection and highlight.
+/// Sort selected cells in eta or phi bins for selection and highlight.
 
 void TEveCalo2D::CellSelectionChanged()
 {
@@ -668,7 +653,7 @@ void TEveCalo2D::CellSelectionChanged()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sort slected cells in eta or phi bins.
+/// Sort selected cells in eta or phi bins.
 
 void TEveCalo2D::CellSelectionChangedInternal(TEveCaloData::vCellId_t& inputCells, std::vector<TEveCaloData::vCellId_t*>& outputCellLists)
 {
@@ -780,17 +765,14 @@ void TEveCalo2D::ComputeBBox()
 }
 
 
-//==============================================================================
-// TEveCaloLego
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Visualization of calorimeter data as eta/phi histogram.
+/** \class TEveCaloLego
+Visualization of calorimeter data as eta/phi histogram.
+*/
 
 ClassImp(TEveCaloLego);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveCaloLego::TEveCaloLego(TEveCaloData* d, const char* n, const char* t):
    TEveCaloViz(d, n, t),
@@ -821,13 +803,12 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* d, const char* n, const char* t):
    fDrawNumberCellPixels(18), // draw numbers on cell above 30 pixels
    fCellPixelFontSize(12) // size of cell fonts in pixels
 {
-   // Constructor.
-
    fMaxTowerH = 1;
    SetElementNameTitle("TEveCaloLego", "TEveCaloLego");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Set data.
 
 void TEveCaloLego::SetData(TEveCaloData* data)
 {

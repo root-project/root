@@ -9,30 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//____________________________________________________________________
-//Begin_Html <!--
-/* -->
-   </pre>
-<H1><A NAME="SECTION00010000000000000000"></A>
-<A NAME="sec:lintra"></A>
-<BR>
+/** \class TPrincipal
+    \ingroup Hist
 Principal Components Analysis (PCA)
-</H1>
 
-<P>
 The current implementation is based on the LINTRA package from CERNLIB
 by R. Brun, H. Hansroul, and J. Kubler.
 The class has been implemented by Christian Holm Christensen in August 2000.
 
-<P>
+## Introduction
 
-<H2><A NAME="SECTION00011000000000000000"></A>
-<A NAME="sec:intro1"></A>
-<BR>
-Introduction
-</H2>
-
-<P>
 In many applications of various fields of research, the treatment of
 large amounts of data requires powerful techniques capable of rapid
 data reduction and analysis. Usually, the quantities most
@@ -42,7 +28,6 @@ then useful to have a way of selecting an optimal set of variables
 necessary for the recognition process and reducing the dimensionality
 of the problem, resulting in an easier classification procedure.
 
-<P>
 This paper describes the implementation of one such method of
 feature selection, namely the principal components analysis. This
 multidimensional technique is well known in the field of pattern
@@ -50,373 +35,119 @@ recognition and and its use in Particle Physics has been documented
 elsewhere (cf. H. Wind, <I>Function Parameterization</I>, CERN
 72-21).
 
-<P>
-
-<H2><A NAME="SECTION00012000000000000000"></A>
-<A NAME="sec:overview"></A>
-<BR>
-Overview
-</H2>
-
-<P>
+## Overview
 Suppose we have prototypes which are trajectories of particles,
 passing through a spectrometer. If one measures the passage of the
 particle at say 8 fixed planes, the trajectory is described by an
 8-component vector:
-<BR><P></P>
-<DIV ALIGN="CENTER">
-
-<!-- MATH
- \begin{displaymath}
-\mathbf{x} = \left(x_0, x_1, \ldots, x_7\right)
-\end{displaymath}
- -->
-
-
-<IMG
- WIDTH="145" HEIGHT="31" BORDER="0"
- SRC="gif/principal_img1.gif"
- ALT="\begin{displaymath}
-\mathbf{x} = \left(x_0, x_1, \ldots, x_7\right)
-\end{displaymath}">
-</DIV>
-<BR CLEAR="ALL">
-<P></P>
+\f[
+  \mathbf{x} = \left(x_0, x_1, \ldots, x_7\right)
+\f]
 in 8-dimensional pattern space.
 
-<P>
 One proceeds by generating a a representative tracks sample and
-building up the covariance matrix <IMG
- WIDTH="16" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img2.gif"
- ALT="$\mathsf{C}$">. Its eigenvectors and
+building up the covariance matrix \f$\mathsf{C}\f$. Its eigenvectors and
 eigenvalues are computed by standard methods, and thus a new basis is
 obtained for the original 8-dimensional space the expansion of the
 prototypes,
-<BR><P></P>
-<DIV ALIGN="CENTER">
-
-<!-- MATH
- \begin{displaymath}
-\mathbf{x}_m = \sum^7_{i=0} a_{m_i} \mathbf{e}_i
-\quad
-\mbox{where}
-\quad
-a_{m_i} = \mathbf{x}^T\bullet\mathbf{e}_i
-\end{displaymath}
- -->
-
-
-<IMG
- WIDTH="295" HEIGHT="58" BORDER="0"
- SRC="gif/principal_img3.gif"
- ALT="\begin{displaymath}
-\mathbf{x}_m = \sum^7_{i=0} a_{m_i} \mathbf{e}_i
-\quad
-\mbox{where}
-\quad
-a_{m_i} = \mathbf{x}^T\bullet\mathbf{e}_i
-\end{displaymath}">
-</DIV>
-<BR CLEAR="ALL">
-<P></P>
-
-<P>
-allows the study of the behavior of the coefficients <IMG
- WIDTH="31" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img4.gif"
- ALT="$a_{m_i}$"> for all
+\f[
+  \mathbf{x}_m = \sum^7_{i=0} a_{m_i} \mathbf{e}_i
+  \quad
+  \mbox{where}
+  \quad
+  a_{m_i} = \mathbf{x}^T\bullet\mathbf{e}_i
+\f]
+allows the study of the behavior of the coefficients \f$a_{m_i}\f$ for all
 the tracks of the sample. The eigenvectors which are insignificant for
 the trajectory description in the expansion will have their
-corresponding coefficients <IMG
- WIDTH="31" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img4.gif"
- ALT="$a_{m_i}$"> close to zero for all the
+corresponding coefficients \f$a_{m_i}\f$ close to zero for all the
 prototypes.
 
-<P>
 On one hand, a reduction of the dimensionality is then obtained by
 omitting these least significant vectors in the subsequent analysis.
 
-<P>
 On the other hand, in the analysis of real data, these least
 significant variables(?) can be used for the pattern
 recognition problem of extracting the valid combinations of
 coordinates describing a true trajectory from the set of all possible
 wrong combinations.
 
-<P>
 The program described here performs this principal components analysis
 on a sample of data provided by the user. It computes the covariance
 matrix, its eigenvalues ands corresponding eigenvectors and exhibits
-the behavior of the principal components (<IMG
- WIDTH="31" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img4.gif"
- ALT="$a_{m_i}$">), thus providing
+the behavior of the principal components \f$a_{m_i}\f$, thus providing
 to the user all the means of understanding their data.
 
-<P>
-
-<H2><A NAME="SECTION00013000000000000000"></A>
-<A NAME="sec:method"></A>
-<BR>
-Principal Components Method
-</H2>
-
-<P>
-Let's consider a sample of <IMG
- WIDTH="23" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img5.gif"
- ALT="$M$"> prototypes each being characterized by
-<IMG
- WIDTH="18" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img6.gif"
- ALT="$P$"> variables
-<!-- MATH
- $x_0, x_1, \ldots, x_{P-1}$
- -->
-<IMG
- WIDTH="107" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img7.gif"
- ALT="$x_0, x_1, \ldots, x_{P-1}$">. Each prototype is a point, or a
-column vector, in a <IMG
- WIDTH="18" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img6.gif"
- ALT="$P$">-dimensional <I>pattern space</I>.
-<BR>
-<DIV ALIGN="RIGHT">
-
-
-<!-- MATH
- \begin{equation}
-\mathbf{x} = \left[\begin{array}{c}
+## Principal Components Method
+Let's consider a sample of \f$M\f$ prototypes each being characterized by
+\f$P\f$ variables \f$x_0, x_1, \ldots, x_{P-1}\f$. Each prototype is a point, or a
+column vector, in a \f$P\f$-dimensional *Pattern space*.
+\f[
+  \mathbf{x} = \left[\begin{array}{c}
     x_0\\x_1\\\vdots\\x_{P-1}\end{array}\right]\,,
-\end{equation}
- -->
+\f]
+where each \f$x_n\f$ represents the particular value associated with the
+\f$n\f$-dimension.
 
-<TABLE WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><IMG
- WIDTH="102" HEIGHT="102" BORDER="0"
- SRC="gif/principal_img8.gif"
- ALT="\begin{displaymath}
-\mathbf{x} = \left[\begin{array}{c}
-x_0\\ x_1\\ \vdots\\ x_{P-1}\end{array}\right]\,,
-\end{displaymath}"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(1)</TD></TR>
-</TABLE>
-<BR CLEAR="ALL"></DIV><P></P>
-where each <IMG
- WIDTH="23" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img9.gif"
- ALT="$x_n$"> represents the particular value associated with the
-<IMG
- WIDTH="15" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img10.gif"
- ALT="$n$">-dimension.
-
-<P>
-Those <IMG
- WIDTH="18" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img6.gif"
- ALT="$P$"> variables are the quantities accessible to the
+Those \f$P\f$ variables are the quantities accessible to the
 experimentalist, but are not necessarily the most significant for the
 classification purpose.
 
-<P>
-The <I>Principal Components Method</I> consists of applying a
-<I>linear</I> transformation to the original variables. This
+The *Principal Components Method* consists of applying a
+*linear* transformation to the original variables. This
 transformation is described by an orthogonal matrix and is equivalent
 to a rotation of the original pattern space into a new set of
 coordinate vectors, which hopefully provide easier feature
 identification and dimensionality reduction.
 
-<P>
 Let's define the covariance matrix:
-<BR>
-<DIV ALIGN="RIGHT">
-
-
-<!-- MATH
- \begin{equation}
-\mathsf{C} = \left\langle\mathbf{y}\mathbf{y}^T\right\rangle
+\f[
+  \mathsf{C} = \left\langle\mathbf{y}\mathbf{y}^T\right\rangle
   \quad\mbox{where}\quad
   \mathbf{y} = \mathbf{x} - \left\langle\mathbf{x}\right\rangle\,,
-\end{equation}
- -->
-
-<TABLE WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:C"></A><IMG
- WIDTH="267" HEIGHT="37" BORDER="0"
- SRC="gif/principal_img11.gif"
- ALT="\begin{displaymath}
-\mathsf{C} = \left\langle\mathbf{y}\mathbf{y}^T\right\rangl...
-...athbf{y} = \mathbf{x} - \left\langle\mathbf{x}\right\rangle\,,
-\end{displaymath}"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(2)</TD></TR>
-</TABLE>
-<BR CLEAR="ALL"></DIV><P></P>
-and the brackets indicate mean value over the sample of <IMG
- WIDTH="23" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img5.gif"
- ALT="$M$">
+\f]
+and the brackets indicate mean value over the sample of \f$M\f$
 prototypes.
 
-<P>
-This matrix <IMG
- WIDTH="16" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img2.gif"
- ALT="$\mathsf{C}$"> is real, positive definite, symmetric, and will
+This matrix \f$\mathsf{C}\f$ is real, positive definite, symmetric, and will
 have all its eigenvalues greater then zero. It will now be show that
 among the family of all the complete orthonormal bases of the pattern
 space, the base formed by the eigenvectors of the covariance matrix
 and belonging to the largest eigenvalues, corresponds to the most
 significant features of the description of the original prototypes.
 
-<P>
-let the prototypes be expanded on into a set of <IMG
- WIDTH="20" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img12.gif"
- ALT="$N$"> basis vectors
-
-<!-- MATH
- $\mathbf{e}_n, n=0,\ldots,N,N+1, \ldots, P-1$
- -->
-<IMG
- WIDTH="233" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img13.gif"
- ALT="$\mathbf{e}_n, n=0,\ldots,N,N+1, \ldots, P-1$">,
-<BR>
-<DIV ALIGN="RIGHT">
-
-
-<!-- MATH
- \begin{equation}
-\mathbf{y}_i = \sum^N_{i=0} a_{i_n} \mathbf{e}_n,
+let the prototypes be expanded on into a set of \f$N\f$ basis vectors
+\f$\mathbf{e}_n, n=0,\ldots,N,N+1, \ldots, P-1\f$
+\f[
+  \mathbf{y}_i = \sum^N_{i=0} a_{i_n} \mathbf{e}_n,
   \quad
   i = 1, \ldots, M,
   \quad
   N < P-1
-\end{equation}
- -->
-
-<TABLE WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:yi"></A><IMG
- WIDTH="303" HEIGHT="58" BORDER="0"
- SRC="gif/principal_img14.gif"
- ALT="\begin{displaymath}
-\mathbf{y}_i = \sum^N_{i=0} a_{i_n} \mathbf{e}_n,
-\quad
-i = 0, \ldots, M,
-\quad
-N &lt; P-1
-\end{displaymath}"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(3)</TD></TR>
-</TABLE>
-<BR CLEAR="ALL"></DIV><P></P>
-
-<P>
-The `best' feature coordinates <IMG
- WIDTH="23" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img15.gif"
- ALT="$\mathbf{e}_n$">, spanning a <I>feature
-  space</I>,  will be obtained by minimizing the error due to this
+\f]
+The `best' feature coordinates \f$\mathbf{e}_n\f$, spanning a *feature
+space*,  will be obtained by minimizing the error due to this
 truncated expansion, i.e.,
-<BR>
-<DIV ALIGN="RIGHT">
-
-
-<!-- MATH
- \begin{equation}
-\min\left(E_N\right) =
+\f[
+  \min\left(E_N\right) =
   \min\left[\left\langle\left(\mathbf{y}_i - \sum^N_{i=0} a_{i_n} \mathbf{e}_n\right)^2\right\rangle\right]
-\end{equation}
- -->
-
-<TABLE WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:mini"></A><IMG
- WIDTH="306" HEIGHT="65" BORDER="0"
- SRC="gif/principal_img16.gif"
- ALT="\begin{displaymath}
-\min\left(E_N\right) =
-\min\left[\left\langle\left(\mathb...
-...\sum^N_{i=0} a_{i_n} \mathbf{e}_n\right)^2\right\rangle\right]
-\end{displaymath}"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(4)</TD></TR>
-</TABLE>
-<BR CLEAR="ALL"></DIV><P></P>
+\f]
 with the conditions:
-<BR>
-<DIV ALIGN="RIGHT">
-
-
-<!-- MATH
- \begin{equation}
-\mathbf{e}_k\bullet\mathbf{e}_j = \delta_{jk} =
+\f[
+  \mathbf{e}_k\bullet\mathbf{e}_j = \delta_{jk} =
   \left\{\begin{array}{rcl}
     1 & \mbox{for} & k = j\\
     0 & \mbox{for} & k \neq j
   \end{array}\right.
-\end{equation}
- -->
-
-<TABLE WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:ortocond"></A><IMG
- WIDTH="240" HEIGHT="54" BORDER="0"
- SRC="gif/principal_img17.gif"
- ALT="\begin{displaymath}
-\mathbf{e}_k\bullet\mathbf{e}_j = \delta_{jk} =
-\left\{\b...
-...for} &amp; k = j\\
-0 &amp; \mbox{for} &amp; k \neq j
-\end{array}\right.
-\end{displaymath}"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(5)</TD></TR>
-</TABLE>
-<BR CLEAR="ALL"></DIV><P></P>
-
-<P>
-Multiplying (<A HREF="prin_node1.html#eq:yi">3</A>) by
-<!-- MATH
- $\mathbf{e}^T_n$
- -->
-<IMG
- WIDTH="24" HEIGHT="38" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img18.gif"
- ALT="$\mathbf{e}^T_n$"> using (<A HREF="prin_node1.html#eq:ortocond">5</A>),
+\f]
+Multiplying (3) by \f$\mathbf{e}^T_n\f$ using (5),
 we get
-<BR>
-<DIV ALIGN="RIGHT">
-
-
-<!-- MATH
- \begin{equation}
-a_{i_n} = \mathbf{y}_i^T\bullet\mathbf{e}_n\,,
-\end{equation}
- -->
-
-<TABLE WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:ai"></A><IMG
- WIDTH="108" HEIGHT="31" BORDER="0"
- SRC="gif/principal_img19.gif"
- ALT="\begin{displaymath}
-a_{i_n} = \mathbf{y}_i^T\bullet\mathbf{e}_n\,,
-\end{displaymath}"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(6)</TD></TR>
-</TABLE>
-<BR CLEAR="ALL"></DIV><P></P>
+\f[
+  a_{i_n} = \mathbf{y}_i^T\bullet\mathbf{e}_n\,,
+\f]
 so the error becomes
-<BR>
-<DIV ALIGN="CENTER"><A NAME="eq:error"></A>
-
-<!-- MATH
- \begin{eqnarray}
-E_N &=&
+\f{eqnarray*}{
+  E_N &=&
   \left\langle\left[\sum_{n=N+1}^{P-1}  a_{i_n}\mathbf{e}_n\right]^2\right\rangle\nonumber\\
   &=&
   \left\langle\left[\sum_{n=N+1}^{P-1}  \mathbf{y}_i^T\bullet\mathbf{e}_n\mathbf{e}_n\right]^2\right\rangle\nonumber\\
@@ -424,202 +155,37 @@ E_N &=&
   \left\langle\sum_{n=N+1}^{P-1}  \mathbf{e}_n^T\mathbf{y}_i\mathbf{y}_i^T\mathbf{e}_n\right\rangle\nonumber\\
   &=&
   \sum_{n=N+1}^{P-1}  \mathbf{e}_n^T\mathsf{C}\mathbf{e}_n
-\end{eqnarray}
- -->
-
-<TABLE ALIGN="CENTER" CELLPADDING="0" WIDTH="100%">
-<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
- WIDTH="30" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img20.gif"
- ALT="$\displaystyle E_N$"></TD>
-<TD ALIGN="CENTER" NOWRAP><IMG
- WIDTH="18" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img21.gif"
- ALT="$\textstyle =$"></TD>
-<TD ALIGN="LEFT" NOWRAP><IMG
- WIDTH="151" HEIGHT="80" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img22.gif"
- ALT="$\displaystyle \left\langle\left[\sum_{n=N+1}^{P-1} a_{i_n}\mathbf{e}_n\right]^2\right\rangle$"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-&nbsp;</TD></TR>
-<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT">&nbsp;</TD>
-<TD ALIGN="CENTER" NOWRAP><IMG
- WIDTH="18" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img21.gif"
- ALT="$\textstyle =$"></TD>
-<TD ALIGN="LEFT" NOWRAP><IMG
- WIDTH="184" HEIGHT="80" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img23.gif"
- ALT="$\displaystyle \left\langle\left[\sum_{n=N+1}^{P-1} \mathbf{y}_i^T\bullet\mathbf{e}_n\mathbf{e}_n\right]^2\right\rangle$"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-&nbsp;</TD></TR>
-<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT">&nbsp;</TD>
-<TD ALIGN="CENTER" NOWRAP><IMG
- WIDTH="18" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img21.gif"
- ALT="$\textstyle =$"></TD>
-<TD ALIGN="LEFT" NOWRAP><IMG
- WIDTH="156" HEIGHT="69" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img24.gif"
- ALT="$\displaystyle \left\langle\sum_{n=N+1}^{P-1} \mathbf{e}_n^T\mathbf{y}_i\mathbf{y}_i^T\mathbf{e}_n\right\rangle$"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-&nbsp;</TD></TR>
-<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT">&nbsp;</TD>
-<TD ALIGN="CENTER" NOWRAP><IMG
- WIDTH="18" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img21.gif"
- ALT="$\textstyle =$"></TD>
-<TD ALIGN="LEFT" NOWRAP><IMG
- WIDTH="104" HEIGHT="69" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img25.gif"
- ALT="$\displaystyle \sum_{n=N+1}^{P-1} \mathbf{e}_n^T\mathsf{C}\mathbf{e}_n$"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(7)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-
-<P>
-The minimization of the sum in (<A HREF="prin_node1.html#eq:error">7</A>) is obtained when each
-term
-<!-- MATH
- $\mathbf{e}_n^\mathsf{C}\mathbf{e}_n$
- -->
-<IMG
- WIDTH="41" HEIGHT="38" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img26.gif"
- ALT="$\mathbf{e}_n^\mathsf{C}\mathbf{e}_n$"> is minimum, since <IMG
- WIDTH="16" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img2.gif"
- ALT="$\mathsf{C}$"> is
+\f}
+The minimization of the sum in (7) is obtained when each
+term \f$\mathbf{e}_n^\mathsf{C}\mathbf{e}_n\f$ is minimum, since \f$\mathsf{C}\f$ is
 positive definite. By the method of Lagrange multipliers, and the
-condition&nbsp;(<A HREF="prin_node1.html#eq:ortocond">5</A>), we get
-
-<P>
-
-<BR>
-<DIV ALIGN="RIGHT">
-
-
-<!-- MATH
- \begin{equation}
-E_N = \sum^{P-1}_{n=N+1} \left(\mathbf{e}_n^T\mathsf{C}\mathbf{e}_n -
+condition (5), we get
+\f[
+  E_N = \sum^{P-1}_{n=N+1} \left(\mathbf{e}_n^T\mathsf{C}\mathbf{e}_n -
     l_n\mathbf{e}_n^T\bullet\mathbf{e}_n + l_n\right)
-\end{equation}
- -->
-
-<TABLE WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:minerror"></A><IMG
- WIDTH="291" HEIGHT="60" BORDER="0"
- SRC="gif/principal_img27.gif"
- ALT="\begin{displaymath}
-E_N = \sum^{P-1}_{n=N+1} \left(\mathbf{e}_n^T\mathsf{C}\mathbf{e}_n -
-l_n\mathbf{e}_n^T\bullet\mathbf{e}_n + l_n\right)
-\end{displaymath}"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(8)</TD></TR>
-</TABLE>
-<BR CLEAR="ALL"></DIV><P></P>
-The minimum condition
-<!-- MATH
- $\frac{dE_N}{d\mathbf{e}^T_n} = 0$
- -->
-<IMG
- WIDTH="68" HEIGHT="40" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img28.gif"
- ALT="$\frac{dE_N}{d\mathbf{e}^T_n} = 0$"> leads to the
+\f]
+The minimum condition \f$\frac{dE_N}{d\mathbf{e}^T_n} = 0\f$ leads to the
 equation
-<BR>
-<DIV ALIGN="RIGHT">
-
-
-<!-- MATH
- \begin{equation}
-\mathsf{C}\mathbf{e}_n = l_n\mathbf{e}_n\,,
-\end{equation}
- -->
-
-<TABLE WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:Ce"></A><IMG
- WIDTH="91" HEIGHT="30" BORDER="0"
- SRC="gif/principal_img29.gif"
- ALT="\begin{displaymath}
-\mathsf{C}\mathbf{e}_n = l_n\mathbf{e}_n\,,
-\end{displaymath}"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(9)</TD></TR>
-</TABLE>
-<BR CLEAR="ALL"></DIV><P></P>
-which shows that <IMG
- WIDTH="23" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img15.gif"
- ALT="$\mathbf{e}_n$"> is an eigenvector of the covariance
-matrix <IMG
- WIDTH="16" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img2.gif"
- ALT="$\mathsf{C}$"> with eigenvalue <IMG
- WIDTH="19" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img30.gif"
- ALT="$l_n$">. The estimated minimum error is
+\f[
+  \mathsf{C}\mathbf{e}_n = l_n\mathbf{e}_n\,,
+\f]
+which shows that \f$\mathbf{e}_n\f$ is an eigenvector of the covariance
+matrix \f$\mathsf{C}\f$ with eigenvalue \f$l_n\f$. The estimated minimum error is
 then given by
-<BR>
-<DIV ALIGN="RIGHT">
-
-
-<!-- MATH
- \begin{equation}
-E_N \sim \sum^{P-1}_{n=N+1} \mathbf{e}_n^T\bullet l_n\mathbf{e}_n
+\f[
+  E_N \sim \sum^{P-1}_{n=N+1} \mathbf{e}_n^T\bullet l_n\mathbf{e}_n
       = \sum^{P-1}_{n=N+1}  l_n\,,
-\end{equation}
- -->
+\f]
+where \f$l_n,\,n=N+1,\ldots,P\f$ \f$l_n,\,n=N+1,\ldots,P-1\f$ are the eigenvalues associated with the
+omitted eigenvectors in the expansion (3). Thus, by choosing
+the \f$N\f$ largest eigenvalues, and their associated eigenvectors, the
+error \f$E_N\f$ is minimized.
 
-<TABLE WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:esterror"></A><IMG
- WIDTH="264" HEIGHT="60" BORDER="0"
- SRC="gif/principal_img31.gif"
- ALT="\begin{displaymath}
-E_N \sim \sum^{P-1}_{n=N+1} \mathbf{e}_n^T\bullet l_n\mathbf{e}_n
-= \sum^{P-1}_{n=N+1} l_n\,,
-\end{displaymath}"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(10)</TD></TR>
-</TABLE>
-<BR CLEAR="ALL"></DIV><P></P>
-where
-<!-- MATH
- $l_n,\,n=N+1,\ldots,P$
- -->
-<IMG
- WIDTH="161" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img32.gif"
- ALT="$l_n,\,n=N+1,\ldots,P-1$"> are the eigenvalues associated with the
-omitted eigenvectors in the expansion&nbsp;(<A HREF="prin_node1.html#eq:yi">3</A>). Thus, by choosing
-the <IMG
- WIDTH="20" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
- SRC="gif/principal_img12.gif"
- ALT="$N$"> largest eigenvalues, and their associated eigenvectors, the
-error <IMG
- WIDTH="30" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img33.gif"
- ALT="$E_N$"> is minimized.
-
-<P>
 The transformation matrix to go from the pattern space to the feature
-space consists of the ordered eigenvectors
-
-<!-- MATH
- $\mathbf{e}_1,\ldots,\mathbf{e}_P$
- -->
-<IMG
- WIDTH="80" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
- SRC="gif/principal_img34.gif"
- ALT="$\mathbf{e}_0,\ldots,\mathbf{e}_{P-1}$"> for its columns
-<BR>
-<DIV ALIGN="RIGHT">
-
-
-<!-- MATH
- \begin{equation}
-\mathsf{T} = \left[
+space consists of the ordered eigenvectors \f$\mathbf{e}_1,\ldots,\mathbf{e}_P\f$ 
+\f$\mathbf{e}_0,\ldots,\mathbf{e}_{P-1}\f$ for its columns
+\f[
+  \mathsf{T} = \left[
     \begin{array}{cccc}
       \mathbf{e}_0 &
       \mathbf{e}_1 &
@@ -633,35 +199,13 @@ space consists of the ordered eigenvectors
       \vdots        &  \vdots        & \ddots &  \vdots \\
       \mathbf{e}_{0_{P-1}} &  \mathbf{e}_{1_{P-1}} & \cdots &  \mathbf{e}_{{P-1}_{P-1}}\\
     \end{array}\right]
-\end{equation}
- -->
-
-<TABLE WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:trans"></A><IMG
- WIDTH="378" HEIGHT="102" BORDER="0"
- SRC="gif/principal_img35.gif"
- ALT="\begin{displaymath}
-\mathsf{T} = \left[
-\begin{array}{cccc}
-\mathbf{e}_0 &amp;
-\...
-...bf{e}_{1_{P-1}} &amp; \cdots &amp; \mathbf{e}_{{P-1}_{P-1}}\\
-\end{array}\right]
-\end{displaymath}"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(11)</TD></TR>
-</TABLE>
-<BR CLEAR="ALL"></DIV><P></P>
+\f]
 This is an orthogonal transformation, or rotation, of the pattern
 space and feature selection results in ignoring certain coordinates
 in the transformed space.
-   <p>
-   <DIV ALIGN="RIGHT">
-   Christian Holm<br>
-   August 2000, CERN
-   </DIV>
-<!--*/
-// -->End_Html
+
+Christian Holm August 2000, CERN
+*/
 
 // $Id$
 // $Date: 2006/05/24 14:55:26 $

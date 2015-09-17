@@ -15,9 +15,9 @@
 #include "TGWidget.h"
 #include "TGLabel.h"
 
-//______________________________________________________________________________
-//
-// Editor for TEveTriangleSet class.
+/** \class TEveTriangleSetEditor
+Editor for TEveTriangleSet class.
+*/
 
 ClassImp(TEveTriangleSetEditor);
 
@@ -36,8 +36,6 @@ TEveTriangleSetEditor::TEveTriangleSetEditor(const TGWindow *p, Int_t width, Int
    fInfo->SetTextJustify(kTextLeft);
    AddFrame(fInfo, new TGLayoutHints(kLHintsNormal|kLHintsExpandX, 8, 0, 2, 0));
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.

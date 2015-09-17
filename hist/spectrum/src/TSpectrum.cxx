@@ -11,50 +11,48 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Begin_Html
-<center><h2>Advanced Spectra Processing</h2></center>
-This class contains advanced spectra processing functions for:
-<ul>
-<li> One-dimensional background estimation
-<li> One-dimensional smoothing
-<li> One-dimensional deconvolution
-<li> One-dimensional peak search
-</ul>
-<p>
-Author:
-<br>
-<br> Miroslav Morhac
-<br> Institute of Physics
-<br> Slovak Academy of Sciences
-<br> Dubravska cesta 9, 842 28 BRATISLAVA
-<br> SLOVAKIA
-<br> email:fyzimiro@savba.sk,    fax:+421 7 54772479
-<br>
-<br>
+////////////////////////////////////////////////////////////////////////////////
 
-The original code in C has been repackaged as a C++ class by R.Brun.
-<p>
-The algorithms in this class have been published in the following references:
-<ol>
-<li> M.Morhac et al.: Background elimination methods for
-multidimensional coincidence gamma-ray spectra. Nuclear
-Instruments and Methods in Physics Research A 401 (1997) 113-132.
-<li> M.Morhac et al.: Efficient one- and two-dimensional Gold
-deconvolution and its application to gamma-ray spectra
-decomposition. Nuclear Instruments and Methods in Physics
-Research A 401 (1997) 385-408.
-<li> M.Morhac et al.: Identification of peaks in multidimensional
-coincidence gamma-ray spectra. Nuclear Instruments and Methods in
-Research Physics A  443(2000), 108-125.
-</ol>
-These NIM papers are also available as doc or ps files from:
-<ul>
-<li> <A href="ftp://root.cern.ch/root/Spectrum.doc">Spectrum.doc</A><br>
-<li> <A href="ftp://root.cern.ch/root/SpectrumDec.ps.gz">SpectrumDec.ps.gz</A><br>
-<li> <A href="ftp://root.cern.ch/root/SpectrumSrc.ps.gz">SpectrumSrc.ps.gz</A><br>
-<li> <A href="ftp://root.cern.ch/root/SpectrumBck.ps.gz">SpectrumBck.ps.gz</A><br>
-</ul>
-End_Html */
+/** \class TSpectrum
+    \ingroup Hist
+    \brief Advanced Spectra Processing
+
+ ## Advanced spectra processing
+
+ This class contains advanced spectra processing functions for:
+
+ -   One-dimensional background estimation
+ -   One-dimensional smoothing
+ -   One-dimensional deconvolution
+ -   One-dimensional peak search
+
+ Author:
+
+ Miroslav Morhac
+ Institute of Physics
+ Slovak Academy of Sciences
+ Dubravska cesta 9, 842 28 BRATISLAVA
+ SLOVAKIA
+ email:fyzimiro@savba.sk, fax:+421 7 54772479
+
+ The original code in C has been repackaged as a C++ class by R.Brun.
+
+ The algorithms in this class have been published in the following references:
+
+ 1.  M.Morhac et al.: Background elimination methods for multidimensional coincidence gamma-ray spectra. Nuclear Instruments and Methods in Physics Research A 401 (1997) 113-132.
+ 2.  M.Morhac et al.: Efficient one- and two-dimensional Gold deconvolution and its application to gamma-ray spectra decomposition. Nuclear Instruments and Methods in Physics Research A 401 (1997) 385-408.
+ 3.  M.Morhac et al.: Identification of peaks in multidimensional coincidence gamma-ray spectra. Nuclear Instruments and Methods in Research Physics A 443(2000), 108-125.
+
+ These NIM papers are also available as doc or ps files from:
+
+ - [Spectrum.doc](ftp://root.cern.ch/root/Spectrum.doc)
+
+ - [SpectrumDec.ps.gz](ftp://root.cern.ch/root/SpectrumDec.ps.gz)
+
+ - [SpectrumSrc.ps.gz](ftp://root.cern.ch/root/SpectrumSrc.ps.gz)
+
+ - [SpectrumBck.ps.gz](ftp://root.cern.ch/root/SpectrumBck.ps.gz)
+*/
 
 Int_t TSpectrum::fgIterations    = 3;
 Int_t TSpectrum::fgAverageWindow = 3;

@@ -29,14 +29,14 @@
 #include "TGComboBox.h"
 #include "TAttMarkerEditor.h"
 
-//______________________________________________________________________________
-// TEveTrackPropagatorSubEditor
-//
-// Sub-editor for TEveTrackPropagator class.
+/** \class TEveTrackPropagatorSubEditor
+Sub-editor for TEveTrackPropagator class.
+*/
 
 ClassImp(TEveTrackPropagatorSubEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
    TGVerticalFrame(p),
@@ -54,8 +54,6 @@ TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
    fPMAtt(0), fFVAtt(0),
    fProjTrackBreaking(0), fRnrPTBMarkers(0), fPTBAtt(0)
 {
-   // Constructor.
-
    Int_t labelW = 51;
 
    // --- Limits
@@ -106,8 +104,7 @@ TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a frame containing track-reference controls under parent
-/// frame p.
+/// Create a frame containing track-reference controls under parent frame p.
 
 void TEveTrackPropagatorSubEditor::CreateRefsContainer(TGVerticalFrame* p)
 {
@@ -282,8 +279,6 @@ void TEveTrackPropagatorSubEditor::SetModel(TEveTrackPropagator* m)
    fPTBAtt->SetModel(&fM->fPTBAtt);
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Emit "Changed()" signal.
 
@@ -291,8 +286,6 @@ void TEveTrackPropagatorSubEditor::Changed()
 {
    Emit("Changed()");
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for MaxR.
@@ -338,8 +331,6 @@ void TEveTrackPropagatorSubEditor::DoDelta()
    fM->SetDelta(fDelta->GetValue());
    Changed();
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for FitPM.
@@ -428,16 +419,11 @@ void TEveTrackPropagatorSubEditor::DoRnrPTB()
    Changed();
 }
 
-
-//==============================================================================
-// TEveTrackPropagatorEditor
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// GUI editor for TEveTrackPropagator.
-// It's only a wrapper around a TEveTrackPropagatorSubEditor that holds actual
-// widgets.
+/** \class TEveTrackPropagatorEditor
+GUI editor for TEveTrackPropagator.
+It's only a wrapper around a TEveTrackPropagatorSubEditor that holds actual
+widgets.
+*/
 
 ClassImp(TEveTrackPropagatorEditor);
 
@@ -475,8 +461,6 @@ TEveTrackPropagatorEditor::TEveTrackPropagatorEditor(const TGWindow *p,
 
    fRSSubEditor->Connect("Changed()", "TEveTrackPropagatorEditor", this, "Update()");
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.

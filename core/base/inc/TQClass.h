@@ -62,6 +62,7 @@ public:
 // TQObject. They make it possible to have a single connection from all
 // objects of the same class.
 namespace ROOT {
+namespace Internal {
    class TDefaultInitBehavior;
    class TQObjectInitBehavior : public TDefaultInitBehavior {
    public:
@@ -80,6 +81,8 @@ namespace ROOT {
       return behave;
    }
 }
+}
+
 
 #endif
 

@@ -13,14 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
 
-/*
-LikelihoodIntervalPlot : 
-
-This class provides simple and straightforward utilities to plot a LikelihoodInterval
-object.
-*/
 
 #include "RooStats/LikelihoodIntervalPlot.h"
 

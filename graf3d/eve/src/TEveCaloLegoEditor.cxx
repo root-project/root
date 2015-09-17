@@ -19,13 +19,14 @@
 #include "TGLabel.h"
 #include "TG3DLine.h"
 
-//______________________________________________________________________________
-// GUI editor for TEveCaloLego.
-//
+/** \class TEveCaloLegoEditor
+GUI editor for TEveCaloLego.
+*/
 
 ClassImp(TEveCaloLegoEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t height,
                                        UInt_t options, Pixel_t back) :
@@ -48,8 +49,6 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
    fNormalizeRebin(0)
 
 {
-   // Constructor.
-
    MakeTitle("TEveCaloLego");
 
    {  // grid color

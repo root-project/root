@@ -50,6 +50,12 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
+/** \class TSpectrum3
+ \ingroup Hist
+ \brief Advanced 3-dimentional spectra processing functions
+ \author Miroslav Morhac
+
+*/
 
 #include "TSpectrum3.h"
 #include "TH1.h"

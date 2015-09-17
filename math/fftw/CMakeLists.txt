@@ -3,7 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(math/mathcore)
 include_directories(${FFTW_INCLUDE_DIR})
 
 ROOT_GENERATE_DICTIONARY(G__FFTW *.h MODULE FFTW LINKDEF LinkDef.h)

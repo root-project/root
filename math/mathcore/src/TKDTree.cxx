@@ -19,233 +19,252 @@
 templateClassImp(TKDTree)
 
 
-//////////////////////////////////////////////////////////////////////////
-//
-//                      kd-tree and its implementation in TKDTree
-//
-// Contents:
-// 1. What is kd-tree
-// 2. How to cosntruct kdtree - Pseudo code
-// 3. Using TKDTree
-//    a. Creating the kd-tree and setting the data
-//    b. Navigating the kd-tree
-// 4. TKDTree implementation - technical details
-//    a. The order of nodes in internal arrays
-//    b. Division algorithm
-//    c. The order of nodes in boundary related arrays
-//
-//
-//
-// 1. What is kdtree ? ( http://en.wikipedia.org/wiki/Kd-tree )
-//
-// In computer science, a kd-tree (short for k-dimensional tree) is a space-partitioning data structure
-// for organizing points in a k-dimensional space. kd-trees are a useful data structure for several
-// applications, such as searches involving a multidimensional search key (e.g. range searches and
-// nearest neighbour searches). kd-trees are a special case of BSP trees.
-//
-// A kd-tree uses only splitting planes that are perpendicular to one of the coordinate system axes.
-// This differs from BSP trees, in which arbitrary splitting planes can be used.
-// In addition, in the typical definition every node of a kd-tree, from the root to the leaves, stores a point.
-// This differs from BSP trees, in which leaves are typically the only nodes that contain points
-// (or other geometric primitives). As a consequence, each splitting plane must go through one of
-// the points in the kd-tree. kd-trees are a variant that store data only in leaf nodes.
-//
-// 2. Constructing a classical kd-tree ( Pseudo code)
-//
-// Since there are many possible ways to choose axis-aligned splitting planes, there are many different ways
-// to construct kd-trees. The canonical method of kd-tree construction has the following constraints:
-//
-//     * As one moves down the tree, one cycles through the axes used to select the splitting planes.
-//      (For example, the root would have an x-aligned plane, the root's children would both have y-aligned
-//       planes, the root's grandchildren would all have z-aligned planes, and so on.)
-//     * At each step, the point selected to create the splitting plane is the median of the points being
-//       put into the kd-tree, with respect to their coordinates in the axis being used. (Note the assumption
-//       that we feed the entire set of points into the algorithm up-front.)
-//
-// This method leads to a balanced kd-tree, in which each leaf node is about the same distance from the root.
-// However, balanced trees are not necessarily optimal for all applications.
-// The following pseudo-code illustrates this canonical construction procedure (NOTE, that the procedure used
-// by the TKDTree class is a bit different, the following pseudo-code is given as a simple illustration of the
-// concept):
-//
-// function kdtree (list of points pointList, int depth)
-// {
-//     if pointList is empty
-//         return nil;
-//     else
-//     {
-//         // Select axis based on depth so that axis cycles through all valid values
-//         var int axis := depth mod k;
-//
-//         // Sort point list and choose median as pivot element
-//         select median from pointList;
-//
-//         // Create node and construct subtrees
-//         var tree_node node;
-//         node.location := median;
-//         node.leftChild := kdtree(points in pointList before median, depth+1);
-//         node.rightChild := kdtree(points in pointList after median, depth+1);
-//         return node;
-//     }
-// }
-//
-// Our construction method is optimized to save memory, and differs a bit from the constraints above.
-// In particular, the division axis is chosen as the one with the biggest spread, and the point to create the
-// splitting plane is chosen so, that one of the two subtrees contains exactly 2^k terminal nodes and is a
-// perfectly balanced binary tree, and, while at the same time, trying to keep the number of terminal nodes
-// in the 2 subtrees as close as possible. The following section gives more details about our implementation.
-//
-// 3. Using TKDTree
-//
-// 3a. Creating the tree and setting the data
-//     The interface of the TKDTree, that allows to set input data, has been developped to simplify using it
-//     together with TTree::Draw() functions. That's why the data has to be provided column-wise. For example:
-//     {
-//     TTree *datatree = ...
-//     ...
-//     datatree->Draw("x:y:z", "selection", "goff");
-//     //now make a kd-tree on the drawn variables
-//     TKDTreeID *kdtree = new TKDTreeID(npoints, 3, 1);
-//     kdtree->SetData(0, datatree->GetV1());
-//     kdtree->SetData(1, datatree->GetV2());
-//     kdtree->SetData(2, datatree->GetV3());
-//     kdtree->Build();
-//     }
-//     NOTE, that this implementation of kd-tree doesn't support adding new points after the tree has been built
-//     Of course, it's not necessary to use TTree::Draw(). What is important, is to have data columnwise.
-//     An example with regular arrays:
-//     {
-//     Int_t npoints = 100000;
-//     Int_t ndim = 3;
-//     Int_t bsize = 1;
-//     Double_t xmin = -0.5;
-//     Double_t xmax = 0.5;
-//     Double_t *data0 = new Double_t[npoints];
-//     Double_t *data1 = new Double_t[npoints];
-//     Double_t *data2 = new Double_t[npoints];
-//     Double_t *y     = new Double_t[npoints];
-//     for (Int_t i=0; i<npoints; i++){
-//        data0[i]=gRandom->Uniform(xmin, xmax);
-//        data1[i]=gRandom->Uniform(xmin, xmax);
-//        data2[i]=gRandom->Uniform(xmin, xmax);
-//     }
-//     TKDTreeID *kdtree = new TKDTreeID(npoints, ndim, bsize);
-//     kdtree->SetData(0, data0);
-//     kdtree->SetData(1, data1);
-//     kdtree->SetData(2, data2);
-//     kdtree->Build();
-//     }
-//
-//     By default, the kd-tree doesn't own the data and doesn't delete it with itself. If you want the
-//     data to be deleted together with the kd-tree, call TKDTree::SetOwner(kTRUE).
-//
-//     Most functions of the kd-tree don't require the original data to be present after the tree
-//     has been built. Check the functions documentation for more details.
-//
-// 3b. Navigating the kd-tree
-//
-//     Nodes of the tree are indexed top to bottom, left to right. The root node has index 0. Functions
-//     TKDTree::GetLeft(Index inode), TKDTree::GetRight(Index inode) and TKDTree::GetParent(Index inode)
-//     allow to find the children and the parent of a given node.
-//
-//     For a given node, one can find the indexes of the original points, contained in this node,
-//     by calling the GetNodePointsIndexes(Index inode) function. Additionally, for terminal nodes,
-//     there is a function GetPointsIndexes(Index inode) that returns a pointer to the relevant
-//     part of the index array. To find the number of point in the node
-//     (not only terminal), call TKDTree::GetNpointsNode(Index inode).
-//
-// 4.  TKDtree implementation details - internal information, not needed to use the kd-tree.
-//     4a. Order of nodes in the node information arrays:
-//
-// TKDtree is optimized to minimize memory consumption.
-// Nodes of the TKDTree do not store pointers to the left and right children or to the parent node,
-// but instead there are several 1-d arrays of size fNNodes with information about the nodes.
-// The order of the nodes information in the arrays is described below. It's important to understand
-// it, if one's class needs to store some kind of additional information on the per node basis, for
-// example, the fit function parameters.
-//
-// Drawback:   Insertion to the TKDtree is not supported.
-// Advantage:  Random access is supported
-//
-// As noted above, the construction of the kd-tree involves choosing the axis and the point on
-// that axis to divide the remaining points approximately in half. The exact algorithm for choosing
-// the division point is described in the next section. The sequence of divisions is
-// recorded in the following arrays:
-// fAxix[fNNodes]  - Division axis (0,1,2,3 ...)
-// fValue[fNNodes] - Division value
-//
-// Given the index of a node in those arrays, it's easy to find the indices, corresponding to
-// children nodes or the parent node:
-// Suppose, the parent node is stored under the index inode. Then:
-// Left child index  = inode*2+1
-// Right child index =  (inode+1)*2
-// Suppose, that the child node is stored under the index inode. Then:
-// Parent index = inode/2
-//
-// Number of division nodes and number of terminals :
-// fNNodes = (fNPoints/fBucketSize)
-//
-// The nodes are filled always from left side to the right side:
-// Let inode be the index of a node, and irow - the index of a row
-// The TKDTree looks the following way:
-// Ideal case:
-// Number of _terminal_ nodes = 2^N,  N=3
-//
-//            INode
-// irow 0     0                                                                   -  1 inode
-// irow 1     1                              2                                    -  2 inodes
-// irow 2     3              4               5               6                    -  4 inodes
-// irow 3     7       8      9      10       11     12       13      14           -  8 inodes
-//
-//
-// Non ideal case:
-// Number of _terminal_ nodes = 2^N+k,  N=3  k=1
-//
-//           INode
-// irow 0     0                                                                   - 1 inode
-// irow 1     1                              2                                    - 2 inodes
-// irow 2     3              4               5               6                    - 3 inodes
-// irow 3     7       8      9      10       11     12       13      14           - 8 inodes
-// irow 4     15  16                                                              - 2 inodes
-//
-//
-// 3b. The division algorithm:
-//
-// As described above, the kd-tree is built by repeatingly dividing the given set of points into
-// 2 smaller sets. The cut is made on the axis with the biggest spread, and the value on the axis,
-// on which the cut is performed, is chosen based on the following formula:
-// Suppose, we want to divide n nodes into 2 groups, left and right. Then the left and right
-// will have the following number of nodes:
-//
-// n=2^k+rest
-//
-// Left  = 2^k-1 +  ((rest>2^k-2) ?  2^k-2      : rest)
-// Right = 2^k-1 +  ((rest>2^k-2) ?  rest-2^k-2 : 0)
-//
-// For example, let n_nodes=67. Then, the closest 2^k=64, 2^k-1=32, 2^k-2=16.
-// Left node gets 32+3=35 sub-nodes, and the right node gets 32 sub-nodes
-//
-// The division process continues until all the nodes contain not more than a predefined number
-// of points.
-//
-// 3c. The order of nodes in boundary-related arrays
-//
-// Some kd-tree based algorithms need to know the boundaries of each node. This information can
-// be computed by calling the TKDTree::MakeBoundaries() function. It fills the following arrays:
-//
-// fRange : array containing the boundaries of the domain:
-// | 1st dimension (min + max) | 2nd dimension (min + max) | ...
-// fBoundaries : nodes boundaries
-// | 1st node {1st dim * 2 elements | 2nd dim * 2 elements | ...} | 2nd node {...} | ...
-// The nodes are arranged in the order described in section 3a.
-//
-//
-// Note: the storage of the TKDTree in a file which include also the contained data is not
-//       supported. One must store the data separatly in a file (e.g. using a TTree) and then
-//       re-creating the TKDTree from the data, after having read them from the file
-//////////////////////////////////////////////////////////////////////////
+/**
+
+\class TKDTree class implementing a kd-tree
 
 
+
+Contents:
+1. What is kd-tree
+2. How to cosntruct kdtree - Pseudo code
+3. Using TKDTree
+   a. Creating the kd-tree and setting the data
+   b. Navigating the kd-tree
+4. TKDTree implementation - technical details
+   a. The order of nodes in internal arrays
+   b. Division algorithm
+   c. The order of nodes in boundary related arrays
+
+
+
+### 1. What is kdtree ? ( [http://en.wikipedia.org/wiki/Kd-tree] )
+
+In computer science, a kd-tree (short for k-dimensional tree) is a space-partitioning data structure
+for organizing points in a k-dimensional space. kd-trees are a useful data structure for several
+applications, such as searches involving a multidimensional search key (e.g. range searches and
+nearest neighbour searches). kd-trees are a special case of BSP trees.
+
+A kd-tree uses only splitting planes that are perpendicular to one of the coordinate system axes.
+This differs from BSP trees, in which arbitrary splitting planes can be used.
+In addition, in the typical definition every node of a kd-tree, from the root to the leaves, stores a point.
+This differs from BSP trees, in which leaves are typically the only nodes that contain points
+(or other geometric primitives). As a consequence, each splitting plane must go through one of
+the points in the kd-tree. kd-trees are a variant that store data only in leaf nodes.
+
+### 2. Constructing a classical kd-tree ( Pseudo code)
+
+Since there are many possible ways to choose axis-aligned splitting planes, there are many different ways
+to construct kd-trees. The canonical method of kd-tree construction has the following constraints:
+
+* As one moves down the tree, one cycles through the axes used to select the splitting planes.
+  (For example, the root would have an x-aligned plane, the root's children would both have y-aligned
+  planes, the root's grandchildren would all have z-aligned planes, and so on.)
+* At each step, the point selected to create the splitting plane is the median of the points being
+  put into the kd-tree, with respect to their coordinates in the axis being used. (Note the assumption
+  that we feed the entire set of points into the algorithm up-front.)
+
+This method leads to a balanced kd-tree, in which each leaf node is about the same distance from the root.
+However, balanced trees are not necessarily optimal for all applications.
+The following pseudo-code illustrates this canonical construction procedure (NOTE, that the procedure used
+by the TKDTree class is a bit different, the following pseudo-code is given as a simple illustration of the
+concept):
+
+~~~~
+function kdtree (list of points pointList, int depth)
+{
+    if pointList is empty
+        return nil;
+    else
+    {
+        // Select axis based on depth so that axis cycles through all valid values
+        var int axis := depth mod k;
+
+        // Sort point list and choose median as pivot element
+        select median from pointList;
+
+        // Create node and construct subtrees
+        var tree_node node;
+        node.location := median;
+        node.leftChild := kdtree(points in pointList before median, depth+1);
+        node.rightChild := kdtree(points in pointList after median, depth+1);
+        return node;
+    }
+}
+~~~~
+
+Our construction method is optimized to save memory, and differs a bit from the constraints above.
+In particular, the division axis is chosen as the one with the biggest spread, and the point to create the
+splitting plane is chosen so, that one of the two subtrees contains exactly 2^k terminal nodes and is a
+perfectly balanced binary tree, and, while at the same time, trying to keep the number of terminal nodes
+in the 2 subtrees as close as possible. The following section gives more details about our implementation.
+
+### 3. Using TKDTree
+
+#### 3a. Creating the tree and setting the data
+    The interface of the TKDTree, that allows to set input data, has been developped to simplify using it
+    together with TTree::Draw() functions. That's why the data has to be provided column-wise. For example:
+
+\code{.cpp}
+    {
+    TTree *datatree = ...
+    ...
+    datatree->Draw("x:y:z", "selection", "goff");
+    //now make a kd-tree on the drawn variables
+    TKDTreeID *kdtree = new TKDTreeID(npoints, 3, 1);
+    kdtree->SetData(0, datatree->GetV1());
+    kdtree->SetData(1, datatree->GetV2());
+    kdtree->SetData(2, datatree->GetV3());
+    kdtree->Build();
+    }
+    NOTE, that this implementation of kd-tree doesn't support adding new points after the tree has been built
+    Of course, it's not necessary to use TTree::Draw(). What is important, is to have data columnwise.
+    An example with regular arrays:
+    {
+    Int_t npoints = 100000;
+    Int_t ndim = 3;
+    Int_t bsize = 1;
+    Double_t xmin = -0.5;
+    Double_t xmax = 0.5;
+    Double_t *data0 = new Double_t[npoints];
+    Double_t *data1 = new Double_t[npoints];
+    Double_t *data2 = new Double_t[npoints];
+    Double_t *y     = new Double_t[npoints];
+    for (Int_t i=0; i<npoints; i++){
+       data0[i]=gRandom->Uniform(xmin, xmax);
+       data1[i]=gRandom->Uniform(xmin, xmax);
+       data2[i]=gRandom->Uniform(xmin, xmax);
+    }
+    TKDTreeID *kdtree = new TKDTreeID(npoints, ndim, bsize);
+    kdtree->SetData(0, data0);
+    kdtree->SetData(1, data1);
+    kdtree->SetData(2, data2);
+    kdtree->Build();
+    }
+\endcode
+
+    By default, the kd-tree doesn't own the data and doesn't delete it with itself. If you want the
+    data to be deleted together with the kd-tree, call TKDTree::SetOwner(kTRUE).
+
+    Most functions of the kd-tree don't require the original data to be present after the tree
+    has been built. Check the functions documentation for more details.
+
+#### 3b. Navigating the kd-tree
+
+    Nodes of the tree are indexed top to bottom, left to right. The root node has index 0. Functions
+    TKDTree::GetLeft(Index inode), TKDTree::GetRight(Index inode) and TKDTree::GetParent(Index inode)
+    allow to find the children and the parent of a given node.
+
+    For a given node, one can find the indexes of the original points, contained in this node,
+    by calling the GetNodePointsIndexes(Index inode) function. Additionally, for terminal nodes,
+    there is a function GetPointsIndexes(Index inode) that returns a pointer to the relevant
+    part of the index array. To find the number of point in the node
+    (not only terminal), call TKDTree::GetNpointsNode(Index inode).
+
+### 4.  TKDtree implementation details - internal information, not needed to use the kd-tree.
+
+####  4a. Order of nodes in the node information arrays:
+
+TKDtree is optimized to minimize memory consumption.
+Nodes of the TKDTree do not store pointers to the left and right children or to the parent node,
+but instead there are several 1-d arrays of size fNNodes with information about the nodes.
+The order of the nodes information in the arrays is described below. It's important to understand
+it, if one's class needs to store some kind of additional information on the per node basis, for
+example, the fit function parameters.
+
+- Drawback:   Insertion to the TKDtree is not supported.
+- Advantage:  Random access is supported
+
+As noted above, the construction of the kd-tree involves choosing the axis and the point on
+that axis to divide the remaining points approximately in half. The exact algorithm for choosing
+the division point is described in the next section. The sequence of divisions is
+recorded in the following arrays:
+~~~~
+fAxix[fNNodes]  - Division axis (0,1,2,3 ...)
+fValue[fNNodes] - Division value
+~~~~
+
+Given the index of a node in those arrays, it's easy to find the indices, corresponding to
+children nodes or the parent node:
+Suppose, the parent node is stored under the index inode. Then:
+- Left child `index  = inode*2+1`
+- Right child `index =  (inode+1)*2`
+
+Suppose, that the child node is stored under the index inode. Then:
+- Parent `index = inode/2`
+
+Number of division nodes and number of terminals :
+`fNNodes = (fNPoints/fBucketSize)`
+
+The nodes are filled always from left side to the right side:
+Let inode be the index of a node, and irow - the index of a row
+The TKDTree looks the following way:
+Ideal case:
+~~~~
+Number of _terminal_ nodes = 2^N,  N=3
+
+           INode
+irow 0     0                                                                   -  1 inode
+irow 1     1                              2                                    -  2 inodes
+irow 2     3              4               5               6                    -  4 inodes
+irow 3     7       8      9      10       11     12       13      14           -  8 inodes
+~~~~
+
+Non ideal case:
+~~~~
+Number of _terminal_ nodes = 2^N+k,  N=3  k=1
+
+          INode
+irow 0     0                                                                   - 1 inode
+irow 1     1                              2                                    - 2 inodes
+irow 2     3              4               5               6                    - 3 inodes
+irow 3     7       8      9      10       11     12       13      14           - 8 inodes
+irow 4     15  16                                                              - 2 inodes
+~~~~
+
+#### 4b. The division algorithm:
+
+As described above, the kd-tree is built by repeatingly dividing the given set of points into
+2 smaller sets. The cut is made on the axis with the biggest spread, and the value on the axis,
+on which the cut is performed, is chosen based on the following formula:
+Suppose, we want to divide n nodes into 2 groups, left and right. Then the left and right
+will have the following number of nodes:
+
+~~~~
+n=2^k+rest
+
+Left  = 2^k-1 +  ((rest>2^k-2) ?  2^k-2      : rest)
+Right = 2^k-1 +  ((rest>2^k-2) ?  rest-2^k-2 : 0)
+~~~~
+
+For example, let `n_nodes=67`. Then, the closest `2^k=64, 2^k-1=32, 2^k-2=16`.
+Left node gets `32+3=35` sub-nodes, and the right node gets 32 sub-nodes
+
+The division process continues until all the nodes contain not more than a predefined number
+of points.
+
+#### 4c. The order of nodes in boundary-related arrays
+
+Some kd-tree based algorithms need to know the boundaries of each node. This information can
+be computed by calling the TKDTree::MakeBoundaries() function. It fills the following arrays:
+
+- `fRange` : array containing the boundaries of the domain:
+      `| 1st dimension (min + max) | 2nd dimension (min + max) | ...`
+`fBoundaries` : nodes boundaries
+      `| 1st node {1st dim * 2 elements | 2nd dim * 2 elements | ...} | 2nd node {...} | ...`
+
+
+The nodes are arranged in the order described in section 3a.
+
+
+- **Note**: the storage of the TKDTree in a file which include also the contained data is not
+      supported. One must store the data separatly in a file (e.g. using a TTree) and then
+      re-creating the TKDTree from the data, after having read them from the file
+
+@ingroup Random
+
+
+*/
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor. Nothing is built
 

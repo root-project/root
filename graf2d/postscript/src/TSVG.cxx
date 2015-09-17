@@ -31,47 +31,43 @@
 
 ClassImp(TSVG)
 
+/** \class TSVG
+Interface to SVG
 
-////////////////////////////////////////////////////////////////////////////////
-
-/*Begin_Html
-<center><h2>TSVG: Graphics interface to SVG</h2></center>
-<a href="http://www.w3.org/Graphics/SVG/Overview.htm8"><b>SVG</b></a>
-(Scalable Vector Graphics) is a language for describing two-dimensional
-graphics in XML. <b>SVG</b> allows high quality vector graphics in
+[SVG](http://www.w3.org/Graphics/SVG/Overview.htm8)
+(Scalable Vector Graphics) is a language for describing
+two-dimensional graphics in XML. SVG allows high quality vector graphics in
 HTML pages.
-<p>
-To print a ROOT canvas "c1" into an <b>SVG</b> file simply do:
-<PRE>
-   c1->Print("c1.svg");
-</PRE>
-The result is the ASCII file <tt>c1.svg</tt>.
-<p>
-It can be open direclty using a web browser or included in a html document
+
+To print a ROOT canvas "c1" into an SVG file simply do:
+~~~ {.cpp}
+     c1->Print("c1.svg");
+~~~
+The result is the ASCII file `c1.svg`.
+
+It can be open directly using a web browser or included in a html document
 the following way:
-<pre>
-&lt;embed width="95%" height="500" src="c1.svg" /&gt;>
-</pre>
+~~~ {.cpp}
+<embed width="95%" height="500" src="c1.svg">
+~~~
 It is best viewed with Internet Explorer and you need the
-<a href="http://www.adobe.com/svg/viewer/install/main.html">Adobe <b>SVG</b>
-Viewer</a>.
-<p>
-To zoom using the Adobe <b>SVG</b> Viewer, position the mouse over
+[Adobe SVG Viewer](http://www.adobe.com/svg/viewer/install/main.html)
+
+To zoom using the Adobe SVG Viewer, position the mouse over
 the area you want to zoom and click the right button.
-<p>
+
 To define the zoom area,
 use Control+drag to mark the boundaries of the zoom area.
-<p>
-To pan, use Alt+drag.
-By clicking with the right mouse button on the <b>SVG</b> graphics you will get
-a pop-up menu giving other ways to interact with the image.
-<p>
-<b>SVG</b> files can be used directly in compressed mode to minimize the time
-transfer over the network. Compressed <b>SVG</b> files should be created using
-<tt>gzip</tt> on a normal ASCII <b>SVG</b> file and should then be renamed
-using the file extension <tt>.svgz</tt>.
-End_Html */
 
+To pan, use Alt+drag.
+By clicking with the right mouse button on the SVG graphics you will get
+a pop-up menu giving other ways to interact with the image.
+
+SVG files can be used directly in compressed mode to minimize the time
+transfer over the network. Compressed SVG files should be created using
+`gzip` on a normal ASCII SVG file and should then be renamed
+using the file extension `.svgz`.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default SVG constructor
@@ -89,15 +85,14 @@ TSVG::TSVG() : TVirtualPS()
    SetTitle("SVG");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the SVG interface
 ///
-///  fname : SVG file name
-///  wtype : SVG workstation type. Not used in the SVG driver. But as TSVG
-///          inherits from TVirtualPS it should be kept. Anyway it is not
-///          necessary to specify this parameter at creation time because it
-///          has a default value (which is ignore in the SVG case).
+///  - fname : SVG file name
+///  - wtype : SVG workstation type. Not used in the SVG driver. But as TSVG
+///            inherits from TVirtualPS it should be kept. Anyway it is not
+///            necessary to specify this parameter at creation time because it
+///            has a default value (which is ignore in the SVG case).
 
 TSVG::TSVG(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
@@ -105,7 +100,6 @@ TSVG::TSVG(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    SetTitle("SVG");
    Open(fname, wtype);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a SVG file
@@ -155,7 +149,6 @@ void TSVG::Open(const char *fname, Int_t wtype)
    NewPage();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default SVG destructor
 
@@ -163,7 +156,6 @@ TSVG::~TSVG()
 {
    Close();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Close a SVG file
@@ -181,7 +173,6 @@ void TSVG::Close(Option_t *)
    gVirtualPS = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate an already open SVG file
 
@@ -198,7 +189,6 @@ void TSVG::On()
    gVirtualPS = this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Deactivate an already open SVG file
 
@@ -206,7 +196,6 @@ void TSVG::Off()
 {
    gVirtualPS = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a Box
@@ -282,15 +271,14 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a Frame around a box
 ///
-/// mode = -1  the box looks as it is behind the screen
-/// mode =  1  the box looks as it is in front of the screen
-/// border is the border size in already pre-computed SVG units dark is the
-/// color for the dark part of the frame light is the color for the light
-/// part of the frame
+///  - mode = -1  the box looks as it is behind the screen
+///  - mode =  1  the box looks as it is in front of the screen
+///  - border is the border size in already pre-computed SVG units dark is the
+///    color for the dark part of the frame light is the color for the light
+///    part of the frame
 
 void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
                             Int_t mode, Int_t border, Int_t dark, Int_t light)
@@ -430,16 +418,15 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    PrintFast(2,"/>");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a PolyLine
 ///
 ///  Draw a polyline through  the points  xy.
-///  If NN=1 moves only to point x,y.
-///  If NN=0 the x,y are  written  in the SVG        file
-///     according to the current transformation.
-///  If NN>0 the line is clipped as a line.
-///  If NN<0 the line is clipped as a fill area.
+///  - If NN=1 moves only to point x,y.
+///  - If NN=0 the x,y are  written  in the SVG        file
+///       according to the current transformation.
+///  - If NN>0 the line is clipped as a line.
+///  - If NN<0 the line is clipped as a fill area.
 
 void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
 {
@@ -502,16 +489,15 @@ void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a PolyLine in NDC space
 ///
 ///  Draw a polyline through  the points  xy.
-///  If NN=1 moves only to point x,y.
-///  If NN=0 the x,y are  written  in the SVG        file
-///     according to the current transformation.
-///  If NN>0 the line is clipped as a line.
-///  If NN<0 the line is clipped as a fill area.
+///  --If NN=1 moves only to point x,y.
+///  --If NN=0 the x,y are  written  in the SVG        file
+///       according to the current transformation.
+///  --If NN>0 the line is clipped as a line.
+///  - If NN<0 the line is clipped as a fill area.
 
 void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 {
@@ -573,7 +559,6 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
    } else {
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint PolyMarker
@@ -808,7 +793,6 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    PrintStr("</g>");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint PolyMarker
 
@@ -1040,13 +1024,12 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    PrintStr("</g>");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This function defines a path with xw and yw and draw it according the
 /// value of nn:
 ///
-///  If nn>0 a line is drawn.
-///  If nn<0 a closed polygon is drawn.
+///  - If nn>0 a line is drawn.
+///  - If nn<0 a closed polygon is drawn.
 
 void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 {
@@ -1146,7 +1129,6 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the SVG file. The main task of the function is to output the
 /// SVG header file which consist in <title>, <desc> and <defs>. The
@@ -1181,7 +1163,6 @@ void TSVG::Initialize()
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Move to a new position (ix, iy). The move is done in relative coordinates
 /// which allows to have short numbers which decrease the size of the file.
@@ -1203,7 +1184,6 @@ void TSVG::MovePS(Double_t ix, Double_t iy)
       WriteReal(iy);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Start the SVG page. This function initialize the pad conversion
@@ -1238,7 +1218,6 @@ void TSVG::NewPage()
       fBoundingBox  = kTRUE;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the range for the paper in centimetres
@@ -1293,7 +1272,6 @@ void TSVG::Range(Float_t xsize, Float_t ysize)
    fRange = kTRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for fill areas
 
@@ -1303,7 +1281,6 @@ void TSVG::SetFillColor( Color_t cindex )
    if (gStyle->GetFillColor() <= 0) cindex = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for lines
 
@@ -1312,20 +1289,18 @@ void TSVG::SetLineColor( Color_t cindex )
    fLineColor = cindex;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the line style
 ///
-/// linestyle = 2 dashed
-///           = 3 dotted
-///           = 4 dash-dotted
-///           = else solid (1 in is used most of the time)
+///  - linestyle = 2 dashed
+///  - linestyle = 3 dotted
+///  - linestyle = 4 dash-dotted
+///  - linestyle = else solid (1 in is used most of the time)
 
 void TSVG::SetLineStyle(Style_t linestyle)
 {
    fLineStyle = linestyle;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the lines width.
@@ -1335,7 +1310,6 @@ void TSVG::SetLineWidth(Width_t linewidth)
    fLineWidth = linewidth;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for markers.
 
@@ -1343,7 +1317,6 @@ void TSVG::SetMarkerColor( Color_t cindex )
 {
    fMarkerColor = cindex;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color with its color index
@@ -1361,13 +1334,12 @@ void TSVG::SetColor(Int_t color)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color with its R G B components
 ///
-///  r: % of red in [0,1]
-///  g: % of green in [0,1]
-///  b: % of blue in [0,1]
+///  - r: % of red in [0,1]
+///  --g: % of green in [0,1]
+///  - b: % of blue in [0,1]
 
 void TSVG::SetColor(Float_t r, Float_t g, Float_t b)
 {
@@ -1384,7 +1356,6 @@ void TSVG::SetColor(Float_t r, Float_t g, Float_t b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for text
 
@@ -1393,13 +1364,12 @@ void TSVG::SetTextColor( Color_t cindex )
    fTextColor = cindex;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw text
 ///
-/// xx: x position of the text
-/// yy: y position of the text
-/// chars: text to be drawn
+///  - xx: x position of the text
+///  - yy: y position of the text
+///  - chars: text to be drawn
 
 void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
 {
@@ -1628,7 +1598,6 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters in NDC
 
@@ -1639,7 +1608,6 @@ void TSVG::TextNDC(Double_t u, Double_t v, const char *chars)
    Text(x, y, chars);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert U from NDC coordinate to SVG
 
@@ -1648,7 +1616,6 @@ Double_t TSVG::UtoSVG(Double_t u)
    Double_t cm = fXsize*(gPad->GetAbsXlowNDC() + u*gPad->GetAbsWNDC());
    return 0.5 + 72*cm/2.54;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert V from NDC coordinate to SVG
@@ -1659,7 +1626,6 @@ Double_t TSVG::VtoSVG(Double_t v)
    return 0.5 + 72*cm/2.54;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert X from world coordinate to SVG
 
@@ -1668,7 +1634,6 @@ Double_t TSVG::XtoSVG(Double_t x)
    Double_t u = (x - gPad->GetX1())/(gPad->GetX2() - gPad->GetX1());
    return  UtoSVG(u);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert Y from world coordinate to SVG
@@ -1679,7 +1644,6 @@ Double_t TSVG::YtoSVG(Double_t y)
    return  fYsizeSVG-VtoSVG(v);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Begin the Cell Array painting
 
@@ -1689,7 +1653,6 @@ void TSVG::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
    Warning("TSVG::CellArrayBegin", "not yet implemented");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the Cell Array
 
@@ -1698,7 +1661,6 @@ void TSVG::CellArrayFill(Int_t, Int_t, Int_t)
    Warning("TSVG::CellArrayFill", "not yet implemented");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// End the Cell Array painting
 
@@ -1706,7 +1668,6 @@ void TSVG::CellArrayEnd()
 {
    Warning("TSVG::CellArrayEnd", "not yet implemented");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Not needed in SVG case

@@ -17,13 +17,9 @@
 #include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
 
-//==============================================================================
-// TEveTrackProjectedGL
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// GL-renderer for TEveTrackProjected class.
+/** \class TEveTrackProjectedGL
+GL-renderer for TEveTrackProjected class.
+*/
 
 ClassImp(TEveTrackProjectedGL);
 
@@ -35,8 +31,6 @@ TEveTrackProjectedGL::TEveTrackProjectedGL() : TEveTrackGL(), fM(0)
    // fDLCache = kFALSE; // Disable display list.
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -46,8 +40,6 @@ Bool_t TEveTrackProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
    fM = DynCast<TEveTrackProjected>(obj);
    return kTRUE;
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw track with GL.

@@ -12,17 +12,8 @@
 #ifndef ROOSTATS_MinNLLTestStat
 #define ROOSTATS_MinNLLTestStat
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-MinNLLTestStat is an implementation of the TestStatistic interface that calculates the minimum value of the negative log likelihood
-function and returns it as a test statistic.
-Internaly it operates by delegating to a MinNLLTestStat object.
-</p>
-END_HTML
-*/
-//
+
+
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -50,6 +41,15 @@ END_HTML
 #include "ProfileLikelihoodTestStat.h"
 
 namespace RooStats {
+
+   /**
+
+      MinNLLTestStat is an implementation of the TestStatistic interface that calculates the minimum value of the negative log likelihood
+      function and returns it as a test statistic.
+      Internaly it operates by delegating to a MinNLLTestStat object.
+
+      \ingroup Roostats
+   */
 
   class MinNLLTestStat : public TestStatistic{
 

@@ -1789,10 +1789,10 @@ Bool_t TClass::AddRule( const char *rule )
       // Create an empty emulated class for now.
       cl = gInterpreter->GenerateTClass(ruleobj->GetTargetClass(), /* emulation = */ kTRUE, /*silent = */ kTRUE);
    }
-   ROOT::TSchemaRuleSet* rset = cl->GetSchemaRules( kTRUE );
+   ROOT::Detail::TSchemaRuleSet* rset = cl->GetSchemaRules( kTRUE );
 
    TString errmsg;
-   if( !rset->AddRule( ruleobj, ROOT::TSchemaRuleSet::kCheckConflict, &errmsg ) ) {
+   if( !rset->AddRule( ruleobj, ROOT::Detail::TSchemaRuleSet::kCheckConflict, &errmsg ) ) {
       ::Warning( "TClass::AddRule", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because it conflicts with one of the other rules (%s).",
                 ruleobj->GetTargetClass(), ruleobj->GetVersion(), ruleobj->GetTargetString(), errmsg.Data() );
       delete ruleobj;
@@ -1804,7 +1804,7 @@ Bool_t TClass::AddRule( const char *rule )
 ////////////////////////////////////////////////////////////////////////////////
 /// Adopt a new set of Data Model Evolution rules.
 
-void TClass::AdoptSchemaRules( ROOT::TSchemaRuleSet *rules )
+void TClass::AdoptSchemaRules( ROOT::Detail::TSchemaRuleSet *rules )
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -1816,7 +1816,7 @@ void TClass::AdoptSchemaRules( ROOT::TSchemaRuleSet *rules )
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the set of the schema rules if any.
 
-const ROOT::TSchemaRuleSet* TClass::GetSchemaRules() const
+const ROOT::Detail::TSchemaRuleSet* TClass::GetSchemaRules() const
 {
    return fSchemaRules;
 }
@@ -1825,10 +1825,10 @@ const ROOT::TSchemaRuleSet* TClass::GetSchemaRules() const
 /// Return the set of the schema rules if any.
 /// If create is true, create an empty set
 
-ROOT::TSchemaRuleSet* TClass::GetSchemaRules(Bool_t create)
+ROOT::Detail::TSchemaRuleSet* TClass::GetSchemaRules(Bool_t create)
 {
    if (create && fSchemaRules == 0) {
-      fSchemaRules = new ROOT::TSchemaRuleSet();
+      fSchemaRules = new ROOT::Detail::TSchemaRuleSet();
       fSchemaRules->SetClass( this );
    }
    return fSchemaRules;
@@ -5639,7 +5639,7 @@ void TClass::SetStreamerImpl()
 /// Create the collection proxy object (and the streamer object) from
 /// using the information in the TCollectionProxyInfo.
 
-void TClass::SetCollectionProxy(const ROOT::TCollectionProxyInfo &info)
+void TClass::SetCollectionProxy(const ROOT::Detail::TCollectionProxyInfo &info)
 {
    R__LOCKGUARD(gInterpreterMutex);
 

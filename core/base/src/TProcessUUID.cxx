@@ -9,33 +9,35 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TProcessUUID
-//
-// This class is a specialized TProcessID managing the list of UUIDs.
-// In addition to TProcessID, this object has the following members:
-//   - fUUIDs  : a THashList of TUUIDs in string format (using a TObjString)
-//   - fActive : a TBits table with one bit per TUUID in the table
-// When a new TUUID is entered into the list fUUIDs, it is assigned
-// the first free slot in the list of bits and the TUUID UUIDNumber
-// is set to this slot number.
-// When a TUUID is removed from the list, the corresponding bit
-// is reset in fActive.
-// The object corresponding to a TUUID at slot I can be found
-// via fObjects->At(I).
-// One can use two mechanisms to find the object corresponding to a TUUID:
-//  1- the input is the TUUID.AsString. One can find the corresponding
-//     TObjString object objs in fUUIDs via THashList::FindObject(name).
-//     The slot number is then objs->GetUniqueID().
-//  2- The input is the UUIDNumber. The slot number is UIUIDNumber
-//
-// When a TRef points to an object having a TUUID, both the TRef and the
-// referenced object have their bit kHasUUID set. In this case, the pointer
-// TProcessID *fPID in TRef points to the unique object TProcessUUID.
-// The TRef uniqueID is directly the UUIDNumber=slot number.
-//
-//////////////////////////////////////////////////////////////////////////
+/** \class TProcessUUID
+This class is a specialized TProcessID managing the list of UUIDs.
+In addition to TProcessID, this object has the following members:
+
+  - fUUIDs  : a THashList of TUUIDs in string format (using a TObjString)
+  - fActive : a TBits table with one bit per TUUID in the table
+
+When a new TUUID is entered into the list fUUIDs, it is assigned
+the first free slot in the list of bits and the TUUID UUIDNumber
+is set to this slot number.
+
+When a TUUID is removed from the list, the corresponding bit
+is reset in fActive.
+
+The object corresponding to a TUUID at slot I can be found
+via fObjects->At(I).
+
+One can use two mechanisms to find the object corresponding to a TUUID:
+
+ 1. the input is the TUUID.AsString. One can find the corresponding
+    TObjString object objs in fUUIDs via THashList::FindObject(name).
+    The slot number is then objs->GetUniqueID().
+ 2. The input is the UUIDNumber. The slot number is UIUIDNumber
+
+When a TRef points to an object having a TUUID, both the TRef and the
+referenced object have their bit kHasUUID set. In this case, the pointer
+TProcessID *fPID in TRef points to the unique object TProcessUUID.
+The TRef uniqueID is directly the UUIDNumber=slot number.
+*/
 
 #include "TROOT.h"
 #include "TProcessUUID.h"
@@ -119,7 +121,7 @@ UInt_t TProcessUUID::AddUUID(const char *uuids)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Find the TObjString by slot number
+/// Find the TObjString by slot number
 
 TObjString *TProcessUUID::FindUUID(UInt_t number) const
 {
@@ -133,7 +135,7 @@ TObjString *TProcessUUID::FindUUID(UInt_t number) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Remove entry number in the list of uuids
+/// Remove entry number in the list of uuids
 
 void TProcessUUID::RemoveUUID(UInt_t number)
 {

@@ -9,14 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSystemFile                                                          //
-//                                                                      //
-// A TSystemFile describes an operating system file.                    //
-// The information is used by the browser (see TBrowser).               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSystemFile
+A TSystemFile describes an operating system file.
+The information is used by the browser (see TBrowser).
+*/
 
 #include "TSystemFile.h"
 #include "TBrowser.h"

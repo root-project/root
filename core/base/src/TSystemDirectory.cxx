@@ -9,16 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSystemDirectory                                                     //
-//                                                                      //
-// Describes an Operating System directory for the browser.             //
-//                                                                      //
-// Author: Christian Bormann  30/09/97                                  //
-//         http://www.ikf.physik.uni-frankfurt.de/~bormann/             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+/** \class TSystemDirectory
+Describes an Operating System directory for the browser.
+*/
 
 #include "TSystemDirectory.h"
 #include "TSystem.h"
@@ -49,7 +44,7 @@ TSystemDirectory::TSystemDirectory(const char *dirname, const char *path) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
+/// Copy constructor
 
 TSystemDirectory::TSystemDirectory(const TSystemDirectory& sd) :
   TSystemFile(sd),
@@ -59,7 +54,7 @@ TSystemDirectory::TSystemDirectory(const TSystemDirectory& sd) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignment operator
+/// Assignment operator
 
 TSystemDirectory& TSystemDirectory::operator=(const TSystemDirectory& sd)
 {
@@ -149,7 +144,7 @@ Bool_t TSystemDirectory::IsItDirectory(const char *name) const
 void TSystemDirectory::Browse(TBrowser *b)
 {
    // Collections to keep track of all browser objects that have been
-   // generated. It's main goal is to prevent the contineous
+   // generated. It's main goal is to prevent the continuous
    // allocations of new objects with the same names during browsing.
    if (!fDirsInBrowser)  fDirsInBrowser  = new TOrdCollection;
    if (!fFilesInBrowser) fFilesInBrowser = new TOrdCollection(10);

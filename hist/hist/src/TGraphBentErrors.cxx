@@ -28,17 +28,14 @@ ClassImp(TGraphBentErrors)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Begin_Html
-<center><h2>TGraphBentErrors class</h2></center>
+/** \class  TGraphBentErrors
+    \ingroup Hist
 A TGraphBentErrors is a TGraph with bent, assymetric error bars.
-<p>
-The TGraphBentErrors painting is performed thanks to the
-<a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
-class. All details about the various painting options are given in
-<a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
-<p>
+
+The TGraphBentErrors painting is performed thanks to the TGraphPainter
+class. All details about the various painting options are given in this class.
+
 The picture below gives an example:
-End_Html
 Begin_Macro(source)
 {
    c1 = new TCanvas("c1","A Simple Graph with bent error bars",200,10,700,500);
@@ -60,7 +57,8 @@ Begin_Macro(source)
    gr->Draw("ALP");
    return c1;
 }
-End_Macro */
+End_Macro
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

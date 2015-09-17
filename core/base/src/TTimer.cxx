@@ -9,39 +9,38 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTimer                                                               //
-//                                                                      //
-// Handles synchronous and a-synchronous timer events.                  //
-// 1. synchronous timer is registered into TSystem and is processed     //
-//    within the standard ROOT event-loop.                              //
-// 2. asynchronous timer is passed to the operating system which sends  //
-//    an external signal to ROOT and thus interrupts its event-loop.    //
-//                                                                      //
-// You can use this class in one of the following ways:                 //
-//    - Sub-class TTimer and override the Notify() method.              //
-//    - Re-implement the TObject::HandleTimer() method in your class    //
-//      and pass a pointer to this object to timer, see the SetObject() //
-//      method.                                                         //
-//    - Pass an interpreter command to timer, see SetCommand() method.  //
-//    - Create a TTimer, connect its Timeout() signal to the            //
-//      appropriate methods. Then when the time is up it will emit a    //
-//      Timeout() signal and call connected slots.                      //
-//                                                                      //
-//  Minimum timeout interval is defined in TSystem::ESysConstants as    //
-//  kItimerResolution (currently 10 ms).                                //
-//                                                                      //
-//  Signal/slots example:                                               //
-//       TTimer *timer = new TTimer();                                  //
-//       timer->Connect("Timeout()", "myObjectClassName",               //
-//                      myObject, "TimerDone()");                       //
-//       timer->Start(2000, kTRUE);   // 2 seconds single-shot          //
-//                                                                      //
-//  To emit the Timeout signal repeadetly with minimum timeout:         //
-//       timer->Start(0, kFALSE);                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTimer
+Handles synchronous and a-synchronous timer events.
+1. synchronous timer is registered into TSystem and is processed
+   within the standard ROOT event-loop.
+2. asynchronous timer is passed to the operating system which sends
+   an external signal to ROOT and thus interrupts its event-loop.
+
+You can use this class in one of the following ways:
+   - Sub-class TTimer and override the Notify() method.
+   - Re-implement the TObject::HandleTimer() method in your class
+     and pass a pointer to this object to timer, see the SetObject()
+     method.
+   - Pass an interpreter command to timer, see SetCommand() method.
+   - Create a TTimer, connect its Timeout() signal to the
+     appropriate methods. Then when the time is up it will emit a
+     Timeout() signal and call connected slots.
+
+Minimum timeout interval is defined in TSystem::ESysConstants as
+`kItimerResolution` (currently 10 ms).
+
+Signal/slots example:
+~~~{.cpp}
+      TTimer *timer = new TTimer();
+      timer->Connect("Timeout()", "myObjectClassName",
+                     myObject, "TimerDone()");
+      timer->Start(2000, kTRUE);   // 2 seconds single-shot
+~~~
+To emit the Timeout signal repeatedly with minimum timeout:
+~~~ {.cpp}
+      timer->Start(0, kFALSE);
+~~~
+*/
 
 #include "TTimer.h"
 #include "TSystem.h"

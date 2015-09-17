@@ -2194,14 +2194,18 @@ TClass *TTabCom::MakeClassFromClassName(const char className[]) const
    TClass *pClass = TClass::GetClass(className);
    NoMsg(-1);
 
+   if (!pClass){
+      Error("TTabCom::MakeClassFromClassName", "Unknown class \"%s\"", className);
+      return nullptr;
+   }
+
    // make sure "className" exists
    // if (pClass->Size() == 0) {   //namespace has 0 size
    if (pClass->GetListOfAllPublicMethods()->GetSize() == 0 &&
        pClass->GetListOfAllPublicDataMembers()->GetSize() == 0) {
       // i'm assuming this happens iff there was some error.
       // (misspelled the class name, for example)
-      std::cerr << std::endl << "class " << dblquote(className) << " not defined." <<
-          std::endl;
+      Error("TTabCom::MakeClassFromClassName", "class \"%s\" is not defined.", className);
       return 0;
    }
 

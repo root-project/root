@@ -17,13 +17,12 @@
 
 ClassImp(TAttPad)
 
-//______________________________________________________________________________
-//
-//  Manages default Pad attributes. Referenced by TStyle.
-//
+/** \class TAttPad
+Manages default Pad attributes. Referenced by TStyle.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
-///constructor
+/// Constructor.
 
 TAttPad::TAttPad()
 {
@@ -31,7 +30,7 @@ TAttPad::TAttPad()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///destructor
+/// Destructor.
 
 TAttPad::~TAttPad()
 {
@@ -62,14 +61,14 @@ void TAttPad::Copy(TAttPad &attpad) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///print function
+/// Print function.
 
 void TAttPad::Print(Option_t *) const
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///reset pad attributes
+/// Reset pad attributes.
 
 void TAttPad::ResetAttPad(Option_t *)
 {
@@ -93,8 +92,7 @@ void TAttPad::ResetAttPad(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Set Pad bottom margin in fraction of the pad height*-*-*-*
-///*-*              ===================================================
+/// Set Pad bottom margin in fraction of the pad height.
 
 void TAttPad::SetBottomMargin(Float_t margin)
 {
@@ -104,8 +102,7 @@ void TAttPad::SetBottomMargin(Float_t margin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Set Pad left margin in fraction of the pad width*-*-*-*-*
-///*-*              ================================================
+/// Set Pad left margin in fraction of the pad width.
 
 void TAttPad::SetLeftMargin(Float_t margin)
 {
@@ -115,8 +112,7 @@ void TAttPad::SetLeftMargin(Float_t margin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Set Pad right margin in fraction of the pad width*-*-*-*-*
-///*-*              =================================================
+/// Set Pad right margin in fraction of the pad width.
 
 void TAttPad::SetRightMargin(Float_t margin)
 {
@@ -126,8 +122,7 @@ void TAttPad::SetRightMargin(Float_t margin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Set Pad top margin in fraction of the pad height*-*-*-*-*
-///*-*              ================================================
+/// Set Pad top margin in fraction of the pad height.
 
 void TAttPad::SetTopMargin(Float_t margin)
 {
@@ -137,7 +132,7 @@ void TAttPad::SetTopMargin(Float_t margin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Set all margins
+/// Set all margins.
 
 void TAttPad::SetMargin(Float_t left, Float_t right, Float_t bottom, Float_t top)
 {

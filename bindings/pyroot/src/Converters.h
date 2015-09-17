@@ -272,6 +272,32 @@ namespace PyROOT {
       virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* = 0 );
    };
 
+// smart pointer converter
+   class TSmartPtrCppObjectConverter : public TConverter  {
+   public:
+      TSmartPtrCppObjectConverter( Cppyy::TCppType_t klass,
+                                   Cppyy::TCppType_t rawPtrType,
+                                   Cppyy::TCppMethod_t deref,
+                                   Bool_t keepControl = kFALSE,
+                                   Bool_t handlePtr = kFALSE )
+         : fClass( klass ), fRawPtrType( rawPtrType ), fDereferencer( deref ),
+           fKeepControl( keepControl ), fHandlePtr( handlePtr ) {}
+
+   public:
+      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual PyObject* FromMemory( void* address );
+      //virtual Bool_t ToMemory( PyObject* value, void* address );
+
+   protected:
+      virtual Bool_t GetAddressSpecialCase( PyObject*, void*& ) { return kFALSE; }
+
+      Cppyy::TCppType_t   fClass;
+      Cppyy::TCppType_t   fRawPtrType;
+      Cppyy::TCppMethod_t fDereferencer;
+      Bool_t              fKeepControl;
+      Bool_t              fHandlePtr;
+   };
+
 // create converter from fully qualified type
    TConverter* CreateConverter( const std::string& fullType, Long_t size = -1 );
 

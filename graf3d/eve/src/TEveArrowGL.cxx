@@ -17,9 +17,9 @@
 #include "TGLUtil.h"
 #include "TGLQuadric.h"
 
-//______________________________________________________________________________
-// OpenGL renderer class for TEveArrow.
-//
+/** \class TEveArrowGL
+OpenGL renderer class for TEveArrow.
+*/
 
 ClassImp(TEveArrowGL);
 

@@ -26,21 +26,30 @@
 
 ClassImp(TH3)
 
+/** \addtogroup Hist
+@{
+\class TH3C \brief tomato 3-D histogram with a bype per channel (see TH1 documentation)
+\class TH3S \brief tomato 3-D histogram with a short per channel (see TH1 documentation)
+\class TH3I \brief tomato 3-D histogram with a int per channel (see TH1 documentation)}
+\class TH3F \brief tomato 3-D histogram with a float per channel (see TH1 documentation)}
+\class TH3D \brief tomato 3-D histogram with a double per channel (see TH1 documentation)}
+@} 
+*/
 
-//______________________________________________________________________________
-//
-//  The 3-D histogram classes derived from the 1-D histogram classes.
-//  all operations are supported (fill, fit).
-//  Drawing is currently restricted to one single option.
-//  A cloud of points is drawn. The number of points is proportional to
-//  cell content.
-//
-//
-//  TH3C a 3-D histogram with one byte per cell (char)
-//  TH3S a 3-D histogram with two bytes per cell (short integer)
-//  TH3I a 3-D histogram with four bytes per cell (32 bits integer)
-//  TH3F a 3-D histogram with four bytes per cell (float)
-//  TH3D a 3-D histogram with eight bytes per cell (double)
+/** \class TH3 
+    \ingroup Hist
+The 3-D histogram classes derived from the 1-D histogram classes.
+All operations are supported (fill, fit).
+Drawing is currently restricted to one single option.
+A cloud of points is drawn. The number of points is proportional to
+cell content.
+
+-   TH3C a 3-D histogram with one byte per cell (char)
+-   TH3S a 3-D histogram with two bytes per cell (short integer)
+-   TH3I a 3-D histogram with four bytes per cell (32 bits integer)
+-   TH3F a 3-D histogram with four bytes per cell (float)
+-   TH3D a 3-D histogram with eight bytes per cell (double)
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////

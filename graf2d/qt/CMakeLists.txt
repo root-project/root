@@ -3,7 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(gui/gui)
 include(${QT_USE_FILE})
 
 set(headers TGQt.h TQtTimer.h TQtApplication.h TQtBrush.h

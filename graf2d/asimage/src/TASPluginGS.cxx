@@ -9,12 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TASPluginGS - allows to read PS/EPS/PDF files via GhostScript        //
-//                                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TASPluginGS
+Allows to read PS/EPS/PDF files via GhostScript
+*/
 
 #include "TASPluginGS.h"
 #include "TSystem.h"
@@ -44,7 +41,6 @@ extern "C" {
 
 
 ClassImp(TASPluginGS)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor

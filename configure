@@ -910,8 +910,8 @@ check_header()  {
 }
 
 #_____________________________________________________________________
-check_include() {
-    # This function compiles a source file including the header in $1
+check_code() {
+    # This function compiles a source file containing code from $1
     # with extra CXXFLAGS $2 (can be empty), e.g. to pass -I.
     # The result of the check is stored in include_result, 1 if true,
     # 0 otherwise, which should be immediately copied, since the variable
@@ -923,15 +923,13 @@ check_include() {
         return 1
     fi
 
-    logmsg " Checking for header $1 with flags '$2'"
+    logmsg " Compiling $1 with flags '$2'"
+    echo "$1" > conftest.cxx
     cat <<EOF > conftest.mk
 include ${ac_srcdir}/config/Makefile.${arch}
 CXX = ${altcxx}
 conftest.o: conftest.cxx
 	\$(CXX) $2 -c \$^ -o \$@
-conftest.cxx:
-	echo '#include <$1>' > \$@
-	echo 'int main(int,char*[]){return 0;}' >> \$@
 EOF
     $gnumake -f conftest.mk >> $logfile 2>&1
     if test $? -eq 0 ; then
@@ -2697,12 +2695,14 @@ hasstdstringview="undef"
 hasstdexpstringview="undef"
 message "Checking for string_view implementation"
 if test "x$usecxx11" = "xdefine" ; then
-    check_include 'string_view'
+    check_code '#include <string_view>
+int main() {std::string_view().to_string(); return 0; }'
     if test $include_result -eq 1 ; then
         hasstdstringview="define"
         result '<string_view>'
     else
-        check_include 'experimental/string_view'
+        check_code '#include <experimental/string_view>
+int main() {std::experimental::string_view().to_string(); return 0; }'
         if test $include_result -eq 1 ; then
             hasstdexpstringview="define"
             result '<experimental/string_view>'
@@ -4342,7 +4342,7 @@ if test ! "x$enable_pythia8" = "xno" ; then
     # Check for PYTHIA8 include and library
     check_header "Pythia8/Pythia.h" "$pythia8incdir" \
         $PYTHIA8 ${PYTHIA8:+$PYTHIA8/include} \
-        /opt/pythia8/include /usr/local/include /usr/include /usr/include/pythia
+        /opt/pythia8/include /usr/local/include /usr/include /usr/include/pythia /usr/include/Pythia8 /usr/include/pythia8
     pythia8incdir=$found_dir
 
     check_library "libpythia8" "$enable_shared" "$pythia8libdir" \
@@ -4813,7 +4813,7 @@ if test ! "x$enable_geocad" = "xno"; then
     # Check for OpenCascade include and library
     check_header "XCAFApp_Application.hxx" "$occincdir" \
         $CASROOT ${CASROOT:+$CASROOT/inc} /usr/include/opencascade \
-        /usr/include
+        /usr/include /usr/include/oce
     occinc=$found_hdr
     occincdir=$found_dir
 

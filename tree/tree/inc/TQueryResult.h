@@ -63,7 +63,7 @@ protected:
    TDatime         fStart;        //time when processing started
    TDatime         fEnd;          //time when processing ended
    Float_t         fUsedCPU;      //real CPU time used (seconds)
-   TString         fOptions;      //processing options + aclic mode (<opt>#<aclic_mode>)
+   TString         fOptions;      //processing options + aclic mode (< opt >#< aclic_mode >)
    TList          *fInputList;    //input list; contains also data sets, entry list, ...
    Long64_t        fEntries;      //number of entries processed
    Long64_t        fFirst;        //first entry processed

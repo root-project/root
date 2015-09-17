@@ -38,7 +38,6 @@ The following people have contributed to this new version:
  Matevz Tadel, UCSD/CMS, Eve, \
  Vassil Vassilev, CERN/SFT \
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
- Yue Shi Lai, MIT,\
  Maciej Zimnoch
 
 
@@ -75,6 +74,20 @@ New options:
 - `-a` option append to existing file
 - The verbosity level is now optional after -v
 
+### Command line utilities
+We added command line utilities to streamline very common operations performed on root files, like listing their content or creating directories.
+The command line utilities are:
+- rootbrowse: to open the file in a TBrowser
+- rootcp: to copy content from one file to another
+- rooteventselector: to select a subset of the events in a tree contained in a file
+- rootls: to list the content of a rootfile
+- rootmkdir: to create a directory in a rootfile
+- rootmv: to move content across files
+- rootprint: to plot content (histograms, graphs) of files
+- rootrm: to remove content from files
+These utilities took inspiration from the well known *nix commands and all offer the -h switch which provides documentation for all options available and example invocation lines.
+
+
 ### I/O New functionalities
 
 ### I/O Behavior change.
@@ -99,6 +112,14 @@ New options:
 Improve the algorithm to compute the lower limit of an axis in log scale when its
 real lower limit is 0. The problem was reported in ROOT-7414.
 
+Using the `COL` option with histograms having some negative bins; the empty bins
+(containing 0) are drawn. In some cases one wants to not draw empty bins
+(containing 0) of histograms having a negative minimum. The option `1`, used with
+the option `COL`, allows to do that.
+
+Implement the Log option for `CANDLE` plots as requested
+[here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20225&p=87006#p87006).
+
 ### TTeXDump
 
 From Dmitry Kalinkin (via github): Fix file corruption in TTeXDump::DrawPolyMarker`
@@ -114,6 +135,40 @@ introduce forced newline. The third option is less intrusive and just adds addit
 spaces to provide clues for the proper line wrapping (this is the one implemented in
 this change).
 
+### TLatex
+
+Make sure the line width used to draw `#sqrt` is always >= 1.
+
+When a global text alignment was set the `TLatex`characters `#minus`, `#plus`,
+`#mp`, `#hbar`, and `#backslash` were mis-aligned. The following macro demonstrate
+the problem:
+
+``` {.cpp}
+{
+   gStyle->SetTextAlign(22);
+   TLatex t(.5,.5,"#minus100 #mp100 #plus100 #hbar #backslash");
+   t.Draw();
+}
+```
+
+The angle of a `TLatex` object was set to 0 if the `GetYsize` method was called.
+
+### TColor
+
+New palette `kViridis`. It was presented at SciPy2015 by Stéfan van der Walt and
+Nathaniel Smith. It is now matplotlib's current default color map.
+
+![Viridis](palette_112.png)
+
+
+### TMultiGraph
+
+Ignore empty graphs when computing the multi-graph range at painting time.
+
+### TASImage
+
+A left click on a image produced a one pixel zoom.
+
 ## 3D Graphics Libraries
 
 
@@ -128,7 +183,7 @@ this change).
 ### THttpServer
 
 Support of POST HTTP requests. For example, ROOT objects can be send with POST request and used as arguments of
-objects method execution in exe.bin and exe.json requests. Request and response HTTP headers are now directely accessible in THttpCallArg class
+objects method execution in exe.bin and exe.json requests. Request and response HTTP headers are now directly accessible in THttpCallArg class
 
 When command is registered with THttpServer::RegisterCommand() method,
 one could configure additional arguments which should be submitted when
@@ -172,6 +227,9 @@ If host has several network interfaces, one could select one for binding:
 
 ## Language Bindings
 
+### Notebooks
+We provided integration of ROOT with Jupyter notebooks. For what concerns Python notebooks, tab completion, output and graphics capturing have been enabled. It is possible to switch from Python to C++ and have a C++ notebook at disposal.
+New tutorials and code examples have been provided here: https://root.cern.ch/code-examples#notebooks
 
 ## JavaScript ROOT
 
@@ -187,5 +245,7 @@ If host has several network interfaces, one could select one for binding:
 
 
 ## Build, Configuration and Testing Infrastructure
+
+- The option cxx14 requires GCC > 5.1 because std::string_view needs member to_string
 
 

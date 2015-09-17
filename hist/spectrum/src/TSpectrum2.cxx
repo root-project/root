@@ -1,6 +1,7 @@
 // @(#)root/spectrum:$Id$
 // Author: Miroslav Morhac   17/01/2006
 
+
 /////////////////////////////////////////////////////////////////////////////
 //   THIS CLASS CONTAINS ADVANCED SPECTRA PROCESSING FUNCTIONS.            //
 //                                                                         //
@@ -42,40 +43,42 @@
 //                                                                         //
 //   These NIM papers are also available as Postscript files from:         //
 //
-/*
-   ftp://root.cern.ch/root/SpectrumDec.ps.gz
-   ftp://root.cern.ch/root/SpectrumSrc.ps.gz
-   ftp://root.cern.ch/root/SpectrumBck.ps.gz
-*/
+//
+//   ftp://root.cern.ch/root/SpectrumDec.ps.gz
+//   ftp://root.cern.ch/root/SpectrumSrc.ps.gz
+//   ftp://root.cern.ch/root/SpectrumBck.ps.gz
+//
 //
 /////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////NEW FUNCTIONS  January 2006
-//Begin_Html <!--
-/* -->
-<div class=Section1>
-
-<p class=MsoNormal style='text-align:justify'><i><span lang=EN-US
-style='font-size:16.0pt'>All figures in this page were prepared using DaqProVis
-system, Data Acquisition, Processing and Visualization system, which is being
-developed at the Institute of Physics, Slovak Academy of Sciences, Bratislava,
-Slovakia:  </span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span lang=EN-US
-style='font-size:16.0pt'><a href="http://www.fu.sav.sk/nph/projects/DaqProVis/">http://www.fu.sav.sk/nph/projects/DaqProVis/</a>
-under construction</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span lang=EN-US
-style='font-size:16.0pt'><a href="http://www.fu.sav.sk/nph/projects/ProcFunc/">http://www.fu.sav.sk/nph/projects/ProcFunc/</a>
-.</span></i></p>
-
-</div>
-
-<!-- */
+//
+//<div class=Section1>
+//
+//<p class=MsoNormal style='text-align:justify'><i><span lang=EN-US
+//style='font-size:16.0pt'>All figures in this page were prepared using DaqProVis
+//system, Data Acquisition, Processing and Visualization system, which is being
+//developed at the Institute of Physics, Slovak Academy of Sciences, Bratislava,
+//Slovakia:  </span></i></p>
+//
+//<p class=MsoNormal style='text-align:justify'><i><span lang=EN-US
+//style='font-size:16.0pt'><a href="http://www.fu.sav.sk/nph/projects/DaqProVis/">http://www.fu.sav.sk/nph/projects/DaqProVis/</a>
+//under construction</span></i></p>
+//
+//<p class=MsoNormal style='text-align:justify'><i><span lang=EN-US
+//style='font-size:16.0pt'><a href="http://www.fu.sav.sk/nph/projects/ProcFunc/">http://www.fu.sav.sk/nph/projects/ProcFunc/</a>
+//.</span></i></p>
+//
+//</div>
+//
+//<!-- */
 // --> End_Html
 
 //______________________________________________________________________________
-
+/** \class TSpectrum2
+ \ingroup Hist
+ \brief Advanced 2-dimentional spectra processing
+*/
 
 
 #include "TSpectrum2.h"

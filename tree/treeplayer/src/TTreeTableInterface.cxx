@@ -24,27 +24,24 @@
 
 ClassImp(TTreeTableInterface)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTreeTableInterface.                                                 //
-//                                                                      //
-// TTreeTableInterface is used to interface to data that is stored in a //
-// TTree. When the interface is created, an expression can be           //
-// specified. This expression will define the columns to be shown.      //
-//                                                                      //
-// A selection criterium can also be specified. A TEntryList will be    //
-// created and applied to the TTree using this criterium.               //
-// a new TEntryList to use can be specified using SetEntryList.         //
-// TGTable->Update() will need to be called to show the effects.        //
-//                                                                      //
-// WARNING: Do not apply an entrylist to the tree in any other way than //
-// through the interface, this will have undefined consequences.        //
-//                                                                      //
-// Columns can be manipulated using the appropriate methods. A          //
-// TGTable->Update is always needed afterwards to make the table aware  //
-// of the changes.                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTreeTableInterface
+
+TTreeTableInterface is used to interface to data that is stored in a
+TTree. When the interface is created, an expression can be
+specified. This expression will define the columns to be shown.
+
+A selection criterium can also be specified. A TEntryList will be
+created and applied to the TTree using this criterium.
+a new TEntryList to use can be specified using SetEntryList.
+TGTable->Update() will need to be called to show the effects.
+
+WARNING: Do not apply an entrylist to the tree in any other way than
+through the interface, this will have undefined consequences.
+
+Columns can be manipulated using the appropriate methods. A
+TGTable->Update is always needed afterwards to make the table aware
+of the changes.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TTreeTableInterface constructor.

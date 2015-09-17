@@ -6395,11 +6395,6 @@ bool testH1Buffer() {
    int pr = std::cout.precision(15);
    double eps = TMath::Limits<double>::Epsilon();
 
-   // Adjust the threshold on ARM64 bits. On this RISC architecture,
-   // there is a difference when incrementing the sumwx with variables
-   // saved in memory (in the histogram buffer) and passed as function 
-   // arguments (Fill(x,w)).
-
    bool itest = false;
 
    // now test that functions are consistent
@@ -6521,6 +6516,10 @@ bool testH1BufferWeights() {
    int pr = std::cout.precision(15);
    double eps = TMath::Limits<double>::Epsilon();
 
+   // Adjust the threshold on ARM64 bits. On this RISC architecture,
+   // there is a difference when incrementing the sumwx with variables
+   // saved in memory (in the histogram buffer) and passed as function
+   // arguments (Fill(x,w)).
 #ifdef __aarch64__
    eps*=28;
 #endif

@@ -18,20 +18,15 @@
 #include "TString.h"
 #include "TMath.h"
 
-//==============================================================================
-//==============================================================================
-// TEveText
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// TEveElement class used for displaying FreeType GL fonts. Holds a
-// set of parameters to define FTGL font and its rendering style.
-//
+/** \class TEveText
+TEveElement class used for displaying FreeType GL fonts. Holds a
+set of parameters to define FTGL font and its rendering style.
+*/
 
 ClassImp(TEveText);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TEveText::TEveText(const char* txt) :
    TEveElement(fTextColor),
@@ -49,8 +44,6 @@ TEveText::TEveText(const char* txt) :
    fAutoLighting(kTRUE),
    fLighting(kFALSE)
 {
-   // Constructor.
-
    fPolygonOffset[0] = 0;
    fPolygonOffset[1] = 0;
 

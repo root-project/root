@@ -3,10 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(tree/tree)
-ROOT_USE_PACKAGE(core/rint)
-
 if(NOT WIN32)
   ROOT_EXECUTABLE(rootn.exe rmain.cxx LIBRARIES New Core MathCore Rint)
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore)
@@ -21,3 +17,22 @@ if(CMAKE_Fortran_COMPILER)
   ROOT_EXECUTABLE(h2root h2root.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread minicern)
 endif()
 
+if(python)
+  file(GLOB utils RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} python/root*)
+  foreach(rawUtilName ${utils})
+    get_filename_component(utilName ${rawUtilName} NAME)
+    if(NOT WIN32)
+      # We need the .py only on Windows
+      string(REPLACE ".py" "" utilName ${utilName})
+    endif()
+
+    install(FILES ${rawUtilName} DESTINATION ${CMAKE_INSTALL_BINDIR}/${CMAKE_INSTALL_BINDIR} RENAME ${utilName})
+    execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                    COMMAND ${CMAKE_COMMAND} -E copy ${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName})
+  endforeach()
+
+  install(FILES python/cmdLineUtils.py DESTINATION ${runtimedir})
+  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/cmdLineUtils.py )")
+  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/cmdLineUtils.py )")
+  file(COPY python/cmdLineUtils.py DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
+endif()

@@ -22,12 +22,9 @@
 
 ClassImp(TLine)
 
-
-//______________________________________________________________________________
-//
-// A Graphical line
-//
-
+/** \class TLine
+A Graphical line
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Line default constructor.
@@ -36,7 +33,6 @@ TLine::TLine(): TObject(), TAttLine()
 {
    fX1=0; fY1=0; fX2=0; fY2=0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Line normal constructor.
@@ -47,14 +43,12 @@ TLine::TLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    fX1=x1; fY1=y1; fX2=x2; fY2=y2;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Line default destructor.
 
 TLine::~TLine()
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Line copy constructor.
@@ -64,7 +58,6 @@ TLine::TLine(const TLine &line) : TObject(line), TAttLine(line), TAttBBox2D(line
    fX1=0; fY1=0; fX2=0; fY2=0;
    ((TLine&)line).Copy(*this);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this line to line.
@@ -79,7 +72,6 @@ void TLine::Copy(TObject &obj) const
    ((TLine&)obj).fY2 = fY2;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a line.
 
@@ -93,7 +85,6 @@ Int_t TLine::DistancetoPrimitive(Int_t px, Int_t py)
    return DistancetoLine(px,py,x1,y1,x2,y2);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this line with new coordinates.
 
@@ -106,7 +97,6 @@ TLine *TLine::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    return newline;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this line with new coordinates in NDC.
 
@@ -116,7 +106,6 @@ TLine *TLine::DrawLineNDC(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    newline->SetBit(kLineNDC);
    return newline;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
@@ -240,7 +229,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
       if (opaque) {
          if (p1) {
-            //check in which corner the BBox is eddited
+            //check in which corner the BBox is edited
             if (fX1>fX2) {
                if (fY1>fY2)
                   gPad->ShowGuidelines(this, event, '2', true);
@@ -254,7 +243,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             }
          }
          if (p2) {
-            //check in which corner the BBox is eddited
+            //check in which corner the BBox is edited
             if (fX1>fX2) {
                if (fY1>fY2)
                   gPad->ShowGuidelines(this, event, '4', true);
@@ -290,7 +279,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
       }
       if (opaque) {
-         if (ndcsav) {
+         if (ndcsav && !this->TestBit(kLineNDC)) {
             this->SetX1((fX1 - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
             this->SetX2((fX2 - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
             this->SetY1((fY1 - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
@@ -365,7 +354,6 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// List this line with its attributes.
 
@@ -374,7 +362,6 @@ void TLine::ls(Option_t *) const
    TROOT::IndentLevel();
    printf("%s  X1=%f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),fX1,fY1,fX2,fY2);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this line with its current attributes.
@@ -385,7 +372,6 @@ void TLine::Paint(Option_t *)
    else                   PaintLine(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this line with new coordinates.
 
@@ -395,7 +381,6 @@ void TLine::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    gPad->PaintLine(x1,y1,x2,y2);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this line with new coordinates in NDC.
 
@@ -404,7 +389,6 @@ void TLine::PaintLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
    TAttLine::Modify();  //Change line attributes only if necessary
    gPad->PaintLineNDC(u1,v1,u2,v2);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump this line with its attributes.
@@ -417,7 +401,6 @@ void TLine::Print(Option_t *) const
    if (GetLineWidth() != 1) printf(" Width=%d",GetLineWidth());
    printf("\n");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
@@ -437,7 +420,6 @@ void TLine::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   line->Draw();"<<std::endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Check whether this line is to be drawn horizontally.
 
@@ -445,7 +427,6 @@ Bool_t TLine::IsHorizontal()
 {
    return TestBit(kHorizontal);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check whether this line is to be drawn vertically.
@@ -455,7 +436,6 @@ Bool_t TLine::IsVertical()
    return TestBit(kVertical);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set NDC mode on if isNDC = kTRUE, off otherwise
 
@@ -464,7 +444,6 @@ void TLine::SetNDC(Bool_t isNDC)
    ResetBit(kLineNDC);
    if (isNDC) SetBit(kLineNDC);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Force the line to be drawn horizontally.
@@ -487,7 +466,6 @@ void TLine::SetHorizontal(Bool_t set /*= kTRUE*/)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Force the line to be drawn vertically.
 /// Makes fX2 equal to fX1. The line length is kept.
@@ -508,7 +486,6 @@ void TLine::SetVertical(Bool_t set /*= kTRUE*/)
       fX2 = fX1;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TLine.
@@ -536,7 +513,6 @@ void TLine::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(TLine::Class(),this);
    }
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the bounding Box of the Line
 
@@ -630,7 +606,7 @@ void TLine::SetBBoxCenterY(const Int_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set lefthandside of BoundingBox to a value
+/// Set left hand side of BoundingBox to a value
 /// (resize in x direction on left)
 
 void TLine::SetBBoxX1(const Int_t x)
@@ -642,7 +618,7 @@ void TLine::SetBBoxX1(const Int_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set righthandside of BoundingBox to a value
+/// Set right hand side of BoundingBox to a value
 /// (resize in x direction on right)
 
 void TLine::SetBBoxX2(const Int_t x)

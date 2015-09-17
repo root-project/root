@@ -26,6 +26,11 @@ MATHCOREDH2  := $(MODDIRI)/TRandom.h \
                 $(MODDIRI)/TRandom1.h \
                 $(MODDIRI)/TRandom2.h \
                 $(MODDIRI)/TRandom3.h \
+                $(MODDIRI)/Math/Random.h \
+                $(MODDIRI)/Math/RandomFunctions.h \
+                $(MODDIRI)/Math/TRandomEngine.h \
+                $(MODDIRI)/Math/MersenneTwisterEngine.h \
+                $(MODDIRI)/Math/MixMaxEngine.h \
                 $(MODDIRI)/TStatistic.h \
                 $(MODDIRI)/TKDTree.h \
                 $(MODDIRI)/TKDTreeBinning.h \
@@ -75,7 +80,8 @@ MATHCOREH4   := $(filter-out $(MODDIRI)/Fit/LinkDef%,$(wildcard $(MODDIRI)/Fit/*
 MATHCOREH    := $(MATHCOREH1) $(MATHCOREH2) $(MATHCOREH3) $(MATHCOREH4)
 
 MATHCORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-MATHCOREO    := $(call stripsrc,$(MATHCORES:.cxx=.o))
+MATHCORECS   := $(wildcard $(MODDIRS)/*.c)
+MATHCOREO    := $(call stripsrc,$(MATHCORES:.cxx=.o) $(MATHCORECS:.c=.o))
 
 MATHCOREDEP  := $(MATHCOREO:.o=.d) $(MATHCOREDO:.o=.d)
 

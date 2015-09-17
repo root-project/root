@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TParameter<AParamType>                                               //
-//                                                                      //
-// Named parameter, streamable and storable.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TParameter
+TParameter <AParamType> .
 
+Named parameter, streamable and storable.
+*/
 
 #include "TParameter.h"
-
 
 templateClassImp(TParameter)

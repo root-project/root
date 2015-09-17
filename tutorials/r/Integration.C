@@ -29,7 +29,7 @@ void Integration()
 
   ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
   
-  r["BreitWigner"]=ROOT::R::TRFunction(BreitWignerVectorized);
+  r["BreitWigner"]=ROOT::R::TRFunctionExport(BreitWignerVectorized);
   
   Double_t value=r.Eval("integrate(BreitWigner, lower = -2, upper = 2)$value");
 

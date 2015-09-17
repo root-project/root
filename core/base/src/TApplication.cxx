@@ -9,17 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TApplication                                                         //
-//                                                                      //
-// This class creates the ROOT Application Environment that interfaces  //
-// to the windowing system eventloop and eventhandlers.                 //
-// This class must be instantiated exactly once in any given            //
-// application. Normally the specific application class inherits from   //
-// TApplication (see TRint).                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TApplication
+This class creates the ROOT Application Environment that interfaces
+to the windowing system eventloop and eventhandlers.
+This class must be instantiated exactly once in any given
+application. Normally the specific application class inherits from
+TApplication (see TRint).
+*/
 
 #include "RConfigure.h"
 #include "Riostream.h"
@@ -101,9 +97,9 @@ TApplication::TApplication() :
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an application environment. The application environment
 /// provides an interface to the graphics system and eventloop
-/// (be it X, Windoze, MacOS or BeOS). After creating the application
+/// (be it X, Windows, MacOS or BeOS). After creating the application
 /// object start the eventloop by calling its Run() method. The command
-/// line options recogized by TApplication are described in the GetOptions()
+/// line options recognized by TApplication are described in the GetOptions()
 /// method. The recognized options are removed from the argument array.
 /// The original list of argument options can be retrieved via the Argc()
 /// and Argv() methods. The appClassName "proofserv" is reserved for the
@@ -355,32 +351,38 @@ char *TApplication::Argv(Int_t index) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Get and handle command line options. Arguments handled are removed
 /// from the argument array. The following arguments are handled:
-///    -b : run in batch mode without graphics
-///    -x : exit on exception
-///    -e expression: request execution of the given C++ expression.
-///    -n : do not execute logon and logoff macros as specified in .rootrc
-///    -q : exit after processing command line macro files
-///    -l : do not show splash screen
+///
+///  - b : run in batch mode without graphics
+///  - x : exit on exception
+///  - e expression: request execution of the given C++ expression.
+///  - n : do not execute logon and logoff macros as specified in .rootrc
+///  - q : exit after processing command line macro files
+///  - l : do not show splash screen
+///
 /// The last three options are only relevant in conjunction with TRint.
 /// The following help and info arguments are supported:
-///    -?       : print usage
-///    -h       : print usage
-///    --help   : print usage
-///    -config  : print ./configure options
-///    -memstat : run with memory usage monitoring
+///
+///  - ?       : print usage
+///  - h       : print usage
+///  - -help   : print usage
+///  - config  : print ./configure options
+///  - memstat : run with memory usage monitoring
+///
 /// In addition to the above options the arguments that are not options,
 /// i.e. they don't start with - or + are treated as follows (and also removed
 /// from the argument array):
-///   <dir>       is considered the desired working directory and available
-///               via WorkingDirectory(), if more than one dir is specified the
-///               first one will prevail
-///   <file>      if the file exists its added to the InputFiles() list
-///   <file>.root are considered ROOT files and added to the InputFiles() list,
-///               the file may be a remote file url
-///   <macro>.C   are considered ROOT macros and also added to the InputFiles() list
+///
+///  - <dir>       is considered the desired working directory and available
+///                via WorkingDirectory(), if more than one dir is specified the
+///                first one will prevail
+///  - <file>      if the file exists its added to the InputFiles() list
+///  - <file>.root are considered ROOT files and added to the InputFiles() list,
+///                the file may be a remote file url
+///  - <macro>.C   are considered ROOT macros and also added to the InputFiles() list
+///
 /// In TRint we set the working directory to the <dir>, the ROOT files are
 /// connected, and the macros are executed. If your main TApplication is not
-/// TRint you have to decide yourself what to do whith these options.
+/// TRint you have to decide yourself what to do with these options.
 /// All specified arguments (also the ones removed) can always be retrieved
 /// via the TApplication::Argv() method.
 
@@ -601,7 +603,7 @@ void TApplication::Help(const char *line)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Load shared libs neccesary for graphics. These libraries are only
+/// Load shared libs necessary for graphics. These libraries are only
 /// loaded when gROOT->IsBatch() is kFALSE.
 
 void TApplication::LoadGraphicsLibs()
@@ -678,7 +680,9 @@ void TApplication::MakeBatch()
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse the content of a line starting with ".R" (already stripped-off)
 /// The format is
+/// ~~~ {.cpp}
 ///      [user@]host[:dir] [-l user] [-d dbg] [script]
+/// ~~~
 /// The variable 'dir' is the remote directory to be used as working dir.
 /// The username can be specified in two ways, "-l" having the priority
 /// (as in ssh).
@@ -742,7 +746,9 @@ Int_t TApplication::ParseRemoteLine(const char *ln,
 ////////////////////////////////////////////////////////////////////////////////
 /// Process the content of a line starting with ".R" (already stripped-off)
 /// The format is
+/// ~~~ {.cpp}
 ///      [user@]host[:dir] [-l user] [-d dbg] [script] | [host] -close
+/// ~~~
 /// The variable 'dir' is the remote directory to be used as working dir.
 /// The username can be specified in two ways, "-l" having the priority
 /// (as in ssh).
@@ -1101,7 +1107,7 @@ again:
    if (!execute) {
       TString exname = exnam;
       if (!tempfile) {
-         // We have a script that does NOT contain an unamed macro,
+         // We have a script that does NOT contain an unnamed macro,
          // so we can call the script compiler on it.
          exname += aclicMode;
       }
@@ -1235,8 +1241,8 @@ void TApplication::ReturnPressed(char *text )
 ////////////////////////////////////////////////////////////////////////////////
 /// Set console echo mode:
 ///
-///  mode = kTRUE  - echo input symbols
-///  mode = kFALSE - noecho input symbols
+///  - mode = kTRUE  - echo input symbols
+///  - mode = kFALSE - noecho input symbols
 
 void TApplication::SetEchoMode(Bool_t)
 {

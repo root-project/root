@@ -1,6 +1,7 @@
 #---Check for installed packages depending on the build options/components eamnbled -
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
+set(repository_tarfiles http://service-spi.web.cern.ch/service-spi/external/tarFiles)
 
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
@@ -88,7 +89,7 @@ if(builtin_lzma)
     ExternalProject_Add(
      LZMA
      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
-#      URL_MD5  65693dc257802b6778c28ed53ecca678
+     #URL_MD5  65693dc257802b6778c28ed53ecca678
      PREFIX LZMA
      INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
@@ -209,17 +210,23 @@ if(mathmore OR builtin_gsl)
   if(NOT builtin_gsl)
     find_package(GSL 1.10)
     if(NOT GSL_FOUND)
-      message(STATUS "GSL not found. Set variable GSL_DIR to point to your GSL installation")
-      message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'")
-      message(STATUS "               For the time being switching OFF 'mathmore' option")
-      set(mathmore OFF CACHE BOOL "" FORCE)
+      if(fail-on-missing)
+        message(FATAL_ERROR "GSL package not found and 'mathmore' component if required ('fail-on-missing' enabled). "
+                            "Alternatively, you can enable the option 'builtin_gsl' to build the GSL libraries internally.")
+      else()
+        message(STATUS "GSL not found. Set variable GSL_DIR to point to your GSL installation")
+        message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'")
+        message(STATUS "               For the time being switching OFF 'mathmore' option")
+        set(mathmore OFF CACHE BOOL "" FORCE)
+      endif()
     endif()
   else()
     set(gsl_version 1.15)
     message(STATUS "Downloading and building GSL version ${gsl_version}")
     ExternalProject_Add(
       GSL
-      URL http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
+      # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
+      URL ${repository_tarfiles}/gsl-${gsl_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no CFLAGS=${CMAKE_C_FLAGS}
     )
@@ -255,6 +262,7 @@ if(python)
     endif()
   else()
   endif()
+  find_package(NumPy)
 endif()
 
 #---Check for Ruby installation-------------------------------------------------------
@@ -530,7 +538,7 @@ if(builtin_fftw3)
   message(STATUS "Downloading and building FFTW version ${FFTW_VERSION}")
   ExternalProject_Add(
     FFTW3
-    URL http://service-spi.web.cern.ch/service-spi/external/tarFiles/fftw-${FFTW_VERSION}.tar.gz
+    URL ${repository_tarfiles}/fftw-${FFTW_VERSION}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
     BUILD_COMMAND make CFLAGS=-fPIC
@@ -548,7 +556,8 @@ if(fitsio OR builtin_cfitsio)
     message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}")
     ExternalProject_Add(
       CFITSIO
-      URL ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
+      # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
+      URL ${repository_tarfiles}/cfitsio${cfitsio_version_no_dots}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
       BUILD_IN_SOURCE 1
@@ -613,30 +622,24 @@ if(xrootd)
   endif()
 endif()
 if(builtin_xrootd)
-  set(xrootd_version 4.2.1)
-  set(xrootd_versionnum 400020001)
+  set(xrootd_version 4.2.2)
+  set(xrootd_versionnum 400020002)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-duplicate-decl-specifier)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-deprecated-declarations)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-conditional-uninitialized)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-unused-result)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-sometimes-uninitialized)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-pointer-bool-conversion)
-  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-format-security)
   ExternalProject_Add(
     XROOTD
-    URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
+    # http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
+    URL ${repository_tarfiles}/xrootd-${xrootd_version}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CMAKE_ARGS -DENABLE_PERL=FALSE
-               -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -DCMAKE_CXX_FLAGS=${__cxxflags}
                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+               -DENABLE_PYTHON=OFF
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
   set(_LIBDIR_DEFAULT "lib")
@@ -839,7 +842,8 @@ if(davix OR builtin_davix)
     ExternalProject_Add(
       DAVIX
       PREFIX DAVIX
-      URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
+      # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
+      URL ${repository_tarfiles}/davix-embedded-${DAVIX_VERSION}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}/DAVIX-install
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -925,7 +929,7 @@ if(tbb)
     set(tbb_version 42_20140122)
     ExternalProject_Add(
       TBB
-      URL http://service-spi.web.cern.ch/service-spi/external/tarFiles/tbb${tbb_version}oss_src.tgz
+      URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ""
       BUILD_COMMAND make CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
@@ -947,8 +951,24 @@ if(tbb)
   endif()
 endif()
 
+#---Check for OCC--------------------------------------------------------------------
+if(geocad)
+  find_package(OCC COMPONENTS TKPrim TKBRep TKOffset TKGeomBase TKShHealing TKTopAlgo
+                              TKSTEP TKG2d TKBool TKBO TKXCAF TKXDESTEP TKLCAF TKernel TKXSBase TKG3d TKMath)
+  if(NOT OCC_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "OpenCascade libraries not found and is required (geocad option enabled)")
+    else()
+      message(STATUS "OpenCascade libraries not found. Set variable CASROOT to point to your OpenCascade installation")
+      message(STATUS "For the time being switching OFF 'geocad' option")
+      set(geocad OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs glite sapdb srp geocad)
+foreach(opt afs glite sapdb srp)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)

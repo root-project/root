@@ -12,13 +12,6 @@
  *************************************************************************/
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-BEGIN_HTML
-Represents the Heaviside function.
-Evaluates to 1.0 when ((Double_t)x) >= ((Double_t)c), 0.0 otherwise.
-END_HTML
-*/
-//_________________________________________________
 
 #ifndef RooStats_Heaviside
 #include "RooStats/Heaviside.h"

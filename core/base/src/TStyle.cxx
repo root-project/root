@@ -29,24 +29,22 @@ const UInt_t kTakeStyle = BIT(17);
 
 ClassImp(TStyle)
 
+/** \class TStyle
+TStyle objects may be created to define special styles.
+By default ROOT creates a default style that can be accessed via
+the gStyle pointer.
 
-//______________________________________________________________________________
-//
-// TStyle objects may be created to define special styles.
-// By default ROOT creates a default style that can be accessed via
-// the gStyle pointer.
-//
-// This class includes functions to set some of the following object attributes.
-//   - Canvas
-//   - Pad
-//   - Histogram axis
-//   - Lines
-//   - Fill areas
-//   - Text
-//   - Markers
-//   - Functions
-//   - Histogram Statistics and Titles
-
+This class includes functions to set some of the following object attributes.
+  - Canvas
+  - Pad
+  - Histogram axis
+  - Lines
+  - Fill areas
+  - Text
+  - Markers
+  - Functions
+  - Histogram Statistics and Titles
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -55,7 +53,6 @@ TStyle::TStyle() :TNamed()
 {
    Reset();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new TStyle.
@@ -93,10 +90,14 @@ TStyle::TStyle() :TNamed()
 ///  - TStyle::SetStripDecimals
 ///
 ///  The current style is pointed by gStyle.
+///
 ///  When calling myStyle->cd(), gStyle is set to myStyle.
+///
 ///  One can also use gROOT to change the current style, e.g.
+///
 ///    gROOT->SetStyle("Plain") will change the current style gStyle to the
 ///    "Plain" style
+///
 ///  See also TROOT::ForceStyle and TROOT::UseCurrentStyle
 
 TStyle::TStyle(const char *name, const char *title)
@@ -254,7 +255,6 @@ TStyle::TStyle(const char *name, const char *title)
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -265,7 +265,6 @@ TStyle::~TStyle()
    if (gStyle == this) gStyle = (TStyle*)gROOT->GetListOfStyles()->Last();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
@@ -274,7 +273,6 @@ TStyle::TStyle(const TStyle &style) : TNamed(style), TAttLine(style), TAttFill(s
    ((TStyle&)style).Copy(*this);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse the style object.
 
@@ -282,7 +280,6 @@ void TStyle::Browse(TBrowser *)
 {
    cd();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create some standard styles.
@@ -300,7 +297,6 @@ void TStyle::BuildStyles()
    delete col;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current style.
 
@@ -308,7 +304,6 @@ void TStyle::cd()
 {
    gStyle = this;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this style.
@@ -428,7 +423,6 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fTimeOffset     = fTimeOffset;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Function used by the TStyle manager when drawing a canvas showing the
 /// current style.
@@ -438,7 +432,6 @@ Int_t TStyle::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
    gPad->SetSelected(this);
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset.
@@ -707,7 +700,6 @@ void TStyle::Reset(Option_t *opt)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return number of divisions.
 
@@ -719,7 +711,6 @@ Int_t TStyle::GetNdivisions( Option_t *axis) const
    if (ax == 3) return fZaxis.GetNdivisions();
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the axis color number in the axis.
@@ -733,7 +724,6 @@ Color_t TStyle::GetAxisColor( Option_t *axis) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return color number i in current palette.
 
@@ -741,7 +731,6 @@ Int_t TStyle::GetColorPalette(Int_t i) const
 {
    return TColor::GetColorPalette(i);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the label color number in the axis.
@@ -755,7 +744,6 @@ Color_t TStyle::GetLabelColor( Option_t *axis) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return label font.
 
@@ -767,7 +755,6 @@ Style_t TStyle::GetLabelFont( Option_t *axis) const
    if (ax == 3) return fZaxis.GetLabelFont();
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return label offset.
@@ -781,7 +768,6 @@ Float_t TStyle::GetLabelOffset( Option_t *axis) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return label size.
 
@@ -794,7 +780,6 @@ Float_t TStyle::GetLabelSize( Option_t *axis) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return line style string (used by PostScript).
 /// See SetLineStyleString for more explanations
@@ -804,7 +789,6 @@ const char *TStyle::GetLineStyleString(Int_t i) const
    if (i < 1 || i > 29) return fLineStyle[0].Data();
    return fLineStyle[i].Data();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return number of colors in the color palette.
@@ -824,7 +808,6 @@ void TStyle::GetPaperSize(Float_t &xsize, Float_t &ysize) const
    ysize = fPaperSizeY;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return tick length.
 
@@ -836,7 +819,6 @@ Float_t TStyle::GetTickLength( Option_t *axis) const
    if (ax == 3) return fZaxis.GetTickLength();
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return title color.
@@ -850,7 +832,6 @@ Color_t TStyle::GetTitleColor( Option_t *axis) const
    return fTitleTextColor;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return title font.
 
@@ -862,7 +843,6 @@ Style_t TStyle::GetTitleFont( Option_t *axis) const
    if (ax == 3) return fZaxis.GetTitleFont();
    return fTitleFont;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return title offset.
@@ -876,7 +856,6 @@ Float_t TStyle::GetTitleOffset( Option_t *axis) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return title size.
 
@@ -889,7 +868,6 @@ Float_t TStyle::GetTitleSize( Option_t *axis) const
    return fTitleFontSize;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Show the options from the current style
 /// if (TClass::GetClass("TStyleManager")) gSystem->Load("libGed");
@@ -900,30 +878,28 @@ void TStyle::Paint(Option_t *option)
                            (ULong_t)this,option));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Define the color model used by TPostScript and TPDF (RGB or CMYK).
 /// CMY and CMYK models are subtractive color models unlike RGB which is
 /// additive. They are mainly used for printing purposes. CMY means Cyan Magenta
 /// Yellow. To convert RGB to CMY it is enough to do: C=1-R, M=1-G and Y=1-B.
 /// CMYK has one more component K (black). The conversion from RGB to CMYK is:
-///
+/// ~~~ {.cpp}
 /// Double_t Black   = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
 /// Double_t Cyan    = (1-Red-Black)/(1-Black);
 /// Double_t Magenta = (1-Green-Black)/(1-Black);
 /// Double_t Yellow  = (1-Blue-Black)/(1-Black);
-///
+/// ~~~
 /// CMYK adds the black component which allows better quality for black
 /// printing. PostScript and PDF support the CMYK model.
 ///
-/// c = 0 means TPostScript and TPDF will use RGB color model (default)
-/// c = 1 means TPostScript and TPDF will use CMYK color model
+///  - c = 0 means TPostScript and TPDF will use RGB color model (default)
+///  - c = 1 means TPostScript and TPDF will use CMYK color model
 
 void TStyle::SetColorModelPS(Int_t c)
 {
    fColorModelPS = c;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If the argument zero=kTRUE the minimum value for the Y axis of 1-d histograms
@@ -936,11 +912,10 @@ void TStyle::SetHistMinimumZero(Bool_t zero)
    fHistMinimumZero = zero;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the number of divisions to draw an axis.
 ///  ndiv      : Number of divisions.
-///
+/// ~~~ {.cpp}
 ///       n = N1 + 100*N2 + 10000*N3
 ///       N1=number of primary divisions.
 ///       N2=number of secondary divisions.
@@ -949,6 +924,7 @@ void TStyle::SetHistMinimumZero(Bool_t zero)
 ///           nndi=0 --> no tick marks.
 ///           nndi=2 --> 2 divisions, one tick mark in the middle
 ///                      of the axis.
+/// ~~~
 /// axis specifies which axis ("x","y","z"), default = "x"
 /// if axis="xyz" set all 3 axes
 
@@ -960,7 +936,6 @@ void TStyle::SetNdivisions(Int_t n, Option_t *axis)
    if (opt.Contains("y")) fYaxis.SetNdivisions(n);
    if (opt.Contains("z")) fZaxis.SetNdivisions(n);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color to draw the axis line and tick marks.
@@ -977,7 +952,6 @@ void TStyle::SetAxisColor(Color_t color, Option_t *axis)
    if (opt.Contains("z")) fZaxis.SetAxisColor(color);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the size (in pixels) of the small lines drawn at the
 /// end of the error bars (TH1 or TGraphErrors).
@@ -990,23 +964,25 @@ void TStyle::SetEndErrorSize(Float_t np)
    else         fEndErrorSize = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Define a string to be inserted in the Postscript header
 /// The string in header will be added to the Postscript file
 /// immediately following the %%Page line
 /// For example, this string may contain special Postscript instructions like
+/// ~~~ {.cpp}
 ///      200 200 translate
+/// ~~~
 /// the following header string will print the string "my annotation" at the
 /// bottom left corner of the page (outside the user area)
+/// ~~~ {.cpp}
 ///  "gsave 100 -100 t 0 r 0 0 m /Helvetica-Bold findfont 56 sf 0 0 m ( my annotation ) show gr"
+/// ~~~
 /// This information is used in TPostScript::Initialize
 
 void TStyle::SetHeaderPS(const char *header)
 {
    fHeaderPS = header;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the fIsReading member to reading (default=kTRUE)
@@ -1019,7 +995,6 @@ void TStyle::SetIsReading(Bool_t reading)
    fIsReading = reading;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Define a string to be used in the %%Title of the Postscript files.
 /// If this string is not defined, ROOT will use the canvas title.
@@ -1028,7 +1003,6 @@ void TStyle::SetTitlePS(const char *pstitle)
 {
    fTitlePS = pstitle;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set axis labels color.
@@ -1045,13 +1019,12 @@ void TStyle::SetLabelColor(Color_t color, Option_t *axis)
    if (opt.Contains("z")) fZaxis.SetLabelColor(color);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set font number used to draw axis labels.
-///    font  : Text font code = 10*fontnumber + precision
-///             Font numbers must be between 1 and 14
-///             precision = 1 fast hardware fonts (steps in the size)
-///             precision = 2 scalable and rotatable hardware fonts
+///  - font  :  Text font code = 10*fontnumber + precision
+///           - Font numbers must be between 1 and 14
+///           - precision = 1 fast hardware fonts (steps in the size)
+///           - precision = 2 scalable and rotatable hardware fonts
 /// The default font number is 62.
 /// axis specifies which axis ("x","y","z"), default = "x"
 /// if axis="xyz" set all 3 axes
@@ -1065,7 +1038,6 @@ void TStyle::SetLabelFont(Style_t font, Option_t *axis)
    if (opt.Contains("y")) fYaxis.SetLabelFont(font);
    if (opt.Contains("z")) fZaxis.SetLabelFont(font);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set offset between axis and axis labels.
@@ -1083,7 +1055,6 @@ void TStyle::SetLabelOffset(Float_t offset, Option_t *axis)
    if (opt.Contains("z")) fZaxis.SetLabelOffset(offset);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set size of axis labels. The size is expressed as a percent of the pad height.
 /// axis specifies which axis ("x","y","z"), default = "x"
@@ -1099,7 +1070,6 @@ void TStyle::SetLabelSize(Float_t size, Option_t *axis)
    if (opt.Contains("z")) fZaxis.SetLabelSize(size);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set line style string using the PostScript convention.
 /// A line is a suite of segments, each segment is described by the number of
@@ -1107,35 +1077,30 @@ void TStyle::SetLabelSize(Float_t size, Option_t *axis)
 /// are the dashes, and the others spaces between dashes.
 ///
 /// Default fixed line styles are pre-defined as:
-///
+/// ~~~ {.cpp}
 ///   linestyle 1  "[]"             solid
 ///   linestyle 2  "[12 12]"        dashed
 ///   linestyle 3  "[4 8]"          dotted
 ///   linestyle 4  "[12 16 4 16]"   dash-dotted
-///
+/// ~~~
 ///  For example the following lines define the line style 5 to 9.
-///
+/// ~~~ {.cpp}
 ///   gStyle->SetLineStyleString(5,"20 12 4 12");
 ///   gStyle->SetLineStyleString(6,"20 12 4 12 4 12 4 12");
 ///   gStyle->SetLineStyleString(7,"20 20");
 ///   gStyle->SetLineStyleString(8,"20 12 4 12 4 12");
 ///   gStyle->SetLineStyleString(9,"80 20");
-///
-///Begin_Html
+/// ~~~
+/// \image html base_linestyle.png
+/// Note:
+///  - Up to 30 different styles may be defined.
+///  - The opening and closing brackets may be omitted
+///  - It is recommended to use 4 as the smallest segment length and multiple of
+///    4 for other lengths.
+///  - The line style 1 to 10 are predefined. 1 to 4 cannot be changed.
 
 void TStyle::SetLineStyleString(Int_t i, const char *text)
 {
-   /*
-   <img src="gif/userlinestyle.gif">
-   */
-   //End_Html
-   //
-   // Note:
-   //  - Up to 30 different styles may be defined.
-   //  - The opening and closing brackets may be omitted
-   //  - It is recommended to use 4 as the smallest segment length and multiple of
-   //    4 for other lengths.
-   //  - The line style 1 to 10 are predefined. 1 to 4 cannot be changed.
 
    char *l;
    Int_t nch = strlen(text);
@@ -1147,7 +1112,6 @@ void TStyle::SetLineStyleString(Int_t i, const char *text)
    if (i >= 1 && i <= 29) fLineStyle[i] = st;
    delete [] st;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the default number of contour levels when drawing 2-d plots.
@@ -1162,36 +1126,37 @@ void TStyle::SetNumberContours(Int_t number)
    Error("SetNumberContours","Illegal number of contours: %d, must be > 0 and < 1000",number);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// If optdate is non null, the current date/time will be printed in the canvas.
 /// The position of the date string can be controlled by:
 ///  optdate = 10*format + mode
-///    mode = 1   (default) date is printed in the bottom/left corner.
-///    mode = 2   date is printed in the bottom/right corner.
-///    mode = 3   date is printed in the top/right corner.
-///    format = 0 (default) date has the format like: "Wed Sep 25 17:10:35 2002"
-///    format = 1 date has the format like: "2002-09-25"
-///    format = 2 date has the format like: "2002-09-25 17:10:35"
+///  -  mode = 1   (default) date is printed in the bottom/left corner.
+///  -  mode = 2   date is printed in the bottom/right corner.
+///  -  mode = 3   date is printed in the top/right corner.
+///  -  format = 0 (default) date has the format like: "Wed Sep 25 17:10:35 2002"
+///  -  format = 1 date has the format like: "2002-09-25"
+///  -  format = 2 date has the format like: "2002-09-25 17:10:35"
 ///
 ///  examples:
-///    optdate = 1  date like "Wed Sep 25 17:10:35 2002" in the bottom/left corner.
-///    optdate = 13 date like "2002-09-25" in the top/right corner.
+///  -  optdate = 1  date like "Wed Sep 25 17:10:35 2002" in the bottom/left corner.
+///  -  optdate = 13 date like "2002-09-25" in the top/right corner.
 ///
 ///  The date position can also be controlled by:
 ///    gStyle->SetDateX(x);  x in NDC
 ///    gStyle->SetDateY(y);  y in NDC
 ///
 ///  The date text attributes can be changed with:
+/// ~~~ {.cpp}
 ///    gStyle->GetAttDate()->SetTextFont(font=62);
 ///    gStyle->GetAttDate()->SetTextSize(size=0.025);
 ///    gStyle->GetAttDate()->SetTextAngle(angle=0);
 ///    gStyle->GetAttDate()->SetTextAlign(align=11);
 ///    gStyle->GetAttDate()->SetTextColor(color=1);
-///
+/// ~~~
 ///  The current date attributes can be obtained via:
+/// ~~~ {.cpp}
 ///    gStyle->GetAttDate()->GetTextxxxx();
-///
+/// ~~~
 ///  When the date option is active, a text object is created when the pad
 ///  paint its list of primitives. The text object is named "DATE".
 ///  The DATE attributes can also be edited interactively (position
@@ -1218,22 +1183,21 @@ void TStyle::SetOptDate(Int_t optdate)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// The type of information about fit parameters printed in the histogram
 /// statistics box can be selected via the parameter mode.
 ///  The parameter mode can be = pcev  (default = 0111)
-///    p = 1;  print Probability
-///    c = 1;  print Chisquare/Number of degrees of freedom
-///    e = 1;  print errors (if e=1, v must be 1)
-///    v = 1;  print name/values of parameters
-///  Example: gStyle->SetOptFit(1011);
+///  -  p = 1;  print Probability
+///  -  c = 1;  print Chisquare/Number of degrees of freedom
+///  -  e = 1;  print errors (if e=1, v must be 1)
+///  -  v = 1;  print name/values of parameters
+///  Example: `gStyle->SetOptFit(1011);`
 ///           print fit probability, parameter names/values and errors.
-///    When "v"=1 is specified, only the non-fixed parameters are shown.
-///    When "v"=2 all parameters are shown.
+///  -  When "v"=1 is specified, only the non-fixed parameters are shown.
+///  -  When "v"=2 all parameters are shown.
 ///
-///  Note: gStyle->SetOptFit(1) means "default value", so it is equivalent to
-///        gStyle->SetOptFit(111)
+///  Note: `gStyle->SetOptFit(1)` means "default value", so it is equivalent to
+///        `gStyle->SetOptFit(111)`
 ///
 /// see also SetOptStat below.
 
@@ -1251,33 +1215,36 @@ void TStyle::SetOptFit(Int_t mode)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// The type of information printed in the histogram statistics box
 ///  can be selected via the parameter mode.
 ///  The parameter mode can be = ksiourmen  (default = 000001111)
-///    k = 1;  kurtosis printed
-///    k = 2;  kurtosis and kurtosis error printed
-///    s = 1;  skewness printed
-///    s = 2;  skewness and skewness error printed
-///    i = 1;  integral of bins printed
-///    i = 2;  integral of bins with option "width" printed
-///    o = 1;  number of overflows printed
-///    u = 1;  number of underflows printed
-///    r = 1;  rms printed
-///    r = 2;  rms and rms error printed
-///    m = 1;  mean value printed
-///    m = 2;  mean and mean error values printed
-///    e = 1;  number of entries printed
-///    n = 1;  name of histogram is printed
-///  Example: gStyle->SetOptStat(11);
+///  -  k = 1;  kurtosis printed
+///  -  k = 2;  kurtosis and kurtosis error printed
+///  -  s = 1;  skewness printed
+///  -  s = 2;  skewness and skewness error printed
+///  -  i = 1;  integral of bins printed
+///  -  i = 2;  integral of bins with option "width" printed
+///  -  o = 1;  number of overflows printed
+///  -  u = 1;  number of underflows printed
+///  -  r = 1;  rms printed
+///  -  r = 2;  rms and rms error printed
+///  -  m = 1;  mean value printed
+///  -  m = 2;  mean and mean error values printed
+///  -  e = 1;  number of entries printed
+///  -  n = 1;  name of histogram is printed
+///
+///  Example: `gStyle->SetOptStat(11);`
 ///           print only name of histogram and number of entries.
-///           gStyle->SetOptStat(1101);  displays the name of histogram, mean value and RMS.
-///  WARNING: never call SetOptStat(000111); but SetOptStat(1111), 0001111 will
+///           `gStyle->SetOptStat(1101);`  displays the name of histogram, mean value and RMS.
+///
+///  WARNING: never call `SetOptStat(000111);` but `SetOptStat(1111)`, 0001111 will
 ///          be taken as an octal number !!
-///  WARNING: SetOptStat(1) is taken as SetOptStat(1111) (for back compatibility
+///
+///  WARNING: `SetOptStat(1)` is taken as `SetOptStat(1111)` (for back compatibility
 ///           with older versions. If you want to print only the name of the histogram
-///           call SetOptStat(1000000001).
+///           call `SetOptStat(1000000001)`.
+///
 ///  NOTE that in case of 2-D histograms, when selecting just underflow (10000)
 ///        or overflow (100000), the stats box will show all combinations
 ///        of underflow/overflows and not just one single number!
@@ -1296,27 +1263,28 @@ void TStyle::SetOptStat(Int_t mode)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///  The parameter mode can be any combination of kKsSiourRmMen
-///    k :  kurtosis printed
-///    K :  kurtosis and kurtosis error printed
-///    s :  skewness printed
-///    S :  skewness and skewness error printed
-///    i :  integral of bins printed
-///    I :  integral of bins with option "width" printed
-///    o :  number of overflows printed
-///    u :  number of underflows printed
-///    r :  rms printed
-///    R :  rms and rms error printed
-///    m :  mean value printed
-///    M :  mean value mean error values printed
-///    e :  number of entries printed
-///    n :  name of histogram is printed
-///  Example: gStyle->SetOptStat("ne");
+///  -  k :  kurtosis printed
+///  -  K :  kurtosis and kurtosis error printed
+///  -  s :  skewness printed
+///  -  S :  skewness and skewness error printed
+///  -  i :  integral of bins printed
+///  -  I :  integral of bins with option "width" printed
+///  -  o :  number of overflows printed
+///  -  u :  number of underflows printed
+///  -  r :  rms printed
+///  -  R :  rms and rms error printed
+///  -  m :  mean value printed
+///  -  M :  mean value mean error values printed
+///  -  e :  number of entries printed
+///  -  n :  name of histogram is printed
+///
+///  Example: `gStyle->SetOptStat("ne");`
 ///           print only name of histogram and number of entries.
-///  gStyle->SetOptStat("n") print only the name of the histogram
-///  gStyle->SetOptStat("nemr") is the default
+///
+///  - `gStyle->SetOptStat("n")` print only the name of the histogram
+///  - `gStyle->SetOptStat("nemr")` is the default
 
 void TStyle::SetOptStat(Option_t *stat)
 {
@@ -1343,7 +1311,6 @@ void TStyle::SetOptStat(Option_t *stat)
    SetOptStat(mode);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set paper size for PostScript output.
 
@@ -1362,7 +1329,6 @@ void TStyle::SetPaperSize(EPaperSize size)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set paper size for PostScript output.
 /// The paper size is specified in centimeters. Default is 20x26.
@@ -1373,7 +1339,6 @@ void TStyle::SetPaperSize(Float_t xsize, Float_t ysize)
    fPaperSizeX = xsize;
    fPaperSizeY = ysize;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the tick marks length for an axis.
@@ -1390,11 +1355,11 @@ void TStyle::SetTickLength(Float_t length, Option_t *axis)
    if (opt.Contains("z")) fZaxis.SetTickLength(length);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// if axis =="x"  set the X axis title color
-/// if axis =="y"  set the Y axis title color
-/// if axis =="z"  set the Z axis title color
+///  - if axis =="x"  set the X axis title color
+///  - if axis =="y"  set the Y axis title color
+///  - if axis =="z"  set the Z axis title color
+///
 /// any other value of axis will set the pad title color
 ///
 /// if axis="xyz" set all 3 axes
@@ -1411,11 +1376,11 @@ void TStyle::SetTitleColor(Color_t color, Option_t *axis)
    if (!set) fTitleColor = color;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// if axis =="x"  set the X axis title font
-/// if axis =="y"  set the Y axis title font
-/// if axis =="z"  set the Z axis title font
+///  - if axis =="x"  set the X axis title font
+///  - if axis =="y"  set the Y axis title font
+///  - if axis =="z"  set the Z axis title font
+///
 /// any other value of axis will set the pad title font
 ///
 /// if axis="xyz" set all 3 axes
@@ -1432,13 +1397,13 @@ void TStyle::SetTitleFont(Style_t font, Option_t *axis)
    if (!set) fTitleFont = font;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Specify a parameter offset to control the distance between the axis
 /// and the axis title.
-/// offset = 1 means : use the default distance
-/// offset = 1.2 means: the distance will be 1.2*(default distance)
-/// offset = 0.8 means: the distance will be 0.8*(default distance)
+///
+///  - offset = 1 means : use the default distance
+///  - offset = 1.2 means: the distance will be 1.2*(default distance)
+///  - offset = 0.8 means: the distance will be 0.8*(default distance)
 ///
 /// axis specifies which axis ("x","y","z"), default = "x"
 /// if axis="xyz" set all 3 axes
@@ -1453,11 +1418,11 @@ void TStyle::SetTitleOffset(Float_t offset, Option_t *axis)
    if (opt.Contains("z")) fZaxis.SetTitleOffset(offset);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// if axis =="x"  set the X axis title size
-/// if axis =="y"  set the Y axis title size
-/// if axis =="z"  set the Z axis title size
+///  - if axis =="x"  set the X axis title size
+///  - if axis =="y"  set the Y axis title size
+///  - if axis =="z"  set the Z axis title size
+///
 /// any other value of axis will set the pad title size
 ///
 /// if axis="xyz" set all 3 axes
@@ -1474,7 +1439,6 @@ void TStyle::SetTitleSize(Float_t size, Option_t *axis)
    if (!set) fTitleFontSize = size;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// See TColor::SetPalette.
 
@@ -1482,7 +1446,6 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
 {
    TColor::SetPalette(ncolors,colors,alpha);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the time offset for time plotting.
@@ -1502,7 +1465,6 @@ void TStyle::SetTimeOffset(Double_t toffset)
    fTimeOffset = toffset;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///  Set option to strip decimals when drawing axis labels.
 ///  By default, TGaxis::PaintAxis removes trailing 0s after a dot
@@ -1515,7 +1477,6 @@ void TStyle::SetStripDecimals(Bool_t strip)
 {
    fStripDecimals = strip;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the current style in a C++ macro file.
@@ -1574,7 +1535,6 @@ void TStyle::SaveSource(const char *filename, Option_t *option)
 
    printf(" C++ macro file %s has been generated\n", gSystem->BaseName(ff));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save a main frame widget as a C++ statement(s) on output stream out.

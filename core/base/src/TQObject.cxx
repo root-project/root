@@ -9,54 +9,46 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// This is the ROOT implementation of the Qt object communication       //
-// mechanism (see also http://www.troll.no/qt/metaobjects.html)         //
-//                                                                      //
-// Signals and slots are used for communication between objects.        //
-// When an object has changed in some way that might be interesting     //
-// for the outside world, it emits a signal to tell whoever is          //
-// listening. All slots that are connected to this signal will be       //
-// activated (called). It is even possible to connect a signal          //
-// directly to another signal (this will emit the second signal         //
-// immediately whenever the first is emitted.) There is no limitation   //
-// on the number of slots that can be connected to a signal.            //
-// The slots will be activated in the order they were connected         //
-// to the signal. This mechanism allows objects to be easily reused,    //
-// because the object that emits a signal does not need to know         //
-// to which objects the signals are connected.                          //
-// Together, signals and slots make up a powerfull component            //
-// programming mechanism.                                               //
-//                                                                      //
-// This implementation is provided by                                   //
-// Valeriy Onuchin (onuchin@sirius.ihep.su).                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TQObject
+This is the ROOT implementation of the Qt object communication
+mechanism (see also http://www.troll.no/qt/metaobjects.html)
 
-//***************************** Signals *****************************
-//___________________________________________________________________
-//
-//             Destroyed()
-//
-// Signal emitted when object is destroyed.
-// This signal could be connected to some garbage-collector object.
-//
-//___________________________________________________________________
-//
-//             ChangedBy(const char *method_name)
-//
-// This signal is emitted when some important data members of
-// the object were changed. method_name parameter can be used
-// as an identifier of the modifier method.
-//
-//___________________________________________________________________
-//
-//             Message(const char *msg)
-//
-// General purpose message signal
-//
-/////////////////////////////////////////////////////////////////////
+Signals and slots are used for communication between objects.
+When an object has changed in some way that might be interesting
+for the outside world, it emits a signal to tell whoever is
+listening. All slots that are connected to this signal will be
+activated (called). It is even possible to connect a signal
+directly to another signal (this will emit the second signal
+immediately whenever the first is emitted.) There is no limitation
+on the number of slots that can be connected to a signal.
+The slots will be activated in the order they were connected
+to the signal. This mechanism allows objects to be easily reused,
+because the object that emits a signal does not need to know
+to which objects the signals are connected.
+Together, signals and slots make up a powerfull component
+programming mechanism.
+
+### Signals
+
+~~~ {.cpp}
+   Destroyed()
+~~~
+Signal emitted when object is destroyed.
+This signal could be connected to some garbage-collector object.
+
+~~~ {.cpp}
+   ChangedBy(const char *method_name)
+~~~
+This signal is emitted when some important data members of
+the object were changed. method_name parameter can be used
+as an identifier of the modifier method.
+
+~~~ {.cpp}
+   Message(const char *msg)
+~~~
+
+General purpose message signal
+*/
 
 #include "Varargs.h"
 #include "TQObject.h"
@@ -90,16 +82,17 @@ ClassImpQ(TQObject)
 ClassImpQ(TQObjSender)
 ClassImpQ(TQClass)
 
-////////////////////////////// internal functions //////////////////////////////
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Removes "const" words and blanks from full (with prototype)
 /// method name and resolve any typedefs in the method signature.
 /// If a null or empty string is passed in, an empty string
 /// is returned.
 ///
-/// Example: CompressName(" Draw(const char *, const char *,
-///                              Option_t * , Int_t , Int_t)");
+/// Example:
+/// ~~~ {.cpp}
+///   CompressName(" Draw(const char *, const char *,
+///                  Option_t * , Int_t , Int_t)");
+/// ~~~
 /// returns the string "Draw(char*,char*,char*,int,int)".
 
 TString TQObject::CompressName(const char *method_name)
@@ -177,8 +170,6 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
 }
 
 }
-////////////////////////// end of internal functions ///////////////////////////
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Checking of consitency of sender/receiver methods/arguments.
@@ -308,12 +299,11 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
    return nsigargs;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//    TQConnectionList is the named list of connections,                      //
-//    see also TQConnection class.                                            //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+/** \class TQConnectionList
+   TQConnectionList is the named list of connections,
+   see also TQConnection class.
+*/
+
 class TQConnectionList : public TList {
 
 private:
@@ -605,7 +595,9 @@ void TQObject::Emit(const char *signal_name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate signal with single parameter.
 /// Example:
-///          theButton->Emit("Clicked(int)",id)
+/// ~~~ {.cpp}
+///   theButton->Emit("Clicked(int)",id)
+/// ~~~
 
 void TQObject::Emit(const char *signal_name, Long_t param)
 {
@@ -646,7 +638,9 @@ void TQObject::Emit(const char *signal_name, Long_t param)
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate signal with single parameter.
 /// Example:
-///          theButton->Emit("Progress(Long64_t)",processed)
+/// ~~~ {.cpp}
+///   theButton->Emit("Progress(Long64_t)",processed)
+/// ~~~
 
 void TQObject::Emit(const char *signal_name, Long64_t param)
 {
@@ -687,7 +681,9 @@ void TQObject::Emit(const char *signal_name, Long64_t param)
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate signal with single parameter.
 /// Example:
-///          theButton->Emit("Scale(float)",factor)
+/// ~~~ {.cpp}
+///   theButton->Emit("Scale(float)",factor)
+/// ~~~
 
 void TQObject::Emit(const char *signal_name, Double_t param)
 {
@@ -728,7 +724,9 @@ void TQObject::Emit(const char *signal_name, Double_t param)
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate signal with parameter text string.
 /// Example:
-///          myObject->Emit("Error(char*)","Fatal error");
+/// ~~~ {.cpp}
+///   myObject->Emit("Error(char*)","Fatal error");
+/// ~~~
 
 void TQObject::Emit(const char *signal_name, const char *params)
 {
@@ -771,6 +769,7 @@ void TQObject::Emit(const char *signal_name, const char *params)
 /// paramArr is an array of the parameters.
 /// Note: any parameter should be converted to long type.
 /// Example:
+/// ~~~ {.cpp}
 ///    TQObject *processor; // data processor
 ///    TH1F     *hist;      // filled with processor results
 ///
@@ -782,6 +781,7 @@ void TQObject::Emit(const char *signal_name, const char *params)
 ///    args[1] = (Long_t)processor->GetValue(2);
 ///
 ///    processor->Emit("Evaluated(Float_t,Float_t)",args);
+/// ~~~
 
 void TQObject::Emit(const char *signal_name, Long_t *paramArr)
 {
@@ -943,22 +943,24 @@ Bool_t TQObject::ConnectToClass(const char *class_name,
 /// cl != 0 - class name, it can be class with or
 ///           without dictionary, e.g interpreted class.
 /// Example:
+/// ~~~ {.cpp}
 ///       TGButton *myButton;
 ///       TH2F     *myHist;
 ///
 ///       TQObject::Connect(myButton,"Clicked()",
 ///                         "TH2F", myHist,"Draw(Option_t*)");
-///
+/// ~~~
 /// cl == 0 - corresponds to function (interpereted or global)
 ///           the name of the function is defined by the slot string,
 ///           parameter receiver should be 0.
 /// Example:
+/// ~~~ {.cpp}
 ///       TGButton *myButton;
 ///       TH2F     *myHist;
 ///
 ///       TQObject::Connect(myButton,"Clicked()",
 ///                         0, 0,"hsimple()");
-///
+/// ~~~
 /// Warning:
 ///  If receiver is class not derived from TQObject and going to be
 ///  deleted, disconnect all connections to this receiver.
@@ -1032,23 +1034,26 @@ Bool_t TQObject::Connect(TQObject *sender,
 /// cl != 0 - class name, it can be class with or
 ///           without dictionary, e.g interpreted class.
 /// Example:
+/// ~~~ {.cpp}
 ///       TGButton *myButton;
 ///       TH2F     *myHist;
 ///
 ///       TQObject::Connect("TGButton", "Clicked()",
 ///                         "TH2F", myHist, "Draw(Option_t*)");
-///
+///~~~
 /// cl == 0 - corresponds to function (interpereted or global)
 ///           the name of the function is defined by the slot string,
 ///           parameter receiver should be 0.
 /// Example:
+/// ~~~ {.cpp}
 ///       TGButton *myButton;
 ///       TH2F     *myHist;
 ///
 ///       TQObject::Connect("TGButton", "Clicked()",
 ///                         0, 0, "hsimple()");
-///
+/// ~~~
 /// Warning:
+///
 ///  If receiver class not derived from TQObject and going to be
 ///  deleted, disconnect all connections to this receiver.
 ///  In case of class derived from TQObject it is done automatically.
@@ -1185,11 +1190,17 @@ Bool_t TQObject::Connect(const char *signal,
 /// examples shows:
 ///
 ///  - Disconnect everything connected to an object's signals:
+/// ~~~ {.cpp}
 ///       Disconnect(myObject);
+/// ~~~
 ///  - Disconnect everything connected to a signal:
+/// ~~~ {.cpp}
 ///       Disconnect(myObject, "mySignal()");
+/// ~~~
 ///  - Disconnect a specific receiver:
+/// ~~~ {.cpp}
 ///       Disconnect(myObject, 0, myReceiver, 0);
+/// ~~~
 ///
 /// 0 may be used as a wildcard in three of the four arguments,
 /// meaning "any signal", "any receiving object" or
@@ -1316,12 +1327,10 @@ Bool_t TQObject::BlockAllSignals(Bool_t b)
    return ret;
 }
 
-// Global function which simplifies making connection in interpreted
-// ROOT session
-//
-//  ConnectCINT      - connects to interpreter(CINT) command
-
 ////////////////////////////////////////////////////////////////////////////////
+/// Global function which simplifies making connection in interpreted ROOT session
+///
+///  ConnectCINT      - connects to interpreter(CINT) command
 
 Bool_t ConnectCINT(TQObject *sender, const char *signal, const char *slot)
 {

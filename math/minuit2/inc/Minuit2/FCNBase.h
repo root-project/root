@@ -23,10 +23,12 @@ namespace ROOT {
 
 /**
 
-@defgroup Minuit Minuit2 Minimization Library
+  \defgroup Minuit Minuit2 Minimization Library
 
-  Object-oriented implementation of the MINUIT minimization package.
-  More information is available at the home page of the \ref Minuit2 package.
+  New Object-oriented implementation of the MINUIT minimization package.
+  More information is available at the home page of the \ref Minuit2Page "Minuit2" minimization package".
+
+  \ingroup Math
 */
 
 
@@ -38,7 +40,7 @@ Interface (abstract class) defining the function to be minimized, which has to b
 
 @author Fred James and Matthias Winkler; modified by Andras Zsenei and Lorenzo Moneta
 
-@ingroup Minuit
+\ingroup Minuit
 
  */
 

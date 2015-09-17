@@ -24,16 +24,18 @@
 // Standard
 #include <assert.h>
 #include <map>
+#include <set>
 #include <sstream>
-#include <vector>
 
 // temp
 #include <iostream>
 typedef PyROOT::TParameter TParameter;
 // --temp
 
+
 // small number that allows use of stack for argument passing
 const int SMALL_ARGS_N = 8;
+
 
 // data for life time management ---------------------------------------------
 typedef std::vector< TClassRef > ClassRefs_t;
@@ -54,6 +56,10 @@ static GlobalVars_t g_globalvars;
 
 // data ----------------------------------------------------------------------
 Cppyy::TCppScope_t Cppyy::gGlobalScope = GLOBAL_HANDLE;
+
+// smart pointer types
+static std::set< std::string > gSmartPtrTypes =
+   { "auto_ptr", "shared_ptr", "weak_ptr", "unique_ptr" };
 
 
 // global initialization -----------------------------------------------------
@@ -86,7 +92,7 @@ public:
 static inline
 TClassRef& type_from_handle( Cppyy::TCppScope_t scope )
 {
-   assert( (ClassRefs_t::size_type) scope < g_classrefs.size());
+   assert( (ClassRefs_t::size_type) scope < g_classrefs.size() );
    return g_classrefs[ (ClassRefs_t::size_type)scope ];
 }
 
@@ -571,6 +577,18 @@ Bool_t Cppyy::IsSubtype( TCppType_t derived, TCppType_t base )
    return derived_type->GetBaseClass( base_type ) != 0;
 }
 
+void Cppyy::AddSmartPtrType( const std::string& type_name ) {
+   gSmartPtrTypes.insert( ResolveName( type_name ) );
+}
+
+Bool_t Cppyy::IsSmartPtr( const std::string& type_name ) {
+// checks if typename denotes a smart pointer
+// TODO: perhaps make this stricter?
+   const std::string& real_name = ResolveName( type_name );
+   return gSmartPtrTypes.find(
+      real_name.substr( 0,real_name.find( "<" ) ) ) != gSmartPtrTypes.end();
+}
+
 // type offsets --------------------------------------------------------------
 ptrdiff_t Cppyy::GetBaseOffset( TCppType_t derived, TCppType_t base,
       TCppObject_t address, int direction, bool rerror )
@@ -666,6 +684,13 @@ std::vector< Cppyy::TCppMethod_t > Cppyy::GetMethodsFromName(
                methods.push_back( (TCppMethod_t)func );
             }
          }
+      }
+   } else {
+      TClassRef& cr = type_from_handle( scope );
+      if ( cr.GetClass() ) {
+      // todo: handle overloads
+         TMethod* m = cr->GetMethodAny( name.c_str() );
+         if ( m ) methods.push_back( (TCppMethod_t)m );
       }
    }
 

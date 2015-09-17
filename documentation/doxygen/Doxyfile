@@ -154,7 +154,7 @@ FULL_PATH_NAMES        = YES
 # will be relative from the directory where doxygen is started.
 # This tag requires that the tag FULL_PATH_NAMES is set to YES.
 
-STRIP_FROM_PATH        =
+STRIP_FROM_PATH        = $(DOXYGEN_STRIP_PATH)
 
 # The STRIP_FROM_INC_PATH tag can be used to strip a user-defined part of the
 # path mentioned in the documentation of a class, which tells the reader which
@@ -163,7 +163,7 @@ STRIP_FROM_PATH        =
 # specify the list of include paths that are normally passed to the compiler
 # using the -I flag.
 
-STRIP_FROM_INC_PATH    =
+STRIP_FROM_INC_PATH    = $(DOXYGEN_INCLUDE_PATH)
 
 # If the SHORT_NAMES tag is set to YES, doxygen will generate much shorter (but
 # less readable) file names. This can be useful is your file systems doesn't
@@ -179,7 +179,7 @@ SHORT_NAMES            = NO
 # description.)
 # The default value is: NO.
 
-JAVADOC_AUTOBRIEF      = NO
+JAVADOC_AUTOBRIEF      = YES
 
 # If the QT_AUTOBRIEF tag is set to YES then doxygen will interpret the first
 # line (until the first dot) of a Qt-style comment as the brief description. If
@@ -187,7 +187,7 @@ JAVADOC_AUTOBRIEF      = NO
 # requiring an explicit \brief command for a brief description.)
 # The default value is: NO.
 
-QT_AUTOBRIEF           = NO
+QT_AUTOBRIEF           = YES
 
 # The MULTILINE_CPP_IS_BRIEF tag can be set to YES to make doxygen treat a
 # multi-line C++ special comment block (i.e. a block of //! or /// comments) as
@@ -280,7 +280,7 @@ OPTIMIZE_OUTPUT_VHDL   = NO
 # Note that for custom extensions you also need to set FILE_PATTERNS otherwise
 # the files are not read by doxygen.
 
-EXTENSION_MAPPING      = h=C icc=C++
+EXTENSION_MAPPING      = h=C++ icc=C++
 
 # If the MARKDOWN_SUPPORT tag is enabled then doxygen pre-processes all comments
 # according to the Markdown format, which allows for more readable
@@ -497,7 +497,7 @@ INTERNAL_DOCS          = NO
 # and Mac users are advised to set this option to NO.
 # The default value is: system dependent.
 
-CASE_SENSE_NAMES       = NO
+CASE_SENSE_NAMES       = YES
 
 # If the HIDE_SCOPE_NAMES tag is set to NO then doxygen will show members with
 # their full class and namespace scopes in the documentation. If set to YES the
@@ -753,10 +753,12 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../../core/base/ \
+INPUT                  = . \
+                         ../../core/base/ \
                          ../../core/cont/ \
                          ../../core/meta/ \
                          ../../core/metautils/ \
+                         ../../core/multiproc/ \
                          ../../core/rint/ \
                          ../../core/thread/ \
                          ../../core/unix/ \
@@ -774,11 +776,7 @@ INPUT                  = ../../core/base/ \
                          ../../graf3d/g3d/ \
                          ../../graf3d/gl/ \
                          ../../graf3d/gviz3d/ \
-                         ../../hist/hist/ \
-                         ../../hist/histpainter/ \
-                         ../../hist/hbook/ \
-                         ../../hist/spectrum/ \
-                         ../../hist/spectrumpainter/ \
+                         ../../hist \
                          ../../io/io/ \
                          ../../io/sql/ \
                          ../../io/xml/ \
@@ -843,11 +841,6 @@ FILE_PATTERNS          = *.c \
                          *.hxx \
                          *.hpp \
                          *.h++ \
-                         *.cs \
-                         *.php \
-                         *.php4 \
-                         *.php5 \
-                         *.phtml \
                          *.inc \
                          *.m \
                          *.markdown \
@@ -896,7 +889,9 @@ EXCLUDE_SYMLINKS       = NO
 # exclude all test directories for example use the pattern */test/*
 
 EXCLUDE_PATTERNS       =  */G__* \
-                          */src/unuran-*
+                          */src/unuran-* \
+                          */libAfterImage/* \
+                          */doc/v6* */doc/v5*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -933,7 +928,7 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             =
+IMAGE_PATH             = $(DOXYGEN_OUTPUT_DIRECTORY)/html
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
@@ -2373,7 +2368,7 @@ DIAFILE_DIRS           =
 # Minimum value: 0, maximum value: 10000, default value: 50.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-DOT_GRAPH_MAX_NODES    = 50
+DOT_GRAPH_MAX_NODES    = 100
 
 # The MAX_DOT_GRAPH_DEPTH tag can be used to set the maximum depth of the graphs
 # generated by dot. A depth value of 3 means that only nodes reachable from the

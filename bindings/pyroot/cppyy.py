@@ -158,7 +158,10 @@ def load_reflection_info(name):
 if not _builtin_cppyy:
    class _ns_meta( type ):
       def __getattr__( cls, name ):
-         attr = _backend.LookupCppEntity( name )
+         try:
+            attr = _backend.LookupCppEntity( name )
+         except TypeError as e:
+            raise AttributeError(str(e))
          if type(attr) is _backend.PropertyProxy:
             setattr( cls.__class__, name, attr )
             return attr.__get__(cls)
@@ -167,7 +170,10 @@ if not _builtin_cppyy:
 
    class _stdmeta( type ):
       def __getattr__( cls, name ):   # for non-templated classes in std
-         klass = _backend.CreateScopeProxy( name, cls )
+         try:
+            klass = _backend.CreateScopeProxy( name, cls )
+         except TypeError as e:
+            raise AttributeError(str(e))
          setattr( cls, name, klass )
          return klass
 
@@ -212,6 +218,11 @@ def getAllClasses() :
       if c : classes.append( c )
       else : break
    return classes
+
+def add_smart_pointer(typename):
+   """Add a smart pointer to the list of known smart pointer types.
+   """
+   _backend.AddSmartPtrType(typename)
 
 #--- Global namespace and global objects -------------------------------
 gbl  = _global_cpp

@@ -116,7 +116,10 @@ function(ROOT_GET_SOURCES variable cwd )
     if( IS_ABSOLUTE ${fp})
       file(GLOB files ${fp})
     else()
-      file(GLOB files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${cwd}/${fp})
+      if(root7)
+        set(root7glob v7/src/${fp})
+      endif()
+      file(GLOB files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${cwd}/${fp} ${root7glob})
     endif()
     if(files)
       foreach(s ${files})
@@ -153,6 +156,8 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
           set(headerfiles ${headerfiles} ${f})
         endif()
       endforeach()
+    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+      set(headerfiles ${headerfiles} ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
     else()
       set(headerfiles ${headerfiles} ${fp})
     endif()
@@ -235,6 +240,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
           set(headerfiles ${headerfiles} ${f})
         endif()
       endforeach()
+    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+      set(headerfiles ${headerfiles} ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
     else()
       set(headerfiles ${headerfiles} ${fp})
     endif()
@@ -335,6 +342,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
+                     IMPLICIT_DEPENDS CXX ${_linkdef}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
   get_filename_component(dictname ${dictionary} NAME)
 
@@ -359,10 +367,11 @@ endfunction()
 
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT] LIBRARIES library1 library2 ...)
+#---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT]
+#                        [NOINSTALL] LIBRARIES library1 library2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_LINKER_LIBRARY library)
-  CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;TEST" "TYPE" "LIBRARIES;DEPENDENCIES"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;TEST;NOINSTALL" "TYPE" "LIBRARIES;DEPENDENCIES"  ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
   if(NOT ARG_TYPE)
     set(ARG_TYPE SHARED)
@@ -438,7 +447,7 @@ function(ROOT_LINKER_LIBRARY library)
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
   set_target_properties(${library} PROPERTIES LINK_INTERFACE_LIBRARIES "${ARG_DEPENDENCIES}")
   #----Installation details-------------------------------------------------------
-  if(NOT ARG_TEST AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+  if(NOT ARG_TEST AND NOT ARG_NOINSTALL AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     if(ARG_CMAKENOEXPORT)
       install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
                                  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
@@ -471,6 +480,9 @@ function(ROOT_OBJECT_LIBRARY library)
   if(TARGET move_headers)
     add_dependencies(${library} move_headers)
   endif()
+
+  #--- Only for building shared libraries
+  set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE 1)
 
   #--- Fill the property OBJECTS with all the object files
   #    This is needed becuase the generator expression $<TARGET_OBJECTS:target>
@@ -516,12 +528,6 @@ function(ROOT_MODULE_LIBRARY library)
                              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
                              ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 endfunction()
-
-#---------------------------------------------------------------------------------------------------
-#---ROOT_USE_PACKAGE( package )
-#---------------------------------------------------------------------------------------------------
-macro( ROOT_USE_PACKAGE package )
-endmacro()
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_GENERATE_ROOTMAP( library LINKDEF linkdef LIBRRARY lib DEPENDENCIES lib1 lib2 )
@@ -579,6 +585,11 @@ function(ROOT_INSTALL_HEADERS)
     set(dirs ${ARG_UNPARSED_ARGUMENTS})
   else()
     set(dirs inc/)
+    if(root7)
+      if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/)
+        set(dirs inc/ v7/inc/)
+      endif()
+    endif()
   endif()
   foreach(d ${dirs})
     install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -913,4 +924,29 @@ function(ROOT_ADD_C_FLAG var flag)
     set(${var} "${${var}} ${flag}" PARENT_SCOPE)
   endif()
 endfunction()
+
+#----------------------------------------------------------------------------
+# find_python_module(module [REQUIRED])
+#----------------------------------------------------------------------------
+function(find_python_module module)
+  string(TOUPPER ${module} module_upper)
+  if(NOT PY_${module_upper})
+    if(ARGC GREATER 1 AND ARGV1 STREQUAL "REQUIRED")
+      set(${module}_FIND_REQUIRED TRUE)
+    endif()
+    # A module's location is usually a directory, but for binary modules
+    # it's a .so file.
+    execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+      "import re, ${module}; print re.compile('/__init__.py.*').sub('',${module}.__file__)"
+      RESULT_VARIABLE _${module}_status
+      OUTPUT_VARIABLE _${module}_location
+      ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(NOT _${module}_status)
+      set(PY_${module_upper} ${_${module}_location} CACHE STRING  "Location of Python module ${module}")
+    endif()
+  endif()
+  find_package_handle_standard_args(PY_${module} DEFAULT_MSG PY_${module_upper})
+  set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE) 
+endfunction()
+
 

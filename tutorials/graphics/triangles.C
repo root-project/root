@@ -21,7 +21,7 @@ void triangles(Int_t ntriangles=50) {
      TPolyLine *pl = new TPolyLine(4,x,y);
      pl->SetUniqueID(i);
      ci = ncolors*r.Rndm();
-     c  = gROOT->GetColor(ci);
+     c  = gROOT->GetColor(TColor::GetColorPalette(ci));
      c->SetAlpha(r.Rndm());
      pl->SetFillColor(ci);
      pl->Draw("f");

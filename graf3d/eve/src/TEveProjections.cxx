@@ -17,17 +17,12 @@
 
 #include <limits>
 
-//==============================================================================
-//==============================================================================
-// TEveProjection
-//==============================================================================
+/** \class TEveProjection
+Base-class for non-linear projections.
 
-//______________________________________________________________________________
-//
-// Base-class for non-linear projections.
-//
-// Enables to define an external center of distortion and a scale to
-// fixate a bounding box of a projected point.
+Enables to define an external center of distortion and a scale to
+fixate a bounding box of a projected point.
+*/
 
 ClassImp(TEveProjection);
 
@@ -151,8 +146,8 @@ void TEveProjection::PreScaleVariable(Int_t dim, Float_t& v)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Pre-scale point (x, y) in projected coordinates for 2D projections:
-///   RhoZ ~ (rho, z)
-///   RPhi ~ (r, phi), scaling phi doesn't make much sense.
+///  - RhoZ ~ (rho, z)
+///  - RPhi ~ (r, phi), scaling phi doesn't make much sense.
 
 void TEveProjection::PreScalePoint(Float_t& x, Float_t& y)
 {
@@ -173,9 +168,9 @@ void TEveProjection::PreScalePoint(Float_t& x, Float_t& y, Float_t& z)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add new scaling range for given coordinate.
 /// Arguments:
-///  coord    0 ~ x, 1 ~ y, 2 ~ z
-///  value    value of input coordinate from which to apply this scale;
-///  scale    the scale to apply from value onwards.
+///  - coord    0 ~ x, 1 ~ y, 2 ~ z
+///  - value    value of input coordinate from which to apply this scale;
+///  - scale    the scale to apply from value onwards.
 ///
 /// NOTE: If pre-scaling is combined with center-displaced then
 /// the scale of the central region should be 1. This limitation
@@ -542,16 +537,10 @@ Float_t TEveProjection::GetScreenVal(Int_t i, Float_t x)
    return GetScreenVal(i, x, dirVec, oCenter);
 }
 
-
-//==============================================================================
-//==============================================================================
-// TEveRhoZProjection
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Transformation from 3D to 2D. X axis represent Z coordinate. Y axis have value of
-// radius with a sign of Y coordinate.
+/** \class TEveRhoZProjection
+Transformation from 3D to 2D. X axis represent Z coordinate. Y axis have value of
+radius with a sign of Y coordinate.
+*/
 
 ClassImp(TEveRhoZProjection);
 
@@ -619,7 +608,6 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
    z = d;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set center of distortion (virtual method).
 
@@ -653,11 +641,12 @@ void TEveRhoZProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
       vec.Set(0.0f, 1.0f, 0.0f);
 
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if segment of two projected points is valid.
 ///
 /// Move slightly one of the points if by shifting it by no more than
-/// tolearance the segment can become acceptable.
+/// tolerance the segment can become acceptable.
 
 Bool_t TEveRhoZProjection::AcceptSegment(TEveVector& v1, TEveVector& v2,
                                          Float_t tolerance) const
@@ -686,7 +675,7 @@ Bool_t TEveRhoZProjection::AcceptSegment(TEveVector& v1, TEveVector& v2,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return sub-space id for the point.
 /// 0 - upper half-space
-/// 1 - lowwer half-space
+/// 1 - lower half-space
 
 Int_t TEveRhoZProjection::SubSpaceId(const TEveVector& v) const
 {
@@ -694,21 +683,16 @@ Int_t TEveRhoZProjection::SubSpaceId(const TEveVector& v) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Checks if point is on sub-space boundrary.
+/// Checks if point is on sub-space boundary.
 
 Bool_t TEveRhoZProjection::IsOnSubSpaceBoundrary(const TEveVector& v) const
 {
    return v.fY == fProjectedCenter.fY;
 }
 
-//==============================================================================
-//==============================================================================
-// TEveRPhiProjection
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// XY projection with distortion around given center.
+/** \class TEveRPhiProjection
+XY projection with distortion around given center.
+*/
 
 ClassImp(TEveRPhiProjection);
 
@@ -778,15 +762,9 @@ void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
    z = d;
 }
 
-
-//==============================================================================
-//==============================================================================
-// TEve3DProjection
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// 3D scaling projection. One has to use pre-scaling to make any ise of this.
+/** \class TEve3DProjection
+3D scaling projection. One has to use pre-scaling to make any ise of this.
+*/
 
 ClassImp(TEve3DProjection);
 

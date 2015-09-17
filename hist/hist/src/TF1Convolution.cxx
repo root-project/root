@@ -32,20 +32,22 @@
 #include "TVirtualFFT.h"
 #include "TClass.h"
 
-//________________________________________________________________________
-//***********************************************************************
-// (f*g)(t) = int(f(x)g(x-t)dx)   *
-//*********************************
-// class wrapping convolution of two function : evaluation of TF1(t) * TF1(x-t)
-//
-// The convolution is performed by default using FFTW if it is available .
-// One can pass optionally the range of the convolution (by default the first function range is used).
-// Note that when using Discrete Fouriere Transform (as FFTW), it is a circular transform, so the functions should be
-// approximatly zero at the end of the range. If they are significantly different than zero on one side (e.g. the left side)
-// a spill over will occur on the other side (e.g right side).
-// If no function range is given by default the function1 range + 10% is used 
-// One shoud use also a not too small number of points for the DFT (a minimum of 1000).  By default 10000 points are used . 
-//
+////////////////////////////////////////////////////////////////////////////////
+/** \class TF1Convolution
+    \ingroup Hist 
+    \brief Class wrapping convolution of two functions
+
+Class wrapping convolution of two functions: evaluation of \f$\int f(x)g(x-t)dx\f$
+
+The convolution is performed by default using FFTW if it is available .
+One can pass optionally the range of the convolution (by default the first function range is used).
+Note that when using Discrete Fouriere Transform (as FFTW), it is a circular transform, so the functions should be
+approximatly zero at the end of the range. If they are significantly different than zero on one side (e.g. the left side)
+a spill over will occur on the other side (e.g right side).
+If no function range is given by default the function1 range + 10% is used
+One shoud use also a not too small number of points for the DFT (a minimum of 1000).  By default 10000 points are used.
+*/////////////////////////////////////////////////////////////////////////////////
+
 class TF1Convolution_EvalWrapper
 {
    std::shared_ptr < TF1 > fFunction1;
@@ -60,7 +62,7 @@ public:
    }
    Double_t operator()(Double_t x) const
    {
-      return fFunction1->Eval(x) * fFunction2->Eval(x-fT0);
+      return fFunction1->Eval(x) * fFunction2->Eval(fT0-x);
    }
 };
 
@@ -256,8 +258,9 @@ void TF1Convolution::MakeFFTConv()
    {
       // we need this since we have applied a shift in the middle of f2
       int j = i + fNofPoints/2;
-      if (j >= fNofPoints) j -= fNofPoints; 
-      fGraphConv->SetPoint(i, x[i], fftinverse->GetPointReal(j)/fNofPoints);//because it is not normalized
+      if (j >= fNofPoints) j -= fNofPoints;
+      // need to normalize by dividing by the number of points and multiply by the bin width = Range/Number of points
+      fGraphConv->SetPoint(i, x[i], fftinverse->GetPointReal(j)*(fXmax-fXmin)/(fNofPoints*fNofPoints) );  
    }
    fFlagGraph = true; // we can use the graph
 }
@@ -276,38 +279,23 @@ Double_t TF1Convolution::EvalFFTConv(Double_t t)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// perform numerical convolution
-/// could in principle cache the integral  in a Grap[h as it is done for the FFTW
+/// could in principle cache the integral  in a Graph as it is done for the FFTW
 
 Double_t TF1Convolution::EvalNumConv(Double_t t)
 {
    TF1Convolution_EvalWrapper fconv( fFunction1, fFunction2, t);
    Double_t result = 0;
    
-   if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS )
-   {
-      ROOT::Math::GaussIntegrator integrator(1e-9, 1e-9);
-      integrator.SetFunction(ROOT::Math::Functor1D(fconv));
-      if      (fXmin != - TMath::Infinity() && fXmax != TMath::Infinity())
-         result =  integrator.Integral(fXmin, fXmax);
-      else if (fXmin == - TMath::Infinity() && fXmax != TMath::Infinity())
-         result = integrator.IntegralLow(fXmax);
-      else if (fXmin != - TMath::Infinity() && fXmax == TMath::Infinity())
-         result = integrator.IntegralUp(fXmin);
-      else if (fXmin == - TMath::Infinity() && fXmax == TMath::Infinity())
-         result = integrator.Integral();
-   }
-   else
-   {
-      ROOT::Math::IntegratorOneDim integrator(fconv, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), 1e-9, 1e-9);
-      if      (fXmin != - TMath::Infinity() && fXmax != TMath::Infinity() )
-         result =  integrator.Integral(fXmin, fXmax);
-      else if (fXmin == - TMath::Infinity() && fXmax != TMath::Infinity() )
-         result = integrator.IntegralLow(fXmax);
-      else if (fXmin != - TMath::Infinity() && fXmax == TMath::Infinity() )
-         result = integrator.IntegralUp(fXmin);
-      else if (fXmin == - TMath::Infinity() && fXmax == TMath::Infinity() )
-         result = integrator.Integral();
-   }
+   ROOT::Math::IntegratorOneDim integrator(fconv, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), 1e-9, 1e-9);
+   if      (fXmin != - TMath::Infinity() && fXmax != TMath::Infinity() )
+      result =  integrator.Integral(fXmin, fXmax);
+   else if (fXmin == - TMath::Infinity() && fXmax != TMath::Infinity() )
+      result = integrator.IntegralLow(fXmax);
+   else if (fXmin != - TMath::Infinity() && fXmax == TMath::Infinity() )
+      result = integrator.IntegralUp(fXmin);
+   else if (fXmin == - TMath::Infinity() && fXmax == TMath::Infinity() )
+      result = integrator.Integral();
+
    return result;
 }
 

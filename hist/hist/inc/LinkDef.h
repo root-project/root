@@ -46,6 +46,7 @@
 #pragma link C++ class TGraph2D-;
 #pragma link C++ class TGraph2DErrors-;
 #pragma link C++ class TGraphDelaunay+;
+#pragma link C++ class TGraphDelaunay2D+;
 #pragma link C++ class TGraphSmooth+;
 #pragma link C++ class TGraphTime+;
 #pragma link C++ class TH1-;
@@ -308,7 +309,7 @@
 #pragma link C++ function R__H(Int_t);
 #pragma link C++ function R__H(const char*);
 
-#pragma link C++ class ROOT::THnBaseBrowsable;
+#pragma link C++ class ROOT::Internal::THnBaseBrowsable;
 #pragma link C++ class ROOT::Math::WrappedTF1;
 #pragma link C++ class ROOT::Math::WrappedMultiTF1;
 

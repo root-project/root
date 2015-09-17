@@ -38,6 +38,15 @@
 
 namespace ROOT {
 
+namespace Internal {
+template <typename T> class TStdBitsetHelper {
+   // This class is intentionally empty, this is scaffolding to allow the equivalent
+   // of 'template <int N> struct TCollectionProxyInfo::Type<std::bitset<N> >' which
+   // is not effective in C++ (as of gcc 4.3.3).
+};
+}
+
+namespace Detail {
    class TCollectionProxyInfo {
       // This class is a place holder for the information needed
       // to create the proper Collection Proxy.
@@ -553,15 +562,15 @@ namespace ROOT {
       }
 
       /// Generate proxy from template
-      template <class T> static ROOT::TCollectionProxyInfo* Generate(const T&)  {
+      template <class T> static TCollectionProxyInfo* Generate(const T&)  {
          // Generate a TCollectionProxyInfo given a TCollectionProxyInfo::Type
          // template (used to described the behavior of the stl collection.
          // Typical use looks like:
-         //      ::ROOT::TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< std::vector<string> >()));
+         //      ::ROOT::Detail::TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< std::vector<string> >()));
 
          PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p =
             (PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
-         return new ROOT::TCollectionProxyInfo(typeid(TYPENAME T::Cont_t),
+         return new TCollectionProxyInfo(typeid(TYPENAME T::Cont_t),
                                                sizeof(TYPENAME T::Iter_t),
                                                (((char*)&p->second)-((char*)&p->first)),
                                                T::value_offset(),
@@ -582,16 +591,16 @@ namespace ROOT {
                                                T::Iterators_t::destruct2);
       }
 
-      template <class T> static ROOT::TCollectionProxyInfo Get(const T&)  {
+      template <class T> static TCollectionProxyInfo Get(const T&)  {
 
          // Generate a TCollectionProxyInfo given a TCollectionProxyInfo::Type
          // template (used to described the behavior of the stl collection.
          // Typical use looks like:
-         //      ::ROOT::TCollectionProxyInfo::Get(TCollectionProxyInfo::Pushback< std::vector<string> >()));
+         //      ::ROOT::Detail::TCollectionProxyInfo::Get(TCollectionProxyInfo::Pushback< std::vector<string> >()));
 
          PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p =
             (PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
-         return ROOT::TCollectionProxyInfo(typeid(TYPENAME T::Cont_t),
+         return TCollectionProxyInfo(typeid(TYPENAME T::Cont_t),
                                            sizeof(TYPENAME T::Iter_t),
                                            (((char*)&p->second)-((char*)&p->first)),
                                            T::value_offset(),
@@ -737,20 +746,14 @@ namespace ROOT {
 
 #ifndef __CINT__
    // Need specialization for boolean references due to stupid STL std::vector<bool>
-   template<> inline void* ::ROOT::TCollectionProxyInfo::Address<std::vector<Bool_t>::const_reference>::address(std::vector<Bool_t>::const_reference ) {
+   template<> inline void* TCollectionProxyInfo::Address<std::vector<Bool_t>::const_reference>::address(std::vector<Bool_t>::const_reference ) {
       R__ASSERT(0);
       return 0;
    }
 #endif
 
-   template <typename T> class TStdBitsetHelper {
-      // This class is intentionally empty, this is scaffolding to allow the equivalent
-      // of 'template <int N> struct TCollectionProxyInfo::Type<std::bitset<N> >' which
-      // is not effective in C++ (as of gcc 4.3.3).
-   };
-
 #ifndef __CINT__
-   template <typename Bitset_t> struct TCollectionProxyInfo::Type<ROOT::TStdBitsetHelper<Bitset_t> > : public TCollectionProxyInfo::Address<const Bool_t &>
+   template <typename Bitset_t> struct TCollectionProxyInfo::Type<Internal::TStdBitsetHelper<Bitset_t> > : public TCollectionProxyInfo::Address<const Bool_t &>
    {
       typedef Bitset_t                 Cont_t;
       typedef std::pair<size_t,Bool_t> Iter_t;
@@ -854,7 +857,7 @@ namespace ROOT {
    };
 
    template <typename Bitset_t>
-   struct TCollectionProxyInfo::Pushback<ROOT::TStdBitsetHelper<Bitset_t>  > : public TCollectionProxyInfo::Type<TStdBitsetHelper<Bitset_t> > {
+   struct TCollectionProxyInfo::Pushback<Internal::TStdBitsetHelper<Bitset_t>  > : public TCollectionProxyInfo::Type<Internal::TStdBitsetHelper<Bitset_t> > {
       typedef Bitset_t         Cont_t;
       typedef bool             Iter_t;
       typedef bool             Value_t;
@@ -878,6 +881,10 @@ namespace ROOT {
    };
 #endif
 
-}
+} // namespace Detail
+
+// For (reasonable) backward compatibility:
+using namespace Detail;
+} // namespace ROOT
 
 #endif

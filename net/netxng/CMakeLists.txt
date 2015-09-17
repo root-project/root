@@ -3,8 +3,6 @@
 # @author Lukasz Janyst <ljanyst@cern.ch>
 ############################################################################
 
-ROOT_USE_PACKAGE(net/net)
-
 include_directories(${XROOTD_INCLUDE_DIRS})
 add_definitions(${XROOTD_CFLAGS})
 

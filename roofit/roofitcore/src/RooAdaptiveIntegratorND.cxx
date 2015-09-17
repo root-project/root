@@ -100,7 +100,10 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   case 3: _nmax = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxEval3D")) ; break ;
   default: _nmax = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxEvalND")) ; break ;
   }
-  _integrator = new ROOT::Math::AdaptiveIntegratorMultiDim(config.epsAbs(),config.epsRel(),_nmax) ;
+  // by default do not use absolute tolerance (see https://root.cern.ch/phpBB3/viewtopic.php?f=15&t=20071 )
+  _epsAbs = 0.0;
+  _epsRel = config.epsRel();      
+  _integrator = new ROOT::Math::AdaptiveIntegratorMultiDim(_epsAbs,_epsRel,_nmax) ;
   _integrator->SetFunction(*_func) ;
   _useIntegrandLimits=kTRUE ;
 
@@ -108,8 +111,6 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   _xmax = 0 ;
   _nError = 0 ;
   _nWarn = 0 ;
-  _epsRel = 1e-7 ;
-  _epsAbs = 1e-7 ;
   checkLimits() ;
   _intName = function.getName() ;
 } 

@@ -19,10 +19,9 @@
 #include "TGButton.h"
 #include "TGLabel.h"
 
-//______________________________________________________________________________
-// TEveTransSubEditor
-//
-// Sub-editor for TEveTrans class.
+/** \class TEveTransSubEditor
+Sub-editor for TEveTrans class.
+*/
 
 ClassImp(TEveTransSubEditor);
 
@@ -51,7 +50,7 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    fUseTrans->Connect("Toggled(Bool_t)", "TEveTransSubEditor", this, "DoUseTrans()");
    fEditTrans = new TGCheckButton(fTopHorFrame, "EditTrans");
    fTopHorFrame->AddFrame(fEditTrans, new TGLayoutHints(kLHintsLeft, 2,1,0,0));
-   fEditTrans->Connect("Toggled(Bool_t)"," TEveTransSubEditor", this, "DoEditTrans()");
+   fEditTrans->Connect("Toggled(Bool_t)", "TEveTransSubEditor", this, "DoEditTrans()");
 
    AddFrame(fTopHorFrame, new TGLayoutHints(kLHintsTop, 0,0,2,1));
 
@@ -121,8 +120,6 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    AddFrame(fEditTransFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,1,2));
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
@@ -175,8 +172,6 @@ void TEveTransSubEditor::SetTransFromData()
    fTrans->Scale(v[0], v[1], v[2]);
 }
 
-/******************************************************************************/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Emit "UseTrans()" signal.
 
@@ -193,8 +188,6 @@ void TEveTransSubEditor::TransChanged()
    SetTransFromData();
    Emit("TransChanged()");
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot for UseTrans.
@@ -223,11 +216,9 @@ void TEveTransSubEditor::DoTransChanged()
       TransChanged();
 }
 
-
-//______________________________________________________________________________
-// TEveTransEditor
-//
-// Editor for TEveTrans class.
+/** \class TEveTransEditor
+Editor for TEveTrans class.
+*/
 
 ClassImp(TEveTransEditor);
 
@@ -247,8 +238,6 @@ TEveTransEditor::TEveTransEditor(const TGWindow *p, Int_t width, Int_t height,
    fSE->Connect("UseTrans()",     "TEveTransEditor", this, "Update()");
    fSE->Connect("TransChanged()", "TEveTransEditor", this, "Update()");
 }
-
-/******************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
