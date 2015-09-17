@@ -124,7 +124,7 @@ int TMVAClassification( TString myMethodList = "" )
    Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
    Use["TMlpANN"]         = 0; // ROOT's own ANN
-   Use["NN"]              = 1; // improved implementation of a NN
+   Use["DNN"]             = 1; // improved implementation of a NN
    //
    // --- Support Vector Machine 
    Use["SVM"]             = 1;
@@ -165,6 +165,22 @@ int TMVAClassification( TString myMethodList = "" )
 
    // --- Here the preparation phase begins
 
+   // Read training and test data
+   // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
+   TString fname = "./tmva_class_example.root";
+   
+   if (gSystem->AccessPathName( fname ))  // file does not exist in local directory
+      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
+   
+   TFile *input = TFile::Open( fname );
+   
+   std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
+   
+   // --- Register the training and test trees
+
+   TTree *signal     = (TTree*)input->Get("TreeS");
+   TTree *background = (TTree*)input->Get("TreeB");
+   
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
    TString outfileName( "TMVA.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
@@ -199,24 +215,10 @@ int TMVAClassification( TString myMethodList = "" )
    // You can add so-called "Spectator variables", which are not used in the MVA training,
    // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the
    // input variables, the response values of all trained MVAs, and the spectator variables
+
    dataloader->AddSpectator( "spec1 := var1*2",  "Spectator 1", "units", 'F' );
    dataloader->AddSpectator( "spec2 := var1*3",  "Spectator 2", "units", 'F' );
 
-   // Read training and test data
-   // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
-   TString fname = "./tmva_class_example.root";
-   
-   if (gSystem->AccessPathName( fname ))  // file does not exist in local directory
-      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
-   
-   TFile *input = TFile::Open( fname );
-   
-   std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
-   
-   // --- Register the training and test trees
-
-   TTree *signal     = (TTree*)input->Get("TreeS");
-   TTree *background = (TTree*)input->Get("TreeB");
    
    // global event weights per tree (see below for setting event-wise weights)
    Double_t signalWeight     = 1.0;
@@ -426,7 +428,7 @@ int TMVAClassification( TString myMethodList = "" )
 
 
    // improved neural network implementation 
-   if (Use["NN"])
+   if (Use["DNN"])
    {
 //       TString layoutString ("Layout=TANH|(N+100)*2,LINEAR");
 //       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
@@ -451,7 +453,7 @@ int TMVAClassification( TString myMethodList = "" )
        nnOptions.Append (":"); nnOptions.Append (layoutString);
        nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
 
-       factory->BookMethod( TMVA::Types::kNN, "NN", nnOptions ); // NN
+       factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", nnOptions ); // NN
    }
 
 

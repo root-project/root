@@ -100,19 +100,15 @@ namespace TMVA {
          kLD             ,
          kPlugins        ,
          kCategory       ,
-<<<<<<< 8abbee7ffc3abbf99da8b843cb5188043ed7d1d9
-         kMaxMethod      ,
+         kDNN            ,
          kPyRandomForest ,
          kPyAdaBoost     ,
          kPyGTB          ,
          kC50            ,
          kRSNNS          ,
          kRSVM           ,
-         kRXGB       
-=======
-         kNN             ,
+         kRXGB           ,
          kMaxMethod
->>>>>>> 	modified:   tmva/inc/LinkDef1.h
       };
 
       // available variable transformations
