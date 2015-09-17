@@ -22,6 +22,7 @@
 #include "TFile.h"
 #include "TStopwatch.h"
 #include "TROOT.h"
+#include "TSystem.h"
 
 #include "TMVA/GeneticAlgorithm.h"
 #include "TMVA/GeneticFitter.h"
