@@ -164,6 +164,22 @@ int TMVAClassification( TString myMethodList = "" )
 
    // --- Here the preparation phase begins
 
+   // Read training and test data
+   // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
+   TString fname = "./tmva_class_example.root";
+   
+   if (gSystem->AccessPathName( fname ))  // file does not exist in local directory
+      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
+   
+   TFile *input = TFile::Open( fname );
+   
+   std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
+   
+   // --- Register the training and test trees
+
+   TTree *signal     = (TTree*)input->Get("TreeS");
+   TTree *background = (TTree*)input->Get("TreeB");
+   
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
    TString outfileName( "TMVA.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
@@ -197,24 +213,10 @@ int TMVAClassification( TString myMethodList = "" )
    // You can add so-called "Spectator variables", which are not used in the MVA training,
    // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the
    // input variables, the response values of all trained MVAs, and the spectator variables
+
    factory->AddSpectator( "spec1 := var1*2",  "Spectator 1", "units", 'F' );
    factory->AddSpectator( "spec2 := var1*3",  "Spectator 2", "units", 'F' );
 
-   // Read training and test data
-   // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
-   TString fname = "./tmva_class_example.root";
-   
-   if (gSystem->AccessPathName( fname ))  // file does not exist in local directory
-      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
-   
-   TFile *input = TFile::Open( fname );
-   
-   std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
-   
-   // --- Register the training and test trees
-
-   TTree *signal     = (TTree*)input->Get("TreeS");
-   TTree *background = (TTree*)input->Get("TreeB");
    
    // global event weights per tree (see below for setting event-wise weights)
    Double_t signalWeight     = 1.0;
