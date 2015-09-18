@@ -42,14 +42,6 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 .PRECIOUS: properties_rflx_tmp1.C iotype_rflx_tmp1.C updateMembers_rflx_tmp1.C properties_rflxdriver.C updateMembers_rflxdriver.C iotype_rflxdriver.C classVersion_rflx_tmp1.C iotype_rflx_tmp2.C properties_rflx_tmp2.C updateMembers_rflx_tmp2.C classVersion_rflxdriver.C properties_rflx.cpp classVersion_rflx_tmp2.C iotype_rflx.cpp iotype32_rflx.cpp classVersion_rflx.cpp updateMembers_rflx.cpp
 
-# the driver which includes the relevant files for the library:
-%_rflxdriver.C: %_rflx.cpp %_test.C TestHelper.h
-	$(CMDECHO) echo '#include "TestHelper.h" // some helper functions' >> $@
-	$(CMDECHO) echo '#include "TSystem.h" // the dictionary' >> $@
-	$(CMDECHO) echo '#include "$*_rflx.cpp" // the dictionary' >> $@
-	$(CMDECHO) echo '#include "$*_test.C" // the test' >> $@
-	$(CMDECHO) echo 'void $(@:.C=()){ gSystem->Setenv("LINES","-1"); $*_test();} // forward' >> $@
-
 iotype_rflxdriver.$(DllSuf): iotype_rflx.o iotype32_rflx.o
 	$(BuildFromObjs)
 
@@ -71,7 +63,6 @@ $(RFLXDICTTESTS_DRIVERS_DLL): %_rflxdriver_C.$(DllSuf): %_rflx_tmp1.C
 %_rflx.log: %_rflxdriver_C.$(DllSuf) %_rflx_tmp1.C %_rflx_tmp2.C
 	$(CMDECHO) $(CALLROOTEXE) -l -b -q $*_rflx_tmp2.C 2>&1 | grep -v  'Processing ' | grep -v 'creating shared' > $@ || handleError.sh --result=$$? --log=$@
 
-ifeq (1,1) # $(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
 $(RFLXDICTTESTS): %_rflx: %_rflx.log %_rflx.ref
 	$(TestDiff)
 
@@ -84,16 +75,5 @@ Tools: Tools.log
 	$(TestDiff)
 
 exechepmc.log: libhepmc_dictrflx.$(DllSuf)
-
-else
-
-$(RFLXDICTTESTS): %_rflx:
-$(TEST_TARGETS):
-ifeq ($(HAVEGCCXML),"nocintex")
-	$(CMDECHO) echo "Your ROOT build does not include cintex: skipping test $@"
-else
-	$(CMDECHO) echo "GCCXML not in \$$PATH: skipping test $@"
-endif
-endif
 
 properties_rflx: GENREFLEXFLAGS=--iocomments
