@@ -9,15 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TArray                                                               //
-//                                                                      //
-// Abstract array base class. Used by TArrayC, TArrayS, TArrayI,        //
-// TArrayL, TArrayF and TArrayD.                                        //
-// Data member is public for historical reasons.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TArray
+Abstract array base class. Used by TArrayC, TArrayS, TArrayI,
+TArrayL, TArrayF and TArrayD.
+Data member is public for historical reasons.
+*/
 
 #include "TArray.h"
 #include "TError.h"

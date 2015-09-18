@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TArrayD                                                              //
-//                                                                      //
-// Array of doubles (64 bits per element).                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TArrayD
+Array of doubles (64 bits per element).
+*/
 
 #include "TArrayD.h"
 #include "TBuffer.h"
