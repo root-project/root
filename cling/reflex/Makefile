@@ -7,8 +7,9 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *_rflx.cpp *_rflxdriver.C *_rflx_
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-RFLXDICTTESTS:= classVersion_rflx properties_rflx updateMembers_rflx iotype_rflx
-TEST_TARGETS += $(RFLXDICTTESTS) ReflexCintexOrder CintexReflexOrder Tools
+RFLXDICTTESTS:= classVersion_rflx properties_rflx  iotype_rflx
+TEST_TARGETS += $(RFLXDICTTESTS)
+# Tools
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -39,23 +40,27 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
-.PRECIOUS: properties_rflx_tmp1.C iotype_rflx_tmp1.C updateMembers_rflx_tmp1.C properties_rflxdriver.C updateMembers_rflxdriver.C iotype_rflxdriver.C classVersion_rflx_tmp1.C iotype_rflx_tmp2.C properties_rflx_tmp2.C updateMembers_rflx_tmp2.C classVersion_rflxdriver.C properties_rflx.cpp classVersion_rflx_tmp2.C iotype_rflx.cpp classVersion_rflx.cpp updateMembers_rflx.cpp
+.PRECIOUS: properties_rflx_tmp1.C iotype_rflx_tmp1.C updateMembers_rflx_tmp1.C properties_rflxdriver.C updateMembers_rflxdriver.C iotype_rflxdriver.C classVersion_rflx_tmp1.C iotype_rflx_tmp2.C properties_rflx_tmp2.C updateMembers_rflx_tmp2.C classVersion_rflxdriver.C properties_rflx.cpp classVersion_rflx_tmp2.C iotype_rflx.cpp iotype32_rflx.cpp classVersion_rflx.cpp updateMembers_rflx.cpp
 
 # the driver which includes the relevant files for the library:
 %_rflxdriver.C: %_rflx.cpp %_test.C TestHelper.h
-	$(CMDECHO) echo '#ifndef __CINT__' > $@
 	$(CMDECHO) echo '#include "TestHelper.h" // some helper functions' >> $@
 	$(CMDECHO) echo '#include "TSystem.h" // the dictionary' >> $@
 	$(CMDECHO) echo '#include "$*_rflx.cpp" // the dictionary' >> $@
 	$(CMDECHO) echo '#include "$*_test.C" // the test' >> $@
-	$(CMDECHO) echo '#endif' >> $@
 	$(CMDECHO) echo 'void $(@:.C=()){ gSystem->Setenv("LINES","-1"); $*_test();} // forward' >> $@
 
-%_rflx_tmp1.C: %_rflxdriver.C
-	$(CMDECHO) echo '{gSystem->Load("libCintex"); gSystem->Load("libTree"); gROOT->ProcessLine(".L $<+");}' > $@
+iotype_rflxdriver.$(DllSuf): iotype_rflx.o iotype32_rflx.o
+	$(BuildFromObjs)
 
-%_rflx_tmp2.C: %_rflxdriver.C
-	$(CMDECHO) echo '{gSystem->Load("libCintex"); gSystem->Load("libTree"); gROOT->ProcessLine(".x $<+");}' > $@
+%_rflxdriver.$(DllSuf): %_rflx.o
+	$(BuildFromObj)
+
+%_rflx_tmp1.C: %_rflxdriver.$(DllSuf)
+	$(CMDECHO) echo '{gSystem->Load("libTree"); gROOT->ProcessLine(".L $<");}' > $@
+
+%_rflx_tmp2.C: %_rflxdriver.$(DllSuf)
+	$(CMDECHO) echo '{gSystem->Load("libTree"); gROOT->ProcessLine(".L $<"); gROOT->ProcessLine(".x $*_test.C"); }' > $@
 
 RFLXDICTTESTS_DRIVERS_DLL := $(addsuffix driver_C.$(DllSuf),$(RFLXDICTTESTS))
 
@@ -66,7 +71,7 @@ $(RFLXDICTTESTS_DRIVERS_DLL): %_rflxdriver_C.$(DllSuf): %_rflx_tmp1.C
 %_rflx.log: %_rflxdriver_C.$(DllSuf) %_rflx_tmp1.C %_rflx_tmp2.C
 	$(CMDECHO) $(CALLROOTEXE) -l -b -q $*_rflx_tmp2.C 2>&1 | grep -v  'Processing ' | grep -v 'creating shared' > $@ || handleError.sh --result=$$? --log=$@
 
-ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
+ifeq (1,1) # $(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
 $(RFLXDICTTESTS): %_rflx: %_rflx.log %_rflx.ref
 	$(TestDiff)
 

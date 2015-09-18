@@ -1,19 +1,19 @@
-#include "Cintex/Cintex.h"
-#include "Reflex/Type.h"
 #include "TClass.h"
+#include "TDataMember.h"
 #include "TFile.h"
 #include "TTree.h"
-#include "TDataMember.h"
+#include "TBranch.h"
 
-using namespace ROOT::Cintex;
-using namespace ROOT::Reflex;
+#include "TestHelper.h"
+#include "iotype.h"
 
-void checkIOType(const char* name, const Reflex::Type& t) {
-   printf("\ndata member '%s', type '%s'\n", name, t.Name().c_str());
+void checkIOType(const char* name) {
+   printf("\ndata member '%s' \n", name);
    TClass* cl = TClass::GetClass("CIoType");
    RflxAssert(cl);
    TDataMember* dm = cl->GetDataMember(name);
    RflxAssert(dm);
+   printf("\ndata member '%s', type '%s'\n", name, dm->GetTypeName());
    if (strstr("32", dm->GetName())) {
       const char* tname = dm->GetTypeName();
       RflxAssert(strstr(tname, "Double32_t"));
@@ -74,12 +74,10 @@ void readIOT() {
 }
 
 void iotype_test() {
-   Type t = Type::ByName("CIoType");
+   auto t = TClass::GetClass("CIoType");
    RflxAssert(t);
-   Cintex::Enable();
-   for (Reflex::Member_Iterator i = t.DataMember_Begin(), e = t.DataMember_End();
-        i != e; ++i) {
-      checkIOType(i->Name().c_str(), i->TypeOf());
+   for (auto d : *t->GetListOfDataMembers()) {
+      checkIOType(d->GetName());
    }
    writeIOT();
    readIOT();

@@ -1,9 +1,5 @@
-#include "Cintex/Cintex.h"
-#include "Reflex/Type.h"
 #include "TClass.h"
-
-using namespace ROOT::Cintex;
-using namespace ROOT::Reflex;
+#include "TestHelper.h"
 
 void checkVersion(const char* name, short version, bool inhFromTObj = false) {
    printf("\nCLASS %s, version %d, isATObject=%d\n", name,
@@ -17,9 +13,9 @@ void checkVersion(const char* name, short version, bool inhFromTObj = false) {
 }
 
 void classVersion_test() {
-   Type tWithClassVersion = Type::ByName("WithClassVersion");
+   TClass *tWithClassVersion = TClass::GetClass("WithClassVersion");
    RflxAssert(tWithClassVersion);
-   Cintex::Enable();
+
    checkVersion("WithClassVersion", 42);
    checkVersion("WithClassDef", 12);
    checkVersion("NoIO", 0);

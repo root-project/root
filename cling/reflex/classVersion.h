@@ -25,13 +25,12 @@ class FromTObject: public TObject {
 class NoDictionary {
    ClassDef(NoDictionary, 14);
 };
-TClass* NoDictionary::Class() { return 0; }
-const char* NoDictionary::Class_Name() { return 0; }
-void NoDictionary::Dictionary() {}
-void NoDictionary::ShowMembers(TMemberInspector&) {}
+TClass* NoDictionary::Class() { return nullptr; }
+const char* NoDictionary::Class_Name() { return nullptr; }
+TClass* NoDictionary::Dictionary() { return nullptr; }
 void NoDictionary::Streamer(TBuffer&) {}
 int NoDictionary::ImplFileLine() { return -1; }
-const char* NoDictionary::ImplFileName() { return 0; }
+const char* NoDictionary::ImplFileName() { return nullptr; }
 
 class NoDictionaryTObj: public TObject {
 };

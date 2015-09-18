@@ -13,9 +13,7 @@
   <field name="Tdd32" iotype="Template<Double32_t>"/>
 </class>
 <class name="Template<double>"/>
-<class name="Template<Double32_t>"/>
 <class name="Template<float>"/>
 <class name="Template<std::vector<double> >"/>
-<class name="Template<std::vector<Double32_t> >"/>
 <class name="Template<std::vector<float> >"/>
 </lcgdict>

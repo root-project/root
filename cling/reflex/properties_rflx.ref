@@ -1,25 +1,17 @@
 
-!props.HasProperty("Doesn't Exist"): ok.
-props.HasProperty("id"): FAILED!
-props.PropertyAsString("ClassID") == "MyID": ok.
-props.HasProperty("someProperty"): ok.
-props.PropertyAsString("someProperty") == "42": ok.
+!props->HasKey("Doesn't Exist"): ok.
+props->HasKey("id"): ok.
+props->GetPropertyAsString("id") == string("MyID"): ok.
+props->HasKey("someProperty"): ok.
+props->GetPropertyAsString("someProperty") == string("42"): ok.
 TClass object: ok.
-Reflex data member memWithComment: ok.
-Reflex comment property memWithComment: ok.
-Reflex data member memNoIO: ok.
-Reflex comment property memNoIO: ok.
-TDataMember memNoIO: ok.
-TDataMember comment memNoIO: ok.
-Reflex data member memWithoutSplitting: ok.
-Reflex comment property memWithoutSplitting: ok.
-TDataMember memWithoutSplitting: ok.
-TDataMember comment memWithoutSplitting: ok.
-Reflex data member memPtrAlwaysValid: ok.
-Reflex comment property memPtrAlwaysValid: ok.
-TDataMember memPtrAlwaysValid: ok.
-TDataMember comment memPtrAlwaysValid: ok.
-Reflex data member memDouble32Range: ok.
-Reflex comment property memDouble32Range: ok.
-TDataMember memDouble32Range: ok.
-TDataMember comment memDouble32Range: ok.
+TDataMember data member memWithComment: ok.
+TDataMember comment property memWithComment: ok.
+TDataMember data member memNoIO: ok.
+TDataMember comment property memNoIO: ok.
+TDataMember data member memWithoutSplitting: ok.
+TDataMember comment property memWithoutSplitting: ok.
+TDataMember data member memPtrAlwaysValid: ok.
+TDataMember comment property memPtrAlwaysValid: ok.
+TDataMember data member memDouble32Range: ok.
+TDataMember comment property memDouble32Range: ok.

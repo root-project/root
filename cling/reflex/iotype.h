@@ -1,3 +1,6 @@
+#ifndef IOTYPE_H
+#define IOTYPE_H
+
 #include "Rtypes.h"
 #include <vector>
 #include <cstdlib>
@@ -88,7 +91,7 @@ void Template<T>::Set(double& v) {
    }
 }
 
-void CIoType::Set(double x) {
+inline void CIoType::Set(double x) {
    double v = x;
    SetT(vd, v);
    SetT(vd32, v = x);
@@ -122,3 +125,5 @@ template class Template<float>;
 template class Template<std::vector<double> >;
 //template class Template<std::vector<Double32_t> >;
 template class Template<std::vector<float> >;
+
+#endif

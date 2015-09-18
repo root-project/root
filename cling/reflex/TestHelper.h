@@ -1,3 +1,4 @@
+#include <iostream>
 
 #define RflxAssert(TEST) \
   {if (!(TEST)) std::cout << #TEST << ": FAILED!" << std::endl; \
