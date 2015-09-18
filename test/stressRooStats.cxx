@@ -374,11 +374,6 @@ int main(int argc, const char *argv[])
 //            << refFileName << endl;
 //    }
 
-   // Disable caching of complex error function calculation, as we don't
-   // want to write out the cache file as part of the validation procedure
-   RooMath::cacheCERF(kFALSE) ;
-
-
    // set minimizer
     // use Minut2 if available
    std::string minimizerType = minimizerName;
