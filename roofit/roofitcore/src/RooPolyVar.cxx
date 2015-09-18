@@ -29,10 +29,10 @@
 
 #include <cmath>
 
+#include "TError.h"
 #include "RooPolyVar.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
-//#include "Riostream.h"
 
 using namespace std;
 
@@ -73,7 +73,7 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
-      assert(0) ;
+      R__ASSERT(0) ;
     }
     _coefList.add(*coef) ;
   }
