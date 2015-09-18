@@ -34,8 +34,8 @@
 
 TProtoClass::TProtoClass(TClass* cl):
    TNamed(*cl), fBase(cl->GetListOfBases()), 
-   fEnums(cl->GetListOfEnums()), fSizeof(cl->Size()), fCanSplit(cl->fCanSplit),
-   fStreamerType(cl->fStreamerType), fProperty(cl->fProperty),
+   fEnums(cl->GetListOfEnums()), fSizeof(cl->Size()), fCheckSum(cl->fCheckSum),
+   fCanSplit(cl->fCanSplit), fStreamerType(cl->fStreamerType), fProperty(cl->fProperty),
    fClassProperty(cl->fClassProperty)
 {
    if (cl->Property() & kIsNamespace){
@@ -268,6 +268,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    }
   
    cl->fSizeof = fSizeof;
+   cl->fCheckSum = fCheckSum;
    cl->fCanSplit = fCanSplit;
    cl->fProperty = fProperty;
    cl->fClassProperty = fClassProperty;

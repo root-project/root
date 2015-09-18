@@ -1395,10 +1395,14 @@ void TClass::Init(const char *name, Version_t cversion,
       }
       if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE)) {
          gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
-         if (!fClassInfo) {
-            if (IsZombie()) {
-               TClass::RemoveClass(this);
-               return;
+         if (fClassInfo) {
+            fCheckSum = GetCheckSum(kLatestCheckSum);
+         } else {
+            if (!fClassInfo) {
+               if (IsZombie()) {
+                  TClass::RemoveClass(this);
+                  return;
+               }
             }
          }
       }
@@ -5904,11 +5908,11 @@ UInt_t TClass::GetCheckSum(Bool_t &isvalid) const
 
 UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
 {
+   if (fCheckSum && code == kCurrentCheckSum) return fCheckSum;
+
    R__LOCKGUARD(gInterpreterMutex);
 
    isvalid = kTRUE;
-
-   if (fCheckSum && code == kCurrentCheckSum) return fCheckSum;
 
    // kCurrentCheckSum (0) is the default parameter value and should be kept
    // for backward compatibility, too be able to use the inequality checks,
@@ -6014,7 +6018,7 @@ UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
          }
       }/*EndMembLoop*/
    }
-   if (code==kLatestCheckSum) fCheckSum = id;
+   //if (code==kLatestCheckSum) fCheckSum = id;
    return id;
 }
 
@@ -6627,6 +6631,7 @@ void TClass::RegisterStreamerInfo(TVirtualStreamerInfo *info)
       fStreamerInfo->AddAtAndExpand(info, slot);
       if (fState <= kForwardDeclared) {
          fState = kEmulated;
+         if (fCheckSum==0) fCheckSum = info->GetCheckSum();
       }
    }
 }
