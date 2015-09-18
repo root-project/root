@@ -374,16 +374,11 @@ int main(int argc, const char *argv[])
 //            << refFileName << endl;
 //    }
 
-   // Disable caching of complex error function calculation, as we don't
-   // want to write out the cache file as part of the validation procedure
-   RooMath::cacheCERF(kFALSE) ;
-
-
-   // set minimizer 
-    // use Minut2 if available 
-   std::string minimizerType = minimizerName; 
-   // check in case of Minuit2 and set Minuit in case we cannot use it 
-   if (minimizerType == "Minuit2") { 
+   // set minimizer
+    // use Minut2 if available
+   std::string minimizerType = minimizerName;
+   // check in case of Minuit2 and set Minuit in case we cannot use it
+   if (minimizerType == "Minuit2") {
       int prec = gErrorIgnoreLevel;
       gErrorIgnoreLevel = kFatal;
       if (gSystem->Load("libMinuit2") < 0) minimizerType = "Minuit";
