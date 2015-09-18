@@ -1,3 +1,6 @@
+#ifndef CLASSVERSION_H
+#define CLASSVERSION_H
+
 #include "TObject.h"
 
 class WithClassVersion {
@@ -19,6 +22,8 @@ class ReallyNoDict {
 
 class FromTObject: public TObject {
    ReallyNoDict fTransientByComment; //! this is intended to be transient
+   ReallyNoDict fTransientBySelection; // this is intended to be transient, marked by selection.xml
+
    ClassDef(FromTObject, 13);
 };
 
@@ -53,4 +58,7 @@ template <class T> class TemplateWithVersion {
 
 template class TemplateWithVersion<int>;
 template class TemplateWithVersion<double>;
+
+#endif
+
 

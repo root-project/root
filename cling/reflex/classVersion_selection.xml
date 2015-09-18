@@ -13,7 +13,10 @@
 
 <class name="WithClassDef"/>
 <class name="NoIO"/>
-<class name="FromTObject"/>
+<class name="FromTObject">
+   <field name="fTransientBySelection" transient="true" />
+</class>
+
 
 <class name="TemplateWithVersion<int>" />
 <class name="TemplateWithVersion<double>" />

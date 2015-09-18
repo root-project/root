@@ -10,6 +10,7 @@ void checkVersion(const char* name, short version, bool inhFromTObj = false) {
       RflxEqual(cl->GetClassVersion(), version);
       RflxEqual(inhFromTObj, cl->InheritsFrom(TObject::Class()));
    }
+   cl->GetStreamerInfo();
 }
 
 void classVersion_test() {
