@@ -73,7 +73,7 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
-      R__ASSERT(0) ;
+      assert(0) ;
     }
     _coefList.add(*coef) ;
   }
@@ -121,15 +121,6 @@ Double_t RooPolyVar::evaluate() const
 {
   // Calculate and return value of polynomial
 
-  Double_t sum(0) ;
-  Int_t order(_lowestOrder) ;
-  _coefIter->Reset() ;
-
-  RooAbsReal* coef ;
-  const RooArgSet* nset = _coefList.nset() ;
-  while((coef=(RooAbsReal*)_coefIter->Next())) {
-    sum += coef->getVal(nset)*TMath::Power(_x,order++) ;
-=======
   const unsigned sz = _coefList.getSize();
   const int lowestOrder = _lowestOrder;
   if (!sz) return lowestOrder ? 1. : 0.;
@@ -140,7 +131,6 @@ Double_t RooPolyVar::evaluate() const
     RooFIter it = _coefList.fwdIterator();
     RooAbsReal* c;
     while ((c = (RooAbsReal*) it.next())) _wksp.push_back(c->getVal(nset));
->>>>>>> 477acd2... RooPolyVar, RooPolynomial: improve implementation
   }
   const Double_t x = _x;
   Double_t retVal = _wksp[sz - 1];
