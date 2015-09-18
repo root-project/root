@@ -76,6 +76,7 @@ private:
    std::vector<TDataMember *>       fData;   // collection of data members
    std::vector<TString>    fDepClasses;  // list of dependent classes 
    Int_t    fSizeof;   // Size of the class
+   UInt_t   fCheckSum; //checksum of data members and base classes
    Int_t    fCanSplit; // Whether this class can be split
    Int_t    fStreamerType; // Which streaming method to use
    Long_t   fProperty; // Class properties, see EProperties

@@ -196,7 +196,7 @@ private:
    Short_t            fImplFileLine;    //line of class implementation
    UInt_t             fInstanceCount;   //number of instances of this class
    UInt_t             fOnHeap;          //number of instances on heap
-   mutable UInt_t     fCheckSum;        //checksum of data members and base classes
+   UInt_t             fCheckSum;        //checksum of data members and base classes
    TVirtualCollectionProxy *fCollectionProxy; //Collection interface
    Version_t          fClassVersion;    //Class version Identifier
    ClassInfo_t       *fClassInfo;       //pointer to CINT class info class
