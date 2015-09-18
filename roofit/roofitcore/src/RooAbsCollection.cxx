@@ -147,11 +147,13 @@ void RooAbsCollection::safeDeleteList()
     tmp.reserve(_list.GetSize());
     do {
       tmp.clear();
-      RooFIter it = _list.fwdIterator();
-      RooAbsArg* arg;
-      while ((arg = it.next())) {
-	// Check if arg depends on remainder of list      
-	if (!arg->dependsOn(*this, arg)) tmp.push_back(arg);
+      {
+        RooFIter it = _list.fwdIterator();
+        RooAbsArg* arg;
+        while ((arg = it.next())) {
+    	  // Check if arg depends on remainder of list      
+	  if (!arg->dependsOn(*this, arg)) tmp.push_back(arg);
+        }
       }
       // sort and uniquify, in case some elements occur more than once
       std::sort(tmp.begin(), tmp.end());
