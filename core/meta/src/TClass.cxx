@@ -5509,8 +5509,15 @@ Long_t TClass::Property() const
    //    kExternal: the class has a free standing way of streaming itself
    //    kEmulatedStreamer: the class is missing its shared library.
 
+   // Check if we can return without taking the lock,
+   // this is valid since fProperty is atomic and set as
+   // the last operation before return.
+   if (fProperty!=(-1)) return fProperty;
+
    R__LOCKGUARD(gInterpreterMutex);
 
+   // Check if another thread set fProperty while we
+   // were waiting.
    if (fProperty!=(-1)) return fProperty;
 
    // Avoid asking about the class when it is still building
