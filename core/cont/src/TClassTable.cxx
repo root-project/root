@@ -94,7 +94,7 @@ namespace ROOT {
       std::unique_ptr<TClassAlt> fNext;
    };
 
-
+#define R__USE_STD_MAP
    class TMapTypeToClassRec {
 #if defined R__USE_STD_MAP
      // This wrapper class allow to avoid putting #include <map> in the
@@ -136,7 +136,7 @@ namespace ROOT {
       void Print() {
          Info("TMapTypeToClassRec::Print", "printing the typeinfo map in TClassTable");
          for (const_iterator iter = fMap.begin(); iter != fMap.end(); iter++) {
-            printf("Key: %40s 0x%lx\n", iter->first.c_str(), iter->second);
+            printf("Key: %40s 0x%lx\n", iter->first.c_str(), (unsigned long)iter->second);
          }
       }
 #else
