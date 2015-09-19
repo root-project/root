@@ -2339,8 +2339,7 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
       const FunctionDecl *decl = fMethod->GetMethodDecl();
 
       R__LOCKGUARD(gInterpreterMutex);
-      map<const FunctionDecl *, void *>::iterator I =
-      gWrapperStore.find(decl);
+      map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
       if (I != gWrapperStore.end()) {
          fWrapper = (tcling_callfunc_Wrapper_t) I->second;
       } else {
