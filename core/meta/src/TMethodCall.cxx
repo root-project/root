@@ -534,6 +534,25 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Invoke the method
+///
+/// \param[in] objAddress  Address of the object to execute the method (nullptr if it is a free function)
+/// \param[in] args        Array of pointer to the address of the argument to pass to the
+///                        function as is.  *No* conversion is done, the argument must be
+///                        of the expected type.
+/// \param[in] nargs       Number of arguments passed (must be less than actua size of args
+/// \param[out] ret        Address of value (or object) to use for the return value.
+
+
+void TMethodCall::Execute(void *objAddress, const void* args[], int nargs, void *ret /* = 0 */)
+{
+   if (!fFunc) return;
+
+   gCling->CallFunc_ExecWithArgsAndReturn(fFunc,objAddress,args,nargs,ret);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns the return type of the method. Either (unsigned) long,
 /// int, short and char, or float and double or anything else.
 /// Since finding the return type is expensive the result is cached.

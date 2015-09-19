@@ -127,6 +127,8 @@ public:
    void     Execute(Double_t &retDouble);
    void     Execute(const char *params, Double_t &retDouble);
 
+   void     Execute(void *objAddress, const void* args[], int nargs, void *ret = 0);
+
    ClassDef(TMethodCall,0)  //Method calling interface
 };
 
