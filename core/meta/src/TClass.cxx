@@ -5501,8 +5501,15 @@ void TClass::PostLoadCheck()
 
 Long_t TClass::Property() const
 {
+   // Check if we can return without taking the lock,
+   // this is valid since fProperty is atomic and set as
+   // the last operation before return.
+   if (fProperty!=(-1)) return fProperty;
+
    R__LOCKGUARD(gInterpreterMutex);
 
+   // Check if another thread set fProperty while we
+   // were waiting.
    if (fProperty!=(-1)) return fProperty;
 
    // Avoid asking about the class when it is still building
