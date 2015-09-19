@@ -1416,7 +1416,9 @@ void TClass::Init(const char *name, Version_t cversion,
       if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE)) {
          gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
          if (fClassInfo) {
-            fCheckSum = GetCheckSum(kLatestCheckSum);
+            // This should be moved out of GetCheckSum itself however the last time
+            // we tried this cause problem, in particular in the end-of-process operation.
+            // fCheckSum = GetCheckSum(kLatestCheckSum);
          } else {
             if (!fClassInfo) {
                if (IsZombie()) {
@@ -6055,7 +6057,9 @@ UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
          }
       }/*EndMembLoop*/
    }
-   //if (code==kLatestCheckSum) fCheckSum = id;
+   // This should be moved to Initialization time however the last time
+   // we tried this cause problem, in particular in the end-of-process operation.
+   if (code==kLatestCheckSum) fCheckSum = id;
    return id;
 }
 
@@ -6668,7 +6672,7 @@ void TClass::RegisterStreamerInfo(TVirtualStreamerInfo *info)
       fStreamerInfo->AddAtAndExpand(info, slot);
       if (fState <= kForwardDeclared) {
          fState = kEmulated;
-         if (fCheckSum==0) fCheckSum = info->GetCheckSum();
+         if (fCheckSum==0 && slot==fClassVersion) fCheckSum = info->GetCheckSum();
       }
    }
 }
