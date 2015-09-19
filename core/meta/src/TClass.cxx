@@ -2582,8 +2582,9 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
 
 Int_t TClass::GetBaseClassOffset(const TClass *toBase, void *address, bool isDerivedObject)
 {
-   R__LOCKGUARD(gInterpreterMutex);
    // Warning("GetBaseClassOffset","Requires the use of fClassInfo for %s to %s",GetName(),toBase->GetName());
+
+   if (this == toBase) return 0;
 
    if ((!address /* || !has_virtual_base */) &&
        (!HasInterpreterInfoInMemory() || !toBase->HasInterpreterInfoInMemory())) {
@@ -2600,6 +2601,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *toBase, void *address, bool isDer
    ClassInfo_t* derived = GetClassInfo();
    ClassInfo_t* base = toBase->GetClassInfo();
    if(derived && base) {
+      R__LOCKGUARD(gInterpreterMutex);
       return gCling->ClassInfo_GetBaseOffset(derived, base, address, isDerivedObject);
    }
    else {
