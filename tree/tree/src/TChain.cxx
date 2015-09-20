@@ -283,7 +283,7 @@ Int_t TChain::Add(TChain* chain)
 ///    is interesting in case the number of entries in the file is already stored
 ///    in a run data base for example.
 ///
-/// C. if (nentries == kBigNumber) (default), the file is not connected.
+/// C. if (nentries == TTree::kMaxEntries) (default), the file is not connected.
 ///    the number of entries in each file will be read only when the file
 ///    will need to be connected to read an entry.
 ///    This option is the default and very efficient if one process
@@ -292,7 +292,7 @@ Int_t TChain::Add(TChain* chain)
 ///    this forces the Tree headers in the first and second file
 ///    to be read to find the number of entries in these files.
 ///    Note that if one calls TChain::GetEntriesFast() after having created
-///    a chain with this default, GetEntriesFast will return kBigNumber!
+///    a chain with this default, GetEntriesFast will return TTree::kMaxEntries!
 ///    TChain::GetEntries will force of the Tree headers in the chain to be
 ///    read to read the number of entries in each Tree.
 ///
@@ -311,7 +311,7 @@ Int_t TChain::Add(TChain* chain)
 /// ~~~
 /// Return value:
 ///
-/// - If nentries>0 (including the default of kBigNumber) and no
+/// - If nentries>0 (including the default of TTree::kMaxEntries) and no
 ///   wildcarding is used, ALWAYS returns 1 without regard to whether
 ///   the file exists or contains the correct tree.
 ///
@@ -322,7 +322,7 @@ Int_t TChain::Add(TChain* chain)
 /// - If nentries<=0 and wildcarding is not used, return 1 if the file
 ///  exists and contains the correct tree and 0 otherwise.
 
-Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
+Int_t TChain::Add(const char* name, Long64_t nentries /* = TTree::kMaxEntries */)
 {
    TString basename, treename, query, suffix;
    ParseTreeFilename(name, basename, treename, query, suffix, kTRUE);
@@ -402,7 +402,7 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
 ///    This second mode is interesting in case the number of entries in
 ///    the file is already stored in a run database for example.
 ///
-/// C. If nentries == kBigNumber (default), the file is not opened.
+/// C. If nentries == TTree::kMaxEntries (default), the file is not opened.
 ///    The number of entries in each file will be read only when the file
 ///    is opened to read an entry.  This option is the default and very
 ///    efficient if one processes the chain sequentially.  Note that in
@@ -410,7 +410,7 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
 ///    third file, for example, this forces the tree headers in the first
 ///    and second file to be read to find the number of entries in those
 ///    files.  Note that if one calls GetEntriesFast() after having created
-///    a chain with this default, GetEntriesFast() will return kBigNumber!
+///    a chain with this default, GetEntriesFast() will return TTree::kMaxEntries!
 ///    Using the GetEntries() function instead will force all of the tree
 ///    headers in the chain to be read to read the number of entries in
 ///    each tree.
@@ -430,7 +430,7 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
 /// ~~~
 /// The function returns 1 if the file is successfully connected, 0 otherwise.
 
-Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, const char* tname /* = "" */)
+Int_t TChain::AddFile(const char* name, Long64_t nentries /* = TTree::kMaxEntries */, const char* tname /* = "" */)
 {
    if(name==0 || name[0]=='\0') {
       Error("AddFile", "No file name; no files connected");
@@ -497,7 +497,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    }
 
    if (nentries > 0) {
-      if (nentries != kBigNumber) {
+      if (nentries != TTree::kMaxEntries) {
          fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
          fEntries += nentries;
       } else {
@@ -527,7 +527,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
 /// list must be either TFileInfo or TObjString or TUrl .
 /// The function return 1 if successful, 0 otherwise.
 
-Int_t TChain::AddFileInfoList(TCollection* filelist, Long64_t nfiles /* = kBigNumber */)
+Int_t TChain::AddFileInfoList(TCollection* filelist, Long64_t nfiles /* = TTree::kMaxEntries */)
 {
    if (!filelist)
       return 0;
@@ -919,7 +919,7 @@ Long64_t TChain::GetEntries() const
                                " run TChain::SetProof(kTRUE, kTRUE) first");
       return fProofChain->GetEntries();
    }
-   if (fEntries >= TTree::kMaxEntries || fEntries==kBigNumber) {
+   if (fEntries == TTree::kMaxEntries) {
       const_cast<TChain*>(this)->LoadTree(TTree::kMaxEntries-1);
    }
    return fEntries;

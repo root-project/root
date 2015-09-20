@@ -61,9 +61,11 @@ public:
       kGlobalWeight   = BIT(15),
       kAutoDelete     = BIT(16),
       kProofUptodate  = BIT(17),
-      kProofLite      = BIT(18),
-      kBigNumber      = 1234567890
+      kProofLite      = BIT(18)
    };
+
+   // This used to be 1234567890, if user code hardcoded this number, the user code will need to change.
+   static constexpr auto kBigNumber = TTree::kMaxEntries;
 
 public:
    TChain();
@@ -71,9 +73,9 @@ public:
    virtual ~TChain();
 
    virtual Int_t     Add(TChain* chain);
-   virtual Int_t     Add(const char* name, Long64_t nentries = kBigNumber);
-   virtual Int_t     AddFile(const char* name, Long64_t nentries = kBigNumber, const char* tname = "");
-   virtual Int_t     AddFileInfoList(TCollection* list, Long64_t nfiles = kBigNumber);
+   virtual Int_t     Add(const char* name, Long64_t nentries = TTree::kMaxEntries);
+   virtual Int_t     AddFile(const char* name, Long64_t nentries = TTree::kMaxEntries, const char* tname = "");
+   virtual Int_t     AddFileInfoList(TCollection* list, Long64_t nfiles = TTree::kMaxEntries);
    virtual TFriendElement *AddFriend(const char* chainname, const char* dummy = "");
    virtual TFriendElement *AddFriend(const char* chainname, TFile* dummy);
    virtual TFriendElement *AddFriend(TTree* chain, const char* alias = "", Bool_t warn = kFALSE);
