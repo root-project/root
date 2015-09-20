@@ -52,8 +52,6 @@ the trees in the chain.
 #include "TFileStager.h"
 #include "TFilePrefetch.h"
 
-const Long64_t theBigNumber = Long64_t(1234567890)<<28;
-
 ClassImp(TChain)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -229,8 +227,8 @@ Int_t TChain::Add(TChain* chain)
    TChainElement* element = 0;
    while ((element = (TChainElement*) next())) {
       Long64_t nentries = element->GetEntries();
-      if (fTreeOffset[fNtrees] == theBigNumber) {
-         fTreeOffset[fNtrees+1] = theBigNumber;
+      if (fTreeOffset[fNtrees] == TTree::kMaxEntries) {
+         fTreeOffset[fNtrees+1] = TTree::kMaxEntries;
       } else {
          fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
       }
@@ -503,7 +501,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
          fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
          fEntries += nentries;
       } else {
-         fTreeOffset[fNtrees+1] = theBigNumber;
+         fTreeOffset[fNtrees+1] = TTree::kMaxEntries;
          fEntries = nentries;
       }
       fNtrees++;
@@ -921,8 +919,8 @@ Long64_t TChain::GetEntries() const
                                " run TChain::SetProof(kTRUE, kTRUE) first");
       return fProofChain->GetEntries();
    }
-   if (fEntries >= theBigNumber || fEntries==kBigNumber) {
-      const_cast<TChain*>(this)->LoadTree(theBigNumber-1);
+   if (fEntries >= TTree::kMaxEntries || fEntries==kBigNumber) {
+      const_cast<TChain*>(this)->LoadTree(TTree::kMaxEntries-1);
    }
    return fEntries;
 }
@@ -965,9 +963,9 @@ Long64_t TChain::GetEntryNumber(Long64_t entry) const
       //same const_cast as in the GetEntries() function
       if (localentry<0) return -1;
       if (treenum != fTreeNumber){
-         if (fTreeOffset[treenum]==theBigNumber){
+         if (fTreeOffset[treenum]==TTree::kMaxEntries){
             for (Int_t i=0; i<=treenum; i++){
-               if (fTreeOffset[i]==theBigNumber)
+               if (fTreeOffset[i]==TTree::kMaxEntries)
                   (const_cast<TChain*>(this))->LoadTree(fTreeOffset[i-1]);
             }
          }
@@ -1259,7 +1257,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
       return -1;
    }
 
-   if ((entry < 0) || ((entry > 0) && (entry >= fEntries && entry!=(theBigNumber-1) ))) {
+   if ((entry < 0) || ((entry > 0) && (entry >= fEntries && entry!=(TTree::kMaxEntries-1) ))) {
       // -- Invalid entry number.
       if (fTree) fTree->LoadTree(-1);
       fReadEntry = -1;
@@ -1268,7 +1266,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    // Find out which tree in the chain contains the passed entry.
    Int_t treenum = fTreeNumber;
-   if ((fTreeNumber == -1) || (entry < fTreeOffset[fTreeNumber]) || (entry >= fTreeOffset[fTreeNumber+1]) || (entry==theBigNumber-1)) {
+   if ((fTreeNumber == -1) || (entry < fTreeOffset[fTreeNumber]) || (entry >= fTreeOffset[fTreeNumber+1]) || (entry==TTree::kMaxEntries-1)) {
       // -- Entry is *not* in the chain's current tree.
       // Do a linear search of the tree offset array.
       // FIXME: We could be smarter by starting at the
@@ -2682,7 +2680,7 @@ void TChain::SetEventList(TEventList *evlist)
    Long64_t globalentry, localentry;
    const char *treename;
    const char *filename;
-   if (fTreeOffset[fNtrees-1]==theBigNumber){
+   if (fTreeOffset[fNtrees-1]==TTree::kMaxEntries){
       //Load all the tree headers if the tree offsets are not known
       //It is assumed here, that loading the last tree will load all
       //previous ones
