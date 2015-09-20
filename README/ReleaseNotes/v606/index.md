@@ -48,6 +48,14 @@ The following people have contributed to this new version:
 Fixed the dictionary generation in the case of class inside a namespace
 marked inlined.
 
+### Thread safety
+
+We added the function TMethodCall::GetCallFunc to allow direct access to the function wrapper.
+
+We reduced thread serialization in TClass::GetCheckSum, TClass::GetBaseClassOffset and TClass::Property
+
+TObjArray::Delete was updated to allow its caller to explicitly avoid costly checks (extra RecursiveRemove and lock)
+
 ### TDirectory::TContext
 
 We added a default constructor to TDirectory::TContext which record the current directory
