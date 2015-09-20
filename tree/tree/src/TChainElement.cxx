@@ -76,7 +76,12 @@ void TChainElement::CreatePackets()
 void TChainElement::ls(Option_t *) const
 {
    TROOT::IndentLevel();
-   std::cout << GetTitle() << "tree:" << GetName() << " entries=" << fEntries << '\n';
+   std::cout << GetTitle() << "tree:" << GetName() << " entries=";
+   if (fEntries == TTree::kMaxEntries)
+      std::cout << "<not calculated>";
+   else
+      std::cout << fEntries;
+   std::cout << '\n';
 }
 
 ////////////////////////////////////////////////////////////////////////////////
