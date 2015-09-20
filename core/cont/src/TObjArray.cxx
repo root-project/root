@@ -344,7 +344,7 @@ void TObjArray::Delete(Option_t *opt)
    // (To avoid performance penalties, the option must be spelt exactly (no
    // uppercase, no spaces)
    const char *noreg = "noregistration";
-   bool needRegister = fSize && TROOT::Initialized() && strcmp(opt,noreg) == 0;
+   bool needRegister = fSize && TROOT::Initialized() && (strcmp(opt,noreg) != 0);
    if(needRegister) {
       R__LOCKGUARD2(gROOTMutex);
       needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
