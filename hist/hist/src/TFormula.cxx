@@ -2227,7 +2227,10 @@ void TFormula::ClearFormula(Option_t * /*option*/ )
    if (fOper)   { delete [] fOper;   fOper   = 0;}
    if (fConst)  { delete [] fConst;  fConst  = 0;}
    if (fParams) { delete [] fParams; fParams = 0;}
-   fFunctions.Delete();
+   // Since we do not implement RecursiveRemove there is no point in
+   // having fFunction register itself to the list of cleanup (we
+   // would not have seen the information anyway).
+   fFunctions.Delete("noregistration");
    fLinearParts.Delete();
    //
    //MI change
