@@ -81,9 +81,9 @@ public:
    virtual void      CanDeleteRefs(Bool_t flag = kTRUE);
    virtual void      CreatePackets();
    virtual void      DirectoryAutoAdd(TDirectory *);
-   virtual Long64_t  Draw(const char* varexp, const TCut& selection, Option_t* option = "", Long64_t nentries = kBigNumber, Long64_t firstentry = 0);
-   virtual Long64_t  Draw(const char* varexp, const char* selection, Option_t* option = "", Long64_t nentries = kBigNumber, Long64_t firstentry = 0); // *MENU*
-   virtual void      Draw(Option_t* opt) { Draw(opt, "", "", 1000000000, 0); }
+   virtual Long64_t  Draw(const char* varexp, const TCut& selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
+   virtual Long64_t  Draw(const char* varexp, const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
+   virtual void      Draw(Option_t* opt) { Draw(opt, "", "", kMaxEntries, 0); }
    virtual Int_t     Fill() { MayNotUse("Fill()"); return -1; }
    virtual TBranch  *FindBranch(const char* name);
    virtual TLeaf    *FindLeaf(const char* name);
@@ -120,32 +120,24 @@ public:
    virtual Int_t     LoadBaskets(Long64_t maxmemory);
    virtual Long64_t  LoadTree(Long64_t entry);
            void      Lookup(Bool_t force = kFALSE);
-   virtual void      Loop(Option_t *option="", Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
+   virtual void      Loop(Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0); // *MENU*
    virtual void      ls(Option_t *option="") const;
    virtual Long64_t  Merge(const char *name, Option_t *option = "");
    virtual Long64_t  Merge(TCollection *list, Option_t *option = "");
    virtual Long64_t  Merge(TCollection *list, TFileMergeInfo *info);
    virtual Long64_t  Merge(TFile *file, Int_t basketsize, Option_t *option="");
    virtual void      Print(Option_t *option="") const;
-   virtual Long64_t  Process(const char *filename, Option_t *option="", Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
-#if defined(__CINT__)
-#if defined(R__MANUAL_DICT)
-   virtual Long64_t  Process(void* selector, Option_t* option = "", Long64_t nentries = kBigNumber, Long64_t firstentry = 0);
-#endif
-#else
-   virtual Long64_t  Process(TSelector* selector, Option_t* option = "", Long64_t nentries = kBigNumber, Long64_t firstentry = 0);
-#endif
+   virtual Long64_t  Process(const char *filename, Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0); // *MENU*
+   virtual Long64_t  Process(TSelector* selector, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual void      RecursiveRemove(TObject *obj);
    virtual void      RemoveFriend(TTree*);
    virtual void      Reset(Option_t *option="");
    virtual void      ResetAfterMerge(TFileMergeInfo *);
    virtual void      ResetBranchAddress(TBranch *);
    virtual void      ResetBranchAddresses();
-   virtual Long64_t  Scan(const char *varexp="", const char *selection="", Option_t *option="", Long64_t nentries=1000000000, Long64_t firstentry=0); // *MENU*
+   virtual Long64_t  Scan(const char *varexp="", const char *selection="", Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0); // *MENU*
    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
-#if !defined(__CINT__)
    virtual Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
-#endif
    virtual Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
    virtual Int_t     SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
    template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {

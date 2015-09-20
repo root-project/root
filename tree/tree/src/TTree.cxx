@@ -3404,8 +3404,7 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
    return nbytes;
 }
 
-//______________________________________________________________________________
-TTree* TTree::CopyTree(const char* selection, Option_t* option /* = 0 */, Long64_t nentries /* = 1000000000 */, Long64_t firstentry /* = 0 */)
+TTree* TTree::CopyTree(const char* selection, Option_t* option /* = 0 */, Long64_t nentries /* = TTree::kMaxEntries */, Long64_t firstentry /* = 0 */)
 {
    // Copy a tree with selection.
    //
