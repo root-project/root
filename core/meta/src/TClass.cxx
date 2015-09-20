@@ -5924,7 +5924,16 @@ UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
    // TStreamerInfo uses the information in TStreamerElement while TClass uses the information
    // from TClass::GetListOfBases and TClass::GetListOfDataMembers.
 
-   if (fCheckSum && code == kCurrentCheckSum) return fCheckSum;
+   // fCheckSum is an atomic variable.  Also once it has
+   // transition from a zero Value it never changes.  If two
+   // thread reach past this if statement and caculated the
+   // 'kLastestCheckSum', they will by definition obtain the
+   // same value, so technically we could simply have:
+   //    if (fCheckSum && code == kCurrentCheckSum) return fCheckSum;
+   // However save a little bit of barier time by calling load()
+   // only once.
+   UInt_t currentChecksum = fCheckSum.load();
+   if (currentChecksum && code == kCurrentCheckSum) return currentChecksum;
 
    R__LOCKGUARD(gInterpreterMutex);
 
