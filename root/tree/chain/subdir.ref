@@ -3,7 +3,7 @@ Processing runsubdir.C...
 TChain::AddFile
 Trying subdir.root/data1.root with a tree name
 OBJ: TChain	tree	 : 0
- subdir.root/data1.roottree:tree entries=1234567890
+ subdir.root/data1.roottree:tree entries=<not calculated>
 ******************************************************************************
 *Chain   :tree      : subdir.root/data1.root                                 *
 ******************************************************************************
@@ -18,7 +18,7 @@ OBJ: TChain	tree	 : 0
 *............................................................................*
 Trying subdir.root/data2.root
 OBJ: TChain	tree	 : 0
- subdir.root/data2.roottree:tree entries=1234567890
+ subdir.root/data2.roottree:tree entries=<not calculated>
 ******************************************************************************
 *Chain   :tree      : subdir.root/data2.root                                 *
 ******************************************************************************
@@ -34,8 +34,8 @@ OBJ: TChain	tree	 : 0
 TChain::Add
 Trying subdir.root/data*.root
 OBJ: TChain	tree	 : 0
- subdir.root/data1.roottree:tree entries=1234567890
- subdir.root/data2.roottree:tree entries=1234567890
+ subdir.root/data1.roottree:tree entries=<not calculated>
+ subdir.root/data2.roottree:tree entries=<not calculated>
 ******************************************************************************
 *Chain   :tree      : subdir.root/data1.root                                 *
 ******************************************************************************
@@ -62,8 +62,8 @@ OBJ: TChain	tree	 : 0
 *............................................................................*
 Trying subdir.root/data*.root/tree
 OBJ: TChain	tree	 : 0
- subdir.root/data1.roottree:tree entries=1234567890
- subdir.root/data2.roottree:tree entries=1234567890
+ subdir.root/data1.roottree:tree entries=<not calculated>
+ subdir.root/data2.roottree:tree entries=<not calculated>
 ******************************************************************************
 *Chain   :tree      : subdir.root/data1.root                                 *
 ******************************************************************************
@@ -90,7 +90,7 @@ OBJ: TChain	tree	 : 0
 *............................................................................*
 Trying subdir.root/data1.root/tree
 OBJ: TChain	tree	 : 0
- subdir.root/data1.roottree:tree entries=1234567890
+ subdir.root/data1.roottree:tree entries=<not calculated>
 ******************************************************************************
 *Chain   :tree      : subdir.root/data1.root                                 *
 ******************************************************************************
@@ -105,7 +105,7 @@ OBJ: TChain	tree	 : 0
 *............................................................................*
 Trying subdir.root/data2.root
 OBJ: TChain	tree	 : 0
- subdir.root/data2.roottree:tree entries=1234567890
+ subdir.root/data2.roottree:tree entries=<not calculated>
 ******************************************************************************
 *Chain   :tree      : subdir.root/data2.root                                 *
 ******************************************************************************
