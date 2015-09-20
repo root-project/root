@@ -501,7 +501,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
          fEntries += nentries;
       } else {
          fTreeOffset[fNtrees+1] = theBigNumber;
-         fEntries = nentries;
+         fEntries = theBigNumber;
       }
       fNtrees++;
 
