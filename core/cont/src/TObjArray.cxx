@@ -9,46 +9,42 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TObjArray                                                            //
-//                                                                      //
-// An array of TObjects. The array expands automatically when
-// objects are added (shrinking can be done by hand using Expand(),
-// how nice to have meaningful names -:)).
-// Use operator[] to have "real" array behaviour.
-//
-// Note on ownership and copy:
-// By default the TObjArray does not own the objects it points to and
-// will not delete them unless explicitly asked (via a call to the
-// Delete member function).   To assign ownership of the content to
-// the array, call:
-//     myarr->SetOwner(kTRUE);
-// When the array owns its content a call to Clear or the deletion of
-// the array itself will lead to the deletion of its contents.
-//
-// You can either make a shallow copy of the array:
-//     otherarr = new TObjArray(*myarr);
-//    *otherarr = *myarr;
-// in which case ownership (if any) is not transfered but the other
-// array points to the same object as the original array.  Note that
-// if the content of either array is deleted the other array is not
-// notified in any way (i.e. still points to the now deleted objects).
-//
-// You can also make a deep copy of the array:
-//     otherarr = (TObjArray*)myarr->Clone();
-// in which case the array and the content are both duplicated (i.e.
-// otherarr and myarr do not point to the same objects).  If myarr
-// is set to the be the owner of its content, otherarr will also be
-// set to the owner of its own conent.
-//
-//Begin_Html
-/*
-<img src=gif/tobjarray.gif>
+/** \class TObjArray
+An array of TObjects. The array expands automatically when
+objects are added (shrinking can be done by hand using Expand(),
+how nice to have meaningful names -:)).
+Use operator[] to have "real" array behaviour.
+
+Note on ownership and copy:
+By default the TObjArray does not own the objects it points to and
+will not delete them unless explicitly asked (via a call to the
+Delete member function).   To assign ownership of the content to
+the array, call:
+~~~ {.cpp}
+     myarr->SetOwner(kTRUE);
+~~~
+When the array owns its content a call to Clear or the deletion of
+the array itself will lead to the deletion of its contents.
+
+You can either make a shallow copy of the array:
+~~~ {.cpp}
+     otherarr = new TObjArray(*myarr);
+    *otherarr = *myarr;
+~~~
+in which case ownership (if any) is not transfered but the other
+array points to the same object as the original array.  Note that
+if the content of either array is deleted the other array is not
+notified in any way (i.e. still points to the now deleted objects).
+
+You can also make a deep copy of the array:
+~~~ {.cpp}
+     otherarr = (TObjArray*)myarr->Clone();
+~~~
+in which case the array and the content are both duplicated (i.e.
+otherarr and myarr do not point to the same objects).  If myarr
+is set to the be the owner of its content, otherarr will also be
+set to the owner of its own content.
 */
-//End_Html
-//
-//////////////////////////////////////////////////////////////////////////
 
 #include "TObjArray.h"
 #include "TError.h"
@@ -379,7 +375,7 @@ void TObjArray::Expand(Int_t newSize)
    if (newSize == fSize)
       return;
    if (newSize < fSize) {
-      // if the array is shrinked check whether there are nonempty entries
+      // if the array is shrunk check whether there are nonempty entries
       for (Int_t j = newSize; j < fSize; j++)
          if (fCont[j]) {
             Error ("Expand", "expand would cut off nonempty entries at %d", j);
@@ -546,11 +542,11 @@ TObject **TObjArray::GetObjectRef(const TObject *obj) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// obj != 0 Return index of object in array.
-///          Returns lowerBound-1 in case array doesn't contain the obj.
+///  - obj != 0 Return index of object in array.
+///             Returns lowerBound-1 in case array doesn't contain the obj.
 ///
-/// obj == 0 Return the index of the first empty slot.
-///          Returns lowerBound-1 in case array doesn't contain any empty slot.
+///  - obj == 0 Return the index of the first empty slot.
+///             Returns lowerBound-1 in case array doesn't contain any empty slot.
 
 Int_t TObjArray::IndexOf(const TObject *obj) const
 {
@@ -717,10 +713,11 @@ void TObjArray::SetLast(Int_t last)
 /// Randomize objects inside the array, i.e. permute randomly objects.
 /// With fLast being the index of the last entry in the array, the following
 /// algorithm is applied to the array:
-///   - for each entry j between 0 and fLast, another entry k is chosen
-///     randomly between 0 and fLast.
-///   - the objects at j and k are swapped.
-///   - this process is repeated ntimes (ntimes = 1 by default).
+///
+///  - for each entry j between 0 and fLast, another entry k is chosen
+///    randomly between 0 and fLast.
+///  - the objects at j and k are swapped.
+///  - this process is repeated ntimes (ntimes = 1 by default).
 
 void TObjArray::Randomize(Int_t ntimes)
 {
@@ -792,14 +789,9 @@ Int_t TObjArray::BinarySearch(TObject *op, Int_t upto)
    return -1;
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TObjArrayIter                                                        //
-//                                                                      //
-// Iterator of object array.                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TObjArrayIter
+Iterator of object array.
+*/
 
 ClassImp(TObjArrayIter)
 
