@@ -43,7 +43,10 @@ private:
 
 public:
    // Used as the max value for any TTree range operation.
-   static constexpr Long64_t kMaxEntries = std::numeric_limits<Long64_t>::max();
+   static constexpr Long64_t kMaxEntries = LLONG_MAX;
+   // Note: using
+   //   static constexpr Long64_t kMaxEntries = std::numeric_limits<Long64_t>::max();
+   // leads to a seg-fault in clang seen in most roottest's PyROOT executions ...
 
    TVirtualTreePlayer() { }
    virtual ~TVirtualTreePlayer();
