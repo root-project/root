@@ -9,74 +9,76 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// This class registers all instances of TObject and its derived        //
-// classes in a hash table. The Add() and Remove() members are called   //
-// from the TObject ctor and dtor, repectively. Using the Print()       //
-// member one can see all currently active objects in the system.       //
-// Using the resource (in .rootrc): Root.ObjectStat one can toggle this //
-// feature on or off.                                                   //
-// Using the compile option R__NOSTATS one can de-active this feature   //
-// for the entire system (for maximum performance in highly time        //
-// critical applications).                                              //
-//                                                                      //
-// The following output has been produced in a ROOT interactive session
-// via the command gObjectTable->Print()
-//   class                     cnt    on heap     size    total size    heap size
-//   ============================================================================
-//   TKey                        4          4       72           288          288
-//   TClass                     84         84       80          6720         6720
-//   TDataMember               276        276       24          6624         6624
-//   TObject                    11         11       12           132          132
-//   TMethod                  1974       1974       64        126336       126336
-//   TDataType                  34         34       56          1904         1904
-//   TList                    2328       2328       36         83808        83808
-//   TH1F                        1          1      448           448          448
-//   TText                    2688       2688       56        150528       150528
-//   TGaxis                      1          0      120           120            0
-//   TAxis                       6          3       88           528          264
-//   TBox                       57         57       52          2964         2964
-//   TLine                     118        118       40          4720         4720
-//   TWbox                       1          1       56            56           56
-//   TArrow                      1          1       64            64           64
-//   TPaveText                  59         59      124          7316         7316
-//   TPave                       1          1       92            92           92
-//   TFile                       1          1      136           136          136
-//   TCanvas                     3          3      444          1332         1332
-//   TPad                        1          1      312           312          312
-//   TContextMenu                3          3       48           144          144
-//   TMethodArg               2166       2166       44         95304        95304
-//   TPaveLabel                  1          1      120           120          120
-//   THtml                       1          1       32            32           32
-//   TROOT                       1          0      208           208            0
-//   TApplication                1          1       28            28           28
-//   TFileHandler                1          1       20            20           20
-//   TColor                    163        163       40          6520         6520
-//   TStyle                      1          1      364           364          364
-//   TRealData                 117        117       28          3276         3276
-//   TBaseClass                 88         88       36          3168         3168
-//   THashList                   5          5       40           200          200
-//   THashTable                  5          5       36           180          180
-//   TGeometry                   1          1       64            64           64
-//   TLink                       7          7       60           420          420
-//   TPostScript                 1          1      764           764          764
-//   TMinuit                     1          1      792           792          792
-//   TStopwatch                  1          0       56            56            0
-//   TRootGuiFactory             1          1       28            28           28
-//   TGX11                       1          1      172           172          172
-//   TUnixSystem                 1          1      252           252          252
-//   TSignalHandler              1          1       20            20           20
-//   TOrdCollection              3          3       40           120          120
-//   TEnv                        1          1       24            24           24
-//   TCling                      1          1      208           208          208
-//   TBenchmark                  1          1       52            52           52
-//   TClassTable                 1          1       12            12           12
-//   TObjectTable                1          1       12            12           12
-//   ----------------------------------------------------------------------------
-//   Total:                  10225      10219     5976        506988       506340
-//   ============================================================================
-//////////////////////////////////////////////////////////////////////////
+/** \class TObjectTable
+This class registers all instances of TObject and its derived
+classes in a hash table. The Add() and Remove() members are called
+from the TObject ctor and dtor, respectively. Using the Print()
+member one can see all currently active objects in the system.
+Using the resource (in .rootrc): Root.ObjectStat one can toggle this
+feature on or off.
+
+Using the compile option R__NOSTATS one can de-active this feature
+for the entire system (for maximum performance in highly time
+critical applications).
+
+The following output has been produced in a ROOT interactive session
+via the command gObjectTable->Print()
+~~~ {.cpp}
+  class                     cnt    on heap     size    total size    heap size
+  ============================================================================
+  TKey                        4          4       72           288          288
+  TClass                     84         84       80          6720         6720
+  TDataMember               276        276       24          6624         6624
+  TObject                    11         11       12           132          132
+  TMethod                  1974       1974       64        126336       126336
+  TDataType                  34         34       56          1904         1904
+  TList                    2328       2328       36         83808        83808
+  TH1F                        1          1      448           448          448
+  TText                    2688       2688       56        150528       150528
+  TGaxis                      1          0      120           120            0
+  TAxis                       6          3       88           528          264
+  TBox                       57         57       52          2964         2964
+  TLine                     118        118       40          4720         4720
+  TWbox                       1          1       56            56           56
+  TArrow                      1          1       64            64           64
+  TPaveText                  59         59      124          7316         7316
+  TPave                       1          1       92            92           92
+  TFile                       1          1      136           136          136
+  TCanvas                     3          3      444          1332         1332
+  TPad                        1          1      312           312          312
+  TContextMenu                3          3       48           144          144
+  TMethodArg               2166       2166       44         95304        95304
+  TPaveLabel                  1          1      120           120          120
+  THtml                       1          1       32            32           32
+  TROOT                       1          0      208           208            0
+  TApplication                1          1       28            28           28
+  TFileHandler                1          1       20            20           20
+  TColor                    163        163       40          6520         6520
+  TStyle                      1          1      364           364          364
+  TRealData                 117        117       28          3276         3276
+  TBaseClass                 88         88       36          3168         3168
+  THashList                   5          5       40           200          200
+  THashTable                  5          5       36           180          180
+  TGeometry                   1          1       64            64           64
+  TLink                       7          7       60           420          420
+  TPostScript                 1          1      764           764          764
+  TMinuit                     1          1      792           792          792
+  TStopwatch                  1          0       56            56            0
+  TRootGuiFactory             1          1       28            28           28
+  TGX11                       1          1      172           172          172
+  TUnixSystem                 1          1      252           252          252
+  TSignalHandler              1          1       20            20           20
+  TOrdCollection              3          3       40           120          120
+  TEnv                        1          1       24            24           24
+  TCling                      1          1      208           208          208
+  TBenchmark                  1          1       52            52           52
+  TClassTable                 1          1       12            12           12
+  TObjectTable                1          1       12            12           12
+  ----------------------------------------------------------------------------
+  Total:                  10225      10219     5976        506988       506340
+  ============================================================================
+~~~
+*/
 
 #include "TObjectTable.h"
 #include "TROOT.h"
