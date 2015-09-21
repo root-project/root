@@ -319,6 +319,11 @@ long TClingDataMemberInfo::Offset()
       return static_cast<long>(offset);
    }
    else if (const VarDecl *VD = dyn_cast<VarDecl>(D)) {
+      // Could trigger deserialization of decls, in particular in case
+      // of constexpr, like:
+      //   static constexpr Long64_t something = std::numeric_limits<Long64_t>::max();
+      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+
       if (VD->hasInit() && VD->checkInitIsICE()) {
          // FIXME: We might want in future to printout the reason why the eval
          // failed.
