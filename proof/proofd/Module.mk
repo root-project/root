@@ -262,7 +262,7 @@ distclean::     distclean-$(MODNAME)
 $(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS)
 
 $(XPDO): $(XROOTDMAKE) $(XRDHDRS)
-$(XPDO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS) $(BONJOURCPPFLAGS)
+$(XPDO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
 
 ifneq ($(ICC_GE_9),)
 # remove when xrootd has moved from strstream.h -> sstream.

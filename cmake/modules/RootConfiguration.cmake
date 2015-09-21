@@ -252,7 +252,6 @@ set(buildbonjour ${value${bonjour}})
 set(dnssdlibdir ${BONJOUR_LIBRARY_DIR})
 set(dnssdlib ${BONJOUR_LIBRARY})
 set(dnsdincdir ${BONJOUR_INCLUDE_DIR})
-set(bonjourcppflags)
 
 set(buildchirp ${value${chirp}})
 set(chirplibdir ${CHIRP_LIBRARY_DIR})
