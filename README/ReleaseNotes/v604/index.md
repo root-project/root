@@ -825,7 +825,7 @@ directory - this behavior is now implement by the default constructor.
 
 ### Tree
 - TTreeReader: fix reading of data members of type `BasicType[42]`
-- Fix ROOT-6885 (Affect very large TChain with friend trees).
+- Fix [ROOT-6885] which affects very large TChain with friend trees.
 
 ### Interpreter
 - Fix redirection [ROOT-7053]
