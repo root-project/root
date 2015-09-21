@@ -318,6 +318,11 @@ long TClingDataMemberInfo::Offset() const
    else if (const VarDecl *VD = dyn_cast<VarDecl>(D)) {
       if (VD->getType()->isIntegralType(C) && VD->hasInit() &&
           VD->checkInitIsICE()) {
+         // Could trigger deserialization of decls, in particular in case
+         // of constexpr, like:
+         //   static constexpr Long64_t something = std::numeric_limits<Long64_t>::max();
+         cling::Interpreter::PushTransactionRAII RAII(fInterp);
+
          // FIXME: We might want in future to printout the reason why the eval
          // failed.
          APValue* val = VD->evaluateValue();
