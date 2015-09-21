@@ -64,7 +64,11 @@
 class TFile;
 class TTree;
 class TDirectory;
-
+/**
+ @namespace TMVA
+ namespace associated TMVA package for ROOT.
+ @defgroup TMVA Toolkit for Multivariate Analysis
+ */
 namespace TMVA {
 
    class IMethod;
