@@ -5247,6 +5247,7 @@ if test "x$enable_xrootd" = "xyes" ; then
    #
    # Check libraries now
    hasxrdutils="no"
+   libxrdutils=""
    #
    # Release date of version 3.1.0 containing the new lib packaging
    decreftre=300000000
@@ -5268,6 +5269,7 @@ if test "x$enable_xrootd" = "xyes" ; then
    else
       xrdlibs="libXrdNet libXrdOuc libXrdSys libXrdClient libXrd"
    fi
+   tmpxrdlibdir=""
    xrdlibext=""
    for ll in $xrdlibs ; do
       #
@@ -5284,6 +5286,10 @@ if test "x$enable_xrootd" = "xyes" ; then
          break
       else
          xrdlibext="$found_ext"
+         tmpxrdlibdir="$found_dir"
+         if test "x$ll" = "xlibXrdUtils"; then
+            libxrdutils="$found_lib"
+         fi
       fi
    done
 
@@ -5305,6 +5311,12 @@ if test "x$enable_xrootd" = "xyes" ; then
       elif test -d "${ac_srcdir}/proof/xrdinc"; then
          xrdincprivate="proof"
       fi
+   fi
+
+   #
+   # Set xrdlibdir if XrdUtils is available for code potentially using it ...
+   if test "x$enable_xrootd" = "xyes"; then
+      xrdlibdir="$tmpxrdlibdir"
    fi
 
    #
