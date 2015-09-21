@@ -816,7 +816,6 @@ directory - this behavior is now implement by the default constructor.
 ### Build System
 - Fix generation of PCH with CXX flags with spaces [ROOT-7478]
 - Implemented option 'geocad' with CMake making use of the OpenCASCADE software package.
-- Option 'cxx14' requires GCC > 5.1
 
 ### Core
 - Fix the location of include files in ROOTINCDIR/include instead of ROOTINCDIR [ROOT-7537]
@@ -826,6 +825,7 @@ directory - this behavior is now implement by the default constructor.
 
 ### Tree
 - TTreeReader: fix reading of data members of type `BasicType[42]`
+- Fix ROOT-6885 (Affect very large TChain with friend trees).
 
 ### Interpreter
 - Fix redirection [ROOT-7053]
