@@ -967,8 +967,8 @@ void TBtInnerNode::InformParent()
 /// or create a new node and then redistribute.
 /// In an attempt to minimize the number of splits, we adopt the following
 /// strategy:
-///  * redistribute if possible
-///  * if not possible, then split with a sibling
+///  - redistribute if possible
+///  - if not possible, then split with a sibling
 
 void TBtInnerNode::IsFull(TBtNode *that)
 {
@@ -1046,8 +1046,8 @@ void TBtInnerNode::IsFull(TBtNode *that)
 /// elements between children, or THAT will be merged with another child.
 /// In an attempt to minimize the number of mergers, we adopt the following
 /// strategy:
-///  * redistribute if possible
-///  * if not possible, then merge with a sibling
+///  - redistribute if possible
+///  - if not possible, then merge with a sibling
 
 void TBtInnerNode::IsLow(TBtNode *that)
 {
@@ -1178,9 +1178,9 @@ void TBtInnerNode::PushLeft(Int_t noFromThis, TBtInnerNode *leftsib, Int_t pidx)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The operation is three steps:
-///  Step I.   Make room for the incoming keys in RIGHTSIB.
-///  Step II.  Move the items from THIS into RIGHTSIB.
-///  Step III. Update the length of THIS.
+///  - Step I.   Make room for the incoming keys in RIGHTSIB.
+///  - Step II.  Move the items from THIS into RIGHTSIB.
+///  - Step III. Update the length of THIS.
 
 void TBtInnerNode::PushRight(Int_t noFromThis, TBtInnerNode *rightsib, Int_t pidx)
 {
