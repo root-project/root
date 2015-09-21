@@ -44,6 +44,8 @@ Implementation of the functionality provided by TProofMgr in the case of a xproo
 #include "TSysEvtHandler.h"
 #include "XProofProtocol.h"
 
+#include "XrdProofConn.h"
+
 ClassImp(TXProofMgr)
 
 //

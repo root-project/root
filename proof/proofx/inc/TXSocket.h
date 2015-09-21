@@ -40,8 +40,8 @@
 #ifndef ROOT_TSocket
 #include "TSocket.h"
 #endif
-#ifndef ROOT_XrdProofConn
-#include "XrdProofConn.h"
+#ifndef __XPTYPES_H
+#include "XProtocol/XPtypes.hh"
 #endif
 #ifndef XRC_UNSOLMSG_H
 #include "XrdClient/XrdClientUnsolMsg.hh"
@@ -56,6 +56,7 @@ class TXSockPipe;
 class TXHandler;
 class TXSocketHandler;
 class XrdClientMessage;
+class XrdProofConn;
 
 // To transmit info to Handlers
 typedef struct {
@@ -141,7 +142,7 @@ private:
    void                PostSemAll();
 
    // Auxilliary
-   Int_t               GetLowSocket() const { return (fConn ? fConn->GetLowSocket() : -1); }
+   Int_t               GetLowSocket() const;
 
    static void         SetLocation(const char *loc = ""); // Set location string
 
@@ -167,13 +168,13 @@ public:
 
    virtual Int_t       GetClientID() const { return -1; }
    virtual Int_t       GetClientIDSize() const { return 1; }
-   Int_t               GetLogConnID() const { return (fConn ? fConn->GetLogConnID() : -1); }
-   Int_t               GetOpenError() const { return (fConn ? fConn->GetOpenError() : -1); }
-   Int_t               GetServType() const { return (fConn ? fConn->GetServType() : -1); }
-   Int_t               GetSessionID() const { return (fConn ? fConn->GetSessionID() : -1); }
+   Int_t               GetLogConnID() const;
+   Int_t               GetOpenError() const;
+   Int_t               GetServType() const;
+   Int_t               GetSessionID() const;
    Int_t               GetXrdProofdVersion() const { return fXrdProofdVersion; }
 
-   Bool_t              IsValid() const { return (fConn ? (fConn->IsValid()) : kFALSE); }
+   Bool_t              IsValid() const;
    Bool_t              IsServProofd();
    virtual void        RemoveClientID() { }
    virtual void        SetClientID(Int_t) { }
@@ -212,13 +213,10 @@ public:
    void                SendUrgent(Int_t type, Int_t int1, Int_t int2);
 
    // Interrupt the low level socket
-   inline void         SetInterrupt(Bool_t i = kTRUE) {
-                                        std::lock_guard<std::recursive_mutex> lock(fAMtx);
-                                        fRDInterrupt = i;
-                                        if (i && fConn) fConn->SetInterrupt();
-                                        if (i && fAWait) fASem.Post(); }
+   void                SetInterrupt(Bool_t i = kTRUE);
    inline Bool_t       IsInterrupt()  { std::lock_guard<std::recursive_mutex> lock(fAMtx);
                                         return fRDInterrupt; }
+
    // Set / Check async msg queue waiting status
    inline void         SetAWait(Bool_t w = kTRUE) {
                                         std::lock_guard<std::recursive_mutex> lock(fAMtx);

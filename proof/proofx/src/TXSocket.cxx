@@ -913,6 +913,45 @@ void TXSocket::PostSemAll()
    return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Getter for logical connection ID
+
+Int_t TXSocket::GetLogConnID() const
+{
+   return (fConn ? fConn->GetLogConnID() : -1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Getter for last error
+
+Int_t TXSocket::GetOpenError() const
+{
+   return (fConn ? fConn->GetOpenError() : -1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Getter for server type
+
+Int_t TXSocket::GetServType() const
+{
+   return (fConn ? fConn->GetServType() : -1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Getter for session ID
+
+Int_t TXSocket::GetSessionID() const
+{
+   return (fConn ? fConn->GetSessionID() : -1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Getter for validity status
+
+Bool_t TXSocket::IsValid() const
+{
+   return (fConn ? (fConn->IsValid()) : kFALSE);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if the remote server is a 'proofd'
@@ -1634,6 +1673,16 @@ Int_t TXSocket::SendInterrupt(Int_t type)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void TXSocket::SetInterrupt(Bool_t i)
+{
+   R__LOCKGUARD(fAMtx);
+   fRDInterrupt = i;
+   if (i && fConn) fConn->SetInterrupt();
+   if (i && fAWait) fASem.Post();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Send a TMessage object. Returns the number of bytes in the TMessage
 /// that were sent and -1 in case of error.
 
@@ -1921,6 +1970,12 @@ void TXSocket::SendUrgent(Int_t type, Int_t int1, Int_t int2)
 
    // Done
    return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Int_t TXSocket::GetLowSocket() const {
+   return (fConn ? fConn->GetLowSocket() : -1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
