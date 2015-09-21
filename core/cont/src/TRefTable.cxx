@@ -9,34 +9,32 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TRefTable maintains the association between a referenced object    //
-// and the parent object supporting this referenced object.             //
-//                                                                      //
-// The parent object is typically a branch of a TTree. For each object  //
-// referenced in a TTree entry, the corresponding entry in the TTree's  //
-// TBranchRef::fRefTable contains the index of the branch that          //
-// needs to be loaded to bring the object into memory.                  //
-//                                                                      //
-// Persistency of a TRefTable is split into two parts:                  //
-// * entry specific information is stored (read) by FillBuffer          //
-//   (ReadBuffer). For each referenced object the object's fUniqueID    //
-//   and the referencing TRef::fPID is stored (to allow the TRefTable   //
-//   to autoload references created by different processes).            //
-// * non-entry specific, i.e. global information is stored (read) by    //
-//   the Streamer function. This comprises all members marked as        //
-//   persistent.                                                        //
-//                                                                      //
-// As TObject::fUniqueID is only unique for a given TProcessID, a table //
-// of unique IDs is kept for each used TProcessID. There is no natural  //
-// order of TProcessIDs, so TRefTable stores a vector of the TGUID of   //
-// all known TProcessIDs in fProcessGUIDs; the index of a TProcessID in //
-// this vector defines the index of the auto-loading info in fParentIDs //
-// for that TProcessID. The mapping of TProcessID* to index is cached   //
-// for quick non-persistent lookup.                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRefTable
+A TRefTable maintains the association between a referenced object
+and the parent object supporting this referenced object.
+
+The parent object is typically a branch of a TTree. For each object
+referenced in a TTree entry, the corresponding entry in the TTree's
+TBranchRef::fRefTable contains the index of the branch that
+needs to be loaded to bring the object into memory.
+
+Persistency of a TRefTable is split into two parts:
+  - entry specific information is stored (read) by FillBuffer
+    (ReadBuffer). For each referenced object the object's fUniqueID
+    and the referencing TRef::fPID is stored (to allow the TRefTable
+    to autoload references created by different processes).
+  - non-entry specific, i.e. global information is stored (read) by
+    the Streamer function. This comprises all members marked as
+    persistent.
+
+As TObject::fUniqueID is only unique for a given TProcessID, a table
+of unique IDs is kept for each used TProcessID. There is no natural
+order of TProcessIDs, so TRefTable stores a vector of the TGUID of
+all known TProcessIDs in fProcessGUIDs; the index of a TProcessID in
+this vector defines the index of the auto-loading info in fParentIDs
+for that TProcessID. The mapping of TProcessID* to index is cached
+for quick non-persistent lookup.
+*/
 
 #include "TRefTable.h"
 #include "TObjArray.h"
@@ -353,7 +351,6 @@ void TRefTable::Reset(Option_t * /*option*/ )
 ///
 /// This function is called by TBranchElement::Fill() and by
 /// TBranchElement::GetEntry().
-///
 
 Int_t TRefTable::SetParent(const TObject* parent, Int_t branchID)
 {
