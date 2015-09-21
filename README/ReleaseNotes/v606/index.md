@@ -118,7 +118,7 @@ end early in case of very large trees.
 
 - as the default value for the number of entries returned by TChain::GetEntriesFast.
 The previous value was kBigNumber (set to 1234567890) and internally (but somewhat
-inconsistently, see ROOT-6885) a larger value was used (named theBigNumber).  Now
+inconsistently, see [ROOT-6885]) a larger value was used (named theBigNumber).  Now
 `TTree::kMaxEntries` is used throughout TChain.
 
 `TChain::kBigNumber` is deprecated and its value has been changed to be equal
