@@ -35,13 +35,15 @@ class TSpline;
 class TH1F;
 class TH1D;
 
-struct _object;
-typedef _object PyObject;
+#if __GNUC__ 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
-struct tagPyArrayObject;
-typedef tagPyArrayObject PyArrayObject;
-//class PyObject;
-//class PyArrayObject;
+#include <Python.h>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
+
 
 namespace TMVA {
 
