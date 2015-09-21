@@ -1769,10 +1769,6 @@ int XrdProofdManager::DoDirectiveAllowedUsers(char *val, XrdOucStream *cfg, bool
 
 int XrdProofdManager::DoDirectiveRole(char *val, XrdOucStream *cfg, bool)
 {
-#if defined(BUILD_BONJOUR)
-   XPDLOC(ALL, "Manager::DoDirectiveRole")
-#endif
-
    if (!val)
       // undefined inputs
       return -1;
@@ -1796,13 +1792,6 @@ int XrdProofdManager::DoDirectiveRole(char *val, XrdOucStream *cfg, bool)
    } else if (tval == "any") {
       fSrvType = kXPD_AnyServer;
    }
-
-#if defined(BUILD_BONJOUR)
-   // Check the compatibility of the roles and give a warning to the user.
-   if (!XrdProofdNetMgr::CheckBonjourRoleCoherence(SrvType(), fNetMgr->GetBonjourRequestedServiceType())) {
-      TRACE(XERR, "Warning: xpd.role directive and xpd.bonjour service selection are not compatible");
-   }
-#endif
 
    return 0;
 }
