@@ -50,19 +50,19 @@ marked inlined.
 
 ### Thread safety
 
-We added the function TMethodCall::GetCallFunc to allow direct access to the function wrapper.
+We added the function `TMethodCall::GetCallFunc` to allow direct access to the function wrapper.
 
-We reduced thread serialization in TClass::GetCheckSum, TClass::GetBaseClassOffset and TClass::Property
+We reduced thread serialization in `TClass::GetCheckSum`, `TClass::GetBaseClassOffset` and `TClass::Property`
 
-TObjArray::Delete was updated to allow its caller to explicitly avoid costly checks (extra RecursiveRemove and lock)
+`TObjArray::Delete` was updated to allow its caller to explicitly avoid costly checks (extra RecursiveRemove and lock)
 
 ### TDirectory::TContext
 
-We added a default constructor to TDirectory::TContext which record the current directory
+We added a default constructor to `TDirectory::TContext` which record the current directory
 and will restore it at destruction time and does not change the current directory.
 
-The constructor for TDirectory::TContext that takes a single TDirectory pointer as
-an argument was changed to set gDirectory to zero when being passed a null pointer;
+The constructor for `TDirectory::TContext` that takes a single TDirectory pointer as
+an argument was changed to set `gDirectory` to zero when being passed a null pointer;
 previously it was interpreting a null pointer as a request to *not* change the current
 directory - this behavior is now implement by the default constructor.
 
@@ -83,22 +83,47 @@ New options:
 - The verbosity level is now optional after -v
 
 ### Command line utilities
+
 We added command line utilities to streamline very common operations performed on root files, like listing their content or creating directories.
 The command line utilities are:
-- rootbrowse: to open the file in a TBrowser
-- rootcp: to copy content from one file to another
-- rooteventselector: to select a subset of the events in a tree contained in a file
-- rootls: to list the content of a rootfile
-- rootmkdir: to create a directory in a rootfile
-- rootmv: to move content across files
-- rootprint: to plot content (histograms, graphs) of files
-- rootrm: to remove content from files
-These utilities took inspiration from the well known *nix commands and all offer the -h switch which provides documentation for all options available and example invocation lines.
+- `rootbrowse`: to open the file in a TBrowser
+- `rootcp`: to copy content from one file to another
+- `rooteventselector`: to select a subset of the events in a tree contained in a file
+- `rootls`: to list the content of a rootfile
+- `rootmkdir`: to create a directory in a rootfile
+- `rootmv`: to move content across files
+- `rootprint`: to plot content (histograms, graphs) of files
+- `rootrm`: to remove content from files
+These utilities took inspiration from the well known *nix commands and all offer the `-h` switch which provides documentation for all options available and example invocation lines.
 
 
 ### I/O New functionalities
 
 ### I/O Behavior change.
+
+
+
+## TTree Libraries
+
+### Improvement of handling of default number of entries
+
+A new const expression value: `TTree::kMaxEntries` has been introduced to
+express the largest possible entry number in a `TTree`.  This is used in
+two main cases:
+
+- as the default value for the requested number of entries a routine should be
+applied to; for example this is used for `TTree::Draw` and `TTree::Process`.
+Previously the default was only 1 billions entries, causing those routines to
+end early in case of very large trees.
+
+- as the default value for the number of entries returned by TChain::GetEntriesFast.
+The previous value was kBigNumber (set to 1234567890) and internally (but somewhat
+inconsistently, see ROOT-6885) a larger value was used (named theBigNumber).  Now
+`TTree::kMaxEntries` is used throughout TChain.
+
+`TChain::kBigNumber` is deprecated and its value has been changed to be equal
+to `TTree::kMaxEntries`.
+
 
 
 ## Histogram Libraries
@@ -108,9 +133,6 @@ These utilities took inspiration from the well known *nix commands and all offer
 
 
 ## RooFit Libraries
-
-
-## TTree Libraries
 
 
 ## 2D Graphics Libraries
@@ -130,7 +152,7 @@ Implement the Log option for `CANDLE` plots as requested
 
 ### TTeXDump
 
-From Dmitry Kalinkin (via github): Fix file corruption in TTeXDump::DrawPolyMarker`
+From Dmitry Kalinkin (via github): Fix file corruption in `TTeXDump::DrawPolyMarker`
 The current implementation of `TTeXDump` uses `TVirtualPS::PrintFast` based methods
 to output TeX markup with automatic linewraps. Yet these methods are optimized for
 PostScript format where there are a lot of space characters that are used for newline
@@ -253,7 +275,3 @@ New tutorials and code examples have been provided here: https://root.cern.ch/co
 
 
 ## Build, Configuration and Testing Infrastructure
-
-- The option cxx14 requires GCC > 5.1 because std::string_view needs member to_string
-
-
