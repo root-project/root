@@ -9,30 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THashTable                                                           //
-//                                                                      //
-// THashTable implements a hash table to store TObject's. The hash      //
-// value is calculated using the value returned by the TObject's        //
-// Hash() function. Each class inheriting from TObject can override     //
-// Hash() as it sees fit.                                               //
-// THashTable does not preserve the insertion order of the objects.     //
-// If the insertion order is important AND fast retrieval is needed     //
-// use THashList instead.                                               //
-//Begin_Html
-/*
-<img src=gif/thashtable.gif>
+/** \class THashTable
+THashTable implements a hash table to store TObject's. The hash
+value is calculated using the value returned by the TObject's
+Hash() function. Each class inheriting from TObject can override
+Hash() as it sees fit.
+
+THashTable does not preserve the insertion order of the objects.
+If the insertion order is important AND fast retrieval is needed
+use THashList instead.
 */
-//End_Html
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "THashTable.h"
 #include "TObjectTable.h"
 #include "TList.h"
 #include "TError.h"
-
 
 ClassImp(THashTable)
 
@@ -358,14 +349,9 @@ TObject *THashTable::RemoveSlow(TObject *obj)
    return 0;
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THashTableIter                                                       //
-//                                                                      //
-// Iterator of hash table.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class THashTableIter
+Iterator of hash table.
+*/
 
 ClassImp(THashTableIter)
 
