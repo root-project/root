@@ -9,16 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBtree                                                               //
-//                                                                      //
-// B-tree class. TBtree inherits from the TSeqCollection ABC.           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//BEGIN_HTML <!--
-/* -->
-<h2>B-tree Implementation notes</h2>
+/** \class TBtree
+B-tree class. TBtree inherits from the TSeqCollection ABC.
+
+## B-tree Implementation notes
 
 This implements B-trees with several refinements. Most of them can be found
 in Knuth Vol 3, but some were developed to adapt to restrictions imposed
@@ -30,32 +24,30 @@ Therefore, what Knuth calls level (l-1) is the bottom of our tree, and
 we call the nodes at this level LeafNodes. Other nodes are called InnerNodes.
 The other enhancement we have adopted is in the paragraph at the bottom of
 page 477: overflow control.
-<p>
+
 The following are modifications of Knuth's properties on page 478:
-<p>
-<ol>
-<li>  Every InnerNode has at most Order keys, and at most Order+1 sub-trees.
-<li>  Every LeafNode has at most 2*(Order+1) keys.
-<li>  An InnerNode with k keys has k+1 sub-trees.
-<li>  Every InnerNode that is not the root has at least InnerLowWaterMark keys.
-<li>  Every LeafNode that is not the root has at least LeafLowWaterMark keys.
-<li>  If the root is a LeafNode, it has at least one key.
-<li>  If the root is an InnerNode, it has at least one key and two sub-trees.
-<li>  All LeafNodes are the same distance from the root as all the other
+
+  1.  Every InnerNode has at most Order keys, and at most Order+1 sub-trees.
+  2.  Every LeafNode has at most 2*(Order+1) keys.
+  3.  An InnerNode with k keys has k+1 sub-trees.
+  4.  Every InnerNode that is not the root has at least InnerLowWaterMark keys.
+  5.  Every LeafNode that is not the root has at least LeafLowWaterMark keys.
+  6.  If the root is a LeafNode, it has at least one key.
+  7.  If the root is an InnerNode, it has at least one key and two sub-trees.
+  8.  All LeafNodes are the same distance from the root as all the other
       LeafNodes.
-<li>  For InnerNode n with key n[i].key, then sub-tree n[i-1].tree contains
-      all keys &lt; n[i].key, and sub-tree n[i].tree contains all keys
-      &gt;= n[i].key.
-<li>  Order is at least 3.
-</ol>
-<p>
+  9.  For InnerNode n with key n[i].key, then sub-tree n[i-1].tree contains
+      all keys < n[i].key, and sub-tree n[i].tree contains all keys
+      >= n[i].key.
+ 10.  Order is at least 3.
+
 The values of InnerLowWaterMark and LeafLowWaterMark may actually be set
 by the user when the tree is initialized, but currently they are set
 automatically to:
-<p><pre>
+~~~ {.cpp}
         InnerLowWaterMark = ceiling(Order/2)
         LeafLowWaterMark  = Order - 1
-</pre><p>
+~~~
 If the tree is only filled, then all the nodes will be at least 2/3 full.
 They will almost all be exactly 2/3 full if the elements are added to the
 tree in order (either increasing or decreasing). [Knuth says McCreight's
@@ -65,16 +57,16 @@ a different scheme for balancing. [No, he used a different scheme for
 splitting: he did a two-way split instead of the three way split as we do
 here. Which means that McCreight does better on insertion of ordered data,
 but we should do better on insertion of random data.]]
-<p>
+
 It must also be noted that B-trees were designed for DISK access algorithms,
 not necessarily in-memory sorting, as we intend it to be used here. However,
-if the order is kept small (&lt; 6?) any inefficiency is negligible for
+if the order is kept small (< 6?) any inefficiency is negligible for
 in-memory sorting. Knuth points out that balanced trees are actually
 preferable for memory sorting. I'm not sure that I believe this, but
 it's interesting. Also, deleting elements from balanced binary trees, being
 beyond the scope of Knuth's book (p. 465), is beyond my scope. B-trees
 are good enough.
-<p>
+
 A B-tree is declared to be of a certain ORDER (3 by default). This number
 determines the number of keys contained in any interior node of the tree.
 Each interior node will contain ORDER keys, and therefore ORDER+1 pointers
@@ -87,7 +79,7 @@ pairs of keys and nodes, meaning that one key field (key[0]) is not used
 and therefore wasted.  Given that the number of interior nodes is
 small, that this waste allows fewer cases of special code, and that it
 is useful in certain of the methods, it was felt to be a worthwhile waste.
-<p>
+
 The size of the exterior nodes (leaf nodes) does not need to be related to
 the size of the interior nodes at all. Since leaf nodes contain only
 keys, they may be as large or small as we like independent of the size
@@ -97,27 +89,27 @@ will be numbered and indexed from 0 to 2*ORDER+1. It does have the advantage
 of keeping the size of the leaf and interior arrays the same, so that if we
 find allocation and de-allocation of these arrays expensive, we can modify
 their allocation to use a garbage ring, or something.
-<p>
+
 Both of these numbers will be run-time constants associated with each tree
 (each tree at run-time can be of a different order). The variable "order"
 is the order of the tree, and the inclusive upper limit on the indices of
 the keys in the interior nodes.  The variable "order2" is the inclusive
 upper limit on the indices of the leaf nodes, and is designed
-<p><pre>
+~~~ {.cpp}
     (1) to keep the sizes of the two kinds of nodes the same;
     (2) to keep the expressions involving the arrays of keys looking
         somewhat the same:   lower limit        upper limit
           for inner nodes:        1                order
           for leaf  nodes:        0                order2
         Remember that index 0 of the inner nodes is special.
-</pre><p>
+~~~
 Currently, order2 = 2*(order+1).
-<p><pre>
+~~~ {.cpp}
  Picture: (also see Knuth Vol 3 pg 478)
 
            +--+--+--+--+--+--...
            |  |  |  |  |  |
- parent---&gt;|  |     |     |
+ parent--->|  |     |     |
            |  |     |     |
            +*-+*-+*-+--+--+--...
             |  |  |
@@ -126,29 +118,29 @@ Currently, order2 = 2*(order+1).
        V             |  V
        +----------+  |  +----------+
        |          |  |  |          |
- this-&gt;|          |  |  |          |&lt;--sib
+ this->|          |  |  |          |<--sib
        +----------+  |  +----------+
                      V
                     data
-</pre><p>
+~~~
 It is conceptually VERY convenient to think of the data as being the
 very first element of the sib node. Any primitive that tells sib to
 perform some action on n nodes should include this 'hidden' element.
 For InnerNodes, the hidden element has (physical) index 0 in the array,
 and in LeafNodes, the hidden element has (virtual) index -1 in the array.
 Therefore, there are two 'size' primitives for nodes:
-<p><pre>
+~~~ {.cpp}
 Psize       - the physical size: how many elements are contained in the
               array in the node.
 Vsize       - the 'virtual' size; if the node is pointed to by
               element 0 of the parent node, then Vsize == Psize;
               otherwise the element in the parent item that points to this
               node 'belongs' to this node, and Vsize == Psize+1;
-</pre><p>
+~~~
 Parent nodes are always InnerNodes.
-<p>
+
 These are the primitive operations on Nodes:
-<p><pre>
+~~~ {.cpp}
 Append(elt)     - adds an element to the end of the array of elements in a
                   node.  It must never be called where appending the element
                   would fill the node.
@@ -159,19 +151,18 @@ PushLeft(n)     - move n elements into the left sibling
 PushRight(n)    - move n elements into the right sibling
 BalanceWithRight() - even up the number of elements in the two nodes.
 BalanceWithLeft()  - ditto
-</pre><p>
+~~~
 To allow this implementation of btrees to also be an implementation of
 sorted arrays/lists, the overhead is included to allow O(log n) access
 of elements by their rank (`give me the 5th largest element').
 Therefore, each Item keeps track of the number of keys in and below it
 in the tree (remember, each item's tree is all keys to the RIGHT of the
 item's own key).
-<p><pre>
-[ [ &lt; 0 1 2 3 &gt; 4 &lt; 5 6 7 &gt; 8 &lt; 9 10 11 12 &gt; ] 13 [ &lt; 14 15 16 &gt; 17 &lt; 18 19 20 &gt; ] ]
+~~~ {.cpp}
+[ [ < 0 1 2 3 > 4 < 5 6 7 > 8 < 9 10 11 12 > ] 13 [ < 14 15 16 > 17 < 18 19 20 > ] ]
    4  1 1 1 1   4   1 1 1   5   1  1  1  1      7  3   1  1  1    4    1  1  1
-</pre><p>
-<!--*/
-// -->END_HTML
+~~~
+*/
 
 #include <stdlib.h>
 #include "TBtree.h"
@@ -489,13 +480,9 @@ void TBtree::Streamer(TBuffer &b)
 }
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBtItem                                                              //
-//                                                                      //
-// Item stored in inner nodes of a TBtree.                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBtItem
+Item stored in inner nodes of a TBtree.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an item to be stored in the tree. An item contains a counter
@@ -540,14 +527,9 @@ TBtItem::~TBtItem()
 {
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBtNode                                                              //
-//                                                                      //
-// Abstract base class (ABC) of a TBtree node.                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBtNode
+Abstract base class (ABC) of a TBtree node.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a B-tree node.
@@ -579,14 +561,9 @@ TBtNode::~TBtNode()
 {
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBtreeIter                                                           //
-//                                                                      //
-// Iterator of btree.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBtreeIter
+// Iterator of btree.
+*/
 
 ClassImp(TBtreeIter)
 
@@ -697,14 +674,9 @@ TObject* TBtreeIter::operator*() const
            (*fTree)[fCurCursor] : nullptr);
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBtInnerNode                                                         //
-//                                                                      //
-// Inner node of a TBtree.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBtInnerNode
+// Inner node of a TBtree.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a B-tree innernode.
@@ -1315,6 +1287,7 @@ void TBtInnerNode::Split()
 /// the number of keys between the three of them.
 ///
 /// picture: (also see Knuth Vol 3 pg 478)
+/// ~~~ {.cpp}
 ///               keyidx keyidx+1
 ///            +--+--+--+--+--+--...
 ///            |  |  |  |  |  |
@@ -1331,7 +1304,7 @@ void TBtInnerNode::Split()
 ///        +----------+  |  +----------+
 ///                      V
 ///                    data
-///
+/// ~~~
 /// keyidx is the index of where the sibling is, and where the
 /// newly created node will be recorded (sibling will be moved to
 /// keyidx+1)
@@ -1376,14 +1349,9 @@ void TBtInnerNode::SplitWith(TBtInnerNode *rightsib, Int_t keyidx)
       fParent->InformParent();
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBtLeafNode                                                          //
-//                                                                      //
-// Leaf node of a TBtree.                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBtLeafNode
+Leaf node of a TBtree.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
