@@ -3,12 +3,15 @@
  * author: Max Baak (mbaak@cern.ch)                                          *
  *****************************************************************************/ 
 
-// Written by Max Baak (mbaak@cern.ch)
-// 1-dimensional morph function between a list of input functions (varlist) as a function of one input parameter (m).
-// The vector mrefpoints assigns an m-number to each function in the function list.
-// For example: varlist can contain MC histograms (or single numbers) of a reconstructed mass, for certain 
-// true Higgs masses indicated in mrefpoints. the input parameter m is the true (continous) Higgs mass.
-// Morphing can be set to be linear or non-linear, or mixture of the two.
+/** \class Roo1DMomentMorphFunction
+    \ingroup Roofitpdf
+
+1-dimensional morph function between a list of input functions (varlist) as a function of one input parameter (m).
+The vector mrefpoints assigns an m-number to each function in the function list.
+For example: varlist can contain MC histograms (or single numbers) of a reconstructed mass, for certain
+true Higgs masses indicated in mrefpoints. the input parameter m is the true (continuous) Higgs mass.
+Morphing can be set to be linear, non-linear or a mixture of the two.
+*/
 
 #include "Riostream.h" 
 
@@ -33,6 +36,7 @@ ClassImp(Roo1DMomentMorphFunction)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
 
   Roo1DMomentMorphFunction::Roo1DMomentMorphFunction() : _mref(0), _frac(0), _M(0), _setting(Linear)
 {
@@ -42,7 +46,13 @@ ClassImp(Roo1DMomentMorphFunction)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CTOR
+/// Constructor.
+/// \param[in] name
+/// \param[in] title
+/// \param[in] _m
+/// \param[in] varList
+/// \param[in] mrefpoints
+/// \param[in] setting
 
 Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char *title, 
 						   RooAbsReal& _m,
@@ -77,6 +87,9 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char 
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+/// \param[in] other
+/// \param[in] name
 
 Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const Roo1DMomentMorphFunction& other, const char* name) :  
   RooAbsReal(other,name), 
@@ -93,6 +106,7 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const Roo1DMomentMorphFunctio
 } 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
 
 Roo1DMomentMorphFunction::~Roo1DMomentMorphFunction() 
 {
@@ -105,6 +119,7 @@ Roo1DMomentMorphFunction::~Roo1DMomentMorphFunction()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
 
 void Roo1DMomentMorphFunction::initialize() 
 {

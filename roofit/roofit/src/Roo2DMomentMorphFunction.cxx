@@ -3,10 +3,59 @@
  * author: Max Baak (mbaak@cern.ch)                                          *
  *****************************************************************************/ 
 
-// Written by Max Baak (mbaak@cern.ch)
-// 2-dimensional morph function between a list of function-numbers as a function of two input parameter (m1 and m2).
-// The matrix mrefpoints assigns a function value to each m1,m2 coordinate.
-// Morphing can be set to be linear or non-linear, or mixture of the two.
+/** \class Roo2DMomentMorphFunction
+    \ingroup Roofitpdf
+
+2-dimensional morph function between a list of function-numbers as a function of two input parameters (m1 and m2).
+The matrix mrefpoints assigns a function value to each m1,m2 coordinate.
+Morphing can be set to be linear, non-linear or a mixture of the two.
+
+Usage example:
+~~~ {.cpp}
+    TMatrixD foo(9,3);
+
+    foo(0,0) =   0;      // coordinate of variable m1
+    foo(0,1) =   0;      // coordinate of variable m2
+    foo(0,2) =   0**2;   // function value at (m1,m2) = 0,0
+    foo(1,0) = 100;
+    foo(1,1) =   0;
+    foo(1,2) =   1**2;
+    foo(2,0) = 200;
+    foo(2,1) =   0;
+    foo(2,2) =   2**2;
+
+    foo(3,0) = 0;
+    foo(3,1) = 150;
+    foo(3,2) = 4**2;
+    foo(4,0) = 100;
+    foo(4,1) = 150;
+    foo(4,2) = 5**2;
+    foo(5,0) = 200;
+    foo(5,1) = 150;
+    foo(5,2) = 8**2;
+
+    foo(6,0) = 0;
+    foo(6,1) = 300;
+    foo(6,2) = 8**2;
+    foo(7,0) = 100;
+    foo(7,1) = 300;
+    foo(7,2) = 8.5**2;
+    foo(8,0) = 200;
+    foo(8,1) = 300;
+    foo(8,2) = 9**2;
+
+    // need to provide at least 4 coordinates to Roo2DMomentMorphFunction for 2d extrapolation
+
+    foo.Print();
+
+    RooRealVar m1("m1","m1",50,0,200);
+    RooRealVar m2("m2","m2",50,0,300);
+    Roo2DMomentMorphFunction bar("bar","bar", m1, m2, foo );
+
+    bar.Print();
+~~~
+*/
+
 
 #include "Riostream.h" 
 
@@ -18,60 +67,21 @@
 #include "TTree.h"
 
 
-/*
-  // Example usage:
-
-  TMatrixD foo(9,3);
-  
-  foo(0,0) =   0;      // coordinate of variable m1
-  foo(0,1) =   0;      // coordinate of variable m2
-  foo(0,2) =   0**2;   // function value at (m1,m2) = 0,0
-  foo(1,0) = 100;
-  foo(1,1) =   0;
-  foo(1,2) =   1**2;
-  foo(2,0) = 200;
-  foo(2,1) =   0;
-  foo(2,2) =   2**2;
-  
-  foo(3,0) = 0;
-  foo(3,1) = 150;
-  foo(3,2) = 4**2;
-  foo(4,0) = 100;
-  foo(4,1) = 150;
-  foo(4,2) = 5**2;
-  foo(5,0) = 200;
-  foo(5,1) = 150;
-  foo(5,2) = 8**2;
-  
-  foo(6,0) = 0;
-  foo(6,1) = 300;
-  foo(6,2) = 8**2;
-  foo(7,0) = 100;
-  foo(7,1) = 300;
-  foo(7,2) = 8.5**2;
-  foo(8,0) = 200;
-  foo(8,1) = 300;
-  foo(8,2) = 9**2;
-  
-  // need to provide at least 4 coordinates to Roo2DMomentMorphFunction for 2d extrapolation
-  
-  foo.Print();
-  
-  RooRealVar m1("m1","m1",50,0,200);
-  RooRealVar m2("m2","m2",50,0,300);
-  Roo2DMomentMorphFunction bar("bar","bar", m1, m2, foo );
-  
-  bar.Print();
-*/
-
-
 using namespace std;
 
 ClassImp(Roo2DMomentMorphFunction) 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// cross-check that we have enough reference points
+/// Constructor.
+/// Cross-check that we have enough reference points.
+/// \param[in] name
+/// \param[in] title
+/// \param[in] _m1
+/// \param[in] _m2
+/// \param[in] mrefpoints
+/// \param[in] setting
+/// \param[in] verbose
 
 Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const char *name, const char *title, 
                         		       RooAbsReal& _m1, RooAbsReal& _m2,
@@ -102,7 +112,18 @@ Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const char *name, const char 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// cross-check that we have enough reference points
+/// Constructor.
+/// Cross-check that we have enough reference points.
+/// \param[in] name
+/// \param[in] title
+/// \param[in] _m1
+/// \param[in] _m2
+/// \param[in] nrows
+/// \param[in] dm1arr
+/// \param[in] dm2arr
+/// \param[in] dvalarr
+/// \param[in] setting
+/// \param[in] verbose
 
 Roo2DMomentMorphFunction::Roo2DMomentMorphFunction( const char *name, const char *title,
 					       RooAbsReal& _m1, RooAbsReal& _m2,
@@ -135,6 +156,7 @@ Roo2DMomentMorphFunction::Roo2DMomentMorphFunction( const char *name, const char
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
 
 Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const Roo2DMomentMorphFunction& other, const char* name) :  
   RooAbsReal(other,name), 
@@ -151,6 +173,7 @@ Roo2DMomentMorphFunction::Roo2DMomentMorphFunction(const Roo2DMomentMorphFunctio
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
 
 Roo2DMomentMorphFunction::~Roo2DMomentMorphFunction()
 {
@@ -331,7 +354,15 @@ Roo2DMomentMorphFunction::findSquare(const double& x, const double& y) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// p1 and p2 on same side of line b-a ?
+/// Returns true if p1 and p2 are on same side of line b-a.
+/// \param[in] p1x
+/// \param[in] p1y
+/// \param[in] p2x
+/// \param[in] p2y
+/// \param[in] ax
+/// \param[in] ay
+/// \param[in] bx
+/// \param[in] by
 
 Bool_t Roo2DMomentMorphFunction::onSameSide(const double& p1x, const double& p1y, const double& p2x, const double& p2y, const double& ax, const double& ay, const double& bx, const double& by) const
 {   
@@ -382,7 +413,15 @@ Roo2DMomentMorphFunction::myCrossProduct(const double& ax, const double& ay, con
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// reject kinked shapes
+/// Reject kinked shapes.
+/// \param[in] ax
+/// \param[in] ay
+/// \param[in] bx
+/// \param[in] by
+/// \param[in] cx
+/// \param[in] cy
+/// \param[in] dx
+/// \param[in] dy
 
 Bool_t 
 Roo2DMomentMorphFunction::isAcceptableSquare(const double& ax, const double& ay, const double& bx, const double& by, const double& cx, const double& cy, const double& dx, const double& dy) const
