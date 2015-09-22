@@ -55,18 +55,18 @@ As an example of using it let's analyse a few lines which get and set
 a fEditable field in TCanvas:
 ~~~ {.cpp}
     TCanvas     *c  = new TCanvas("c");   // create a canvas
-    TClass      *cl = c-&gt;IsA();            // get its class description object.
+    TClass      *cl = c->IsA();            // get its class description object.
 
-    TDataMember *dm = cl-&gt;GetDataMember("fEditable"); //This is our data member
+    TDataMember *dm = cl->GetDataMember("fEditable"); //This is our data member
 
-    TMethodCall *getter = dm-&gt;GetterMethod(c); //find a method that gets value!
+    TMethodCall *getter = dm->GetterMethod(c); //find a method that gets value!
     Long_t l;   // declare a storage for this value;
 
-    getter-&gt;Execute(c,"",l);  // Get this Value !!!! It will appear in l !!!
+    getter->Execute(c,"",l);  // Get this Value !!!! It will appear in l !!!
 
 
-    TMethodCall *setter = dm-&gt;SetterMethod(c);
-    setter-&gt;Execute(c,"0",);   // Set Value 0 !!!
+    TMethodCall *setter = dm->SetterMethod(c);
+    setter->Execute(c,"0",);   // Set Value 0 !!!
 ~~~
 
 This trick is widely used in ROOT TContextMenu and dialogs for obtaining
