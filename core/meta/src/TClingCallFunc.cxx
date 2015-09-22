@@ -11,20 +11,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClingCallFunc                                                       //
-//                                                                      //
-// Emulation of the CINT CallFunc class.                                //
-//                                                                      //
-// The CINT C++ interpreter provides an interface for calling           //
-// functions through the generated wrappers in dictionaries with        //
-// the CallFunc class. This class provides the same functionality,      //
-// using an interface as close as possible to CallFunc but the          //
-// function metadata and calling service comes from the Cling           //
-// C++ interpreter and the Clang C++ compiler, not CINT.                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TClingCallFunc
+Emulation of the CINT CallFunc class.
+
+The CINT C++ interpreter provides an interface for calling
+functions through the generated wrappers in dictionaries with
+the CallFunc class. This class provides the same functionality,
+using an interface as close as possible to CallFunc but the
+function metadata and calling service comes from the Cling
+C++ interpreter and the Clang C++ compiler, not CINT.
+*/
 
 #include "TClingCallFunc.h"
 
