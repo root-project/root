@@ -58,7 +58,8 @@ void Interpolation()
          r<<"curve(fc(x), 0, 10, col = 'darkblue', add = TRUE)";
 // different interpolation on left and right side :
          r<<"plot(approxfun(x, y, rule = 2:1), 0, 11,col = 'tomato', add = TRUE, lty = 3, lwd = 2)";
-      }
+         r<<"dev.off()";//Required to close new window for plot
+   }
       else {
          r << "x2=x+0.5";
          r << "print('Result of approxfun with default method')";
@@ -66,5 +67,4 @@ void Interpolation()
          r << "print('Result of approxfun with const method')";
          r << "print(paste('x = ',x,'  f(x) = ',fc(x2)))";
       }
-    r<<"dev.off()";//Required to close new window for plot
-   }
+}
