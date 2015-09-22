@@ -33,18 +33,18 @@ class TFile;
 class TDirectoryFile : public TDirectory {
 
 protected:
-   Bool_t      fModified;        //true if directory has been modified
-   Bool_t      fWritable;        //true if directory is writable
-   TDatime     fDatimeC;         //Date and time when directory is created
-   TDatime     fDatimeM;         //Date and time of last modification
-   Int_t       fNbytesKeys;      //Number of bytes for the keys
-   Int_t       fNbytesName;      //Number of bytes in TNamed at creation time
-   Int_t       fBufferSize;      //Default buffer size to create new TKeys
-   Long64_t    fSeekDir;         //Location of directory on file
-   Long64_t    fSeekParent;      //Location of parent directory on file
-   Long64_t    fSeekKeys;        //Location of Keys record on file
-   TFile      *fFile;            //pointer to current file in memory
-   TList      *fKeys;            //Pointer to keys list in memory
+   Bool_t      fModified;        ///< True if directory has been modified
+   Bool_t      fWritable;        ///< True if directory is writable
+   TDatime     fDatimeC;         ///< Date and time when directory is created
+   TDatime     fDatimeM;         ///< Date and time of last modification
+   Int_t       fNbytesKeys;      ///< Number of bytes for the keys
+   Int_t       fNbytesName;      ///< Number of bytes in TNamed at creation time
+   Int_t       fBufferSize;      ///< Default buffer size to create new TKeys
+   Long64_t    fSeekDir;         ///< Location of directory on file
+   Long64_t    fSeekParent;      ///< Location of parent directory on file
+   Long64_t    fSeekKeys;        ///< Location of Keys record on file
+   TFile      *fFile;            ///< Pointer to current file in memory
+   TList      *fKeys;            ///< Pointer to keys list in memory
 
    virtual void         CleanTargets();
    void Init(TClass *cl = 0);
