@@ -25,9 +25,20 @@ ENDFOREACH(CACHE_VAR ${CACHE_VARS})
 SET(CMAKE_INVOKE "${CMAKE_COMMAND} ${CMAKE_INVOKE_ARGS} ${CMAKE_CURRENT_SOURCE_DIR}" CACHE STRING "Command used to invoke cmake" FORCE)
 # Create a simple shell script that allows us to reinvoke cmake with the captured command line.
 IF (NOT WIN32)
-    FILE(WRITE ${CMAKE_BINARY_DIR}/recmake.sh "#!/bin/sh\n"
+    SET(RECMAKE_REPLAY_FILE ${CMAKE_BINARY_DIR}/recmake_replay.sh)
+    SET(RECMAKE_INITIAL_FILE ${CMAKE_BINARY_DIR}/recmake_initial.sh)
+    if (NOT EXISTS ${RECMAKE_INITIAL_FILE})
+        FILE(WRITE ${RECMAKE_INITIAL_FILE} "#!/bin/sh\n"
+                "rm -f CMakeCache.txt\n"
+                "${CMAKE_INVOKE}\n")
+    endif()
+    if (EXISTS ${RECMAKE_REPLAY_FILE})
+        FILE(APPEND ${RECMAKE_REPLAY_FILE} "${CMAKE_INVOKE}\n")
+    else()
+        FILE(WRITE ${RECMAKE_REPLAY_FILE} "#!/bin/sh\n"
             "rm -f CMakeCache.txt\n"
             "${CMAKE_INVOKE}\n")
+    endif()
 ENDIF (NOT WIN32)
 
 #---Check if cmake has the required version-----------------------------------------------------
