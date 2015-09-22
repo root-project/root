@@ -9,21 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFileCacheRead : a cache when reading files over the network         //
-//                                                                      //
-// A caching system to speed up network I/O, i.e. when there is         //
-// no operating system caching support (like the buffer cache for       //
-// local disk I/O). The cache makes sure that every I/O is done with    //
-// a (large) fixed length buffer thereby avoiding many small I/O's.     //
-// Currently the read cache system is used by the classes TNetFile,     //
-// TXNetFile and TWebFile (via TFile::ReadBuffers()).                   //
-//                                                                      //
-// When processing TTree, TChain, a specialized class TTreeCache that   //
-// derives from this class is automatically created.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+ \class TFileCacheRead
+ \ingroup IO
+    
+ A cache when reading files over the network.
+
+ A caching system to speed up network I/O, i.e. when there is     
+ no operating system caching support (like the buffer cache for   
+ local disk I/O). The cache makes sure that every I/O is done with
+ a (large) fixed length buffer thereby avoiding many small I/O's. 
+ Currently the read cache system is used by the classes TNetFile, 
+ TXNetFile and TWebFile (via TFile::ReadBuffers()).                                                                       
+ When processing TTree, TChain, a specialized class TTreeCache that
+ derives from this class is automatically created.                
+*/
 
 #include "TEnv.h"
 #include "TFile.h"
@@ -310,14 +310,16 @@ void TFileCacheRead::SecondPrefetch(Long64_t pos, Int_t len){
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Print cache statistics, like
-///   ******TreeCache statistics for file: cms2.root ******
-///   Reading............................: 72761843 bytes in 7 transactions
-///   Readahead..........................: 256000 bytes with overhead = 0 bytes
-///   Average transaction................: 10394.549000 Kbytes
-///   Number of blocks in current cache..: 210, total size: 6280352
+/// Print cache statistics.
+/// 
+/// The format is:
+///     ******TreeCache statistics for file: cms2.root ******
+///     Reading............................: 72761843 bytes in 7 transactions
+///     Readahead..........................: 256000 bytes with overhead = 0 bytes
+///     Average transaction................: 10394.549000 Kbytes
+///     Number of blocks in current cache..: 210, total size: 6280352
 ///
-/// if option = "a" the list of blocks in the cache is printed
+/// If option = "a" the list of blocks in the cache is printed
 /// NB: this function is automatically called by TTreeCache::Print
 
 void TFileCacheRead::Print(Option_t *option) const
@@ -350,6 +352,7 @@ void TFileCacheRead::Print(Option_t *option) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read buffer at position pos.
+///
 /// If pos is in the list of prefetched blocks read from fBuffer,
 /// otherwise need to make a normal read from file. Returns -1 in case of
 /// read error, 0 in case not in cache, 1 in case read from cache.
@@ -439,9 +442,10 @@ Int_t TFileCacheRead::ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Base function for ReadBuffer. Also gives out the position
-/// of the block in the internal buffer. This helps TTreeCacheUnzip to avoid
-/// doing twice the binary search
+/// Base function for ReadBuffer. 
+///
+/// Also gives out the position of the block in the internal buffer.
+/// This helps TTreeCacheUnzip to avoid doing twice the binary search.
 
 Int_t TFileCacheRead::ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, Int_t &loc)
 {
@@ -616,8 +620,7 @@ void TFileCacheRead::Sort()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sort buffers to be prefetched in increasing order of positions.
-/// Merge consecutive blocks if necessary.
-/// Sort buffers to be prefetched in increasing order of positions.
+///
 /// Merge consecutive blocks if necessary.
 
 void TFileCacheRead::SecondSort()
@@ -690,12 +693,15 @@ void TFileCacheRead::WaitFinishPrefetch()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sets the buffer size. If the current prefetch list is too large to fit in
+/// Sets the buffer size.
+///
+/// If the current prefetch list is too large to fit in
 /// the new buffer some or all of the prefetch blocks are dropped. The
 /// requested buffersize must be greater than zero.
-/// Returns  0 if the prefetch block lists remain unchanged
-///          1 if some or all blocks have been removed from the prefetch list
-///         -1 on error
+/// Return values:
+///   - 0 if the prefetch block lists remain unchanged
+///   - 1 if some or all blocks have been removed from the prefetch list
+///   - -1 on error
 
 Int_t TFileCacheRead::SetBufferSize(Int_t buffersize)
 {
@@ -751,7 +757,8 @@ Int_t TFileCacheRead::SetBufferSize(Int_t buffersize)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the prefetching mode of this file.
-/// if 'setPrefetching', enable the asynchronous prefetching
+///
+/// If 'setPrefetching', enable the asynchronous prefetching
 /// (using TFilePrefetch) and if the gEnv and rootrc
 /// variable Cache.Directory is set, also enable the local
 /// caching of the prefetched blocks.

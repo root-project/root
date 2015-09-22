@@ -12,15 +12,6 @@
 #ifndef ROOT_TFileCacheWrite
 #define ROOT_TFileCacheWrite
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFileCacheWrite                                                      //
-//                                                                      //
-// TFile cache when writing                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
@@ -30,12 +21,12 @@ class TFile;
 class TFileCacheWrite : public TObject {
 
 protected:
-   Long64_t      fSeekStart;      //Seek value of first block in cache
-   Int_t         fBufferSize;     //Allocated size of fBuffer
-   Int_t         fNtot;           //Total size of cached blocks
-   TFile        *fFile;           //Pointer to file
-   char         *fBuffer;         //[fBufferSize] buffer of contiguous prefetched blocks
-   Bool_t        fRecursive;      //flag to avoid recursive calls
+   Long64_t      fSeekStart;      ///< Seek value of first block in cache
+   Int_t         fBufferSize;     ///< Allocated size of fBuffer
+   Int_t         fNtot;           ///< Total size of cached blocks
+   TFile        *fFile;           ///< Pointer to file
+   char         *fBuffer;         ///< [fBufferSize] buffer of contiguous prefetched blocks
+   Bool_t        fRecursive;      ///< flag to avoid recursive calls
 
 private:
    TFileCacheWrite(const TFileCacheWrite &);            //cannot be copied

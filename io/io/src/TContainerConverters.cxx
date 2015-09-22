@@ -16,6 +16,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+/**
+ \class TConvertClonesArrayToProxy
+ \file TContainerConverters.cxx
+ \ingroup IO
+ 
+ Small helper to read a TBuffer containing a TClonesArray into any valid 
+ collection.   
+*/
+
 #include "TContainerConverters.h"
 #include "TClonesArray.h"
 #include "TStreamerInfo.h"

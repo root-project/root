@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TArchiveFile                                                         //
-//                                                                      //
-// This is an abstract class that describes an archive file containing  //
-// multiple sub-files, like a ZIP or TAR archive.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TArchiveFile.cxx
+\class TArchiveFile
+\ingroup IO
+
+Class describing an archive file containing multiple sub-files, like a ZIP 
+or TAR archive.
+*/
 
 #include "TArchiveFile.h"
 #include "TPluginManager.h"
@@ -31,7 +31,13 @@
 ClassImp(TArchiveFile)
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Specify the archive name and member name. The member can be a decimal
+/// Specify the archive name and member name.
+///
+/// \param[in] archive Name of the archive file
+/// \param[in] member Name of the ROOT file or integer number
+/// \param[in] file Address of the TFile instance from where the call takes place
+///
+/// The member can be a decimal
 /// number which allows to access the n-th sub-file. This method is
 /// normally only called via TFile.
 
@@ -101,6 +107,7 @@ Int_t TArchiveFile::SetMember(Int_t idx)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return proper archive file handler depending on passed url.
+///
 /// The handler is loaded via the plugin manager and is triggered by
 /// the extension of the archive file. In case no handler is found 0
 /// is returned. The file argument is used to access the archive.

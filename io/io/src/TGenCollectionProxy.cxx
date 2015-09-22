@@ -9,20 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGenCollectionProxy
-//
-// Proxy around an arbitrary container, which implements basic
-// functionality and iteration.
-//
-// In particular this is used to implement splitting and abstract
-// element access of any container. Access to compiled code is necessary
-// to implement the abstract iteration sequence and functionality like
-// size(), clear(), resize(). resize() may be a void operation.
-//
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGenCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
 #include "TStreamerElement.h"
@@ -554,6 +540,24 @@ void TGenCollectionProxy::Value::DeleteItem(void* ptr)
       }
    }
 }
+
+/**
+ \class TGenCollectionProxy TGenCollectionProxy.cxx
+ \ingroup IO
+
+ Proxy around an arbitrary container, which implements basic
+ functionality and iteration.
+
+ The purpose of this implementation
+ is to shield any generated dictionary implementation from the
+ underlying streamer/proxy implementation and only expose
+ the creation functions.
+
+ In particular this is used to implement splitting and abstract
+ element access of any container. Access to compiled code is necessary
+ to implement the abstract iteration sequence and functionality like
+ size(), clear(), resize(). resize() may be a void operation.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Build a proxy for an emulated container.
@@ -1747,4 +1751,3 @@ TStreamerInfoActions::TActionSequence *TGenCollectionProxy::GetWriteMemberWiseAc
   }
   return result;
 }
-

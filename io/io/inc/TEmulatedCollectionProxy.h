@@ -11,21 +11,6 @@
 #ifndef ROOT_TEmulatedCollectionProxy
 #define ROOT_TEmulatedCollectionProxy
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TEmulatedCollectionProxy
-//
-// Streamer around an arbitrary STL like container, which implements basic
-// container functionality.
-//
-// Note:
-// Although this class contains all the setup necessary to deal
-// with maps, the map-like functionality is NOT supported.
-// For optimization reasons this functionality is put into
-// the class TEmulatedMapProxy.
-//
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGenCollectionProxy.h"
 
 class TEmulatedCollectionProxy : public TGenCollectionProxy  {
