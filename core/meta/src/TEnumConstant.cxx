@@ -9,11 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// The TEnumConstant class implements the constants of the enum type.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TEnumConstant
+The TEnumConstant class implements the constants of the enum type.
+*/
 
 #include "TEnumConstant.h"
 #include "TEnum.h"
