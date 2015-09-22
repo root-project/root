@@ -9,15 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TListOfFunctionTemplates                                                     //
-//                                                                      //
-// A collection of TFunction objects designed for fast access given a   //
-// DeclId_t and for keep track of TFunction that were described         //
-// unloaded function.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TListOfFunctionTemplates
+A collection of TFunction objects designed for fast access given a
+DeclId_t and for keep track of TFunction that were described
+unloaded function.
+*/
 
 #include "TListOfFunctionTemplates.h"
 #include "TClass.h"
@@ -354,7 +350,7 @@ TObject* TListOfFunctionTemplates::Remove(TObjLink *lnk)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Load all the functions known to the intepreter for the scope 'fClass'
+/// Load all the functions known to the interpreter for the scope 'fClass'
 /// into this collection.
 
 void TListOfFunctionTemplates::Load()
