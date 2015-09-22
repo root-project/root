@@ -9,14 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TInterpreter                                                         //
-//                                                                      //
-// This class defines an abstract interface to a generic command line   //
-// interpreter.                                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TInterpreter
+This class defines an abstract interface to a generic command line
+interpreter.
+*/
 
 #include "TInterpreter.h"
 
