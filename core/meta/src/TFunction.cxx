@@ -9,14 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Global functions class (global functions are obtaine from CINT).     //
-// This class describes one single global function.                     //
-// The TROOT class contains a list of all currently defined global      //
-// functions (accessible via TROOT::GetListOfGlobalFunctions()).        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TFunction
+Global functions class (global functions are obtained from CINT).
+This class describes one single global function.
+The TROOT class contains a list of all currently defined global
+functions (accessible via TROOT::GetListOfGlobalFunctions()).
+*/
 
 #include "TFunction.h"
 #include "TMethodArg.h"
@@ -148,7 +146,7 @@ const char *TFunction::GetReturnTypeName() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the normalized name of the return type.  A normalized name is fully
-/// qualified and has all typedef desugared except for the 'special' typedef
+/// qualified and has all typedef disagreed except for the 'special' typedef
 /// which include Double32_t, Float16_t, [U]Long64_t and std::string.  It
 /// also has std:: removed [This is subject to change].
 ///
