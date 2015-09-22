@@ -29,8 +29,8 @@
 class TFree : public TObject {
 
 protected:
-   Long64_t        fFirst;            //First free word of segment
-   Long64_t        fLast;             //Last free word of segment
+   Long64_t        fFirst;            ///<First free word of segment
+   Long64_t        fLast;             ///<Last free word of segment
 
 public:
    TFree();

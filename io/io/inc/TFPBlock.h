@@ -12,18 +12,6 @@
 #ifndef ROOT_TFPBlock
 #define ROOT_TFPBlock
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFPBlock                                                             //
-//                                                                      //
-// This class represents the encapsulation of a block request.          //
-// It contains the chunks to be prefetched and also serves as a         //
-// container for the information read.                                  //
-// These blocks are prefetch in a special reader thread by the          //
-// TFilePrefetch class.                                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
