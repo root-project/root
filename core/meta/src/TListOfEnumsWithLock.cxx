@@ -9,15 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TListOfEnumsWithLock                                                         //
-//                                                                      //
-// A collection of TEnum objects designed for fast access given a       //
-// DeclId_t and for keep track of TEnum that were described             //
-// unloaded enum.                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TListOfEnumsWithLock
+A collection of TEnum objects designed for fast access given a
+DeclId_t and for keep track of TEnum that were described
+unloaded enum.
+*/
 
 #include <forward_list>
 
@@ -326,13 +322,9 @@ Int_t TListOfEnumsWithLock::GetSize() const
    return TListOfEnums::GetSize();
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TListOfEnumsWithLockIter                                                 //
-//                                                                      //
-// Iterator for TListOfEnumsWithLock.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TListOfEnumsWithLockIter
+Iterator for TListOfEnumsWithLock.
+*/
 
 ClassImp(TListOfEnumsWithLockIter)
 
