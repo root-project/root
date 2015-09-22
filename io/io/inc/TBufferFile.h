@@ -53,16 +53,16 @@ class TBufferFile : public TBuffer {
 protected:
    typedef std::vector<TStreamerInfo*> InfoList_t;
 
-   Int_t           fMapCount;      //Number of objects or classes in map
-   Int_t           fMapSize;       //Default size of map
-   Int_t           fDisplacement;  //Value to be added to the map offsets
-   UShort_t        fPidOffset;     //Offset to be added to the pid index in this key/buffer.
-   TExMap         *fMap;           //Map containing object,offset pairs for reading/writing
-   TExMap         *fClassMap;      //Map containing object,class pairs for reading
-   TStreamerInfo  *fInfo;          //Pointer to TStreamerInfo object writing/reading the buffer
-   InfoList_t      fInfoStack;     //Stack of pointers to the TStreamerInfos
+   Int_t           fMapCount;      ///< Number of objects or classes in map
+   Int_t           fMapSize;       ///< Default size of map
+   Int_t           fDisplacement;  ///< Value to be added to the map offsets
+   UShort_t        fPidOffset;     ///< Offset to be added to the pid index in this key/buffer.
+   TExMap         *fMap;           ///< Map containing object,offset pairs for reading/writing
+   TExMap         *fClassMap;      ///< Map containing object,class pairs for reading
+   TStreamerInfo  *fInfo;          ///< Pointer to TStreamerInfo object writing/reading the buffer
+   InfoList_t      fInfoStack;     ///< Stack of pointers to the TStreamerInfos
 
-   static Int_t    fgMapSize;      //Default map size for all TBuffer objects
+   static Int_t    fgMapSize;      ///< Default map size for all TBuffer objects
 
    // Default ctor
    TBufferFile() : TBuffer(), fMapCount(0), fMapSize(0),
@@ -70,8 +70,8 @@ protected:
      fInfo(0), fInfoStack() {}
 
    // TBuffer objects cannot be copied or assigned
-   TBufferFile(const TBufferFile &);       // not implemented
-   void operator=(const TBufferFile &);    // not implemented
+   TBufferFile(const TBufferFile &);       ///<  not implemented
+   void operator=(const TBufferFile &);    ///<  not implemented
 
    Int_t  CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, const char* classname);
    void   CheckCount(UInt_t offset);
