@@ -225,7 +225,7 @@ namespace Internal {
          fClass->SetMerge(fMerge);
          fClass->SetResetAfterMerge(fResetAfterMerge);
          fClass->AdoptStreamer(fStreamer); fStreamer = 0;
-         // If IsZombie is true, something went wront and we will not be
+         // If IsZombie is true, something went wrong and we will not be
          // able to properly copy the collection proxy
          if (!fClass->IsZombie()) {
             if (fCollectionProxy) fClass->CopyCollectionProxy(*fCollectionProxy);
@@ -321,7 +321,7 @@ namespace Internal {
 
    const type_info &TGenericClassInfo::GetInfo() const
    {
-      // Return the typeifno value
+      // Return the typeinfo value
 
       return fInfo;
    }
@@ -450,7 +450,7 @@ namespace Internal {
 
    void TGenericClassInfo::SetStreamerFunc(ClassStreamerFunc_t streamer)
    {
-      // Set a wrapper around the Streamer memger function.
+      // Set a wrapper around the Streamer member function.
 
       fStreamerFunc = streamer;
       if (fClass) fClass->SetStreamerFunc(streamer);
@@ -458,7 +458,7 @@ namespace Internal {
 
    void TGenericClassInfo::SetConvStreamerFunc(ClassConvStreamerFunc_t streamer)
    {
-      // Set a wrapper around the Streamer memger function.
+      // Set a wrapper around the Streamer member function.
 
       fConvStreamerFunc = streamer;
       if (fClass) fClass->SetConvStreamerFunc(streamer);
