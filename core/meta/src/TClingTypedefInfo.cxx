@@ -9,19 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClingTypedefInfo                                                    //
-//                                                                      //
-// Emulation of the CINT TypedefInfo class.                             //
-//                                                                      //
-// The CINT C++ interpreter provides an interface to metadata about     //
-// a typedef through the TypedefInfo class.  This class provides the    //
-// same functionality, using an interface as close as possible to       //
-// TypedefInfo but the typedef metadata comes from the Clang C++        //
-// compiler, not CINT.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \classTClingTypedefInfo
+
+Emulation of the CINT TypedefInfo class.
+
+The CINT C++ interpreter provides an interface to metadata about
+a typedef through the TypedefInfo class.  This class provides the
+same functionality, using an interface as close as possible to
+TypedefInfo but the typedef metadata comes from the Clang C++
+compiler, not CINT.
+*/
 
 #include "TClingTypedefInfo.h"
 
@@ -323,7 +320,7 @@ const char *TClingTypedefInfo::Title()
 
    // Try to get the comment either from the annotation or the header file if present
 
-   // Iterate over the redeclarations, we can have muliple definitions in the
+   // Iterate over the redeclarations, we can have multiple definitions in the
    // redecl chain (came from merging of pcms).
    if (const TypedefNameDecl *TND = llvm::dyn_cast<TypedefNameDecl>(GetDecl())) {
       if ( (TND = ROOT::TMetaUtils::GetAnnotatedRedeclarable(TND)) ) {
