@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClassGenerator                                                      //
-//                                                                      //
-// Objects following this interface can be passed onto the TROOT object //
-// to implement a user customized way to create the TClass objects.     //
-//                                                                      //
-// Use TROOT::AddClassGenerator to register a concrete instance.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TClassGenerator
+Objects following this interface can be passed onto the TROOT object
+to implement a user customized way to create the TClass objects.
+
+Use TROOT::AddClassGenerator to register a concrete instance.
+*/
 
 
 #include "TClassGenerator.h"
