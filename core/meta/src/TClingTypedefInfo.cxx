@@ -9,8 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \classTClingTypedefInfo
-
+/** \class TClingTypedefInfo
 Emulation of the CINT TypedefInfo class.
 
 The CINT C++ interpreter provides an interface to metadata about
