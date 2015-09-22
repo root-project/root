@@ -111,7 +111,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
 bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
                                    llvm::SmallVectorImpl<char> &RecoveryPath) {
    // Method called via Callbacks->FileNotFound(Filename, RecoveryPath)
-   // in Preprocessor::HandleIncludeDirective(), initally allowing to
+   // in Preprocessor::HandleIncludeDirective(), initially allowing to
    // change the include path, and allowing us to compile code via ACLiC
    // when specifying #include "myfile.C+", and suppressing the preprocessor
    // error message:
@@ -160,7 +160,7 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
                                                 SemaR.TUScope);
          int retcode = TCling__CompileMacro(fname.c_str(), options.c_str());
          if (retcode) {
-            // complation was successful, let's remember the original
+            // compilation was successful, let's remember the original
             // preprocessor "include not found" error suppression flag
             if (!fPPChanged)
                fPPOldFlag = PP.GetSuppressIncludeNotFoundError();
@@ -446,7 +446,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
    Preprocessor::CleanupAndRestoreCacheRAII cleanupPPRAII(PP);
    TObject *obj = TCling__GetObjectAddress(Name.getAsString().c_str(),
                                            fLastLookupCtx);
-   cleanupPPRAII.pop(); // force restroing the cache
+   cleanupPPRAII.pop(); // force restoring the cache
 
    if (obj) {
 
@@ -693,7 +693,7 @@ void TClingCallbacks::DeclDeserialized(const clang::Decl* D) {
       // up decl is found in the PCH/PCM. We have to do that extra step, which
       // loads the corresponding library when a decl was deserialized.
       //
-      // Unfortunatelly we cannot do that with the current implementation,
+      // Unfortunately we cannot do that with the current implementation,
       // because the library load will pull in the header files of the library
       // as well, even though they are in the PCH/PCM and available.
       (void)RD;//TCling__AutoLoadCallback(RD->getNameAsString().c_str());
