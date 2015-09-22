@@ -17,13 +17,9 @@
 #include <map>
 #include <type_traits>
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClass                                                               //
-//                                                                      //
-// TIsAProxy implementation class.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TIsAProxy
+TIsAProxy implementation class.
+*/
 
 namespace {
    struct DynamicType {
