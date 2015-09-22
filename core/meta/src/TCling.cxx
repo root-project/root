@@ -2178,7 +2178,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
             iField->getNameForDiagnostic(stream, printPol, true /*fqi*/);
             stream.flush();
             Error("InspectMembers",
-                  "Cannot retrieve pointer Type for member %s while inspecting class %s",
+                  "Cannot retrieve pointee Type for member %s while inspecting class %s",
                   memberName.c_str(), clname);
             continue; // skip member
          }
