@@ -824,8 +824,11 @@ directory - this behavior is now implement by the default constructor.
 - Fix missing OCC header file for the version [ROOT-7536]
 
 ### Tree
-- TTreeReader: fix reading of data members of type `BasicType[42]`
 - Fix [ROOT-6885] which affects very large TChain with friend trees.
+
+#### TTreeReader
+- Fix reading of data members of type `BasicType[42]`
+- Fix support for large file [ROOT-7652]
 
 ### Interpreter
 - Fix redirection [ROOT-7053]
