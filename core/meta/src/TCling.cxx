@@ -9,16 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCling                                                               //
-//                                                                      //
-// This class defines an interface to the cling C++ interpreter.        //
-//                                                                      //
-// Cling is a full ANSI compliant C++-11 interpreter based on           //
-// clang/LLVM technology.                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TCling
+
+This class defines an interface to the cling C++ interpreter.
+
+Cling is a full ANSI compliant C++-11 interpreter based on
+clang/LLVM technology.
+*/
 
 #include "TCling.h"
 
@@ -501,7 +498,7 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       if (gROOT->GetListOfGlobals()->FindObject(ND->getNameAsString().c_str()))
          return;
 
-      // Put the global constants and global enums in the coresponding lists.
+      // Put the global constants and global enums in the corresponding lists.
       gROOT->GetListOfGlobals()->Add(new TGlobal((DataMemberInfo_t *)
                                                 new TClingDataMemberInfo(fInterpreter,
                                                                         cast<ValueDecl>(ND), 0)));
@@ -890,7 +887,7 @@ namespace{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Try hard to avoid looking up in the Cling database as this could enduce
+/// Try hard to avoid looking up in the Cling database as this could induce
 /// an unwanted autoparsing.
 
 bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
@@ -1523,7 +1520,7 @@ void TCling::RegisterModule(const char* modulename,
    TString code = gNonInterpreterClassDef;
    code += payloadCode;
 
-   // We need to open the dictionary shared library, to resolve sylbols
+   // We need to open the dictionary shared library, to resolve symbols
    // requested by the JIT from it: as the library is currently being dlopen'ed,
    // its symbols are not yet reachable from the process.
    // Recursive dlopen seems to work just fine.
@@ -2041,7 +2038,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
 
    // Treat the case of std::complex in a special manner. We want to enforce
    // the layout of a stl implementation independent class, which is the
-   // complex as implmented in ROOT5.
+   // complex as implemented in ROOT5.
 
    // A simple lambda to simplify the code
    auto inspInspect =  [&] (ptrdiff_t offset){
@@ -2080,7 +2077,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
    static clang::PrintingPolicy
       printPol(fInterpreter->getCI()->getLangOpts());
    if (printPol.Indentation) {
-      // not yet inialized
+      // not yet initialized
       printPol.Indentation = 0;
       printPol.SuppressInitializers = true;
    }
@@ -2181,7 +2178,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
             iField->getNameForDiagnostic(stream, printPol, true /*fqi*/);
             stream.flush();
             Error("InspectMembers",
-                  "Cannot retrieve pointee Type for member %s while inspecting class %s",
+                  "Cannot retrieve pointer Type for member %s while inspecting class %s",
                   memberName.c_str(), clname);
             continue; // skip member
          }
@@ -2912,7 +2909,6 @@ void TCling::ResetAll()
 /// call to TCling::SaveGlobalsContext().
 ///
 /// Note: Right now, all we do is run the global destructors.
-///
 
 void TCling::ResetGlobals()
 {
@@ -3104,7 +3100,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
       delete info;
       return;
    }
-   cl->fClassInfo = (ClassInfo_t*)info; // Note: We are transfering ownership here.
+   cl->fClassInfo = (ClassInfo_t*)info; // Note: We are transferring ownership here.
    // In case a class contains an external enum, the enum will be seen as a
    // class. We must detect this special case and make the class a Zombie.
    // Here we assume that a class has at least one method.
@@ -3163,8 +3159,9 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 /// If the flag isClassOrNamespaceOnly is true, classes, structs and
 /// namespaces only are considered. I.e. if the name is an enum or a union,
 /// the returned value is false.
+///
 /// In the case where the class is not loaded and belongs to a namespace
-/// or is nested, looking for the full class name is outputing a lots of
+/// or is nested, looking for the full class name is outputting a lots of
 /// (expected) error messages.  Currently the only way to avoid this is to
 /// specifically check that each level of nesting is already loaded.
 /// In case of templates the idea is that everything between the outer
@@ -3612,7 +3609,7 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
          // 0 means success.
          cl = TClass::LoadClass(classnam.c_str(), silent);
          if (cl == 0) {
-            Error("GenerateTClass","Even though the dictionary generation for %s seemed successfull we can't find the TClass bootstrap!",classname.c_str());
+            Error("GenerateTClass","Even though the dictionary generation for %s seemed successful we can't find the TClass bootstrap!",classname.c_str());
          }
       }
 #endif
@@ -3635,13 +3632,17 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate the dictionary for the C++ classes listed in the first
-/// argmument (in a semi-colon separated list).
+/// argument (in a semi-colon separated list).
 /// 'includes' contains a semi-colon separated list of file to
 /// #include in the dictionary.
 /// For example:
+/// ~~~ {.cpp}
 ///    gInterpreter->GenerateDictionary("vector<vector<float> >;list<vector<float> >","list;vector");
+/// ~~~
 /// or
+/// ~~~ {.cpp}
 ///    gInterpreter->GenerateDictionary("myclass","myclass.h;myhelper.h");
+/// ~~~
 
 Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 0 */, const char* /* options  = 0 */)
 {
@@ -4054,7 +4055,7 @@ TInterpreter::DeclId_t TCling::GetFunctionTemplate(ClassInfo_t *opaque_cl, const
 /// The 'name' is known to the interpreter, this function returns
 /// the internal version of this name (usually just resolving typedefs)
 /// This is used in particular to synchronize between the name used
-/// by rootcling and by the run-time enviroment (TClass)
+/// by rootcling and by the run-time environment (TClass)
 /// Return 0 if the name is not known.
 
 void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_t full)
@@ -4089,7 +4090,6 @@ void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_
 ///        this does not really translate well to cling/clang.  We
 ///        should enhance these interfaces so that we can report
 ///        compilation and runtime errors properly.
-///
 
 void TCling::Execute(const char* function, const char* params, int* error)
 {
@@ -4114,7 +4114,6 @@ void TCling::Execute(const char* function, const char* params, int* error)
 ///        this does not really translate well to cling/clang.  We
 ///        should enhance these interfaces so that we can report
 ///        compilation and runtime errors properly.
-///
 
 void TCling::Execute(TObject* obj, TClass* cl, const char* method,
                      const char* params, Bool_t objectIsConst, int* error)
@@ -4141,6 +4140,7 @@ void TCling::Execute(TObject* obj, TClass* cl, const char* method,
 {
    Execute(obj,cl,method,params,false,error);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute a method from class cl with the arguments in array params
 /// (params[0] ... params[n] = array of TObjString parameters).
@@ -4284,49 +4284,45 @@ const char* TCling::GetTopLevelMacroName() const
 /// Return the file name of the currently interpreted file,
 /// included or not. Example to illustrate the difference between
 /// GetCurrentMacroName() and GetTopLevelMacroName():
-/// BEGIN_HTML <!--
+/// ~~~ {.cpp}
+///   void inclfile() {
+///   std::cout << "In inclfile.C" << std::endl;
+///   std::cout << "  TCling::GetCurrentMacroName() returns  " <<
+///      TCling::GetCurrentMacroName() << std::endl;
+///   std::cout << "  TCling::GetTopLevelMacroName() returns " <<
+///      TCling::GetTopLevelMacroName() << std::endl;
+///   }
+/// ~~~
+/// ~~~ {.cpp}
+///   void mymacro() {
+///   std::cout << "In mymacro.C" << std::endl;
+///   std::cout << "  TCling::GetCurrentMacroName() returns  " <<
+///      TCling::GetCurrentMacroName() << std::endl;
+///   std::cout << "  TCling::GetTopLevelMacroName() returns " <<
+///      TCling::GetTopLevelMacroName() << std::endl;
+///   std::cout << "  Now calling inclfile..." << std::endl;
+///   gInterpreter->ProcessLine(".x inclfile.C");;
+///   }
+/// ~~~
+/// Running mymacro.C will print:
+///
+/// ~~~ {.cpp}
+/// root [0] .x mymacro.C
+/// ~~~
+/// In mymacro.C
+/// ~~~ {.cpp}
+///   TCling::GetCurrentMacroName() returns  ./mymacro.C
+///   TCling::GetTopLevelMacroName() returns ./mymacro.C
+/// ~~~
+///   Now calling inclfile...
+/// In inclfile.h
+/// ~~~ {.cpp}
+///   TCling::GetCurrentMacroName() returns  inclfile.C
+///   TCling::GetTopLevelMacroName() returns ./mymacro.C
+/// ~~~
 
 const char* TCling::GetCurrentMacroName() const
 {
-   /* -->
-      <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">inclfile.C</span>
-      <!--div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;"-->
-      <div class="code">
-      <pre style="margin:0pt">#include &lt;iostream&gt;
-   void inclfile() {
-   std::cout &lt;&lt; "In inclfile.C" &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  TCling::GetCurrentMacroName() returns  " &lt;&lt;
-      TCling::GetCurrentMacroName() &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  TCling::GetTopLevelMacroName() returns " &lt;&lt;
-      TCling::GetTopLevelMacroName() &lt;&lt; std::endl;
-   }</pre></div>
-      <div style="clear:both"></div>
-      <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">mymacro.C</span>
-      <div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;">
-      <pre style="margin:0pt">#include &lt;iostream&gt;
-   void mymacro() {
-   std::cout &lt;&lt; "In mymacro.C" &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  TCling::GetCurrentMacroName() returns  " &lt;&lt;
-      TCling::GetCurrentMacroName() &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  TCling::GetTopLevelMacroName() returns " &lt;&lt;
-      TCling::GetTopLevelMacroName() &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  Now calling inclfile..." &lt;&lt; std::endl;
-   gInterpreter->ProcessLine(".x inclfile.C");;
-   }</pre></div>
-   <div style="clear:both"></div>
-   <!-- */
-   // --> END_HTML
-   // Running mymacro.C will print:
-   //
-   // root [0] .x mymacro.C
-   // In mymacro.C
-   //   TCling::GetCurrentMacroName() returns  ./mymacro.C
-   //   TCling::GetTopLevelMacroName() returns ./mymacro.C
-   //   Now calling inclfile...
-   // In inclfile.h
-   //   TCling::GetCurrentMacroName() returns  inclfile.C
-   //   TCling::GetTopLevelMacroName() returns ./mymacro.C
-
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,0)
    Warning("GetCurrentMacroName", "Must change return type!");
@@ -4484,7 +4480,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
 /// Create a resource table and read the (possibly) three resource files, i.e
 /// $ROOTSYS/etc/system<name> (or ROOTETCDIR/system<name>), $HOME/<name> and
 /// ./<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
-/// read additional user defined resource files by creating addtional TEnv
+/// read additional user defined resource files by creating additional TEnv
 /// objects. By setting the shell variable ROOTENV_NO_HOME=1 the reading of
 /// the $HOME/<name> resource file will be skipped. This might be useful in
 /// case the home directory resides on an automounted remote file system
@@ -4708,7 +4704,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
          // Fill in the namespace candidate list
 //          Ssiz_t last = cls.Last(':');
 //          if (last != kNPOS) {
-//             // Please note that the funny op overlaod does substring.
+//             // Please note that the funny op overload does substring.
 //             TString namespaceCand = cls(0, last - 1);
 //             // This is a reference to a substring that lives in fMapfile
 //             if (!fMapNamespaces->FindObject(namespaceCand.Data()))
@@ -4997,7 +4993,7 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
    R__LOCKGUARD(gInterpreterMutex);
 
    if (!knowDictNotLoaded && gClassTable->GetDictNorm(cls)) {
-      // The library is alreday loaded as the class's dictionary is known.
+      // The library is already loaded as the class's dictionary is known.
       // Return success.
       // Note: the name (cls) is expected to be normalized as it comes either
       // from a callbacks (that can/should calculate the normalized name from the
@@ -5188,7 +5184,7 @@ Int_t TCling::AutoParse(const char *cls)
          for (auto const & scopeObj : *tokens){
             auto scopeName = ((TObjString*) scopeObj)->String().Data();
             previousScopeAsNamedDecl = cling::utils::Lookup::Named(&fInterpreter->getSema(), scopeName, previousScopeAsContext);
-            // Check if we have multipple nodes in the AST with this name
+            // Check if we have multiple nodes in the AST with this name
             if ((clang::NamedDecl*)-1 == previousScopeAsNamedDecl) break;
             previousScopeAsContext = llvm::dyn_cast_or_null<clang::DeclContext>(previousScopeAsNamedDecl);
             if (!previousScopeAsContext) break; // this is not a context
@@ -5390,12 +5386,12 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///    if (fMapNamespaces){
-///       return fMapNamespaces->FindObject(name);
-///    }
 
 Bool_t TCling::IsAutoLoadNamespaceCandidate(const char* name)
 {
+//    if (fMapNamespaces){
+//       return fMapNamespaces->FindObject(name);
+//    }
    return false;
 }
 
@@ -5603,9 +5599,9 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Helper function to go through the members of a class or namespace and unload them.
 
 void TCling::UnloadClassMembers(TClass* cl, const clang::DeclContext* DC) {
-   // Helper function to go through the members of a class or namespace and unload them.
 
    TDataMember* var = 0;
    TFunction* function = 0;
@@ -5768,9 +5764,9 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///UpdateListOfLoadedSharedLibraries();
 
 void TCling::LibraryLoaded(const void* dyLibHandle, const char* canonicalName) {
+// UpdateListOfLoadedSharedLibraries();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7325,7 +7321,7 @@ void TCling::FuncTempInfo_Title(FuncTempInfo_t *ft_info, TString &output) const
    if (!ft_info) return;
    const clang::FunctionTemplateDecl *ft = (const clang::FunctionTemplateDecl*)ft_info;
 
-   // Iterate over the redeclarations, we can have muliple definitions in the
+   // Iterate over the redeclarations, we can have multiple definitions in the
    // redecl chain (came from merging of pcms).
    if (const RedeclarableTemplateDecl *AnnotFD
        = ROOT::TMetaUtils::GetAnnotatedRedeclarable((const RedeclarableTemplateDecl*)ft)) {
