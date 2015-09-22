@@ -17,8 +17,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 /**
- \class TConvertClonesArrayToProxy
- \file TContainerConverters.cxx
+ \class TConvertClonesArrayToProxy TContainerConverters.cxx
  \ingroup IO
  
  Small helper to read a TBuffer containing a TClonesArray into any valid 
