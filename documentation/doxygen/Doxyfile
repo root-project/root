@@ -776,6 +776,8 @@ INPUT                  = . \
                          ../../graf3d/g3d/ \
                          ../../graf3d/gl/ \
                          ../../graf3d/gviz3d/ \
+                         ../../gui/gui/ \
+                         ../../gui/fitpanel/
                          ../../hist \
                          ../../io/io/ \
                          ../../io/sql/ \
@@ -796,10 +798,54 @@ INPUT                  = . \
                          ../../tmva \
                          ../../roofit \
                          ../../tree \
-                         ../../sql/ \
-                         ../../gui/gui/ \
-                         ../../gui/fitpanel/
-#                         ../../gui/ged/ \
+                         ../../sql/
+
+#                         ../../bindings/pyroot/
+#                         ../../bindings/r/
+#                         ../../bindings/ruby/
+#                         ../../core/clib/
+#                         ../../core/lzma/
+#                         ../../core/macosx/
+#                         ../../core/newdelete/
+#                         ../../core/textinput/
+#                         ../../core/winnt/
+#                         ../../core/zip/
+#                         ../../geom/geocad/
+#                         ../../graf2d/cocoa/
+#                         ../../graf2d/ios/
+#                         ../../graf2d/mathtext/
+#                         ../../graf2d/qt/
+#                         ../../graf2d/quartz/
+#                         ../../graf2d/win32gdk/
+#                         ../../graf2d/x11/
+#                         ../../graf2d/x11ttf/
+#                         ../../graf3d/ftgl/
+#                         ../../graf3d/glew/
+#                         ../../graf3d/x3d/
+#                         ../../gui/ged/
+#                         ../../gui/guibuilder/
+#                         ../../gui/guihtml/
+#                         ../../gui/qtgsi/
+#                         ../../gui/qtroot/
+#                         ../../gui/recorder/
+#                         ../../gui/sessionviewer/
+#                         ../../html/
+#                         ../../io/castor/
+#                         ../../io/chirp/
+#                         ../../io/dcache/
+#                         ../../io/gfal/
+#                         ../../io/hdfs/
+#                         ../../io/rfio/
+#                         ../../misc/table/
+#                         ../../montecarlo/pythia6/
+#                         ../../net/alien/
+#                         ../../net/bonjour/
+#                         ../../net/davix/
+#                         ../../net/glite/
+#                         ../../net/ldap/
+#                         ../../net/monalisa/
+#                         ../../net/rootd/
+#                         ../../net/rpdutils/
 
 
 # This tag can be used to specify the character encoding of the source files
