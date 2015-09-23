@@ -9,26 +9,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TToggle                                                              //
-//                                                                      //
-// This class defines toggling facility for both - object's method or   //
-// variables.                                                           //
-// Assume that user provides an object with a two-state field , and     //
-// methods to Get/Set value of this field. This object enables to switch//
-// values via this method when the only thing you know about the field  //
-// is the name of the method (or method itself) which sets the field.   //
-// This facility is required in context Pop-Up menu, when the only      //
-// information about how to toggle a field is a name of methhod which   //
-// sets it.                                                             //
-// This class may be also used for toggling an integer variable,        //
-// which may be important while building universal objects...           //
-// When user provides a "set-method" of name SetXXX this object tries   //
-// automaticaly find a matching "get-method" by lookin for a method     //
-// with name GetXXX, IsXXX or HasXXX for given object.                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TToggle
+
+This class defines toggling facility for both - object's method or
+variables.
+Assume that user provides an object with a two-state field , and
+methods to Get/Set value of this field. This object enables to switch
+values via this method when the only thing you know about the field
+is the name of the method (or method itself) which sets the field.
+This facility is required in context Pop-Up menu, when the only
+information about how to toggle a field is a name of methhod which
+sets it.
+This class may be also used for toggling an integer variable,
+which may be important while building universal objects...
+When user provides a "set-method" of name SetXXX this object tries
+automaticaly find a matching "get-method" by lookin for a method
+with name GetXXX, IsXXX or HasXXX for given object.
+*/
 
 #include "TMethod.h"
 #include "TToggle.h"
