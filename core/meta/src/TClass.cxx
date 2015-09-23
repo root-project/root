@@ -5932,12 +5932,13 @@ UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
    //    if (fCheckSum && code == kCurrentCheckSum) return fCheckSum;
    // However save a little bit of barier time by calling load()
    // only once.
+
+   isvalid = kTRUE;
+
    UInt_t currentChecksum = fCheckSum.load();
    if (currentChecksum && code == kCurrentCheckSum) return currentChecksum;
 
    R__LOCKGUARD(gInterpreterMutex);
-
-   isvalid = kTRUE;
 
    // kCurrentCheckSum (0) is the default parameter value and should be kept
    // for backward compatibility, too be able to use the inequality checks,
