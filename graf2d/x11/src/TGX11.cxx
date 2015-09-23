@@ -9,18 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGX11                                                                //
-//                                                                      //
-// This class is the basic interface to the X11 graphics system. It is  //
-// an implementation of the abstract TVirtualX class. The companion     //
-// class for Win32 is TGWin32.                                          //
-//                                                                      //
-// This code was initially developed in the context of HIGZ and PAW     //
-// by Olivier Couet (package X11INT).                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGX11
+\ingroup GraphicsBackends
+This class is the basic interface to the X11 (Xlib) graphics system.
+It is an implementation of the abstract TVirtualX class.
+
+This class gives access to basic X11 graphics, pixmap, text and font handling
+routines.
+
+The companion class for Win32 is TGWin32.
+
+This code was initially developed in the context of HIGZ and PAW
+by Olivier Couet (package X11INT).
+*/
+
 #include "TROOT.h"
 #include "TColor.h"
 #include "TGX11.h"
@@ -337,8 +339,10 @@ Bool_t TGX11::Init(void *display)
 /// for 15 and 16 bit true colors have 6 bits precision per color however
 /// only the 5 most significant bits are used in the color index.
 /// Except for 16 bits where green uses all 6 bits. I.e.:
+/// ~~~ {.cpp}
 ///   15 bits = rrrrrgggggbbbbb
 ///   16 bits = rrrrrggggggbbbbb
+/// ~~~
 /// for 24 bits each r, g and b are represented by 8 bits.
 ///
 /// Since all colors are set with a max of 65535 (16 bits) per r, g, b
@@ -501,8 +505,9 @@ void TGX11::CopyWindowtoPixmap(Drawable *pix, int xpos, int ypos )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a box.
-/// mode=0 hollow  (kHollow)
-/// mode=1 solid   (kSolid)
+///
+///  - mode=0 hollow  (kHollow)
+///  - mode=1 solid   (kSolid)
 
 void TGX11::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 {
@@ -528,14 +533,15 @@ void TGX11::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a cell array.
-/// x1,y1        : left down corner
-/// x2,y2        : right up corner
-/// nx,ny        : array size
-/// ic           : array
+//
+///  \param [in] x1,y1        : left down corner
+///  \param [in] x2,y2        : right up corner
+///  \param [in] nx,ny        : array size
+///  \param [in] ic           : array
 ///
-/// Draw a cell array. The drawing is done with the pixel presicion
+/// Draw a cell array. The drawing is done with the pixel precision
 /// if (X2-X1)/NX (or Y) is not a exact pixel number the position of
-/// the top rigth corner may be wrong.
+/// the top right corner may be wrong.
 
 void TGX11::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *ic)
 {
@@ -563,8 +569,8 @@ void TGX11::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill area described by polygon.
-/// n         : number of points
-/// xy(2,n)   : list of points
+///  \param [in] n         : number of points
+///  \param [in] xy(2,n)   : list of points
 
 void TGX11::DrawFillArea(int n, TPoint *xyt)
 {
@@ -581,8 +587,9 @@ void TGX11::DrawFillArea(int n, TPoint *xyt)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a line.
-/// x1,y1        : begin of line
-/// x2,y2        : end of line
+///
+///  \param [in] x1,y1        : begin of line
+///  \param [in] x2,y2        : end of line
 
 void TGX11::DrawLine(int x1, int y1, int x2, int y2)
 {
@@ -596,8 +603,9 @@ void TGX11::DrawLine(int x1, int y1, int x2, int y2)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a line through all points.
-/// n         : number of points
-/// xy        : list of points
+///
+///  \param [in] n         : number of points
+///  \param [in] xy        : list of points
 
 void TGX11::DrawPolyLine(int n, TPoint *xyt)
 {
@@ -647,8 +655,9 @@ void TGX11::DrawPolyLine(int n, TPoint *xyt)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw n markers with the current attributes at position x, y.
-/// n    : number of markers to draw
-/// xy   : x,y coordinates of markers
+///
+///  \param [in] n    : number of markers to draw
+///  \param [in] xy   : x,y coordinates of markers
 
 void TGX11::DrawPolyMarker(int n, TPoint *xyt)
 {
@@ -716,13 +725,14 @@ void TGX11::DrawPolyMarker(int n, TPoint *xyt)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a text string using current font.
-/// mode       : drawing mode
-/// mode=0     : the background is not drawn (kClear)
-/// mode=1     : the background is drawn (kOpaque)
-/// x,y        : text position
-/// angle      : text angle
-/// mgn        : magnification factor
-/// text       : text string
+///
+///  \param [in] mode       : drawing mode
+///              - mode=0     : the background is not drawn (kClear)
+///              - mode=1     : the background is drawn (kOpaque)
+///  \param [in] x,y        : text position
+///  \param [in] angle      : text angle
+///  \param [in] mgn        : magnification factor
+///  \param [in] text       : text string
 
 void TGX11::DrawText(int x, int y, float angle, float mgn,
                      const char *text, ETextMode mode)
@@ -927,10 +937,11 @@ Int_t TGX11::GetDoubleBuffer(int wid)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return position and size of window wid.
-/// wid        : window identifier
-/// x,y        : window position (output)
-/// w,h        : window size (output)
-/// if wid < 0 the size of the display is returned
+///
+///  \param [in] wid        : window identifier
+///  \param [in] x,y        : window position (output)
+///  \param [in] w,h        : window size (output)
+///  \param [in] if wid < 0 the size of the display is returned
 
 void TGX11::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &h)
 {
@@ -1014,9 +1025,10 @@ void TGX11::GetRGB(int index, float &r, float &g, float &b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the size of a character string.
-/// iw          : text width
-/// ih          : text height
-/// mess        : message
+///
+///  \param [in] w          : text width
+///  \param [in] h          : text height
+///  \param [in] mess        : message
 
 void TGX11::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
 {
@@ -1035,7 +1047,8 @@ void TGX11::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the X11 window identifier.
-/// wid      : Workstation identifier (input)
+///
+///  \param [in] wid      : Workstation identifier (input)
 
 Window_t TGX11::GetWindowID(int wid)
 {
@@ -1044,9 +1057,10 @@ Window_t TGX11::GetWindowID(int wid)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Move the window wid.
-/// wid  : Window identifier.
-/// x    : x new window position
-/// y    : y new window position
+///
+///  \param [in] wid  : Window identifier.
+///  \param [in] x    : x new window position
+///  \param [in] y    : y new window position
 
 void TGX11::MoveWindow(int wid, int x, int y)
 {
@@ -1208,7 +1222,8 @@ Int_t TGX11::OpenDisplay(void *disp)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a new pixmap.
-/// w,h : Width and height of the pixmap.
+///
+///  \param [in] w,h : Width and height of the pixmap.
 
 Int_t TGX11::OpenPixmap(unsigned int w, unsigned int h)
 {
@@ -1265,7 +1280,8 @@ again:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open window and return window number.
-/// Return -1 if window initialization fails.
+///
+/// \return -1 if window initialization fails.
 
 Int_t TGX11::InitWindow(ULong_t win)
 {
@@ -1415,8 +1431,9 @@ void TGX11::RemoveWindow(ULong_t qwid)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Query pointer position.
-/// ix       : X coordinate of pointer
-/// iy       : Y coordinate of pointer
+///
+///  \param [in] ix       : X coordinate of pointer
+///  \param [in] iy       : Y coordinate of pointer
 /// (both coordinates are relative to the origin of the root window)
 
 void TGX11::QueryPointer(int &ix, int &iy)
@@ -1444,29 +1461,31 @@ void  TGX11::RemovePixmap(Drawable *pix)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Request Locator position.
-/// x,y       : cursor position at moment of button press (output)
-/// ctyp      : cursor type (input)
-///   ctyp=1 tracking cross
-///   ctyp=2 cross-hair
-///   ctyp=3 rubber circle
-///   ctyp=4 rubber band
-///   ctyp=5 rubber rectangle
 ///
-/// mode      : input mode
-///   mode=0 request
-///   mode=1 sample
+///  \param [in] x,y       : cursor position at moment of button press (output)
+///  \param [in] ctyp      : cursor type (input)
+///              - ctyp=1 tracking cross
+///              - ctyp=2 cross-hair
+///              - ctyp=3 rubber circle
+///              - ctyp=4 rubber band
+///              - ctyp=5 rubber rectangle
+///
+///  \param [in] mode      : input mode
+///              - mode=0 request
+///              - mode=1 sample
 ///
 /// Request locator:
-/// return button number  1 = left is pressed
-///                       2 = middle is pressed
-///                       3 = right is pressed
+/// return button number:
+///                     - 1 = left is pressed
+///                     - 2 = middle is pressed
+///                     - 3 = right is pressed
 ///        in sample mode:
-///                      11 = left is released
-///                      12 = middle is released
-///                      13 = right is released
-///                      -1 = nothing is pressed or released
-///                      -2 = leave the window
-///                    else = keycode (keyboard is pressed)
+///                     - 11 = left is released
+///                     - 12 = middle is released
+///                     - 13 = right is released
+///                     - -1 = nothing is pressed or released
+///                     - -2 = leave the window
+///                     - else = keycode (keyboard is pressed)
 
 Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
 {
@@ -1638,8 +1657,9 @@ Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Request a string.
-/// x,y         : position where text is displayed
-/// text        : text displayed (input), edited text (output)
+///
+///  \param [in] x,y         : position where text is displayed
+///  \param [in] text        : text displayed (input), edited text (output)
 ///
 /// Request string:
 /// text is displayed and can be edited with Emacs-like keybinding
@@ -1798,9 +1818,10 @@ Int_t TGX11::RequestString(int x, int y, char *text)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Rescale the window wid.
-/// wid  : Window identifier
-/// w    : Width
-/// h    : Heigth
+///
+///  \param [in] wid  : Window identifier
+///  \param [in] w    : Width
+///  \param [in] h    : Height
 
 void TGX11::RescaleWindow(int wid, unsigned int w, unsigned int h)
 {
@@ -1832,8 +1853,9 @@ void TGX11::RescaleWindow(int wid, unsigned int w, unsigned int h)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Resize a pixmap.
-/// wid : pixmap to be resized
-/// w,h : Width and height of the pixmap
+///
+///  \param [in] wid : pixmap to be resized
+///  \param [in] w,h : Width and height of the pixmap
 
 int TGX11::ResizePixmap(int wid, unsigned int w, unsigned int h)
 {
@@ -1975,9 +1997,10 @@ void TGX11::SetClipOFF(int wid)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set clipping region for the window wid.
-/// wid        : Window indentifier
-/// x,y        : origin of clipping rectangle
-/// w,h        : size of clipping rectangle;
+///
+///  \param [in] wid        : Window identifier
+///  \param [in] x,y        : origin of clipping rectangle
+///  \param [in] w,h        : size of clipping rectangle;
 
 void TGX11::SetClipRegion(int wid, int x, int y, unsigned int w, unsigned int h)
 {
@@ -2043,10 +2066,12 @@ void  TGX11::SetCursor(int wid, ECursor cursor)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the double buffer on/off on window wid.
-/// wid  : Window identifier.
-///        999 means all the opened windows.
-/// mode : 1 double buffer is on
-///        0 double buffer is off
+///
+///  \param [in] wid  : Window identifier.
+///       - 999 means all the opened windows.
+///  \param [in] mode :
+///       - 1 double buffer is on
+///       - 0 double buffer is off
 
 void TGX11::SetDoubleBuffer(int wid, int mode)
 {
@@ -2108,12 +2133,13 @@ void TGX11::SetDoubleBufferON()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the drawing mode.
-/// mode : drawing mode
-///   mode=1 copy
-///   mode=2 xor
-///   mode=3 invert
-///   mode=4 set the suitable mode for cursor echo according to
-///          the vendor
+///
+///  \param [in] mode : drawing mode
+///            - mode=1 copy
+///            - mode=2 xor
+///            - mode=3 invert
+///            - mode=4 set the suitable mode for cursor echo according to
+///                     the vendor
 
 void TGX11::SetDrawMode(EDrawMode mode)
 {
@@ -2154,8 +2180,9 @@ void TGX11::SetFillColor(Color_t cindex)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set fill area style.
-/// fstyle   : compound fill area interior style
-///    fstyle = 1000*interiorstyle + styleindex
+///
+///  \param [in] fstyle   : compound fill area interior style
+///            - fstyle = 1000*interiorstyle + styleindex
 
 void TGX11::SetFillStyle(Style_t fstyle)
 {
@@ -2243,13 +2270,14 @@ void TGX11::SetLineColor(Color_t cindex)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set line type.
-/// n         : length of dash list
-/// dash(n)   : dash segment lengths
 ///
-/// if n <= 0 use solid lines
-/// if n >  0 use dashed lines described by DASH(N)
-///    e.g. N=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
-///    and a gap of 7 between dashes
+///  \param [in] n         : length of dash list
+///  \param [in] dash(n)   : dash segment lengths
+///
+///  - if n <= 0 use solid lines
+///  - if n >  0 use dashed lines described by DASH(N)
+///       e.g. N=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
+///       and a gap of 7 between dashes
 
 void TGX11::SetLineType(int n, int *dash)
 {
@@ -2312,7 +2340,8 @@ void TGX11::SetLineStyle(Style_t lstyle)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set line width.
-/// width   : line width in pixels
+///
+///  \param [in] width   : line width in pixels
 
 void TGX11::SetLineWidth(Width_t width )
 {
@@ -2344,7 +2373,8 @@ void TGX11::SetMarkerColor(Color_t cindex)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set marker size index.
-/// msize  : marker scale factor
+///
+///  \param [in] msize  : marker scale factor
 
 void TGX11::SetMarkerSize(Float_t msize)
 {
@@ -2358,17 +2388,18 @@ void TGX11::SetMarkerSize(Float_t msize)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set marker type.
-/// type      : marker type
-/// n         : length of marker description
-/// xy        : list of points describing marker shape
 ///
-/// if n == 0 marker is a single point
-/// if TYPE == 0 marker is hollow circle of diameter N
-/// if TYPE == 1 marker is filled circle of diameter N
-/// if TYPE == 2 marker is a hollow polygon describe by line XY
-/// if TYPE == 3 marker is a filled polygon describe by line XY
-/// if TYPE == 4 marker is described by segmented line XY
-///   e.g. TYPE=4,N=4,XY=(-3,0,3,0,0,-3,0,3) sets a plus shape of 7x7 pixels
+///  \param [in] type      : marker type
+///  \param [in] n         : length of marker description
+///  \param [in] xy        : list of points describing marker shape
+///
+///  - if n == 0 marker is a single point
+///  - if TYPE == 0 marker is hollow circle of diameter N
+///  - if TYPE == 1 marker is filled circle of diameter N
+///  - if TYPE == 2 marker is a hollow polygon describe by line XY
+///  - if TYPE == 3 marker is a filled polygon describe by line XY
+///  - if TYPE == 4 marker is described by segmented line XY
+///     e.g. TYPE=4,N=4,XY=(-3,0,3,0,0,-3,0,3) sets a plus shape of 7x7 pixels
 
 void TGX11::SetMarkerType(int type, int n, RXPoint *xy)
 {
@@ -2734,8 +2765,9 @@ Int_t TGX11::FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color intensities for given color index.
-/// cindex     : color index
-/// r,g,b      : red, green, blue intensities between 0.0 and 1.0
+///
+///  \param [in] cindex     : color index
+///  \param [in] r,g,b      : red, green, blue intensities between 0.0 and 1.0
 
 void TGX11::SetRGB(int cindex, float r, float g, float b)
 {
@@ -2767,8 +2799,9 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set text alignment.
-/// txalh   : horizontal text alignment
-/// txalv   : vertical text alignment
+///
+///  \param [in] txalh   : horizontal text alignment
+///  \param [in] txalv   : vertical text alignment
 
 void TGX11::SetTextAlign(Short_t talign)
 {
@@ -2847,10 +2880,11 @@ void TGX11::SetTextColor(Color_t cindex)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set text font to specified name.
-/// mode       : loading flag
-/// mode=0     : search if the font exist (kCheck)
-/// mode=1     : search the font and load it if it exists (kLoad)
-/// font       : font name
+///
+///  \param [in] mode       : loading flag
+///            - mode=0     : search if the font exist (kCheck)
+///            - mode=1     : search the font and load it if it exists (kLoad)
+///  \param [in] font       : font name
 ///
 /// Set text font to specified name. This function returns 0 if
 /// the specified font is found, 1 if not.
@@ -2911,9 +2945,10 @@ void TGX11::SetTextSize(Float_t textsize)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set synchronisation on or off.
-/// mode : synchronisation on/off
-///    mode=1  on
-///    mode<>0 off
+///
+///  \param [in] mode : synchronisation on/off
+///            - mode=1  on
+///            - mode<>0 off
 
 void TGX11::Sync(int mode)
 {
@@ -2931,8 +2966,8 @@ void TGX11::Sync(int mode)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update display.
-/// mode : (1) update
-///        (0) sync
+///
+///  \param [in] mode : (1) update (0) sync
 ///
 /// Synchronise client and server once (not permanent).
 /// Copy the pixmap gCws->fDrawing on the window gCws->fWindow
@@ -2953,8 +2988,10 @@ void TGX11::UpdateWindow(int mode)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set pointer position.
-/// ix       : New X coordinate of pointer
-/// iy       : New Y coordinate of pointer
+///
+///  \param [in] ix       : New X coordinate of pointer
+///  \param [in] iy       : New Y coordinate of pointer
+///
 /// Coordinates are relative to the origin of the window id
 /// or to the origin of the current window if id == 0.
 
@@ -2970,10 +3007,11 @@ void TGX11::Warp(Int_t ix, Int_t iy, Window_t id)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the pixmap wid in the bitmap file pxname.
-/// wid         : Pixmap address
-/// w,h         : Width and height of the pixmap.
-/// lenname     : pixmap name length
-/// pxname      : pixmap name
+///
+///  \param [in] wid         : Pixmap address
+///  \param [in] w,h         : Width and height of the pixmap.
+///  \param [in] lenname     : pixmap name length
+///  \param [in] pxname      : pixmap name
 
 void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
 {
@@ -3308,7 +3346,7 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns an array of pixels created from a part of drawable (defined by x, y, w, h)
 /// in format:
-/// b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+/// `b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..`
 ///
 /// Pixels are numbered from left to right and from top to bottom.
 /// By default all pixels from the whole drawable are returned.
@@ -3336,8 +3374,10 @@ Pixmap_t TGX11::CreatePixmapFromData(unsigned char * /*bits*/, UInt_t /*width*/,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register pixmap created by gVirtualGL
-/// w,h : Width and height of the pixmap.
-///register new pixmap
+///
+///  \param [in] w,h : Width and height of the pixmap.
+///
+/// register new pixmap
 
 Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h)
 {
@@ -3382,8 +3422,8 @@ Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h)
 /// argument, returns 0 in case extension is not supported and returns -1
 /// in case of error (like server not initialized).
 /// Examples:
-///   "Apple-WM" - does server run on MacOS X;
-///   "XINERAMA" - does server support Xinerama.
+///  - "Apple-WM" - does server run on MacOS X;
+///  - "XINERAMA" - does server support Xinerama.
 /// See also the output of xdpyinfo.
 
 Int_t TGX11::SupportsExtension(const char *ext) const
