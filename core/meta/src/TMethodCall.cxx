@@ -9,19 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMethodCall                                                          //
-//                                                                      //
-// Method or function calling interface. Objects of this class contain  //
-// the (CINT) environment to call a global function or a method for an  //
-// object of a specific class with the desired arguments. This class is //
-// espicially useful when a method has to be called more times for      //
-// different objects and/or with different arguments. If a function or  //
-// method needs to be called only once one better uses                  //
-// TInterpreter::Execute().                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMethodCall
+Method or function calling interface. Objects of this class contain
+the (CINT) environment to call a global function or a method for an
+object of a specific class with the desired arguments. This class is
+especially useful when a method has to be called more times for
+different objects and/or with different arguments. If a function or
+method needs to be called only once one better uses
+TInterpreter::Execute().
+*/
 
 #include "TInterpreter.h"
 #include "TMethodCall.h"
@@ -103,7 +99,7 @@ fDtorOnly(orig.fDtorOnly), fRetType(orig.fRetType)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignement operator.
+/// Assignment operator.
 
 TMethodCall &TMethodCall::operator=(const TMethodCall &rhs)
 {
@@ -143,13 +139,16 @@ TObject *TMethodCall::Clone(const char *) const
    return newobj;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Helper function to find the scope associated with a qualified
+/// function name
+
+static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinfo)
+{
+
 //______________________________________________________________________________
 // FIXME: We don't need to split that into lookup scope and lookup member.
 // Consider merging the implementation with the new lookup functionality.
-static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinfo)
-{
-   // Helper function to find the scope associated with a qualified
-   // function name
 
    if (function) {
       UInt_t nested = 0;
@@ -250,6 +249,7 @@ void TMethodCall::Init(TFunction *function)
 /// Initialize the method invocation environment. Necessary input
 /// information: the class, method name and the parameter string
 /// of the form "\"aap\", 3, 4.35".
+///
 /// To execute the method call TMethodCall::Execute(object,...).
 /// This two step method is much more efficient than calling for
 /// every invocation TInterpreter::Execute(...).
@@ -270,6 +270,7 @@ void TMethodCall::Init(TClass *cl, const char *method, const char *params, Bool_
 /// Initialize the function invocation environment. Necessary input
 /// information: the function name and the parameter string of
 /// the form "\"aap\", 3, 4.35".
+///
 /// To execute the method call TMethodCall::Execute(...).
 /// This two step method is much more efficient than calling for
 /// every invocation TInterpreter::Execute(...).
@@ -285,6 +286,9 @@ void TMethodCall::Init(const char *function, const char *params)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function implements Init and InitWithPrototype.
+///
+/// 'methodname' should NOT have any scope information in it.  The scope
+/// information should be passed via the TClass or CINT ClassInfo.
 
 void TMethodCall::InitImplementation(const char *methodname, const char *params,
                                      const char *proto,
@@ -292,9 +296,6 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
                                      const ClassInfo_t *cinfo,
                                      ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */)
 {
-   // 'methodname' should NOT have any scope information in it.  The scope
-   // information should be passed via the TClass or CINT ClassInfo.
-
    if (!fFunc) {
       R__LOCKGUARD2(gInterpreterMutex);
       fFunc = gCling->CallFunc_Factory();
@@ -330,6 +331,7 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
 /// Initialize the method invocation environment. Necessary input
 /// information: the class, method name and the prototype string of
 /// the form: "char*,int,float".
+///
 /// To execute the method call TMethodCall::Execute(object,...).
 /// This two step method is much more efficient than calling for
 /// every invocation TInterpreter::Execute(...).
@@ -350,6 +352,7 @@ void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *
 /// Initialize the function invocation environment. Necessary input
 /// information: the function name and the prototype string of
 /// the form: "char*,int,float".
+///
 /// To execute the method call TMethodCall::Execute(...).
 /// This two step method is much more efficient than calling for
 /// every invocation TInterpreter::Execute(...).
@@ -542,7 +545,6 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
 ///                        of the expected type.
 /// \param[in] nargs       Number of arguments passed (must be less than actua size of args
 /// \param[out] ret        Address of value (or object) to use for the return value.
-
 
 void TMethodCall::Execute(void *objAddress, const void* args[], int nargs, void *ret /* = 0 */)
 {
