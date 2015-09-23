@@ -9,11 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/**
+  \defgroup GraphicsBackends Graphics' Backends
+   Graphics' Backends interface classes.
+   Graphics classes interfacing ROOT graphics with the low level
+   native graphics backends(s) like X11, Cocoa, Win32 etc...
+   These classes are not meant to be used directly by ROOT users.
+*/
+
 /** \class TVirtualX
-Semi-Abstract base class defining a generic interface to the
-underlying, low level, graphics system (X11, Win32, MacOS).
-An instance of TVirtualX itself defines a batch interface to the
-graphics system.
+\ingroup GraphicsBackends
+Semi-Abstract base class defining a generic interface to the underlying, low
+level, native graphics backend (X11, Win32, MacOS, OpenGL...).
+An instance of TVirtualX itself defines a batch interface to the graphics system.
 */
 
 #include "TVirtualX.h"
