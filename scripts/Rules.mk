@@ -844,10 +844,10 @@ endif
 	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
 
 exec%.ref:  | exec%.clog
-	$(CMDECHO) if [ ! -e $@ ] ; then echo > $@ ; echo "Processing exec$*.cxx+..." >> $@ ; echo "(int) 0" >> $@ ; fi
+	$(CMDECHO) if [ ! -e $@ ] ; then echo > $@ ; echo "Processing exec$*.cxx+..." >> $@ ; fi
 
 exec%.ref:  | exec%.log
-	$(CMDECHO)  if [ ! -e $@ ] ; then echo > $@ ; echo "Processing exec$*.C..." >> $@ ; echo "(int) 0" >> $@ ; fi
+	$(CMDECHO)  if [ ! -e $@ ] ; then echo > $@ ; echo "Processing exec$*.C..." >> $@ ; fi
 
 %.py.ref:
 	$(CMDECHO) touch $@
