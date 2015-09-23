@@ -638,6 +638,11 @@ root/meta/genreflex/XMLParsing/dicts/*
 /root/meta/tclass/tmpltd.root
 /root/meta/tclass/tmpltd32.root
 
+# /root/meta/ROOT-7462
+/root/meta/ROOT-7462/inst2lib.cxx
+/root/meta/ROOT-7462/instlib.cxx
+/root/meta/ROOT-7462/inst.root
+
 # /root/rint/
 /root/rint/TabCom.err
 

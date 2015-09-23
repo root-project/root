@@ -1,5 +1,6 @@
 CLEAN_TARGETS += *.log dummy* *pcm *o *rflx.* $(ALL_LIBRARIES) inst.root instlib* inst2lib*
-TEST_TARGETS += execLoadLibs
+TEST_TARGETS += execLoadLibs runInvalidDeclRecovery.success
+#runInvalidDeclRecoveryCI.success
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
    export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
@@ -31,4 +32,10 @@ inst2lib.$(DllSuf): inst2lib.$(ObjSuf)
 execWriteFile.log: instlib.$(DllSuf) inst2lib.$(DllSuf)
 
 execTest.log: execWriteFile.success
+
+runInvalidDeclRecovery.success: runInvalidDeclRecovery.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > runInvalidDeclRecovery.log 2>runInvalidDeclRecovery.ign.elog || handleError.sh --cmd='Execution of $<' --result=$$? --log=runInvalidDeclRecovery.ign.elog --test=runInvalidDeclRecovery.C && touch $@
+
+#runInvalidDeclRecoveryCI.success: runInvalidDeclRecoveryCI.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+#	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > runInvalidDeclRecoveryCI.log 2>runInvalidDeclRecoveryCI.ign.elog || handleError.sh --cmd='Execution of $<' --result=$$? --log=runInvalidDeclRecoveryCI.ign.elog --test=runInvalidDeclRecoveryCI.C && touch $@
 
