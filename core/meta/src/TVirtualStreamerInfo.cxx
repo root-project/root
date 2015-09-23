@@ -145,7 +145,7 @@ TStreamerBasicType *TVirtualStreamerInfo::GetElementCounter(const char *countNam
 ////////////////////////////////////////////////////////////////////////////////
 /// Return whether the TStreamerInfos will save the collections in
 /// "member-wise" order whenever possible.    The default is to store member-wise.
-///  --kTRUE indicates member-wise storing
+///  - kTRUE indicates member-wise storing
 ///  - kFALSE inddicates object-wise storing
 ///
 /// A collection can be saved member wise when it contain is guaranteed to be
