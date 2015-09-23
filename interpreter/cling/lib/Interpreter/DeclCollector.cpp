@@ -68,6 +68,13 @@ namespace cling {
     m_CurTransaction->append(DCI);
   }
 
+  void DeclCollector::HandleInvalidTagDeclDefinition(clang::TagDecl *TD){
+    Transaction::DelayCallInfo DCI(DeclGroupRef(TD),
+                                   Transaction::kCCIHandleTagDeclDefinition);
+    m_CurTransaction->append(DCI);
+    m_CurTransaction->setIssuedDiags(Transaction::kErrors);
+  }
+
   void DeclCollector::HandleVTable(CXXRecordDecl* RD, bool DefinitionRequired) {
     Transaction::DelayCallInfo DCI(DeclGroupRef(RD),
                                    Transaction::kCCIHandleVTable);
