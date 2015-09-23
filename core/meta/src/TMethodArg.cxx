@@ -17,17 +17,15 @@
 #include "TMethodCall.h"
 #include "TDataMember.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  Each ROOT method (see TMethod) has a linked list of its arguments.  //
-//  This class describes one single method argument.                    //
-//  The method argument info is obtained via the CINT api.              //
-//  See class TCling.                                                    //
-//                                                                      //
-//  The method argument information is used a.o. in the TContextMenu    //
-//  and THtml classes.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMethodArg
+Each ROOT method (see TMethod) has a linked list of its arguments.
+This class describes one single method argument.
+The method argument info is obtained via the CINT api.
+See class TCling.
+
+The method argument information is used a.o. in the TContextMenu
+and THtml classes.
+*/
 
 ClassImp(TMethodArg)
 
@@ -80,11 +78,10 @@ const char *TMethodArg::GetFullTypeName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the normalized name of the return type.  A normalized name is fully
+/// Get the normalized name of the return type. A normalized name is fully
 /// qualified and has all typedef desugared except for the 'special' typedef
 /// which include Double32_t, Float16_t, [U]Long64_t and std::string.  It
 /// also has std:: removed [This is subject to change].
-///
 
 std::string TMethodArg::GetTypeNormalizedName() const
 {
@@ -114,6 +111,7 @@ TList *TMethodArg::GetOptions() const
 /// MethodArg (i.e. it is used as initial values in argument-asking dialogs
 /// popped up from context-meny),you can get this value from one of data
 /// members of the class.
+///
 /// The only restriction is, that this DataMember object must have its
 /// Getter/Setter methods set-up correctly - for details look at TDataMember.
 /// To learn how to specify the data member to which the argument should
