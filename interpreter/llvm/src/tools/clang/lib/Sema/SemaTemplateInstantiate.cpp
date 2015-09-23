@@ -2109,7 +2109,9 @@ Sema::InstantiateClass(SourceLocation PointOfInstantiation,
   // Exit the scope of this instantiation.
   SavedContext.pop();
 
-  if (!Instantiation->isInvalidDecl()) {
+  if (Instantiation->isInvalidDecl()) {
+     Consumer.HandleInvalidTagDeclDefinition(Instantiation);
+  } else {
     Consumer.HandleTagDeclDefinition(Instantiation);
 
     // Always emit the vtable for an explicit instantiation definition
