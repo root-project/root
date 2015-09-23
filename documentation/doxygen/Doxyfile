@@ -777,8 +777,8 @@ INPUT                  = . \
                          ../../graf3d/gl/ \
                          ../../graf3d/gviz3d/ \
                          ../../gui/gui/ \
-                         ../../gui/fitpanel/
-                         ../../hist \
+                         ../../gui/fitpanel/ \
+                         ../../hist/ \
                          ../../io/io/ \
                          ../../io/sql/ \
                          ../../io/xml/ \
@@ -794,12 +794,11 @@ INPUT                  = . \
                          ../../net/net/ \
                          ../../net/netx/ \
                          ../../net/netxng/ \
-                         ../../proof \
-                         ../../tmva \
-                         ../../roofit \
-                         ../../tree \
+                         ../../proof/ \
+                         ../../tmva/ \
+                         ../../roofit/ \
+                         ../../tree/ \
                          ../../sql/
-
 #                         ../../bindings/pyroot/
 #                         ../../bindings/r/
 #                         ../../bindings/ruby/
