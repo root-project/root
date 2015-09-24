@@ -1,12 +1,23 @@
 #include "MPSendRecv.h"
 #include "TBufferFile.h"
-#include "EMPCode.h"
+#include "MPCode.h"
 #include <memory>
 
 //////////////////////////////////////////////////////////////////////////
-/// Send a message through socket s with the specified code.
-/// For readability, codes should be enumerated as in EMPCode.
-/// false is returned on error, true otherwise.
+/// Send a message with the specified code on the specified socket.
+/// This standalone function can be used to send a code
+/// on a given socket. It does not check whether the socket connection is
+/// in a valid state. The message code can then be retrieved via MPRecv().\n
+/// **Note:** only objects the headers of which have been parsed by
+/// cling can be sent by MPSend(). User-defined types can be made available to 
+/// cling via a call like `gSystem->ProcessLine("#include \"header.h\"")`.
+/// Pointer types are not supported (with the exception of const char*),
+/// but the user can simply dereference the pointer and send the
+/// pointed object instead.\n
+/// **Note:** for readability, codes should be enumerated as in EMPCode.\n
+/// \param s a pointer to a valid TSocket. No validity checks are performed\n
+/// \param code the code to be sent
+/// \return the number of bytes sent, as per TSocket::SendRaw
 int MPSend(TSocket *s, unsigned code)
 {
    TBufferFile wBuf(TBuffer::kWrite);
@@ -17,14 +28,25 @@ int MPSend(TSocket *s, unsigned code)
 
 
 //////////////////////////////////////////////////////////////////////////
-/// Receive message from the socket.
+/// Receive message from a socket.
+/// This standalone function can be used to read a message that
+/// has been sent via MPSend(). The smart pointer contained in the returned
+/// ::MPCodeBufPair is null if the message does not contain an object,
+/// otherwise it points to a TBufferFile.
+/// To retrieve the object from the buffer different methods must be used
+/// depending on the type of the object to be read:\n
+/// * non-pointer built-in types: TBufferFile::operator>> must be used\n
+/// * c-strings: TBufferFile::ReadString must be used\n
+/// * class types: TBufferFile::ReadObjectAny must be used\n
+/// \param s a pointer to a valid TSocket. No validity checks are performed\n
+/// \return ::MPCodeBufPair, i.e. an std::pair containing message code and (possibly) object 
 MPCodeBufPair MPRecv(TSocket *s)
 {
    char* rawbuf = new char[sizeof(UInt_t)];
    //receive message code
    unsigned nBytes = s->RecvRaw(rawbuf, sizeof(UInt_t));
    if (nBytes == 0) {
-      return std::make_pair(EMPCode::kRecvError, nullptr);
+      return std::make_pair(MPCode::kRecvError, nullptr);
    }
    //read message code
    TBufferFile bufReader(TBuffer::kRead, sizeof(UInt_t), rawbuf, false);
@@ -41,12 +63,12 @@ MPCodeBufPair MPRecv(TSocket *s)
    delete [] rawbuf;
 
    //receive object if needed
-   std::shared_ptr<TBufferFile> objBuf; //defaults to nullptr
+   std::unique_ptr<TBufferFile> objBuf; //defaults to nullptr
    if(classBufSize != 0) {
       char *classBuf = new char[classBufSize];
       s->RecvRaw(classBuf, classBufSize);
       objBuf.reset(new TBufferFile(TBuffer::kRead, classBufSize, classBuf, true)); //the buffer is deleted by TBuffer's dtor
    }
 
-   return std::make_pair(code, objBuf);
+   return std::make_pair(code, std::move(objBuf));
 }

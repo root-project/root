@@ -16,7 +16,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class TMPClient+;
-#pragma link C++ class TMPServer+;
+#pragma link C++ class TMPWorker+;
 #pragma link C++ class TMPInterruptHandler+;
 #pragma link C++ class TPool+;
 

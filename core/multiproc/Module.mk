@@ -19,13 +19,13 @@ MULTIPROCDO     := $(MULTIPROCDS:.cxx=.o)
 MULTIPROCDH     := $(MULTIPROCDS:.cxx=.h)
 
 MULTIPROCH      := $(MODDIRI)/TMPClient.h $(MODDIRI)/TPool.h \
-                $(MODDIRI)/TMPServer.h $(MODDIRI)/MPSendRecv.h \
-                $(MODDIRI)/TPoolServer.h \
-                $(MODDIRI)/EMPCode.h $(MODDIRI)/EPoolCode.h
+                $(MODDIRI)/TMPWorker.h $(MODDIRI)/MPSendRecv.h \
+                $(MODDIRI)/TPoolWorker.h $(MODDIRI)/MPCode.h \
+                $(MODDIRI)/PoolCode.h
 
 MULTIPROCS      := $(MODDIRS)/TMPClient.cxx $(MODDIRS)/TPool.cxx \
-                $(MODDIRS)/TMPServer.cxx $(MODDIRS)/MPSendRecv.cxx \
-                $(MODDIRS)/TPoolServer.cxx
+                $(MODDIRS)/TMPWorker.cxx $(MODDIRS)/MPSendRecv.cxx \
+                $(MODDIRS)/TPoolWorker.cxx
 
 MULTIPROCO      := $(call stripsrc,$(MULTIPROCS:.cxx=.o))
 

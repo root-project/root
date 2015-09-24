@@ -5,10 +5,10 @@
 #include "TROOT.h" //gROOT
 #include "TObject.h"
 #include "TServerSocket.h"
-#include "EMPCode.h"
+#include "MPCode.h"
 #include "TSocket.h"
-#include "TMPServer.h"
-#include "TCollection.h" //TIter
+#include "TMPWorker.h"
+#include "TSeqCollection.h"
 #include "TList.h"
 #include "TError.h" //gErrorIgnoreLevel
 #include <unistd.h> // close, fork
@@ -17,15 +17,26 @@
 #include <sys/types.h> //socketpair
 #include <sys/socket.h> //socketpair
 #include <iostream>
-#include <memory> //unique_ptr, shared_ptr
+#include <memory> //unique_ptr
 #include <list>
+
+//////////////////////////////////////////////////////////////////////////
+///
+/// \class TMPInterruptHandler
+///
+/// This is an implementation of a TSignalHandler that is added to the
+/// eventloop in the children processes spawned by a TMPClient. When a SIGINT
+/// (i.e. kSigInterrupt) is received, TMPInterruptHandler shuts down the
+/// worker and performs clean-up operations, then exits.
+///
+//////////////////////////////////////////////////////////////////////////
 
 /// Class constructor.
 TMPInterruptHandler::TMPInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE)
 {
 }
 
-/// When SIGINT is received clean-up and quit the application
+/// Executed when SIGINT is received. Clean-up and quit the application
 //TODO this should log somewhere that the server is being shut down
 Bool_t TMPInterruptHandler::Notify()
 {
@@ -36,13 +47,29 @@ Bool_t TMPInterruptHandler::Notify()
    return true;
 }
 
+//////////////////////////////////////////////////////////////////////////
+///
+/// \class TMPClient
+///
+/// Base class for multiprocess applications' clients. It provides a
+/// simple interface to fork a ROOT session into server/worker sessions
+/// and exchange messages with them. Multiprocessing applications can build
+/// on TMPClient and TMPWorker: the class providing multiprocess
+/// functionalities to users should inherit (possibly privately) from
+/// TMPClient, and the workers executing tasks should inherit from TMPWorker.
+///
+//////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
 /// Class constructor.
-/// nWorkers is the number of children processes that will be created by
-/// Fork, i.e. the number of workers that will be available during processing.
-/// The default value is the total number of cores of the machine if available,
-/// 2 otherwise.
+/// \param nWorkers
+/// \parblock
+/// the number of children processes that will be created by
+/// Fork, i.e. the number of workers that will be available after this call.
+/// The default value (0) means that a number of workers equal to the number
+/// of cores of the machine is going to be spawned. If that information is
+/// not available, 2 workers are created instead.
+/// \endparblock
 TMPClient::TMPClient(unsigned nWorkers) : fIsParent(true), fServerPids(), fMon(), fNWorkers(0)
 {
    // decide on number of workers
@@ -64,7 +91,7 @@ TMPClient::TMPClient(unsigned nWorkers) : fIsParent(true), fServerPids(), fMon()
 /// closing off connections and reap the terminated children processes.
 TMPClient::~TMPClient()
 {
-   Broadcast(EMPCode::kShutdownOrder);
+   Broadcast(MPCode::kShutdownOrder);
    TList *l = fMon.GetListOfActives();
    l->Delete();
    delete l;
@@ -83,15 +110,16 @@ TMPClient::~TMPClient()
 /// connected to the original (interactive) session through TSockets.
 /// The children processes' PIDs are added to the fServerPids vector.
 /// The parent session can then communicate with the children using the
-/// Broadcast and Send methods, and receive messages through Collect and
-/// CollectOne.\n
-/// After forking, the children processes will wait for events on server's
-/// TSocket (e.g. messages sent by the parent session). When a message is
-/// received, TMPServer::HandleInput is called if the code of the message
-/// is above 1000, otherwise the unqualified (possibly overridden) version
-/// of HandleInput is called, allowing classes that inherit from TMPServer
-/// to manage their own protocol.
-bool TMPClient::Fork(TMPServer *server)
+/// Broadcast and MPSend methods, and receive messages through MPRecv.\n
+/// \param server
+/// \parblock
+/// A pointer to an instance of the class that will take control
+/// of the subprocesses after forking. Applications should implement their
+/// own class inheriting from TMPWorker. Behaviour can be customized
+/// overriding TMPWorker::HandleInput.
+/// \endparblock
+/// \return true if Fork succeeded, false otherwise
+bool TMPClient::Fork(TMPWorker &server)
 {
    std::string basePath = "/tmp/ROOTMP-";
 
@@ -126,11 +154,9 @@ bool TMPClient::Fork(TMPServer *server)
          }
       }
    }
+   //parent returns here
 
-   if (pid) {
-      //PARENT/CLIENT
-      delete server; //the server is only needed by children processes
-   } else {
+   if (!pid) {
       //CHILD/SERVER
       fIsParent = false;
 
@@ -147,11 +173,9 @@ bool TMPClient::Fork(TMPServer *server)
       //remove stdin from eventloop and close it
       TSeqCollection *fileHandlers = gSystem->GetListOfFileHandlers();
       if(fileHandlers) {
-         TIter next(fileHandlers);
-         TFileHandler *h = nullptr;
-         while ((h = (TFileHandler *)next())) {
-            if (h && h->GetFd() == 0) {
-               gSystem->RemoveFileHandler(h);
+         for (auto h : *fileHandlers) {
+            if (h && ((TFileHandler*)h)->GetFd() == 0) {
+               gSystem->RemoveFileHandler((TFileHandler*)h);
                break;
             }
          }
@@ -176,7 +200,7 @@ bool TMPClient::Fork(TMPServer *server)
       gVirtualX = gGXBatch;
 
       //prepare server and add it to eventloop
-      server->Init(sockets[1]);
+      server.Init(sockets[1]);
 
       gSystem->Run();
    }
@@ -186,23 +210,34 @@ bool TMPClient::Fork(TMPServer *server)
 
 
 //////////////////////////////////////////////////////////////////////////
-///Send a message with the specified code to at most nMessages workers.
-///If nMessages == 0, send specified code to all workers.
-///The number of messages successfully sent is returned.
+/// Send a message with the specified code to at most nMessages workers.
+/// Sockets can either be in an "active" or "non-active" state. This method
+/// activates all the sockets through which the client is connected to the
+/// workers, and deactivates them when a message is sent to the corresponding
+/// worker. This way the sockets pertaining to workers who have been left
+/// idle will be the only ones in the active list
+/// (TSocket::GetMonitor()->GetListOfActives()) after execution.
+/// \param code the code to send (e.g. EMPCode)
+/// \param nMessages
+/// \parblock
+/// the maximum number of messages to send.
+/// If `nMessages == 0 || nMessage > fNWorkers`, send a message to every worker.
+/// \endparblock
+/// \return the number of messages successfully sent
 unsigned TMPClient::Broadcast(unsigned code, unsigned nMessages)
 {
-   if(!nMessages)
+   if(nMessages == 0)
       nMessages = fNWorkers;
    unsigned count = 0;
    fMon.ActivateAll();
 
    //send message to all sockets
-   std::unique_ptr<TList> l(fMon.GetListOfActives());
-   TIter next(l.get());
-   TSocket *s = nullptr;
-   while ((s = (TSocket *)next()) && count < nMessages) {
-      if(MPSend(s, code)) {
-         fMon.DeActivate(s);
+   std::unique_ptr<TList> lp(fMon.GetListOfActives());
+   for (auto s : *lp) {
+      if(count == nMessages)
+         break;
+      if(MPSend((TSocket*)s, code)) {
+         fMon.DeActivate((TSocket*)s);
          ++count;
       } else {
          std::cerr << "[E] Could not send message to server\n";
@@ -216,10 +251,12 @@ unsigned TMPClient::Broadcast(unsigned code, unsigned nMessages)
 //////////////////////////////////////////////////////////////////////////
 /// DeActivate a certain socket.
 /// This does not remove it from the monitor: it will be reactivated by
-/// the next call to Broadcast or possibly other methods.\n
-/// A socket should be DeActivated by HandleInput when the corresponding
+/// the next call to Broadcast() (or possibly other methods that are 
+/// specified to do so).\n
+/// A socket should be DeActivated when the corresponding
 /// worker is done *for now* and we want to stop listening to this worker's
-/// socket. If the worker is done _forever_, Remove should be used instead.
+/// socket. If the worker is done *forever*, Remove() should be used instead.
+/// \param s the socket to be deactivated
 void TMPClient::DeActivate(TSocket *s)
 {
    fMon.DeActivate(s);
@@ -228,9 +265,12 @@ void TMPClient::DeActivate(TSocket *s)
 
 //////////////////////////////////////////////////////////////////////////
 /// Remove a certain socket from the monitor.
-/// A socket should be Removed from the monitor by HandleInput when the
-/// corresponding worker is done _forever_. For example, Remove is called
-/// on sockets pertaining to workers which sent a kShutdownNotice code.
+/// A socket should be Removed from the monitor when the
+/// corresponding worker is done *forever*. For example HandleMPCode()
+/// calls this method on sockets pertaining to workers which sent an
+/// MPCode::kShutdownNotice.\n
+/// If the worker is done *for now*, DeActivate should be used instead.
+/// \param s the socket to be removed from the monitor fMon
 void TMPClient::Remove(TSocket *s)
 {
    fMon.Remove(s);
@@ -239,11 +279,11 @@ void TMPClient::Remove(TSocket *s)
 
 
 //////////////////////////////////////////////////////////////////////////
-/// Wait on worker processes.
-/// This should actually not be a blocking operation, since ReapServers should
-/// only be called when all server sessions have already finished their
-/// jobs and quit. The waiting is done not to leave zombie processes
-/// hanging around.
+/// Wait on worker processes and remove their pids from fServerPids.
+/// A blocking waitpid is called, but this should actually not block
+/// execution since ReapServers should only be called when all workers
+/// have already quit. ReapServers is then called not to leave zombie
+/// processes hanging around, and to clean-up fServerPids.
 void TMPClient::ReapServers()
 {
    for (auto &pid : fServerPids) {
@@ -254,12 +294,17 @@ void TMPClient::ReapServers()
 
 
 //////////////////////////////////////////////////////////////////////////
-/// TMPClient's implementation of HandleInput.
+/// Handle messages containing an EMPCode.
 /// This method should be called upon receiving a message with a code >= 1000
 /// (i.e. EMPCode). It handles the most generic types of messages.\n
-/// Classes inheriting from TMPClient should implement their own HandleInput
-/// function, that should be able to handle message codes specific to that
-/// application.\n
+/// Classes inheriting from TMPClient should implement a similar method
+/// to handle message codes specific to the application they're part of.\n
+/// \param msg the MPCodeBufPair returned by a MPRecv call
+/// \param s 
+/// \parblock
+/// a pointer to the socket from which the message has been received is passed.
+/// This way HandleMPCode knows which socket to reply on.
+/// \endparblock
 void TMPClient::HandleMPCode(MPCodeBufPair& msg, TSocket *s)
 {
    unsigned code = msg.first;
@@ -267,11 +312,11 @@ void TMPClient::HandleMPCode(MPCodeBufPair& msg, TSocket *s)
    char *str = new char[msg.second->BufferSize()];
    msg.second->ReadString(str, msg.second->BufferSize());
 
-   if (code == EMPCode::kMessage) {
+   if (code == MPCode::kMessage) {
       std::cerr << "[I][C] message received: " << str << "\n";
-   } else if (code == EMPCode::kError) {
+   } else if (code == MPCode::kError) {
       std::cerr << "[E][C] error message received:\n" << str << "\n";
-   } else if (code == EMPCode::kShutdownNotice || code == EMPCode::kFatalError) {
+   } else if (code == MPCode::kShutdownNotice || code == MPCode::kFatalError) {
       if(gDebug > 0) //generally users don't want to know this
          std::cerr << "[I][C] shutdown notice received from " << str << "\n";
       Remove(s);

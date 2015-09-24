@@ -2,9 +2,9 @@
 # CMakeLists.txt file for building ROOT core/multiproc package
 ############################################################################
 
-set(headers TMPClient.h MPSendRecv.h TPool.h TMPServer.h TPoolServer.h EMPCode.h EPoolCode.h)
+set(headers TMPClient.h MPSendRecv.h TPool.h TMPWorker.h TPoolWorker.h MPCode.h PoolCode.h)
 
-set(sources TMPClient.cxx MPSendRecv.cxx TPool.cxx TMPServer.cxx TPoolServer.cxx)
+set(sources TMPClient.cxx MPSendRecv.cxx TPool.cxx TMPWorker.cxx TPoolWorker.cxx)
 
 ROOT_GENERATE_DICTIONARY(G__MultiProc ${headers} MODULE MultiProc LINKDEF LinkDef.h)
 
