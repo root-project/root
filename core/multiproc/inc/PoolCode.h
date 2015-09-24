@@ -19,7 +19,7 @@ namespace PoolCode {
    /// An enumeration of the message codes handled by TPool and TPoolWorker.
    ///
    //////////////////////////////////////////////////////////////////////////
-   
+
    enum EPoolCode : unsigned {
       kExecFunc = 0,    ///< Execute function without arguments
       kExecFuncWithArg, ///< Execute function with the argument contained in the message

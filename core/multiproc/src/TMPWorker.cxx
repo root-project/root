@@ -54,7 +54,7 @@ TMPWorker::TMPWorker() : TFileHandler(-1, kRead), fS(), fPid(0)
 /// e.g. by calling TMPWorker::Init explicitly.
 void TMPWorker::Init(int fd)
 {
-   fS.reset(new TSocket(fd,"MPsock")); //TSocket's constructor with this signature seems much faster than TSocket(int fd)
+   fS.reset(new TSocket(fd, "MPsock")); //TSocket's constructor with this signature seems much faster than TSocket(int fd)
    fPid = getpid();
 
    //TFileHandler's stuff
@@ -70,12 +70,12 @@ void TMPWorker::Init(int fd)
 /// EMPCode). It handles the most generic types of messages.\n
 /// Classes inheriting from TMPWorker should implement their own HandleInput
 /// function, that should be able to handle codes specific to that application.\n
-/// The appropriate version of the HandleInput method (TMPWorker's or the 
+/// The appropriate version of the HandleInput method (TMPWorker's or the
 /// overriding version) is automatically called depending on the message code.
-void TMPWorker::HandleInput(MPCodeBufPair& msg)
+void TMPWorker::HandleInput(MPCodeBufPair &msg)
 {
    unsigned code = msg.first;
-   
+
    std::string reply = "S" + std::to_string(fPid);
    if (code == MPCode::kMessage) {
       //general message, ignore it
@@ -102,11 +102,11 @@ void TMPWorker::HandleInput(MPCodeBufPair& msg)
 Bool_t TMPWorker::Notify()
 {
    MPCodeBufPair msg = MPRecv(fS.get());
-   if(msg.first == MPCode::kRecvError) {
+   if (msg.first == MPCode::kRecvError) {
       std::cerr << "Lost connection to client\n";
       gSystem->Exit(0);
    }
-   if(msg.first < 1000)
+   if (msg.first < 1000)
       HandleInput(msg); //call overridden method
    else
       TMPWorker::HandleInput(msg); //call this class' method

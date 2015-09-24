@@ -87,7 +87,7 @@ TMPClient::TMPClient(unsigned nWorkers) : fIsParent(true), fServerPids(), fMon()
 
 //////////////////////////////////////////////////////////////////////////
 /// Class destructor.
-/// This method is in charge of shutting down any remaining worker, 
+/// This method is in charge of shutting down any remaining worker,
 /// closing off connections and reap the terminated children processes.
 TMPClient::~TMPClient()
 {
@@ -129,10 +129,10 @@ bool TMPClient::Fork(TMPWorker &server)
    for (unsigned i = 0; i < fNWorkers; ++i) {
       //create socket pair
       int ret = socketpair(AF_UNIX, SOCK_STREAM, 0, sockets);
-      if(ret != 0) {
+      if (ret != 0) {
          std::cerr << "[E][C] Could not create socketpair. Error n. " << errno << ". Now retrying.\n";
-        --i;
-        continue;
+         --i;
+         continue;
       }
 
       //fork
@@ -145,7 +145,7 @@ bool TMPClient::Fork(TMPWorker &server)
          //parent process, create TSocket with current value of sockets[0]
          close(sockets[1]); //we don't need this
          TSocket *s = new TSocket(sockets[0], (std::to_string(pid)).c_str()); //TSocket's constructor with this signature seems much faster than TSocket(int fd)
-         if(s && s->IsValid()) {
+         if (s && s->IsValid()) {
             fMon.Add(s);
             fServerPids.push_back(pid);
          } else {
@@ -163,19 +163,19 @@ bool TMPClient::Fork(TMPWorker &server)
       //override signal handler (make the servers exit on SIGINT)
       TSeqCollection *signalHandlers = gSystem->GetListOfSignalHandlers();
       TSignalHandler *sh = nullptr;
-      if(signalHandlers && signalHandlers->GetSize() > 0)
-         sh = (TSignalHandler*)signalHandlers->First();
-      if(sh)
+      if (signalHandlers && signalHandlers->GetSize() > 0)
+         sh = (TSignalHandler *)signalHandlers->First();
+      if (sh)
          gSystem->RemoveSignalHandler(sh);
       TMPInterruptHandler handler;
       handler.Add();
 
       //remove stdin from eventloop and close it
       TSeqCollection *fileHandlers = gSystem->GetListOfFileHandlers();
-      if(fileHandlers) {
+      if (fileHandlers) {
          for (auto h : *fileHandlers) {
-            if (h && ((TFileHandler*)h)->GetFd() == 0) {
-               gSystem->RemoveFileHandler((TFileHandler*)h);
+            if (h && ((TFileHandler *)h)->GetFd() == 0) {
+               gSystem->RemoveFileHandler((TFileHandler *)h);
                break;
             }
          }
@@ -226,7 +226,7 @@ bool TMPClient::Fork(TMPWorker &server)
 /// \return the number of messages successfully sent
 unsigned TMPClient::Broadcast(unsigned code, unsigned nMessages)
 {
-   if(nMessages == 0)
+   if (nMessages == 0)
       nMessages = fNWorkers;
    unsigned count = 0;
    fMon.ActivateAll();
@@ -234,10 +234,10 @@ unsigned TMPClient::Broadcast(unsigned code, unsigned nMessages)
    //send message to all sockets
    std::unique_ptr<TList> lp(fMon.GetListOfActives());
    for (auto s : *lp) {
-      if(count == nMessages)
+      if (count == nMessages)
          break;
-      if(MPSend((TSocket*)s, code)) {
-         fMon.DeActivate((TSocket*)s);
+      if (MPSend((TSocket *)s, code)) {
+         fMon.DeActivate((TSocket *)s);
          ++count;
       } else {
          std::cerr << "[E] Could not send message to server\n";
@@ -251,7 +251,7 @@ unsigned TMPClient::Broadcast(unsigned code, unsigned nMessages)
 //////////////////////////////////////////////////////////////////////////
 /// DeActivate a certain socket.
 /// This does not remove it from the monitor: it will be reactivated by
-/// the next call to Broadcast() (or possibly other methods that are 
+/// the next call to Broadcast() (or possibly other methods that are
 /// specified to do so).\n
 /// A socket should be DeActivated when the corresponding
 /// worker is done *for now* and we want to stop listening to this worker's
@@ -300,12 +300,12 @@ void TMPClient::ReapServers()
 /// Classes inheriting from TMPClient should implement a similar method
 /// to handle message codes specific to the application they're part of.\n
 /// \param msg the MPCodeBufPair returned by a MPRecv call
-/// \param s 
+/// \param s
 /// \parblock
 /// a pointer to the socket from which the message has been received is passed.
 /// This way HandleMPCode knows which socket to reply on.
 /// \endparblock
-void TMPClient::HandleMPCode(MPCodeBufPair& msg, TSocket *s)
+void TMPClient::HandleMPCode(MPCodeBufPair &msg, TSocket *s)
 {
    unsigned code = msg.first;
    //message contains server's pid. retrieve it
@@ -317,7 +317,7 @@ void TMPClient::HandleMPCode(MPCodeBufPair& msg, TSocket *s)
    } else if (code == MPCode::kError) {
       std::cerr << "[E][C] error message received:\n" << str << "\n";
    } else if (code == MPCode::kShutdownNotice || code == MPCode::kFatalError) {
-      if(gDebug > 0) //generally users don't want to know this
+      if (gDebug > 0) //generally users don't want to know this
          std::cerr << "[I][C] shutdown notice received from " << str << "\n";
       Remove(s);
    } else

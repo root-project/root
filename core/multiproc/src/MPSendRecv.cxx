@@ -9,7 +9,7 @@
 /// on a given socket. It does not check whether the socket connection is
 /// in a valid state. The message code can then be retrieved via MPRecv().\n
 /// **Note:** only objects the headers of which have been parsed by
-/// cling can be sent by MPSend(). User-defined types can be made available to 
+/// cling can be sent by MPSend(). User-defined types can be made available to
 /// cling via a call like `gSystem->ProcessLine("#include \"header.h\"")`.
 /// Pointer types are not supported (with the exception of const char*),
 /// but the user can simply dereference the pointer and send the
@@ -39,10 +39,10 @@ int MPSend(TSocket *s, unsigned code)
 /// * c-strings: TBufferFile::ReadString must be used\n
 /// * class types: TBufferFile::ReadObjectAny must be used\n
 /// \param s a pointer to a valid TSocket. No validity checks are performed\n
-/// \return ::MPCodeBufPair, i.e. an std::pair containing message code and (possibly) object 
+/// \return ::MPCodeBufPair, i.e. an std::pair containing message code and (possibly) object
 MPCodeBufPair MPRecv(TSocket *s)
 {
-   char* rawbuf = new char[sizeof(UInt_t)];
+   char *rawbuf = new char[sizeof(UInt_t)];
    //receive message code
    unsigned nBytes = s->RecvRaw(rawbuf, sizeof(UInt_t));
    if (nBytes == 0) {
@@ -64,7 +64,7 @@ MPCodeBufPair MPRecv(TSocket *s)
 
    //receive object if needed
    std::unique_ptr<TBufferFile> objBuf; //defaults to nullptr
-   if(classBufSize != 0) {
+   if (classBufSize != 0) {
       char *classBuf = new char[classBufSize];
       s->RecvRaw(classBuf, classBufSize);
       objBuf.reset(new TBufferFile(TBuffer::kRead, classBufSize, classBuf, true)); //the buffer is deleted by TBuffer's dtor

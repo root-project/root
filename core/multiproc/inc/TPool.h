@@ -35,7 +35,7 @@
 ///
 //////////////////////////////////////////////////////////////////////////
 namespace PoolUtils {
-   TObject* ReduceObjects(const std::vector<TObject *>& objs);
+   TObject *ReduceObjects(const std::vector<TObject *> &objs);
 }
 
 class TPool : private TMPClient {
@@ -43,18 +43,18 @@ public:
    explicit TPool(unsigned nWorkers = 0); //default number of workers is the number of processors
    ~TPool() {}
    //it doesn't make sense for a TPool to be copied
-   TPool(const TPool&) = delete;
-   TPool& operator=(const TPool&) = delete;
+   TPool(const TPool &) = delete;
+   TPool &operator=(const TPool &) = delete;
 
    // Map
    //these late return types allow for a compile-time check of compatibility between function signatures and args,
    //and a compile-time check that the argument list implements a front() method (all STL sequence containers have it)
    template<class F> auto Map(F func, unsigned nTimes) -> std::vector<decltype(func())>;
-   template<class F, class T> auto Map(F func, T& args) -> std::vector<decltype(++(args.begin()), args.end(), func(args.front()))>;
+   template<class F, class T> auto Map(F func, T &args) -> std::vector < decltype(++(args.begin()), args.end(), func(args.front())) >;
    /// \cond doxygen should ignore these methods
    template<class F> TObjArray Map(F func, TCollection &args);
    template<class F, class T> auto Map(F func, std::initializer_list<T> args) -> std::vector<decltype(func(*args.begin()))>;
-   template<class F, class T> auto Map(F func, std::vector<T>& args) -> std::vector<decltype(func(args.front()))>;
+   template<class F, class T> auto Map(F func, std::vector<T> &args) -> std::vector<decltype(func(args.front()))>;
    /// \endcond
 
    // MapReduce
@@ -66,7 +66,7 @@ public:
    /// \cond doxygen should ignore these methods
    template<class F, class R> auto MapReduce(F func, TCollection &args, R redfunc) -> decltype(func(nullptr));
    template<class F, class T, class R> auto MapReduce(F func, std::initializer_list<T> args, R redfunc) -> decltype(func(*args.begin()));
-   template<class F, class T, class R> auto MapReduce(F func, std::vector<T>& args, R redfunc) -> decltype(func(args.front()));
+   template<class F, class T, class R> auto MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(func(args.front()));
    /// \endcond
 
    inline void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
@@ -75,10 +75,10 @@ public:
 
 private:
    template<class T> void Collect(std::vector<T> &reslist);
-   template<class T> void HandlePoolCode(MPCodeBufPair& msg, TSocket *sender, std::vector<T> &reslist);
+   template<class T> void HandlePoolCode(MPCodeBufPair &msg, TSocket *sender, std::vector<T> &reslist);
 
    void Reset();
-   template<class T, class R> T Reduce(const std::vector<T>& objs, R redfunc);
+   template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
    void ReplyToResult(TSocket *s);
    void ReplyToIdle(TSocket *s);
 
@@ -106,22 +106,23 @@ auto TPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
 
    //fork max(nTimes, fNWorkers) times
    unsigned oldNWorkers = GetNWorkers();
-   if(nTimes < oldNWorkers)
+   if (nTimes < oldNWorkers)
       SetNWorkers(nTimes);
    TPoolWorker<F> worker(func);
    unsigned ok = Fork(worker);
    SetNWorkers(oldNWorkers);
-   if (!ok) {
+   if (!ok)
+   {
       std::cerr << "[E][C] Could not fork. Aborting operation\n";
       return std::vector<retType>();
    }
 
-   //give out tasks 
+   //give out tasks
    fNToProcess = nTimes;
    std::vector<retType> reslist;
    reslist.reserve(fNToProcess);
    fNProcessed = Broadcast(PoolCode::kExecFunc, fNToProcess);
-   
+
    //collect results, give out other tasks if needed
    Collect(reslist);
 
@@ -139,13 +140,13 @@ auto TPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
 /// **Note:** the collection of arguments is modified by Map and should be considered empty or otherwise
 /// invalidated after Map's execution (std::move might be applied to it).
 template<class F, class T>
-auto TPool::Map(F func, T &args) -> std::vector<decltype(++(args.begin()), args.end(), func(args.front()))>
+auto TPool::Map(F func, T &args) -> std::vector < decltype(++(args.begin()), args.end(), func(args.front())) >
 {
    std::vector<typename T::value_type> vargs(
       std::make_move_iterator(std::begin(args)),
       std::make_move_iterator(std::end(args))
    );
-   const auto& reslist = Map(func, vargs);
+   const auto &reslist = Map(func, vargs);
    return reslist;
 }
 
@@ -156,13 +157,13 @@ template<class F>
 TObjArray TPool::Map(F func, TCollection &args)
 {
    // check the function returns something from which we can build a TObject*
-   static_assert(std::is_constructible<TObject*, typename std::result_of<F(TObject*)>::type>::value,
-      "func should return a pointer to TObject or derived classes");
-   
+   static_assert(std::is_constructible<TObject *, typename std::result_of<F(TObject *)>::type>::value,
+                 "func should return a pointer to TObject or derived classes");
+
    //build vector with same elements as args
    std::vector<TObject *> vargs(args.GetSize());
    auto it = vargs.begin();
-   for(auto o : args) {
+   for (auto o : args) {
       *it = o;
       ++it;
    }
@@ -201,12 +202,13 @@ auto TPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(args.
    //fork max(args.size(), fNWorkers) times
    //N.B. from this point onwards, args is filled with undefined (but valid) values, since TPoolWorker moved its content away
    unsigned oldNWorkers = GetNWorkers();
-   if(args.size() < oldNWorkers)
+   if (args.size() < oldNWorkers)
       SetNWorkers(args.size());
    TPoolWorker<F, T> worker(func, args);
    unsigned ok = Fork(worker);
    SetNWorkers(oldNWorkers);
-   if (!ok) {
+   if (!ok)
+   {
       std::cerr << "[E][C] Could not fork. Aborting operation\n";
       return std::vector<retType>();
    }
@@ -247,9 +249,9 @@ auto TPool::MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func())
 
    //fork max(nTimes, fNWorkers) times
    unsigned oldNWorkers = GetNWorkers();
-   if(nTimes < oldNWorkers)
+   if (nTimes < oldNWorkers)
       SetNWorkers(nTimes);
-   TPoolWorker<F,void,R> worker(func, redfunc);
+   TPoolWorker<F, void, R> worker(func, redfunc);
    unsigned ok = Fork(worker);
    SetNWorkers(oldNWorkers);
    if (!ok) {
@@ -257,7 +259,7 @@ auto TPool::MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func())
       return retType();
    }
 
-   //give workers their first task  
+   //give workers their first task
    fNToProcess = nTimes;
    std::vector<retType> reslist;
    reslist.reserve(fNToProcess);
@@ -265,7 +267,7 @@ auto TPool::MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func())
 
    //collect results/give workers their next task
    Collect(reslist);
-   
+
    //clean-up and return
    ReapServers();
    return redfunc(reslist);
@@ -284,7 +286,7 @@ auto TPool::MapReduce(F func, T &args, R redfunc) -> decltype(++(args.begin()), 
       std::make_move_iterator(std::begin(args)),
       std::make_move_iterator(std::end(args))
    );
-   const auto& reslist = MapReduce(func, vargs, redfunc);
+   const auto &reslist = MapReduce(func, vargs, redfunc);
    return reslist;
 }
 
@@ -311,7 +313,7 @@ template<class F, class T, class R>
 auto TPool::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> decltype(func(*args.begin()))
 {
    std::vector<T> vargs(std::move(args));
-   const auto& reslist = MapReduce(func, vargs, redfunc);
+   const auto &reslist = MapReduce(func, vargs, redfunc);
    return reslist;
 }
 
@@ -327,9 +329,9 @@ auto TPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(func(
 
    //fork max(args.size(), fNWorkers) times
    unsigned oldNWorkers = GetNWorkers();
-   if(args.size() < oldNWorkers)
+   if (args.size() < oldNWorkers)
       SetNWorkers(args.size());
-   TPoolWorker<F,T,R> worker(func, args, redfunc);
+   TPoolWorker<F, T, R> worker(func, args, redfunc);
    unsigned ok = Fork(worker);
    SetNWorkers(oldNWorkers);
    if (!ok) {
@@ -337,7 +339,7 @@ auto TPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(func(
       return retType();
    }
 
-   //give workers their first task  
+   //give workers their first task
    fNToProcess = args.size();
    std::vector<retType> reslist;
    reslist.reserve(fNToProcess);
@@ -347,7 +349,7 @@ auto TPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(func(
 
    //collect results/give workers their next task
    Collect(reslist);
-   
+
    ReapServers();
    return redfunc(reslist);
 }
@@ -366,7 +368,7 @@ void TPool::Collect(std::vector<T> &reslist)
    while (mon.GetActive() > 0) {
       TSocket *s = mon.Select();
       MPCodeBufPair msg = MPRecv(s);
-      if(msg.first == MPCode::kRecvError) {
+      if (msg.first == MPCode::kRecvError) {
          std::cerr << "[E][C] Lost connection to a worker\n";
          Remove(s);
       } else if (msg.first < 1000)
@@ -380,13 +382,13 @@ void TPool::Collect(std::vector<T> &reslist)
 //////////////////////////////////////////////////////////////////////////
 /// Handle message and reply to the worker (actual code implemented in ReplyToResult
 template<class T>
-void TPool::HandlePoolCode(MPCodeBufPair& msg, TSocket *s, std::vector<T> &reslist)
+void TPool::HandlePoolCode(MPCodeBufPair &msg, TSocket *s, std::vector<T> &reslist)
 {
    unsigned code = msg.first;
    if (code == PoolCode::kFuncResult) {
       reslist.push_back(std::move(ReadBuffer<T>(msg.second.get())));
       ReplyToResult(s);
-   } else if(code == PoolCode::kIdling) {
+   } else if (code == PoolCode::kIdling) {
       ReplyToIdle(s);
    } else {
       // UNKNOWN CODE
@@ -396,7 +398,7 @@ void TPool::HandlePoolCode(MPCodeBufPair& msg, TSocket *s, std::vector<T> &resli
 
 /// Check that redfunc has the right signature and call it on objs
 template<class T, class R>
-T TPool::Reduce(const std::vector<T>& objs, R redfunc)
+T TPool::Reduce(const std::vector<T> &objs, R redfunc)
 {
    // check we can apply reduce to objs
    static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");

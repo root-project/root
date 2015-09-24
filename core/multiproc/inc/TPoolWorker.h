@@ -41,13 +41,13 @@ public:
    // TPool is in charge of checking the signatures for incompatibilities:
    // we trust that decltype(redfunc(std::vector<decltype(func(args[0]))>)) == decltype(args[0])
    // TODO document somewhere that fReducedResult must have a default ctor
-   TPoolWorker(F func, const std::vector<T> &args, R redfunc) : 
+   TPoolWorker(F func, const std::vector<T> &args, R redfunc) :
       TMPWorker(), fFunc(func), fArgs(std::move(args)), fRedFunc(redfunc),
       fReducedResult(), fCanReduce(false)
-   {} 
+   {}
    ~TPoolWorker() {}
 
-   void HandleInput(MPCodeBufPair& msg) ///< Execute instructions received from a TPool client
+   void HandleInput(MPCodeBufPair &msg) ///< Execute instructions received from a TPool client
    {
       unsigned code = msg.first;
       TSocket *s = GetSocket();
@@ -56,17 +56,17 @@ public:
          unsigned n;
          msg.second->ReadUInt(n);
          // execute function on argument n
-         const auto& res = fFunc(fArgs[n]);
+         const auto &res = fFunc(fArgs[n]);
          // tell client we're done
          MPSend(s, PoolCode::kIdling);
          // reduce arguments if possible
-         if(fCanReduce) {
+         if (fCanReduce) {
             fReducedResult = fRedFunc({res, fReducedResult}); //TODO try not to copy these into a vector, do everything by ref. std::vector<T&>?
          } else {
             fCanReduce = true;
             fReducedResult = res;
          }
-      } else if(code == PoolCode::kSendResult) {
+      } else if (code == PoolCode::kSendResult) {
          MPSend(s, PoolCode::kFuncResult, fReducedResult);
       } else {
          reply += ": unknown code received: " + std::to_string(code);
@@ -86,30 +86,30 @@ private:
 template<class F, class R>
 class TPoolWorker<F, void, R> : public TMPWorker {
 public:
-   TPoolWorker(F func, R redfunc) : 
+   TPoolWorker(F func, R redfunc) :
       TMPWorker(), fFunc(func), fRedFunc(redfunc),
       fReducedResult(), fCanReduce(false)
-   {} 
+   {}
    ~TPoolWorker() {}
 
-   void HandleInput(MPCodeBufPair& msg) ///< Execute instructions received from a TPool client
+   void HandleInput(MPCodeBufPair &msg) ///< Execute instructions received from a TPool client
    {
       unsigned code = msg.first;
       TSocket *s = GetSocket();
       std::string reply = "S" + std::to_string(GetPid());
       if (code == PoolCode::kExecFunc) {
          // execute function
-         const auto& res = fFunc();
+         const auto &res = fFunc();
          // tell client we're done
          MPSend(s, PoolCode::kIdling);
          // reduce arguments if possible
-         if(fCanReduce) {
+         if (fCanReduce) {
             fReducedResult = fRedFunc({res, fReducedResult}); //TODO try not to copy these into a vector, do everything by ref. std::vector<T&>?
          } else {
             fCanReduce = true;
             fReducedResult = res;
          }
-      } else if(code == PoolCode::kSendResult) {
+      } else if (code == PoolCode::kSendResult) {
          MPSend(s, PoolCode::kFuncResult, fReducedResult);
       } else {
          reply += ": unknown code received: " + std::to_string(code);
@@ -125,11 +125,11 @@ private:
 };
 
 template<class F, class T>
-class TPoolWorker<F,T,void> : public TMPWorker {
+class TPoolWorker<F, T, void> : public TMPWorker {
 public:
    TPoolWorker(F func, const std::vector<T> &args) : TMPWorker(), fFunc(func), fArgs(std::move(args)) {}
    ~TPoolWorker() {}
-   void HandleInput(MPCodeBufPair& msg) ///< Execute instructions received from a TPool client
+   void HandleInput(MPCodeBufPair &msg) ///< Execute instructions received from a TPool client
    {
       unsigned code = msg.first;
       TSocket *s = GetSocket();
@@ -161,7 +161,7 @@ class TPoolWorker<F, void, void> : public TMPWorker {
 public:
    explicit TPoolWorker(F func) : TMPWorker(), fFunc(func) {}
    ~TPoolWorker() {}
-   void HandleInput(MPCodeBufPair& msg)
+   void HandleInput(MPCodeBufPair &msg)
    {
       unsigned code = msg.first;
       TSocket *s = GetSocket();

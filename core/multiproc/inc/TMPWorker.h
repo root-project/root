@@ -29,15 +29,15 @@ public:
    TMPWorker();
    virtual ~TMPWorker() {};
    //it doesn't make sense to copy a TMPWorker (each one has a uniq_ptr to its socket)
-   TMPWorker(const TMPWorker&) = delete;
-   TMPWorker& operator=(const TMPWorker&) = delete;
+   TMPWorker(const TMPWorker &) = delete;
+   TMPWorker &operator=(const TMPWorker &) = delete;
 
-   virtual void Init(int fd); 
-   inline TSocket* GetSocket() { return fS.get(); }
+   virtual void Init(int fd);
+   inline TSocket *GetSocket() { return fS.get(); }
    inline pid_t GetPid() { return fPid; }
 
 private:
-   virtual void HandleInput(MPCodeBufPair& msg);
+   virtual void HandleInput(MPCodeBufPair &msg);
    Bool_t Notify();
    Bool_t ReadNotify() { return Notify(); }
 
