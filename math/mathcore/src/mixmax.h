@@ -29,6 +29,8 @@
 #ifndef ROOT_MIXMAX_H_
 #define ROOT_MIXMAX_H_ 1
 
+//#define USE_INLINE_ASM //DP: uncomment if want to use inline asm
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -187,7 +189,7 @@ inline 	myuint GET_BY_MACRO(rng_state_t* X) {
 	
 inline double get_next_float_BY_MACRO(rng_state_t* X){
         int64_t Z=(int64_t)get_next(X);
-#ifdef __SSE__
+#if defined(__SSE__) && defined(USE_INLINE_ASM)
 //#warning using SSE inline assembly for int64 -> double conversion, not really necessary in GCC-5 or better
     double F;
         __asm__ ("pxor %0, %0;"
