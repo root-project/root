@@ -25,6 +25,8 @@
 #include "TObject.h"
 #endif
 
+#include <limits>
+
 class TClass;
 class TTree;
 class TH1;
