@@ -28,17 +28,16 @@
 
 #define MESSAGE(which,text)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  class TGenVectorProxy
-//
-//   Local optimization class.
-//
-//   Collection proxies get copied. On copy we switch the type of the
-//   proxy to the concrete STL type. The concrete types are optimized
-//   for element access.
-//
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TGenVectorProxy
+\ingroup IO
+Local optimization class.
+
+Collection proxies get copied. On copy we switch the type of the
+proxy to the concrete STL type. The concrete types are optimized
+for element access.
+*/
+
 class TGenVectorProxy : public TGenCollectionProxy {
 public:
    // Standard Destructor
@@ -79,17 +78,15 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  class TGenVectorBoolProxy
-//
-//   Local optimization class.
-//
-//   Collection proxies get copied. On copy we switch the type of the
-//   proxy to the concrete STL type. The concrete types are optimized
-//   for element access.
-//
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TGenVectorBoolProxy
+\ingroup IO
+Local optimization class.
+
+Collection proxies get copied. On copy we switch the type of the
+proxy to the concrete STL type. The concrete types are optimized
+for element access.
+*/
 class TGenVectorBoolProxy : public TGenCollectionProxy {
    Bool_t fLastValue;
 
@@ -195,17 +192,16 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  class TGenListProxy
-//
-//   Localoptimization class.
-//
-//   Collection proxies get copied. On copy we switch the type of the
-//   proxy to the concrete STL type. The concrete types are optimized
-//   for element access.
-//
-//////////////////////////////////////////////////////////////////////////
+/*
+\class TGenListProxy
+\ingroup IO
+Local optimization class.
+
+Collection proxies get copied. On copy we switch the type of the
+proxy to the concrete STL type. The concrete types are optimized
+for element access.
+**/
+
 class TGenListProxy : public TGenVectorProxy {
 public:
    // Standard Destructor
@@ -238,17 +234,16 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// class TGenSetProxy
-//
-//   Localoptimization class.
-//
-//   Collection proxies get copied. On copy we switch the type of the
-//   proxy to the concrete STL type. The concrete types are optimized
-//   for element access.
-//
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TGenSetProxy
+\ingroup IO
+Localoptimization class.
+
+Collection proxies get copied. On copy we switch the type of the
+proxy to the concrete STL type. The concrete types are optimized
+for element access.
+*/
+
 class TGenSetProxy : public TGenVectorProxy {
 public:
    // Standard Destructor
@@ -284,17 +279,16 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  class TGenMapProxy
-//
-//   Localoptimization class.
-//
-//   Collection proxies get copied. On copy we switch the type of the
-//   proxy to the concrete STL type. The concrete types are optimized
-//   for element access.
-//
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TGenMapProxy
+\ingroup IO
+Localoptimization class.
+
+Collection proxies get copied. On copy we switch the type of the
+proxy to the concrete STL type. The concrete types are optimized
+for element access.
+*/
+
 class TGenMapProxy : public TGenSetProxy {
 public:
    // Standard Destructor
@@ -517,9 +511,12 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the Value has been properly initialized.
+
 Bool_t TGenCollectionProxy::Value::IsValid()
 {
-   // Return true if the Value has been properly initialized.
+   
 
    return fSize != std::string::npos;
 }

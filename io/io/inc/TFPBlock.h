@@ -16,16 +16,21 @@
 #include "TObject.h"
 #endif
 
+/**
+\class TFPBlock
+\ingroup IO   
+*/
+
 class TFPBlock : public TObject{
 
 private:
-   char     *fBuffer;       // content of the block
-   Int_t     fNblock;       // number of segment in the block
-   Long64_t  fDataSize;     // total size of useful data in the block
-   Long64_t  fCapacity;     // capacity of the buffer
-   Int_t    *fLen;          // array of lengths of each segment
-   Long64_t *fPos;          // array of positions of each segment
-   Long64_t *fRelOffset;    // relative offset of piece in the buffer
+   char     *fBuffer;       ///< Content of the block
+   Int_t     fNblock;       ///< Number of segment in the block
+   Long64_t  fDataSize;     ///< Total size of useful data in the block
+   Long64_t  fCapacity;     ///< Capacity of the buffer
+   Int_t    *fLen;          ///< Array of lengths of each segment
+   Long64_t *fPos;          ///< Array of positions of each segment
+   Long64_t *fRelOffset;    ///< Relative offset of piece in the buffer
 
    TFPBlock(const TFPBlock&);            // Not implemented.
    TFPBlock &operator=(const TFPBlock&); // Not implemented.
@@ -53,75 +58,58 @@ public:
    ClassDef(TFPBlock, 0);  // File prefetch block
 };
 
-//__________________________________________________________________
+/// Get pointer to the array of postions.
 inline Long64_t* TFPBlock::GetPos() const
 {
-   // Get pointer to the array of postions.
-
    return fPos;
 }
 
-//__________________________________________________________________
+/// Get pointer to the array of lengths.
 inline Int_t* TFPBlock::GetLen() const
 {
-   // Get pointer to the array of lengths.
 
    return fLen;
 }
 
-//__________________________________________________________________
+/// Return size of the data in the block.
 inline Long64_t TFPBlock::GetDataSize() const
 {
-   // Return size of the data in the block.
-
    return fDataSize;
 }
 
-//__________________________________________________________________
+/// Return capacity of the block.
 inline Long64_t TFPBlock::GetCapacity() const
 {
-   // Return capacity of the block.
-
    return fCapacity;
 }
 
-//__________________________________________________________________
+/// Return number of elements in the block.
 inline Int_t TFPBlock::GetNoElem() const
 {
-   // Return number of elements in the block.
-
    return fNblock;
 }
 
-//__________________________________________________________________
+/// Get position of the element at index i.
 inline Long64_t TFPBlock::GetPos(Int_t i) const
 {
-   // Get position of the element at index i.
-
    return fPos[i];
 }
 
-//__________________________________________________________________
+/// Get length of the element at index i.
 inline Int_t TFPBlock::GetLen(Int_t i) const
 {
-  // Get length of the element at index i.
-
    return fLen[i];
 }
 
-//__________________________________________________________________
+/// Get block buffer.
 inline char* TFPBlock::GetBuffer() const
 {
-   // Get block buffer.
-
    return fBuffer;
 }
 
-//__________________________________________________________________
+/// Get block buffer.
 inline char* TFPBlock::GetPtrToPiece(Int_t index) const
 {
-   // Get block buffer.
-
   return (fBuffer + fRelOffset[index]);
 }
 

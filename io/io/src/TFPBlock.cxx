@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /**
-\class TFPBlock
+\class TFPBlock TFPBlock.cxx 
 \ingroup IO                                           
                                                             
 This class represents the encapsulation of a block request.

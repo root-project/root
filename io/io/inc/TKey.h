@@ -12,15 +12,6 @@
 #ifndef ROOT_TKey
 #define ROOT_TKey
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TKey                                                                 //
-//                                                                      //
-// Header description of a logical record on file.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
@@ -46,20 +37,20 @@ private:
    TKey& operator=(const TKey&); // TKey objects are not copiable.
 
 protected:
-   Int_t       fVersion;     //Key version identifier
-   Int_t       fNbytes;      //Number of bytes for the object on file
-   Int_t       fObjlen;      //Length of uncompressed object in bytes
-   TDatime     fDatime;      //Date/Time of insertion in file
-   Short_t     fKeylen;      //Number of bytes for the key itself
-   Short_t     fCycle;       //Cycle number
-   Long64_t    fSeekKey;     //Location of object on file
-   Long64_t    fSeekPdir;    //Location of parent directory on file
-   TString     fClassName;   //Object Class name
-   Int_t       fLeft;        //Number of bytes left in current segment
-   char       *fBuffer;      //Object buffer
-   TBuffer    *fBufferRef;   //Pointer to the TBuffer object
-   UShort_t    fPidOffset;   //! Offset to be added to the pid index in this key/buffer.  This is actually saved in the high bits of fSeekPdir
-   TDirectory *fMotherDir;   //! pointer to mother directory
+   Int_t       fVersion;     ///< Key version identifier
+   Int_t       fNbytes;      ///< Number of bytes for the object on file
+   Int_t       fObjlen;      ///< Length of uncompressed object in bytes
+   TDatime     fDatime;      ///< Date/Time of insertion in file
+   Short_t     fKeylen;      ///< Number of bytes for the key itself
+   Short_t     fCycle;       ///< Cycle number
+   Long64_t    fSeekKey;     ///< Location of object on file
+   Long64_t    fSeekPdir;    ///< Location of parent directory on file
+   TString     fClassName;   ///< Object Class name
+   Int_t       fLeft;        ///< Number of bytes left in current segment
+   char       *fBuffer;      ///< Object buffer
+   TBuffer    *fBufferRef;   ///< Pointer to the TBuffer object
+   UShort_t    fPidOffset;   ///<!Offset to be added to the pid index in this key/buffer.  This is actually saved in the high bits of fSeekPdir
+   TDirectory *fMotherDir;   ///<!pointer to mother directory
 
    virtual Int_t    Read(const char *name) { return TObject::Read(name); }
    virtual void     Create(Int_t nbytes, TFile* f = 0);

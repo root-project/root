@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /**
-\file TBuffrFile.cxx
+\file TBufferFile.cxx
 \class TBufferFile
 \ingroup IO
 

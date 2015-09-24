@@ -12,15 +12,6 @@
 #ifndef ROOT_TMemFile
 #define ROOT_TMemFile
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMemFile                                                             //
-//                                                                      //
-// A TMemFile is like a normal TFile except that it reads and writes    //
-// its data via in memory.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif
@@ -44,11 +35,11 @@ private:
       UChar_t   *fBuffer;
       Long64_t   fSize;
    };
-   TMemBlock    fBlockList;   // Colletion of memory blocks of size fBlockSize
-   Long64_t     fSize;        // Total file size (sum of the size of the chunks)
-   Long64_t     fSysOffset;   // Seek offset in file
-   TMemBlock   *fBlockSeek;   // Pointer to the block we seeked to.
-   Long64_t     fBlockOffset; // Seek offset within the block
+   TMemBlock    fBlockList;   ///< Colletion of memory blocks of size fBlockSize
+   Long64_t     fSize;        ///< Total file size (sum of the size of the chunks)
+   Long64_t     fSysOffset;   ///< Seek offset in file
+   TMemBlock   *fBlockSeek;   ///< Pointer to the block we seeked to.
+   Long64_t     fBlockOffset; ///< Seek offset within the block
 
    static Long64_t fgDefaultBlockSize;
 
@@ -82,7 +73,7 @@ public:
 
    virtual void        Print(Option_t *option="") const;
 
-   ClassDef(TMemFile, 0) //A ROOT file that reads/writes via HDFS
+   ClassDef(TMemFile, 0) // A ROOT file that reads/writes via HDFS
 };
 
 #endif
