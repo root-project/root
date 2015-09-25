@@ -65,8 +65,10 @@ TArrow::TArrow(): TLine(),TAttFill()
 /// ~~~
 /// Note:
 ///
-/// - If FillColor == 0 an open triangle is drawn, otherwise a full triangle is drawn with the fill color. The default is filled with LineColor
-/// -  The "Begin" and "end" bars options can be combined with any other options.
+/// - If FillColor == 0 an open triangle is drawn, otherwise a full triangle is
+///   drawn with the fill color. The default is filled with LineColor
+/// - The "Begin" and "end" bars options can be combined with any other options.
+/// - The 9 options described above cannot be mixed.
 
 TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
              Float_t arrowsize ,Option_t *option)
