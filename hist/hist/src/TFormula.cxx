@@ -2231,7 +2231,7 @@ void TFormula::ClearFormula(Option_t * /*option*/ )
    // having fFunction register itself to the list of cleanup (we
    // would not have seen the information anyway).
    fFunctions.Delete("noregistration");
-   fLinearParts.Delete();
+   fLinearParts.Delete("noregistration");
    //
    //MI change
    if (fPredefined)    { delete [] fPredefined;    fPredefined    = 0;}
