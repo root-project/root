@@ -199,6 +199,12 @@ Ignore empty graphs when computing the multi-graph range at painting time.
 
 A left click on a image produced a one pixel zoom.
 
+### TCreatePrimitives
+
+The ending of a polyline creation is based on the closeness of the two last
+entered points. The previous algorithm was based on user coordinates. It is now
+based on pixel to avoid the problem reported here: https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20343
+
 ## 3D Graphics Libraries
 
 
