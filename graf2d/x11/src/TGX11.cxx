@@ -19,6 +19,10 @@ routines.
 
 The companion class for Win32 is TGWin32.
 
+The file G11Gui.cxx contains the implementation of the GUI methods of the
+TGX11 class. Most of the methods are used by the machine independent
+GUI classes (libGUI.so).
+
 This code was initially developed in the context of HIGZ and PAW
 by Olivier Couet (package X11INT).
 */
