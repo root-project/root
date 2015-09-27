@@ -53,6 +53,9 @@ node's HDFS configuration files.
 // For now, we don't allow any write/fs modification operations.
 static const Bool_t R__HDFS_ALLOW_CHANGES = kFALSE;
 
+static const char hdfs_default_host[] = "default";
+static const int hdfs_default_port = 0;
+
 // The following snippet is used for developer-level debugging
 // Contributed by Pete Wyckoff of the HDFS project
 #define THDFSFile_TRACE
@@ -91,14 +94,22 @@ THDFSFile::THDFSFile(const char *path, Option_t *option,
 
    Bool_t has_authn = kTRUE;
 
+   struct hdfsBuilder *bld = hdfsNewBuilder();
+   if (!bld) {
+      SysError("THDFSFile", "Error creating hdfs builder");
+      goto zombie;
+   }
+
+   hdfsBuilderSetNameNode(bld, hdfs_default_host);
+   hdfsBuilderSetNameNodePort(bld, hdfs_default_port);
    if (has_authn) {
       UserGroup_t *ugi = gSystem->GetUserInfo((char*) 0);
       const char *user = (ugi->fUser).Data();
-      fFS = hdfsConnectAsUser("default", 0, user);
+      hdfsBuilderSetUserName(bld, user);
       delete ugi;
-   } else {
-      fFS = hdfsConnect("default", 0);
    }
+
+   fFS = hdfsBuilderConnect(bld);
 
    if (fFS == 0) {
       SysError("THDFSFile", "HDFS client for %s cannot open the filesystem",
@@ -317,15 +328,23 @@ THDFSSystem::THDFSSystem() : TSystem("-hdfs", "HDFS Helper System")
 
    Bool_t has_authn = kTRUE;
 
+
+   struct hdfsBuilder *bld = hdfsNewBuilder();
+   if (!bld) {
+      SysError("THDFSSystem", "Error creating hdfs builder");
+      goto zombie;
+   }
+
+   hdfsBuilderSetNameNode(bld, hdfs_default_host);
+   hdfsBuilderSetNameNodePort(bld, hdfs_default_port);
    if (has_authn) {
       UserGroup_t *ugi = gSystem->GetUserInfo((char*) 0);
       const char *user = (ugi->fUser).Data();
-      fFH = hdfsConnectAsUser("default", 0, user);
-      SysError("blah", "user: %dd", fFH);
+      hdfsBuilderSetUserName(bld, user);
       delete ugi;
-   } else {
-      fFH = hdfsConnect("default", 0);
    }
+
+   fFH = hdfsBuilderConnect(bld);
 
    if (fFH == 0) {
       SysError("THDFSSystem", "HDFS client cannot open the filesystem");
