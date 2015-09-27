@@ -167,7 +167,7 @@ THDFSFile::~THDFSFile()
 Int_t THDFSFile::SysRead(Int_t, void *buf, Int_t len)
 {
    TRACE("READ")
-   tSize num_read = hdfsPread((hdfsFS)fFS, (hdfsFile)fHdfsFH, fSysOffset, buf, len);
+   tSize num_read = hdfsRead((hdfsFS) fFS, (hdfsFile) fHdfsFH, buf, len);
    fSysOffset += len;
    if (num_read < 0) {
       gSystem->SetErrorStr(strerror(errno));
@@ -206,6 +206,12 @@ Long64_t THDFSFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
       SysError("THDFSFile", "Unknown whence!");
       return -1;
    }
+
+   if (hdfsSeek((hdfsFS) fFS, (hdfsFile) fHdfsFH, fSysOffset) != 0) {
+	 SysError("THDFSFile", "Unable to seek to the given position");
+	 return -1;
+   }
+
    return fSysOffset;
 }
 
