@@ -32,10 +32,15 @@ This is usually found in either:
 or
     $JAVA_HOME/jre/lib/amd64/server
 This file can only be used if hdfs support is compiled into ROOT.
-The HDFS URLs should be of the form:
-    hdfs:///path/to/file/in/HDFS.root
+The HDFS URLs follow the Hadoop notation and should be of the form:
+   hdfs://[host:port]/absolute/path/to/file/in/HDFS.root
 Any host or port information will be ignored; this is taken from the
 node's HDFS configuration files.
+
+Example HDFS URLs:
+
+    hdfs:///user/username/dir1/file2.root
+    hdfs://localhost/user/username/dir1/file2.root
 */
 
 #include "syslog.h"
@@ -78,7 +83,6 @@ THDFSFile::THDFSFile(const char *path, Option_t *option,
    fHdfsFH    = 0;
    fFS        = 0;
    fSize      = -1;
-   fPath      = 0;
    fSysOffset = 0;
 
    fOption = option;
@@ -161,9 +165,6 @@ THDFSFile::~THDFSFile()
 {
    TRACE("destroy")
 
-   if (fPath)
-      delete [] fPath;
-
    // We assume that the file is closed in SysClose
    // Explicitly release reference to HDFS filesystem object.
    // Turned off now due to compilation issues.
@@ -231,17 +232,16 @@ Long64_t THDFSFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
 
 Int_t THDFSFile::SysOpen(const char * pathname, Int_t flags, UInt_t)
 {
-   // This is given to us as a URL (hdfs://hadoop-name:9000//foo or
-   // hdfs:///foo); convert this to a file name.
-   TUrl url(pathname);
-   const char * file = url.GetFile();
-   size_t path_size = strlen(file);
-   fPath = new char[path_size+1];
-   if (fPath == 0) {
-      SysError("THDFSFile", "Unable to allocate memory for path.");
+   // This is given to us as a URL in Hadoop notation (hdfs://hadoop-name:9000/user/foo/bar or
+   // hdfs:///user/foo/bar); convert this to a file name.
+   fUrl = TUrl(pathname);
+
+   fPath = fUrl.GetFileAndOptions();
+   if (!fPath.BeginsWith("/")) {
+      fPath.Insert(0, '/');
    }
-   strlcpy(fPath, file,path_size+1);
-   if ((fHdfsFH = hdfsOpenFile((hdfsFS)fFS, fPath, flags, 0, 0, 0)) == 0) {
+
+   if ((fHdfsFH = hdfsOpenFile((hdfsFS) fFS, fPath, flags, 0, 0, 0)) == 0) {
       SysError("THDFSFile", "Unable to open file %s in HDFS", pathname);
       return -1;
    }
@@ -371,9 +371,10 @@ Int_t THDFSSystem::MakeDirectory(const char * path)
       Error("MakeDirectory", "No filesystem handle (should never happen)");
       return -1;
    }
+   TUrl url(path);
 
    if (R__HDFS_ALLOW_CHANGES == kTRUE) {
-      return hdfsCreateDirectory((hdfsFS)fFH, path);
+      return hdfsCreateDirectory((hdfsFS) fFH, url.GetFileAndOptions());
    } else {
       return -1;
    }
@@ -390,7 +391,7 @@ void *THDFSSystem::OpenDirectory(const char * path)
        Error("OpenDirectory", "No filesystem handle (should never happen)");
        return 0;
    }
-
+   TUrl url(path);
    fDirp = 0;
 /*
    if (fDirp) {
@@ -400,14 +401,14 @@ void *THDFSSystem::OpenDirectory(const char * path)
 */
 
    hdfsFileInfo * dir = 0;
-   if ((dir = hdfsGetPathInfo((hdfsFS)fFH, path)) == 0) {
+   if ((dir = hdfsGetPathInfo((hdfsFS) fFH, url.GetFileAndOptions())) == 0) {
       return 0;
    }
    if (dir->mKind != kObjectKindDirectory) {
       return 0;
    }
 
-   fDirp = (void *)hdfsListDirectory((hdfsFS)fFH, path, &fDirEntries);
+   fDirp = (void *)hdfsListDirectory((hdfsFS) fFH, url.GetFileAndOptions(), &fDirEntries);
    fDirCtr = 0;
 
    fUrlp = new TUrl[fDirEntries];
@@ -416,7 +417,6 @@ void *THDFSSystem::OpenDirectory(const char * path)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Free directory via httpd.
 
 void THDFSSystem::FreeDirectory(void *dirp)
 {
@@ -437,7 +437,6 @@ void THDFSSystem::FreeDirectory(void *dirp)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get directory entry via httpd. Returns 0 in case no more entries.
 
 const char *THDFSSystem::GetDirEntry(void *dirp)
 {
@@ -483,7 +482,10 @@ Int_t THDFSSystem::GetPathInfo(const char *path, FileStat_t &buf)
       Error("GetPathInfo", "No filesystem handle (should never happen)");
       return 1;
    }
-   hdfsFileInfo *fileInfo = hdfsGetPathInfo((hdfsFS)fFH, path);
+
+   TUrl url(path);
+
+   hdfsFileInfo *fileInfo = hdfsGetPathInfo((hdfsFS) fFH, url.GetFileAndOptions());
 
    if (fileInfo == 0)
       return 1;
@@ -515,7 +517,9 @@ Bool_t THDFSSystem::AccessPathName(const char *path, EAccessMode mode)
       return kTRUE;
    }
 
-   if (hdfsExists((hdfsFS)fFH, path) == 0)
+   TUrl url(path);
+
+   if (hdfsExists((hdfsFS) fFH, url.GetFileAndOptions()) == 0)
       return kFALSE;
    else
       return kTRUE;
