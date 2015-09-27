@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXMLAttr                                                             //
-//                                                                      //
-// TXMLAttribute is the attribute of an Element. It contains the name   //
-// and the value of the attribute.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TXMLAttr
+\ingroup IO
+
+TXMLAttribute is the attribute of an Element. It contains the name
+and the value of the attribute.
+*/
 
 #include "TXMLAttr.h"
 

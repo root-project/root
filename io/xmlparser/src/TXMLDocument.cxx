@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXMLDocument                                                         //
-//                                                                      //
-// TXMLDocument contains a pointer to an xmlDoc structure, after the    //
-// parser returns a tree built during the document analysis.            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TXMLDocument
+\ingroup IO
+
+TXMLDocument contains a pointer to an xmlDoc structure, after the
+parser returns a tree built during the document analysis.
+*/
 
 #include "TXMLDocument.h"
 #include "TXMLNode.h"
