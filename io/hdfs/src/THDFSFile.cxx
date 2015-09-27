@@ -92,7 +92,7 @@ THDFSFile::THDFSFile(const char *path, Option_t *option,
    Bool_t has_authn = kTRUE;
 
    if (has_authn) {
-      UserGroup_t *ugi = gSystem->GetUserInfo(0);
+      UserGroup_t *ugi = gSystem->GetUserInfo((char*) 0);
       const char *user = (ugi->fUser).Data();
       fFS = hdfsConnectAsUser("default", 0, user);
       delete ugi;
@@ -318,9 +318,10 @@ THDFSSystem::THDFSSystem() : TSystem("-hdfs", "HDFS Helper System")
    Bool_t has_authn = kTRUE;
 
    if (has_authn) {
-      UserGroup_t *ugi = gSystem->GetUserInfo(0);
+      UserGroup_t *ugi = gSystem->GetUserInfo((char*) 0);
       const char *user = (ugi->fUser).Data();
       fFH = hdfsConnectAsUser("default", 0, user);
+      SysError("blah", "user: %dd", fFH);
       delete ugi;
    } else {
       fFH = hdfsConnect("default", 0);
