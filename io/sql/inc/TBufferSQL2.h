@@ -5,15 +5,6 @@
 #ifndef ROOT_TBufferSQL2
 #define ROOT_TBufferSQL2
 
-
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-// TBufferSQL2 class used in TSQLFile to convert binary object data    //
-// to SQL statements, supplied to DB server                            //
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
-
-
 #ifndef ROOT_TBufferFile
 #include "TBufferFile.h"
 #endif
@@ -48,22 +39,22 @@ friend class TSQLStructure;
 
 protected:
 
-   TSQLFile*        fSQL;                  //!   instance of TSQLFile
-   TSQLStructure*   fStructure;            //!   structures, created by object storing
-   TSQLStructure*   fStk;                  //!   pointer on current active structure (stack head)
-   TExMap*          fObjMap;               //!   Map between stored objects and object id
-   TString          fReadBuffer;           //!   Buffer for read value
-   Int_t            fErrorFlag;            //!   Error id value
-   Bool_t           fExpectedChain;        //!   flag to resolve situation when several elements of same basic type stored as FastArray
-   Int_t            fCompressLevel;        //!   compress level used to minimize size of data in database
-   Int_t            fReadVersionBuffer;    //!   buffer, used to by ReadVersion method
-   Long64_t         fObjIdCounter;         //!   counter of objects id
-   Bool_t           fIgnoreVerification;   //!   ignore verification of names
-   TSQLObjectData*  fCurrentData;          //!
-   TObjArray*       fObjectsInfos;         //!   array of objects info for selected key
-   Long64_t         fFirstObjId;           //!   id of first object to be read from the database
-   Long64_t         fLastObjId;            //!   id of last object correspond to this key
-   TMap*            fPoolsMap;             //!   map of pools with data from different tables
+   TSQLFile*        fSQL;                  ///<!   instance of TSQLFile
+   TSQLStructure*   fStructure;            ///<!   structures, created by object storing
+   TSQLStructure*   fStk;                  ///<!   pointer on current active structure (stack head)
+   TExMap*          fObjMap;               ///<!   Map between stored objects and object id
+   TString          fReadBuffer;           ///<!   Buffer for read value
+   Int_t            fErrorFlag;            ///<!   Error id value
+   Bool_t           fExpectedChain;        ///<!   flag to resolve situation when several elements of same basic type stored as FastArray
+   Int_t            fCompressLevel;        ///<!   compress level used to minimize size of data in database
+   Int_t            fReadVersionBuffer;    ///<!   buffer, used to by ReadVersion method
+   Long64_t         fObjIdCounter;         ///<!   counter of objects id
+   Bool_t           fIgnoreVerification;   ///<!   ignore verification of names
+   TSQLObjectData*  fCurrentData;          ///<!
+   TObjArray*       fObjectsInfos;         ///<!   array of objects info for selected key
+   Long64_t         fFirstObjId;           ///<!   id of first object to be read from the database
+   Long64_t         fLastObjId;            ///<!   id of last object correspond to this key
+   TMap*            fPoolsMap;             ///<!   map of pools with data from different tables
 
    // TBufferSQL2 objects cannot be copied or assigned
    TBufferSQL2(const TBufferSQL2 &);       // not implemented

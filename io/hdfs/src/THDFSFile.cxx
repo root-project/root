@@ -9,34 +9,34 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THDFSFile                                                            //
-//                                                                      //
-// A THDFSFile is like a normal TFile except that it reads and writes   //
-// its data via the HDFS protocols.  For more information on HDFS, see  //
-// http://hadoop.apache.org/hdfs/.                                      //
-// This implementation interfaces with libhdfs, which is a JNI-based    //
-// library (i.e., it will start a Java JVM internally the first time    //
-// it is called).  At a minimum, you will need your environment's       //
-// $CLASSPATH variable set up properly to use.  Here's an example of    //
-// one way to properly set your classpath, assuming you use the OSG     //
-// distribution of Hadoop:                                              //
-//    $ source $HADOOP_CONF_DIR/hadoop-env.sh                           //
-//    $ export CLASSPATH=$HADOOP_CLASSPATH                              //
-// Additionally, you will need a valid libjvm in your $LD_LIBRARY_PATH  //
-// This is usually found in either:                                     //
-//    $JAVA_HOME/jre/lib/i386/server                                    //
-// or                                                                   //
-//    $JAVA_HOME/jre/lib/amd64/server                                   //
-// This file can only be used if hdfs support is compiled into ROOT.    //
-//                                                                      //
-// The HDFS URLs should be of the form:                                 //
-//    hdfs:///path/to/file/in/HDFS.root                                 //
-// Any host or port information will be ignored; this is taken from the //
-// node's HDFS configuration files.                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class THDFSFile
+\ingroup IO
+
+Reads and writes its data via the HDFS protocols
+
+A THDFSFile is like a normal TFile except that it reads and writes
+its data via the HDFS protocols. For more information on HDFS, see
+http://hadoop.apache.org/hdfs/.
+This implementation interfaces with libhdfs, which is a JNI-based
+library (i.e., it will start a Java JVM internally the first time
+it is called). At a minimum, you will need your environment's
+$CLASSPATH variable set up properly to use. Here's an example of
+one way to properly set your classpath, assuming you use the OSG
+distribution of Hadoop:
+    $ source $HADOOP_CONF_DIR/hadoop-env.sh
+    $ export CLASSPATH=$HADOOP_CLASSPATH
+Additionally, you will need a valid libjvm in your $LD_LIBRARY_PATH
+This is usually found in either:
+    $JAVA_HOME/jre/lib/i386/server
+or
+    $JAVA_HOME/jre/lib/amd64/server
+This file can only be used if hdfs support is compiled into ROOT.
+The HDFS URLs should be of the form:
+    hdfs:///path/to/file/in/HDFS.root
+Any host or port information will be ignored; this is taken from the
+node's HDFS configuration files.
+*/
 
 #include "syslog.h"
 #include "assert.h"
@@ -291,6 +291,14 @@ void THDFSFile::ResetErrno() const
 {
    TSystem::ResetErrno();
 }
+
+
+/**
+\class THDFSSystem
+\ingroup IO
+
+Directory handler for HDFS (THDFSFile).
+*/
 
 
 ClassImp(THDFSSystem)

@@ -12,17 +12,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TDCacheFile                                                          //
-//                                                                      //
-// A TDCacheFile is like a normal TFile except that it may read and     //
-// write its data via a dCache server (for more on the dCache daemon    //
-// see http://www-dcache.desy.de/. Given a path which doesn't belong    //
-// to the dCache managed filesystem, it falls back to the ordinary      //
-// TFile behaviour.                                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TDCacheFile
+\ingroup IO
+A TDCacheFile is like a normal TFile except that it may read and
+write its data via a dCache server (for more on the dCache daemon
+see http://www-dcache.desy.de/. Given a path which doesn't belong
+to the dCache managed filesystem, it falls back to the ordinary
+TFile behaviour.
+*/
 
 #include "TDCacheFile.h"
 #include "TError.h"
@@ -58,10 +56,12 @@ static const size_t DCAP_PREFIX_LEN = strlen(DCAP_PREFIX);
 ClassImp(TDCacheFile)
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a dCache file object. A dCache file is the same as a TFile
+/// Create a dCache file object.
+///
+/// A dCache file is the same as a TFile
 /// except that it is being accessed via a dCache server. The url
-/// argument must be of the form: dcache:/pnfs/<path>/<file>.root or
-/// dcap://<nodename.org>/<path>/<file>.root. If the file specified in the
+/// argument must be of the form: \a dcache:/pnfs/<path>/<file>.root or
+/// \a dcap://<nodename.org>/<path>/<file>.root. If the file specified in the
 /// URL does not exist, is not accessable or can not be created the kZombie
 /// bit will be set in the TDCacheFile object. Use IsZombie() to see if the
 /// file is accessable. For a description of the option and other arguments
@@ -519,12 +519,11 @@ Int_t TDCacheFile::SysSync(Int_t fd)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get info about a file: id, size, flags, modification time.
-/// Id      is (statbuf.st_dev << 24) + statbuf.st_ino
-/// Size    is the file size
-/// Flags   is file type: 0 is regular file, bit 0 set executable,
-///                       bit 1 set directory, bit 2 set special file
-///                       (socket, fifo, pipe, etc.)
-/// Modtime is modification time.
+///
+/// \param[in] id (statbuf.st_dev << 24) + statbuf.st_ino
+/// \param[in] size The file size
+/// \param[in] flags File type: 0 is regular file, bit 0 set executable, bit 1 set directory, bit 2 set special file (socket, fifo, pipe, etc.)
+/// \param[in] modtime Modification time.
 /// The function returns 0 in case of success and 1 if the file could
 /// not be stat'ed.
 
@@ -582,8 +581,8 @@ void TDCacheFile::ResetErrno() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Transform the input path into a path usuable by the dcap C library,
-/// i.e either dcap://nodename.org/where/filename.root or
-/// /pnfs/where/filename.root
+/// i.e either \a dcap://nodename.org/where/filename.root or
+/// \a /pnfs/where/filename.root
 
 TString TDCacheFile::GetDcapPath(const char *path)
 {

@@ -9,16 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//________________________________________________________________________
-//
-// Class for serializing/deserializing object to/from SQL data base.
-// It redefines most of TBuffer class function to convert simple types,
-// array of simple types and objects to/from TSQLStructure objects.
-// TBufferSQL2 class uses streaming mechanism, provided by ROOT system,
-// therefore most of ROOT and user classes can be stored. There are
-// limitations for complex objects like TTree, TClonesArray, TDirectory and
-// few other, which can not be converted to SQL (yet).
-//________________________________________________________________________
+/**
+\class TBufferSQL2
+\ingroup IO
+
+Converts data to SQL statements or read data from SQL tables.
+
+Class for serializing/deserializing object to/from SQL data base.
+It redefines most of TBuffer class function to convert simple types,
+array of simple types and objects to/from TSQLStructure objects.
+TBufferSQL2 class uses streaming mechanism, provided by ROOT system,
+therefore most of ROOT and user classes can be stored. There are
+limitations for complex objects like TTree, TClonesArray, TDirectory and
+few other, which can not be converted to SQL (yet).
+*/
 
 #include "TBufferSQL2.h"
 
@@ -147,7 +151,7 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile* file) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// destroy sql buffer
+/// Destroy sql buffer.
 
 TBufferSQL2::~TBufferSQL2()
 {
@@ -261,7 +265,8 @@ Bool_t TBufferSQL2::SqlObjectInfo(Long64_t objid, TString& clname, Version_t& ve
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// creates TSQLObjectData for specifed object id and specified class
+/// Creates TSQLObjectData for specifed object id and specified class
+///
 /// Object data for each class can be stored in two different tables.
 /// First table contains data in column-wise form for simple types like integer,
 /// strings and so on when second table contains any other data which cannot
@@ -321,7 +326,7 @@ TSQLObjectData* TBufferSQL2::SqlObjectData(Long64_t objid, TSQLClassInfo* sqlinf
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert object into sql structures.
-/// !!! Should be used only by TBufferSQL2 itself.
+/// <b>It should be used only by TBufferSQL2 itself</b>
 /// Use SqlWrite() functions to convert your object to sql
 /// Redefined here to avoid gcc 3.x warning
 
@@ -331,7 +336,7 @@ void TBufferSQL2::WriteObject(const TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write object to buffer
+/// Write object to buffer.
 /// If object was written before, only pointer will be stored
 /// Return id of saved object
 
@@ -606,7 +611,7 @@ void TBufferSQL2::SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_ty
 ////////////////////////////////////////////////////////////////////////////////
 /// This method inform buffer data of which class now
 /// will be streamed. When reading, classversion should be specified
-/// as was read by TBuffer::ReadVersion() call
+/// as was read by TBuffer::ReadVersion().
 ///
 /// ClassBegin(), ClassEnd() & ClassMemeber() should be used in
 /// custom class streamers to specify which kind of data are
@@ -668,27 +673,7 @@ void TBufferSQL2::ClassEnd(const TClass* cl)
 /// Method indicates name and typename of class memeber,
 /// which should be now streamed in custom streamer
 /// Following combinations are supported:
-/// 1. name = "ClassName", typeName = 0 or typename==ClassName
-///    This is a case, when data of parent class "ClassName" should be streamed.
-///    For instance, if class directly inherited from TObject, custom
-///    streamer should include following code:
-///    b.ClassMember("TObject");
-///    TObject::Streamer(b);
-/// 2. Basic data type
-///      b.ClassMember("fInt","Int_t");
-///      b >> fInt;
-/// 3. Array of basic data types
-///      b.ClassMember("fArr","Int_t", 5);
-///      b.ReadFastArray(fArr, 5);
-/// 4. Object as data member
-///      b.ClassMemeber("fName","TString");
-///      fName.Streamer(b);
-/// 5. Pointer on object as datamember
-///      b.ClassMemeber("fObj","TObject*");
-///      b.StreamObject(b);
-/// arrsize1 and arrsize2 arguments (when specified) indicate first and
-/// second dimension of array. Can be used for array of basic types.
-/// For more details see ClassBegin() method description.
+/// see TBufferXML::ClassMember for the details.
 
 void TBufferSQL2::ClassMember(const char* name, const char* typeName, Int_t arrsize1, Int_t arrsize2)
 {
@@ -901,7 +886,7 @@ void TBufferSQL2::WorkWithElement(TStreamerElement* elem, Int_t /* comp_type */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// suppressed function of TBuffer
+/// Suppressed function of TBuffer
 
 TClass* TBufferSQL2::ReadClass(const TClass*, UInt_t*)
 {
@@ -909,14 +894,14 @@ TClass* TBufferSQL2::ReadClass(const TClass*, UInt_t*)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// suppressed function of TBuffer
+/// Suppressed function of TBuffer
 
 void TBufferSQL2::WriteClass(const TClass*)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// suppressed function of TBuffer
+/// Suppressed function of TBuffer
 
 Int_t TBufferSQL2::CheckByteCount(UInt_t /*r_s */, UInt_t /*r_c*/, const TClass* /*cl*/)
 {
@@ -924,7 +909,7 @@ Int_t TBufferSQL2::CheckByteCount(UInt_t /*r_s */, UInt_t /*r_c*/, const TClass*
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// suppressed function of TBuffer
+/// Suppressed function of TBuffer
 
 Int_t  TBufferSQL2::CheckByteCount(UInt_t, UInt_t, const char*)
 {
@@ -932,7 +917,7 @@ Int_t  TBufferSQL2::CheckByteCount(UInt_t, UInt_t, const char*)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// suppressed function of TBuffer
+/// Suppressed function of TBuffer
 
 void TBufferSQL2::SetByteCount(UInt_t, Bool_t)
 {
@@ -947,7 +932,7 @@ void TBufferSQL2::SkipVersion(const TClass *cl)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read version value from buffer
+/// Read version value from buffer
 /// actually version is normally defined by table name
 /// and kept in intermediate variable fReadVersionBuffer
 
@@ -1427,7 +1412,7 @@ Int_t TBufferSQL2::ReadStaticArrayDouble32(Double_t  *d, TStreamerElement * /*el
       }                                                                 \
    }
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Bool_t from buffer
+/// Read array of Bool_t from buffer
 
 void TBufferSQL2::ReadFastArray(Bool_t    *b, Int_t n)
 {
@@ -1435,7 +1420,7 @@ void TBufferSQL2::ReadFastArray(Bool_t    *b, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Char_t from buffer
+/// Read array of Char_t from buffer
 /// if nodename==CharStar, read all array as string
 
 void TBufferSQL2::ReadFastArray(Char_t    *c, Int_t n)
@@ -1454,7 +1439,7 @@ void TBufferSQL2::ReadFastArray(Char_t    *c, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of UChar_t from buffer
+/// Read array of UChar_t from buffer
 
 void TBufferSQL2::ReadFastArray(UChar_t   *c, Int_t n)
 {
@@ -1462,7 +1447,7 @@ void TBufferSQL2::ReadFastArray(UChar_t   *c, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Short_t from buffer
+/// Read array of Short_t from buffer
 
 void TBufferSQL2::ReadFastArray(Short_t   *h, Int_t n)
 {
@@ -1470,7 +1455,7 @@ void TBufferSQL2::ReadFastArray(Short_t   *h, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of UShort_t from buffer
+/// Read array of UShort_t from buffer
 
 void TBufferSQL2::ReadFastArray(UShort_t  *h, Int_t n)
 {
@@ -1478,7 +1463,7 @@ void TBufferSQL2::ReadFastArray(UShort_t  *h, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Int_t from buffer
+/// Read array of Int_t from buffer
 
 void TBufferSQL2::ReadFastArray(Int_t     *i, Int_t n)
 {
@@ -1486,7 +1471,7 @@ void TBufferSQL2::ReadFastArray(Int_t     *i, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of UInt_t from buffer
+/// Read array of UInt_t from buffer
 
 void TBufferSQL2::ReadFastArray(UInt_t    *i, Int_t n)
 {
@@ -1494,7 +1479,7 @@ void TBufferSQL2::ReadFastArray(UInt_t    *i, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Long_t from buffer
+/// Read array of Long_t from buffer
 
 void TBufferSQL2::ReadFastArray(Long_t    *l, Int_t n)
 {
@@ -1502,7 +1487,7 @@ void TBufferSQL2::ReadFastArray(Long_t    *l, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of ULong_t from buffer
+/// Read array of ULong_t from buffer
 
 void TBufferSQL2::ReadFastArray(ULong_t   *l, Int_t n)
 {
@@ -1510,7 +1495,7 @@ void TBufferSQL2::ReadFastArray(ULong_t   *l, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Long64_t from buffer
+/// Read array of Long64_t from buffer
 
 void TBufferSQL2::ReadFastArray(Long64_t  *l, Int_t n)
 {
@@ -1518,7 +1503,7 @@ void TBufferSQL2::ReadFastArray(Long64_t  *l, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of ULong64_t from buffer
+/// Read array of ULong64_t from buffer
 
 void TBufferSQL2::ReadFastArray(ULong64_t *l, Int_t n)
 {
@@ -1526,7 +1511,7 @@ void TBufferSQL2::ReadFastArray(ULong64_t *l, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Float_t from buffer
+/// Read array of Float_t from buffer
 
 void TBufferSQL2::ReadFastArray(Float_t   *f, Int_t n)
 {
@@ -1534,7 +1519,7 @@ void TBufferSQL2::ReadFastArray(Float_t   *f, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Double_t from buffer
+/// Read array of Double_t from buffer
 
 void TBufferSQL2::ReadFastArray(Double_t  *d, Int_t n)
 {
@@ -1542,7 +1527,7 @@ void TBufferSQL2::ReadFastArray(Double_t  *d, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Float16_t from buffer
+/// Read array of Float16_t from buffer
 
 void TBufferSQL2::ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement * /*ele*/)
 {
@@ -1550,7 +1535,7 @@ void TBufferSQL2::ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement * 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Float16_t from buffer
+/// Read array of Float16_t from buffer
 
 void TBufferSQL2::ReadFastArrayWithFactor(Float_t  *f, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
 {
@@ -1558,7 +1543,7 @@ void TBufferSQL2::ReadFastArrayWithFactor(Float_t  *f, Int_t n, Double_t /* fact
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Float16_t from buffer
+/// Read array of Float16_t from buffer
 
 void TBufferSQL2::ReadFastArrayWithNbits(Float_t  *f, Int_t n, Int_t /*nbits*/)
 {
@@ -1566,7 +1551,7 @@ void TBufferSQL2::ReadFastArrayWithNbits(Float_t  *f, Int_t n, Int_t /*nbits*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Double32_t from buffer
+/// Read array of Double32_t from buffer
 
 void TBufferSQL2::ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement * /*ele*/)
 {
@@ -1574,14 +1559,14 @@ void TBufferSQL2::ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Double32_t from buffer
+/// Read array of Double32_t from buffer
 
 void TBufferSQL2::ReadFastArrayWithFactor(Double_t  *d, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
 {
    TBufferSQL2_ReadFastArray(d);
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// read array of Double32_t from buffer
+/// Read array of Double32_t from buffer
 
 void TBufferSQL2::ReadFastArrayWithNbits(Double_t  *d, Int_t n, Int_t /*nbits*/)
 {
@@ -2063,7 +2048,7 @@ Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// steram object to/from buffer
+/// Stream object to/from buffer
 
 void TBufferSQL2::StreamObject(void *obj, const type_info &typeinfo, const TClass *onFileClass)
 {
@@ -2071,7 +2056,7 @@ void TBufferSQL2::StreamObject(void *obj, const type_info &typeinfo, const TClas
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// steram object to/from buffer
+/// Stream object to/from buffer
 
 void TBufferSQL2::StreamObject(void *obj, const char *className, const TClass *onFileClass)
 {
@@ -2079,7 +2064,7 @@ void TBufferSQL2::StreamObject(void *obj, const char *className, const TClass *o
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// steram object to/from buffer
+/// Stream object to/from buffer
 
 void TBufferSQL2::StreamObject(void *obj, const TClass *cl, const TClass *onFileClass)
 {
@@ -2092,7 +2077,7 @@ void TBufferSQL2::StreamObject(void *obj, const TClass *cl, const TClass *onFile
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// steram object to/from buffer
+/// Stream object to/from buffer
 
 void TBufferSQL2::StreamObject(TObject *obj)
 {
@@ -2100,7 +2085,7 @@ void TBufferSQL2::StreamObject(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// steram object to/from buffer
+/// Stream object to/from buffer
 
 void TBufferSQL2::StreamObject(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n, const TClass *onFileClass)
 {
@@ -2525,7 +2510,7 @@ Bool_t TBufferSQL2::SqlWriteValue(const char* value, const char* tname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to Char_t value
+/// Read current value from table and convert it to Char_t value
 
 void TBufferSQL2::SqlReadBasic(Char_t& value)
 {
@@ -2539,7 +2524,7 @@ void TBufferSQL2::SqlReadBasic(Char_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to Short_t value
+/// Read current value from table and convert it to Short_t value
 
 void TBufferSQL2::SqlReadBasic(Short_t& value)
 {
@@ -2551,7 +2536,7 @@ void TBufferSQL2::SqlReadBasic(Short_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to Int_t value
+/// Read current value from table and convert it to Int_t value
 
 void TBufferSQL2::SqlReadBasic(Int_t& value)
 {
@@ -2563,7 +2548,7 @@ void TBufferSQL2::SqlReadBasic(Int_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to Long_t value
+/// Read current value from table and convert it to Long_t value
 
 void TBufferSQL2::SqlReadBasic(Long_t& value)
 {
@@ -2575,7 +2560,7 @@ void TBufferSQL2::SqlReadBasic(Long_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to Long64_t value
+/// Read current value from table and convert it to Long64_t value
 
 void TBufferSQL2::SqlReadBasic(Long64_t& value)
 {
@@ -2587,7 +2572,7 @@ void TBufferSQL2::SqlReadBasic(Long64_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to Float_t value
+/// Read current value from table and convert it to Float_t value
 
 void TBufferSQL2::SqlReadBasic(Float_t& value)
 {
@@ -2599,7 +2584,7 @@ void TBufferSQL2::SqlReadBasic(Float_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to Double_t value
+/// Read current value from table and convert it to Double_t value
 
 void TBufferSQL2::SqlReadBasic(Double_t& value)
 {
@@ -2611,7 +2596,7 @@ void TBufferSQL2::SqlReadBasic(Double_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to Bool_t value
+/// Read current value from table and convert it to Bool_t value
 
 void TBufferSQL2::SqlReadBasic(Bool_t& value)
 {
@@ -2623,7 +2608,7 @@ void TBufferSQL2::SqlReadBasic(Bool_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to UChar_t value
+/// Read current value from table and convert it to UChar_t value
 
 void TBufferSQL2::SqlReadBasic(UChar_t& value)
 {
@@ -2637,7 +2622,7 @@ void TBufferSQL2::SqlReadBasic(UChar_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to UShort_t value
+/// Read current value from table and convert it to UShort_t value
 
 void TBufferSQL2::SqlReadBasic(UShort_t& value)
 {
@@ -2649,7 +2634,7 @@ void TBufferSQL2::SqlReadBasic(UShort_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to UInt_t value
+/// Read current value from table and convert it to UInt_t value
 
 void TBufferSQL2::SqlReadBasic(UInt_t& value)
 {
@@ -2661,7 +2646,7 @@ void TBufferSQL2::SqlReadBasic(UInt_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to ULong_t value
+/// Read current value from table and convert it to ULong_t value
 
 void TBufferSQL2::SqlReadBasic(ULong_t& value)
 {
@@ -2673,7 +2658,7 @@ void TBufferSQL2::SqlReadBasic(ULong_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read current value from table and convert it to ULong64_t value
+/// Read current value from table and convert it to ULong64_t value
 
 void TBufferSQL2::SqlReadBasic(ULong64_t& value)
 {
@@ -2685,7 +2670,7 @@ void TBufferSQL2::SqlReadBasic(ULong64_t& value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read string value from current stack node
+/// Read string value from current stack node
 
 const char* TBufferSQL2::SqlReadValue(const char* tname)
 {
@@ -2714,7 +2699,7 @@ const char* TBufferSQL2::SqlReadValue(const char* tname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read CharStar value, if it has special code, request it from large table
+/// Read CharStar value, if it has special code, request it from large table
 
 const char* TBufferSQL2::SqlReadCharStarValue()
 {
