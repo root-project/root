@@ -182,7 +182,7 @@ Int_t THDFSFile::SysRead(Int_t, void *buf, Int_t len)
    tSize num_read_total = 0;
 
    do {
-       tSize num_read = hdfsRead((hdfsFS) fFS, (hdfsFile) fHdfsFH, buf + num_read_total, len - num_read_total);
+       tSize num_read = hdfsRead((hdfsFS) fFS, (hdfsFile) fHdfsFH, (char*) buf + num_read_total, len - num_read_total);
        num_read_total += num_read;
        if (num_read < 0) {
           gSystem->SetErrorStr(strerror(errno));
