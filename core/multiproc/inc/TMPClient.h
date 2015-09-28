@@ -13,16 +13,13 @@
 #define ROOT_TMPClient
 
 #include "TMonitor.h"
-#include "TSocket.h"
-#include "TClass.h"
-#include "TCollection.h"
 #include "TMPWorker.h"
 #include "TSysEvtHandler.h"
 #include "MPSendRecv.h"
 #include <vector>
 #include <unistd.h> //pid_t
-#include <iostream>
 #include <memory> //unique_ptr
+#include <iostream>
 
 class TMPInterruptHandler : public TSignalHandler {
    /// \cond
@@ -46,11 +43,11 @@ public:
    template<class T> unsigned Broadcast(unsigned code, const std::vector<T> &objs);
    template<class T> unsigned Broadcast(unsigned code, std::initializer_list<T> &objs);
    template<class T> unsigned Broadcast(unsigned code, T obj, unsigned nMessages = 0);
-   inline TMonitor &GetMonitor() { return fMon; }
-   inline bool GetIsParent() const { return fIsParent; }
+   TMonitor &GetMonitor() { return fMon; }
+   bool GetIsParent() const { return fIsParent; }
    /// Set the number of workers that will be spawned by the next call to Fork()
-   inline void SetNWorkers(unsigned n) { fNWorkers = n; }
-   inline unsigned GetNWorkers() const { return fNWorkers; }
+   void SetNWorkers(unsigned n) { fNWorkers = n; }
+   unsigned GetNWorkers() const { return fNWorkers; }
    void DeActivate(TSocket *s);
    void Remove(TSocket *s);
    void ReapServers();

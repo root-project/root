@@ -1,24 +1,18 @@
 #include "TMPClient.h"
-#include "TGuiFactory.h"
-#include "TVirtualX.h"
-#include "TSystem.h" //gSystem
-#include "TROOT.h" //gROOT
-#include "TObject.h"
-#include "TServerSocket.h"
+#include "TMPWorker.h"
 #include "MPCode.h"
 #include "TSocket.h"
-#include "TMPWorker.h"
-#include "TSeqCollection.h"
-#include "TList.h"
+#include "TGuiFactory.h" //gGuiFactory
+#include "TVirtualX.h" //gVirtualX
+#include "TSystem.h" //gSystem
+#include "TROOT.h" //gROOT
 #include "TError.h" //gErrorIgnoreLevel
 #include <unistd.h> // close, fork
 #include <sys/wait.h> // waitpid
 #include <errno.h> //errno, used by socketpair
-#include <sys/types.h> //socketpair
 #include <sys/socket.h> //socketpair
-#include <iostream>
 #include <memory> //unique_ptr
-#include <list>
+#include <iostream>
 
 //////////////////////////////////////////////////////////////////////////
 ///

@@ -13,12 +13,8 @@
 #define ROOT_TMPWorker
 
 #include "TSysEvtHandler.h" //TFileHandler
-#include "TSocket.h"
-#include "TBufferFile.h"
-#include "TClass.h"
-#include "MPSendRecv.h"
+#include "MPSendRecv.h" //MPCodeBufPair
 #include <unistd.h> //pid_t
-#include <string>
 #include <memory> //unique_ptr
 
 class TMPWorker : public TFileHandler {
@@ -33,8 +29,8 @@ public:
    TMPWorker &operator=(const TMPWorker &) = delete;
 
    virtual void Init(int fd);
-   inline TSocket *GetSocket() { return fS.get(); }
-   inline pid_t GetPid() { return fPid; }
+   TSocket *GetSocket() { return fS.get(); }
+   pid_t GetPid() { return fPid; }
 
 private:
    virtual void HandleInput(MPCodeBufPair &msg);

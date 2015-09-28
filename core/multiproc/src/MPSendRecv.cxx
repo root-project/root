@@ -1,7 +1,7 @@
 #include "MPSendRecv.h"
 #include "TBufferFile.h"
 #include "MPCode.h"
-#include <memory>
+#include <memory> //unique_ptr
 
 //////////////////////////////////////////////////////////////////////////
 /// Send a message with the specified code on the specified socket.

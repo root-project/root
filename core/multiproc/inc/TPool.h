@@ -16,17 +16,14 @@
 #include "TCollection.h"
 #include "MPSendRecv.h"
 #include "TPoolWorker.h"
-#include "TSocket.h"
 #include "TObjArray.h"
 #include "PoolCode.h"
 #include "MPCode.h"
-#include "TClass.h"
 #include <vector>
 #include <initializer_list>
 #include <type_traits> //std::result_of, std::enable_if
-#include <typeinfo> //typeid
-#include <iostream>
 #include <numeric> //std::iota
+#include <iostream>
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -69,8 +66,8 @@ public:
    template<class F, class T, class R> auto MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(func(args.front()));
    /// \endcond
 
-   inline void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
-   inline unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
+   void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
+   unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
    /// Return true if this process is the parent/client/master process, false otherwise
 
 private:
