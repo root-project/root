@@ -170,8 +170,9 @@ void BaseSelectionRule::PrintAttributes(std::ostream &out, int level) const
    }
 
    if (!fAttributes.empty()) {
-      for (AttributesMap_t::const_iterator iter = fAttributes.begin(); iter!=fAttributes.end(); ++iter) {
-         out<<tabs<<iter->first<<" = "<<iter->second<<std::endl;
+      std::map<std::string,std::string> orderedAttributes(fAttributes.begin(),fAttributes.end());
+      for (auto&& attr : orderedAttributes) {
+         out<<tabs<<attr.first<<" = "<<attr.second<<std::endl;
       }
    }
    else {
