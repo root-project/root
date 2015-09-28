@@ -179,12 +179,23 @@ THDFSFile::~THDFSFile()
 Int_t THDFSFile::SysRead(Int_t, void *buf, Int_t len)
 {
    TRACE("READ")
-   tSize num_read = hdfsRead((hdfsFS) fFS, (hdfsFile) fHdfsFH, buf, len);
-   fSysOffset += len;
-   if (num_read < 0) {
-      gSystem->SetErrorStr(strerror(errno));
-   }
-   return num_read;
+   tSize num_read_total = 0;
+
+   do {
+       tSize num_read = hdfsRead((hdfsFS) fFS, (hdfsFile) fHdfsFH, buf + num_read_total, len - num_read_total);
+       num_read_total += num_read;
+       if (num_read < 0) {
+          gSystem->SetErrorStr(strerror(errno));
+          break;
+       } else if (num_read == 0) {
+           break;
+       }
+   } while (num_read_total < len);
+
+
+   fSysOffset += num_read_total;
+   return num_read_total;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
