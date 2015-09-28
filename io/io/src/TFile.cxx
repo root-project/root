@@ -11,12 +11,12 @@
 
 /**
   \defgroup IO Input/Output Library
- 
+
   The library collecting the ROOT classes dedicated to data input and output.
- 
+
 */
 
-/** 
+/**
 \file TFile.cxx
 \class TFile
 \ingroup IO
@@ -65,8 +65,9 @@ Byte Range      | Record Name | Description
 42->45 [54->57] | fNbytesInfo | Number of bytes in TStreamerInfo record
 46->63 [58->75] | fUUID       | Universal Unique ID
 
-\image html tfile_file_layout.gif
-
+Begin_Macro
+../../../tutorials/io/file.C
+End_Macro
 The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 */
 
@@ -214,9 +215,9 @@ TFile::TFile() : TDirectoryFile(), fInfoCache(0)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Opens or creates a local ROOT file. 
+/// Opens or creates a local ROOT file.
 ///
-/// \param[in] fname1 The name of the file 
+/// \param[in] fname1 The name of the file
 /// \param[in] option Specifies the mode in which the file is opened
 /// \param[in] ftitle The title of the file
 /// \param[in] compress Specifies the compression algorithm and level
@@ -278,7 +279,7 @@ TFile::TFile() : TDirectoryFile(), fInfoCache(0)
 ///
 ///     compress = 100 * algorithm + level
 ///
-/// Level | Explaination
+/// Level | Explanation
 /// ------|-------------
 /// 0   | objects written to this file will not be compressed.
 /// 1   | minimal compression level but fast.
@@ -517,7 +518,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    return;
 
 zombie:
-   // error in file opening occured, make this object a zombie
+   // error in file opening occurred, make this object a zombie
    {
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Add(this);
@@ -875,7 +876,7 @@ zombie:
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Add(this);
    }
-   // error in file opening occured, make this object a zombie
+   // error in file opening occurred, make this object a zombie
    fWritable = kFALSE;
    MakeZombie();
    gDirectory = gROOT;
@@ -885,7 +886,7 @@ zombie:
 /// Close a file.
 ///
 /// \param[in] option If option == "R", all TProcessIDs referenced by this file are deleted.
-/// 
+///
 /// Calling TFile::Close("R") might be necessary in case one reads a long list
 /// of files having TRef, writing some of the referenced objects or TRef
 /// to a new file. If the TRef or referenced objects of the file being closed
@@ -1024,7 +1025,7 @@ TFile *&TFile::CurrentFile()
 ///
 /// \param[in] namecycle Encodes the name and cycle of the objects to delete
 ///
-/// Namecycle identifies an object in the top directory of the file namecycle 
+/// Namecycle identifies an object in the top directory of the file namecycle
 /// has the format <em>name;cycle</em>.
 ///   - <em>name  = *</em> means all objects
 ///   - <em>cycle = *</em> means all cycles (memory and keys)
@@ -1217,7 +1218,7 @@ TFileCacheWrite *TFile::GetCacheWrite() const
 /// Read the logical record header starting at a certain postion.
 ///
 /// \param[in] maxbytes Bytes which are read into buf.
-/// \param[out] nbytes Number of bytes in record if negative, this is a deleted 
+/// \param[out] nbytes Number of bytes in record if negative, this is a deleted
 /// record if 0, cannot read record, wrong value of argument first
 /// \param[out] objlen Uncompressed object size
 /// \param[out] keylen Length of logical record header
@@ -1301,7 +1302,7 @@ const TList *TFile::GetStreamerInfoCache()
 ////////////////////////////////////////////////////////////////////////////////
 /// Read the list of TStreamerInfo objects written to this file.
 ///
-/// The function returns a TList. It is the user'responsability
+/// The function returns a TList. It is the user's responsibility
 /// to delete the list created by this function.
 ///
 /// Using the list, one can access additional information, e.g.:
@@ -1707,7 +1708,7 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read buffer via cache.
 ///
-/// Returns 0 if the requested block is not in the cache, 1 in case read via 
+/// Returns 0 if the requested block is not in the cache, 1 in case read via
 /// cache was successful, 2 in case read via cache failed.
 
 Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
@@ -2718,7 +2719,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
              || (info->GetClassVersion() > alternate->GetClassVersion()) ) {
             list->AddAfter(alternate, info);
             list->Remove(alternate);
-         } // otherwise ingnore this info as not being the official one.
+         } // otherwise ignore this info as not being the official one.
       } else {
          list->Add(info);
       }
@@ -3496,7 +3497,7 @@ void TFile::ReadStreamerInfo()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Specify if the streamerinfos must be read at file opening.
-/// 
+///
 /// If fgReadInfo is true (default) TFile::ReadStreamerInfo is called
 ///  when opening the file.
 /// It may be interesting to set fgReadInfo to false to speedup the file
@@ -3642,7 +3643,7 @@ void TFile::WriteStreamerInfo()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Open a file for reading through the file cache. 
+/// Open a file for reading through the file cache.
 ///
 /// The file will be downloaded to the cache and opened from there.
 /// If the download fails, it will be opened remotely.
@@ -3850,8 +3851,8 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// TFile::AsyncOpen(...), it is possible to request a timeout with the
 /// option <b>TIMEOUT=<secs></b>: the timeout must be specified in seconds and
 /// it will be internally checked with granularity of one millisec.
-/// For remote files there is the option: <b>CACHEREAD</b> opens an existing 
-/// file for reading through the file cache. The file will be downloaded to 
+/// For remote files there is the option: <b>CACHEREAD</b> opens an existing
+/// file for reading through the file cache. The file will be downloaded to
 /// the cache and opened from there. If the download fails, it will be opened remotely.
 /// The file will be downloaded to the directory specified by SetCacheFileDir().
 
@@ -4069,7 +4070,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Submit an asynchronous open request. 
+/// Submit an asynchronous open request.
 
 /// See TFile::Open(const char *, ...) for an
 /// explanation of the arguments. A handler is returned which is to be passed
@@ -4167,7 +4168,7 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
       gSystem->Unlink(rh.fFile);
    }
 
-   // Make sure that no error occured
+   // Make sure that no error occurred
    if (notfound) {
       SafeDelete(f);
       // Save the arguments in the handler, so that a standard open can be
@@ -4269,7 +4270,7 @@ Int_t TFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to system lseek.
-/// 
+///
 /// All arguments like in POSIX lseek()
 /// except that the offset and return value are of a type which are
 /// able to handle 64 bit file systems.
@@ -4286,7 +4287,7 @@ Long64_t TFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return file stat information. 
+/// Return file stat information.
 ///
 /// The interface and return value is
 /// identical to TSystem::GetPathInfo(). The function returns 0 in
@@ -4386,7 +4387,7 @@ Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected,
       // try to create it
       gSystem->mkdir(cached, kTRUE);
       if (gSystem->AccessPathName(cached, kFileExists)) {
-         ::Error("TFile::SetCacheFileDir", "no suffcient permissions on cache directory %s or cannot create it", cachedir);
+         ::Error("TFile::SetCacheFileDir", "no sufficient permissions on cache directory %s or cannot create it", cachedir);
          fgCacheFileDir = "";
          return kFALSE;
       }
@@ -4512,7 +4513,7 @@ Bool_t TFile::GetOnlyStaged()
 /// Return kTRUE if 'url' matches the coordinates of this file.
 ///
 /// The check is implementation dependent and may need to be overload
-/// by each TFile implememtation relying on this check.
+/// by each TFile implementation relying on this check.
 /// The default implementation checks the file name only.
 
 Bool_t TFile::Matches(const char *url)
@@ -4651,7 +4652,7 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
 
 TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(const char* name)
 {
-   // Check the list of pending async opem requests
+   // Check the list of pending async open requests
    if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
       TIter nxr(fgAsyncOpenRequests);
       TFileOpenHandle *fh = 0;
@@ -4697,7 +4698,7 @@ TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(TFileOpenHandle *handle)
 
 const TUrl *TFile::GetEndpointUrl(const char* name)
 {
-   // Check the list of pending async opem requests
+   // Check the list of pending async open requests
    if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
       TIter nxr(fgAsyncOpenRequests);
       TFileOpenHandle *fh = 0;
@@ -4943,7 +4944,7 @@ Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
    if (len == 0) {
       // according POSIX spec if len is zero, all data following offset
       // is specified. Nevertheless ROOT uses zero to probe readahead
-      // capadilites.
+      // capabilities.
       advice = POSIX_FADV_NORMAL;
    }
    Double_t start = 0;
@@ -4968,7 +4969,7 @@ Bool_t TFile::ReadBufferAsync(Long64_t, Int_t)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Max number of bytes to prefetch. 
+/// Max number of bytes to prefetch.
 ///
 /// By default this is 75% of the
 /// read cache size. But specific TFile implementations may need to change it
