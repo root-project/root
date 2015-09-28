@@ -65,16 +65,17 @@ void    ExecuteCommand(TString);
 
 
 // Global variables.
-char    gLine[255];  // Current line in the current input file
-TString gFileName;   // Input file name
-TString gLineString; // Current line (as a TString) in the current input file
-TString gClassName;  // Current class name
-TString gImageName;  // Current image name
-TString gMacroName;  // Current macro name
-TString gCwd;        // Current working directory
-TString gOutDir;     // Output directory
-Bool_t  gHeader;     // True if the input file is a header
-Bool_t  gSource;     // True if the input file is a source file
+char    gLine[255];   // Current line in the current input file
+TString gFileName;    // Input file name
+TString gLineString;  // Current line (as a TString) in the current input file
+TString gClassName;   // Current class name
+TString gImageName;   // Current image name
+TString gMacroName;   // Current macro name
+TString gCwd;         // Current working directory
+TString gOutDir;      // Output directory
+Bool_t  gHeader;      // True if the input file is a header
+Bool_t  gSource;      // True if the input file is a source file
+Bool_t  gImageSource; // True the source of the current macro should be shown
 Bool_t  gInClassDef;
 Bool_t  gClass;
 Int_t   gInMacro;
@@ -89,14 +90,15 @@ int main(int argc, char *argv[])
 {
    // Initialisation
 
-   gFileName   = argv[1];
-   gHeader     = kFALSE;
-   gSource     = kFALSE;
-   gInClassDef = kFALSE;
-   gClass      = kFALSE;
-   gInMacro    = 0;
-   gImageID    = 0;
-   gMacroID    = 0;
+   gFileName    = argv[1];
+   gHeader      = kFALSE;
+   gSource      = kFALSE;
+   gInClassDef  = kFALSE;
+   gClass       = kFALSE;
+   gImageSource = kFALSE;
+   gInMacro     = 0;
+   gImageID     = 0;
+   gMacroID     = 0;
    if (gFileName.EndsWith(".cxx")) gSource = kTRUE;
    if (gFileName.EndsWith(".h"))   gHeader = kTRUE;
    GetClassName();
@@ -158,6 +160,7 @@ int main(int argc, char *argv[])
 
          if (gLineString.Index("End_Macro") >= 0) {
             gLineString.ReplaceAll("End_Macro","");
+            gImageSource = kFALSE;
             gInMacro = 0;
             if (m) {
                fclose(m);
@@ -182,10 +185,14 @@ int main(int argc, char *argv[])
                                                         , "w");
                   if (m) fprintf(m,"%s",gLineString.Data());
                   if (gLineString.BeginsWith("{")) {
-                     gLineString.ReplaceAll("{"
-                                             , TString::Format("\\include %s_%3.3d.C"
-                                             , gClassName.Data()
-                                             , gMacroID));
+                     if (gImageSource) {
+                        gLineString.ReplaceAll("{"
+                                                , TString::Format("\\include %s_%3.3d.C"
+                                                , gClassName.Data()
+                                                , gMacroID));
+                     } else {
+                        gLineString = "\n";
+                     }
                   }
                   gInMacro++;
                }
@@ -204,6 +211,7 @@ int main(int argc, char *argv[])
          }
 
          if (gLineString.Index("Begin_Macro") >= 0) {
+            if (gLineString.Index("source") >= 0)    gImageSource = kTRUE;
             gImageID++;
             gInMacro++;
             gLineString = "\n";
@@ -311,9 +319,12 @@ void ExecuteMacro()
                                              gOutDir.Data()));
 
    ExecuteCommand(gLineString);
-
-   gLineString = TString::Format("\\include %s\n\\image html %s\n", gMacroName.Data(),
-                                                                    gImageName.Data());
+   if (gImageSource) {
+      gLineString = TString::Format("\\include %s\n\\image html %s\n", gMacroName.Data(),
+                                                                       gImageName.Data());
+   } else {
+      gLineString = TString::Format("\n\\image html %s\n", gImageName.Data());
+   }
 }
 
 
