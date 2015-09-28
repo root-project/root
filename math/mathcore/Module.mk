@@ -76,7 +76,7 @@ MATHCOREMH1   := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MATHCOREMH2   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
 MATHCOREMH3   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.icc))
 MATHCOREMH4   := $(filter-out $(MODDIRI)/Fit/LinkDef%,$(wildcard $(MODDIRI)/Fit/*.h))
-MATHCOREMH    := $(MATHCOREH1) $(MATHCOREH2) $(MATHCOREH3) $(MATHCOREH4)
+MATHCOREMH    := $(MATHCOREMH1) $(MATHCOREMH2) $(MATHCOREMH3) $(MATHCOREMH4)
 
 MATHCORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MATHCORECS   := $(wildcard $(MODDIRS)/*.c)
