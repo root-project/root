@@ -1,0 +1,8 @@
+<lcgdict>
+<class name="DataProduct" ClassVersion="11">
+   <version ClassVersion="11" checksum="1215113161"/>
+</class>
+<class name="DataProduct">
+   <field name="dummy" transient="true" />
+</class>
+</lcgdict>

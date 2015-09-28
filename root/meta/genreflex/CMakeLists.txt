@@ -1,5 +1,12 @@
 ROOTTEST_ADD_TESTDIRS()
 
+# ROOT-7643
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-selectionDuplicate
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/duplicateSelection.h
+                          --select=${CMAKE_CURRENT_SOURCE_DIR}/duplicateSelection_selection.xml
+                  ERRREF duplicateSelection.eref
+                  PASSRC 1)
+
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-excludedAutoparseKeys
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/excludedAutoparseKeys.h
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/excludedAutoparseKeys_selection.xml --debug -I ${CMAKE_CURRENT_SOURCE_DIR}
