@@ -165,6 +165,32 @@ void SelectionRules::ClearSelectionRules()
 }
 
 template<class RULE>
+static bool areEqual(RULE* r1, RULE* r2){
+   return r1->GetAttributes() != r2->GetAttributes();
+}
+
+template<class RULESCOLLECTION>
+static bool areEqual(const RULESCOLLECTION& r1, const RULESCOLLECTION& r2){
+   if (r1.size() != r2.size()) return false;
+   auto rIt1 = r1.begin();
+   auto rIt2 = r2.begin();
+   for (;rIt1!=r1.end();++rIt1,++rIt2){
+      if (!areEqual(&(*rIt1),&(*rIt2))) return false;
+   }
+   return true;
+}
+
+template<>
+bool areEqual<ClassSelectionRule>(ClassSelectionRule* r1, ClassSelectionRule* r2){
+   if (r1->GetAttributes() != r2->GetAttributes()) return false;
+   // Now check fields
+   if (!areEqual(r1->GetFieldSelectionRules(),r2->GetFieldSelectionRules())) return false;
+   // On the same footing, now check methods
+   if (!areEqual(r1->GetMethodSelectionRules(),r2->GetMethodSelectionRules())) return false;
+   return true;
+}
+
+template<class RULE>
 static bool HasDuplicate(RULE* rule, 
                          std::unordered_map<std::string,RULE*>& storedRules,
                          const std::string& attrName){
@@ -172,25 +198,20 @@ static bool HasDuplicate(RULE* rule,
 
    auto storedRule = storedRules[attrName];
    
-   if (!itRetCodePair.second && storedRule->GetSelected() == rule->GetSelected()) {
+   if (!itRetCodePair.second && storedRule->GetSelected() == rule->GetSelected() && !areEqual(storedRule,rule)) {
       std::stringstream sstr; sstr << "Rule:\n";
       rule->Print(sstr);
       sstr << "Conflicting rule already stored:\n";
       storedRule->Print(sstr);
-      
-      auto differentAttributes = storedRule->GetAttributes() !=rule->GetAttributes();
-      if (differentAttributes){
-         ROOT::TMetaUtils::Warning("SelectionRules::CheckDuplicates",
+      ROOT::TMetaUtils::Warning("SelectionRules::CheckDuplicates",
                                    "Duplicated rule with name found.\n%s\n",sstr.str().c_str());
-         return true;
-      }
-      
-   }
+      return true;
+   }   
    return false;
 }
 
-template<class RULESCOLLECTIONS, class RULE = typename RULESCOLLECTIONS::value_type>
-static int CheckDuplicatesImp(RULESCOLLECTIONS& rules){
+template<class RULESCOLLECTION, class RULE = typename RULESCOLLECTION::value_type>
+static int CheckDuplicatesImp(RULESCOLLECTION& rules){
    int nDuplicates = 0;
    std::unordered_map<std::string, RULE*> patterns,names;
    for (auto&& rule : rules){
