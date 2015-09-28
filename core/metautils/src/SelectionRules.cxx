@@ -221,14 +221,21 @@ static bool HasDuplicate(RULE* rule,
                          const std::string& attrName){
    auto itRetCodePair = storedRules.emplace( attrName, rule );
 
-   if (!itRetCodePair.second) {
+   auto storedRule = storedRules[attrName];
+   
+   if (!itRetCodePair.second && storedRule->GetSelected() == rule->GetSelected()) {
       std::stringstream sstr; sstr << "Rule:\n";
       rule->Print(sstr);
       sstr << "Conflicting rule already stored:\n";
-      storedRules[attrName]->Print(sstr);
-      ROOT::TMetaUtils::Warning("SelectionRules::CheckDuplicates",
-                                "Duplicated rule with name found.\n%s\n",sstr.str().c_str());
-      return true;
+      storedRule->Print(sstr);
+      
+      auto differentAttributes = storedRule->GetAttributes() !=rule->GetAttributes();
+      if (differentAttributes){
+         ROOT::TMetaUtils::Warning("SelectionRules::CheckDuplicates",
+                                   "Duplicated rule with name found.\n%s\n",sstr.str().c_str());
+         return true;
+      }
+      
    }
    return false;
 }
