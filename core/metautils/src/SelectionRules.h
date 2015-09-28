@@ -12,14 +12,6 @@
 #ifndef R__SELECTIONRULES_H
 #define R__SELECTIONRULES_H
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// SelectionRules                                                       //
-//                                                                      //
-// the class representing all selection rules                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include <list>
 #include "BaseSelectionRule.h"
 #include "ClassSelectionRule.h"
@@ -41,7 +33,8 @@ namespace ROOT{
 class SelectionRules {
 
 public:
-   enum ESelectionFileTypes { // type of selection file
+   /// Type of selection file
+   enum ESelectionFileTypes {
       kSelectionXMLFile,
       kLinkdefFile,
       kNumSelectionFileTypes
@@ -87,6 +80,8 @@ public:
 
    void SetHasFileNameRule(bool file_rule);
    bool GetHasFileNameRule() const;
+
+   int CheckDuplicates();
 
    void SetDeep(bool deep);
    bool GetDeep() const;
@@ -160,15 +155,15 @@ public:
    void FillCache(); // Fill the cache of all selection rules
 
 private:
-   std::list<ClassSelectionRule>    fClassSelectionRules;    // list of the class selection rules
-   std::list<FunctionSelectionRule> fFunctionSelectionRules; // list of the global functions selection rules
-   std::list<VariableSelectionRule> fVariableSelectionRules; // list of the global variables selection rules
-   std::list<EnumSelectionRule>     fEnumSelectionRules;     // list of the enums selection rules
+   std::list<ClassSelectionRule>    fClassSelectionRules;    ///< List of the class selection rules
+   std::list<FunctionSelectionRule> fFunctionSelectionRules; ///< List of the global functions selection rules
+   std::list<VariableSelectionRule> fVariableSelectionRules; ///< List of the global variables selection rules
+   std::list<EnumSelectionRule>     fEnumSelectionRules;     ///< List of the enums selection rules
 
    ESelectionFileTypes fSelectionFileType;
 
-   bool fIsDeep; // if --deep option passed from command line, this should be set to true
-   bool fHasFileNameRule; // if we have a file name rule, this should be set to true
+   bool fIsDeep; ///< if --deep option passed from command line, this should be set to true
+   bool fHasFileNameRule; ///< if we have a file name rule, this should be set to true
    long int fRulesCounter;
 
    ROOT::TMetaUtils::TNormalizedCtxt& fNormCtxt;

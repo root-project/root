@@ -9,17 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// SelectionRules                                                       //
-//                                                                      //
-// the class representing all selection rules                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
+/**
+\class SelectionRules
+The class representing the collection of selection rules.
+*/
 
 #include "SelectionRules.h"
 #include <iostream>
+#include <sstream>
 #include <algorithm>
 #include "TString.h"
 #include "llvm/Support/raw_ostream.h"
@@ -216,6 +213,52 @@ bool SelectionRules::GetHasFileNameRule() const
 {
    if (fHasFileNameRule) return true;
    else return false;
+}
+
+template<class RULE>
+static bool HasDuplicate(RULE* rule, 
+                         std::unordered_map<std::string,RULE*>& storedRules,
+                         const std::string& attrName){
+   auto itRetCodePair = storedRules.emplace( attrName, rule );
+
+   if (!itRetCodePair.second) {
+      std::stringstream sstr; sstr << "Rule:\n";
+      rule->Print(sstr);
+      sstr << "Conflicting rule already stored:\n";
+      storedRules[attrName]->Print(sstr);
+      ROOT::TMetaUtils::Warning("SelectionRules::CheckDuplicates",
+                                "Duplicated rule with name found.\n%s\n",sstr.str().c_str());
+      return true;
+   }
+   return false;
+}
+
+template<class RULESCOLLECTIONS, class RULE = typename RULESCOLLECTIONS::value_type>
+static int CheckDuplicatesImp(RULESCOLLECTIONS& rules){
+   int nDuplicates = 0;
+   std::unordered_map<std::string, RULE*> patterns,names;
+   for (auto&& rule : rules){
+      if (rule.HasAttributeName() && HasDuplicate(&rule,names,rule.GetAttributeName())) nDuplicates++;
+      if (rule.HasAttributePattern() && HasDuplicate(&rule,patterns,rule.GetAttributePattern())) nDuplicates++;
+   }
+   return nDuplicates;
+}
+
+int SelectionRules::CheckDuplicates(){
+
+   // Check for identical patterns and names
+   FillCache();
+
+   int nDuplicates = 0;
+   nDuplicates += CheckDuplicatesImp(fClassSelectionRules);
+   nDuplicates += CheckDuplicatesImp(fFunctionSelectionRules);
+   nDuplicates += CheckDuplicatesImp(fVariableSelectionRules);
+   nDuplicates += CheckDuplicatesImp(fEnumSelectionRules);
+   if (0 != nDuplicates){
+      ROOT::TMetaUtils::Error("SelectionRules::CheckDuplicates",
+            "Duplicates in rules were found.\n");
+   }
+   return nDuplicates;
 }
 
 void SelectionRules::SetDeep(bool deep)

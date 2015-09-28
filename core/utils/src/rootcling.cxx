@@ -4540,10 +4540,15 @@ int RootCling(int argc,
 
    }
 
+   if (isGenreflex){
+      if (0 != selectionRules.CheckDuplicates()){
+         return 1;
+      }
+   }
+
    // If we want to validate the selection only, we just quit.
    if (selSyntaxOnly)
       return 0;
-
 
    //---------------------------------------------------------------------------
    // Write schema evolution related headers and declarations
