@@ -1,5 +1,18 @@
 ROOTTEST_ADD_TESTDIRS()
 
+# ROOT-7450
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-privateClassXMLSelection
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/privateClassSelection.h
+                          --select=${CMAKE_CURRENT_SOURCE_DIR}/privateClassSelection_selection.xml
+                  ERRREF privateClassXMLSelection.eref)              
+                  
+# ROOT-7450
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-privateClassFileSelection
+                  COPY_TO_BUILDDIR privateClassSelection.h privateClassSelection_LinkDef.h
+                  COMMAND ${ROOT_rootcling_CMD} -f out.cpp privateClassSelection.h
+                          privateClassSelection_LinkDef.h
+                  OUTREF privateClassFileSelection.ref)
+
 # ROOT-7643
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-selectionDuplicate
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/duplicateSelection.h
