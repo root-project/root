@@ -11,8 +11,8 @@ Conflicting rule already stored:
 		name = DataProduct
 		Field 0:
 		Selected: Yes
-			transient = true
 			name = dummy
+			transient = true
 		No method sel rules
 
 Error in <SelectionRules::CheckDuplicates>: Duplicates in rules were found.
