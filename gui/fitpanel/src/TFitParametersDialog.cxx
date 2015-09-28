@@ -49,8 +49,6 @@ enum EParametersDialogWid {
    kCANCEL
 };
 
-const Double_t kUnlimit = std::numeric_limits<double>::max();
-
 ClassImp(TFitParametersDialog)
 
 ////////////////////////////////////////////////////////////////////////////////
