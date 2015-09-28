@@ -842,6 +842,28 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
       if(rcrdDeclNotAlreadySelected &&
          !fFirstPass){
+          
+          
+         // Before adding the decl to the selected ones, check its access. 
+         // We do not yet support I/O of private or protected classes.
+         // See ROOT-7450
+         // We exclude filename selections as they can come from aclic
+         auto isFileSelection = selected->HasAttributeFileName() && 
+                                selected->HasAttributePattern() &&
+                                "*" == selected->GetAttributePattern();
+         auto canDeclAccess = recordDecl->getCanonicalDecl()->getAccess();
+         if (!isFileSelection && (AS_protected == canDeclAccess || AS_private == canDeclAccess)){
+            std::string normName;
+            TMetaUtils::GetNormalizedName(normName,
+                                          recordDecl->getASTContext().getTypeDeclType(recordDecl),
+                                          fInterpreter,
+                                          fNormCtxt);            
+            auto msg = "Class or struct %s was selected but its dictionary cannot be generated: "
+                       "this is a private or protected class and this is not supported. No direct "
+                       "I/O operation of %s instances will be possible.\n";
+            ROOT::TMetaUtils::Warning(0,msg,normName.c_str(),normName.c_str());
+            return true;
+         }
 
          const std::string& name_value = selected->GetAttributeName();
          if (selected->HasAttributeName()) {
