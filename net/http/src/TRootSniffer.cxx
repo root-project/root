@@ -34,6 +34,7 @@
 #include "TUrl.h"
 #include "TImage.h"
 #include "RZip.h"
+#include "RVersion.h"
 #include "TRootSnifferStore.h"
 #include "THttpCallArg.h"
 
@@ -50,6 +51,8 @@ const char *item_prop_arraydim = "_arraydim";
 const char *item_prop_realname = "_realname"; // real object name
 const char *item_prop_user = "_username";
 const char *item_prop_autoload = "_autoload";
+const char *item_prop_rootversion = "_root_version";
+
 
 // ============================================================================
 
@@ -383,6 +386,9 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
 
    if (full_name != 0)
       SetField("_fullname", full_name);
+
+   if (topelement)
+      SetField(item_prop_rootversion, TString::Format("%d",ROOT_VERSION_CODE));
 
    if (topelement && sniffer->GetAutoLoad())
       SetField(item_prop_autoload, sniffer->GetAutoLoad());
@@ -943,6 +949,10 @@ void TRootSniffer::ScanHierarchy(const char *topname, const char *path,
    rec.fStore = store;
 
    rec.CreateNode(topname);
+
+   if (rec.fSearchPath == 0)
+      rec.SetField(item_prop_rootversion, TString::Format("%d",ROOT_VERSION_CODE));
+
    if ((rec.fSearchPath == 0) && (GetAutoLoad() != 0))
       rec.SetField(item_prop_autoload, GetAutoLoad());
 
