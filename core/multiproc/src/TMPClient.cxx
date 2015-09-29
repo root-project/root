@@ -295,8 +295,7 @@ void TMPClient::HandleMPCode(MPCodeBufPair &msg, TSocket *s)
 {
    unsigned code = msg.first;
    //message contains server's pid. retrieve it
-   char *str = new char[msg.second->BufferSize()];
-   msg.second->ReadString(str, msg.second->BufferSize());
+   const char *str = ReadBuffer<const char*>(msg.second.get());
 
    if (code == MPCode::kMessage) {
       std::cerr << "[I][C] message received: " << str << "\n";
