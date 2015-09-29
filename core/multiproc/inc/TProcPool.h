@@ -124,7 +124,7 @@ auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
    Collect(reslist);
 
    //clean-up and return
-   ReapServers();
+   ReapWorkers();
    return reslist;
 }
 
@@ -222,7 +222,7 @@ auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(a
    Collect(reslist);
 
    //clean-up and return
-   ReapServers();
+   ReapWorkers();
    return reslist;
 }
 // tell doxygen to stop ignoring code
@@ -266,7 +266,7 @@ auto TProcPool::MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func()
    Collect(reslist);
 
    //clean-up and return
-   ReapServers();
+   ReapWorkers();
    return redfunc(reslist);
 }
 
@@ -347,7 +347,7 @@ auto TProcPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(f
    //collect results/give workers their next task
    Collect(reslist);
 
-   ReapServers();
+   ReapWorkers();
    return redfunc(reslist);
 }
 /// \endcond

@@ -50,12 +50,12 @@ public:
    unsigned GetNWorkers() const { return fNWorkers; }
    void DeActivate(TSocket *s);
    void Remove(TSocket *s);
-   void ReapServers();
+   void ReapWorkers();
    void HandleMPCode(MPCodeBufPair &msg, TSocket *sender);
 
 private:
    bool fIsParent; ///< This is true if this is the parent/client process, false if this is a child/worker process
-   std::vector<pid_t> fServerPids; ///< A vector containing the PIDs of children processes/workers
+   std::vector<pid_t> fWorkerPids; ///< A vector containing the PIDs of children processes/workers
    TMonitor fMon; ///< This object manages the sockets and detect socket events via TMonitor::Select
    unsigned fNWorkers; ///< The number of workers that should be spawned upon forking
 };

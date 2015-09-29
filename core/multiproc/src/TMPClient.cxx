@@ -61,7 +61,7 @@ Bool_t TMPInterruptHandler::Notify()
 /// of cores of the machine is going to be spawned. If that information is
 /// not available, 2 workers are created instead.
 /// \endparblock
-TMPClient::TMPClient(unsigned nWorkers) : fIsParent(true), fServerPids(), fMon(), fNWorkers(0)
+TMPClient::TMPClient(unsigned nWorkers) : fIsParent(true), fWorkerPids(), fMon(), fNWorkers(0)
 {
    // decide on number of workers
    if (nWorkers) {
@@ -90,7 +90,7 @@ TMPClient::~TMPClient()
    l->Delete();
    delete l;
    fMon.RemoveAll();
-   ReapServers();
+   ReapWorkers();
 }
 
 
@@ -99,7 +99,7 @@ TMPClient::~TMPClient()
 /// The ROOT sessions spawned in this way will not have graphical
 /// capabilities and will not read from standard input, but will be
 /// connected to the original (interactive) session through TSockets.
-/// The children processes' PIDs are added to the fServerPids vector.
+/// The children processes' PIDs are added to the fWorkerPids vector.
 /// The parent session can then communicate with the children using the
 /// Broadcast and MPSend methods, and receive messages through MPRecv.\n
 /// \param server
@@ -138,7 +138,7 @@ bool TMPClient::Fork(TMPWorker &server)
          TSocket *s = new TSocket(sockets[0], (std::to_string(pid)).c_str()); //TSocket's constructor with this signature seems much faster than TSocket(int fd)
          if (s && s->IsValid()) {
             fMon.Add(s);
-            fServerPids.push_back(pid);
+            fWorkerPids.push_back(pid);
          } else {
             std::cerr << "[E][C] Could not connect to worker with pid " << pid << ". Giving up.\n";
             delete s;
@@ -265,17 +265,17 @@ void TMPClient::Remove(TSocket *s)
 
 
 //////////////////////////////////////////////////////////////////////////
-/// Wait on worker processes and remove their pids from fServerPids.
+/// Wait on worker processes and remove their pids from fWorkerPids.
 /// A blocking waitpid is called, but this should actually not block
-/// execution since ReapServers should only be called when all workers
-/// have already quit. ReapServers is then called not to leave zombie
-/// processes hanging around, and to clean-up fServerPids.
-void TMPClient::ReapServers()
+/// execution since ReapWorkers should only be called when all workers
+/// have already quit. ReapWorkers is then called not to leave zombie
+/// processes hanging around, and to clean-up fWorkerPids.
+void TMPClient::ReapWorkers()
 {
-   for (auto &pid : fServerPids) {
+   for (auto &pid : fWorkerPids) {
       waitpid(pid, nullptr, 0);
    }
-   fServerPids.clear();
+   fWorkerPids.clear();
 }
 
 
