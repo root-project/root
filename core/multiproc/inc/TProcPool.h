@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TPool
-#define ROOT_TPool
+#ifndef ROOT_TProcPool
+#define ROOT_TProcPool
 
 #include "TMPClient.h"
 #include "TCollection.h"
@@ -28,20 +28,20 @@
 //////////////////////////////////////////////////////////////////////////
 ///
 /// This namespace contains pre-defined functions to be used in
-/// conjuction with TPool::Map and TPool::MapReduce.
+/// conjuction with TProcPool::Map and TProcPool::MapReduce.
 ///
 //////////////////////////////////////////////////////////////////////////
 namespace PoolUtils {
    TObject *ReduceObjects(const std::vector<TObject *> &objs);
 }
 
-class TPool : private TMPClient {
+class TProcPool : private TMPClient {
 public:
-   explicit TPool(unsigned nWorkers = 0); //default number of workers is the number of processors
-   ~TPool() {}
-   //it doesn't make sense for a TPool to be copied
-   TPool(const TPool &) = delete;
-   TPool &operator=(const TPool &) = delete;
+   explicit TProcPool(unsigned nWorkers = 0); //default number of workers is the number of processors
+   ~TProcPool() {}
+   //it doesn't make sense for a TProcPool to be copied
+   TProcPool(const TProcPool &) = delete;
+   TProcPool &operator=(const TProcPool &) = delete;
 
    // Map
    //these late return types allow for a compile-time check of compatibility between function signatures and args,
@@ -57,7 +57,7 @@ public:
    // MapReduce
    // the late return types also check at compile-time whether redfunc is compatible with func,
    // other than checking that func is compatible with the type of arguments.
-   // a static_assert check in TPool::Reduce is used to check that redfunc is compatible with the type returned by func
+   // a static_assert check in TProcPool::Reduce is used to check that redfunc is compatible with the type returned by func
    template<class F, class R> auto MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func());
    template<class F, class T, class R> auto MapReduce(F func, T &args, R redfunc) -> decltype(++(args.begin()), args.end(), func(args.front()));
    /// \cond doxygen should ignore these methods
@@ -94,7 +94,7 @@ private:
 /// Functions that take more than zero arguments can be executed (with
 /// fixed arguments) by wrapping them in a lambda or with std::bind.
 template<class F>
-auto TPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
+auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
 {
    using retType = decltype(func());
    //prepare environment
@@ -137,7 +137,7 @@ auto TPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
 /// **Note:** the collection of arguments is modified by Map and should be considered empty or otherwise
 /// invalidated after Map's execution (std::move might be applied to it).
 template<class F, class T>
-auto TPool::Map(F func, T &args) -> std::vector < decltype(++(args.begin()), args.end(), func(args.front())) >
+auto TProcPool::Map(F func, T &args) -> std::vector < decltype(++(args.begin()), args.end(), func(args.front())) >
 {
    std::vector<typename T::value_type> vargs(
       std::make_move_iterator(std::begin(args)),
@@ -151,7 +151,7 @@ auto TPool::Map(F func, T &args) -> std::vector < decltype(++(args.begin()), arg
 // tell doxygen to ignore this (\endcond closes the statement)
 /// \cond
 template<class F>
-TObjArray TPool::Map(F func, TCollection &args)
+TObjArray TProcPool::Map(F func, TCollection &args)
 {
    // check the function returns something from which we can build a TObject*
    static_assert(std::is_constructible<TObject *, typename std::result_of<F(TObject *)>::type>::value,
@@ -177,7 +177,7 @@ TObjArray TPool::Map(F func, TCollection &args)
 
 
 template<class F, class T>
-auto TPool::Map(F func, std::initializer_list<T> args) -> std::vector<decltype(func(*args.begin()))>
+auto TProcPool::Map(F func, std::initializer_list<T> args) -> std::vector<decltype(func(*args.begin()))>
 {
    std::vector<T> vargs(std::move(args));
    const auto &reslist = Map(func, vargs);
@@ -188,7 +188,7 @@ auto TPool::Map(F func, std::initializer_list<T> args) -> std::vector<decltype(f
 // actual implementation of the Map method. all other calls with arguments eventually
 // call this one
 template<class F, class T>
-auto TPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(args.front()))>
+auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(args.front()))>
 {
    //check whether func is callable
    using retType = decltype(func(args.front()));
@@ -236,7 +236,7 @@ auto TPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(args.
 /// "squash" the vector returned by Map into a single object by merging,
 /// adding, mixing the elements of the vector.
 template<class F, class R>
-auto TPool::MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func())
+auto TProcPool::MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func())
 {
    using retType = decltype(func());
    //prepare environment
@@ -277,7 +277,7 @@ auto TPool::MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func())
 /// "squash" the vector returned by Map into a single object by merging,
 /// adding, mixing the elements of the vector.
 template<class F, class T, class R>
-auto TPool::MapReduce(F func, T &args, R redfunc) -> decltype(++(args.begin()), args.end(), func(args.front()))
+auto TProcPool::MapReduce(F func, T &args, R redfunc) -> decltype(++(args.begin()), args.end(), func(args.front()))
 {
    std::vector<typename T::value_type> vargs(
       std::make_move_iterator(std::begin(args)),
@@ -289,7 +289,7 @@ auto TPool::MapReduce(F func, T &args, R redfunc) -> decltype(++(args.begin()), 
 
 /// \cond doxygen should ignore these methods
 template<class F, class R>
-auto TPool::MapReduce(F func, TCollection &args, R redfunc) -> decltype(func(nullptr))
+auto TProcPool::MapReduce(F func, TCollection &args, R redfunc) -> decltype(func(nullptr))
 {
    //build vector with same elements as args
    std::vector<TObject *> vargs(args.GetSize());
@@ -307,7 +307,7 @@ auto TPool::MapReduce(F func, TCollection &args, R redfunc) -> decltype(func(nul
 
 
 template<class F, class T, class R>
-auto TPool::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> decltype(func(*args.begin()))
+auto TProcPool::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> decltype(func(*args.begin()))
 {
    std::vector<T> vargs(std::move(args));
    const auto &reslist = MapReduce(func, vargs, redfunc);
@@ -316,7 +316,7 @@ auto TPool::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> declt
 
 
 template<class F, class T, class R>
-auto TPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(func(args.front()))
+auto TProcPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(func(args.front()))
 {
    using retType = decltype(func(args.front()));
    //prepare environment
@@ -355,10 +355,10 @@ auto TPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(func(
 
 //////////////////////////////////////////////////////////////////////////
 /// Listen for messages sent by the workers and call the appropriate handler function.
-/// TPool::HandlePoolCode is called on messages with a code < 1000 and
+/// TProcPool::HandlePoolCode is called on messages with a code < 1000 and
 /// TMPClient::HandleMPCode is called on messages with a code >= 1000.
 template<class T>
-void TPool::Collect(std::vector<T> &reslist)
+void TProcPool::Collect(std::vector<T> &reslist)
 {
    TMonitor &mon = GetMonitor();
    mon.ActivateAll();
@@ -379,7 +379,7 @@ void TPool::Collect(std::vector<T> &reslist)
 //////////////////////////////////////////////////////////////////////////
 /// Handle message and reply to the worker (actual code implemented in ReplyToResult
 template<class T>
-void TPool::HandlePoolCode(MPCodeBufPair &msg, TSocket *s, std::vector<T> &reslist)
+void TProcPool::HandlePoolCode(MPCodeBufPair &msg, TSocket *s, std::vector<T> &reslist)
 {
    unsigned code = msg.first;
    if (code == PoolCode::kFuncResult) {
@@ -395,7 +395,7 @@ void TPool::HandlePoolCode(MPCodeBufPair &msg, TSocket *s, std::vector<T> &resli
 
 /// Check that redfunc has the right signature and call it on objs
 template<class T, class R>
-T TPool::Reduce(const std::vector<T> &objs, R redfunc)
+T TProcPool::Reduce(const std::vector<T> &objs, R redfunc)
 {
    // check we can apply reduce to objs
    static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");

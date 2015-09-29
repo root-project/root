@@ -20,7 +20,8 @@
 #include <vector>
 
 // Quick guide to TPoolWorker:
-// For each TPool::Map and TPool::MapReduce signature there's a corresponding
+// For each TProcPool::Map and TProcPool::MapReduce signature
+// there's a corresponding
 // specialization of TPoolWorker:
 // * Map(func, nTimes) --> TPoolWorker<F, void, void>
 // * Map(func, args)   --> TPoolWorker<F, T, void>
@@ -38,7 +39,7 @@
 template<class F, class T = void, class R = void>
 class TPoolWorker : public TMPWorker {
 public:
-   // TPool is in charge of checking the signatures for incompatibilities:
+   // TProcPool is in charge of checking the signatures for incompatibilities:
    // we trust that decltype(redfunc(std::vector<decltype(func(args[0]))>)) == decltype(args[0])
    // TODO document somewhere that fReducedResult must have a default ctor
    TPoolWorker(F func, const std::vector<T> &args, R redfunc) :
@@ -47,7 +48,7 @@ public:
    {}
    ~TPoolWorker() {}
 
-   void HandleInput(MPCodeBufPair &msg) ///< Execute instructions received from a TPool client
+   void HandleInput(MPCodeBufPair &msg) ///< Execute instructions received from a TProcPool client
    {
       unsigned code = msg.first;
       TSocket *s = GetSocket();
@@ -92,7 +93,7 @@ public:
    {}
    ~TPoolWorker() {}
 
-   void HandleInput(MPCodeBufPair &msg) ///< Execute instructions received from a TPool client
+   void HandleInput(MPCodeBufPair &msg) ///< Execute instructions received from a TProcPool client
    {
       unsigned code = msg.first;
       TSocket *s = GetSocket();
@@ -129,7 +130,7 @@ class TPoolWorker<F, T, void> : public TMPWorker {
 public:
    TPoolWorker(F func, const std::vector<T> &args) : TMPWorker(), fFunc(func), fArgs(std::move(args)) {}
    ~TPoolWorker() {}
-   void HandleInput(MPCodeBufPair &msg) ///< Execute instructions received from a TPool client
+   void HandleInput(MPCodeBufPair &msg) ///< Execute instructions received from a TProcPool client
    {
       unsigned code = msg.first;
       TSocket *s = GetSocket();
