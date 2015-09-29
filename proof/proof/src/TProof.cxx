@@ -12639,7 +12639,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
       // into parts
       TString dsns( dsname.Data() ), enl;
       Ssiz_t eli = dsns.Index("?enl=");
-      TFileCollection *fc;
+      TFileCollection *fc = nullptr;
       if (eli != kNPOS) {
          enl = dsns(eli+5, dsns.Length());
          dsns.Remove(eli, dsns.Length()-eli);
