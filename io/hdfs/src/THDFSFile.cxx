@@ -440,7 +440,7 @@ void THDFSSystem::FreeDirectory(void *dirp)
       return;
    }
    if (fUrlp != 0) {
-      delete fUrlp;
+      delete[] fUrlp;
    }
 
    hdfsFreeFileInfo((hdfsFileInfo *)fDirp, fDirEntries);
@@ -553,3 +553,4 @@ Int_t THDFSSystem::Unlink(const char * path)
       return -1;
    }
 }
+
