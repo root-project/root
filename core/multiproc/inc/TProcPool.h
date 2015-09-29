@@ -106,7 +106,7 @@ auto TProcPool::Map(F func, unsigned nTimes) -> std::vector<decltype(func())>
    if (nTimes < oldNWorkers)
       SetNWorkers(nTimes);
    TPoolWorker<F> worker(func);
-   unsigned ok = Fork(worker);
+   bool ok = Fork(worker);
    SetNWorkers(oldNWorkers);
    if (!ok)
    {
@@ -202,7 +202,7 @@ auto TProcPool::Map(F func, std::vector<T> &args) -> std::vector<decltype(func(a
    if (args.size() < oldNWorkers)
       SetNWorkers(args.size());
    TPoolWorker<F, T> worker(func, args);
-   unsigned ok = Fork(worker);
+   bool ok = Fork(worker);
    SetNWorkers(oldNWorkers);
    if (!ok)
    {
@@ -249,7 +249,7 @@ auto TProcPool::MapReduce(F func, unsigned nTimes, R redfunc) -> decltype(func()
    if (nTimes < oldNWorkers)
       SetNWorkers(nTimes);
    TPoolWorker<F, void, R> worker(func, redfunc);
-   unsigned ok = Fork(worker);
+   bool ok = Fork(worker);
    SetNWorkers(oldNWorkers);
    if (!ok) {
       std::cerr << "[E][C] Could not fork. Aborting operation\n";
@@ -329,7 +329,7 @@ auto TProcPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(f
    if (args.size() < oldNWorkers)
       SetNWorkers(args.size());
    TPoolWorker<F, T, R> worker(func, args, redfunc);
-   unsigned ok = Fork(worker);
+   bool ok = Fork(worker);
    SetNWorkers(oldNWorkers);
    if (!ok) {
       std::cerr << "[E][C] Could not fork. Aborting operation\n";
