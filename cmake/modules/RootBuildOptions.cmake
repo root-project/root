@@ -211,25 +211,25 @@ foreach(opt ${root_build_options})
   endif()
 endforeach()
 
-#---Avoid creating dependencies to 'non-statndard' header files -------------------------------
+#---Avoid creating dependencies to 'non-standard' header files -------------------------------
 include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
 
 #---Add Installation Variables------------------------------------------------------------------
 include(RootInstallDirs)
 
-#---General Build options----------------------------------------------------------------------
-# use, i.e. don't skip the full RPATH for the build tree
-set(CMAKE_SKIP_BUILD_RPATH  FALSE)
-# when building, don't use the install RPATH already (but later on when installing)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-# add the automatically determined parts of the RPATH
-# which point to directories outside the build tree to the install RPATH
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+#---RPATH options-------------------------------------------------------------------------------
+#  When building, don't use the install RPATH already (but later on when installing)
+set(CMAKE_SKIP_BUILD_RPATH FALSE)         # don't skip the full RPATH for the build tree
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) # use always the build RPATH for the build tree
 
-# the RPATH to be used when installing---------------------------------------------------------
+# Check whether to add RPATH to the installation (the build tree always has the RPATH enabled)
 if(rpath)
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
-  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+  set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_FULL_LIBDIR}) # install LIBDIR
+  set(CMAKE_SKIP_INSTALL_RPATH FALSE)          # don't skip the full RPATH for the install tree
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)  # point to directories outside the build tree to the install RPATH
+else()
+  set(CMAKE_SKIP_INSTALL_RPATH TRUE)           # skip the full RPATH for the install tree
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE) # point to directories outside the build tree to the install RPATH
 endif()
 
 
