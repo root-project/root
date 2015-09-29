@@ -31,12 +31,9 @@ TMPInterruptHandler::TMPInterruptHandler() : TSignalHandler(kSigInterrupt, kFALS
 }
 
 /// Executed when SIGINT is received. Clean-up and quit the application
-//TODO this should log somewhere that the server is being shut down
 Bool_t TMPInterruptHandler::Notify()
 {
-   // logging does not work
-   //gSystem->RedirectOutput(0);
-   //std::cerr << "server shutting down on SIGINT" << std::endl;
+   std::cerr << "server shutting down on SIGINT" << std::endl;
    gSystem->Exit(0);
    return true;
 }
@@ -175,11 +172,6 @@ bool TMPClient::Fork(TMPWorker &server)
          }
       }
       close(0);
-
-#ifndef R__WIN32
-      //redirect output to /dev/null
-      gSystem->RedirectOutput("/dev/null"); // we usually don't like servers to write on the main console
-#endif
 
       //disable graphics
       //these instructions were copied from TApplication::MakeBatch
