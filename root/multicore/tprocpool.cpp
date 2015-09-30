@@ -1,6 +1,6 @@
 #include "TApplication.h"
 #include "TH1F.h"
-#include "TProcPool.h"
+#include "TPool.h"
 #include "TList.h"
 #include <functional>
 #include <list>
@@ -29,7 +29,7 @@ TObject *rootF(TObject *o)
 }
 
 int PoolTest() {
-   TProcPool pool;
+   TPool pool; //To be changed back to TProcPool
    fClass c;
    auto boundF = std::bind(f, 1);
 
