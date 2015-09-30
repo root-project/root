@@ -1,9 +1,11 @@
 {
-TFile f("testVectorBranches.root");
-auto t = (TTree*)f.Get("TestVectorBranches");
+TString hSimplePath = gROOT->GetTutorialsDir();
+hSimplePath+="/hsimple.root";
+TFile f(hSimplePath);
+auto t = (TTree*)f.Get("ntuple");
 TTreeReader r(t);
 r.SetEntry(3);
-TTreeReaderArray<Float_t> vx(r, "vx");
+TTreeReaderValue<Float_t> px(r, "px");
 r.Next();
-cout << vx[1] << endl;
+cout << *px << endl;
 }
