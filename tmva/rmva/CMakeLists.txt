@@ -17,9 +17,6 @@ set(R_HEADERS ${CMAKE_SOURCE_DIR}/tmva/rmva/inc/TMVA/RMethodBase.h
               ${CMAKE_SOURCE_DIR}/tmva/rmva/inc/TMVA/MethodRXGB.h
               )
 
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-
-
 ROOT_GENERATE_DICTIONARY(G__RMVA ${R_HEADERS} MODULE ${libname} LINKDEF LinkDef.h)
 # ROOT_GENERATE_ROOTMAP(RInterface LINKDEF LinkDef.h)
 
