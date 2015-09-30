@@ -10,7 +10,7 @@ public:
    }
 
    void addSomeData() {}
-   void Print(Option_t *option="") const {
+   void Print(Option_t* /*option=""*/) const {
       std::cout << "MyClass::Print ver: " << ver << "\n";
       //std::cout << "arr[0]: " << fArray[0] << "\n";
       //std::cout << "arr[1]: " << fArray[1] << "\n";

@@ -184,7 +184,7 @@ bool IsSame<>(const TH1F& a, const TH1F& b){
    if( 0 != strcmp(a.GetName(),b.GetName())) return false;
    if( 0 != strcmp(a.GetTitle(),b.GetTitle())) return false;
    if( a.GetNbinsX() != b.GetNbinsX()) return false;
-   for (size_t i=0;i<a.GetNbinsX();++i){
+   for (int i=0;i<a.GetNbinsX();++i){
       if (a.GetBinContent(i)!=b.GetBinContent(i)) return false;
       if (a.GetBinError(i)!=b.GetBinError(i)) return false;
    }
