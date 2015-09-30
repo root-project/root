@@ -197,6 +197,7 @@ private:
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; // readers that use our director
    THashTable   fProxies; //attached ROOT::TNamedBranchProxies; owned
    Long64_t fLastEntry; //< The last entry to be processed. When set (i.e. >= 0), it provides a way to stop looping over the TTree when we reach a certain entry: Next() returns kEntryLast when GetCurrentEntry() reaches fLastEntry
+   Bool_t fProxiesSet; //< True if the proxies have been set, false otherwise
 
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;
