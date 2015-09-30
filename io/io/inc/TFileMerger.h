@@ -79,7 +79,7 @@ public:
    const char *GetOutputFileName() const { return fOutputFilename; }
    TList      *GetMergeList() const { return fMergeList;  }
    TFile      *GetOutputFile() const { return fOutputFile; }
-   Int_t       GetMaxOpenedFies() const { return fMaxOpenedFiles; }
+   Int_t       GetMaxOpenedFiles() const { return fMaxOpenedFiles; }
    void        SetMaxOpenedFiles(Int_t newmax);
    const char *GetMsgPrefix() const { return fMsgPrefix; }
    void        SetMsgPrefix(const char *prefix);
