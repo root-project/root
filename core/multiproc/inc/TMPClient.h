@@ -14,21 +14,11 @@
 
 #include "TMonitor.h"
 #include "TMPWorker.h"
-#include "TSysEvtHandler.h"
 #include "MPSendRecv.h"
 #include <vector>
 #include <unistd.h> //pid_t
 #include <memory> //unique_ptr
 #include <iostream>
-
-class TMPInterruptHandler : public TSignalHandler {
-   /// \cond
-   ClassDef(TMPInterruptHandler, 0); //this is a TObject so it's good to have a ClassDef
-   /// \endcond
-public:
-   TMPInterruptHandler();
-   Bool_t Notify();
-};
 
 class TMPClient {
 public:

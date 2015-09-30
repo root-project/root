@@ -17,7 +17,7 @@
 #include <unistd.h> //pid_t
 #include <memory> //unique_ptr
 
-class TMPWorker : public TFileHandler {
+class TMPWorker {
    /// \cond
    ClassDef(TMPWorker, 0);
    /// \endcond
@@ -29,13 +29,13 @@ public:
    TMPWorker &operator=(const TMPWorker &) = delete;
 
    virtual void Init(int fd);
+   void Run();
    TSocket *GetSocket() { return fS.get(); }
    pid_t GetPid() { return fPid; }
 
+
 private:
    virtual void HandleInput(MPCodeBufPair &msg);
-   Bool_t Notify();
-   Bool_t ReadNotify() { return Notify(); }
 
    std::unique_ptr<TSocket> fS; ///< This worker's socket. The unique_ptr makes sure resources are released.
    pid_t fPid; ///< the PID of the process in which this worker is running

@@ -16,30 +16,6 @@
 
 //////////////////////////////////////////////////////////////////////////
 ///
-/// \class TMPInterruptHandler
-///
-/// This is an implementation of a TSignalHandler that is added to the
-/// eventloop in the children processes spawned by a TMPClient. When a SIGINT
-/// (i.e. kSigInterrupt) is received, TMPInterruptHandler shuts down the
-/// worker and performs clean-up operations, then exits.
-///
-//////////////////////////////////////////////////////////////////////////
-
-/// Class constructor.
-TMPInterruptHandler::TMPInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE)
-{
-}
-
-/// Executed when SIGINT is received. Clean-up and quit the application
-Bool_t TMPInterruptHandler::Notify()
-{
-   std::cerr << "server shutting down on SIGINT" << std::endl;
-   gSystem->Exit(0);
-   return true;
-}
-
-//////////////////////////////////////////////////////////////////////////
-///
 /// \class TMPClient
 ///
 /// Base class for multiprocess applications' clients. It provides a
@@ -145,10 +121,12 @@ bool TMPClient::Fork(TMPWorker &server)
          }
       }
    }
-   //parent returns here
 
-   if (!pid) {
-      //CHILD/SERVER
+   if (pid) {
+      //parent returns here
+      return true;
+   } else {
+      //CHILD/WORKER
       fIsParent = false;
 
       //override signal handler (make the servers exit on SIGINT)
@@ -158,8 +136,6 @@ bool TMPClient::Fork(TMPWorker &server)
          sh = (TSignalHandler *)signalHandlers->First();
       if (sh)
          gSystem->RemoveSignalHandler(sh);
-      TMPInterruptHandler handler;
-      handler.Add();
 
       //remove stdin from eventloop and close it
       TSeqCollection *fileHandlers = gSystem->GetListOfFileHandlers();
@@ -188,10 +164,11 @@ bool TMPClient::Fork(TMPWorker &server)
       //prepare server and add it to eventloop
       server.Init(sockets[1]);
 
-      //enter main loop
-      gSystem->Run();
+      //enter worker loop
+      server.Run();
    }
 
+   //control should never reach here
    return true;
 }
 
