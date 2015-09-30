@@ -68,13 +68,13 @@ ROOTTEST_ADD_TEST(roottest-root-multicore-tprofile
                   EXEC tprofile
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-# Disable test: see ROOT-7158
-#ROOTTEST_GENERATE_REFLEX_DICTIONARY(tsenums tsenums.h  SELECTION tsenums_selection.xml)
+# Re-Enabled Disable test: see ROOT-7158
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(tsenums tsenums.h  SELECTION tsenums_selection.xml)
 
-#ROOTTEST_ADD_TEST(roottest-root-multicore-tsenums
-#                  MACRO  exectsenums.C
-#                  OUTREF exectsenums.ref
-#                  DEPENDS ${GENERATE_REFLEX_TEST})
+ROOTTEST_ADD_TEST(roottest-root-multicore-tsenums
+                  MACRO  exectsenums.C
+                  OUTREF exectsenums.ref
+                  DEPENDS ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_GENERATE_EXECUTABLE(fork fork.cpp LIBRARIES Core)
 
