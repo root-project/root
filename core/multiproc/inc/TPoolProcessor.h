@@ -72,7 +72,13 @@ class TPoolProcessor : public TMPWorker {
 public:
    TPoolProcessor(F procFunc, const std::vector<std::string>& fileNames, const std::string& treeName, unsigned nWorkers, ULong64_t maxEntries) :
       TMPWorker(), fProcFunc(procFunc),
-      fFileNames(fileNames), fTreeName(treeName),
+      fFileNames(fileNames), fTreeName(treeName), fTree(nullptr),
+      fNWorkers(nWorkers), fMaxNEntries(maxEntries),
+      fProcessedEntries(0), fReducedResult(), fCanReduce(false)
+   {}
+   TPoolProcessor(F procFunc, TTree *tree, unsigned nWorkers, ULong64_t maxEntries) :
+      TMPWorker(), fProcFunc(procFunc),
+      fFileNames(), fTreeName(), fTree(tree),
       fNWorkers(nWorkers), fMaxNEntries(maxEntries),
       fProcessedEntries(0), fReducedResult(), fCanReduce(false)
    {}
@@ -88,6 +94,7 @@ private:
    F fProcFunc; ///< the function to be executed
    std::vector<std::string> fFileNames; ///< the files to be processed by all workers
    std::string fTreeName; ///< the name of the tree to be processed
+   TTree *fTree; ///< pointer to the tree to be processed. It is only used if the tree is directly passed to TProcPool::Process as argument
    unsigned fNWorkers; ///< the number of workers spawned
    ULong64_t fMaxNEntries; ///< the maximum number of entries to be processed by this worker
    ULong64_t fProcessedEntries; ///< the number of entries processed by this worker so far
@@ -101,8 +108,10 @@ void TPoolProcessor<F>::HandleInput(MPCodeBufPair& msg)
 {
    unsigned code = msg.first;
 
-   if (code == PoolCode::kProcRange || code == PoolCode::kProcFile) {
-      //execute fProcFunc
+   if (code == PoolCode::kProcRange
+         || code == PoolCode::kProcFile
+         || code == PoolCode::kProcTree) {
+      //execute fProcFunc on a file or a range of entries in a file
       Process(code, msg);
    } else if (code == PoolCode::kSendResult) {
       //send back result
@@ -119,13 +128,11 @@ void TPoolProcessor<F>::HandleInput(MPCodeBufPair& msg)
 template<class F>
 void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
 {
-   //at this point code can be either kProcRange or kProcFile
-   bool procRange = (code == PoolCode::kProcRange);
-
    //evaluate the index of the file to process in fFileNames
+   //(we actually don't need the parameter if code == kProcTree)
    unsigned fileN = 0;
    unsigned nProcessed = 0;
-   if (procRange) {
+   if (code == PoolCode::kProcRange || code == PoolCode::kProcTree) {
       //retrieve the total number of entries ranges processed so far by TPool
       nProcessed = ReadBuffer<unsigned>(msg.second.get());
       //evaluate the file and the entries range to process
@@ -135,25 +142,32 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
       fileN = ReadBuffer<unsigned>(msg.second.get());
    }
 
-   //open file
-   std::unique_ptr<TFile> fp(OpenFile(fFileNames[fileN]));
-   if(fp == nullptr) {
-      //errors are handled inside OpenFile
-      return;
+   std::unique_ptr<TFile> fp;
+   TTree *tree = nullptr;
+   if (code != PoolCode::kProcTree) {
+      //open file
+      fp.reset(OpenFile(fFileNames[fileN]));
+      if (fp == nullptr) {
+         //errors are handled inside OpenFile
+         return;
+      }
+
+      //retrieve the TTree with the specified name from file
+      //we are not the owner of the TTree object, the file is!
+      tree = RetrieveTree(fp.get());
+      if(tree == nullptr) {
+         //errors are handled inside RetrieveTree
+         return;
+      }
+   } else {
+      tree = fTree;
    }
    
-   //retrieve the TTree with the specified name from file
-   //we are not the owner of the TTree object, the file is!
-   TTree *tree = RetrieveTree(fp.get());
-   if(tree == nullptr) {
-      //errors are handled inside RetrieveTree
-      return;
-   }
 
    //create entries range
    Long64_t start = 0;
    Long64_t finish = 0;
-   if (procRange) {
+   if (code == PoolCode::kProcRange || code == PoolCode::kProcTree) {
       //example: for 21 entries, 4 workers we want ranges 0-5, 5-10, 10-15, 15-21
       //and this worker must take the rangeN-th range
       unsigned nEntries = tree->GetEntries();

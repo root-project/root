@@ -72,6 +72,7 @@ public:
    template<class F> TObject* Process(const std::string& fileName, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0);
    template<class F> TObject* Process(TFileCollection& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0);
    template<class F> TObject* Process(TChain& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0);
+   template<class F> TObject* Process(TTree& tree, F procFunc, ULong64_t nToProcess = 0);
 
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
@@ -453,6 +454,47 @@ TObject* TProcPool::Process(TChain& files, F procFunc, const std::string& treeNa
    return Process(fileNames, procFunc, treeName, nToProcess);
 }
 
+
+template<class F>
+TObject* TProcPool::Process(TTree& tree, F procFunc, ULong64_t nToProcess)
+{
+   static_assert(std::is_constructible<TObject*, typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type>::value, "procFunc must return a pointer to a class inheriting from TObject, and must take a reference to TTreeReader as the only argument");
+
+   //prepare environment
+   Reset();
+   unsigned nWorkers = GetNWorkers();
+
+   //fork
+   TPoolProcessor<F> worker(procFunc, &tree, nWorkers, nToProcess/nWorkers);
+   bool ok = Fork(worker);
+   if(!ok) {
+      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+      return nullptr;
+   }
+
+   //divide entries equally between workers
+   fTask = ETask::kProcRange;
+
+   //tell workers to start processing entries
+   fNToProcess = nWorkers; //this is the total number of ranges that will be processed by all workers cumulatively
+   std::vector<unsigned> args(nWorkers);
+   std::iota(args.begin(), args.end(), 0);
+   fNProcessed = Broadcast(PoolCode::kProcTree, args);
+   if(fNProcessed < nWorkers)
+      std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+
+   //collect results, distribute new tasks
+   std::vector<TObject*> reslist;
+   Collect(reslist);
+
+   //merge
+   TObject* res = PoolUtils::ReduceObjects(reslist);
+
+   //clean-up and return
+   ReapWorkers();
+   fTask = ETask::kNoTask;
+   return res;
+}
 
 //////////////////////////////////////////////////////////////////////////
 /// Listen for messages sent by the workers and call the appropriate handler function.
