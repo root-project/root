@@ -10,7 +10,7 @@ void execreadTree(const char *filename = "ofile.root")
    tree->SetBranchAddress("myObjects", &myobj);
 
    tree->GetEvent(0);
-   myobj->Print();
+   myobj->Print(nullptr);
 
    // Now, re-write the rootmap.
    const char* content = "[libMyClass_v1_dictrflx.so]\nclass MyClass";
