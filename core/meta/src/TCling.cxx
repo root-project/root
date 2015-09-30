@@ -2874,8 +2874,7 @@ void TCling::ResetGlobals()
    // Here we should iterate over the transactions (N-3) and revert.
    // N-3 because the first three internal to cling.
 
-   // Disable while investigating failure on some platforms
-   // fInterpreter->runAndRemoveStaticDestructors();
+   fInterpreter->runAndRemoveStaticDestructors();
 }
 
 //______________________________________________________________________________
