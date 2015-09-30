@@ -84,3 +84,9 @@ configure_file(commands2.txt . COPYONLY)
 ROOTTEST_ADD_TEST(roottest-root-multicore-fork
                   EXEC fork
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
+ROOTTEST_GENERATE_EXECUTABLE(tprocpool tprocpool.cpp LIBRARIES MultiProc Core Net TreePlayer)
+
+ROOTTEST_ADD_TEST(roottest-root-multicore-tprocpool
+                  EXEC tprocpool
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
