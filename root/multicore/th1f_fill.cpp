@@ -15,7 +15,7 @@ void fillHisto(const char* filename, TH1F& histo){
   f.GetObject("ntuple", ntuple);
   if (!ntuple) printf ("Cannot read ntuple from file %s\n", filename);
   //printf("Num entries: %d\n", ntuple->GetEntries());
-  for (size_t i = 0; i<ntuple->GetEntries(); ++i){
+  for (int i = 0; i<ntuple->GetEntries(); ++i){
     ntuple->GetEvent(i);
     auto args = ntuple->GetArgs(); // px py pz random i
     auto px = args[0];
