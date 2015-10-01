@@ -825,16 +825,20 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          auto previouslyMatchingRule = declSelRuleMapIt->second;
          int previouslineno = previouslyMatchingRule->GetLineNumber();
 
-         std::stringstream message;
-         auto lineno = selected->GetLineNumber();
-         std::string cleanFileName =  llvm::sys::path::filename(selected->GetSelFileName());
-         if (lineno > 1) message << "Selection file " << cleanFileName << ", lines " << lineno << " and " << previouslineno << ". ";
-         message << "Attempt to select with a named selection rule an already selected class. The name used in the selection is \""
-                 << name_value << "\" while the class is \"" << normName << "\".";
-         if (selected->GetAttributes().size() > 1){
-            message << " The attributes specified will not be propagated to the typesystem of ROOT.";
+         // Avoid warnings if 2 typedefs point to the same class.
+         // See ROOT-7676
+         if(previouslyMatchingRule->IsFromTypedef() && selected->IsFromTypedef()){
+            std::stringstream message;
+            auto lineno = selected->GetLineNumber();
+            std::string cleanFileName =  llvm::sys::path::filename(selected->GetSelFileName());
+            if (lineno > 1) message << "Selection file " << cleanFileName << ", lines " << lineno << " and " << previouslineno << ". ";
+            message << "Attempt to select with a named selection rule an already selected class. The name used in the selection is \""
+                  << name_value << "\" while the class is \"" << normName << "\".";
+            if (selected->GetAttributes().size() > 1){
+               message << " The attributes specified will not be propagated to the typesystem of ROOT.";
+            }
+            ROOT::TMetaUtils::Warning(0,"%s\n", message.str().c_str());
          }
-         ROOT::TMetaUtils::Warning(0,"%s\n", message.str().c_str());
       }
 
 
