@@ -1,3 +1,1 @@
-Warning: Selection file classSelectedTwice_selection.xml, lines 3 and 2. Attempt to select with a named selection rule an already selected class. The name used in the selection is "Muon::RpcPrepDataContainer_p3" while the class is "Muon::myclass<float>". The attributes specified will not be propagated to the typesystem of ROOT.
-Warning: Selection file classSelectedTwice_selection.xml, lines 4 and 3. Attempt to select with a named selection rule an already selected class. The name used in the selection is "Muon::additionalTypedef" while the class is "Muon::myclass<float>".
 Selected class -> Muon::myclass<float> for ROOT: Muon::myclass<float>
