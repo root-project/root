@@ -1,5 +1,25 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_GENERATE_EXECUTABLE(procPoolTreeTest tProcPoolTreeTest.cpp LIBRARIES MultiProc Core Net TreePlayer)
+
+ROOTTEST_ADD_TEST(roottest-root-multicore-procPoolTreeTest
+                  EXEC procPoolTreeTest
+                  OUTREF tProcPoolTreeTest.ref
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
+ROOTTEST_GENERATE_EXECUTABLE(procPoolProcessTest tProcPoolProcessTest.cpp LIBRARIES MultiProc Core Net TreePlayer)
+
+ROOTTEST_ADD_TEST(roottest-root-multicore-procPoolProcess
+                  EXEC procPoolProcessTest
+                  OUTREF tProcPoolProcessTest.ref
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
+ROOTTEST_GENERATE_EXECUTABLE(procPool tprocpool.cpp LIBRARIES MultiProc Core Net TreePlayer)
+
+ROOTTEST_ADD_TEST(roottest-root-multicore-procPool
+                  EXEC procPool
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 ROOTTEST_GENERATE_EXECUTABLE(current_dir current_dir.cpp LIBRARIES Core RIO Thread)
 
 ROOTTEST_ADD_TEST(roottest-root-multicore-current_dir
@@ -84,10 +104,3 @@ configure_file(commands2.txt . COPYONLY)
 ROOTTEST_ADD_TEST(roottest-root-multicore-fork
                   EXEC fork
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
-
-ROOTTEST_GENERATE_EXECUTABLE(tprocpool tprocpool.cpp LIBRARIES MultiProc Core Net TreePlayer)
-
-ROOTTEST_ADD_TEST(roottest-root-multicore-tprocpool
-                  EXEC tprocpool
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
-
