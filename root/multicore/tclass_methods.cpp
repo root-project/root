@@ -1,7 +1,6 @@
 #include "TClass.h"
 #include "TThread.h"
 #include "TObject.h"
-#include "TVirtualStreamerInfo.h"
 #include <thread>
 #include <memory>
 #include <atomic>
@@ -44,17 +43,13 @@ int main(int argc, char** argv)
   std::atomic<int> classWasGotten{0};
   std::atomic<int> firstMethodGotten{0};
 
+  //Tell Root we want to be multi-threaded
   TThread::Initialize();
   //When threading, also have to keep ROOT from logging all TObjects into a list
   TObject::SetObjectStat(false);
 
-  //Have to avoid having Streamers modify themselves after they have been used
-  TVirtualStreamerInfo::Optimize(false);
-
-
   for(int i=0; i<kNThreads; ++i) {
     threads.emplace_back([i,&canStart,&classWasGotten,&firstMethodGotten]() {
-        TTHREAD_TLS_DECL(TThread, s_thread_guard);
         ++classWasGotten;
         ++firstMethodGotten;
         while(not canStart) {}

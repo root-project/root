@@ -3,7 +3,6 @@
 #include "TBranch.h"
 #include "TClass.h"
 #include "TThread.h"
-#include "TVirtualStreamerInfo.h"
 #include "TList.h"
 #include "TMap.h"
 #include "TObjString.h"
@@ -80,20 +79,12 @@ int main(int argc, char** argv) {
   TThread::Initialize();
   //When threading, also have to keep ROOT from logging all TObjects into a list
   TObject::SetObjectStat(false);
-  //Have to avoid having Streamers modify themselves after they have been used
-  TVirtualStreamerInfo::Optimize(false);
-
-
 
   std::vector<std::shared_ptr<std::thread>> threads;
   threads.reserve(kNThreads);
 
-
-
   for(int i=0; i< kNThreads; ++i) {
     threads.push_back(std::make_shared<std::thread>( std::thread([i]() {
-	TTHREAD_TLS_DECL(TThread, s_thread_guard);
-
         std::stringstream nameStream;
         nameStream <<"write_thread_"<<i<<".root";
 

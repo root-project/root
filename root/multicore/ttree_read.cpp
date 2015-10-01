@@ -3,7 +3,6 @@
 #include "TBranch.h"
 #include "TClass.h"
 #include "TThread.h"
-#include "TVirtualStreamerInfo.h"
 
 #include "TList.h"
 #include "TMap.h"
@@ -95,16 +94,12 @@ int main(int argc, char** argv) {
 
   gDebug = std::get<2>(options);
 
-
-
 //  AutoLibraryLoader::enable();
 
   //Tell Root we want to be multi-threaded
   TThread::Initialize();
   //When threading, also have to keep ROOT from logging all TObjects into a list
   TObject::SetObjectStat(false);
-  //Have to avoid having Streamers modify themselves after they have been used
-  TVirtualStreamerInfo::Optimize(false);
 
   if(kFileName == kDefaultFileName) {
     for(int i=0; i< kNThreads; ++i) {
@@ -117,7 +112,6 @@ int main(int argc, char** argv) {
 
   for(int i=0; i< kNThreads; ++i) {
     threads.push_back(std::make_shared<std::thread>( std::thread([&kFileName, i]() {
-	TTHREAD_TLS_DECL(TThread, s_thread_guard);
 	while(waitToStart) ;
         std::string name = std::to_string(i) + kFileName;
         std::unique_ptr<TFile> f{ TFile::Open(name.c_str()) };

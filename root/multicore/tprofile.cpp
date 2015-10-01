@@ -2,7 +2,6 @@
 #include "TProfile.h"
 #include "TThread.h"
 #include "TObject.h"
-#include "TVirtualStreamerInfo.h"
 #include <thread>
 #include <memory>
 #include <vector>
@@ -17,13 +16,10 @@ int main()
 
   TH1::AddDirectory(kFALSE);
 
+  //Tell Root we want to be multi-threaded
   TThread::Initialize();
   //When threading, also have to keep ROOT from logging all TObjects into a list
   TObject::SetObjectStat(false);
-
-  //Have to avoid having Streamers modify themselves after they have been used
-  TVirtualStreamerInfo::Optimize(false);
-
 
   for(unsigned int i=0; i<20; ++i) {
     std::ostringstream s;
@@ -32,7 +28,6 @@ int main()
     profiles.back()->SetCanExtend(TH1::kAllAxes);
     auto profile = profiles.back().get();
     threads.emplace_back([i,profile,&canStart]() {
-        TTHREAD_TLS_DECL(TThread, s_thread_guard);
         while(not canStart) {}
         for(int x=10; x>0; --x) {
           for(int y=0; y<20; ++y) {

@@ -1,7 +1,6 @@
 #include "TFile.h"
 #include "TThread.h"
 #include "TDirectory.h"
-#include "TVirtualStreamerInfo.h"
 
 #include <cassert>
 #include <iostream>
@@ -58,8 +57,6 @@ int main(int argc, char** argv) {
   TThread::Initialize();
   //When threading, also have to keep ROOT from logging all TObjects into a list
   TObject::SetObjectStat(false);
-  //Have to avoid having Streamers modify themselves after they have been used
-  TVirtualStreamerInfo::Optimize(false);
 
   for(int i=0; i< kNThreads; ++i) {
       createEmptyFile(i, fileName);
@@ -71,7 +68,6 @@ int main(int argc, char** argv) {
   printf("Running current dir on multiple threads...\n");
   for(int i=0; i< kNThreads; ++i) {
     threads.push_back(std::make_shared<std::thread>( std::thread([&fileName, i]() {
-        TTHREAD_TLS_DECL(TThread, s_thread_guard);
         while(waitToStart) ;
         std::string name = std::to_string(i) + fileName;
         std::unique_ptr<TFile> f{ TFile::Open(name.c_str()) };
