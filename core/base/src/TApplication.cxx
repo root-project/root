@@ -245,13 +245,9 @@ void TApplication::NeedGraphicsLibs()
 
 void TApplication::InitializeGraphics()
 {
-   if (fgGraphInit || !fgGraphNeeded)
-      return;
-
-   fgGraphInit = kTRUE;
+   if (fgGraphInit || !fgGraphNeeded) return;
 
    // Load the graphics related libraries
-
 
 #if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
    gVirtualX = new ROOT::iOS::TGIOS("TGIOS", "VirtualX for iOS");
@@ -653,6 +649,7 @@ void TApplication::LoadGraphicsLibs()
          return;
       }
       gVirtualX = (TVirtualX *) h->ExecPlugin(2, name.Data(), title.Data());
+      fgGraphInit = kTRUE;
    }
    if ((h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory))) {
       if (h->LoadPlugin() == -1) {

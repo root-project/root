@@ -205,6 +205,12 @@ The ending of a polyline creation is based on the closeness of the two last
 entered points. The previous algorithm was based on user coordinates. It is now
 based on pixel to avoid the problem reported here: https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20343
 
+### TCanvas
+
+When the first canvas created by ROOT was in batch mode, it was note possible to
+comme back in interactive mode for the next canvases. this problem was reported here:
+https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20354
+
 ## 3D Graphics Libraries
 
 
