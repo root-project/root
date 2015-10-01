@@ -1,6 +1,5 @@
 <rootdict>
    <class name="Muon::myclass<float>"/>
-   <class name="Muon::RpcPrepDataContainer_p3" id="65496D1F-E660-42A9-84C9-2002D39B87CB" />
    <class name="Muon::additionalTypedef" />
 </rootdict>
 
