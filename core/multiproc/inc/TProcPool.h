@@ -68,11 +68,11 @@ public:
 
    // Process
    // this version requires that procFunc returns a ptr to TObject or inheriting classes and takes a TTreeReader& (both enforced at compile-time)
-   template<class F> TObject* Process(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0);
-   template<class F> TObject* Process(const std::string& fileName, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0);
-   template<class F> TObject* Process(TFileCollection& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0);
-   template<class F> TObject* Process(TChain& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0);
-   template<class F> TObject* Process(TTree& tree, F procFunc, ULong64_t nToProcess = 0);
+   template<class F> auto Process(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   template<class F> auto Process(const std::string& fileName, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   template<class F> auto Process(TFileCollection& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   template<class F> auto Process(TChain& files, F procFunc, const std::string& treeName = "", ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   template<class F> auto Process(TTree& tree, F procFunc, ULong64_t nToProcess = 0) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
 
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
@@ -371,9 +371,10 @@ auto TProcPool::MapReduce(F func, std::vector<T> &args, R redfunc) -> decltype(f
 
 
 template<class F>
-TObject* TProcPool::Process(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName, ULong64_t nToProcess)
+auto TProcPool::Process(const std::vector<std::string>& fileNames, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
-   static_assert(std::is_constructible<TObject*, typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type>::value, "procFunc must return a pointer to a class inheriting from TObject, and must take a reference to TTreeReader as the only argument");
+   using retType = typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   static_assert(std::is_constructible<TObject*, retType>::value, "procFunc must return a pointer to a class inheriting from TObject, and must take a reference to TTreeReader as the only argument");
 
    //prepare environment
    Reset();
@@ -418,12 +419,12 @@ TObject* TProcPool::Process(const std::vector<std::string>& fileNames, F procFun
    //clean-up and return
    ReapWorkers();
    fTask = ETask::kNoTask;
-   return res;
+   return static_cast<retType>(res);
 }
 
 
 template<class F>
-TObject* TProcPool::Process(const std::string& fileName, F procFunc, const std::string& treeName, ULong64_t nToProcess)
+auto TProcPool::Process(const std::string& fileName, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
    std::vector<std::string> singleFileName(1, fileName);
    return Process(singleFileName, procFunc, treeName, nToProcess);
@@ -431,7 +432,7 @@ TObject* TProcPool::Process(const std::string& fileName, F procFunc, const std::
 
 
 template<class F>
-TObject* TProcPool::Process(TFileCollection& files, F procFunc, const std::string& treeName, ULong64_t nToProcess)
+auto TProcPool::Process(TFileCollection& files, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
    std::vector<std::string> fileNames(files.GetNFiles());
    unsigned count = 0;
@@ -443,7 +444,7 @@ TObject* TProcPool::Process(TFileCollection& files, F procFunc, const std::strin
 
 
 template<class F>
-TObject* TProcPool::Process(TChain& files, F procFunc, const std::string& treeName, ULong64_t nToProcess)
+auto TProcPool::Process(TChain& files, F procFunc, const std::string& treeName, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
    TObjArray* filelist = files.GetListOfFiles();
    std::vector<std::string> fileNames(filelist->GetEntries());
@@ -456,9 +457,10 @@ TObject* TProcPool::Process(TChain& files, F procFunc, const std::string& treeNa
 
 
 template<class F>
-TObject* TProcPool::Process(TTree& tree, F procFunc, ULong64_t nToProcess)
+auto TProcPool::Process(TTree& tree, F procFunc, ULong64_t nToProcess) -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
-   static_assert(std::is_constructible<TObject*, typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type>::value, "procFunc must return a pointer to a class inheriting from TObject, and must take a reference to TTreeReader as the only argument");
+   using retType = typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
+   static_assert(std::is_constructible<TObject*, retType>::value, "procFunc must return a pointer to a class inheriting from TObject, and must take a reference to TTreeReader as the only argument");
 
    //prepare environment
    Reset();
@@ -493,7 +495,7 @@ TObject* TProcPool::Process(TTree& tree, F procFunc, ULong64_t nToProcess)
    //clean-up and return
    ReapWorkers();
    fTask = ETask::kNoTask;
-   return res;
+   return static_cast<retType>(res);
 }
 
 //////////////////////////////////////////////////////////////////////////
