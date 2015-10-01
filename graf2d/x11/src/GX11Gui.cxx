@@ -853,8 +853,10 @@ Int_t TGX11::OpenDisplay(const char *dpyName)
 
 void TGX11::CloseDisplay()
 {
-   XCloseDisplay((Display*)fDisplay);
-   fDisplay = 0;
+   if (!fDisplay){
+      XCloseDisplay((Display*)fDisplay);
+      fDisplay = nullptr;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
