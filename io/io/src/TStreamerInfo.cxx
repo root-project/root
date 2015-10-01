@@ -265,6 +265,7 @@ void TStreamerInfo::Build()
       TStreamerElement* element = new TStreamerSTL("This", title.Data(), 0, fClass->GetName(), *proxy, 0);
       fElements->Add(element);
       Compile();
+      fCheckSum = fClass->GetCheckSum();
       fIsBuilt = kTRUE;
       return;
    }
