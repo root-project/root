@@ -21,10 +21,11 @@ int main() {
    hsimpleLocation+="/hsimple.root";
 
    std::unique_ptr<TFile> fp(TFile::Open(hsimpleLocation));
-   TTree *tree = static_cast<TTree*>(fp->Get("ntuple"));
+   TTree* tree;
+   fp->GetObject("ntuple",tree);
 
    TProcPool pool(2);
-   auto res = static_cast<TH1F*>(pool.Process(*tree, myMacro));
+   auto res = pool.Process(*tree, myMacro);
 
    std::cout << res->GetEntries() << std::endl;
 
