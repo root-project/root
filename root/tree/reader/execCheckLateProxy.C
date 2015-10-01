@@ -1,4 +1,4 @@
-{
+int execCheckLateProxy(){
 TString hSimplePath = gROOT->GetTutorialsDir();
 hSimplePath+="/hsimple.root";
 TFile f(hSimplePath);
@@ -8,4 +8,6 @@ r.SetEntry(3);
 TTreeReaderValue<Float_t> px(r, "px");
 r.Next();
 cout << *px << endl;
+return 0;
 }
+
