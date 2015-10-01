@@ -1,5 +1,11 @@
 ROOTTEST_ADD_TESTDIRS()
 
+#ROOT-7676
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-twoTypedefsOneClass
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/twoTypedefsOneClass.h
+                          --select=${CMAKE_CURRENT_SOURCE_DIR}/twoTypedefsOneClass_selection.xml
+                  OUTREF twoTypedefsOneClass.ref)
+
 # ROOT-7450
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-privateClassXMLSelection
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/privateClassSelection.h
