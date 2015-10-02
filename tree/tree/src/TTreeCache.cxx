@@ -583,6 +583,15 @@ Bool_t TTreeCache::FillBuffer()
    Long64_t fEntryCurrentMax = 0;
 
    if (fEnablePrefetching){ //prefetching mode
+      if (fIsLearning) { // Learning mode
+         if (fEntryNext >= 0 && entry >= fEntryNext) {
+            // entry is outside the learn range, need to stop the learning
+            // phase. Doing so may trigger a recursive call to FillBuffer in
+            // the process of filling both prefetching buffers
+            StopLearningPhase();
+            fIsManual = kFALSE;
+         }
+      }
       if (fIsLearning){ //learning mode
          entry = 0;
       }
