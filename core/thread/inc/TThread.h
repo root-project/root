@@ -42,9 +42,6 @@
 #ifndef ROOT_Varargs
 #include "Varargs.h"
 #endif
-#ifndef ROOT_TThreadSlots
-#include "TThreadSlots.h"
-#endif
 
 class TThreadImp;
 
@@ -97,7 +94,6 @@ private:
    VoidFunc_t     fFcnVoid;               // void  start function of thread
    void          *fThreadArg;             // thread start function arguments
    void          *fClean;                 // support of cleanup structure
-   void          *fTsd[ROOT::kMaxThreadSlot]; // thread specific data container
    char           fComment[100];          // thread specific state comment
 
    static TThreadImp      *fgThreadImp;   // static pointer to thread implementation
@@ -121,6 +117,7 @@ private:
    static void   *Function(void *ptr);
    static Int_t   XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret);
    static void    AfterCancel(TThread *th);
+   static void    **GetTls(Int_t k);
 
    TThread(const TThread&);            // not implemented
    TThread& operator=(const TThread&); // not implemented

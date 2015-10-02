@@ -19,24 +19,28 @@
 namespace ROOT {
 
    enum EThreadSlotReservation {
-      // Describe the system wide slot pre-allocation in the TThread
-      // 'special data' storage array ; meant to be used as thread local
-      // storage.  (See TThread::Tsd)
+      // Describe the thread local storage array in TThread::Tsd
       //
-      // Slot 0 through 19 can be used for user application
-      // Slot 20 and above are reserved for the global system
-      kMaxUserThreadSlot   = 20,
-
+      // Slot 0 through 4 are reserved for the global system
+      // Slot 5 through 24 can be used for user application
+      
       // Slot reserved by ROOT's packages.
-      kPadThreadSlot       = 20,
-      kClassThreadSlot     = 21,
-      kDirectoryThreadSlot = 22,
-      kFileThreadSlot      = 23,
-      kPerfStatsThreadSlot = 24,
+      kDirectoryThreadSlot = 0,
+      kPadThreadSlot       = 1,
+      kClassThreadSlot     = 2,
+      kFileThreadSlot      = 3,
+      kPerfStatsThreadSlot = 4,
 
-      kMaxThreadSlot       = 25  // Size of the array of thread local slots in TThread
+      kMaxThreadSlot       = 25,  // Size of the array of thread local slots in TThread
+      kMinUserThreadSlot   = 5,
+      kMaxUserThreadSlot   = kMaxThreadSlot
    };
 }
+
+// This macro assumes that the first position in the TLS array corresponds
+// to the current directory and initialises it to gROOT.
+// The rest of the pointers in the array are initialised to null
+#define TTHREAD_INIT_TLS_ARRAY {gROOT}
 
 #ifndef __CINT__
 R__EXTERN void **(*gThreadTsd)(void*,Int_t);
