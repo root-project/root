@@ -10,6 +10,8 @@
  *************************************************************************/
 
 #ifndef WIN32
+#   include <sys/types.h>
+#   include <sys/stat.h>
 #   include <unistd.h>
 #else
 #   define ssize_t int
@@ -105,7 +107,8 @@ TAFS::TAFS(const char *fpw, const char *user, int life)
    // Prompt for credentials if not yet found
    if (!pw) {
 
-      TString prompt = Form("AFS password for %s@%s", usr.Data(), AFSLocalCell());
+      TString prompt;
+      prompt.Form("AFS password for %s@%s", usr.Data(), AFSLocalCell());
 
       // Init the dialog box, if needed
       if (fgUsePwdDialog) {
@@ -137,7 +140,7 @@ TAFS::TAFS(const char *fpw, const char *user, int life)
       } else {
          if (isatty(0) != 0 && isatty(1) != 0) {
             Gl_config("noecho", 1);
-            pw = Getline((char *) prompt.Data());
+            pw = (char *) Getline((char *) prompt.Data());
             Gl_config("noecho", 0);
          } else {
             Warning("TAFS", "not tty: cannot prompt for passwd: failure");

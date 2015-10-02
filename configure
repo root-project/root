@@ -5775,7 +5775,7 @@ if test ! "x$enable_afs" = "xno" ; then
     afssearchlibdirs="${afsdir:+$afsdir/afs} ${AFS:+$AFS/lib} \
                       ${finkdir:+$finkdir/lib} \
                       /usr/lib /usr/local/lib /opt/lib"
-    afslibs="libafsrpc libafsauthent"
+    afslibs="libafsauthent libkauth libafsrpc libdes"
     if test "x$afsshared" = "xyes" ; then
 
        # We try to use the shared version of the libraries; however, for OpenAFS

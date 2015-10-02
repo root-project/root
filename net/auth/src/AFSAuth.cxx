@@ -95,19 +95,19 @@ void *GetAFSToken(const char *usr, const char *pwd, int pwlen,
 
    // reset the error message, if defined
    if (emsg)
-      *emsg = "";
+      *emsg = (char *)"";
 
    // Check user name
    if (!usr || strlen(usr) <= 0) {
       if (emsg)
-         *emsg = "Input user name undefined - check your inputs!";
+         *emsg = (char *)"Input user name undefined - check your inputs!";
       return (void *)0;
    }
 
    // Check password buffer
    if (!pwd || (pwlen <= 0 && strlen(pwd) <= 0)) {
       if (emsg)
-         *emsg = "Password buffer undefined - check your inputs!";
+         *emsg = (char *)"Password buffer undefined - check your inputs!";
       return (void *)0;
    }
 
@@ -125,7 +125,7 @@ void *GetAFSToken(const char *usr, const char *pwd, int pwlen,
    if ((rc = ka_Init(0))) {
       // Failure
       if (emsg)
-         *emsg = GetAFSErrorString(rc);
+         *emsg = (char *)GetAFSErrorString(rc);
       return (void *)0;
    }
 
@@ -152,7 +152,7 @@ void *GetAFSToken(const char *usr, const char *pwd, int pwlen,
    char cellname[MAXKTCREALMLEN];
    if (ka_ExpandCell(cell, cellname, 0) != 0) {
       if (emsg)
-         *emsg = "Could not expand cell name";
+         *emsg = (char *)"Could not expand cell name";
       return (void *)0;
    }
    cell = cellname;
@@ -161,7 +161,7 @@ void *GetAFSToken(const char *usr, const char *pwd, int pwlen,
    struct ubik_client *conn = 0;
    if (ka_AuthServerConn(cell, KA_AUTHENTICATION_SERVICE, 0, &conn) != 0) {
       if (emsg)
-         *emsg = "Could not get a connection to server";
+         *emsg = (char *)"Could not get a connection to server";
       return (void *)0;
    }
 
@@ -175,7 +175,7 @@ void *GetAFSToken(const char *usr, const char *pwd, int pwlen,
                              &key, now, now + life, tkn, &pwexpires))) {
       // Failure
       if (emsg)
-         *emsg = GetAFSErrorString(rc);
+         *emsg = (char *)GetAFSErrorString(rc);
       ubik_ClientDestroy(conn);
       return (void *)0;
    }
@@ -184,7 +184,7 @@ void *GetAFSToken(const char *usr, const char *pwd, int pwlen,
    if ((rc = ka_GetAuthToken((char *)usr, "", "", &key, life, &pwexpires))) {
       // Failure
       if (emsg)
-         *emsg = GetAFSErrorString(rc);
+         *emsg = (char *)GetAFSErrorString(rc);
       ubik_ClientDestroy(conn);
       return (void *)0;
    }
@@ -192,7 +192,7 @@ void *GetAFSToken(const char *usr, const char *pwd, int pwlen,
                              KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG))) {
       // Failure
       if (emsg)
-         *emsg = GetAFSErrorString(rc);
+         *emsg = (char *)GetAFSErrorString(rc);
       ubik_ClientDestroy(conn);
       return (void *)0;
    }
