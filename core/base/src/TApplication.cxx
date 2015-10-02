@@ -261,7 +261,10 @@ void TApplication::InitializeGraphics()
    if (fgGraphInit || !fgGraphNeeded)
       return;
 
+   fgGraphInit = kTRUE;
+
    // Load the graphics related libraries
+
 
 #if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
    gVirtualX = new ROOT::iOS::TGIOS("TGIOS", "VirtualX for iOS");
@@ -607,7 +610,7 @@ void TApplication::LoadGraphicsLibs()
    TString title1 = "ROOT interface to ";
    TString nativex, title;
    TString nativeg = "root";
-
+   
 #ifdef R__WIN32
    nativex = "win32gdk";
    name    = "Win32gdk";
@@ -615,7 +618,7 @@ void TApplication::LoadGraphicsLibs()
 #elif defined(R__HAS_COCOA)
    nativex = "quartz";
    name    = "quartz";
-   title   = title1 + "Quartz";
+   title   = title1 + "Quartz"; 
 #else
    nativex = "x11";
    name    = "X11";
@@ -641,7 +644,6 @@ void TApplication::LoadGraphicsLibs()
          return;
       }
       gVirtualX = (TVirtualX *) h->ExecPlugin(2, name.Data(), title.Data());
-      fgGraphInit = kTRUE;
    }
    if ((h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory))) {
       if (h->LoadPlugin() == -1) {
@@ -881,7 +883,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 #else
       return PrintFile("$(ROOTSYS)/README/CREDITS");
 #endif
-
+     
    }
 
    if (!strncmp(line, ".pwd", 4)) {
@@ -1193,7 +1195,7 @@ void TApplication::Terminate(Int_t status)
          ProcessLine("TMemStat::Close()");
          fUseMemstat = kFALSE;
       }
-
+   
       gSystem->Exit(status);
    }
 }

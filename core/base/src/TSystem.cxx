@@ -1767,6 +1767,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    AbstractMethod("Load");
    return 0;
 #else
+   static int recCall = 0;
 
    // don't load libraries that have already been loaded
    TString libs( GetLibraries() );
@@ -1814,6 +1815,8 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       }
    }
 
+   recCall++;
+
    char *path = DynamicPathName(module);
 
    int ret = -1;
@@ -1846,6 +1849,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
                     deplib, ((TObjString*)tokens->At(0))->GetName());
             if ((ret = Load(deplib, "", system)) < 0) {
                delete tokens;
+               recCall--;
                return ret;
             }
          }
@@ -1892,6 +1896,15 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       gLibraryVersionIdx--;
       delete [] path;
    }
+
+   recCall--;
+
+   // will load and initialize graphics libraries if
+   // TApplication::NeedGraphicsLibs() has been called by a
+   // library static initializer, only do this when Load() is
+   // not called recursively
+   if (recCall == 0 && gApplication)
+      gApplication->InitializeGraphics();
 
    if (!entry || !entry[0] || ret < 0) return ret;
 
