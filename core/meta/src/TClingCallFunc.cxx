@@ -109,7 +109,12 @@ EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
    if (E->EvaluateAsInt(res, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
       // IntTy or maybe better E->getType()?
       V = cling::Value(C.IntTy, interp);
-      V.getULL() = res.getZExtValue();
+      // We must use the correct signedness otherwise the zero extension
+      // fails if the actual type is strictly less than long long.
+      if (res.isSigned())
+        V.getLL() = res.getSExtValue();
+      else
+        V.getULL() = res.getZExtValue();
       return;
    }
    // TODO: Build a wrapper around the expression to avoid decompilation and
