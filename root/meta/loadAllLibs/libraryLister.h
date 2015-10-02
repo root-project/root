@@ -33,8 +33,10 @@ strList getLibrariesList(){
 
 void loadLibrariesInList(strList libList){
 
-for (auto const & libName: libList){ 
-   gSystem->Load(libName.c_str());
+for (auto const & libName: libList){
+   std::cout << "Loading library " << libName;
+   auto rc = gSystem->Load(libName.c_str());
+   std::cout << " [rc = " << rc << "]" << std::endl;
 }
 
 }
