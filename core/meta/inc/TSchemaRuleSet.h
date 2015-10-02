@@ -16,23 +16,20 @@ namespace ROOT {
 
 class TSchemaRule;
 
-namespace Internal {
-   class TSchemaMatch: public TObjArray
-   {
-      public:
-         virtual ~TSchemaMatch() {};
-         const TSchemaRule* GetRuleWithSource( const TString& name ) const;
-         const TSchemaRule* GetRuleWithTarget( const TString& name ) const;
-               Bool_t       HasRuleWithSource( const TString& name, Bool_t needingAlloc ) const;
-               Bool_t       HasRuleWithTarget( const TString& name, Bool_t willset ) const;
-      ClassDef(TSchemaMatch,0);
-   };
-} // End of Namespace Internal
-
 namespace Detail {
    class TSchemaRuleSet: public TObject
    {
       public:
+
+         class TMatches: public std::vector<const TSchemaRule*>
+         {
+         public:
+            operator bool() { return !empty(); }
+            const TSchemaRule* GetRuleWithSource( const TString& name ) const;
+            const TSchemaRule* GetRuleWithTarget( const TString& name ) const;
+            Bool_t       HasRuleWithSource( const TString& name, Bool_t needingAlloc ) const;
+            Bool_t       HasRuleWithTarget( const TString& name, Bool_t willset ) const;
+         };
 
          enum EConsistencyCheck {
             kNoCheck       = 0,
@@ -46,10 +43,10 @@ namespace Detail {
          Bool_t              AddRule( TSchemaRule* rule, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = 0 );
          Bool_t              AddRules( TSchemaRuleSet* rules, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = 0);
          Bool_t              HasRuleWithSourceClass( const TString &source) const;
-         const TObjArray*    FindRules( const TString &source ) const;
-         const Internal::TSchemaMatch* FindRules( const TString &source, Int_t version ) const;
-         const Internal::TSchemaMatch* FindRules( const TString &source, UInt_t checksum ) const;
-         const Internal::TSchemaMatch* FindRules( const TString &source, Int_t version, UInt_t checksum ) const;
+         const TMatches FindRules( const TString &source ) const;
+         const TMatches FindRules( const TString &source, Int_t version ) const;
+         const TMatches FindRules( const TString &source, UInt_t checksum ) const;
+         const TMatches FindRules( const TString &source, Int_t version, UInt_t checksum ) const;
          TClass*             GetClass();
          UInt_t              GetClassCheckSum() const;
          TString             GetClassName() const;

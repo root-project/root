@@ -142,7 +142,7 @@ TSchemaRule& TSchemaRule::operator = ( const TSchemaRule& rhs )
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the rule have the same effects.
 
-Bool_t TSchemaRule::operator == ( const TSchemaRule& rhs )
+Bool_t TSchemaRule::operator == ( const TSchemaRule& rhs ) const
 {
    if( this != &rhs ) {
       Bool_t result = ( fVersion == rhs.fVersion

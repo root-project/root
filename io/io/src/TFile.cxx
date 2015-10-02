@@ -2686,33 +2686,29 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       TMakeProject::GenerateMissingStreamerInfos( &extrainfos, info->GetName() );
       TIter enext( info->GetElements() );
       TStreamerElement *el;
-      const ROOT::Internal::TSchemaMatch* rules = 0;
+      ROOT::Detail::TSchemaRuleSet::TMatches rules;
       if (cl && cl->GetSchemaRules()) {
          rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
       }
       while( (el=(TStreamerElement*)enext()) ) {
-         if (rules) {
-            for(Int_t art = 0; art < rules->GetEntries(); ++art) {
-               ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)rules->At(art);
-               if( rule->IsRenameRule() || rule->IsAliasRule() )
-                  continue;
-               // Check whether this is an 'attribute' rule.
-               if ( rule->HasTarget( el->GetName()) && rule->GetAttributes()[0] != 0 ) {
-                  TString attr( rule->GetAttributes() );
-                  attr.ToLower();
-                  if (attr.Contains("owner")) {
-                     if (attr.Contains("notowner")) {
-                        el->SetBit(TStreamerElement::kDoNotDelete);
-                     } else {
-                        el->ResetBit(TStreamerElement::kDoNotDelete);
-                     }
+         for(auto rule : rules) {
+            if( rule->IsRenameRule() || rule->IsAliasRule() )
+               continue;
+            // Check whether this is an 'attribute' rule.
+            if ( rule->HasTarget( el->GetName()) && rule->GetAttributes()[0] != 0 ) {
+               TString attr( rule->GetAttributes() );
+               attr.ToLower();
+               if (attr.Contains("owner")) {
+                  if (attr.Contains("notowner")) {
+                     el->SetBit(TStreamerElement::kDoNotDelete);
+                  } else {
+                     el->ResetBit(TStreamerElement::kDoNotDelete);
                   }
                }
             }
          }
          TMakeProject::GenerateMissingStreamerInfos(&extrainfos, el);
       }
-      delete rules;
       TVirtualStreamerInfo *alternate = (TVirtualStreamerInfo*)list->FindObject(info->GetName());
       if (alternate) {
          if ((info->GetClass() && info->GetClassVersion() == info->GetClass()->GetClassVersion())
@@ -2870,30 +2866,25 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       TClass *cl = TClass::GetClass(info->GetName());
       if (cl) {
          if (cl->HasInterpreterInfo()) continue; // skip known classes
-         const ROOT::Internal::TSchemaMatch* rules = 0;
          if (cl->GetSchemaRules()) {
-            rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
+            auto rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
             TString strrule;
-            if (rules) {
-               for(Int_t art = 0; art < rules->GetEntries(); ++art) {
-                  ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)rules->At(art);
-                  strrule.Clear();
-                  if (genreflex) {
-                     rule->AsString(strrule,"x");
-                     strrule.Append("\n");
-                     if ( selections.Index(strrule) == kNPOS ) {
-                        selections.Append(strrule);
-                     }
-                  } else {
-                     rule->AsString(strrule);
-                     if (strncmp(strrule.Data(),"type=",5)==0) {
-                        strrule.Remove(0,5);
-                     }
-                     fprintf(fp,"#pragma %s;\n",strrule.Data());
+            for(auto rule : rules) {
+               strrule.Clear();
+               if (genreflex) {
+                  rule->AsString(strrule,"x");
+                  strrule.Append("\n");
+                  if ( selections.Index(strrule) == kNPOS ) {
+                     selections.Append(strrule);
                   }
+               } else {
+                  rule->AsString(strrule);
+                  if (strncmp(strrule.Data(),"type=",5)==0) {
+                     strrule.Remove(0,5);
+                  }
+                  fprintf(fp,"#pragma %s;\n",strrule.Data());
                }
             }
-            delete rules;
          }
 
       }

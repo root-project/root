@@ -32,6 +32,7 @@ TStreamerElement objects and calls the appropriate function for each
 element type.
 */
 
+#include <memory>
 #include "TStreamerInfo.h"
 #include "TFile.h"
 #include "TROOT.h"
@@ -281,7 +282,7 @@ void TStreamerInfo::Build()
 
    Bool_t needAllocClass = kFALSE;
    Bool_t wasCompiled = fComp != 0;
-   const ROOT::Internal::TSchemaMatch* rules = 0;
+   ROOT::TSchemaRuleSet::TMatches rules;
    if (fClass->GetSchemaRules()) {
        rules = fClass->GetSchemaRules()->FindRules(fClass->GetName(), fClassVersion);
    }
@@ -533,7 +534,7 @@ void TStreamerInfo::Build()
          }
       }
 
-      if ( !wasCompiled && (rules && rules->HasRuleWithSource( element->GetName(), kTRUE )) ) {
+      if ( !wasCompiled && (rules && rules.HasRuleWithSource( element->GetName(), kTRUE )) ) {
          needAllocClass = kTRUE;
 
          // If this is optimized to re-use TStreamerElement(s) in case of variable renaming,
@@ -543,7 +544,7 @@ void TStreamerInfo::Build()
          TStreamerElement *cached = element;
          // Now that we are caching the unconverted element, we do not assign it to the real type even if we could have!
          if (element->GetNewType()>0 /* intentionally not including base class for now */
-             && rules && !rules->HasRuleWithTarget( element->GetName(), kTRUE ) )
+             && rules && !rules.HasRuleWithTarget( element->GetName(), kTRUE ) )
          {
             TStreamerElement *copy = (TStreamerElement*)element->Clone();
             fElements->Add(copy);
@@ -1177,11 +1178,9 @@ Bool_t TStreamerInfo::BuildFor( const TClass *in_memory_cl )
       return kFALSE;
    }
 
-   const TObjArray* rules;
+   auto rules = in_memory_cl->GetSchemaRules()->FindRules( GetName(), fOnFileClassVersion, fCheckSum );
 
-   rules = in_memory_cl->GetSchemaRules()->FindRules( GetName(), fOnFileClassVersion, fCheckSum );
-
-   if( !rules && !in_memory_cl->GetCollectionType() ) {
+   if( rules.empty() && !in_memory_cl->GetCollectionType() ) {
       Warning( "BuildFor", "The build of %s streamer info for %s has been requested, but no matching conversion rules were specified", GetName(), in_memory_cl->GetName() );
       return kFALSE;
    }
@@ -1667,10 +1666,10 @@ void TStreamerInfo::BuildOld()
    // Get schema rules for this class
    /////////////////////////////////////////////////////////////////////////////
 
-   const ROOT::Internal::TSchemaMatch*   rules   = 0;
+   ROOT::TSchemaRuleSet::TMatches rules;
    const ROOT::TSchemaRuleSet* ruleSet = fClass->GetSchemaRules();
 
-   rules = (ruleSet ? ruleSet->FindRules( GetName(), fOnFileClassVersion, fCheckSum ) : 0);
+   if (ruleSet) rules = ruleSet->FindRules( GetName(), fOnFileClassVersion, fCheckSum );
 
    Bool_t shouldHaveInfoLoc = fClass->TestBit(TClass::kIsEmulation) && !TClassEdit::IsStdClass(fClass->GetName());
    Int_t virtualInfoLocAlloc = 0;
@@ -1712,7 +1711,7 @@ void TStreamerInfo::BuildOld()
             ////////////////////////////////////////////////////////////////////
 
             if( !baseclass && !fClass->TestBit( TClass::kIsEmulation ) ) {
-               const ROOT::TSchemaRule* rule = (rules ? rules->GetRuleWithSource( base->GetName() ) : 0);
+               const ROOT::TSchemaRule* rule = (rules ? rules.GetRuleWithSource( base->GetName() ) : 0);
 
                //---------------------------------------------------------------
                // No renaming, sorry
@@ -1767,7 +1766,7 @@ void TStreamerInfo::BuildOld()
                      TClass *in_memory_bcl = bc->GetClassPointer();
                      if (in_memory_bcl && in_memory_bcl->GetSchemaRules()) {
                         auto baserule = in_memory_bcl->GetSchemaRules()->FindRules( base->GetName(), base->GetBaseVersion(), base->GetBaseCheckSum() );
-                        if (baserule) {
+                        if (!baserule.empty()) {
                            base->SetNewBaseClass(in_memory_bcl);
                            baseOffset = bc->GetDelta();
 
@@ -2318,7 +2317,7 @@ void TStreamerInfo::BuildOld()
       }
 
       if (!wasCompiled && rules) {
-         if (rules->HasRuleWithSource( element->GetName(), kTRUE ) ) {
+         if (rules.HasRuleWithSource( element->GetName(), kTRUE ) ) {
 
             if (allocClass == 0) {
                infoalloc  = (TStreamerInfo *)Clone(TString::Format("%s@@%d",GetName(),GetOnFileClassVersion()));
@@ -2334,7 +2333,7 @@ void TStreamerInfo::BuildOld()
 
             // Now that we are caching the unconverted element, we do not assign it to the real type even if we could have!
             if (element->GetNewType()>0 /* intentionally not including base class for now */
-                && !rules->HasRuleWithTarget( element->GetName(), kTRUE ) ) {
+                && !rules.HasRuleWithTarget( element->GetName(), kTRUE ) ) {
 
                TStreamerElement *copy = (TStreamerElement*)element->Clone();
                R__TObjArray_InsertBefore( fElements, copy, element );
@@ -2357,7 +2356,7 @@ void TStreamerInfo::BuildOld()
             element->SetBit(TStreamerElement::kCache);
             element->SetNewType( element->GetType() );
             element->SetOffset(infoalloc ? infoalloc->GetOffset(element->GetName()) : 0);
-         } else if (rules->HasRuleWithTarget( element->GetName(), kTRUE ) ) {
+         } else if (rules.HasRuleWithTarget( element->GetName(), kTRUE ) ) {
             // The data member exist in the onfile StreamerInfo and there is a rule
             // that has the same member 'only' has a target ... so this means we are
             // asked to ignore the input data ...
@@ -2369,7 +2368,7 @@ void TStreamerInfo::BuildOld()
                element->SetOffset(kMissing);
             }
          }
-      } else if (rules && rules->HasRuleWithTarget( element->GetName(), kTRUE ) ) {
+      } else if (rules && rules.HasRuleWithTarget( element->GetName(), kTRUE ) ) {
          // The data member exist in the onfile StreamerInfo and there is a rule
          // that has the same member 'only' has a target ... so this means we are
          // asked to ignore the input data ...
@@ -2431,7 +2430,6 @@ void TStreamerInfo::BuildOld()
    }
 
    Compile();
-   delete rules;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4256,15 +4254,14 @@ T TStreamerInfo::GetTypedValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t
 ////////////////////////////////////////////////////////////////////////////////
 /// Insert new members as expressed in the array of TSchemaRule(s).
 
-void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
+void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule*> &rules)
 {
-   if (!rules) return;
+   if (rules.empty()) return;
 
    TIter next(fElements);
    UInt_t count = 0;
 
-   for(Int_t art = 0; art < rules->GetEntries(); ++art) {
-      ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)rules->At(art);
+   for(auto rule : rules) {
       if( rule->IsRenameRule() || rule->IsAliasRule() )
          continue;
       next.Reset();

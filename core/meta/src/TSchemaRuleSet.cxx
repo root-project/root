@@ -107,7 +107,6 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    // present int the target class
    /////////////////////////////////////////////////////////////////////////////
 
-   TObject* obj;
    // Check only if we have some information about the class, otherwise we have
    // nothing to check against
    bool streamerInfosTest;
@@ -117,6 +116,7 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    }
    if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && streamerInfosTest) ) {
       TObjArrayIter titer( rule->GetTarget() );
+      TObject* obj;
       while( (obj = titer.Next()) ) {
          TObjString* str = (TObjString*)obj;
          if( !fClass->GetDataMember( str->GetString() ) && !fClass->GetBaseClass( str->GetString() ) ) {
@@ -138,14 +138,13 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    // Check if there is a rule conflicting with this one
    /////////////////////////////////////////////////////////////////////////////
 
-   const TObjArray* rules = FindRules( rule->GetSourceClass() );
-   TObjArrayIter it( rules );
-   TSchemaRule *r;
+   std::vector<const TSchemaRule*> rules = FindRules( rule->GetSourceClass() );
+   //TObjArrayIter it( rules );
+   //TSchemaRule *r;
 
-   while( (obj = it.Next()) ) {
-      r = (TSchemaRule *) obj;
+   for(auto r : rules) { // while( (obj = it.Next()) ) {
       if( rule->Conflicts( r ) ) {
-         delete rules;
+         //delete rules;
          if ( *r == *rule) {
             // The rules are duplicate from each other,
             // just ignore the new ones.
@@ -165,7 +164,6 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
          return kFALSE;
       }
    }
-   delete rules;
 
    //---------------------------------------------------------------------------
    // No conflicts - insert the rules
@@ -286,17 +284,17 @@ Bool_t TSchemaRuleSet::HasRuleWithSourceClass( const TString &source ) const
 /// Return all the rules that are about the given 'source' class.
 /// User has to delete the returned array
 
-const TObjArray* TSchemaRuleSet::FindRules( const TString &source ) const
+const TSchemaRuleSet::TMatches TSchemaRuleSet::FindRules( const TString &source ) const
 {
    TObject*      obj;
    TObjArrayIter it( fAllRules );
-   TObjArray*    arr = new TObjArray();
-   arr->SetOwner( kFALSE );
+   TMatches arr;
+   // arr->SetOwner( kFALSE );
 
    while( (obj = it.Next()) ) {
       TSchemaRule* rule = (TSchemaRule*)obj;
       if( rule->GetSourceClass() == source )
-         arr->Add( rule );
+         arr.push_back( rule );
    }
 
 #if 0
@@ -325,75 +323,60 @@ const TObjArray* TSchemaRuleSet::FindRules( const TString &source ) const
 /// Return all the rules that applies to the specified version of the given 'source' class.
 /// User has to delete the returned array
 
-const Internal::TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, Int_t version ) const
+const TSchemaRuleSet::TMatches TSchemaRuleSet::FindRules( const TString &source, Int_t version ) const
 {
    TObject*      obj;
    TObjArrayIter it( fAllRules );
-   Internal::TSchemaMatch* arr = new Internal::TSchemaMatch();
-   arr->SetOwner( kFALSE );
+   TMatches arr;
+   // arr->SetOwner( kFALSE );
 
    while( (obj = it.Next()) ) {
       TSchemaRule* rule = (TSchemaRule*)obj;
       if( rule->GetSourceClass() == source && rule->TestVersion( version ) )
-         arr->Add( rule );
+         arr.push_back( rule );
    }
 
-   if( arr->GetEntriesFast() )
-      return arr;
-   else {
-      delete arr;
-      return 0;
-   }
+   return arr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return all the rules that applies to the specified checksum of the given 'source' class.
 /// User has to delete the returned array
 
-const Internal::TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, UInt_t checksum ) const
+const TSchemaRuleSet::TMatches TSchemaRuleSet::FindRules( const TString &source, UInt_t checksum ) const
 {
    TObject*      obj;
    TObjArrayIter it( fAllRules );
-   Internal::TSchemaMatch* arr = new Internal::TSchemaMatch();
-   arr->SetOwner( kFALSE );
+   TMatches arr;
+   // arr->SetOwner( kFALSE );
 
    while( (obj = it.Next()) ) {
       TSchemaRule* rule = (TSchemaRule*)obj;
       if( rule->GetSourceClass() == source && rule->TestChecksum( checksum ) )
-         arr->Add( rule );
+         arr.push_back( rule );
    }
 
-   if( arr->GetEntriesFast() )
-      return arr;
-   else {
-      delete arr;
-      return 0;
-   }
+   return arr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return all the rules that applies to the specified version OR checksum of the given 'source' class.
 /// User has to delete the returned array
 
-const Internal::TSchemaMatch* TSchemaRuleSet::FindRules( const TString &source, Int_t version, UInt_t checksum ) const
+const TSchemaRuleSet::TMatches TSchemaRuleSet::FindRules( const TString &source, Int_t version, UInt_t checksum ) const
 {
    TObject*      obj;
    TObjArrayIter it( fAllRules );
-   Internal::TSchemaMatch* arr = new Internal::TSchemaMatch();
-   arr->SetOwner( kFALSE );
+   TMatches arr;
+   // arr->SetOwner( kFALSE );
 
    while( (obj = it.Next()) ) {
       TSchemaRule* rule = (TSchemaRule*)obj;
       if( rule->GetSourceClass() == source && ( rule->TestVersion( version ) || rule->TestChecksum( checksum ) ) )
-         arr->Add( rule );
+         arr.push_back( rule );
    }
 
-   if( arr->GetEntriesFast() )
-      return arr;
-   else {
-      delete arr;
-      return 0;
-   }
+   return arr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -480,10 +463,9 @@ void TSchemaRuleSet::SetClass( TClass* cls )
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the rule that has 'name' as a source.
 
-const TSchemaRule* Internal::TSchemaMatch::GetRuleWithSource( const TString& name ) const
+const TSchemaRule* TSchemaRuleSet::TMatches::GetRuleWithSource( const TString& name ) const
 {
-   for( Int_t i = 0; i < GetEntries(); ++i ) {
-      TSchemaRule* rule = (ROOT::TSchemaRule*)At(i);
+   for( auto rule : *this ) {
       if( rule->HasSource( name ) ) return rule;
    }
    return 0;
@@ -492,10 +474,9 @@ const TSchemaRule* Internal::TSchemaMatch::GetRuleWithSource( const TString& nam
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the rule that has 'name' as a target.
 
-const TSchemaRule* Internal::TSchemaMatch::GetRuleWithTarget( const TString& name ) const
+const TSchemaRule* TSchemaRuleSet::TMatches::GetRuleWithTarget( const TString& name ) const
 {
-   for( Int_t i=0; i<GetEntries(); ++i) {
-      ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)At(i);
+   for( auto rule : *this ) {
       if( rule->HasTarget( name ) ) return rule;
    }
    return 0;
@@ -507,10 +488,9 @@ const TSchemaRule* Internal::TSchemaMatch::GetRuleWithTarget( const TString& nam
 /// If needingAlloc is true, only the rule that requires the data member to
 /// be cached will be taken in consideration.
 
-Bool_t Internal::TSchemaMatch::HasRuleWithSource( const TString& name, Bool_t needingAlloc ) const
+Bool_t TSchemaRuleSet::TMatches::HasRuleWithSource( const TString& name, Bool_t needingAlloc ) const
 {
-   for( Int_t i = 0; i < GetEntries(); ++i ) {
-      TSchemaRule* rule = (ROOT::TSchemaRule*)At(i);
+   for( auto rule : *this ) {
       if( rule->HasSource( name ) ) {
          if (needingAlloc) {
             const TObjArray *targets = rule->GetTarget();
@@ -538,10 +518,9 @@ Bool_t Internal::TSchemaMatch::HasRuleWithSource( const TString& name, Bool_t ne
 /// member named 'name' as a target.
 /// If willset is true, only the rule that will set the value of the data member.
 
-Bool_t Internal::TSchemaMatch::HasRuleWithTarget( const TString& name, Bool_t willset ) const
+Bool_t TSchemaRuleSet::TMatches::HasRuleWithTarget( const TString& name, Bool_t willset ) const
 {
-   for( Int_t i=0; i<GetEntries(); ++i) {
-      ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)At(i);
+   for(auto rule : *this) {
       if( rule->HasTarget( name ) ) {
          if (willset) {
             const TObjArray *targets = rule->GetTarget();
