@@ -828,6 +828,7 @@ directory - this behavior is now implement by the default constructor.
 - Speed up significantly cling's findType and remove its memory cost in most cases.
 - Make sure object declared on the interpreter stack are deleted at the end of the process [ROOT-7673]
 - Resolve issues with error recovery when the transaction includes template instantiation.
+- Fix handling of argument that negative integers in TClingCallFunc [ROOT-7684]
 
 ### I/O
 - Fix memory leak in handling of I/O customization rules [ROOT-7683]
