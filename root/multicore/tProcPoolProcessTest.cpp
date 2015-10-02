@@ -29,31 +29,31 @@ int main() {
 
    //TProcPool::Process with single file name and tree name
    //Note: we have less files than workers here
-   res[0].reset(static_cast<TH1F*>(pool.Process(hsimpleLocation.Data(), myMacro, "ntuple")));
+   res[0].reset(pool.Process(hsimpleLocation.Data(), myMacro, "ntuple"));
 
    //TProcPool::Process with vector of files and tree name
    //Note: we have more files than workers here (different behaviour)
-   res[1].reset(static_cast<TH1F*>(pool.Process(files, myMacro, "ntuple")));
+   res[1].reset(pool.Process(files, myMacro, "ntuple"));
 
    //TProcPool::Process with single file name, tree name and entries limit
-   res[2].reset(static_cast<TH1F*>(pool.Process(hsimpleLocation.Data(), myMacro, "ntuple", 42)));
+   res[2].reset(pool.Process(hsimpleLocation.Data(), myMacro, "ntuple", 42));
 
    //TProcPool::Process with vector of files, no tree name and entries limit
-   res[3].reset(static_cast<TH1F*>(pool.Process(files, myMacro, "ntuple", 10000)));
+   res[3].reset(pool.Process(files, myMacro, "ntuple", 10000));
 
    //TProcPool::Process with TFileCollection, no tree name and entries limit
    TFileCollection fc;
    fc.Add(hsimpleLocation.Data());
    fc.Add(hsimpleLocation.Data());
-   res[4].reset(static_cast<TH1F*>(pool.Process(fc, myMacro, "", 42)));
+   res[4].reset(pool.Process(fc, myMacro, "", 42));
 
    //TProcPool::Process with TChain, no tree name and entries limit
    TChain c;
    c.Add(hsimpleLocation.Data());
    c.Add(hsimpleLocation.Data());
-   res[5].reset(static_cast<TH1F*>(pool.Process(c, myMacro)));
+   res[5].reset(pool.Process(c, myMacro));
 
-   for(auto& r : res)
+   for(auto&& r : res)
       std::cout << r->GetEntries() << "\n";
    std::cout << std::flush;
 
