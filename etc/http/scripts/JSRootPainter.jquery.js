@@ -168,7 +168,9 @@
          }
       }
 
-      if ('_player' in hitem) can_click = true;
+      if ('_player' in hitem) {
+         can_click = true;
+      }
 
       if (img2.length==0) img2 = img1;
       if (img1.length==0) img1 = has_childs ? "img_folder" : "img_page";
@@ -401,7 +403,7 @@
          var handle = JSROOT.getDrawHandle(hitem._kind);
          if (handle!=null) {
             if ('aslink' in handle)
-               return window.open(itemname);
+               return window.open(itemname + "/");
 
             if ('func' in handle)
                return this.display(itemname);
@@ -754,10 +756,11 @@
 
    // ========== performs tree drawing on server ==================
 
-   JSROOT.TTreePlayer = function(itemname, url, askey) {
+   JSROOT.TTreePlayer = function(itemname, url, askey, root_version) {
       JSROOT.TBasePainter.call(this);
       this.SetItemName(itemname);
       this.url = url;
+      this.root_version = root_version;
       this.hist_painter = null;
       this.askey = askey;
       return this;
@@ -805,7 +808,7 @@
 
    JSROOT.TTreePlayer.prototype.PerformDraw = function() {
 
-      var frame = $("#" + this.divid);
+      var frame = $(this.select_main().node());
 
       var url = this.url + '/exe.json.gz?compact=3&method=Draw';
       var expr = frame.find('.treedraw_varexp').val();
@@ -831,7 +834,7 @@
 
          // if any of optional arguments specified, specify all of them
          if ((option!="") || (nentries!="") || (firstentry!="")) {
-            if (nentries=="") nentries = "1000000000";
+            if (nentries=="") nentries = (this.root_version >= 394499) ? "TTree::kMaxEntries": "1000000000"; // kMaxEntries available since ROOT 6.05/03
             if (firstentry=="") firstentry = "0";
             url += '&option="' + option + '"&nentries=' + nentries + '&firstentry=' + firstentry;
          }
@@ -841,6 +844,7 @@
       url += '&_ret_object_=' + hname;
 
       var player = this;
+
       function SubmitDrawRequest() {
          JSROOT.NewHttpRequest(url, 'object', function(res) {
             if (res==null) return;
@@ -848,6 +852,7 @@
             player.hist_painter = JSROOT.draw(player.drawid, res)
          }).send();
       }
+
       if (this.askey) {
          // first let read tree from the file
          this.askey = false;
@@ -856,9 +861,11 @@
    }
 
    JSROOT.TTreePlayer.prototype.CheckResize = function(force) {
-      $("#" + this.drawid).width($("#" + this.divid).width());
-      var h = $("#" + this.divid).height();
-      var h0 = $("#" + this.divid +" .treedraw_buttons").height();
+      var main = $(this.select_main().node());
+
+      $("#" + this.drawid).width(main.width());
+      var h = main.height();
+      var h0 = main.find(".treedraw_buttons").height();
       if (h>h0+30) $("#" + this.drawid).height(h - 1 - h0);
 
       if (this.hist_painter) {
@@ -871,6 +878,10 @@
       var url = hpainter.GetOnlineItemUrl(itemname);
       if (url == null) return null;
 
+      var top = hpainter.GetTopOnlineItem(hpainter.Find(itemname));
+      if (top == null) return null;
+      var root_version = ('_root_version' in top) ? top._root_version : 336417; // by default use version number 5-34-32
+
       var mdi = hpainter.GetDisplay();
       if (mdi == null) return null;
 
@@ -879,15 +890,17 @@
 
       var divid = d3.select(frame).attr('id');
 
-      var player = new JSROOT.TTreePlayer(itemname, url, askey);
+      var player = new JSROOT.TTreePlayer(itemname, url, askey, root_version);
       player.Show(divid);
       return player;
    }
 
    JSROOT.drawTreePlayerKey = function(hpainter, itemname) {
       // function used when tree is not yet loaded on the server
+
       return JSROOT.drawTreePlayer(hpainter, itemname, true);
    }
+
 
    // =======================================================================
 
