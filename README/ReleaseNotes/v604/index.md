@@ -820,8 +820,18 @@ directory - this behavior is now implement by the default constructor.
 ### Core
 - Fix the location of include files in ROOTINCDIR/include instead of ROOTINCDIR [ROOT-7537]
 
-### Geom
-- Fix missing OCC header file for the version [ROOT-7536]
+### Interpreter
+- Fix redirection [ROOT-7053]
+- Take the language and target options from the PCH [ROOT-7478] [ROOT-6966]
+- Properly recover from a template instantiation failure when looking up a class in the interpreter [ROOT-7462]
+- Do not clear pending instantiations upon unloading; fixes missing symbols due to missing function bodies [ROOT-7586]
+- Speed up significantly cling's findType and remove its memory cost in most cases.
+- Make sure object declared on the interpreter stack are deleted at the end of the process [ROOT-7673]
+- Resolve issues with error recovery when the transaction includes template instantiation.
+
+### I/O
+- Fix memory leak in handling of I/O customization rules [ROOT-7683]
+- Set CheckSum of StreamerInfo of user classes that have a collection proxy.
 
 ### Tree
 - Fix [ROOT-6885] which affects very large TChain with friend trees.
@@ -831,10 +841,9 @@ directory - this behavior is now implement by the default constructor.
 - Fix reading of data members of type `BasicType[42]`
 - Fix support for large file [ROOT-7652]
 
-### Interpreter
-- Fix redirection [ROOT-7053]
-- Take the language and target options from the PCH [ROOT-7478] [ROOT-6966]
-- Properly recover from a template instantiation failure when looking up a class in the interpreter [ROOT-7462]
-- Do not clear pending instantiations upon unloading; fixes missing symbols due to missing function bodies [ROOT-7586]
+### Geom
+- Fix missing OCC header file for the version [ROOT-7536]
+
 
 Changes will be part of the future v6.04/04.
+
