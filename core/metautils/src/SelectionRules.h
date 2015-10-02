@@ -95,6 +95,7 @@ public:
    bool GetHasFileNameRule() const { return fHasFileNameRule; }
 
    int CheckDuplicates();
+   void Optimize();
 
    void SetDeep(bool deep);
    bool GetDeep() const { return fIsDeep; }

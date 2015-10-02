@@ -4546,6 +4546,10 @@ int RootCling(int argc,
 
    }
 
+   // Speed up the operations with rules
+   selectionRules.FillCache();
+   selectionRules.Optimize();
+
    if (isGenreflex){
       if (0 != selectionRules.CheckDuplicates()){
          return 1;
