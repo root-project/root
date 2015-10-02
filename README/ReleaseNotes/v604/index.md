@@ -825,6 +825,7 @@ directory - this behavior is now implement by the default constructor.
 
 ### Tree
 - Fix [ROOT-6885] which affects very large TChain with friend trees.
+- Fix [ROOT-7423] which can stop the TTreeCache from stopping the learning phase when asynchronous prefetching is enabled.
 
 #### TTreeReader
 - Fix reading of data members of type `BasicType[42]`
