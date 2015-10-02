@@ -19,6 +19,7 @@ ROOSTATSDO   := $(ROOSTATSDS:.cxx=.o)
 ROOSTATSDH   := $(ROOSTATSDS:.cxx=.h)
 
 ROOSTATSH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/RooStats/*.h))
+ROOSTATSINCH := $(patsubst $(MODDIRI)/RooStats/%.h,include/RooStats/%.h,$(ROOSTATSH))
 ROOSTATSS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 ROOSTATSO    := $(call stripsrc,$(ROOSTATSS:.cxx=.o))
 
@@ -28,7 +29,7 @@ ROOSTATSLIB  := $(LPATH)/libRooStats.$(SOEXT)
 ROOSTATSMAP  := $(ROOSTATSLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/RooStats/%.h,include/RooStats/%.h,$(ROOSTATSH))
+ALLHDRS      += $(ROOSTATSINCH)
 ALLLIBS      += $(ROOSTATSLIB)
 ALLMAPS      += $(ROOSTATSMAP)
 
@@ -57,15 +58,15 @@ $(ROOSTATSLIB): $(ROOSTATSO) $(ROOSTATSDO) $(ORDER_) $(MAINLIBS) \
 $(call pcmrule,ROOSTATS)
 	$(noop)
 
-$(ROOSTATSDS):  $(ROOSTATSH) $(ROOSTATSL) $(ROOTCLINGEXE) $(call pcmdep,ROOSTATS)
+$(ROOSTATSDS):  $(ROOSTATSINCH) $(ROOSTATSL) $(ROOTCLINGEXE) $(call pcmdep,ROOSTATS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ROOSTATS) -c -writeEmptyRootPCM $(ROOSTATSH) $(ROOSTATSL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ROOSTATS) -c -writeEmptyRootPCM $(ROOSTATSINCH) $(ROOSTATSL)
 
-$(ROOSTATSMAP): $(ROOSTATSH) $(ROOSTATSL) $(ROOTCLINGEXE) $(call pcmdep,ROOSTATS)
+$(ROOSTATSMAP): $(ROOSTATSINCH) $(ROOSTATSL) $(ROOTCLINGEXE) $(call pcmdep,ROOSTATS)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(ROOSTATSDS) $(call dictModule,ROOSTATS) -c $(ROOSTATSH) $(ROOSTATSL)
+		$(ROOTCLINGSTAGE2) -r $(ROOSTATSDS) $(call dictModule,ROOSTATS) -c $(ROOSTATSINCH) $(ROOSTATSL)
 
 all-$(MODNAME): $(ROOSTATSLIB)
 
