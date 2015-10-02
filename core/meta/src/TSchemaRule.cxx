@@ -139,7 +139,7 @@ TSchemaRule& TSchemaRule::operator = ( const TSchemaRule& rhs )
 }
 
 //------------------------------------------------------------------------------
-Bool_t TSchemaRule::operator == ( const TSchemaRule& rhs )
+Bool_t TSchemaRule::operator == ( const TSchemaRule& rhs ) const
 {
    // Return true if the rule have the same effects.
 

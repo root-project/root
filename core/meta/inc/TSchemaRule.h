@@ -47,7 +47,7 @@ namespace ROOT {
 
          TSchemaRule( const TSchemaRule& rhs );
          TSchemaRule& operator = ( const TSchemaRule& rhs );
-         Bool_t operator == ( const TSchemaRule& rhs );
+         Bool_t operator == ( const TSchemaRule& rhs ) const;
 
 
          void             Clear(Option_t * /*option*/ ="");
