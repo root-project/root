@@ -9,9 +9,9 @@ void execLoadAllLibsZA(){
   gInterpreter->SetClassAutoparsing(false);
 
   auto libList = getLibrariesList();
-  libList.unique();
   libList.sort();
   libList.reverse();
+  libList.unique();
   loadLibrariesInList(libList);
 
 }
