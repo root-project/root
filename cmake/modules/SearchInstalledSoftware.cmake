@@ -1,6 +1,7 @@
 #---Check for installed packages depending on the build options/components eamnbled -
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
+set(repository_tarfiles http://service-spi.web.cern.ch/service-spi/external/tarFiles)
 
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
@@ -224,7 +225,8 @@ if(mathmore OR builtin_gsl)
     message(STATUS "Downloading and building GSL version ${gsl_version}") 
     ExternalProject_Add(
       GSL
-      URL http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
+      # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
+      URL ${repository_tarfiles}/gsl-${gsl_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no CFLAGS=${CMAKE_C_FLAGS}
     )
@@ -547,7 +549,8 @@ if(fitsio OR builtin_cfitsio)
     message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}") 
     ExternalProject_Add(
       CFITSIO
-      URL ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz 
+      # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
+      URL ${repository_tarfiles}/cfitsio${cfitsio_version_no_dots}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
       BUILD_IN_SOURCE 1
@@ -750,7 +753,8 @@ if(davix OR builtin_davix)
     ExternalProject_Add(
       DAVIX
       PREFIX DAVIX
-      URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
+      # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
+      URL ${repository_tarfiles}/davix-embedded-${DAVIX_VERSION}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}/DAVIX-install
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} 
