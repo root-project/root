@@ -70,18 +70,8 @@ void DetachRes(T res)
 template<class F>
 class TPoolProcessor : public TMPWorker {
 public:
-   TPoolProcessor(F procFunc, const std::vector<std::string>& fileNames, const std::string& treeName, unsigned nWorkers, ULong64_t maxEntries) :
-      TMPWorker(), fProcFunc(procFunc),
-      fFileNames(fileNames), fTreeName(treeName), fTree(nullptr),
-      fNWorkers(nWorkers), fMaxNEntries(maxEntries),
-      fProcessedEntries(0), fReducedResult(), fCanReduce(false)
-   {}
-   TPoolProcessor(F procFunc, TTree *tree, unsigned nWorkers, ULong64_t maxEntries) :
-      TMPWorker(), fProcFunc(procFunc),
-      fFileNames(), fTreeName(), fTree(tree),
-      fNWorkers(nWorkers), fMaxNEntries(maxEntries),
-      fProcessedEntries(0), fReducedResult(), fCanReduce(false)
-   {}
+   TPoolProcessor(F procFunc, const std::vector<std::string>& fileNames, const std::string& treeName, unsigned nWorkers, ULong64_t maxEntries);
+   TPoolProcessor(F procFunc, TTree *tree, unsigned nWorkers, ULong64_t maxEntries);
    ~TPoolProcessor() {}
 
    void HandleInput(MPCodeBufPair& msg); ///< Execute instructions received from a TPool client
@@ -101,6 +91,23 @@ private:
    typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type fReducedResult; ///< the results of the executions of fProcFunc merged together
    bool fCanReduce; ///< true if fReducedResult can be reduced with a new result, false until we have produced one result
 };
+
+
+template<class F>
+TPoolProcessor<F>::TPoolProcessor(F procFunc, const std::vector<std::string>& fileNames, const std::string& treeName, unsigned nWorkers, ULong64_t maxEntries) : TMPWorker(), fProcFunc(procFunc),
+   fFileNames(fileNames), fTreeName(treeName), fTree(nullptr),
+   fNWorkers(nWorkers), fMaxNEntries(maxEntries),
+   fProcessedEntries(0), fReducedResult(), fCanReduce(false)
+{}
+
+
+template<class F>
+TPoolProcessor<F>::TPoolProcessor(F procFunc, TTree *tree, unsigned nWorkers, ULong64_t maxEntries) :
+   TMPWorker(), fProcFunc(procFunc),
+   fFileNames(), fTreeName(), fTree(tree),
+   fNWorkers(nWorkers), fMaxNEntries(maxEntries),
+   fProcessedEntries(0), fReducedResult(), fCanReduce(false)
+{}
 
 
 template<class F>
