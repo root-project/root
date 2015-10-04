@@ -122,9 +122,9 @@ void TProcPool::ReplyToIdle(TSocket *s)
          MPSend(s, PoolCode::kExecFuncWithArg, fNProcessed);
       else if (fTask == ETask::kMapRed)
          MPSend(s, PoolCode::kExecFunc);
-      else if (fTask == ETask::kProcRange)
+      else if (fTask == ETask::kProcByRange)
          MPSend(s, PoolCode::kProcRange, fNProcessed);
-      else if (fTask == ETask::kProcFile)
+      else if (fTask == ETask::kProcByFile)
          MPSend(s, PoolCode::kProcFile, fNProcessed);
       ++fNProcessed;
    } else

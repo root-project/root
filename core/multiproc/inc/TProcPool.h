@@ -89,14 +89,17 @@ private:
    unsigned fNProcessed; ///< number of arguments already passed to the workers
    unsigned fNToProcess; ///< total number of arguments to pass to the workers
 
+   /// A collection of the types of tasks that TProcPool can execute.
+   /// It is used to interpret in the right way and properly reply to the
+   /// messages received (see, for example, TProcPool::HandleInput)
    enum class ETask : unsigned {
-      kNoTask = 0,
-      kMap,
-      kMapWithArg,
-      kMapRed,
-      kMapRedWithArg,
-      kProcRange,
-      kProcFile,
+      kNoTask = 0,   ///< no task is being executed
+      kMap,          ///< a Map method with no arguments is being executed
+      kMapWithArg,   ///< a Map method with arguments is being executed
+      kMapRed,       ///< a MapReduce method with no arguments is being executed
+      kMapRedWithArg, ///< a MapReduce method with arguments is being executed
+      kProcByRange,   ///< a ProcTree method is being executed and each worker will process a certain range of each file
+      kProcByFile,    ///< a ProcTree method is being executed and each worker will process a different file
    } fTask; ///< the kind of task that is being executed, if any
 };
 
@@ -390,7 +393,7 @@ auto TProcPool::ProcTree(const std::vector<std::string>& fileNames, F procFunc, 
 
    if(fileNames.size() < nWorkers) {
       //TTree entry granularity. For each file, we divide entries equally between workers
-      fTask = ETask::kProcRange;
+      fTask = ETask::kProcByRange;
       //Tell workers to start processing entries
       fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
       std::vector<unsigned> args(nWorkers);
@@ -400,7 +403,7 @@ auto TProcPool::ProcTree(const std::vector<std::string>& fileNames, F procFunc, 
          std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
    } else {
       //file granularity. each worker processes one whole file as a single task
-      fTask = ETask::kProcFile;
+      fTask = ETask::kProcByFile;
       fNToProcess = fileNames.size();
       std::vector<unsigned> args(nWorkers);
       std::iota(args.begin(), args.end(), 0);
@@ -475,7 +478,7 @@ auto TProcPool::ProcTree(TTree& tree, F procFunc, ULong64_t nToProcess) -> typen
    }
 
    //divide entries equally between workers
-   fTask = ETask::kProcRange;
+   fTask = ETask::kProcByRange;
 
    //tell workers to start processing entries
    fNToProcess = nWorkers; //this is the total number of ranges that will be processed by all workers cumulatively
