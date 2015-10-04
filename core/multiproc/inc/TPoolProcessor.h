@@ -118,7 +118,7 @@ void TPoolProcessor<F>::HandleInput(MPCodeBufPair& msg)
       MPSend(GetSocket(), PoolCode::kProcResult, fReducedResult);
    } else {
       //unknown code received
-      std::string reply = "S" + std::to_string(GetPid());
+      std::string reply = "S" + std::to_string(GetNWorker());
       reply += ": unknown code received: " + std::to_string(code);
       MPSend(GetSocket(), MPCode::kError, reply.data());
    }
@@ -194,7 +194,7 @@ void TPoolProcessor<F>::Process(unsigned code, MPCodeBufPair& msg)
    //Set first entry to start-1 so that the next call to TTreeReader::Next() sets the entry to the right value
    TTreeReader::EEntryStatus status = reader.SetEntriesRange(start-1, finish);
    if(status != TTreeReader::kEntryValid) {
-      std::string reply = "S" + std::to_string(GetPid());
+      std::string reply = "S" + std::to_string(GetNWorker());
       reply += ": could not set TTreeReader to range " + std::to_string(start) + " " + std::to_string(finish);
       MPSend(GetSocket(), PoolCode::kProcError, reply.data());
       return;
@@ -231,7 +231,7 @@ TFile *TPoolProcessor<F>::OpenFile(const std::string& fileName)
 
    TFile *fp = TFile::Open(fileName.c_str());
    if (fp == nullptr || fp->IsZombie()) {
-      std::string reply = "S" + std::to_string(GetPid());
+      std::string reply = "S" + std::to_string(GetNWorker());
       reply.append(": could not open file ");
       reply.append(fileName);
       MPSend(GetSocket(), PoolCode::kProcError, reply.data());
@@ -262,7 +262,7 @@ TTree *TPoolProcessor<F>::RetrieveTree(TFile *fp)
       tree = static_cast<TTree*>(fp->Get(fTreeName.c_str()));
    }
    if (tree == nullptr) {
-      std::string reply = "S" + std::to_string(GetPid());
+      std::string reply = "S" + std::to_string(GetNWorker());
       std::stringstream ss;
       ss << ": cannot find tree with name " << fTreeName << " in file " << fp->GetName();
       reply.append(ss.str());

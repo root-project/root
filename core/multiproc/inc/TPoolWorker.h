@@ -52,7 +52,7 @@ public:
    {
       unsigned code = msg.first;
       TSocket *s = GetSocket();
-      std::string reply = "S" + std::to_string(GetPid());
+      std::string reply = "S" + std::to_string(GetNWorker());
       if (code == PoolCode::kExecFuncWithArg) {
          unsigned n;
          msg.second->ReadUInt(n);
@@ -97,7 +97,7 @@ public:
    {
       unsigned code = msg.first;
       TSocket *s = GetSocket();
-      std::string reply = "S" + std::to_string(GetPid());
+      std::string reply = "S" + std::to_string(GetNWorker());
       if (code == PoolCode::kExecFunc) {
          // execute function
          const auto &res = fFunc();
@@ -134,7 +134,7 @@ public:
    {
       unsigned code = msg.first;
       TSocket *s = GetSocket();
-      std::string reply = "S" + std::to_string(GetPid());
+      std::string reply = "S" + std::to_string(GetNWorker());
       if (code == PoolCode::kExecFuncWithArg) {
          unsigned n;
          msg.second->ReadUInt(n);

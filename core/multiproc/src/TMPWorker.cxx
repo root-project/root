@@ -89,7 +89,7 @@ void TMPWorker::HandleInput(MPCodeBufPair &msg)
 {
    unsigned code = msg.first;
 
-   std::string reply = "S" + std::to_string(fPid);
+   std::string reply = "S" + std::to_string(fNWorker);
    if (code == MPCode::kMessage) {
       //general message, ignore it
       reply += ": ok";
