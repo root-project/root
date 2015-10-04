@@ -39,7 +39,7 @@
 /// This separation is in place because the instantiation of a worker
 /// must be done once _before_ forking, while the initialization of the
 /// members must be done _after_ forking by each of the children processes.
-TMPWorker::TMPWorker() : fS(), fPid(0)
+TMPWorker::TMPWorker() : fS(), fPid(0), fNWorker(0)
 {
 }
 
@@ -52,10 +52,11 @@ TMPWorker::TMPWorker() : fS(), fPid(0)
 /// the main eventloop (as a TFileHandler).\n
 /// Make sure this operations are performed also by overriding implementations,
 /// e.g. by calling TMPWorker::Init explicitly.
-void TMPWorker::Init(int fd)
+void TMPWorker::Init(int fd, unsigned workerN)
 {
    fS.reset(new TSocket(fd, "MPsock")); //TSocket's constructor with this signature seems much faster than TSocket(int fd)
    fPid = getpid();
+   fNWorker = workerN;
 }
 
 

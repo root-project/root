@@ -28,10 +28,11 @@ public:
    TMPWorker(const TMPWorker &) = delete;
    TMPWorker &operator=(const TMPWorker &) = delete;
 
-   virtual void Init(int fd);
+   virtual void Init(int fd, unsigned workerN);
    void Run();
    TSocket *GetSocket() { return fS.get(); }
    pid_t GetPid() { return fPid; }
+   unsigned GetNWorker() const { return fNWorker; }
 
 
 private:
@@ -39,6 +40,7 @@ private:
 
    std::unique_ptr<TSocket> fS; ///< This worker's socket. The unique_ptr makes sure resources are released.
    pid_t fPid; ///< the PID of the process in which this worker is running
+   unsigned fNWorker; ///< the ordinal number of this worker (0 to nWorkers-1)
 };
 
 #endif

@@ -93,12 +93,13 @@ bool TMPClient::Fork(TMPWorker &server)
    //fork as many times as needed and save pids
    pid_t pid = 1; //must be positive to handle the case in which fNWorkers is 0
    int sockets[2]; //sockets file descriptors
-   for (unsigned i = 0; i < fNWorkers; ++i) {
+   unsigned nWorker = 0;
+   for (; nWorker < fNWorkers; ++nWorker) {
       //create socket pair
       int ret = socketpair(AF_UNIX, SOCK_STREAM, 0, sockets);
       if (ret != 0) {
          std::cerr << "[E][C] Could not create socketpair. Error n. " << errno << ". Now retrying.\n";
-         --i;
+         --nWorker;
          continue;
       }
 
@@ -162,7 +163,7 @@ bool TMPClient::Fork(TMPWorker &server)
       gVirtualX = gGXBatch;
 
       //prepare server and add it to eventloop
-      server.Init(sockets[1]);
+      server.Init(sockets[1], nWorker);
 
       //enter worker loop
       server.Run();
