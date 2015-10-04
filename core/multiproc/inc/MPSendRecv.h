@@ -175,7 +175,8 @@ template < class T, typename std::enable_if < std::is_pointer<T>::value  &&std::
 T ReadBuffer(TBufferFile *buf)
 {
    //read TObject*
-   return (T)buf->ReadObjectAny(TClass::GetClass(typeid(typename std::remove_pointer<T>::type)));
+   using objType = typename std::remove_pointer<T>::type;
+   return (T)buf->ReadObjectAny(objType::Class());
 }
 /// \endcond
 
