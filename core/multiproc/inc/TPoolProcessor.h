@@ -75,11 +75,13 @@ public:
    ~TPoolProcessor() {}
 
    void HandleInput(MPCodeBufPair& msg); ///< Execute instructions received from a TPool client
+   void Init(int fd, unsigned workerN);
 
 private:
    void Process(unsigned code, MPCodeBufPair& msg);
    TFile *OpenFile(const std::string& fileName);
    TTree *RetrieveTree(TFile *fp);
+   ULong64_t EvalMaxEntries(ULong64_t maxEntries);
 
    F fProcFunc; ///< the function to be executed
    std::vector<std::string> fFileNames; ///< the files to be processed by all workers
@@ -129,6 +131,14 @@ void TPoolProcessor<F>::HandleInput(MPCodeBufPair& msg)
       reply += ": unknown code received: " + std::to_string(code);
       MPSend(GetSocket(), MPCode::kError, reply.data());
    }
+}
+
+
+template<class F>
+void TPoolProcessor<F>::Init(int fd, unsigned workerN) {
+   TMPWorker::Init(fd, workerN);
+
+   fMaxNEntries = EvalMaxEntries(fMaxNEntries);
 }
 
 
@@ -280,5 +290,17 @@ TTree *TPoolProcessor<F>::RetrieveTree(TFile *fp)
    return tree;
 }
 
+
+template<class F>
+ULong64_t TPoolProcessor<F>::EvalMaxEntries(ULong64_t maxEntries)
+{
+   //e.g.: when dividing 10 entries between 3 workers, the first
+   //two will process 10/3 == 3 entries, the last one will process
+   //10 - 2*(10/3) == 4 entries.
+   if(GetNWorker() < fNWorkers-1)
+      return maxEntries/fNWorkers;
+   else
+      return maxEntries - (fNWorkers-1)*(maxEntries/fNWorkers);
+}
 
 #endif

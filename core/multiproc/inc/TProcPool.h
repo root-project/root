@@ -384,7 +384,7 @@ auto TProcPool::ProcTree(const std::vector<std::string>& fileNames, F procFunc, 
    unsigned nWorkers = GetNWorkers();
 
    //fork
-   TPoolProcessor<F> worker(procFunc, fileNames, treeName, nWorkers, nToProcess/nWorkers);
+   TPoolProcessor<F> worker(procFunc, fileNames, treeName, nWorkers, nToProcess);
    bool ok = Fork(worker);
    if(!ok) {
       std::cerr << "[E][C] Could not fork. Aborting operation\n";
