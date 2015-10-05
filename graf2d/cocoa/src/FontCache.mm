@@ -57,7 +57,6 @@ const CFStringRef fixedFontNames[FontCache::nPadFonts] =
                                       CFSTR("Symbol-Italic")
                                      };
 
-
 //______________________________________________________________________________
 CTFontCollectionRef CreateFontCollection(const X11::XLFDName &/*xlfd*/)
 {
@@ -434,7 +433,7 @@ unsigned FontCache::GetTextWidth(FontStruct_t font, const char *text, int nChars
 
    //Glyps' advances for a text.
    std::vector<CGSize> glyphAdvances(glyphs.size());
-   CTFontGetAdvancesForGlyphs(fontRef, kCTFontHorizontalOrientation, &glyphs[0], &glyphAdvances[0], glyphs.size());
+   CTFontGetAdvancesForGlyphs(fontRef, Quartz::horizontalFontOrientation, &glyphs[0], &glyphAdvances[0], glyphs.size());
 
    CGFloat textWidth = 0.;
    for (size_type i = 0, e = glyphAdvances.size(); i < e; ++i)
