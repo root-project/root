@@ -263,7 +263,7 @@ int main( int argc, char **argv )
       if (keepCompressionAsIs && !reoptimize)
          std::cout << "hadd compression setting for meta data: " << newcomp << '\n';
       else
-         std::cout << "hadd compression setting for all ouput: " << newcomp << '\n';
+         std::cout << "hadd compression setting for all output: " << newcomp << '\n';
    }
    if (append) {
       if (!merger.OutputFile(targetname,"UPDATE",newcomp)) {

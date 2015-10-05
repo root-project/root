@@ -1486,7 +1486,7 @@ void TMVA::PDEFoam::OutputGrow( Bool_t finished )
 /// as rectangles in C++ format readable for ROOT.
 ///
 /// Parameters:
-/// - filename - filename of ouput root macro
+/// - filename - filename of output root macro
 ///
 /// - opt - cell_value, rms, rms_ov_mean
 ///   If cell_value is set, the following values will be filled into

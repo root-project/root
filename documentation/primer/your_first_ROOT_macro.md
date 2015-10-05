@@ -55,7 +55,7 @@ gROOT->SetStyle("Plain");   // set plain TStyle
 gStyle->SetOptStat(111111); // draw statistics on plots,
                             // (0) for no output
 gStyle->SetOptFit(1111);    // draw fit results on plot,
-                            // (0) for no ouput
+                            // (0) for no output
 gStyle->SetPalette(57);     // set color map
 gStyle->SetOptTitle(0);     // suppress title box
    ...

@@ -61,7 +61,7 @@ Getting Started:
 
   ~/myTMVAwork> root -l 
   ~/myTMVAwork> TMVA::Tools::Instance()  #setup TMVA (loads the library)           
-  ~/myTMVAwork> TMVA::TMVAGui()   #starts the Gui on the 'default tmva ouput file' TMVA.root   
+  ~/myTMVAwork> TMVA::TMVAGui()   #starts the Gui on the 'default tmva output file' TMVA.root   
   ~/myTMVAwork> TMVA::TMVAGui("TheFileCreatedByYourTraining.root"   # start the GUI
 
   How to apply the TMVA methods:
