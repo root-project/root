@@ -161,24 +161,37 @@ bool test8() {
    f = new TFormula("f","x^y");
 
    ok &= (f->Eval(2,3) == 8);
+   delete f; 
 
    f = new TFormula("f","(x+[0])^y");
    f->SetParameter(0,1);
    ok &= (f->Eval(2,3) == 27);
+   delete f; 
 
    f = new TFormula("f","sqrt(x+[0])^y");
    f->SetParameter(0,2);
    ok &= (f->Eval(2,3) == 8);
+   delete f; 
 
    f = new TFormula("f","[0]/((x+2)^y)");
    f->SetParameter(0,27);
    ok &= (f->Eval(1,3) == 1);
+   delete f; 
    
    f = new TFormula("f","[0]/((x+2)^(y+1))");
    f->SetParameter(0,27);
    ok &= (f->Eval(1,2) == 1);
-
    delete f; 
+
+   // test also nested operators
+   f = new TFormula("f","((x+1)^y)^z");
+   ok &= (f->Eval(1,3,4) == 4096);
+   delete f; 
+
+   f = new TFormula("f","x^((y+1)^z)");
+   ok &= (f->Eval(2,1,3) == 256);
+   delete f;
+   
    return ok;
    
 }
