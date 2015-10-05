@@ -733,7 +733,7 @@ void GetWindowAttributes(NSObject<X11Window> *window, WindowAttributes_t *dst)
 #ifdef MAC_OS_X_VERSION_10_11
 NSComparisonResult CompareViewsToLower(__kindof NSView *view1, __kindof NSView *view2, void *context)
 #else
-NSComparisonResult CompareViewsToLower(id *view1, id *view2, void *context)
+NSComparisonResult CompareViewsToLower(id view1, id view2, void *context)
 #endif
 {
     id topView = (id)context;
