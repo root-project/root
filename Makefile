@@ -1081,7 +1081,7 @@ maintainer-clean:: distclean
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
 	   config/Makefile.comp $(ROOTRC) etc/system.rootauthrc \
 	   etc/system.rootdaemonrc etc/root.mimes etc/daemons/rootd.rc.d \
-	   etc/daemons/rootd.xinetd etc/daemons/proofd.rc.d \
+	   etc/daemons/rootd.xinetd etc/daemons/proofd.rc.d etc/cling \
 	   etc/daemons/proofd.xinetd main/src/proofserv.sh main/src/roots.sh \
 	   macros/html.C \
 	   build/misc/root-help.el build-arch-stamp build-indep-stamp \
