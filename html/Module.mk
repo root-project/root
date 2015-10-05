@@ -18,9 +18,8 @@ HTMLDS       := $(call stripsrc,$(MODDIRS)/G__Html.cxx)
 HTMLDO       := $(HTMLDS:.cxx=.o)
 HTMLDH       := $(HTMLDS:.cxx=.h)
 
-HTMLMH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-HTMLH        := $(patsubst $(MODDIRI)/%.h,%.h,$(HTMLMH))
-HTMLINCH     := $(add-prefix include,$(HTMLH))
+HTMLH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+HTMLINCH     := $(patsubst $(MODDIRI)/%.h,include/%.h,$(HTMLH))
 HTMLS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HTMLO        := $(call stripsrc,$(HTMLS:.cxx=.o))
 
