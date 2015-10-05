@@ -610,11 +610,10 @@ void TPythia6::Pytest(int flag) {
    pytest(&flag);
 }
 
-// not (anymore) in libPythia6
-//void TPythia6::Pytune(int itune) {
-//   //interface with fortran routine pytune
-//   pytune(&itune);
-//}
+void TPythia6::Pytune(int itune) {
+   //interface with fortran routine pytune
+   pytune(&itune);
+}
 
 void TPythia6::Pyupda(int mupda, int lun) {
    //interface with fortran routine pyupda
