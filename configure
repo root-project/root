@@ -395,16 +395,30 @@ check_libcompat() {
 
     case $arch in
     macosx)
-        logmsg " lipo -info $chklibcompat | grep ' i386'"
-        if lipo -info $chklibcompat | grep ' i386' > /dev/null 2>& 1 ; then
+        case $chklibcompat in
+        *.tbd)
             ret=1
-        fi
+            ;;
+        *)
+            logmsg " lipo $chklibcompat -verify_arch i386"
+            if lipo $chklibcompat -verify_arch i386 ; then
+                ret=1
+            fi
+            ;;
+        esac
         ;;
     macosx64)
-        logmsg " lipo -info $chklibcompat | grep ' x86_64'"
-        if lipo -info $chklibcompat | grep ' x86_64' > /dev/null 2>& 1 ; then
+        case $chklibcompat in
+        *.tbd)
             ret=1
-        fi
+            ;;
+        *)
+            logmsg " lipo $chklibcompat -verify_arch x86_64"
+            if lipo $chklibcompat -verify_arch x86_64 ; then
+                ret=1
+            fi
+            ;;
+        esac
         ;;
     esac
 
@@ -609,7 +623,7 @@ check_library() {
     done
     slibs=""
     for i in $lib ; do
-        for ext in .so .sl .dylib .dll.a ; do      # .dll.a for cygwin gcc
+        for ext in .so .sl .tbd .dylib .dll.a ; do      # .dll.a for cygwin gcc
             slibs="$slibs $i$ext"
         done
     done
