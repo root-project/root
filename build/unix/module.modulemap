@@ -1206,6 +1206,15 @@ module math_mathcore {
   header "Math/DistFunc.h"
   header "Math/IntegratorOptions.h"
   header "Math/Factory.h"
+  header "TKDTreeBinning.h"
+  header "TComplex.h"
+  header "TRandom1.h"
+  header "TMath.h"
+  header "TRandom3.h"
+}
+
+module math_core_fit {
+  export *
   header "Fit/FitUtil.h"
   header "Fit/DataVectorfwd.h"
   header "Fit/FitUtilParallel.h"
@@ -1224,11 +1233,6 @@ module math_mathcore {
   header "Fit/BinData.h"
   header "Fit/Fitter.h"
   header "Fit/FitConfig.h"
-  header "TKDTreeBinning.h"
-  header "TComplex.h"
-  header "TRandom1.h"
-  header "TMath.h"
-  header "TRandom3.h"
 }
 /*module math_minuit {
   export *
