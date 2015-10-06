@@ -56,6 +56,8 @@ We reduced thread serialization in `TClass::GetCheckSum`, `TClass::GetBaseClassO
 
 `TObjArray::Delete` was updated to allow its caller to explicitly avoid costly checks (extra RecursiveRemove and lock)
 
+We removed the need to create a TThread object per thread in a multi-threaded application.
+
 ### TDirectory::TContext
 
 We added a default constructor to `TDirectory::TContext` which record the current directory
