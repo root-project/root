@@ -10,6 +10,7 @@
  *************************************************************************/
  
 #include "TProcPool.h"
+#include "TPoolPlayer.h"
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -92,6 +93,104 @@ TProcPool::TProcPool(unsigned nWorkers) : TMPClient(nWorkers)
    Reset();
 }
 
+
+TList* TProcPool::ProcTree(TTree& tree, TSelector& selector, ULong64_t nToProcess)
+{
+   //prepare environment
+   Reset();
+   unsigned nWorkers = GetNWorkers();
+
+   //fork
+   TPoolPlayer worker(selector, tree, nWorkers, nToProcess/nWorkers);
+   bool ok = Fork(worker);
+   if(!ok) {
+      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+      return nullptr;
+   }
+
+   //divide entries equally between workers
+   fTask = ETask::kProcByRange;
+
+   //tell workers to start processing entries
+   fNToProcess = nWorkers; //this is the total number of ranges that will be processed by all workers cumulatively
+   std::vector<unsigned> args(nWorkers);
+   std::iota(args.begin(), args.end(), 0);
+   fNProcessed = Broadcast(PoolCode::kProcTree, args);
+   if(fNProcessed < nWorkers)
+      std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+
+   //collect results, distribute new tasks
+   std::vector<TObject*> outLists;
+   Collect(outLists);
+
+   //merge (here we need to allow for duplicate names)
+   ((TCollection *)outLists[0])->SetAllowDuplicates(kTRUE);
+   auto outList = static_cast<TList*>(PoolUtils::ReduceObjects(outLists));
+   
+   TList *selList = selector.GetOutputList();
+   for(auto obj : *outList) {
+      selList->Add(obj);
+   }
+   outList->SetOwner(false);
+   delete outList;
+
+   selector.Terminate();
+
+   //clean-up and return
+   ReapWorkers();
+   fTask = ETask::kNoTask;
+   return outList;
+}
+
+
+TList* TProcPool::ProcTree(const std::vector<std::string>& fileNames, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)
+{
+
+   //prepare environment
+   Reset();
+   unsigned nWorkers = GetNWorkers();
+
+   //fork
+   TPoolPlayer worker(selector, fileNames, treeName, nWorkers, nToProcess);
+   bool ok = Fork(worker);
+   if(!ok) {
+      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+      return nullptr;
+   }
+
+   if(fileNames.size() < nWorkers) {
+      //TTree entry granularity. For each file, we divide entries equally between workers
+      fTask = ETask::kProcByRange;
+      //Tell workers to start processing entries
+      fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
+      std::vector<unsigned> args(nWorkers);
+      std::iota(args.begin(), args.end(), 0);
+      fNProcessed = Broadcast(PoolCode::kProcRange, args);
+      if(fNProcessed < nWorkers)
+         std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+   } else {
+      //file granularity. each worker processes one whole file as a single task
+      fTask = ETask::kProcByFile;
+      fNToProcess = fileNames.size();
+      std::vector<unsigned> args(nWorkers);
+      std::iota(args.begin(), args.end(), 0);
+      fNProcessed = Broadcast(PoolCode::kProcFile, args);
+      if(fNProcessed < nWorkers)
+         std::cerr << "[E][C] There was an error while sending tasks to workers. Some entries might not be processed.\n";
+   }
+
+   //collect results, distribute new tasks
+   std::vector<TObject*> reslist;
+   Collect(reslist);
+
+   //merge
+   TObject* res = PoolUtils::ReduceObjects(reslist);
+
+   //clean-up and return
+   ReapWorkers();
+   fTask = ETask::kNoTask;
+   return static_cast<retType>(res);
+}
 
 //////////////////////////////////////////////////////////////////////////
 /// Reset TProcPool's state.
