@@ -568,11 +568,67 @@ TUnixSystem::~TUnixSystem()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize Unix system interface.
+extern "C"
+{
+    static int full_write(int fd, const char *text)
+    {
+      const char *buffer = text;
+      size_t count = strlen(text);
+      ssize_t written = 0;
+      while (count)
+      {
+        written = write(fd, buffer, count);
+        if (written == -1) 
+        {
+          if (errno == EINTR) {continue;}
+          else {return -errno;}
+        }
+        count -= written;
+        buffer += written;
+      }
+      return 0;
+    }
+
+    static int full_read(int fd, char *inbuf, size_t len)
+    {
+      char *buf = inbuf;
+      size_t count = len;
+      ssize_t complete = 0;
+      while (count)
+      {
+        complete = read(fd, buf, count);
+        if (complete == -1)
+        {
+          if (errno == EINTR) {continue;}
+          else {return -errno;}
+        }
+        count -= complete;
+        buf += complete;
+      }
+      return 0;
+    }
+
+    static int full_cerr_write(const char *text)
+    {
+      return full_write(2, text);
+    }
+
+}
+
+static char pshellExec[8] = "/bin/sh";
+char TUnixSystem::pidString_[TUnixSystem::pidStringLength_] = {};
+static char pidNum[11] = {}; //--- The largest PID number could be converted to 10 characters.
+char * const TUnixSystem::pstackArgv_[] = {pshellExec, TUnixSystem::pidString_, pidNum, nullptr};
+int TUnixSystem::parentToChild_[2] = {-1, -1};
+int TUnixSystem::childToParent_[2] = {-1, -1};
+std::unique_ptr<std::thread> TUnixSystem::helperThread_;
 
 Bool_t TUnixSystem::Init()
 {
    if (TSystem::Init())
       return kTRUE;
+
+   cachePidInfo();
 
    fReadmask   = new TFdSet;
    fWritemask  = new TFdSet;
@@ -2154,10 +2210,8 @@ void TUnixSystem::StackTrace()
       }
       gdbscript += " ";
    }
-
    TString gdbmess = gEnv->GetValue("Root.StacktraceMessage", "");
    gdbmess = gdbmess.Strip();
-
    std::cout.flush();
    fflush(stdout);
 
@@ -2286,7 +2340,6 @@ void TUnixSystem::StackTrace()
          fprintf(f, "%s\n", gdbmess.Data());
          fclose(f);
       }
-
       // use gdb to get stack trace
 #ifdef R__MACOSX
       gdbscript += GetExePath();
@@ -3524,6 +3577,7 @@ static void sighandler(int sig)
 
 void TUnixSystem::DispatchSignals(ESignals sig)
 {
+   const char* signalname = "unknown"; 
    switch (sig) {
    case kSigAlarm:
       DispatchTimers(kFALSE);
@@ -3532,8 +3586,14 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       CheckChilds();
       break;
    case kSigBus:
+      signalname = "bus error";
+      break;
    case kSigSegmentationViolation:
+      signalname = "segmentation violation";
+      break;
    case kSigIllegalInstruction:
+      signalname = "illegal instruction";
+      break;
    case kSigFloatingException:
       Break("TUnixSystem::DispatchSignals", "%s", UnixSigname(sig));
       StackTrace();
@@ -3556,6 +3616,20 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       fSignals->Set(sig);
       fSigcnt++;
       break;
+   }
+
+   if ((sig == kSigIllegalInstruction) || (sig == kSigSegmentationViolation) || (sig == kSigBus))
+   {
+
+      full_cerr_write("\n\nA fatal system signal has occurred: ");
+      full_cerr_write(signalname);
+      full_cerr_write("\nThe following is the call stack containing the origin of the signal.\n"
+        "NOTE:The first few functions on the stack are artifacts of processing the signal and can be ignored\n\n");
+
+      TUnixSystem::stacktraceFromThread();
+
+      signal(sig, SIG_DFL);
+      raise(sig);
    }
 
    // check a-synchronous signals
@@ -5147,4 +5221,155 @@ int TUnixSystem::GetProcInfo(ProcInfo_t *info) const
 #endif
 
    return 0;
+}
+
+static void stacktrace_fork();
+
+void TUnixSystem::stacktraceHelperThread()
+{
+      int toParent = childToParent_[1];
+      int fromParent = parentToChild_[0];
+      char buf[2]; buf[1] = '\0';
+      while(true)
+      {
+        int result = full_read(fromParent, buf, 1);
+        if (result < 0)
+        {
+          close(toParent);
+          full_cerr_write("\n\nTraceback helper thread failed to read from parent: ");
+          full_cerr_write(strerror(-result));
+          full_cerr_write("\n");
+          ::abort();
+        }
+        if (buf[0] == '1')
+        {
+          stacktrace_fork();
+          full_write(toParent, buf);
+        }
+        else if (buf[0] == '2')
+        {
+          close(toParent);
+          close(fromParent);
+          toParent = childToParent_[1];
+          fromParent = parentToChild_[0];
+        }
+        else if (buf[0] == '3')
+        {
+          break;
+        }
+        else
+        {
+          close(toParent);
+          full_cerr_write("\n\nTraceback helper thread got unknown command from parent: ");
+          full_cerr_write(buf);
+          full_cerr_write("\n");
+          ::abort();
+        }
+      }
+}
+
+void TUnixSystem::stacktraceFromThread()
+{
+      int result = full_write(parentToChild_[1], "1"); 
+      if (result < 0)
+      {
+        full_cerr_write("\n\nAttempt to request stacktrace failed: ");
+        full_cerr_write(strerror(-result));
+        full_cerr_write("\n");
+        return;
+      }
+      char buf[2]; buf[1] = '\0';
+      if ((result = full_read(childToParent_[0], buf, 1)) < 0)
+      {
+        full_cerr_write("\n\nWaiting for stacktrace completion failed: ");
+        full_cerr_write(strerror(-result));
+        full_cerr_write("\n");
+        return;
+      }
+
+}
+
+void stacktrace_fork()
+{
+      char child_stack[4*1024];
+      char *child_stack_ptr = child_stack + 4*1024;
+      int pid =
+#ifdef __linux__
+        clone(global_stacktrace, child_stack_ptr, CLONE_VM|CLONE_FS|SIGCHLD, nullptr);
+#else
+        fork();
+      if (child_stack_ptr) {} // Suppress 'unused variable' warning on non-Linux
+      if (pid == 0) {global_stacktrace(nullptr); ::abort();}
+#endif
+      if (pid == -1)
+      {
+        full_cerr_write("(Attempt to perform stack dump failed.)\n");
+      }
+      else
+      {
+        int status;
+        if (waitpid(pid, &status, 0) == -1)
+        {
+          full_cerr_write("(Failed to wait on stack dump output.)\n");
+        } else {}
+      }
+}
+
+int global_stacktrace(void * /*arg*/)
+{
+      char *const *argv = TUnixSystem::getPstackArgv();
+      execv("/bin/sh", argv);
+      ::abort();
+      return 1;
+}
+
+char *const *TUnixSystem::getPstackArgv() {
+   return pstackArgv_;
+}
+
+void TUnixSystem::cachePidInfo()
+{
+#ifdef ROOTETCDIR
+      if(sprintf(pidString_, "%s/gdb-backtrace.sh", ROOTETCDIR) >= pidStringLength_)
+      {
+        full_cerr_write("Unable to pre-allocate executable information");
+	exit(1);
+      }
+#else
+      if(sprintf(pidString_, "%s/etc/gdb-backtrace.sh", Getenv("ROOTSYS")) >= pidStringLength_)
+      {
+        full_cerr_write("Unable to pre-allocate executable information");
+	exit(1);
+      }
+#endif
+
+      if(sprintf(pidNum, "%d", getpid()) >= pidStringLength_)
+      {
+        full_cerr_write("Unable to pre-allocate process id information");
+	exit(1);
+      }
+
+      close(childToParent_[0]);
+      close(childToParent_[1]);
+      childToParent_[0] = -1; childToParent_[1] = -1;
+      close(parentToChild_[0]);
+      close(parentToChild_[1]);
+      parentToChild_[0] = -1; parentToChild_[1] = -1;
+
+      if (-1 == pipe2(childToParent_, O_CLOEXEC))
+      {
+        fprintf(stdout, "pipe childToParent failed\n");
+	exit(1);
+      }
+
+      if (-1 == pipe2(parentToChild_, O_CLOEXEC))
+      {
+        close(childToParent_[0]); close(childToParent_[1]);
+        childToParent_[0] = -1; childToParent_[1] = -1;
+        fprintf(stdout, "pipe parentToChild failed\n");
+	exit(1);
+      }
+
+      helperThread_.reset(new std::thread(stacktraceHelperThread));
+      helperThread_->detach();
 }
