@@ -17,6 +17,9 @@ TH1F* myMacro(TTreeReader& reader) {
 }
 
 int main() {
+   // MacOSX may generate connection to WindowServer errors
+   gROOT->SetBatch(kTRUE);
+   
    TString hsimpleLocation = gROOT->GetTutorialsDir();
    hsimpleLocation+="/hsimple.root";
 
