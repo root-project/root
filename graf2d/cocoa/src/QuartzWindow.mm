@@ -25,6 +25,8 @@
 #include <cassert>
 #include <vector>
 
+#include <Availability.h>
+
 #include "ROOTOpenGLView.h"
 #include "QuartzWindow.h"
 #include "QuartzPixmap.h"
@@ -727,7 +729,12 @@ void GetWindowAttributes(NSObject<X11Window> *window, WindowAttributes_t *dst)
 #pragma mark - Comparators (I need them when changing a window's z-order).
 
 //______________________________________________________________________________
+// SDK 10.11 and above ...
+#ifdef MAC_OS_X_VERSION_10_11
+NSComparisonResult CompareViewsToLower(__kindof NSView *view1, __kindof NSView *view2, void *context)
+#else
 NSComparisonResult CompareViewsToLower(id view1, id view2, void *context)
+#endif
 {
     id topView = (id)context;
     if (view1 == topView)
@@ -739,7 +746,12 @@ NSComparisonResult CompareViewsToLower(id view1, id view2, void *context)
 }
 
 //______________________________________________________________________________
+// SDK 10.11 and above ...
+#ifdef MAC_OS_X_VERSION_10_11
+NSComparisonResult CompareViewsToRaise(__kindof NSView *view1, __kindof NSView *view2, void *context)
+#else
 NSComparisonResult CompareViewsToRaise(id view1, id view2, void *context)
+#endif
 {
    id topView = (id)context;
    if (view1 == topView)
@@ -1748,12 +1760,10 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) updateTrackingAreas
 {
+   [super updateTrackingAreas];
+
    if (!fID)
       return;
-
-   if (NSIsEmptyRect([self visibleRect]))
-      return;
-
 
    const Util::AutoreleasePool pool;
 

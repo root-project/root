@@ -1,51 +1,18 @@
 #include "TMPClient.h"
-#include "TGuiFactory.h"
-#include "TVirtualX.h"
-#include "TSystem.h" //gSystem
-#include "TROOT.h" //gROOT
-#include "TObject.h"
-#include "TServerSocket.h"
+#include "TMPWorker.h"
 #include "MPCode.h"
 #include "TSocket.h"
-#include "TMPWorker.h"
-#include "TSeqCollection.h"
-#include "TList.h"
+#include "TGuiFactory.h" //gGuiFactory
+#include "TVirtualX.h" //gVirtualX
+#include "TSystem.h" //gSystem
+#include "TROOT.h" //gROOT
 #include "TError.h" //gErrorIgnoreLevel
 #include <unistd.h> // close, fork
 #include <sys/wait.h> // waitpid
 #include <errno.h> //errno, used by socketpair
-#include <sys/types.h> //socketpair
 #include <sys/socket.h> //socketpair
-#include <iostream>
 #include <memory> //unique_ptr
-#include <list>
-
-//////////////////////////////////////////////////////////////////////////
-///
-/// \class TMPInterruptHandler
-///
-/// This is an implementation of a TSignalHandler that is added to the
-/// eventloop in the children processes spawned by a TMPClient. When a SIGINT
-/// (i.e. kSigInterrupt) is received, TMPInterruptHandler shuts down the
-/// worker and performs clean-up operations, then exits.
-///
-//////////////////////////////////////////////////////////////////////////
-
-/// Class constructor.
-TMPInterruptHandler::TMPInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE)
-{
-}
-
-/// Executed when SIGINT is received. Clean-up and quit the application
-//TODO this should log somewhere that the server is being shut down
-Bool_t TMPInterruptHandler::Notify()
-{
-   // logging does not work
-   //gSystem->RedirectOutput(0);
-   //std::cerr << "server shutting down on SIGINT" << std::endl;
-   gSystem->Exit(0);
-   return true;
-}
+#include <iostream>
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -70,7 +37,7 @@ Bool_t TMPInterruptHandler::Notify()
 /// of cores of the machine is going to be spawned. If that information is
 /// not available, 2 workers are created instead.
 /// \endparblock
-TMPClient::TMPClient(unsigned nWorkers) : fIsParent(true), fServerPids(), fMon(), fNWorkers(0)
+TMPClient::TMPClient(unsigned nWorkers) : fIsParent(true), fWorkerPids(), fMon(), fNWorkers(0)
 {
    // decide on number of workers
    if (nWorkers) {
@@ -87,7 +54,7 @@ TMPClient::TMPClient(unsigned nWorkers) : fIsParent(true), fServerPids(), fMon()
 
 //////////////////////////////////////////////////////////////////////////
 /// Class destructor.
-/// This method is in charge of shutting down any remaining worker, 
+/// This method is in charge of shutting down any remaining worker,
 /// closing off connections and reap the terminated children processes.
 TMPClient::~TMPClient()
 {
@@ -99,7 +66,7 @@ TMPClient::~TMPClient()
    l->Delete();
    delete l;
    fMon.RemoveAll();
-   ReapServers();
+   ReapWorkers();
 }
 
 
@@ -108,7 +75,7 @@ TMPClient::~TMPClient()
 /// The ROOT sessions spawned in this way will not have graphical
 /// capabilities and will not read from standard input, but will be
 /// connected to the original (interactive) session through TSockets.
-/// The children processes' PIDs are added to the fServerPids vector.
+/// The children processes' PIDs are added to the fWorkerPids vector.
 /// The parent session can then communicate with the children using the
 /// Broadcast and MPSend methods, and receive messages through MPRecv.\n
 /// \param server
@@ -129,10 +96,10 @@ bool TMPClient::Fork(TMPWorker &server)
    for (unsigned i = 0; i < fNWorkers; ++i) {
       //create socket pair
       int ret = socketpair(AF_UNIX, SOCK_STREAM, 0, sockets);
-      if(ret != 0) {
+      if (ret != 0) {
          std::cerr << "[E][C] Could not create socketpair. Error n. " << errno << ". Now retrying.\n";
-        --i;
-        continue;
+         --i;
+         continue;
       }
 
       //fork
@@ -145,47 +112,42 @@ bool TMPClient::Fork(TMPWorker &server)
          //parent process, create TSocket with current value of sockets[0]
          close(sockets[1]); //we don't need this
          TSocket *s = new TSocket(sockets[0], (std::to_string(pid)).c_str()); //TSocket's constructor with this signature seems much faster than TSocket(int fd)
-         if(s && s->IsValid()) {
+         if (s && s->IsValid()) {
             fMon.Add(s);
-            fServerPids.push_back(pid);
+            fWorkerPids.push_back(pid);
          } else {
             std::cerr << "[E][C] Could not connect to worker with pid " << pid << ". Giving up.\n";
             delete s;
          }
       }
    }
-   //parent returns here
 
-   if (!pid) {
-      //CHILD/SERVER
+   if (pid) {
+      //parent returns here
+      return true;
+   } else {
+      //CHILD/WORKER
       fIsParent = false;
 
       //override signal handler (make the servers exit on SIGINT)
       TSeqCollection *signalHandlers = gSystem->GetListOfSignalHandlers();
       TSignalHandler *sh = nullptr;
-      if(signalHandlers && signalHandlers->GetSize() > 0)
-         sh = (TSignalHandler*)signalHandlers->First();
-      if(sh)
+      if (signalHandlers && signalHandlers->GetSize() > 0)
+         sh = (TSignalHandler *)signalHandlers->First();
+      if (sh)
          gSystem->RemoveSignalHandler(sh);
-      TMPInterruptHandler handler;
-      handler.Add();
 
       //remove stdin from eventloop and close it
       TSeqCollection *fileHandlers = gSystem->GetListOfFileHandlers();
-      if(fileHandlers) {
+      if (fileHandlers) {
          for (auto h : *fileHandlers) {
-            if (h && ((TFileHandler*)h)->GetFd() == 0) {
-               gSystem->RemoveFileHandler((TFileHandler*)h);
+            if (h && ((TFileHandler *)h)->GetFd() == 0) {
+               gSystem->RemoveFileHandler((TFileHandler *)h);
                break;
             }
          }
       }
       close(0);
-
-#ifndef R__WIN32
-      //redirect output to /dev/null
-      gSystem->RedirectOutput("/dev/null"); // we usually don't like servers to write on the main console
-#endif
 
       //disable graphics
       //these instructions were copied from TApplication::MakeBatch
@@ -202,9 +164,11 @@ bool TMPClient::Fork(TMPWorker &server)
       //prepare server and add it to eventloop
       server.Init(sockets[1]);
 
-      gSystem->Run();
+      //enter worker loop
+      server.Run();
    }
 
+   //control should never reach here
    return true;
 }
 
@@ -226,7 +190,7 @@ bool TMPClient::Fork(TMPWorker &server)
 /// \return the number of messages successfully sent
 unsigned TMPClient::Broadcast(unsigned code, unsigned nMessages)
 {
-   if(nMessages == 0)
+   if (nMessages == 0)
       nMessages = fNWorkers;
    unsigned count = 0;
    fMon.ActivateAll();
@@ -234,10 +198,10 @@ unsigned TMPClient::Broadcast(unsigned code, unsigned nMessages)
    //send message to all sockets
    std::unique_ptr<TList> lp(fMon.GetListOfActives());
    for (auto s : *lp) {
-      if(count == nMessages)
+      if (count == nMessages)
          break;
-      if(MPSend((TSocket*)s, code)) {
-         fMon.DeActivate((TSocket*)s);
+      if (MPSend((TSocket *)s, code)) {
+         fMon.DeActivate((TSocket *)s);
          ++count;
       } else {
          std::cerr << "[E] Could not send message to server\n";
@@ -251,7 +215,7 @@ unsigned TMPClient::Broadcast(unsigned code, unsigned nMessages)
 //////////////////////////////////////////////////////////////////////////
 /// DeActivate a certain socket.
 /// This does not remove it from the monitor: it will be reactivated by
-/// the next call to Broadcast() (or possibly other methods that are 
+/// the next call to Broadcast() (or possibly other methods that are
 /// specified to do so).\n
 /// A socket should be DeActivated when the corresponding
 /// worker is done *for now* and we want to stop listening to this worker's
@@ -279,17 +243,17 @@ void TMPClient::Remove(TSocket *s)
 
 
 //////////////////////////////////////////////////////////////////////////
-/// Wait on worker processes and remove their pids from fServerPids.
+/// Wait on worker processes and remove their pids from fWorkerPids.
 /// A blocking waitpid is called, but this should actually not block
-/// execution since ReapServers should only be called when all workers
-/// have already quit. ReapServers is then called not to leave zombie
-/// processes hanging around, and to clean-up fServerPids.
-void TMPClient::ReapServers()
+/// execution since ReapWorkers should only be called when all workers
+/// have already quit. ReapWorkers is then called not to leave zombie
+/// processes hanging around, and to clean-up fWorkerPids.
+void TMPClient::ReapWorkers()
 {
-   for (auto &pid : fServerPids) {
+   for (auto &pid : fWorkerPids) {
       waitpid(pid, nullptr, 0);
    }
-   fServerPids.clear();
+   fWorkerPids.clear();
 }
 
 
@@ -300,24 +264,23 @@ void TMPClient::ReapServers()
 /// Classes inheriting from TMPClient should implement a similar method
 /// to handle message codes specific to the application they're part of.\n
 /// \param msg the MPCodeBufPair returned by a MPRecv call
-/// \param s 
+/// \param s
 /// \parblock
 /// a pointer to the socket from which the message has been received is passed.
 /// This way HandleMPCode knows which socket to reply on.
 /// \endparblock
-void TMPClient::HandleMPCode(MPCodeBufPair& msg, TSocket *s)
+void TMPClient::HandleMPCode(MPCodeBufPair &msg, TSocket *s)
 {
    unsigned code = msg.first;
    //message contains server's pid. retrieve it
-   char *str = new char[msg.second->BufferSize()];
-   msg.second->ReadString(str, msg.second->BufferSize());
+   const char *str = ReadBuffer<const char*>(msg.second.get());
 
    if (code == MPCode::kMessage) {
       std::cerr << "[I][C] message received: " << str << "\n";
    } else if (code == MPCode::kError) {
       std::cerr << "[E][C] error message received:\n" << str << "\n";
    } else if (code == MPCode::kShutdownNotice || code == MPCode::kFatalError) {
-      if(gDebug > 0) //generally users don't want to know this
+      if (gDebug > 0) //generally users don't want to know this
          std::cerr << "[I][C] shutdown notice received from " << str << "\n";
       Remove(s);
    } else

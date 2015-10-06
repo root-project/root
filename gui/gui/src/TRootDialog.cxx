@@ -145,7 +145,7 @@ const char *TRootDialog::GetParameters()
          if (!strncmp(type, "char*", 5))
             param = TString::Format("\"%s\"", data);
          else
-            param = data;
+            param = TString::Format("(%s)%s", type, data);
       } else
          param = "0";
 

@@ -13,11 +13,11 @@
 \class SelectionRules
 The class representing the collection of selection rules.
 */
-
-#include "SelectionRules.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include "fnmatch.h"
+#include "SelectionRules.h"
 #include "TString.h"
 #include "llvm/Support/raw_ostream.h"
 #include "clang/Basic/SourceLocation.h"
@@ -223,9 +223,6 @@ static int CheckDuplicatesImp(RULESCOLLECTION& rules){
 
 int SelectionRules::CheckDuplicates(){
 
-   // Check for identical patterns and names
-   FillCache();
-
    int nDuplicates = 0;
    nDuplicates += CheckDuplicatesImp(fClassSelectionRules);
    nDuplicates += CheckDuplicatesImp(fFunctionSelectionRules);
@@ -236,6 +233,59 @@ int SelectionRules::CheckDuplicates(){
             "Duplicates in rules were found.\n");
    }
    return nDuplicates;
+}
+
+static bool Implies(ClassSelectionRule& patternRule, ClassSelectionRule& nameRule){
+
+   // Check if these both select or both exclude
+   if (patternRule.GetSelected() != nameRule.GetSelected()) return false;
+
+   // For the moment check if the name rule has no attribute but the name
+   // Room for optimisation: check if the attributes are strictly included.
+   if (nameRule.GetAttributes().size() != 1) return false;
+
+   auto pattern = patternRule.GetAttributePattern().c_str();
+   auto name = nameRule.GetAttributeName().c_str();
+
+   // Now check if the pattern matches the name
+   auto implies = 0 ==  fnmatch(pattern, name, FNM_PATHNAME);
+   
+   if (implies){
+      static const auto msg = "The pattern rule %s matches the name rule %s. "
+      "Since the name rule has no attributes, it will be removed. The pattern "
+      "rule will match the necessary classes if needed.\n";
+
+      ROOT::TMetaUtils::Info("SelectionRules::Optimize", msg, pattern, name);
+   }
+
+
+   return implies;
+
+}
+
+void SelectionRules::Optimize(){
+
+   // Remove name rules "implied" by pattern rules
+
+   if (!IsSelectionXMLFile()) return;
+
+   auto ruleIt = fClassSelectionRules.begin();
+   std::list<decltype(ruleIt)> itPositionsToErase;
+
+   for (; ruleIt != fClassSelectionRules.end(); ruleIt++ ){
+      if (ruleIt->HasAttributeName()) {
+         for (auto&& intRule : fClassSelectionRules){
+            if (intRule.HasAttributePattern() && Implies(intRule, *ruleIt)){
+               itPositionsToErase.push_back(ruleIt);
+            }
+         }
+      }
+   }
+
+   for (auto&& itPositionToErase : itPositionsToErase){
+      fClassSelectionRules.erase(itPositionToErase);
+   }
+
 }
 
 void SelectionRules::SetDeep(bool deep)

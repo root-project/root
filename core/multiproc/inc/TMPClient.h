@@ -13,52 +13,39 @@
 #define ROOT_TMPClient
 
 #include "TMonitor.h"
-#include "TSocket.h"
-#include "TClass.h"
-#include "TCollection.h"
 #include "TMPWorker.h"
-#include "TSysEvtHandler.h"
 #include "MPSendRecv.h"
 #include <vector>
 #include <unistd.h> //pid_t
-#include <iostream>
 #include <memory> //unique_ptr
-
-class TMPInterruptHandler : public TSignalHandler {
-   /// \cond
-   ClassDef(TMPInterruptHandler, 0); //this is a TObject so it's good to have a ClassDef
-   /// \endcond
-public:
-   TMPInterruptHandler();
-   Bool_t Notify();
-};
+#include <iostream>
 
 class TMPClient {
 public:
    explicit TMPClient(unsigned nWorkers = 0);
    ~TMPClient();
    //it doesn't make sense to copy a TMPClient
-   TMPClient(const TMPClient&) = delete;
-   TMPClient& operator=(const TMPClient&) = delete;
+   TMPClient(const TMPClient &) = delete;
+   TMPClient &operator=(const TMPClient &) = delete;
 
    bool Fork(TMPWorker &server); // we expect application to pass a reference to an inheriting class and take advantage of polymorphism
    unsigned Broadcast(unsigned code, unsigned nMessages = 0);
    template<class T> unsigned Broadcast(unsigned code, const std::vector<T> &objs);
    template<class T> unsigned Broadcast(unsigned code, std::initializer_list<T> &objs);
    template<class T> unsigned Broadcast(unsigned code, T obj, unsigned nMessages = 0);
-   inline TMonitor &GetMonitor() { return fMon; }
-   inline bool GetIsParent() const { return fIsParent; }
+   TMonitor &GetMonitor() { return fMon; }
+   bool GetIsParent() const { return fIsParent; }
    /// Set the number of workers that will be spawned by the next call to Fork()
-   inline void SetNWorkers(unsigned n) { fNWorkers = n; }
-   inline unsigned GetNWorkers() const { return fNWorkers; }
+   void SetNWorkers(unsigned n) { fNWorkers = n; }
+   unsigned GetNWorkers() const { return fNWorkers; }
    void DeActivate(TSocket *s);
    void Remove(TSocket *s);
-   void ReapServers();
-   void HandleMPCode(MPCodeBufPair& msg, TSocket *sender);
+   void ReapWorkers();
+   void HandleMPCode(MPCodeBufPair &msg, TSocket *sender);
 
 private:
    bool fIsParent; ///< This is true if this is the parent/client process, false if this is a child/worker process
-   std::vector<pid_t> fServerPids; ///< A vector containing the PIDs of children processes/workers
+   std::vector<pid_t> fWorkerPids; ///< A vector containing the PIDs of children processes/workers
    TMonitor fMon; ///< This object manages the sockets and detect socket events via TMonitor::Select
    unsigned fNWorkers; ///< The number of workers that should be spawned upon forking
 };
@@ -91,10 +78,10 @@ unsigned TMPClient::Broadcast(unsigned code, const std::vector<T> &args)
    unsigned count = 0;
    unsigned nArgs = args.size();
    for (auto s : *lp) {
-      if(count == nArgs)
+      if (count == nArgs)
          break;
-      if(MPSend((TSocket*)s, code, args[count])) {
-         fMon.DeActivate((TSocket*)s);
+      if (MPSend((TSocket *)s, code, args[count])) {
+         fMon.DeActivate((TSocket *)s);
          ++count;
       } else {
          std::cerr << "[E] Could not send message to server\n";
@@ -110,7 +97,7 @@ unsigned TMPClient::Broadcast(unsigned code, const std::vector<T> &args)
 /// See TMPClient::Broadcast(unsigned code, const std::vector<T> &args)
 /// for more informations.
 template<class T>
-unsigned TMPClient::Broadcast(unsigned code, std::initializer_list<T>& args)
+unsigned TMPClient::Broadcast(unsigned code, std::initializer_list<T> &args)
 {
    std::vector<T> vargs(std::move(args));
    return Broadcast(code, vargs);
@@ -119,7 +106,7 @@ unsigned TMPClient::Broadcast(unsigned code, std::initializer_list<T>& args)
 
 //////////////////////////////////////////////////////////////////////////
 /// Send a message containing code and obj to each worker, up to a
-/// maximum number of nMessages workers. See 
+/// maximum number of nMessages workers. See
 /// Broadcast(unsigned code, unsigned nMessages) for more informations.
 /// \param code the code of the message to send (e.g. EMPCode)
 /// \param obj the object to send
@@ -130,9 +117,9 @@ unsigned TMPClient::Broadcast(unsigned code, std::initializer_list<T>& args)
 /// \endparblock
 /// \return the number of messages successfully sent
 template<class T>
-unsigned TMPClient::Broadcast(unsigned code, T obj, unsigned nMessages) 
+unsigned TMPClient::Broadcast(unsigned code, T obj, unsigned nMessages)
 {
-   if(nMessages == 0)
+   if (nMessages == 0)
       nMessages = fNWorkers;
    unsigned count = 0;
    fMon.ActivateAll();
@@ -140,10 +127,10 @@ unsigned TMPClient::Broadcast(unsigned code, T obj, unsigned nMessages)
    //send message to all sockets
    std::unique_ptr<TList> lp(fMon.GetListOfActives());
    for (auto s : *lp) {
-      if(count == nMessages)
+      if (count == nMessages)
          break;
-      if(MPSend((TSocket*)s, code, obj)) {
-         fMon.DeActivate((TSocket*)s);
+      if (MPSend((TSocket *)s, code, obj)) {
+         fMon.DeActivate((TSocket *)s);
          ++count;
       } else {
          std::cerr << "[E] Could not send message to server\n";

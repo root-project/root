@@ -18,14 +18,15 @@ MULTIPROCDS     := $(call stripsrc,$(MODDIRS)/G__MultiProc.cxx)
 MULTIPROCDO     := $(MULTIPROCDS:.cxx=.o)
 MULTIPROCDH     := $(MULTIPROCDS:.cxx=.h)
 
-MULTIPROCH      := $(MODDIRI)/TMPClient.h $(MODDIRI)/TPool.h \
+MULTIPROCH      := $(MODDIRI)/TMPClient.h $(MODDIRI)/TProcPool.h \
                 $(MODDIRI)/TMPWorker.h $(MODDIRI)/MPSendRecv.h \
-                $(MODDIRI)/TPoolWorker.h $(MODDIRI)/MPCode.h \
-                $(MODDIRI)/PoolCode.h
+                $(MODDIRI)/TPoolWorker.h $(MODDIRI)/TPoolProcessor.h \
+                $(MODDIRI)/MPCode.h $(MODDIRI)/PoolUtils.h
 
-MULTIPROCS      := $(MODDIRS)/TMPClient.cxx $(MODDIRS)/TPool.cxx \
+MULTIPROCS      := $(MODDIRS)/TMPClient.cxx $(MODDIRS)/TProcPool.cxx \
                 $(MODDIRS)/TMPWorker.cxx $(MODDIRS)/MPSendRecv.cxx \
-                $(MODDIRS)/TPoolWorker.cxx
+                $(MODDIRS)/TPoolWorker.cxx $(MODDIRS)/TPoolProcessor.cxx \
+                $(MODDIRS)/PoolUtils.cxx
 
 MULTIPROCO      := $(call stripsrc,$(MULTIPROCS:.cxx=.o))
 

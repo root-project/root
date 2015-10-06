@@ -40,6 +40,7 @@ class TStreamerBasicType;
 class TClassStreamer;
 class TVirtualArray;
 namespace ROOT { namespace Detail { class TCollectionProxyInfo; } }
+namespace ROOT { class TSchemaRule; }
 
 namespace TStreamerInfoActions { class TActionSequence; }
 
@@ -123,7 +124,7 @@ private:
 
    UInt_t            GenerateIncludes(FILE *fp, char *inclist, const TList *extrainfos);
    void              GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subClasses, Bool_t top = kTRUE);
-   void              InsertArtificialElements(const TObjArray *rules);
+   void              InsertArtificialElements(std::vector<const ROOT::TSchemaRule*> &rules);
    void              DestructorImpl(void* p, Bool_t dtorOnly);
 
 private:

@@ -25,6 +25,7 @@ namespace MPCode {
    /////////////////////////////////////////////////////////////////////////
 
    enum EMPCode : unsigned {
+   //not an enum class because we want to be able to easily cast back and forth from unsigned
       kMessage = 1000,  ///< Generic message
       kError,           ///< Error message
       kFatalError,      ///< Fatal error: whoever sends this message is terminating execution

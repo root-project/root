@@ -3,8 +3,8 @@
 #include "MPSendRecv.h"
 #include "TSystem.h"
 #include <string>
-#include <iostream>
 #include <memory> //unique_ptr
+#include <iostream>
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -39,7 +39,7 @@
 /// This separation is in place because the instantiation of a worker
 /// must be done once _before_ forking, while the initialization of the
 /// members must be done _after_ forking by each of the children processes.
-TMPWorker::TMPWorker() : TFileHandler(-1, kRead), fS(), fPid(0)
+TMPWorker::TMPWorker() : fS(), fPid(0)
 {
 }
 
@@ -54,13 +54,25 @@ TMPWorker::TMPWorker() : TFileHandler(-1, kRead), fS(), fPid(0)
 /// e.g. by calling TMPWorker::Init explicitly.
 void TMPWorker::Init(int fd)
 {
-   fS.reset(new TSocket(fd,"MPsock")); //TSocket's constructor with this signature seems much faster than TSocket(int fd)
+   fS.reset(new TSocket(fd, "MPsock")); //TSocket's constructor with this signature seems much faster than TSocket(int fd)
    fPid = getpid();
+}
 
-   //TFileHandler's stuff
-   //these operations _must_ be done in the overriding implementations too
-   SetFd(fd);
-   Add();
+
+void TMPWorker::Run()
+{
+   while(true) {
+      MPCodeBufPair msg = MPRecv(fS.get());
+      if (msg.first == MPCode::kRecvError) {
+         std::cerr << "Lost connection to client\n";
+         gSystem->Exit(0);
+      }
+
+      if (msg.first < 1000)
+         HandleInput(msg); //call overridden method
+      else
+         TMPWorker::HandleInput(msg); //call this class' method
+  }
 }
 
 
@@ -70,12 +82,12 @@ void TMPWorker::Init(int fd)
 /// EMPCode). It handles the most generic types of messages.\n
 /// Classes inheriting from TMPWorker should implement their own HandleInput
 /// function, that should be able to handle codes specific to that application.\n
-/// The appropriate version of the HandleInput method (TMPWorker's or the 
+/// The appropriate version of the HandleInput method (TMPWorker's or the
 /// overriding version) is automatically called depending on the message code.
-void TMPWorker::HandleInput(MPCodeBufPair& msg)
+void TMPWorker::HandleInput(MPCodeBufPair &msg)
 {
    unsigned code = msg.first;
-   
+
    std::string reply = "S" + std::to_string(fPid);
    if (code == MPCode::kMessage) {
       //general message, ignore it
@@ -93,23 +105,4 @@ void TMPWorker::HandleInput(MPCodeBufPair& msg)
       reply += ": unknown code received. code=" + std::to_string(code);
       MPSend(fS.get(), MPCode::kError, reply.data());
    }
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// This method is called by TFileHandler when there's an event on the TSocket fS.
-/// It checks what kind of message was received (if any) and calls the appropriate
-/// handler function (TMPWorker::HandleInput or overridden version).
-Bool_t TMPWorker::Notify()
-{
-   MPCodeBufPair msg = MPRecv(fS.get());
-   if(msg.first == MPCode::kRecvError) {
-      std::cerr << "Lost connection to client\n";
-      gSystem->Exit(0);
-   }
-   if(msg.first < 1000)
-      HandleInput(msg); //call overridden method
-   else
-      TMPWorker::HandleInput(msg); //call this class' method
-
-   return kTRUE;
 }

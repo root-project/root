@@ -24,6 +24,10 @@
 #include "clang/Sema/Template.h"
 #include "clang/Sema/TemplateDeduction.h"
 
+#if defined(_MSC_VER) && (_MSC_VER <= 1800)
+#define constexpr const
+#endif
+
 using namespace clang;
 
 namespace clang {
@@ -39,28 +43,35 @@ namespace clang {
   private:
     Parser* P;
     Preprocessor& PP;
+    decltype(Parser::TemplateIds) OldTemplateIds;
     bool ResetIncrementalProcessing;
     bool OldSuppressAllDiagnostics;
+    bool OldPPSuppressAllDiagnostics;
     bool OldSpellChecking;
-    DestroyTemplateIdAnnotationsRAIIObj CleanupTemplateIds;
     SourceLocation OldPrevTokLocation;
     unsigned short OldParenCount, OldBracketCount, OldBraceCount;
     unsigned OldTemplateParameterDepth;
-
+    decltype(P->getActions().InNonInstantiationSFINAEContext)
+       OldInNonInstantiationSFINAEContext;
 
   public:
     ParserStateRAII(Parser& p)
       : P(&p), PP(p.getPreprocessor()),
         ResetIncrementalProcessing(p.getPreprocessor()
                                    .isIncrementalProcessingEnabled()),
-        OldSuppressAllDiagnostics(p.getPreprocessor().getDiagnostics()
+        OldSuppressAllDiagnostics(P->getActions().getDiagnostics()
+                                  .getSuppressAllDiagnostics()),
+        OldPPSuppressAllDiagnostics(p.getPreprocessor().getDiagnostics()
                                   .getSuppressAllDiagnostics()),
         OldSpellChecking(p.getPreprocessor().getLangOpts().SpellChecking),
-        CleanupTemplateIds(p), OldPrevTokLocation(p.PrevTokLocation),
+        OldPrevTokLocation(p.PrevTokLocation),
         OldParenCount(p.ParenCount), OldBracketCount(p.BracketCount),
         OldBraceCount(p.BraceCount),
-        OldTemplateParameterDepth(p.TemplateParameterDepth)
+        OldTemplateParameterDepth(p.TemplateParameterDepth),
+        OldInNonInstantiationSFINAEContext(P->getActions()
+                                           .InNonInstantiationSFINAEContext)
     {
+       OldTemplateIds.swap(P->TemplateIds);
     }
 
     ~ParserStateRAII()
@@ -70,11 +81,18 @@ namespace clang {
       //
       // Note: Consuming the EOF token will pop the include stack.
       //
+      {
+         // Cleanup the TemplateIds before swapping the previous set back.
+         DestroyTemplateIdAnnotationsRAIIObj CleanupTemplateIds(*P);
+      }
+      P->TemplateIds.swap(OldTemplateIds);
       P->SkipUntil(tok::eof);
       PP.enableIncrementalProcessing(ResetIncrementalProcessing);
       // Doesn't reset the diagnostic mappings
       P->getActions().getDiagnostics().Reset(/*soft=*/true);
-      PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
+      P->getActions().getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
+      PP.getDiagnostics().Reset(/*soft=*/true);
+      PP.getDiagnostics().setSuppressAllDiagnostics(OldPPSuppressAllDiagnostics);
       const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking =
          OldSpellChecking;
 
@@ -83,6 +101,8 @@ namespace clang {
       P->BracketCount = OldBracketCount;
       P->BraceCount = OldBraceCount;
       P->TemplateParameterDepth = OldTemplateParameterDepth;
+      P->getActions().InNonInstantiationSFINAEContext =
+         OldInNonInstantiationSFINAEContext;
     }
   };
 }
@@ -117,8 +137,14 @@ namespace cling {
     //
     //  Tell the diagnostic engine to ignore all diagnostics.
     //
+    P.getActions().getDiagnostics().setSuppressAllDiagnostics(
+                                      diagOnOff == LookupHelper::NoDiagnostics);
     PP.getDiagnostics().setSuppressAllDiagnostics(
-                                                  diagOnOff == LookupHelper::NoDiagnostics);
+                                      diagOnOff == LookupHelper::NoDiagnostics);
+    //
+    //  Tell Sema we are not in the process of doing an instantiation.
+    //
+    P.getActions().InNonInstantiationSFINAEContext = true;
     //
     //  Tell the parser to not attempt spelling correction.
     //

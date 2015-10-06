@@ -1,15 +1,39 @@
 # JSROOT changelog
 
+## Changes in 3.8
+1.  Let use HTML element pointer in JSROOT.draw function like:
+       JSROOT.draw(document.getElementsByTagName("div")[0], obj, "hist");
+   Normally unique identifier was used before, which is not required any longer.
+   Of course, old functionality with element identifier will work as well. 
+2. TreePlayer can also be used for trees, which not yet read from the file.
+   Requires appropriate changes in TRootSniffer class. 
+3. Fix error in I/O with members like:   `Double_t *fArr; //[fN]`  
+4. Introduce JSROOT.OpenFile function. It loads I/O functionality automatically,
+   therefore can be used directly after loading JSRootCore.js script
+5. Same is done with JSROOT.draw function. It is defined in the JSRootCore.js
+   and can be used directly. Makes usage of JSROOT easier    
+6. Introduce JSRootPainter.more.js script, where painters for auxiliary classes
+   will be implemented.
+7. Implement painter for TEllipse, TLine, TArrow classes     
+8. Fix several problems with markers drawing; implement plus, asterisk, mult symbols. 
+9. Implement custom layout, which allows to configure user-defined layout for displayed objects
+10. Fix errors with scaling of axis labels.     
+11. Support also Y axis with custom labels like: http://jsroot.gsi.de/dev/?nobrowser&file=../files/atlas.root&item=LEDShapeHeightCorr_Gain0;1&opt=col   
+
+
 ## Changes in 3.7
-1. Support of X axis with custom labels like:
-      http://web-docs.gsi.de/~linev/js/dev/index.htm?nobrowser&json=../files/hist_xlabels.json
+1. Support of X axis with custom labels like: http://jsroot.gsi.de/dev/index.htm?nobrowser&json=../files/hist_xlabels.json
 2. Extend functionality of JSROOT.addDrawFunc() function. One could register type-specific
    `make_request` and `after_request` functions; `icon`, `prereq`, `script`, `monitor` properties.
    This let add more custom elements to the generic gui, implemented with JSROOT.HierarchyPainter   
 3. Provide full support of require.js. One could load now JSRootCore.js script like:
+
       <script type="text/javascript" src="require.js" data-main="scripts/JSRootCore.js"></script>
+      
    After this several modules are defined and can be used with syntax like:
+   
       require(['JSRootPainter'], function(jsroot) { /*any user code*/});
+      
    Also inside JSROOT require.js used to load all dependencies. 
 
 
@@ -28,16 +52,15 @@
 8. Fix problem with GetBBox - it only can be used for visible elements in mozilla.    
 9. Support drawing of fit parameters in stat box, use (as far as possible) stat and
    fit format for statistic display 
-10.Implement 'g' formatting kind for stat box output - one need to checks 
-   significant digits when producing output.  
-11.Support new draw options for TGraph: 'C', 'B1', '0', '2', '3', '4', '[]'
-12.Primary support for STL containers in IO part. Allows to read ROOT6 TF1.
-13.Full support of TGraphBentErrors
-14.Support objects drawing from JSON files in default user interface, including
-   monitoring. One could open file from link like: 
-      https://root.cern.ch/js/dev/?json=demo/canvas_tf1.json 
-15.Introduce JSROOT.FFormat function to convert numeric values into string according
-   format like 6.4g or 5.7e. Used for statistic display.
+10. Implement 'g' formatting kind for stat box output - one need to checks 
+    significant digits when producing output.  
+11. Support new draw options for TGraph: 'C', 'B1', '0', '2', '3', '4', '[]'
+12. Primary support for STL containers in IO part. Allows to read ROOT6 TF1.
+13. Full support of TGraphBentErrors
+14. Support objects drawing from JSON files in default user interface, including
+    monitoring. One could open file from link like: https://root.cern.ch/js/dev/?json=demo/canvas_tf1.json 
+15. Introduce JSROOT.FFormat function to convert numeric values into string according
+    format like 6.4g or 5.7e. Used for statistic display.
 
 
 ## Changes in 3.5

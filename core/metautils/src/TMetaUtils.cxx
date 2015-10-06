@@ -16,7 +16,6 @@
 // used by TCling and rootcling.                                        //
 //                                                                      //
 //______________________________________________________________________________
-
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -470,9 +469,11 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter,
                                        TNormalizedCtxt &normCtxt,
                                        ExistingTypeCheck_t existingTypeCheck,
+                                       AutoParse_t autoParse,
                                        const int* pgDebug /*= 0*/):
    fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt),
-   fExistingTypeCheck(existingTypeCheck), fPDebug(pgDebug)
+   fExistingTypeCheck(existingTypeCheck),
+   fAutoParse(autoParse), fPDebug(pgDebug)
 {
 }
 
@@ -549,9 +550,14 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
 
    // Try hard to avoid looking up in the Cling database as this could enduce
    // an unwanted autoparsing.
+   // Note: this is always done by the callers and thus is redundant.
+   // Maybe replace with
+   assert(! (fExistingTypeCheck && fExistingTypeCheck(tname,result)) );
    if (fExistingTypeCheck && fExistingTypeCheck(tname,result)) {
       return ! result.empty();
    }
+
+   if (fAutoParse) fAutoParse(tname.c_str());
 
    // Since we already check via other means (TClassTable which is populated by
    // the dictonary loading, and the gROOT list of classes and enums, which are

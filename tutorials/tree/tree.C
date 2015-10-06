@@ -17,7 +17,7 @@ void tree() {
    TPaveText* treePave = new TPaveText(.01,.75,.15,1.00);
    treePave->SetFillColor(18);
    treePave->SetTextAlign(12);
-   TText *tnt = treePave->AddText("TreePave");
+   TText *tnt = treePave->AddText("Tree");
    tnt->SetTextAlign(22);
    tnt->SetTextSize(0.030);
    treePave->AddText("fScanField");

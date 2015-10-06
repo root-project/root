@@ -31,13 +31,11 @@
 #include "llvm/Support/FileSystem.h"
 
 #include "TMetaUtils.h"
-// #include "TCling.h"
 
 using namespace clang;
 using namespace cling;
 
 class TObject;
-class TCling;
 
 // Functions used to forward calls from code compiled with no-rtti to code
 // compiled with rtti.
@@ -268,7 +266,8 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
 
 bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
    // Clang needs Tag's complete definition. Can we parse it?
-   if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
+   //if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
+   if (fIsAutoloadingRecursively) return false;
 
    if (RecordDecl* RD = dyn_cast<RecordDecl>(Tag)) {
       Sema &SemaR = m_Interpreter->getSema();

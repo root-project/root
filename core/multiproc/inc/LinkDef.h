@@ -18,6 +18,6 @@
 #pragma link C++ class TMPClient+;
 #pragma link C++ class TMPWorker+;
 #pragma link C++ class TMPInterruptHandler+;
-#pragma link C++ class TPool+;
+#pragma link C++ class TProcPool+;
 
 #endif

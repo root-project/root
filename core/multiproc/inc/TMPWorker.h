@@ -13,15 +13,11 @@
 #define ROOT_TMPWorker
 
 #include "TSysEvtHandler.h" //TFileHandler
-#include "TSocket.h"
-#include "TBufferFile.h"
-#include "TClass.h"
-#include "MPSendRecv.h"
+#include "MPSendRecv.h" //MPCodeBufPair
 #include <unistd.h> //pid_t
-#include <string>
 #include <memory> //unique_ptr
 
-class TMPWorker : public TFileHandler {
+class TMPWorker {
    /// \cond
    ClassDef(TMPWorker, 0);
    /// \endcond
@@ -29,19 +25,19 @@ public:
    TMPWorker();
    virtual ~TMPWorker() {};
    //it doesn't make sense to copy a TMPWorker (each one has a uniq_ptr to its socket)
-   TMPWorker(const TMPWorker&) = delete;
-   TMPWorker& operator=(const TMPWorker&) = delete;
+   TMPWorker(const TMPWorker &) = delete;
+   TMPWorker &operator=(const TMPWorker &) = delete;
 
-   virtual void Init(int fd); 
-   inline TSocket* GetSocket() { return fS.get(); }
-   inline pid_t GetPid() { return fPid; }
+   virtual void Init(int fd);
+   void Run();
+   TSocket *GetSocket() { return fS.get(); }
+   pid_t GetPid() { return fPid; }
+
 
 private:
-   virtual void HandleInput(MPCodeBufPair& msg);
-   Bool_t Notify();
-   Bool_t ReadNotify() { return Notify(); }
+   virtual void HandleInput(MPCodeBufPair &msg);
 
-   std::unique_ptr<TSocket> fS; ///< This worker's socket
+   std::unique_ptr<TSocket> fS; ///< This worker's socket. The unique_ptr makes sure resources are released.
    pid_t fPid; ///< the PID of the process in which this worker is running
 };
 
