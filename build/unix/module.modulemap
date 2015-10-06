@@ -375,6 +375,10 @@ module Canvas {
 
 module Varargs { header "Varargs.h" export * }
 module MessageTypes {   header "MessageTypes.h" export * }
+
+// in core_base causes a name clash because pyroot redefines the name in pyroot/src/TCallContext.h
+module Parameter { export * header "TParameter.h" }
+
 module core_base {
   requires cplusplus
   export *
@@ -398,7 +402,6 @@ module core_base {
   //header "config.h" //deprecated use RConfigure.h
   header "TBenchmark.h"
   header "TVirtualMutex.h"
-  header "TParameter.h"
   header "Bytes.h"
   header "Byteswap.h"
   header "GLConstants.h"
