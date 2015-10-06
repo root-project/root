@@ -426,7 +426,7 @@ static uint32_t safeDiv(uint64_t Numerator, uint64_t Divisor) {
   return Numerator / Divisor;
 }
 
-// This custom division function mimics gcov's branch ouputs:
+// This custom division function mimics gcov's branch outputs:
 //   - Round to closest whole number
 //   - Only output 0% or 100% if it's exactly that value
 static uint32_t branchDiv(uint64_t Numerator, uint64_t Divisor) {

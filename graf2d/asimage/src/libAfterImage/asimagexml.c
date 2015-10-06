@@ -1471,7 +1471,7 @@ handle_asxml_tag_solid( ASImageXMLState *state, xml_elem_t* doc, xml_elem_t* par
  * id       Optional.  Image will be given this name for future reference.
  * dst      Optional.  Name of file image will be saved to. If omitted
  *          image will be dumped into stdout - usefull for CGI apps.
- * format   Optional.  Ouput format of saved image.  Defaults to the
+ * format   Optional.  Output format of saved image.  Defaults to the
  *          extension of the "dst" parameter.  Valid values are the
  *          standard AS image file formats: xpm, jpg, png, gif, tiff.
  * compress Optional.  Compression level if supported by output file

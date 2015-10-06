@@ -398,7 +398,7 @@ void TMVA::OptimizeConfigParameters::GetMVADists()
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// return the searation between the signal and background 
-/// MVA ouput distribution
+/// MVA output distribution
 
 Double_t TMVA::OptimizeConfigParameters::GetSeparation()
 {
@@ -418,10 +418,10 @@ Double_t TMVA::OptimizeConfigParameters::GetSeparation()
 /// calculate the area (integral) under the ROC curve as a
 /// overall quality measure of the classification
 ///
-/// makeing pdfs out of the MVA-ouput distributions doesn't work
-/// reliably for cases where the MVA-ouput isn't a smooth distribution.
+/// makeing pdfs out of the MVA-output distributions doesn't work
+/// reliably for cases where the MVA-output isn't a smooth distribution.
 /// this happens "frequently" in BDTs for example when the number of
-/// trees is small resulting in only some discrete possible MVA ouput values.
+/// trees is small resulting in only some discrete possible MVA output values.
 /// (I still leave the code here, but use this with care!!! The default
 /// however is to use the distributions!!!
 
