@@ -1625,7 +1625,7 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
 /// ~~~
 /// For example:
 /// ~~~ {.cpp}
-/// gStyle->SetPalette->(kBird);
+/// gStyle->SetPalette(kBird);
 /// ~~~
 /// Set the current palette as "Bird" (number 57).
 ///
