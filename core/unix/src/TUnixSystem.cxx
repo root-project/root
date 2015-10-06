@@ -615,6 +615,10 @@ extern "C"
 
 }
 
+static char pshellExec[8] = "/bin/sh";
+char TUnixSystem::pidString_[TUnixSystem::pidStringLength_] = {};
+static char pidNum[11] = {}; //--- The largest PID number could be converted to 10 characters.
+char * const TUnixSystem::pstackArgv_[] = {pshellExec, TUnixSystem::pidString_, pidNum, nullptr};
 int TUnixSystem::parentToChild_[2] = {-1, -1};
 int TUnixSystem::childToParent_[2] = {-1, -1};
 std::unique_ptr<std::thread> TUnixSystem::helperThread_;
@@ -624,7 +628,7 @@ Bool_t TUnixSystem::Init()
    if (TSystem::Init())
       return kTRUE;
 
-   cachePidInfo(); //##
+   cachePidInfo();
 
    fReadmask   = new TFdSet;
    fWritemask  = new TFdSet;
@@ -2185,9 +2189,7 @@ void TUnixSystem::StackTrace()
       return;
 
    TString gdbscript = gEnv->GetValue("Root.StacktraceScript", "");
-   printf("gdbscript test1: %s\n", gdbscript.Data()); //##
    gdbscript = gdbscript.Strip();
-   printf("gdbscript test2: %s\n", gdbscript.Data()); //##
    if (gdbscript != "") {
       if (AccessPathName(gdbscript, kReadPermission)) {
          fprintf(stderr, "Root.StacktraceScript %s does not exist\n", gdbscript.Data());
@@ -2196,7 +2198,6 @@ void TUnixSystem::StackTrace()
          gdbscript += " ";
       }
    }
-   printf("gdbscript test3: %s\n", gdbscript.Data()); //##
    if (gdbscript == "") {
 #ifdef ROOTETCDIR
       gdbscript.Form("%s/gdb-backtrace.sh", ROOTETCDIR);
@@ -2209,10 +2210,8 @@ void TUnixSystem::StackTrace()
       }
       gdbscript += " ";
    }
-   printf("gdbscript test4: %s\n", gdbscript.Data()); //##
    TString gdbmess = gEnv->GetValue("Root.StacktraceMessage", "");
    gdbmess = gdbmess.Strip();
-   printf("gdbmess test5: %s\n", gdbmess.Data()); //##
    std::cout.flush();
    fflush(stdout);
 
@@ -2245,16 +2244,13 @@ void TUnixSystem::StackTrace()
 
    // use gdb to get stack trace
    gdbscript += GetExePath();
-   printf("gdbscript test6: %s\n", gdbscript.Data()); //##
    gdbscript += " ";
    gdbscript += GetPid();
-   printf("gdbscript test7: %s\n", gdbscript.Data()); //##
    if (gdbmess != "") {
       gdbscript += " ";
       gdbscript += gdbmessf;
    }
    gdbscript += " 1>&2";
-   printf("gdbscript test8:%s\n", gdbscript.Data()); //##
    Exec(gdbscript);
    delete [] gdb;
    return;
@@ -2344,7 +2340,6 @@ void TUnixSystem::StackTrace()
          fprintf(f, "%s\n", gdbmess.Data());
          fclose(f);
       }
-      printf("gdbmessf test9: %s\nmessage size test9: %d\n", gdbmessf.Data(),gdbmessf.Sizeof()); //##
       // use gdb to get stack trace
 #ifdef R__MACOSX
       gdbscript += GetExePath();
@@ -2357,7 +2352,6 @@ void TUnixSystem::StackTrace()
       }
       gdbscript += " 1>&2";
       Exec(gdbscript);
-      printf("gdbscript test10: %s\n", gdbscript.Data()); //##
       delete [] gdb;
    } else {
       // addr2line uses debug info to convert addresses into file names
@@ -3583,7 +3577,7 @@ static void sighandler(int sig)
 
 void TUnixSystem::DispatchSignals(ESignals sig)
 {
-   const char* signalname = "unknown"; //##
+   const char* signalname = "unknown"; 
    switch (sig) {
    case kSigAlarm:
       DispatchTimers(kFALSE);
@@ -3627,11 +3621,6 @@ void TUnixSystem::DispatchSignals(ESignals sig)
    if ((sig == kSigIllegalInstruction) || (sig == kSigSegmentationViolation) || (sig == kSigBus))
    {
 
-      if (gApplication)
-         gApplication->HandleException(sig);
-      else
-         Exit(gSignalMap[sig].fCode + 0x80);
-
       full_cerr_write("\n\nA fatal system signal has occurred: ");
       full_cerr_write(signalname);
       full_cerr_write("\nThe following is the call stack containing the origin of the signal.\n"
@@ -3639,15 +3628,8 @@ void TUnixSystem::DispatchSignals(ESignals sig)
 
       TUnixSystem::stacktraceFromThread();
 
-      full_cerr_write("\nA fatal system signal has occurred: ");
-      full_cerr_write(signalname);
-      full_cerr_write("\n");
       signal(sig, SIG_DFL);
       raise(sig);
-/*
-   } else {
-      ::abort();
-*/
    }
 
    // check a-synchronous signals
@@ -5288,8 +5270,7 @@ void TUnixSystem::stacktraceHelperThread()
 
 void TUnixSystem::stacktraceFromThread()
 {
-
-      int result = full_write(parentToChild_[1], "1");
+      int result = full_write(parentToChild_[1], "1"); 
       if (result < 0)
       {
         full_cerr_write("\n\nAttempt to request stacktrace failed: ");
@@ -5330,23 +5311,44 @@ void stacktrace_fork()
         if (waitpid(pid, &status, 0) == -1)
         {
           full_cerr_write("(Failed to wait on stack dump output.)\n");
-        }
+        } else {}
       }
 }
 
 int global_stacktrace(void * /*arg*/)
 {
-//      char *const *argv = edm::service::InitRootHandlers::getPstackArgv();
-//      execv("/bin/sh", argv);
-      for(int i=0; i<1000000; ++i){
-	fprintf(stdout, "global_stacktrace %d\n",i);
-      }
+      char *const *argv = TUnixSystem::getPstackArgv();
+      execv("/bin/sh", argv);
       ::abort();
       return 1;
 }
 
+char *const *TUnixSystem::getPstackArgv() {
+   return pstackArgv_;
+}
+
 void TUnixSystem::cachePidInfo()
 {
+#ifdef ROOTETCDIR
+      if(sprintf(pidString_, "%s/gdb-backtrace.sh", ROOTETCDIR) >= pidStringLength_)
+      {
+        full_cerr_write("Unable to pre-allocate executable information");
+	exit(1);
+      }
+#else
+      if(sprintf(pidString_, "%s/etc/gdb-backtrace.sh", Getenv("ROOTSYS")) >= pidStringLength_)
+      {
+        full_cerr_write("Unable to pre-allocate executable information");
+	exit(1);
+      }
+#endif
+
+      if(sprintf(pidNum, "%d", getpid()) >= pidStringLength_)
+      {
+        full_cerr_write("Unable to pre-allocate process id information");
+	exit(1);
+      }
+
       close(childToParent_[0]);
       close(childToParent_[1]);
       childToParent_[0] = -1; childToParent_[1] = -1;
@@ -5367,43 +5369,7 @@ void TUnixSystem::cachePidInfo()
         fprintf(stdout, "pipe parentToChild failed\n");
 	exit(1);
       }
-/*
-      char buf[255];
-      pid_t cpid;
-      cpid = fork();
-      if(cpid == -1){
-        fprintf(stdout, "fork failed\n");
-	exit(1);
-      } else if(cpid == 0) {
-        close(childToParent_[0]);
-	close(parentToChild_[1]);
-	while(read(parentToChild_[0],buf,255)>0){
-		fprintf(stdout, "received data: \n%s\n",buf);
-	}
-	sprintf(buf, "Ack: I received your message\n");
-	if(write(childToParent_[1],buf,255)>0){
-		fprintf(stdout, "wrote to parent data: \n%s\n", buf);
-	}
-        close(childToParent_[1]);
-	close(parentToChild_[0]);
-	exit(0);
-      } else {
-	close(childToParent_[1]);
-	close(parentToChild_[0]);
-	sprintf(buf, "This is a message from parent to child\n");
-	if(write(parentToChild_[1],buf,255)>0){
-		fprintf(stdout, "wrote data to child\n%s\n", buf);
-	}
-	while(read(childToParent_[0],buf,255)>0){
-		fprintf(stdout, "read data from child\n%s\n", buf);
-	}
-	fprintf(stdout,"communication done!\n");
-        close(childToParent_[0]);
-	close(parentToChild_[1]);
-	wait(NULL);
-	exit(0);
-      }
-*/
+
       helperThread_.reset(new std::thread(stacktraceHelperThread));
       helperThread_->detach();
 }

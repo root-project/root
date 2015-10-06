@@ -83,14 +83,15 @@ protected:
    static int          UnixSend(int sock, const void *buf, int len, int flag);
 
    // added helper static members for stacktrace
+   static const int pidStringLength_ = 255;
+   static char pidString_[pidStringLength_];
+   static char * const pstackArgv_[];
+   static char *const *getPstackArgv();
    static int          parentToChild_[2];
    static int          childToParent_[2];
    static std::unique_ptr<std::thread> helperThread_;   
    static void         stacktraceHelperThread();
-//   static void         stacktraceFromThread();
    void         cachePidInfo();
-//   static int          func_stacktrace(void *);
-//   static char *const *arg_ret();
 
 public:
    TUnixSystem();
