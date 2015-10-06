@@ -24,7 +24,7 @@ SQLITEO      := $(call stripsrc,$(SQLITES:.cxx=.o))
 
 SQLITEDEP     := $(SQLITEO:.o=.d) $(SQLITEDO:.o=.d)
 
-SQLITELIB     := $(LPATH)/libSQLite.$(SOEXT)
+SQLITELIB     := $(LPATH)/libRSQLite.$(SOEXT)
 SQLITEMAP     := $(SQLITELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
@@ -43,7 +43,7 @@ include/%.h:    $(SQLITEDIRI)/%.h
 
 $(SQLITELIB):   $(SQLITEO) $(SQLITEDO) $(ORDER_) $(MAINLIBS) $(SQLITELIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libSQLite.$(SOEXT) $@ "$(SQLITEO) $(SQLITEDO)" \
+		   "$(SOFLAGS)" libRSQLite.$(SOEXT) $@ "$(SQLITEO) $(SQLITEDO)" \
 		   "$(SQLITELIBEXTRA) $(SQLITELIBDIR) $(SQLITECLILIB)"
 
 $(SQLITEDS):    $(SQLITEH) $(SQLITEL) $(ROOTCINTTMPDEP)
