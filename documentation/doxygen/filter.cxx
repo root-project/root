@@ -16,7 +16,6 @@ using namespace std;
 
 // Auxiliary functions
 void   GetClassName();
-void   StandardizeKeywords();
 void   ExecuteMacro();
 void   ExecuteCommand(string);
 void   ReplaceAll(string&, const string&, const string&);
@@ -94,25 +93,11 @@ int main(int argc, char *argv[])
    if (gSource) {
       while (fgets(gLine,255,f)) {
          gLineString = gLine;
-         StandardizeKeywords();
 
-         if (gLineString.find("/*! \\class") != string::npos ||
-             gLineString.find("/// \\class") != string::npos ||
-             gLineString.find("/** \\class") != string::npos ||
+         if (gLineString.find("/*! \\class")  != string::npos ||
+             gLineString.find("/// \\class")  != string::npos ||
+             gLineString.find("/** \\class")  != string::npos ||
              gLineString.find("///! \\class") != string::npos) gClass = true;
-
-         if (gLineString.find("begin_html") != string::npos) {
-            if (!gClass) {
-               gLineString = StringFormat("/*! \\class %s\n",gClassName.c_str());
-               gClass = true;
-            } else {
-               ReplaceAll(gLineString,"begin_html","");
-            }
-         }
-
-         if (gLineString.find("end_html") != string::npos) {
-            ReplaceAll(gLineString,"end_html","");
-         }
 
          if (gLineString.find("End_Macro") != string::npos) {
             ReplaceAll(gLineString,"End_Macro","");
@@ -153,10 +138,7 @@ int main(int argc, char *argv[])
             } else {
                if (m) fprintf(m,"%s",gLineString.c_str());
                if (BeginsWith(gLineString,"}")) {
-                  ReplaceAll(gLineString,"}"
-                                          , StringFormat("\\image html %s_%3.3d.png"
-                                          , gClassName.c_str()
-                                          , gImageID));
+                  ReplaceAll(gLineString,"}", StringFormat("\\image html %s_%3.3d.png", gClassName.c_str(), gImageID));
                } else {
                   gLineString = "\n";
                }
@@ -165,7 +147,7 @@ int main(int argc, char *argv[])
          }
 
          if (gLineString.find("Begin_Macro") != string::npos) {
-            if (gLineString.find("source") != string::npos)    gImageSource = true;
+            if (gLineString.find("source") != string::npos) gImageSource = true;
             gImageID++;
             gInMacro++;
             gLineString = "\n";
@@ -230,27 +212,12 @@ void GetClassName()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Standardize the THTML keywords to ease the parsing.
-
-void StandardizeKeywords()
-{
-   ReplaceAll(gLineString,"End_Html","end_html");
-   ReplaceAll(gLineString,"End_html","end_html");
-   ReplaceAll(gLineString,"end_html ","end_html");
-   ReplaceAll(gLineString,"Begin_Html","begin_html");
-   ReplaceAll(gLineString,"Begin_html","begin_html");
-   ReplaceAll(gLineString,"<big>","");
-   ReplaceAll(gLineString,"</big>","");
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Execute the macro in gLineString and produce the corresponding picture
 
 void ExecuteMacro()
 {
    // Name of the next Image to be generated
-   gImageName = StringFormat("%s_%3.3d.png", gClassName.c_str()
-                                              , gImageID);
+   gImageName = StringFormat("%s_%3.3d.png", gClassName.c_str(), gImageID);
 
    // Retrieve the macro to be executed.
    if (gLineString.find("../../..") != string::npos) {
@@ -268,6 +235,7 @@ void ExecuteMacro()
    gLineString.replace(l-2,1,StringFormat("C\\\",\\\"%s\\\",\\\"%s\\\")\"", gImageName.c_str(), gOutDir.c_str()));
 
    ExecuteCommand(gLineString);
+
    if (gImageSource) {
       gLineString = StringFormat("\\include %s\n\\image html %s\n", gMacroName.c_str(), gImageName.c_str());
    } else {
@@ -340,6 +308,5 @@ bool EndsWith(string const &fullString, string const &ending) {
 /// find if a string begins with another string
 
 bool BeginsWith(const string& haystack, const string& needle) {
-   return needle.length() <= haystack.length()
-          && equal(needle.begin(), needle.end(), haystack.begin());
+   return needle.length() <= haystack.length() && equal(needle.begin(), needle.end(), haystack.begin());
 }
