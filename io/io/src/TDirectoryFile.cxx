@@ -17,8 +17,9 @@
  Each Directory has a list of Keys (see TKeys) and a list of objects
  in memory. A Key is a small object that describes the type and location
  of a persistent object in a file. The persistent object may be a directory.
- \image html tdirectoryfile_fildir.gif
-
+Begin_Macro
+../../../tutorials/io/fildir.C
+End_Macro
  The structure of a file is shown in TFile::TFile
 */
 
@@ -1380,7 +1381,7 @@ Int_t TDirectoryFile::ReadTObject(TObject *obj, const char *keyname)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the TDirectory after its content has been merged into another
-/// Directory.  
+/// Directory.
 ///
 /// This returns the TDirectoryFile object back to its state
 /// before any data has been written to the file.
@@ -1750,7 +1751,7 @@ Int_t TDirectoryFile::Write(const char *n, Int_t opt, Int_t bufsize) const
 /// with an associated key with name "name".
 ///
 /// Writing an object to a file involves the following steps:
-///   - Creation of a support TKey object in the directory. The TKey object 
+///   - Creation of a support TKey object in the directory. The TKey object
 /// creates a TBuffer object.
 ///   - The TBuffer object is filled via the class::Streamer function.
 ///   - If the file is compressed (default) a second buffer is created to hold
@@ -1783,7 +1784,7 @@ Int_t TDirectoryFile::Write(const char *n, Int_t opt, Int_t bufsize) const
 /// The function returns the total number of bytes written to the directory.
 /// It returns 0 if the object cannot be written.
 ///
-/// WARNING: avoid special characters like '^','$','.' in the name as they 
+/// WARNING: avoid special characters like '^','$','.' in the name as they
 /// are used by the regular expression parser (see TRegexp).
 
 Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_t *option, Int_t bufsize)
