@@ -14,7 +14,7 @@ export DOXYGEN_INCLUDE_PATH := $(shell find $(DOXYGEN_STRIP_PATH) -type d -name 
 all: filter doxygen
 
 filter:
-	`root-config --cxx` -o filter filter.cxx `root-config --libs --glibs --cflags`
+	`root-config --cxx` -o filter filter.cxx
 
 doxygen:
 	if [ ! -d $(DOXYGEN_OUTPUT_DIRECTORY) ]; then mkdir $(DOXYGEN_OUTPUT_DIRECTORY); fi
@@ -23,11 +23,14 @@ doxygen:
 	./makehtmlfooter.sh > htmlfooter.html
 	cp images/* $(DOXYGEN_IMAGE_PATH)
 	doxygen
-	rm c1*
+	rm c1* *.root
 	rm stdout.dat
 	rm htmlfooter.html
 
 clean:
 	rm -r $(DOXYGEN_OUTPUT_DIRECTORY)
 	rm filter
+	rm stdout.dat
+	rm htmlfooter.html
+	rm c1* *.root
 
