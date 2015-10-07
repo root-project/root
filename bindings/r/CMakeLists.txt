@@ -20,7 +20,6 @@ set(RHIST_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRF1.h
 set(ROI_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFile.h)
 set(RGPAD_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRCanvas.h)
 set(RRINT_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRRint.h)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
 ROOT_GENERATE_DICTIONARY(G__RInterface ${R_HEADERS} MODULE ${libname} LINKDEF LinkDef.h)
 ROOT_LINKER_LIBRARY(RInterface *.cxx G__RInterface.cxx LIBRARIES ${R_LIBRARIES} DEPENDENCIES Core Matrix Thread RIO readline)
