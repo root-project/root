@@ -1,5 +1,16 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-conflictingSelections
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/conflictingNameRule.h
+                          --select=${CMAKE_CURRENT_SOURCE_DIR}/conflictingNameRule_selection.xml
+                  OUTREF conflictingNameRule.eref
+                  PASSRC 1)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-equivalentSelections
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/equivalentSelections.h
+                          --select=${CMAKE_CURRENT_SOURCE_DIR}/equivalentSelections_selection.xml
+                  OUTREF equivalentSelections.eref)
+
 #ROOT-7676
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-twoTypedefsOneClass
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/twoTypedefsOneClass.h

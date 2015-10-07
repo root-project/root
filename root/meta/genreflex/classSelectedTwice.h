@@ -6,3 +6,4 @@ namespace Muon{
    typedef myclass<float> additionalTypedef;
 }
 
+class thisClassWithALongName{};
