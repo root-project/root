@@ -86,7 +86,7 @@ TDirectory::TDirectory(const TDirectory &directory) : TNamed(directory)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// -- Destructor.
+/// Destructor.
 
 TDirectory::~TDirectory()
 {
@@ -124,7 +124,7 @@ TDirectory::~TDirectory()
 /// by calling object->SetDirectory(0) or object->SetDirectory(dir) to add it
 /// to the list of objects in the directory dir.
 ///
-///  NOTE that this is a static function. To call it, use;
+///  NOTE that this is a static function. To call it, use:
 /// ~~~ {.cpp}
 ///     TDirectory::AddDirectory
 /// ~~~
@@ -135,7 +135,7 @@ void TDirectory::AddDirectory(Bool_t add)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function: see TDirectory::AddDirectory for more comments
+/// Static function: see TDirectory::AddDirectory for more comments.
 
 Bool_t TDirectory::AddDirectoryStatus()
 {
@@ -145,8 +145,8 @@ Bool_t TDirectory::AddDirectoryStatus()
 ////////////////////////////////////////////////////////////////////////////////
 /// Append object to this directory.
 ///
-/// If replace is true:
-///   remove any existing objects with the same same (if the name is not ""
+/// If `replace` is true:
+///   remove any existing objects with the same name (if the name is not "")
 
 void TDirectory::Append(TObject *obj, Bool_t replace /* = kFALSE */)
 {
@@ -190,13 +190,13 @@ void TDirectory::Browse(TBrowser *b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialise directory to defaults.
+///
+/// If directory is created via default ctor (when dir is read from file)
+/// don't add it here to the directory since its name is not yet known.
+/// It will be added to the directory in TKey::ReadObj().
 
 void TDirectory::Build(TFile* /*motherFile*/, TDirectory* motherDir)
 {
-   // If directory is created via default ctor (when dir is read from file)
-   // don't add it here to the directory since its name is not yet known.
-   // It will be added to the directory in TKey::ReadObj().
-
    if (motherDir && strlen(GetName()) != 0) motherDir->Append(this);
 
    fList       = new THashList(100,50);
@@ -205,7 +205,7 @@ void TDirectory::Build(TFile* /*motherFile*/, TDirectory* motherDir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clean the pointers to this object (gDirectory, TContext, etc.)
+/// Clean the pointers to this object (gDirectory, TContext, etc.).
 
 void TDirectory::CleanTargets()
 {
@@ -254,7 +254,7 @@ static TBuffer* R__CreateBuffer()
 ////////////////////////////////////////////////////////////////////////////////
 /// Clone an object.
 /// This function is called when the directory is not a TDirectoryFile.
-/// This version has to load the I/O package, hence via CINT
+/// This version has to load the I/O package, hence via Cling.
 ///
 /// If autoadd is true and if the object class has a
 /// DirectoryAutoAdd function, it will be called at the end of the
@@ -419,12 +419,16 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change current directory to "this" directory . Using path one can
-/// change the current directory to "path". The absolute path syntax is:
-/// `file.root:/dir1/dir2`
-/// where file.root is the file and /dir1/dir2 the desired subdirectory
-/// in the file. Relative syntax is relative to "this" directory. E.g:
-/// `../aa`. Returns kTRUE in case of success.
+/// Change current directory to "this" directory.
+///
+/// Using path one can change the current directory to "path". The absolute path
+/// syntax is: `file.root:/dir1/dir2`
+/// where `file.root` is the file and `/dir1/dir2` the desired subdirectory
+/// in the file.
+///
+/// Relative syntax is relative to "this" directory. E.g: `../aa`.
+///
+/// Returns kTRUE in case of success.
 
 Bool_t TDirectory::cd(const char *path)
 {
@@ -432,12 +436,17 @@ Bool_t TDirectory::cd(const char *path)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change current directory to "this" directory . Using path one can
+/// Change current directory to "this" directory.
+///
+/// Using path one can
 /// change the current directory to "path". The absolute path syntax is:
 /// `file.root:/dir1/dir2`
-/// where file.root is the file and /dir1/dir2 the desired subdirectory
-/// in the file. Relative syntax is relative to "this" directory. E.g:
-/// `../aa`. Returns kFALSE in case path does not exist.
+/// where `file.root` is the file and `/dir1/dir2` the desired subdirectory
+/// in the file.
+///
+/// Relative syntax is relative to "this" directory. E.g: `../aa`.
+///
+/// Returns kFALSE in case path does not exist.
 
 Bool_t TDirectory::cd1(const char *apath)
 {
@@ -460,8 +469,10 @@ Bool_t TDirectory::cd1(const char *apath)
 /// Change current directory to "path". The absolute path syntax is:
 /// `file.root:/dir1/dir2`
 /// where file.root is the file and `/dir1/dir2 the desired subdirectory
-/// in the file. Relative syntax is relative to the current directory
-/// gDirectory, e.g.: `../aa`. Returns kTRUE in case of success.
+/// in the file.
+/// Relative syntax is relative to the current directory `gDirectory`, e.g.: `../aa`.
+///
+/// Returns kTRUE in case of success.
 
 Bool_t TDirectory::Cd(const char *path)
 {
@@ -472,7 +483,9 @@ Bool_t TDirectory::Cd(const char *path)
 /// Change current directory to "path". The path syntax is:
 /// `file.root:/dir1/dir2`
 /// where file.root is the file and `/dir1/dir2` the desired subdirectory
-/// in the file. Returns kFALSE in case path does not exist.
+/// in the file.
+///
+/// Returns kFALSE in case path does not exist.
 
 Bool_t TDirectory::Cd1(const char *apath)
 {
@@ -688,11 +701,12 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
 ///      directory->GetObject("some object",obj);
 ///      if (obj) { ... the object exist and inherits from MyClass ... }
 /// ~~~
+///
 ///  VERY IMPORTANT NOTE:
 ///
 ///  In case the class of this object derives from TObject but not
 ///  as a first inheritance, one must use dynamic_cast<>().
-///  Example 1: Normal case:
+/// #### Example 1: Normal case:
 /// ~~~ {.cpp}
 ///      class MyClass : public TObject, public AnotherClass
 /// ~~~
@@ -700,7 +714,7 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
 /// ~~~ {.cpp}
 ///      MyClass *obj = (MyClass*)directory->Get("some object of MyClass");
 /// ~~~
-///  Example 2: Special case:
+/// #### Example 2: Special case:
 /// ~~~ {.cpp}
 ///      class MyClass : public AnotherClass, public TObject
 /// ~~~
@@ -784,7 +798,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const char* classname)
 /// object is a type suitable to be stored as a pointer to a "expectedClass"
 /// If expectedClass is null, no check is performed.
 ///
-///   namecycle has the format name;cycle
+/// namecycle has the format `name;cycle`
 ///  - name  = * is illegal, cycle = * is illegal
 ///  - cycle = "" or cycle = 9999 ==> apply to a memory object
 ///
@@ -796,7 +810,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const char* classname)
 ///      MyClass *obj = (MyClass*)directory->GetObjectChecked("some object of MyClass","MyClass"));
 /// ~~~
 ///  Note: We recommend using the method TDirectory::GetObject:
-/// ~~{.cpp}~
+/// ~~~ {.cpp}~
 ///      MyClass *obj = 0;
 ///      directory->GetObject("some object inheriting from MyClass",obj);
 ///      if (obj) { ... we found what we are looking for ... }
@@ -851,7 +865,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expected
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the full path of the directory. E.g. file:/dir1/dir2.
+/// Returns the full path of the directory. E.g. `file:/dir1/dir2`.
 /// The returned path will be re-used by the next call to GetPath().
 
 const char *TDirectory::GetPathStatic() const
@@ -889,7 +903,7 @@ const char *TDirectory::GetPathStatic() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the full path of the directory. E.g. file:/dir1/dir2.
+/// Returns the full path of the directory. E.g. `file:/dir1/dir2`.
 /// The returned path will be re-used by the next call to GetPath().
 
 const char *TDirectory::GetPath() const
@@ -971,13 +985,15 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
 ////////////////////////////////////////////////////////////////////////////////
 /// List Directory contents.
 ///
-///  Indentation is used to identify the directory tree
-///  Subdirectories are listed first, then objects in memory.
+/// Indentation is used to identify the directory tree
+/// Subdirectories are listed first, then objects in memory.
 ///
-///  The option can has the following format:
+/// The option can has the following format:
+///
 ///      [<regexp>]
-///  The <regexp> will be used to match the name of the objects.
-///  By default memory and disk objects are listed.
+///
+/// The <regexp> will be used to match the name of the objects.
+/// By default memory and disk objects are listed.
 
 void TDirectory::ls(Option_t *option) const
 {
