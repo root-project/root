@@ -28,7 +28,7 @@ int main() {
    fp->GetObject("ntuple",tree);
 
    TProcPool pool(2);
-   auto res = pool.Process(*tree, myMacro);
+   auto res = pool.ProcTree(*tree, myMacro);
 
    std::cout << res->GetEntries() << std::endl;
 
