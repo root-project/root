@@ -153,7 +153,7 @@ the class structure of an application to a colleague who does not have
 your classes.
 
 Example:
- ~~~ {.cpp}
+~~~ {.cpp}
    TFile f("myClasses.root","recreate")
    TClassTree *ct = new TClassTree("ct","ATLF*")
    ct->Write();
