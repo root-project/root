@@ -217,7 +217,10 @@ static bool Implies(ClassSelectionRule& patternRule, ClassSelectionRule& nameRul
    if (patternRule.GetSelected() != nameRule.GetSelected()) return false;
 
    // If the two rules are not compatible modulo their name/pattern, bail out
-   if (!SelectionRulesUtils::areEqual(&patternRule, &nameRule, true /*moduloNameOrPattern*/)) {
+   auto nAttrsPattern = patternRule.GetAttributes().size();
+   auto nAttrsName = nameRule.GetAttributes().size();
+   if ((nAttrsPattern != 1 || nAttrsName !=1) &&
+       !SelectionRulesUtils::areEqual(&patternRule, &nameRule, true /*moduloNameOrPattern*/)) {
       return false;
    }
 
@@ -229,7 +232,7 @@ static bool Implies(ClassSelectionRule& patternRule, ClassSelectionRule& nameRul
    
    if (implies){
       static const auto msg = "The pattern rule %s matches the name rule %s. "
-      "Since the name rule has no attributes or compatible attributes, "
+      "Since the name rule has compatible attributes, "
       "it will be removed: the pattern rule will match the necessary classes if needed.\n";
 
       ROOT::TMetaUtils::Info("SelectionRules::Optimize", msg, pattern, name);
