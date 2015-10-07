@@ -29,6 +29,61 @@ namespace ROOT{
       class TNormalizedCtxt;
    }
 }
+#include <iostream>
+namespace SelectionRulesUtils {
+
+   template<class ASSOCIATIVECONTAINER>
+   inline bool areEqualAttributes(const ASSOCIATIVECONTAINER& c1, const ASSOCIATIVECONTAINER& c2, bool moduloNameOrPattern){
+      if (c1.size() != c2.size()) return false;
+      if (moduloNameOrPattern) {
+         for (auto&& keyValPairC1 : c1){
+            auto keyC1 = keyValPairC1.first;
+            if ("pattern" == keyC1 || "name" == keyC1) continue;
+            auto valC1 = keyValPairC1.second;
+            auto C2It = c2.find(keyC1);
+            if (C2It == c2.end() || valC1 != C2It->second) return false;
+         }
+      }
+      else {
+         return !(c1 != c2);
+      }
+      return true;
+   }
+
+   template<class RULE>
+   inline bool areEqual(const RULE* r1, const RULE* r2, bool moduloNameOrPattern = false){
+      return areEqualAttributes(r1->GetAttributes(), r2->GetAttributes(), moduloNameOrPattern);
+   }
+
+   template<class RULESCOLLECTION>
+   inline bool areEqualColl(const RULESCOLLECTION& r1,
+                            const RULESCOLLECTION& r2,
+                            bool moduloNameOrPattern = false){
+      if (r1.size() != r2.size()) return false;
+      auto rIt1 = r1.begin();
+      auto rIt2 = r2.begin();
+      for (;rIt1!=r1.cend();++rIt1,++rIt2){
+         if (!areEqual(&(*rIt1),&(*rIt2), moduloNameOrPattern)) return false;
+      }
+      return true;
+   }
+   template<>
+   inline bool areEqual<ClassSelectionRule>(const ClassSelectionRule* r1,
+                                            const ClassSelectionRule* r2,
+                                            bool moduloNameOrPattern){
+      if (!areEqualAttributes(r1->GetAttributes(), r2->GetAttributes(),moduloNameOrPattern)) return false;
+      // Now check fields
+      if (!areEqualColl(r1->GetFieldSelectionRules(),
+                        r2->GetFieldSelectionRules(),
+                        true)) return false;
+      // On the same footing, now check methods
+      if (!areEqualColl(r1->GetMethodSelectionRules(),
+                        r2->GetMethodSelectionRules(),
+                        true)) return false;
+      return true;
+   }
+}
+
 
 class SelectionRules {
 

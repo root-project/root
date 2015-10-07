@@ -165,32 +165,6 @@ void SelectionRules::ClearSelectionRules()
 }
 
 template<class RULE>
-static bool areEqual(RULE* r1, RULE* r2){
-   return r1->GetAttributes() != r2->GetAttributes();
-}
-
-template<class RULESCOLLECTION>
-static bool areEqual(const RULESCOLLECTION& r1, const RULESCOLLECTION& r2){
-   if (r1.size() != r2.size()) return false;
-   auto rIt1 = r1.begin();
-   auto rIt2 = r2.begin();
-   for (;rIt1!=r1.end();++rIt1,++rIt2){
-      if (!areEqual(&(*rIt1),&(*rIt2))) return false;
-   }
-   return true;
-}
-
-template<>
-bool areEqual<ClassSelectionRule>(ClassSelectionRule* r1, ClassSelectionRule* r2){
-   if (r1->GetAttributes() != r2->GetAttributes()) return false;
-   // Now check fields
-   if (!areEqual(r1->GetFieldSelectionRules(),r2->GetFieldSelectionRules())) return false;
-   // On the same footing, now check methods
-   if (!areEqual(r1->GetMethodSelectionRules(),r2->GetMethodSelectionRules())) return false;
-   return true;
-}
-
-template<class RULE>
 static bool HasDuplicate(RULE* rule, 
                          std::unordered_map<std::string,RULE*>& storedRules,
                          const std::string& attrName){
@@ -198,7 +172,7 @@ static bool HasDuplicate(RULE* rule,
 
    auto storedRule = storedRules[attrName];
    
-   if (!itRetCodePair.second && storedRule->GetSelected() == rule->GetSelected() && !areEqual(storedRule,rule)) {
+   if (!itRetCodePair.second && storedRule->GetSelected() == rule->GetSelected() && !SelectionRulesUtils::areEqual(storedRule,rule)) {
       std::stringstream sstr; sstr << "Rule:\n";
       rule->Print(sstr);
       sstr << "Conflicting rule already stored:\n";
@@ -240,9 +214,11 @@ static bool Implies(ClassSelectionRule& patternRule, ClassSelectionRule& nameRul
    // Check if these both select or both exclude
    if (patternRule.GetSelected() != nameRule.GetSelected()) return false;
 
-   // For the moment check if the name rule has no attribute but the name
+   // If the naming rule has more than one attribute (its name) and the attributes
+   // are not the ones of the pattern rule, bail out.
    // Room for optimisation: check if the attributes are strictly included.
-   if (nameRule.GetAttributes().size() != 1) return false;
+   if (nameRule.GetAttributes().size() != 1 &&
+       !areEqualAttributes(patternRule, nameRule, true /*moduloNameOrPattern*/)) return false;
 
    auto pattern = patternRule.GetAttributePattern().c_str();
    auto name = nameRule.GetAttributeName().c_str();
@@ -252,8 +228,8 @@ static bool Implies(ClassSelectionRule& patternRule, ClassSelectionRule& nameRul
    
    if (implies){
       static const auto msg = "The pattern rule %s matches the name rule %s. "
-      "Since the name rule has no attributes, it will be removed. The pattern "
-      "rule will match the necessary classes if needed.\n";
+      "Since the name rule has no attributes or compatible attributes, "
+      "it will be removed: the pattern rule will match the necessary classes if needed.\n";
 
       ROOT::TMetaUtils::Info("SelectionRules::Optimize", msg, pattern, name);
    }
