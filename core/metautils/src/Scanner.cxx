@@ -841,39 +841,35 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       // We need this check since the same class can be selected through its name or typedef
       bool rcrdDeclNotAlreadySelected = fselectedRecordDecls.insert((RecordDecl*)recordDecl->getCanonicalDecl()).second;
 
-      // Prompt a warning in case the class was selected twice
       auto declSelRuleMapIt = fDeclSelRuleMap.find(recordDecl->getCanonicalDecl());
       if (!fFirstPass &&
           !rcrdDeclNotAlreadySelected &&
-          selected->HasAttributeName() &&
           declSelRuleMapIt != fDeclSelRuleMap.end() &&
           declSelRuleMapIt->second != selected){
-         const std::string& name_value = selected->GetAttributeName();
          std::string normName;
          TMetaUtils::GetNormalizedName(normName,
                                        recordDecl->getASTContext().getTypeDeclType(recordDecl),
                                        fInterpreter,
                                        fNormCtxt);
 
-         auto previouslyMatchingRule = declSelRuleMapIt->second;
+         auto previouslyMatchingRule = (ClassSelectionRule*)declSelRuleMapIt->second;
          int previouslineno = previouslyMatchingRule->GetLineNumber();
 
-         // Avoid warnings if 2 typedefs point to the same class.
-         // See ROOT-7676
-         if(previouslyMatchingRule->IsFromTypedef() && selected->IsFromTypedef()){
+         std::string cleanFileName =  llvm::sys::path::filename(selected->GetSelFileName());
+         auto lineno = selected->GetLineNumber();
+         auto rulesAreCompatible = SelectionRulesUtils::areEqual<ClassSelectionRule>(selected, previouslyMatchingRule, true /*moduloNameOrPattern*/);
+         if (!rulesAreCompatible){
             std::stringstream message;
-            auto lineno = selected->GetLineNumber();
-            std::string cleanFileName =  llvm::sys::path::filename(selected->GetSelFileName());
-            if (lineno > 1) message << "Selection file " << cleanFileName << ", lines " << lineno << " and " << previouslineno << ". ";
-            message << "Attempt to select with a named selection rule an already selected class. The name used in the selection is \""
-                  << name_value << "\" while the class is \"" << normName << "\".";
-            if (selected->GetAttributes().size() > 1){
-               message << " The attributes specified will not be propagated to the typesystem of ROOT.";
-            }
+            if (lineno > 1) message << "Selection file " << cleanFileName << ", lines "
+                                    << lineno << " and " << previouslineno << ". ";
+            message << "Attempt to select a class "<< normName << " with two rules which have incompatible attributes. "
+                    << "The attributes such as transiency might not be correctly propagated to the typesystem of ROOT.\n";
+            selected->Print(message);
+            message << "Conflicting rule already matched:\n";
+            previouslyMatchingRule->Print(message);
             ROOT::TMetaUtils::Warning(0,"%s\n", message.str().c_str());
+            }
          }
-      }
-
 
       fDeclSelRuleMap[recordDecl->getCanonicalDecl()]=selected;
 
