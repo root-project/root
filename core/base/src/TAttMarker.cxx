@@ -100,9 +100,9 @@ accessed via a global name (third column).
        29                    full star            kFullStar
        30                    open star            kOpenStar
        31                    *
-       32                    open triangle down
-       33                    full diamond
-       34                    full cross
+       32                    open triangle down   kOpenTriangleDown
+       33                    full diamond         kFullDiamond
+       34                    full cross           kFullCross
 ~~~
 
 Begin_Macro(source)
