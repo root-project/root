@@ -172,16 +172,18 @@ static bool HasDuplicate(RULE* rule,
 
    auto storedRule = storedRules[attrName];
    
-   if (!itRetCodePair.second && storedRule->GetSelected() == rule->GetSelected() && !SelectionRulesUtils::areEqual(storedRule,rule)) {
-      std::stringstream sstr; sstr << "Rule:\n";
-      rule->Print(sstr);
-      sstr << "Conflicting rule already stored:\n";
-      storedRule->Print(sstr);
-      ROOT::TMetaUtils::Warning("SelectionRules::CheckDuplicates",
-                                   "Duplicated rule with name found.\n%s\n",sstr.str().c_str());
-      return true;
-   }   
-   return false;
+   if (itRetCodePair.second ||
+       storedRule->GetSelected() != rule->GetSelected())  return false;
+   auto areEqual = SelectionRulesUtils::areEqual(storedRule,rule);
+
+   std::stringstream sstr; sstr << "Rule:\n";
+   rule->Print(sstr);
+   sstr << (areEqual ? "Identical " : "Conflicting ");
+   sstr << "rule already stored:\n";
+   storedRule->Print(sstr);
+   ROOT::TMetaUtils::Warning("SelectionRules::CheckDuplicates",
+                             "Duplicated rule found.\n%s",sstr.str().c_str());
+   return !areEqual;
 }
 
 template<class RULESCOLLECTION, class RULE = typename RULESCOLLECTION::value_type>
@@ -214,11 +216,10 @@ static bool Implies(ClassSelectionRule& patternRule, ClassSelectionRule& nameRul
    // Check if these both select or both exclude
    if (patternRule.GetSelected() != nameRule.GetSelected()) return false;
 
-   // If the naming rule has more than one attribute (its name) and the attributes
-   // are not the ones of the pattern rule, bail out.
-   // Room for optimisation: check if the attributes are strictly included.
-   if (nameRule.GetAttributes().size() != 1 &&
-       !areEqualAttributes(patternRule, nameRule, true /*moduloNameOrPattern*/)) return false;
+   // If the two rules are not compatible modulo their name/pattern, bail out
+   if (!SelectionRulesUtils::areEqual(&patternRule, &nameRule, true /*moduloNameOrPattern*/)) {
+      return false;
+   }
 
    auto pattern = patternRule.GetAttributePattern().c_str();
    auto name = nameRule.GetAttributeName().c_str();
@@ -257,7 +258,7 @@ void SelectionRules::Optimize(){
          }
       }
    }
-
+   itPositionsToErase.unique();
    for (auto&& itPositionToErase : itPositionsToErase){
       fClassSelectionRules.erase(itPositionToErase);
    }
