@@ -5,7 +5,11 @@
 
 __all__ = [ 'pylong', 'maxvalue', 'MyTestCase', 'run_pytest', 'FIXCLING' ]
 
-import os, sys, unittest
+import os, sys, unittest, warnings
+
+# avoid conflict wuth the local pytest and py modules and the one from LCG pytools
+warnings.filterwarnings('ignore', message=r'Module .*? is being added to sys\.path', append=True)
+
 
 # add local pytest dir to sys.path to make pytest available
 toplevel = os.path.dirname(os.path.realpath(__file__))
