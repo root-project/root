@@ -390,7 +390,7 @@ Bool_t TFolder::IsOwner()  const
 ///
 /// Indentation is used to identify the folder tree.
 ///
-/// The if option contains a <regexp> it be used to match the name of the objects.
+/// The if option contains a `<regexp>` it be used to match the name of the objects.
 
 void TFolder::ls(Option_t *option) const
 {
