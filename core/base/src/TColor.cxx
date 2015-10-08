@@ -1013,7 +1013,7 @@ void TColor::Allocate()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static method returning color number for color specified by
-/// hex color string of form: #rrggbb, where rr, gg and bb are in
+/// hex color string of form: "#rrggbb", where rr, gg and bb are in
 /// hex between [0,FF], e.g. "#c0c0c0".
 ///
 /// If specified color does not exist it will be created with as
