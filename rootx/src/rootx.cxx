@@ -99,6 +99,8 @@
 #define ROOTBINARY "root.exe"
 #endif
 
+#define ROOTNBBINARY "rootnb.exe"
+
 extern void PopupLogo(bool);
 extern void WaitLogo();
 extern void PopdownLogo();
@@ -423,6 +425,7 @@ static void PrintUsage(char *pname)
    fprintf(stderr, "  -l : do not show splash screen\n");
    fprintf(stderr, "  -x : exit on exception\n");
    fprintf(stderr, " dir : if dir is a valid directory cd to it before executing\n");
+   fprintf(stderr, " --notebook : execute ROOT notebook\n");
    fprintf(stderr, "\n");
    fprintf(stderr, "  -?       : print usage\n");
    fprintf(stderr, "  -h       : print usage\n");
@@ -451,6 +454,7 @@ int main(int argc, char **argv)
    // In batch mode don't show splash screen, idem for no logo mode,
    // in about mode show always splash screen
    bool batch = false, about = false;
+   bool notebook = false;
    int i;
    for (i = 1; i < argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
@@ -458,12 +462,40 @@ int main(int argc, char **argv)
          PrintUsage(argv[0]);
          return 1;
       }
-      if (!strcmp(argv[i], "-b"))      batch   = true;
-      if (!strcmp(argv[i], "-l"))      gNoLogo = true;
-      if (!strcmp(argv[i], "-ll"))     gNoLogo = true;
-      if (!strcmp(argv[i], "-a"))      about   = true;
-      if (!strcmp(argv[i], "-config")) gNoLogo = true;
+      if (!strcmp(argv[i], "-b"))         batch    = true;
+      if (!strcmp(argv[i], "-l"))         gNoLogo  = true;
+      if (!strcmp(argv[i], "-ll"))        gNoLogo  = true;
+      if (!strcmp(argv[i], "-a"))         about    = true;
+      if (!strcmp(argv[i], "-config"))    gNoLogo  = true;
+      if (!strcmp(argv[i], "--notebook")) notebook = true;
    }
+
+   if (notebook) {
+      char *rootsys = getenv("ROOTSYS");
+
+      // Build command
+#ifdef ROOTBINDIR
+      snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTNBBINARY);
+#else
+      snprintf(arg0, sizeof(arg0), "%s/bin/%s", rootsys, ROOTNBBINARY);
+#endif
+
+      // Execute ROOT notebook binary
+      execl(arg0, arg0, NULL);
+  
+      // Exec failed
+#ifndef ROOTBINDIR
+      fprintf(stderr,
+              "%s: can't start ROOT notebook -- check that %s/bin/%s exists!\n",
+              argv[0], rootsys, ROOTBINARY);
+#else
+      fprintf(stderr, "%s: can't start ROOT notebook -- check that %s/%s exists!\n",
+              argv[0], ROOTBINDIR, ROOTBINARY);
+#endif
+
+      return 1;
+   }
+
    if (batch)
       gNoLogo = true;
    if (about) {
