@@ -592,9 +592,11 @@ TPMERegexp::TPMERegexp() :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor:
+/// Constructor.
+///
 /// \param[in] s      string to compile into regular expression
 /// \param[in] opts   perl-style character flags to be set on TPME object
+/// \param[in] nMatchMax  maximum number of matches
 
 TPMERegexp::TPMERegexp(const TString& s, const TString& opts, Int_t nMatchMax) :
    TPRegexp(s),
@@ -608,9 +610,11 @@ TPMERegexp::TPMERegexp(const TString& s, const TString& opts, Int_t nMatchMax) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor:
-/// \param[in] s      string to compile into regular expression
-/// \param[in] opts   PCRE-style option flags to be set on TPME object
+/// Constructor.
+///
+/// \param[in] s          string to compile into regular expression
+/// \param[in] opts       PCRE-style option flags to be set on TPME object
+/// \param[in] nMatchMax  maximum number of matches
 
 TPMERegexp::TPMERegexp(const TString& s, UInt_t opts, Int_t nMatchMax) :
    TPRegexp(s),
@@ -625,7 +629,7 @@ TPMERegexp::TPMERegexp(const TString& s, UInt_t opts, Int_t nMatchMax) :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
-/// Only PCRE specifics are copied, not last-match or global-matech
+/// Only PCRE specifics are copied, not last-match or global-match
 /// information.
 
 TPMERegexp::TPMERegexp(const TPMERegexp& r) :
@@ -857,11 +861,11 @@ Int_t TPMERegexp::Split(const TString& s, Int_t maxfields)
 ///
 /// After the substitution, another pass is made over the resulting
 /// string and the following special tokens are interpreted:
-///  - \l - lowercase next char,
-///  - \u - uppercase next char,
-///  - \L - lowercase till \E,
-///  - \U - uppercase till \E, and
-///  - \E - end case modification.
+///  - `\l`   lowercase next char,
+///  - `\u`   uppercase next char,
+///  - `\L`   lowercase till `\E`,
+///  - `\U`   uppercase till `\E`, and
+///  - `\E`   end case modification.
 
 Int_t TPMERegexp::Substitute(TString& s, const TString& r, Bool_t doDollarSubst)
 {
