@@ -848,6 +848,9 @@ directory - this behavior is now implement by the default constructor.
 ### Geom
 - Fix missing OCC header file for the version [ROOT-7536]
 
+## JIRA generated release notes
+- [All resolved JIRA issues attached to this release](https://sft.its.cern.ch/jira/secure/ReleaseNote.jspa?projectId=10010&version=13213)
+
 ---------------------------------------------------------------------------------------------------------------------
 
 ## HEAD of the v6-04-00-patches branch
