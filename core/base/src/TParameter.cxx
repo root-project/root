@@ -10,8 +10,6 @@
  *************************************************************************/
 
 /** \class TParameter
-TParameter <AParamType> .
-
 Named parameter, streamable and storable.
 */
 
