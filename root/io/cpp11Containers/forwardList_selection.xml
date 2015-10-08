@@ -17,15 +17,9 @@
    <class name="std::deque<vector<TH1F>>" />
 
 <!-- Why not stressing pattern selection with complex -->
-   <class pattern="std::vector<std::complex<*>>" />
-   <class pattern="std::list<std::complex<*>>" />
-   <class pattern="std::forward_list<std::complex<*>>" />
-   <class pattern="std::deque<std::complex<*>>" />
    <class pattern="std::vector<std::complex<*> >" />
    <class pattern="std::list<std::complex<*> >" />
-<!-- <class pattern="std::forward_list<std::complex<*> >" /> -->
-   <class name="std::forward_list<std::complex<float>>" />
-   <class name="std::forward_list<std::complex<double>>" />
+   <class pattern="std::forward_list<std::complex<*> >" />
    <class pattern="std::deque<std::complex<*> >" />
 
 </rootdict>
