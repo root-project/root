@@ -348,7 +348,8 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          // optimisation.
          if (!patternMatched &&
                D &&
-               ROOT::TMetaUtils::IsStdDropDefaultClass(*D)) {
+               //ROOT::TMetaUtils::IsStdDropDefaultClass(*D)) {
+               0 != TClassEdit::IsSTLCont(name)) {
             TClassEdit::GetNormalizedName(auxName, name.c_str());
             if (name.size() != auxName.size()) {
                auxName = TClassEdit::InsertStd(auxName.c_str());
