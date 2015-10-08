@@ -262,9 +262,11 @@ void TVirtualX::FlushOpenGLBuffer(Handle_t /*ctx*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draws a box between [x1,y1] and [x2,y2] according to the "mode".
 ///
-///  \param [in] mode   drawing mode:
-///        - mode = 0 hollow  (kHollow)
-///        - mode = 1 solid   (kSolid)
+/// \param [in] x1,y1   left down corner
+/// \param [in] x2,y2   right up corner
+/// \param [in] mode    drawing mode:
+///             - mode = 0 hollow  (kHollow)
+///             - mode = 1 solid   (kSolid)
 
 void TVirtualX::DrawBox(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/,
                         EBoxMode /*mode*/)
@@ -290,8 +292,8 @@ void TVirtualX::DrawCellArray(Int_t /*x1*/, Int_t /*y1*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Fills area described by the polygon.
 ///
-/// \param [in] n         number of points
-/// \param [in] xy(2,n)   list of points
+/// \param [in] n    number of points
+/// \param [in] xy   list of points. xy(2,n)
 
 void TVirtualX::DrawFillArea(Int_t /*n*/, TPoint * /*xy*/)
 {
@@ -540,6 +542,7 @@ Int_t TVirtualX::InitWindow(ULong_t /*window*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Registers a window created by Qt as a ROOT window
 ///
+/// \param [in] qwid   window identifier
 /// \param [in] w, h   the width and height, which define the window size
 
 Int_t TVirtualX::AddWindow(ULong_t /*qwid*/, UInt_t /*w*/, UInt_t /*h*/)
@@ -550,9 +553,10 @@ Int_t TVirtualX::AddWindow(ULong_t /*qwid*/, UInt_t /*w*/, UInt_t /*h*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Registers a pixmap created by TGLManager as a ROOT pixmap
 ///
+/// \param [in] pixid  pixmap identifier
 /// \param [in] w, h   the width and height, which define the pixmap size
 
-Int_t TVirtualX::AddPixmap(ULong_t /*pixind*/, UInt_t /*w*/, UInt_t /*h*/)
+Int_t TVirtualX::AddPixmap(ULong_t /*pixid*/, UInt_t /*w*/, UInt_t /*h*/)
 {
    return 0;
 }
@@ -570,6 +574,7 @@ void TVirtualX::RemoveWindow(ULong_t /*qwid*/)
 /// It does not change the window's size, raise the window, or change
 /// the mapping state of the window.
 ///
+/// \param [in] wid    window identifier
 /// \param [in] x, y   coordinates, which define the new position of the window
 ///                    relative to its parent.
 
@@ -665,6 +670,7 @@ void TVirtualX::RescaleWindow(Int_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Resizes the specified pixmap "wid".
 ///
+/// \param [in] wid    window identifier
 /// \param [in] w, h   the width and height which define the pixmap dimensions
 
 Int_t TVirtualX::ResizePixmap(Int_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/)
@@ -894,9 +900,10 @@ void TVirtualX::SetTextColor(Color_t /*cindex*/)
 /// Sets text font to specified name "fontname".This function returns 0 if
 /// the specified font is found, 1 if it is not.
 ///
-/// \param [in] mode   loading flag
-///       - mode = 0 search if the font exist (kCheck)
-///       - mode = 1 search the font and load it if it exists (kLoad)
+/// \param [in] fontname   font name
+/// \param [in] mode       loading flag
+///           - mode = 0 search if the font exist (kCheck)
+///           - mode = 1 search the font and load it if it exists (kLoad)
 
 Int_t TVirtualX::SetTextFont(char * /*fontname*/, ETextSetMode /*mode*/)
 {
@@ -952,6 +959,7 @@ void TVirtualX::UpdateWindow(Int_t /*mode*/)
 ///
 /// \param [in] ix   new X coordinate of pointer
 /// \param [in] iy   new Y coordinate of pointer
+/// \param [in] id   window identifier
 ///
 /// Coordinates are relative to the origin of the window id
 /// or to the origin of the current window if id == 0.
@@ -1056,8 +1064,9 @@ void TVirtualX::LowerWindow(Window_t /*id*/)
 /// It does not change the window's size, raise the window, or change
 /// the mapping state of the window.
 ///
+/// \param [in] id     window identifier
 /// \param [in] x, y   coordinates, which define the new position of the window
-///        relative to its parent.
+///                    relative to its parent.
 
 void TVirtualX::MoveWindow(Window_t /*id*/, Int_t /*x*/, Int_t /*y*/)
 {
@@ -1067,10 +1076,11 @@ void TVirtualX::MoveWindow(Window_t /*id*/, Int_t /*x*/, Int_t /*y*/)
 /// Changes the size and location of the specified window "id" without
 /// raising it.
 ///
+/// \param [in] id     window identifier
 /// \param [in] x, y   coordinates, which define the new position of the window
-///           relative to its parent.
+///                    relative to its parent.
 /// \param [in] w, h   the width and height, which define the interior size of
-///           the window
+///                    the window
 
 void TVirtualX::MoveResizeWindow(Window_t /*id*/, Int_t /*x*/, Int_t /*y*/,
                                    UInt_t /*w*/, UInt_t /*h*/)
@@ -1082,8 +1092,9 @@ void TVirtualX::MoveResizeWindow(Window_t /*id*/, Int_t /*x*/, Int_t /*y*/,
 /// including its borders. This function does not change the window's
 /// upper-left coordinate.
 ///
+/// \param [in] id     window identifier
 /// \param [in] w, h   the width and height, which are the interior dimensions of
-///           the window after the call completes.
+///                    the window after the call completes.
 
 void TVirtualX::ResizeWindow(Window_t /*id*/, UInt_t /*w*/, UInt_t /*h*/)
 {
@@ -1509,13 +1520,16 @@ void TVirtualX::Bell(Int_t /*percent*/)
 /// Combines the specified rectangle of "src" with the specified rectangle
 /// of "dest" according to the "gc".
 ///
+/// \param [in] src              source rectangle
+/// \param [in] dest             destination rectangle
+/// \param [in] gc               graphics context
 /// \param [in] src_x, src_y     specify the x and y coordinates, which are relative
-///                     to the origin of the source rectangle and specify
-///                     upper-left corner.
+///                              to the origin of the source rectangle and specify
+///                              upper-left corner.
 /// \param [in] width, height    the width and height, which are the dimensions of both
-///                     the source and destination rectangles
+///                              the source and destination rectangles
 /// \param [in] dest_x, dest_y   specify the upper-left corner of the destination
-///                     rectangle
+///                              rectangle
 ///
 /// GC components in use: function, plane-mask, subwindow-mode,
 /// graphics-exposure, clip-x-origin, clip-y-origin, and clip-mask.
@@ -1731,8 +1745,9 @@ void TVirtualX::SetWMPosition(Window_t /*id*/, Int_t /*x*/, Int_t /*y*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Tells window manager the desired size of window "id".
 ///
-/// \param [in] w   the width
-/// \param [in] h   the height
+/// \param [in] id   window identifier
+/// \param [in] w    the width
+/// \param [in] h    the height
 
 void TVirtualX::SetWMSize(Window_t /*id*/, UInt_t /*w*/, UInt_t /*h*/)
 {
@@ -1742,10 +1757,11 @@ void TVirtualX::SetWMSize(Window_t /*id*/, UInt_t /*w*/, UInt_t /*h*/)
 /// Gives the window manager minimum and maximum size hints of the window
 /// "id". Also specify via "winc" and "hinc" the resize increments.
 ///
+/// \param [in] id           window identifier
 /// \param [in] wmin, hmin   specify the minimum window size
 /// \param [in] wmax, hmax   specify the maximum window size
 /// \param [in] winc, hinc   define an arithmetic progression of sizes into which
-///                 the window to be resized (minimum to maximum)
+///                          the window to be resized (minimum to maximum)
 
 void TVirtualX::SetWMSizeHints(Window_t /*id*/, UInt_t /*wmin*/, UInt_t /*hmin*/,
                                UInt_t /*wmax*/, UInt_t /*hmax*/,
@@ -1901,12 +1917,15 @@ void TVirtualX::DrawRectangle(Drawable_t /*id*/, GContext_t /*gc*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Draws multiple line segments. Each line is specified by a pair of points.
 ///
+/// \param [in] id     Drawable identifier
+/// \param [in] gc     graphics context
 /// \param [in] *seg   specifies an array of segments
 /// \param [in] nseg   specifies the number of segments in the array
 ///
 /// GC components in use: function, plane-mask, line-width, line-style,
 /// cap-style, join-style, fill-style, subwindow-mode, clip-x-origin,
 /// clip-y-origin, clip-mask.
+///
 /// GC mode-dependent components: foreground, background, tile, stipple,
 /// tile-stipple-x-origin, tile-stipple-y-origin, dash-offset, and dash-list.
 /// (see also the GCValues_t structure)
@@ -2017,8 +2036,9 @@ void TVirtualX::TranslateCoordinates(Window_t /*src*/, Window_t /*dest*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the location and the size of window "id"
 ///
+/// \param [in] id     drawable identifier
 /// \param [in] x, y   coordinates of the upper-left outer corner relative to the
-///           parent window's origin
+///                    parent window's origin
 /// \param [in] w, h   the inside size of the window, not including the border
 
 void TVirtualX::GetWindowSize(Drawable_t /*id*/, Int_t &x, Int_t &y,
@@ -2033,8 +2053,10 @@ void TVirtualX::GetWindowSize(Drawable_t /*id*/, Int_t &x, Int_t &y,
 /// automatically if the last point in the list does not coincide with the
 /// first point.
 ///
-/// \param [in] Point_t *points   specifies an array of points
-/// \param [in] Int_t npnt        specifies the number of points in the array
+/// \param [in] id        window identifier
+/// \param [in] gc        graphics context
+/// \param [in] *points   specifies an array of points
+/// \param [in] npnt      specifies the number of points in the array
 ///
 /// GC components in use: function, plane-mask, fill-style, fill-rule,
 /// subwindow-mode, clip-x-origin, clip-y-origin, and clip-mask.  GC
@@ -2051,14 +2073,14 @@ void TVirtualX::FillPolygon(Window_t /*id*/, GContext_t /*gc*/, Point_t *
 /// coordinates relative to the root window's origin.
 ///
 /// \param [in] id               specifies the window
-/// \param [in] rotw             the root window that the pointer is in
+/// \param [in] rootw            the root window that the pointer is in
 /// \param [in] childw           the child window that the pointer is located in, if any
 /// \param [in] root_x, root_y   the pointer coordinates relative to the root window's
-///                     origin
+///                              origin
 /// \param [in] win_x, win_y     the pointer coordinates relative to the specified
-///                     window "id"
+///                              window "id"
 /// \param [in] mask             the current state of the modifier keys and pointer
-///                     buttons
+///                              buttons
 
 void TVirtualX::QueryPointer(Window_t /*id*/, Window_t &rootw, Window_t &childw,
                              Int_t &root_x, Int_t &root_y, Int_t &win_x,
