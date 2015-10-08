@@ -319,7 +319,7 @@ void TSystem::NotifyApplicationCreated()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Beep for duration milliseconds with a tone of frequency freq.
-/// Defaults to printing the '\a' character to stdout.
+/// Defaults to printing the `\a` character to stdout.
 /// If freq or duration is <0 respectively, use default value.
 /// If setDefault is set, only set the frequency and duration as
 /// new defaults, but don't beep.
@@ -1014,7 +1014,8 @@ const char *TSystem::DirName(const char *pathname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert from a Unix pathname to a local pathname. E.g. from /user/root to \user\root.
+/// Convert from a Unix pathname to a local pathname. E.g. from `/user/root` to
+/// `\user\root`.
 
 const char *TSystem::UnixPathName(const char *name)
 {
@@ -3948,8 +3949,11 @@ void  TSystem::SetLinkedLibs(const char *linkedLibs)
 /// the end of the linkdef file used to created the ACLiC dictionary.
 /// This effectively enable the full customization of the creation
 /// of the dictionary.  It should be noted that the file is intended
-/// as a linkdef 'fragment', so usually you would not list the
-/// typical '#pragma link off ....".
+/// as a linkdef `fragment`, so usually you would not list the
+/// typical:
+///~~~ {.cpp}
+///   #pragma link off ....
+///~~~
 
 void  TSystem::SetLinkdefSuffix(const char *suffix)
 {

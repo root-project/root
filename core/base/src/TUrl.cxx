@@ -91,9 +91,9 @@ TUrl::~TUrl()
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse url character string and split in its different subcomponents.
 /// Use IsValid() to check if URL is legal.
-///
+///~~~ {.cpp}
 /// url: [proto://][user[:passwd]@]host[:port]/file.ext[?options][#anchor]
-///
+///~~~
 /// Known protocols: http, root, proof, ftp, news and any special protocols
 /// defined in the rootrc Url.Special key.
 /// The default protocol is "http", unless defaultIsFile is true in which
