@@ -26,8 +26,8 @@ The format of the `.rootrc` file is similar to the `.Xdefaults` format:
 Where `<SystemName>` is either Unix, WinNT, MacOS or Vms,
 `<RootName>` the name as given in the TApplication ctor (or "RootApp"
 in case no explicit TApplication derived object was created),
-`<ProgName>` the current program name and <name> the resource name,
-with optionally a type specification. <value> can be either a
+`<ProgName>` the current program name and `<name>` the resource name,
+with optionally a type specification. `<value>` can be either a
 string, an integer, a float/double or a boolean with the values
 TRUE, FALSE, ON, OFF, YES, NO, OK, NOT. Booleans will be returned as
 an integer 0 or 1. The options [+] allows the concatenation of
@@ -377,11 +377,11 @@ ClassImp(TEnv)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a resource table and read the (possibly) three resource files, i.e
-/// $ROOTSYS/etc/system<name> (or ROOTETCDIR/system<name>), $HOME/<name> and
-/// ./<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
+/// `$ROOTSYS/etc/system<name>` (or `ROOTETCDIR/system<name>`), `$HOME/<name>` and
+/// `./<name>`. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
 /// read additional user defined resource files by creating additional TEnv
 /// objects. By setting the shell variable ROOTENV_NO_HOME=1 the reading of
-/// the $HOME/<name> resource file will be skipped. This might be useful in
+/// the `$HOME/<name>` resource file will be skipped. This might be useful in
 /// case the home directory resides on an auto-mounted remote file system
 /// and one wants to avoid the file system from being mounted.
 
