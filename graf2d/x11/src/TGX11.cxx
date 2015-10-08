@@ -573,8 +573,9 @@ void TGX11::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill area described by polygon.
-///  \param [in] n         : number of points
-///  \param [in] xy(2,n)   : list of points
+///
+///  \param [in] n     number of points
+///  \param [in] xyt   list of points
 
 void TGX11::DrawFillArea(int n, TPoint *xyt)
 {
@@ -608,8 +609,8 @@ void TGX11::DrawLine(int x1, int y1, int x2, int y2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a line through all points.
 ///
-///  \param [in] n         : number of points
-///  \param [in] xy        : list of points
+///  \param [in] n     number of points
+///  \param [in] xyt   list of points
 
 void TGX11::DrawPolyLine(int n, TPoint *xyt)
 {
@@ -660,8 +661,8 @@ void TGX11::DrawPolyLine(int n, TPoint *xyt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw n markers with the current attributes at position x, y.
 ///
-///  \param [in] n    : number of markers to draw
-///  \param [in] xy   : x,y coordinates of markers
+///  \param [in] n     number of markers to draw
+///  \param [in] xyt   x,y coordinates of markers
 
 void TGX11::DrawPolyMarker(int n, TPoint *xyt)
 {
@@ -945,7 +946,8 @@ Int_t TGX11::GetDoubleBuffer(int wid)
 ///  \param [in] wid        : window identifier
 ///  \param [in] x,y        : window position (output)
 ///  \param [in] w,h        : window size (output)
-///  \param [in] if wid < 0 the size of the display is returned
+///
+/// if wid < 0 the size of the display is returned
 
 void TGX11::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &h)
 {
@@ -2804,8 +2806,7 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set text alignment.
 ///
-///  \param [in] txalh   : horizontal text alignment
-///  \param [in] txalv   : vertical text alignment
+///  \param [in] talign   text alignment
 
 void TGX11::SetTextAlign(Short_t talign)
 {
@@ -2885,10 +2886,10 @@ void TGX11::SetTextColor(Color_t cindex)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set text font to specified name.
 ///
-///  \param [in] mode       : loading flag
-///            - mode=0     : search if the font exist (kCheck)
-///            - mode=1     : search the font and load it if it exists (kLoad)
-///  \param [in] font       : font name
+///  \param [in] fontname   font name
+///  \param [in] mode       loading flag
+///            - mode=0     search if the font exist (kCheck)
+///            - mode=1     search the font and load it if it exists (kLoad)
 ///
 /// Set text font to specified name. This function returns 0 if
 /// the specified font is found, 1 if not.
@@ -2993,8 +2994,9 @@ void TGX11::UpdateWindow(int mode)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set pointer position.
 ///
-///  \param [in] ix       : New X coordinate of pointer
-///  \param [in] iy       : New Y coordinate of pointer
+/// \param [in] ix   New X coordinate of pointer
+/// \param [in] iy   New Y coordinate of pointer
+/// \param [in] id   Window identifier
 ///
 /// Coordinates are relative to the origin of the window id
 /// or to the origin of the current window if id == 0.
@@ -3014,7 +3016,6 @@ void TGX11::Warp(Int_t ix, Int_t iy, Window_t id)
 ///
 ///  \param [in] wid         : Pixmap address
 ///  \param [in] w,h         : Width and height of the pixmap.
-///  \param [in] lenname     : pixmap name length
 ///  \param [in] pxname      : pixmap name
 
 void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
@@ -3379,7 +3380,8 @@ Pixmap_t TGX11::CreatePixmapFromData(unsigned char * /*bits*/, UInt_t /*width*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// Register pixmap created by gVirtualGL
 ///
-///  \param [in] w,h : Width and height of the pixmap.
+/// \param [in] pixid   Pixmap identifier
+/// \param [in] w,h     Width and height of the pixmap
 ///
 /// register new pixmap
 
