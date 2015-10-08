@@ -992,7 +992,7 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
 ///
 ///      [<regexp>]
 ///
-/// The <regexp> will be used to match the name of the objects.
+/// The `<regexp>` will be used to match the name of the objects.
 /// By default memory and disk objects are listed.
 
 void TDirectory::ls(Option_t *option) const
