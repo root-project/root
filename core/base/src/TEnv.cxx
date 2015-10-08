@@ -377,8 +377,10 @@ ClassImp(TEnv)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a resource table and read the (possibly) three resource files, i.e
-/// `$ROOTSYS/etc/system<name>` (or `ROOTETCDIR/system<name>`), `$HOME/<name>` and
-/// `./<name>`. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
+/// `$ROOTSYS/etc/system``<name>` (or `ROOTETCDIR/system``<name>`),
+/// `$HOME/``<name>` and
+/// `./``<name>`.
+/// ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
 /// read additional user defined resource files by creating additional TEnv
 /// objects. By setting the shell variable ROOTENV_NO_HOME=1 the reading of
 /// the `$HOME/<name>` resource file will be skipped. This might be useful in

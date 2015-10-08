@@ -368,15 +368,15 @@ char *TApplication::Argv(Int_t index) const
 /// i.e. they don't start with - or + are treated as follows (and also removed
 /// from the argument array):
 ///
-///  - <dir>       is considered the desired working directory and available
-///                via WorkingDirectory(), if more than one dir is specified the
-///                first one will prevail
-///  - <file>      if the file exists its added to the InputFiles() list
-///  - <file>.root are considered ROOT files and added to the InputFiles() list,
-///                the file may be a remote file url
-///  - <macro>.C   are considered ROOT macros and also added to the InputFiles() list
+///  - `<dir>`       is considered the desired working directory and available
+///                  via WorkingDirectory(), if more than one dir is specified the
+///                  first one will prevail
+///  - `<file>`      if the file exists its added to the InputFiles() list
+///  - `<file>.root` are considered ROOT files and added to the InputFiles() list,
+///                  the file may be a remote file url
+///  - `<macro>.C`   are considered ROOT macros and also added to the InputFiles() list
 ///
-/// In TRint we set the working directory to the <dir>, the ROOT files are
+/// In TRint we set the working directory to the `<dir>`, the ROOT files are
 /// connected, and the macros are executed. If your main TApplication is not
 /// TRint you have to decide yourself what to do with these options.
 /// All specified arguments (also the ones removed) can always be retrieved
