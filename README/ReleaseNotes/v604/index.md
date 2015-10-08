@@ -811,11 +811,14 @@ directory - this behavior is now implement by the default constructor.
  - Make sure the line width used to draw `#sqrt` is always >=1.
 
 
-## HEAD of the v6-04-00-patches branch
+----------------------------------------------------------------------------------------------------------------------
+
+## Release v6.04/04
 
 ### Build System
 - Fix generation of PCH with CXX flags with spaces [ROOT-7478]
 - Implemented option 'geocad' with CMake making use of the OpenCASCADE software package.
+- Fix option 'rpath' for CMake and ensure that works for MacOSX 10.11
 
 ### Core
 - Fix the location of include files in ROOTINCDIR/include instead of ROOTINCDIR [ROOT-7537]
@@ -845,6 +848,9 @@ directory - this behavior is now implement by the default constructor.
 ### Geom
 - Fix missing OCC header file for the version [ROOT-7536]
 
+---------------------------------------------------------------------------------------------------------------------
 
-Changes will be part of the future v6.04/04.
+## HEAD of the v6-04-00-patches branch
+
+Changes will be part of the future v6.04/06.
 
