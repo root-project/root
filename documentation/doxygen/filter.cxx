@@ -5,6 +5,7 @@
 //    filters doc files.
 //
 
+#include <unistd.h>
 #include <stdio.h>
 #include <string>
 #include <iostream>

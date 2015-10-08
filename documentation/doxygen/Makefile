@@ -14,7 +14,7 @@ export DOXYGEN_INCLUDE_PATH := $(shell find $(DOXYGEN_STRIP_PATH) -type d -name 
 all: filter doxygen
 
 filter:
-	`root-config --cxx` -o filter filter.cxx
+	`root-config --cxx` -o filter filter.cxx -std=c++11
 
 doxygen:
 	if [ ! -d $(DOXYGEN_OUTPUT_DIRECTORY) ]; then mkdir $(DOXYGEN_OUTPUT_DIRECTORY); fi
