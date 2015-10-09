@@ -462,8 +462,8 @@ void ClassificationSettings::startTestCycle ()
 
     bool Settings::hasConverged (double testError)
     {
-//        std::cout << "check convergence; minError " << m_minError << "  current " << testError
-//                  << "  current convergence count " << m_convergenceCount << std::endl;
+        // std::cout << "check convergence; minError " << m_minError << "  current " << testError
+        //           << "  current convergence count " << m_convergenceCount << std::endl;
         if (testError < m_minError*0.999)
         {
             m_convergenceCount = 0;
