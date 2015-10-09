@@ -1,3 +1,13 @@
+#ROOT-6752
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(expressiveErrorMessages expressiveErrorMessages.h SELECTION expressiveErrorMessages_selection.xml)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-expressiveErrorMessages
+                  MACRO  expressiveErrorMessages.C
+                  OUTREF expressiveErrorMessages.ref
+                  PASSRC 1
+                  OUTCNV expressiveErrorMessages_filter.sh
+                  DEPENDS ${GENERATE_REFLEX_TEST})
+
 ROOTTEST_ADD_TEST(roottest-root-meta-rlibmap
                   EXEC rlibmapLauncher.py
                   PASSRC 1
