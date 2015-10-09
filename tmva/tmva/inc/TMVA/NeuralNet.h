@@ -59,8 +59,13 @@ namespace TMVA
 namespace NN
 {
 
-//    double gaussDouble (double mean, double sigma);
+//    double gaussDoubl (edouble mean, double sigma);
 
+
+
+double gaussDouble (double mean, double sigma);
+double uniformDouble (double minValue, double maxValue);
+int randomInt (int maxValue);
 
 
 
