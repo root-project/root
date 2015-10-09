@@ -3659,9 +3659,10 @@ std::string GenerateFwdDeclString(const RScanner &scan,
    for (auto* TD: scan.fSelectedTypedefs)
       selectedDecls.push_back(TD);
 
-   fwdDeclString += "R\"DICTFWDDCLS(\n";
+   // The "R\"DICTFWDDCLS(\n" ")DICTFWDDCLS\"" pieces have been moved to
+   // TModuleGenerator to be able to make the diagnostics more telling in presence
+   // of an issue ROOT-6752.
    fwdDeclString += Decls2FwdDecls(selectedDecls,interp);
-   fwdDeclString += ")DICTFWDDCLS\"";
 
    // Functions
 //    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
@@ -3677,7 +3678,7 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 //          fwdDeclString+="\""+buffer+"\"\n";
 //    }
 
-   if (fwdDeclString.empty()) fwdDeclString = R"("")";
+   if (fwdDeclString.empty()) fwdDeclString = "";
    return fwdDeclString;
 }
 
