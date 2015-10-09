@@ -1,3 +1,26 @@
+/**
+ * @file NeuralNet
+ * @author  Peter Speckmayer
+ * @version 1.0
+ *
+ * @section LICENSE
+ *
+ *
+ * @section Neural net implementation
+ *
+ * An implementation of a neural net for TMVA. This neural net uses multithreading
+ * 
+ */
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// NeuralNet                                                            //
+//                                                                      //
+// A neural net implementation                                          //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 #ifndef TMVA_NEURAL_NET
 #define TMVA_NEURAL_NET
 #pragma once
@@ -36,8 +59,13 @@ namespace TMVA
 namespace NN
 {
 
-//    double gaussDouble (double mean, double sigma);
+//    double gaussDoubl (edouble mean, double sigma);
 
+
+
+double gaussDouble (double mean, double sigma);
+double uniformDouble (double minValue, double maxValue);
+int randomInt (int maxValue);
 
 
 
@@ -87,6 +115,10 @@ class Net;
 typedef std::vector<char> DropContainer;
 
 
+/*! \brief The Batch class encapsulates one mini-batch
+ *
+ *  Holds a const_iterator to the beginning and the end of one batch in a vector of Pattern
+ */
 class Batch 
 {
 public:
@@ -101,8 +133,8 @@ public:
     const_iterator end   () const { return m_itEnd; }
 
 private:
-    const_iterator m_itBegin;
-    const_iterator m_itEnd;
+    const_iterator m_itBegin; ///< iterator denoting the beginning of the batch
+    const_iterator m_itEnd;   ///< iterator denoting the end of the batch
 };
 
 
@@ -170,21 +202,35 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
 
+///< list all the minimizer types
 enum MinimizerType
 {
-    fSteepest
+    fSteepest ///< SGD
 };
 
 
 
 
 
+/*! \brief Steepest Gradient Descent algorithm (SGD)
+ *
+ *  Implements a steepest gradient descent minimization algorithm
+ */
 class Steepest
 {
 public:
 
     size_t m_repetitions;
 
+    
+   /*! \brief c'tor
+    *
+    *  C'tor
+    * 
+    * \param learningRate denotes the learning rate for the SGD algorithm
+    * \param momentum fraction of the velocity which is taken over from the last step
+    * \param repetitions re-compute the gradients each "repetitions" steps
+    */
     Steepest (double learningRate = 1e-4, 
               double momentum = 0.5, 
               size_t repetitions = 10) 
@@ -193,13 +239,24 @@ public:
         , m_beta (momentum)
     {}
 
+   /*! \brief operator to call the steepest gradient descent algorithm
+    *
+    *  entry point to start the minimization procedure
+    * 
+    * \param fitnessFunction (templated) function which has to be provided. This function is minimized
+    * \param weights (templated) a reference to a container of weights. The result of the minimization procedure 
+    *                is returned via this reference (needs to support std::begin and std::end
+    * \param passThrough (templated) object which can hold any data which the fitness function needs. This object 
+    *                    is not touched by the minimizer; This object is provided to the fitness function when
+    *                    called
+    */
     template <typename Function, typename Weights, typename PassThrough>
         double operator() (Function& fitnessFunction, Weights& weights, PassThrough& passThrough);
 
 
-    double m_alpha;
-    double m_beta;
-    std::vector<double> m_prevGradients;
+    double m_alpha; ///< internal parameter (learningRate)
+    double m_beta;  ///< internal parameter (momentum)
+    std::vector<double> m_prevGradients; ///< vector remembers the gradients of the previous step
 };
 
 
@@ -211,34 +268,6 @@ public:
 
 
 
-
-
-
-
-
-
-
-
-// walk along the maximum gradient
-class MaxGradWeight
-{
-public:
-
-    size_t m_repetitions;
-
-    MaxGradWeight (double learningRate = 1e-4, size_t repetitions = 10) 
-	: m_repetitions (repetitions)
-        , m_learningRate (learningRate)
-    {}
-
-
-
-    template <typename Function, typename Weights, typename PassThrough>
-        double operator() (Function& fitnessFunction, const Weights& weights, PassThrough& passThrough);
-
-private:
-    double m_learningRate;
-};
 
 
 
@@ -281,7 +310,12 @@ template <typename ItWeight>
 
 
 
-// the actual data for the layer (not the layout)
+/*! \brief LayerData holds the data of one layer
+ *
+ *     LayerData holds the data of one layer, but not its layout 
+ *
+ *  
+ */
 class LayerData
 {
 public:
@@ -296,13 +330,46 @@ public:
 
     typedef DropContainer::const_iterator const_dropout_iterator;
     
+   /*! \brief c'tor of LayerData
+    *
+    *  C'tor of LayerData for the input layer
+    * 
+    * \param itInputBegin iterator to the begin of a vector which holds the values of the nodes of the neural net
+    * \param itInputEnd iterator to the end of a vector which holdsd the values of the nodes of the neural net
+    * \param eModeOutput indicates a potential tranformation of the output values before further computation
+    *                    DIRECT does not further transformation; SIGMOID applies a sigmoid transformation to each
+    *                    output value (to create a probability); SOFTMAX applies a softmax transformation to all 
+    *                    output values (mutually exclusive probability)
+    */
     LayerData (const_iterator_type itInputBegin, const_iterator_type itInputEnd, ModeOutputValues eModeOutput = ModeOutputValues::DIRECT);
 
 
+   /*! \brief c'tor of LayerData
+    *
+    *  C'tor of LayerData for the input layer
+    * 
+    * \param inputSize input size of this layer
+    */
     LayerData  (size_t inputSize);
     ~LayerData ()    {}
 
 
+   /*! \brief c'tor of LayerData
+    *
+    *  C'tor of LayerData for all layers which are not the input layer; Used during the training of the NN
+    * 
+    * \param size size of the layer
+    * \param itWeightBegin indicates the start of the weights for this layer on the weight vector
+    * \param itGradientBegin indicates the start of the gradients for this layer on the gradient vector
+    * \param itFunctionBegin indicates the start of the vector of activation functions for this layer on the 
+    *                        activation function vector
+    * \param itInverseFunctionBegin indicates the start of the vector of activation functions for this 
+    *                               layer on the activation function vector
+    * \param eModeOutput indicates a potential tranformation of the output values before further computation
+    *                    DIRECT does not further transformation; SIGMOID applies a sigmoid transformation to each
+    *                    output value (to create a probability); SOFTMAX applies a softmax transformation to all 
+    *                    output values (mutually exclusive probability)
+    */
     LayerData (size_t size, 
 	       const_iterator_type itWeightBegin, 
 	       iterator_type itGradientBegin, 
@@ -310,10 +377,27 @@ public:
 	       const_function_iterator_type itInverseFunctionBegin,
 	       ModeOutputValues eModeOutput = ModeOutputValues::DIRECT);
 
+   /*! \brief c'tor of LayerData
+    *
+    *  C'tor of LayerData for all layers which are not the input layer; Used during the application of the NN
+    * 
+    * \param size size of the layer
+    * \param itWeightBegin indicates the start of the weights for this layer on the weight vector
+    * \param itFunctionBegin indicates the start of the vector of activation functions for this layer on the 
+    *                        activation function vector
+    * \param eModeOutput indicates a potential tranformation of the output values before further computation
+    *                    DIRECT does not further transformation; SIGMOID applies a sigmoid transformation to each
+    *                    output value (to create a probability); SOFTMAX applies a softmax transformation to all 
+    *                    output values (mutually exclusive probability)
+    */
     LayerData (size_t size, const_iterator_type itWeightBegin, 
 	       const_function_iterator_type itFunctionBegin, 
 	       ModeOutputValues eModeOutput = ModeOutputValues::DIRECT);
 
+   /*! \brief copy c'tor of LayerData
+    *
+    * 
+    */
     LayerData (const LayerData& other)
     : m_size (other.m_size)
     , m_itInputBegin (other.m_itInputBegin)
@@ -332,6 +416,10 @@ public:
     , m_eModeOutput (other.m_eModeOutput) 
     {}
 
+   /*! \brief move c'tor of LayerData
+    *
+    * 
+    */
     LayerData (LayerData&& other)
     : m_size (other.m_size)
     , m_itInputBegin (other.m_itInputBegin)
@@ -351,6 +439,13 @@ public:
     {}
 
 
+   /*! \brief change the input iterators
+    *
+    * 
+    * \param itInputBegin indicates the start of the input node vector
+    * \param itInputEnd indicates the end of the input node vector
+    *
+    */
     void setInput (const_iterator_type itInputBegin, const_iterator_type itInputEnd)
     {
         m_isInputLayer = true;
@@ -358,6 +453,10 @@ public:
         m_itInputEnd = itInputEnd;
     }
 
+   /*! \brief clear the values and the deltas
+    *
+    * 
+    */
     void clear ()
     {
         m_values.assign (m_values.size (), 0.0);
@@ -407,29 +506,28 @@ private:
 
 private:
     
-    size_t m_size;
+    size_t m_size; ////< layer size
 
-    const_iterator_type m_itInputBegin;
-    const_iterator_type m_itInputEnd;
+    const_iterator_type m_itInputBegin; ///< iterator to the first of the nodes in the input node vector
+    const_iterator_type m_itInputEnd;   ///< iterator to the end of the nodes in the input node vector
 
-    std::vector<double> m_deltas;
-    std::vector<double> m_valueGradients;
-    std::vector<double> m_values;
-    const_dropout_iterator m_itDropOut; // correlates with m_values
-    bool m_hasDropOut;
+    std::vector<double> m_deltas; ///< stores the deltas for the NN training 
+    std::vector<double> m_valueGradients; ///< stores the gradients of the values (nodes) 
+    std::vector<double> m_values; ///< stores the values of the nodes in this layer
+    const_dropout_iterator m_itDropOut; ///< iterator to a container indicating if the corresponding node is to be dropped
+    bool m_hasDropOut; ///< dropOut is turned on?
 
-    const_iterator_type m_itConstWeightBegin;
-    iterator_type       m_itGradientBegin;
+    const_iterator_type m_itConstWeightBegin; ///< const iterator to the first weight of this layer in the weight vector
+    iterator_type       m_itGradientBegin;  ///< const iterator to the first gradient of this layer in the gradient vector
 
-    const_function_iterator_type m_itFunctionBegin;
+    const_function_iterator_type m_itFunctionBegin; ///< const iterator to the first activation funciton of this layer in the vector of activation functions
+    const_function_iterator_type m_itInverseFunctionBegin;  ///< const iterator to the first inverse activation function of this layer in the vector of inverse activation functions
 
-    const_function_iterator_type m_itInverseFunctionBegin;
-
-    bool m_isInputLayer;
-    bool m_hasWeights;
-    bool m_hasGradients;
-
-    ModeOutputValues m_eModeOutput;
+    bool m_isInputLayer; ///< is this layer an input layer
+    bool m_hasWeights;  ///< does this layer have weights (it does not if it is the input layer)
+    bool m_hasGradients; ///< does this layer have gradients (only if in training mode)
+ 
+    ModeOutputValues m_eModeOutput; ///< stores the output mode (DIRECT, SIGMOID, SOFTMAX)
 
 };
 
@@ -437,11 +535,23 @@ private:
 
 
 
-// defines the layout of a layer
+/*! \brief Layer defines the layout of a layer
+ *
+ *     Layer defines the layout of a specific layer in the NN
+ *     Objects of this class don't hold the layer data itself (see class "LayerData")
+ *  
+ */
 class Layer
 {
 public:
 
+   /*! \brief c'tor for defining a Layer
+    *
+    * 
+    * \param itInputBegin indicates the start of the input node vector
+    * \param itInputEnd indicates the end of the input node vector
+    *
+    */
     Layer (size_t numNodes, EnumFunction activationFunction, ModeOutputValues eModeOutputValues = ModeOutputValues::DIRECT);
 
     ModeOutputValues modeOutputValues () const { return m_eModeOutputValues; }
