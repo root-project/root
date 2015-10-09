@@ -515,6 +515,11 @@ namespace ROOT {
          static void Build(TF1 * f, const char * formula) {
             f->fType = 0; 
             f->fFormula = new TFormula("tf1lambda",formula,f->fNdim,f->fNpar,false);
+            TString formulaExpression(formula);
+            Ssiz_t first = formulaExpression.Index("return")+7;
+            Ssiz_t last  = formulaExpression.Last(';');
+            TString title = formulaExpression( first, last-first);
+            f->SetTitle(title);
          }
       };
    }

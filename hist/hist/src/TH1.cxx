@@ -6798,6 +6798,7 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       histName += "__";
       histName += hcounter;
    }
+   histName = gInterpreter-> MapCppName(histName);
    const char *hname = histName.Data();
    if (!strlen(hname)) hname = "unnamed";
 
