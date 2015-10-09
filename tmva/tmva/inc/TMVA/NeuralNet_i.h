@@ -51,13 +51,6 @@ static std::function<double(double)> InvDoubleInvertedGauss = [](double value)
 
 
 
-double gaussDouble (double mean, double sigma);
-double uniformDouble (double minValue, double maxValue);
-
-
-int randomInt (int maxValue);
-
-
 template <typename T>
 T uniformFromTo (T from, T to)
 {
@@ -356,48 +349,48 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
 
-    template <typename Function, typename Weights, typename PassThrough>
-        double MaxGradWeight::operator() (Function& fitnessFunction, const Weights& weights, PassThrough& passThrough) 
-    {
-	double alpha = m_learningRate;
+    /* template <typename Function, typename Weights, typename PassThrough> */
+    /*     double MaxGradWeight::operator() (Function& fitnessFunction, const Weights& weights, PassThrough& passThrough)  */
+    /* { */
+    /*     double alpha = m_learningRate; */
 
-	size_t numWeights = weights.size ();
-	std::vector<double> gradients (numWeights, 0.0);
-	std::vector<double> localWeights (begin (weights), end (weights));
+    /*     size_t numWeights = weights.size (); */
+    /*     std::vector<double> gradients (numWeights, 0.0); */
+    /*     std::vector<double> localWeights (begin (weights), end (weights)); */
 
 
-        double Ebase = fitnessFunction (passThrough, weights, gradients);
-        double Emin = Ebase;
+    /*     double Ebase = fitnessFunction (passThrough, weights, gradients); */
+    /*     double Emin = Ebase; */
 
-        bool success = true;
-        size_t currentRepetition = 0;
-        while (success)
-        {
-            if (currentRepetition >= m_repetitions)
-                break;
+    /*     bool success = true; */
+    /*     size_t currentRepetition = 0; */
+    /*     while (success) */
+    /*     { */
+    /*         if (currentRepetition >= m_repetitions) */
+    /*             break; */
 
-	    auto itMaxGradElement = std::max_element (begin (gradients), end (gradients));
-	    auto idx = std::distance (begin (gradients), itMaxGradElement);
-	    localWeights.at (idx) += alpha*(*itMaxGradElement);
-            gradients.assign (numWeights, 0.0);
-            double E = fitnessFunction (passThrough, localWeights, gradients);
+    /*         auto itMaxGradElement = std::max_element (begin (gradients), end (gradients)); */
+    /*         auto idx = std::distance (begin (gradients), itMaxGradElement); */
+    /*         localWeights.at (idx) += alpha*(*itMaxGradElement); */
+    /*         gradients.assign (numWeights, 0.0); */
+    /*         double E = fitnessFunction (passThrough, localWeights, gradients); */
 
-            if (E < Emin)
-            {
-                Emin = E;
+    /*         if (E < Emin) */
+    /*         { */
+    /*             Emin = E; */
 
-                auto itLocW = begin (localWeights);
-                auto itLocWEnd = end (localWeights);
-                auto itW = begin (weights);
-                for (; itLocW != itLocWEnd; ++itLocW, ++itW)
-                {
-                    (*itW) = (*itLocW);
-                }
-            }
-            ++currentRepetition;
-        }
-        return Emin;
-    }
+    /*             auto itLocW = begin (localWeights); */
+    /*             auto itLocWEnd = end (localWeights); */
+    /*             auto itW = begin (weights); */
+    /*             for (; itLocW != itLocWEnd; ++itLocW, ++itW) */
+    /*             { */
+    /*                 (*itW) = (*itLocW); */
+    /*             } */
+    /*         } */
+    /*         ++currentRepetition; */
+    /*     } */
+    /*     return Emin; */
+    /* } */
 
 
 
@@ -718,6 +711,8 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
                   Minimizer& minimizer, Settings& settings)
     {
 //        std::cout << "START TRAINING" << std::endl;
+        settings.startTrainCycle ();
+
         settings.pads (4);
         settings.create ("trainErrors", 100, 0, 100, 100, 0,1);
         settings.create ("testErrors", 100, 0, 100, 100, 0,1);
@@ -765,9 +760,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
 	    }
 
 	    // execute training cycle
-            settings.startTrainCycle ();
             trainError = trainCycle (minimizer, weights, begin (trainPattern), end (trainPattern), settings, dropContainer);
-            settings.endTrainCycle (trainError);
 	    
 
 	    // check if we execute a test
@@ -839,6 +832,8 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
             settings.cycle (progress, convText);
         }
 	while (true);
+        settings.endTrainCycle (trainError);
+        
         TString convText = Form( "<D^2> (train/test/epoch): %.4g/%.4g/%d", trainError, testError, (int)cycleCount);
         double progress = 100*(double)settings.maxConvergenceCount() /(double)settings.convergenceSteps ();
         settings.cycle (progress, convText);
