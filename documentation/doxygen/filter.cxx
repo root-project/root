@@ -7,7 +7,7 @@
 
 #include <unistd.h>
 #include <stdio.h>
-#include <string>
+#include <string.h>
 #include <iostream>
 #include <stdlib.h>
 #include <stdarg.h>
