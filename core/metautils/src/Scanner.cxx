@@ -852,7 +852,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
                                        fInterpreter,
                                        fNormCtxt);
 
-         auto previouslyMatchingRule = (ClassSelectionRule*)declSelRuleMapIt->second;
+         auto previouslyMatchingRule = (const ClassSelectionRule*)declSelRuleMapIt->second;
          int previouslineno = previouslyMatchingRule->GetLineNumber();
 
          std::string cleanFileName =  llvm::sys::path::filename(selected->GetSelFileName());
