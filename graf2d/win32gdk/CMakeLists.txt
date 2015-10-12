@@ -31,15 +31,15 @@ endif()
 # Build iconv
 
 add_custom_command( OUTPUT ${iconvliba} ${iconvdlla}
-					COMMAND cmake -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/gdk gdk
+					COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/gdk gdk
 					COMMAND echo "*** Building ${iconvliba}"
-					COMMAND cmake -E chdir gdk/src/iconv 
+					COMMAND ${CMAKE_COMMAND} -E chdir gdk/src/iconv
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 				  )
 
 add_custom_command( OUTPUT ${iconvlib} ${iconvdll}
-					COMMAND cmake -E copy_if_different ${iconvliba} ${iconvlib}
-					COMMAND cmake -E copy_if_different ${iconvdlla} ${iconvdll}
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${iconvliba} ${iconvlib}
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${iconvdlla} ${iconvdll}
 					DEPENDS ${iconvliba} ${iconvdlla}
 				  )
 
@@ -50,14 +50,14 @@ set_target_properties(iconv PROPERTIES FOLDER Builtins)
 
 add_custom_command( OUTPUT ${glibliba} ${glibdlla}
 					COMMAND echo "*** Building ${glibliba}"
-					COMMAND cmake -E chdir gdk/src/glib 
+					COMMAND ${CMAKE_COMMAND} -E chdir gdk/src/glib
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 					DEPENDS iconv
 				  )
 
 add_custom_command( OUTPUT ${gliblib} ${glibdll}
-					COMMAND cmake -E copy_if_different ${glibliba} ${gliblib}
-					COMMAND cmake -E copy_if_different ${glibdlla} ${glibdll}
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${glibliba} ${gliblib}
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${glibdlla} ${glibdll}
 					DEPENDS ${glibliba} ${glibdlla})
 
 add_custom_target(glib DEPENDS ${gliblib})
@@ -67,16 +67,16 @@ set_target_properties(glib PROPERTIES FOLDER Builtins)
 
 add_custom_command( OUTPUT ${gdkliba}
 					COMMAND echo "*** Building ${gdkliba}"
-					COMMAND cmake -E chdir gdk/src/gdk/win32 
+					COMMAND ${CMAKE_COMMAND} -E chdir gdk/src/gdk/win32
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
-					COMMAND cmake -E chdir gdk/src/gdk 
+					COMMAND ${CMAKE_COMMAND} -E chdir gdk/src/gdk
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 					DEPENDS glib
 				  )
 
 add_custom_command( OUTPUT ${gdklib} ${gdkdll}
-					COMMAND cmake -E copy_if_different ${gdkliba} ${gdklib}
-					COMMAND cmake -E copy_if_different ${gdkdlla} ${gdkdll}
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${gdkliba} ${gdklib}
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${gdkdlla} ${gdkdll}
 					DEPENDS ${gdkliba} )
 
 add_custom_target(GDKLIB DEPENDS ${gdklib})
