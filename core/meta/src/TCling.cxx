@@ -1147,6 +1147,8 @@ TCling::TCling(const char *name, const char *title)
    fLockProcessLine = kTRUE;
 
    fAllowLibLoad = !fromRootCling;
+   // Disallow auto-parsing in rootcling
+   fIsAutoParsingSuspended = fromRootCling;
    // Disable the autoloader until it is explicitly enabled.
    SetClassAutoloading(false);
 
