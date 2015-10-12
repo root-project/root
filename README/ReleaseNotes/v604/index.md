@@ -818,7 +818,7 @@ directory - this behavior is now implement by the default constructor.
 ### Build System
 - Fix generation of PCH with CXX flags with spaces [ROOT-7478]
 - Implemented option 'geocad' with CMake making use of the OpenCASCADE software package.
-- Fix option 'rpath' for CMake and ensure that works for MacOSX 10.11
+- Fix option 'rpath' for `CMake` and ensure that works for MacOSX 10.11
 
 ### Core
 - Fix the location of include files in ROOTINCDIR/include instead of ROOTINCDIR [ROOT-7537]
@@ -831,14 +831,14 @@ directory - this behavior is now implement by the default constructor.
 - Speed up significantly cling's findType and remove its memory cost in most cases.
 - Make sure object declared on the interpreter stack are deleted at the end of the process [ROOT-7673]
 - Resolve issues with error recovery when the transaction includes template instantiation.
-- Fix handling of argument that negative integers in TClingCallFunc [ROOT-7684]
+- Fix handling of argument that negative integers in `TClingCallFunc` [ROOT-7684]
 
 ### I/O
 - Fix memory leak in handling of I/O customization rules [ROOT-7683]
 - Set CheckSum of StreamerInfo of user classes that have a collection proxy.
 
 ### Tree
-- Fix [ROOT-6885] which affects very large TChain with friend trees.
+- Fix [ROOT-6885] which affects very large `TChain` with friend trees.
 - Fix [ROOT-7423] which can stop the TTreeCache from stopping the learning phase when asynchronous prefetching is enabled.
 
 #### TTreeReader
@@ -857,3 +857,5 @@ directory - this behavior is now implement by the default constructor.
 
 Changes will be part of the future v6.04/06.
 
+### Core
+- Fix thread safety of the creation of `TMethodCall` from a `TFunction`.
