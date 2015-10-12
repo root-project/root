@@ -5621,11 +5621,20 @@ Long_t TClass::Property() const
          kl->fStreamerType  = kExternal;
          kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
-      kl->fClassProperty = gCling->ClassInfo_ClassProperty(GetClassInfo());
-      // Must set this last since other threads may read fProperty
-      // and think all test bits have been properly set.
-      kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
-
+      if (GetClassInfo()) {
+         // In the case where the TClass for one of ROOT's core class
+         // (eg TClonesArray for map<int,TClonesArray*>) is requesting
+         // during the execution of rootcling, we could end up in a situation
+         // where we should have the information (since TClonesArray has
+         // a dictionary as part of libCore) but do not because the user
+         // only include a forward declaration of TClonesArray and we do not
+         // forcefully load the header file either (because the autoparsing
+         // is intentionally disabled).
+         kl->fClassProperty = gCling->ClassInfo_ClassProperty(fClassInfo);
+         // Must set this last since other threads may read fProperty
+         // and think all test bits have been properly set.
+         kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
+      }
    } else {
 
       if (fStreamer) {
