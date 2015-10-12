@@ -5367,9 +5367,9 @@ void TClass::LoadClassInfo() const
    if (!fClassInfo) gInterpreter->SetClassInfo(const_cast<TClass*>(this));   // sets fClassInfo pointer
    if (!gInterpreter->IsAutoParsingSuspended()) {
       if (!fClassInfo) {
-    ::Error("TClass::LoadClassInfo",
-       "no interpreter information for class %s is available even though it has a TClass initialization routine.",
-       fName.Data());
+         ::Error("TClass::LoadClassInfo",
+                 "no interpreter information for class %s is available even though it has a TClass initialization routine.",
+                 fName.Data());
       }
       fCanLoadClassInfo = kFALSE;
    }
