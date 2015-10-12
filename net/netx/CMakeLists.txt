@@ -7,6 +7,7 @@ ROOT_USE_PACKAGE(net/net)
 ROOT_USE_PACKAGE(proof/proofd)
 
 include_directories(${XROOTD_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR}/proof/proofd/inc)
 add_definitions(${XROOTD_CFLAGS})
 #---------------------------------------------------------------------------
 
