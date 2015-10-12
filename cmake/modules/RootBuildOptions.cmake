@@ -140,6 +140,7 @@ ROOT_BUILD_OPTION(genvector ON "Build the new libGenVector library")
 ROOT_BUILD_OPTION(gfal ON "GFAL support, requires libgfal")
 ROOT_BUILD_OPTION(glite ON "gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)")
 ROOT_BUILD_OPTION(globus OFF "Globus authentication support, requires Globus toolkit")
+ROOT_BUILD_OPTION(gnuinstall OFF "Perform installation following the GNU guidelines")
 ROOT_BUILD_OPTION(gsl_shared OFF "Enable linking against shared libraries for GSL (default no)")
 ROOT_BUILD_OPTION(hdfs ON "HDFS support; requires libhdfs from HDFS >= 0.19.1")
 ROOT_BUILD_OPTION(http ${http_defvalue} "HTTP Server support")
@@ -174,7 +175,6 @@ ROOT_BUILD_OPTION(soversion OFF "Set version number in sonames (recommended)")
 ROOT_BUILD_OPTION(sqlite ON "SQLite support, requires libsqlite3")
 ROOT_BUILD_OPTION(srp ON "SRP support, requires SRP source tree")
 ROOT_BUILD_OPTION(ssl ON "SSL encryption support, requires openssl")
-ROOT_BUILD_OPTION(gnuinstall OFF "Perform installation following the GNU guidelines")
 ROOT_BUILD_OPTION(tbb OFF "TBB multi-threading support, requires TBB")
 ROOT_BUILD_OPTION(table ${table_defvalue} "Build libTable contrib library")
 ROOT_BUILD_OPTION(tcmalloc OFF "Using the tcmalloc allocator")
@@ -221,7 +221,7 @@ set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE) # point to directories outside the build tree to the install RPATH
 
 # Check whether to add RPATH to the installation (the build tree always has the RPATH enabled)
-if(rpath)
+if(rpath OR gnuinstall)
   set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_FULL_LIBDIR}) # install LIBDIR
   set(CMAKE_SKIP_INSTALL_RPATH FALSE)          # don't skip the full RPATH for the install tree
 else()
