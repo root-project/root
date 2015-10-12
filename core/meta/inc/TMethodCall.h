@@ -75,12 +75,12 @@ public:
    TMethodCall(TClass *cl, CallFunc_t *callfunc, Long_t offset = 0);
    TMethodCall(TClass *cl, const char *method, const char *params);
    TMethodCall(const char *function, const char *params);
-   TMethodCall(TFunction *func);
+   TMethodCall(const TFunction *func);
    TMethodCall(const TMethodCall &org);
    TMethodCall& operator=(const TMethodCall &rhs);
    ~TMethodCall();
 
-   void           Init(TFunction *func);
+   void           Init(const TFunction *func);
    void           Init(TClass *cl, CallFunc_t *func, Long_t offset = 0);
    void           Init(TClass *cl, const char *method, const char *params, Bool_t objectIsConst = kFALSE);
    void           Init(const char *function, const char *params);

@@ -79,7 +79,7 @@ fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 }
 
 //______________________________________________________________________________
-TMethodCall::TMethodCall(TFunction *func):
+TMethodCall::TMethodCall(const TFunction *func):
 fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 {
    // Create a global function invocation environment base on a TFunction object.
@@ -216,7 +216,7 @@ void TMethodCall::Init(TClass *cl, CallFunc_t *function, Long_t offset)
 }
 
 //______________________________________________________________________________
-void TMethodCall::Init(TFunction *function)
+void TMethodCall::Init(const TFunction *function)
 {
    // Initialize the method invocation environment based on
    // the TFunction object.
@@ -228,12 +228,12 @@ void TMethodCall::Init(TFunction *function)
    else
       gCling->CallFunc_Init(fFunc);
 
-   TMethod *m = dynamic_cast<TMethod*>(function);
+   const TMethod *m = dynamic_cast<const TMethod*>(function);
    fClass = m ? m->GetClass() : 0;
    fMetPtr = (TFunction*)function->Clone();
-   fMethod = function->GetName();
+   fMethod = fMetPtr->GetName();
    fParams = "";
-   fProto  = function->GetSignature()+1; // skip leading )
+   fProto  = fMetPtr->GetSignature()+1; // skip leading )
    Ssiz_t s = fProto.Last(')');
    fProto.Remove(s); // still need to remove default values :(
 
