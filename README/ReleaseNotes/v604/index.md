@@ -865,3 +865,5 @@ Changes will be part of the future v6.04/06.
 
 ### Core
 - Fix thread safety of the creation of `TMethodCall` from a `TFunction`.
+- Fix dictionary generation of STL collection involving one of ROOT's core classes when the user header contains only a forward declaration of the class [ROOT-7695].
+
