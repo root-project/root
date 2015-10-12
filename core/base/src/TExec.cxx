@@ -18,7 +18,7 @@ ClassImp(TExec)
 /** \class TExec
 TExec is a utility class that can be used to execute a C++ command
 when some event happens in a pad.
-The command in turn can invoke a CINT macro to paint graphics objects
+The command in turn can invoke a C++ macro to paint graphics objects
 at positions depending on the histogram or graph contents.
 
 ### Case 1:
@@ -27,7 +27,7 @@ The TExec object is in the list of pad primitives (after exec.Draw()).
 When the pad is drawn, the TExec::Paint function is called. This function
 will execute the specified command.
 The following example uses the services of the class Aclock created
-in $ROOTSYS/test/Aclock.cxx.
+in `$ROOTSYS/test/Aclock.cxx`.
 This examples uses a TTimer to redraw a pad at regular intervals (clock).
 When the clock is updated, a string with the current date&time is drawn.
 ~~~ {.cpp}
