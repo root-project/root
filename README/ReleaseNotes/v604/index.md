@@ -857,5 +857,11 @@ directory - this behavior is now implement by the default constructor.
 
 Changes will be part of the future v6.04/06.
 
+### Build
+- Building ROOT with `cmake` command not in my PATH now fixed [ROOT-7715]
+- Fix `builtin_xrootd` option that was not working for XROOTD version 4.2.2.
+- Option `gnuinstall` also sets RPATH in librries and executables in installation directory
+- Various fixes for  MacOS X 10.11 [ROOT-7680]
+
 ### Core
 - Fix thread safety of the creation of `TMethodCall` from a `TFunction`.
