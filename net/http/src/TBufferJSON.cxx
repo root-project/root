@@ -49,7 +49,6 @@
 #include "TDataType.h"
 #include "TRealData.h"
 #include "TDataMember.h"
-#include "TMath.h"
 #include "TExMap.h"
 #include "TMethodCall.h"
 #include "TStreamerInfo.h"
@@ -2820,7 +2819,7 @@ void TBufferJSON::JsonWriteBasic(Long64_t value)
 void TBufferJSON::JsonWriteBasic(Float_t value)
 {
    char buf[200];
-   if (value == TMath::Floor(value))
+   if (value == floor(value))
       snprintf(buf, sizeof(buf), "%1.0f", value);
    else
       snprintf(buf, sizeof(buf), fgFloatFmt, value);
@@ -2833,7 +2832,7 @@ void TBufferJSON::JsonWriteBasic(Float_t value)
 void TBufferJSON::JsonWriteBasic(Double_t value)
 {
    char buf[200];
-   if (value == TMath::Floor(value))
+   if (value == floor(value))
       snprintf(buf, sizeof(buf), "%1.0f", value);
    else
       snprintf(buf, sizeof(buf), fgFloatFmt, value);
