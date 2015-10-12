@@ -20,9 +20,9 @@ if(WIN32)
   endif()
 
   add_custom_command( OUTPUT ${afterimageliba}
-                    COMMAND cmake -E copy_directory  ${CMAKE_CURRENT_SOURCE_DIR}/src/libAfterImage libAfterImage
+                    COMMAND ${CMAKE_COMMAND} -E copy_directory  ${CMAKE_CURRENT_SOURCE_DIR}/src/libAfterImage libAfterImage
                     COMMAND echo "*** Building ${afterimageliba}"
-                    COMMAND cmake -E chdir libAfterImage
+                    COMMAND ${CMAKE_COMMAND} -E chdir libAfterImage
                             nmake -nologo -f libAfterImage.mak FREETYPEDIRI=-I${FREETYPE_INCLUDE_DIR}
                             CFG=${astepbld} NMAKECXXFLAGS="${CMAKE_CXX_FLAGS} /wd4244")
 else()
@@ -88,7 +88,7 @@ else()
   endif()
   #---copy files from source directory to build directory------------------------------
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/libAfterImage/configure
-                     COMMAND cmake -E copy_directory  ${CMAKE_CURRENT_SOURCE_DIR}/src/libAfterImage libAfterImage)
+                     COMMAND ${CMAKE_COMMAND} -E copy_directory  ${CMAKE_CURRENT_SOURCE_DIR}/src/libAfterImage libAfterImage)
 
   #---configure and make --------------------------------------------------------------
   add_custom_command(OUTPUT ${afterimageliba}
@@ -102,12 +102,12 @@ endif()
 #---copy the created library into the library directory in the build directory
 if(ROOT_PLATFORM MATCHES macosx)
   add_custom_command(OUTPUT ${afterimagelib}
-                     COMMAND cmake -E copy_if_different ${afterimageliba} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${afterimageliba} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
                      COMMAND ranlib ${afterimagelib}
                      DEPENDS ${afterimageliba} )
 else()
   add_custom_command(OUTPUT ${afterimagelib}
-                     COMMAND cmake -E copy_if_different ${afterimageliba} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${afterimageliba} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
                      DEPENDS ${afterimageliba})
 endif()
 

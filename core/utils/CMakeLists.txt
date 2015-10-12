@@ -65,7 +65,7 @@ else()
 endif()
 
 add_custom_command(OUTPUT rootcling_tmp.cxx
-                   COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
                    DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx)
 if(WIN32)
   set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX -DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling")
@@ -91,7 +91,7 @@ set_source_files_properties(src/TModuleGenerator.cxx PROPERTIES COMPILE_FLAGS -f
 set_source_files_properties(src/rootclingTCling.cxx PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/meta/src)
 
 #---Deal with LLVM resource here----------------------------------------------
-set(copy_commands COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include/llvm/Config/llvm-config.h
+set(copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include/llvm/Config/llvm-config.h
                                         ${CMAKE_BINARY_DIR}/etc/cling/llvm/Config/llvm-config.h)
 set(files_to_copy ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include/llvm/Config/llvm-config.h)
 
@@ -115,14 +115,14 @@ foreach(file  Interpreter/DynamicExprInfo.h
               Interpreter/RuntimeUniverse.h
               Interpreter/Value.h)
   get_filename_component(path ${file} PATH)
-  list(APPEND copy_commands COMMAND cmake -E copy ${clinginclude}/cling/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
+  list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${clinginclude}/cling/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
   list(APPEND files_to_copy ${clinginclude}/cling/${file})
   set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${file})
   install(FILES ${clinginclude}/cling/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
 endforeach()
 
 foreach(file  multimap  multiset)
-  list(APPEND copy_commands COMMAND cmake -E copy ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file} ${CMAKE_BINARY_DIR}/etc/cling/cint/${file})
+  list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file} ${CMAKE_BINARY_DIR}/etc/cling/cint/${file})
   list(APPEND files_to_copy ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file})
   install(FILES ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/cint)
 endforeach()
@@ -134,7 +134,7 @@ endforeach()
 # Capture their build-time version here, and inject it into runtime.
 foreach(file wchar.h bits/stat.h bits/time.h)
   if(EXISTS /usr/include/${file})
-    list(APPEND copy_commands COMMAND cmake -E copy /usr/include/${file} ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/${file})
+    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy /usr/include/${file} ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/${file})
   endif()
 endforeach()
 
@@ -154,11 +154,11 @@ foreach( file llvm/ADT/IntrusiveRefCntPtr.h
               llvm/Support/type_traits.h )
   get_filename_component(path ${file} PATH)
   if(EXISTS ${llvminclude}/${file})
-    list(APPEND copy_commands COMMAND cmake -E copy ${llvminclude}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
+    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${llvminclude}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
     list(APPEND files_to_copy ${llvminclude}/${file})
     install(FILES ${llvminclude}/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
   else()
-    list(APPEND copy_commands COMMAND cmake -E copy ${llvminclude-bin}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
+    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${llvminclude-bin}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
     list(APPEND files_to_copy ${llvminclude-bin}/${file})
     install(FILES ${llvminclude-bin}/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
   endif()
@@ -167,21 +167,21 @@ endforeach()
 
 set(stamp_file ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LLVMRES.stamp)
 add_custom_command(OUTPUT ${stamp_file}
-                   COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
-                   COMMAND cmake -E copy_directory
+                   COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory
                                   ${CMAKE_BINARY_DIR}/interpreter/llvm/src/${CMAKE_CFG_INTDIR}/lib/clang/${LLVM_VERSION}/include
                                   ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
-                   COMMAND cmake -E copy
+                   COMMAND ${CMAKE_COMMAND} -E copy
                                   ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/assert.h
                                   ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/assert.h
-                   COMMAND cmake -E copy
+                   COMMAND ${CMAKE_COMMAND} -E copy
                                   ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/stdlib.h
                                   ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/stdlib.h
-                   COMMAND cmake -E copy
+                   COMMAND ${CMAKE_COMMAND} -E copy
                                   ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/unistd.h
                                   ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/unistd.h
                    ${copy_commands}
-                   COMMAND cmake -E touch ${stamp_file}
+                   COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
                    DEPENDS ${files_to_copy}
                    COMMENT "Copying LLVM respurce and header files")
 add_custom_target(LLVMRES DEPENDS ${stamp_file} CLING)

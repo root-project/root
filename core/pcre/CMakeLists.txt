@@ -29,9 +29,9 @@ if(WIN32)
     set(pcrebuild "libpcre - Win32 Release")
   endif()
   add_custom_command( OUTPUT ${pcreliba}
-                      COMMAND cmake -E copy_directory ${PCRE_SRCDIR}/win32 win32
-                      COMMAND cmake -E tar xvzf ${PCRE_TARGZFILE}
-		              COMMAND cmake -E chdir win32 nmake -nologo -f Makefile.msc
+                      COMMAND ${CMAKE_COMMAND} -E copy_directory ${PCRE_SRCDIR}/win32 win32
+                      COMMAND ${CMAKE_COMMAND} -E tar xvzf ${PCRE_TARGZFILE}
+                      COMMAND ${CMAKE_COMMAND} -E chdir win32 nmake -nologo -f Makefile.msc
                       CFG=${pcrebuild}
                       NMCXXFLAGS="${BLDCXXFLAGS} -I${CMAKE_SOURCE_DIR}/build/win -FIw32pragma.h")
 else()
@@ -70,11 +70,11 @@ else()
 
   # copy tarfile from source directory to build directory, unpack the tarfile
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${PCRE_VERSION}/unpacked
-                     COMMAND cmake -E copy ${PCRE_TARGZFILE} .
+                     COMMAND ${CMAKE_COMMAND} -E copy ${PCRE_TARGZFILE} .
                      COMMAND gunzip ${PCRE_VERSION}.tar.gz
                      COMMAND tar xf ${PCRE_VERSION}.tar
                      COMMAND touch ${PCRE_VERSION}/unpacked
-                     COMMAND cmake -E remove -f ${PCRE_VERSION}.tar
+                     COMMAND ${CMAKE_COMMAND} -E remove -f ${PCRE_VERSION}.tar
                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
   # configure and make pcre, this command depends on the unpacked package
   add_custom_command(OUTPUT ${pcreliba}
@@ -88,12 +88,12 @@ endif()
 # This command depends on the created libpcre.a
 if(ROOT_PLATFORM MATCHES macosx)
   add_custom_command(OUTPUT ${pcrelib}
-                     COMMAND cmake -E copy_if_different ${pcreliba} ${pcrelib}
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${pcreliba} ${pcrelib}
                      COMMAND ranlib ${pcrelib}
                      DEPENDS ${pcreliba} )
 else()
   add_custom_command(OUTPUT ${pcrelib}
-                     COMMAND cmake -E copy_if_different ${pcreliba} ${pcrelib}
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${pcreliba} ${pcrelib}
                      DEPENDS ${pcreliba} )
 endif()
 
