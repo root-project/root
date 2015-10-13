@@ -125,9 +125,9 @@ else
 fi
 
 if [ -z "${MANPATH}" ]; then
-   MANPATH=`dirname @mandir@`:${default_manpath}; export MANPATH
+   MANPATH=@mandir@:${default_manpath}; export MANPATH
 else
-   MANPATH=`dirname @mandir@`:$MANPATH; export MANPATH
+   MANPATH=@mandir@:$MANPATH; export MANPATH
 fi
 
 if [ -z "${CMAKE_PREFIX_PATH}" ]; then
