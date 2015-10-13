@@ -154,6 +154,7 @@ ROOT_BUILD_OPTION(mathmore ON "Build the new libMathMore extended math library, 
 ROOT_BUILD_OPTION(memstat ${memstat_defvalue} "A memory statistics utility, helps to detect memory leaks")
 ROOT_BUILD_OPTION(minuit2 ${minuit2_defvalue} "Build the new libMinuit2 minimizer library")
 ROOT_BUILD_OPTION(monalisa ON "Monalisa monitoring support, requires libapmoncpp")
+ROOT_BUILD_OPTION(mt OFF "Multi-threading support")
 ROOT_BUILD_OPTION(mysql ON "MySQL support, requires libmysqlclient")
 ROOT_BUILD_OPTION(odbc ON "ODBC support, requires libiodbc or libodbc")
 ROOT_BUILD_OPTION(opengl ON "OpenGL support, requires libGL and libGLU")
