@@ -95,7 +95,7 @@ public:
    virtual void  SetAlpha(Float_t a) { fAlpha = a; }
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
 
-   static void    InitializeColors(Bool_t force=kFALSE);
+   static void    InitializeColors();
    static void    HLS2RGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);
    static void    HLS2RGB(Int_t h, Int_t l, Int_t s, Int_t &r, Int_t &g, Int_t &b);
    static void    HLStoRGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b)

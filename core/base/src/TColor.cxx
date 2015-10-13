@@ -361,11 +361,11 @@ TColor::TColor(const TColor &color) : TNamed(color)
 /// This method should be called before the ApplicationImp is created (which
 /// initializes the GUI colors).
 
-void TColor::InitializeColors(Bool_t force)
+void TColor::InitializeColors()
 {
    static Bool_t initDone = kFALSE;
 
-   if (initDone && ! force) return;
+   if (initDone) return;
    initDone = kTRUE;
 
    if (gROOT->GetListOfColors()->First() == 0) {
