@@ -43,7 +43,7 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
 
    if   (num == 200)//expo: exp(p0+p1*x)
    {
-      result = (exp(p[0])/p[1])*(exp(-p[1]*xmin)-exp(-p[1]*xmax));
+      result = ( exp(p[0]+p[1]*xmax) - exp(p[0]+p[1]*xmin))/p[1];
    }
    else if (num == 100)//gaus: [0]*exp(-0.5*((x-[1])/[2])^2))
    {
