@@ -1365,32 +1365,41 @@ Double_t TMVA::MethodBDT::GetGradBoostMVA(const TMVA::Event* e, UInt_t nTrees)
 
 void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample, UInt_t cls)
 {
-   if(DoMulticlass()){
+   if (DoMulticlass()) {
       UInt_t nClasses = DataInfo().GetNClasses();
-      for (std::vector<const TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-         fResiduals[*e].at(cls)+=fForest.back()->CheckEvent(*e,kFALSE);
-         if(cls == nClasses-1){
-            for(UInt_t i=0;i<nClasses;i++){
+      std::vector<Double_t> expCache;
+      if (cls == nClasses - 1) {
+         expCache.resize(nClasses);
+      }
+      for (auto e : eventSample) {
+         fResiduals[e].at(cls) += fForest.back()->CheckEvent(e, kFALSE);
+         if (cls == nClasses - 1) {
+            auto &residualsThisEvent = fResiduals[e];
+            std::transform(residualsThisEvent.begin(),
+                           residualsThisEvent.begin() + nClasses,
+                           expCache.begin(), [](Double_t d) { return exp(d); });
+            for (UInt_t i = 0; i < nClasses; i++) {
                Double_t norm = 0.0;
-               for(UInt_t j=0;j<nClasses;j++){
-                  if(i!=j)
-                     norm+=exp(fResiduals[*e].at(j)-fResiduals[*e].at(i));
+               for (UInt_t j = 0; j < nClasses; j++) {
+                  if (i != j) {
+                     norm += expCache[j] / expCache[i];
+                  }
                }
-               Double_t p_cls = 1.0/(1.0+norm);
-               Double_t res = ((*e)->GetClass()==i)?(1.0-p_cls):(-p_cls);
-               const_cast<TMVA::Event*>(*e)->SetTarget(i,res);
+               Double_t p_cls = 1.0 / (1.0 + norm);
+               Double_t res = (e->GetClass() == i) ? (1.0 - p_cls) : (-p_cls);
+               const_cast<TMVA::Event *>(e)->SetTarget(i, res);
             }
          }
       }
-   }
-   else{
-      for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-         fResiduals[*e].at(0)+=fForest.back()->CheckEvent(*e,kFALSE);
-         Double_t p_sig=1.0/(1.0+exp(-2.0*fResiduals[*e].at(0)));
-         Double_t res = (DataInfo().IsSignal(*e)?1:0)-p_sig;
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,res);
+   } else {
+      for (auto e : eventSample) {
+         auto &residualAt0 = fResiduals[e].at(0);
+         residualAt0 += fForest.back()->CheckEvent(e, kFALSE);
+         Double_t p_sig = 1.0 / (1.0 + exp(-2.0 * residualAt0));
+         Double_t res = (DataInfo().IsSignal(e) ? 1 : 0) - p_sig;
+         const_cast<TMVA::Event *>(e)->SetTarget(0, res);
       }
-   }   
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
