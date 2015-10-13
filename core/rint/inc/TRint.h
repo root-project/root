@@ -63,6 +63,8 @@ public:
            void        Interrupt() { fInterrupt = kTRUE; }
    virtual Int_t       TabCompletionHook(char *buf, int *pLoc, std::ostream& out);
 
+   TFileHandler       *GetInputHandler() { return fInputHandler; }
+
    ClassDef(TRint,0);  //ROOT Interactive Application Interface
 };
 
