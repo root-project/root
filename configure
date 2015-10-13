@@ -7830,6 +7830,7 @@ sed \
     -e "s|@hasstdexpstringview@|$hasstdexpstringview|" \
     -e "s|@hasllvm@|$hasllvm|"             \
     -e "s|@llvmdir@|$llvmdir|"             \
+    -e "s|@usemt@|undef|"                  \
     < RConfigure.tmp > RConfigure-out.tmp
 rm -f RConfigure.tmp
 
