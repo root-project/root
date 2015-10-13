@@ -201,6 +201,7 @@ static TString gNtpRndm("/proof/ntprndm.root");
 static TString gPackEvent("/proof/event.par");
 static TString gPack1("/proof/packtest1.par");
 static TString gPack2("/proof/packtest2.par");
+static TString gPack3("/proof/packtest3.par");
 
 int stressProof(const char *url = 0,
                 const char *tests = 0, Int_t nwrks = -1,
@@ -1679,6 +1680,10 @@ Int_t PT_AssertTutorialDir(const char *tutdir)
    gPack2.Insert(0, tutdir);
    gSystem->ExpandPathName(gPack2);
    if (gSystem->AccessPathName(gPack2)) return -1;
+   //
+   gPack3.Insert(0, tutdir);
+   gSystem->ExpandPathName(gPack3);
+   if (gSystem->AccessPathName(gPack3)) return -1;
 
    // Done
    return 0;
@@ -3345,14 +3350,33 @@ Int_t PT_PackageArguments(void *, RunTimes &tt)
       printf("\n >>> Test failure: could not upload '%s'!\n", gPack2.Data());
       return -1;
    }
+   // Testing recursive enabling via dependencies: upload packtest3
+   const char *pack3 = "packtest3";
+   PutPoint();
+   gProof->UploadPackage(gPack3);
+   // Check the result
+   packs = gProof->GetListOfPackages();
+   if (!packs || !packs->FindObject(pack3)) {
+      printf("\n >>> Test failure: could not upload '%s'!\n", gPack3.Data());
+      return -1;
+   }
    // Create the argument list
    TList *argls = new TList;
    argls->Add(new TNamed("ProofTest.ArgOne", "2."));
    argls->Add(new TNamed("ProofTest.ArgTwo", "3."));
    argls->Add(new TNamed("ProofTest.ArgThree", "4."));
    // Enable the package now passing the 'TList *' argument
-   if (gProof->EnablePackage(pack2, argls) != 0) {
-      printf("\n >>> Test failure: could not enable '%s' with argument: '%s'!\n", gPack2.Data(), arg.Data());
+   if (gProof->EnablePackage(pack3, argls) != 0) {
+      printf("\n >>> Test failure: could not enable '%s' with argument: '%s'!\n", gPack3.Data(), arg.Data());
+      return -1;
+   }
+   // Check list of enabled packages
+   TList *enpkg = gProof->GetListOfEnabledPackages();
+   if (!enpkg || enpkg->GetSize() < 3) {
+      printf("\n >>> Test failure: not all requested packages enabled\n");
+      if (!enpkg->FindObject("packtest1")) printf("\n >>> Test failure: 'packtest1' not enabled\n");
+      if (!enpkg->FindObject("packtest2")) printf("\n >>> Test failure: 'packtest2' not enabled\n");
+      if (!enpkg->FindObject("packtest3")) printf("\n >>> Test failure: 'packtest3' not enabled\n");
       return -1;
    }
 

@@ -51,6 +51,7 @@ different number can be forced on construction.
 #include "TTree.h"
 #include "TVirtualProofPlayer.h"
 #include "TSelector.h"
+#include "TPackMgr.h"
 
 ClassImp(TProofLite)
 
@@ -323,42 +324,14 @@ Int_t TProofLite::Init(const char *, const char *conffile,
 #endif
    }
 
-   fPackageLock             = 0;
-   fEnabledPackagesOnClient = 0;
    fLoadedMacros            = 0;
-   fGlobalPackageDirList    = 0;
    if (TestBit(TProof::kIsClient)) {
 
       // List of directories where to look for global packages
       TString globpack = gEnv->GetValue("Proof.GlobalPackageDirs","");
-      if (globpack.Length() > 0) {
-         Int_t ng = 0;
-         Int_t from = 0;
-         TString ldir;
-         while (globpack.Tokenize(ldir, from, ":")) {
-            TProofServ::ResolveKeywords(ldir);
-            if (gSystem->AccessPathName(ldir, kReadPermission)) {
-               Warning("Init", "directory for global packages %s does not"
-                               " exist or is not readable", ldir.Data());
-            } else {
-               // Add to the list, key will be "G<ng>", i.e. "G0", "G1", ...
-               TString key = Form("G%d", ng++);
-               if (!fGlobalPackageDirList) {
-                  fGlobalPackageDirList = new THashList();
-                  fGlobalPackageDirList->SetOwner();
-               }
-               fGlobalPackageDirList->Add(new TNamed(key,ldir));
-            }
-         }
-      }
-
-      TString lockpath(fPackageDir);
-      lockpath.ReplaceAll("/", "%");
-      lockpath.Insert(0, TString::Format("%s/%s", gSystem->TempDirectory(), kPROOF_PackageLockFile));
-      fPackageLock = new TProofLockPath(lockpath.Data());
-
-      fEnabledPackagesOnClient = new TList;
-      fEnabledPackagesOnClient->SetOwner();
+      TProofServ::ResolveKeywords(globpack);
+      Int_t nglb = TPackMgr::RegisterGlobalPath(globpack);
+      Info("Init", " %d global package directories registered", nglb);
    }
 
    // Start workers
@@ -766,7 +739,7 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
 
    // Package dir
    fprintf(frc,"# Users packages\n");
-   fprintf(frc, "ProofServ.PackageDir: %s\n", fPackageDir.Data());
+   fprintf(frc, "ProofServ.PackageDir: %s\n", fPackMgr->GetDir());
 
    // Image
    fprintf(frc,"# Server image\n");
@@ -926,11 +899,12 @@ Int_t TProofLite::CreateSandbox()
    // Make sure the sandbox area exist and is writable
    if (GetSandbox(fSandbox, kTRUE, "ProofLite.Sandbox") != 0) return -1;
 
-   // Package Dir
-   fPackageDir = gEnv->GetValue("Proof.PackageDir", "");
-   if (fPackageDir.IsNull())
-      fPackageDir.Form("%s/%s", fSandbox.Data(), kPROOF_PackDir);
-   if (AssertPath(fPackageDir, kTRUE) != 0) return -1;
+   // Package Manager
+   TString packdir = gEnv->GetValue("Proof.PackageDir", "");
+   if (packdir.IsNull())
+      packdir.Form("%s/%s", fSandbox.Data(), kPROOF_PackDir);
+   if (AssertPath(packdir, kTRUE) != 0) return -1;
+   fPackMgr = new TPackMgr(packdir);
 
    // Cache Dir
    fCacheDir = gEnv->GetValue("Proof.CacheDir", "");
@@ -1077,14 +1051,7 @@ void TProofLite::SetQueryRunning(TProofQueryResult *pq)
 
    // Build the list of loaded PAR packages
    TString parlist = "";
-   TIter nxp(fEnabledPackagesOnClient);
-   TObjString *os= 0;
-   while ((os = (TObjString *)nxp())) {
-      if (parlist.Length() <= 0)
-         parlist = os->GetName();
-      else
-         parlist += Form(";%s",os->GetName());
-   }
+   fPackMgr->GetEnabledPackages(parlist);
 
    // Set in running state
    pq->SetRunning(startlog, parlist, GetParallel());
