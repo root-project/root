@@ -68,3 +68,11 @@ void TAttBBox::AssertBBoxExtents(Float_t epsilon)
       }
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Setup bounding box as cube with given extent and center position.
+
+void TAttBBox::SetupBBoxCube(Float_t extent, Float_t x, Float_t y, Float_t z)
+{
+   BBoxZero(extent, x, y, z);
+}
