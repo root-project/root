@@ -1500,15 +1500,27 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             mess->ReadString(str, sizeof(str));
             // Make sure that the relevant files are available
             TString fn;
-            if (TProof::GetFileInCmd(str, fn))
-               CopyFromCache(fn, 1);
+
+            Bool_t hasfn = TProof::GetFileInCmd(str, fn);
+
             if (IsParallel() && fProof && !fProof->UseDynamicStartup()) {
                fProof->SendCommand(str);
             } else {
                PDB(kGlobal, 1)
                   Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
+               TString ocwd;
+               if (hasfn) {
+                  fCacheLock->Lock();
+                  ocwd = gSystem->WorkingDirectory();
+                  gSystem->ChangeDirectory(fCacheDir.Data());
+               }
                ProcessLine(str);
+               if (hasfn) {
+                  gSystem->ChangeDirectory(ocwd);
+                  fCacheLock->Unlock();                 
+               }
             }
+
             LogToMaster();
          } else {
             rc = -1;
@@ -1799,7 +1811,8 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                // copy file to cache if not a PAR file
                if (copytocache && size > 0 &&
                   strncmp(fPackageDir, name, fPackageDir.Length()))
-                  CopyToCache(name, 0);
+                  gSystem->Exec(TString::Format("%s %s %s", kCP, fnam.Data(), fCacheDir.Data()));
+
                if (IsMaster() && fw == 1) {
                   Int_t opt = TProof::kForward | TProof::kCp;
                   if (bin)
@@ -5373,12 +5386,6 @@ void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
       TMD5 *md5local = TMD5::FileChecksum(cachef);
 
       if (md5local && md5 == (*md5local)) {
-         // copy file from cache to working directory
-         Bool_t cp = ((opt & TProof::kCp || opt & TProof::kCpBin) || (fProtocol <= 19)) ? kTRUE : kFALSE;
-         if (cp) {
-            Bool_t cpbin = (opt & TProof::kCpBin) ? kTRUE : kFALSE;
-            CopyFromCache(filenam, cpbin);
-         }
          reply << (Int_t)1;
          PDB(kCache, 1)
             Info("HandleCheckFile", "file %s already on node", filenam.Data());
@@ -6001,25 +6008,18 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
             // Atomic action
             fCacheLock->Lock();
 
-            // Load locally; the implementation and header files (and perhaps
-            // the binaries) are already in the cache
-            TString fn;
-            Ssiz_t from = 0;
-            while ((package.Tokenize(fn, from, ",")))
-               CopyFromCache(fn, kTRUE);
+            TString ocwd = gSystem->WorkingDirectory();
+            gSystem->ChangeDirectory(fCacheDir.Data());
 
             // Load the macro
             TString pack(package);
+            Ssiz_t from = 0;
             if ((from = pack.Index(",")) != kNPOS) pack.Remove(from);
             Info("HandleCache", "loading macro %s ...", pack.Data());
             gROOT->ProcessLine(TString::Format(".L %s", pack.Data()));
 
-            // Cache binaries, if any new
-            from = 0;
-            while ((package.Tokenize(fn, from, ",")))
-               CopyToCache(fn, 1);
-
             // Release atomicity
+            gSystem->ChangeDirectory(ocwd.Data());
             fCacheLock->Unlock();
 
             // Now we collect the result from the unique workers and send the load request
@@ -6332,279 +6332,6 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
       gSystem->StackTrace();
       gSystem->Abort();
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Retrieve any files related to 'macro' from the cache directory.
-/// If 'cpbin' is true, the associated binaries are retrieved as well.
-/// Returns 0 on success, -1 otherwise
-
-Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
-{
-   if (!macro || strlen(macro) <= 0)
-      // Invalid inputs
-      return -1;
-
-   // Split out the aclic mode, if any
-   TString name = macro;
-   TString acmode, args, io;
-   name = gSystem->SplitAclicMode(name, acmode, args, io);
-
-   PDB(kGlobal,1)
-      Info("CopyFromCache","enter: names: %s, %s", macro, name.Data());
-
-   // Atomic action
-   Bool_t locked = (fCacheLock->IsLocked()) ? kTRUE : kFALSE;
-   if (!locked) fCacheLock->Lock();
-
-   // Get source from the cache
-   Bool_t assertfile = kFALSE;
-   TString srcname(name);
-   Int_t dot = srcname.Last('.');
-   if (dot != kNPOS) {
-      srcname.Remove(dot);
-      // We need to remove the files created during load to avoid crashes
-      // when we reuse the same code
-      srcname += "_*";
-      gSystem->Exec(TString::Format("%s %s", kRM, srcname.Data()));
-      srcname.ReplaceAll("_*", "*");
-   } else {
-      assertfile = kTRUE;
-   }
-   srcname.Insert(0, TString::Format("%s/",fCacheDir.Data()));
-   dot = (dot != kNPOS) ? srcname.Last('.') : dot;
-   // Assert the file if asked (to silence warnings from 'cp')
-   if (assertfile) {
-      if (gSystem->AccessPathName(srcname)) {
-         PDB(kCache,1)
-            Info("CopyFromCache", "file %s not in cache", srcname.Data());
-         if (!locked) fCacheLock->Unlock();
-         return 0;
-      }
-   }
-   PDB(kCache,1)
-      Info("CopyFromCache", "retrieving %s from cache", srcname.Data());
-   gSystem->Exec(TString::Format("%s %s .", kCP, srcname.Data()));
-
-   // Check if we are done
-   if (!cpbin) {
-      // End of atomicity
-      if (!locked) fCacheLock->Unlock();
-      return 0;
-   }
-
-   // Create binary name template
-   TString binname = name;
-   dot = binname.Last('.');
-   if (dot != kNPOS) {
-      binname.Replace(dot,1,"_");
-      binname += ".";
-   } else {
-      PDB(kCache,1)
-         Info("CopyFromCache",
-              "non-standard name structure: %s ('.' missing)", name.Data());
-      // Done
-      if (!locked) fCacheLock->Unlock();
-      return 0;
-   }
-
-   // Binary version file name
-   TString vername;
-   vername.Form(".%s", name.Data());
-   Int_t dotv = vername.Last('.');
-   if (dotv != kNPOS)
-      vername.Remove(dotv);
-   vername += ".binversion";
-
-   // Check binary version
-   TString v, r;
-   Bool_t okfil = kFALSE;
-   FILE *f = fopen(TString::Format("%s/%s", fCacheDir.Data(), vername.Data()), "r");
-   if (f) {
-      v.Gets(f);
-      r.Gets(f);
-      fclose(f);
-      okfil = kTRUE;
-   }
-
-   Bool_t okver = (v != gROOT->GetVersion()) ? kFALSE : kTRUE;
-   Bool_t okrev = (r != gROOT->GetGitCommit()) ? kFALSE : kTRUE;
-   if (!okfil || !okver || !okrev) {
-   PDB(kCache,1)
-      Info("CopyFromCache",
-           "removing binaries: 'file': %s, 'ROOT version': %s, 'ROOT revision': %s",
-           (okfil ? "OK" : "not OK"), (okver ? "OK" : "not OK"), (okrev ? "OK" : "not OK") );
-      // Remove all existing binaries
-      binname += "*";
-      gSystem->Exec(TString::Format("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
-      // ... and the binary version file
-      gSystem->Exec(TString::Format("%s %s/%s", kRM, fCacheDir.Data(), vername.Data()));
-      // Done
-      if (!locked) fCacheLock->Unlock();
-      return 0;
-   }
-
-   // Retrieve existing binaries, if any
-   void *dirp = gSystem->OpenDirectory(fCacheDir);
-   if (dirp) {
-      const char *e = 0;
-      while ((e = gSystem->GetDirEntry(dirp))) {
-         if (!strncmp(e, binname.Data(), binname.Length())) {
-            TString fncache;
-            fncache.Form("%s/%s", fCacheDir.Data(), e);
-            Bool_t docp = kTRUE;
-            FileStat_t stlocal, stcache;
-            if (!gSystem->GetPathInfo(fncache, stcache)) {
-               Int_t rc = gSystem->GetPathInfo(e, stlocal);
-               if (rc == 0 && (stlocal.fMtime >= stcache.fMtime))
-                  docp = kFALSE;
-               // If a copy candidate, check also the MD5
-               if (docp) {
-                  TMD5 *md5local = TMD5::FileChecksum(e);
-                  TMD5 *md5cache = TMD5::FileChecksum(fncache);
-                  if (md5local && md5cache && md5local == md5cache) docp = kFALSE;
-                  SafeDelete(md5local);
-                  SafeDelete(md5cache);
-               }
-               // Copy the file, if needed
-               if (docp) {
-                  gSystem->Exec(TString::Format("%s %s", kRM, e));
-                  PDB(kCache,1)
-                     Info("CopyFromCache",
-                          "retrieving %s from cache", fncache.Data());
-                  gSystem->Exec(TString::Format("%s %s %s", kCP, fncache.Data(), e));
-               }
-            }
-         }
-      }
-      gSystem->FreeDirectory(dirp);
-   }
-
-   // End of atomicity
-   if (!locked) fCacheLock->Unlock();
-
-   // Done
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy files related to 'macro' to the cache directory.
-/// Action depends on 'opt':
-///
-///    opt = 0         copy 'macro' to cache and delete from cache any binary
-///                    related to name; e.g. if macro = bla.C, the binaries are
-///                    bla_C.so, bla_C.rootmap, ...
-///    opt = 1         copy the binaries related to macro to the cache
-///
-/// Returns 0 on success, -1 otherwise
-
-Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
-{
-   if (!macro || strlen(macro) <= 0 || opt < 0 || opt > 1)
-      // Invalid inputs
-      return -1;
-
-   // Split out the aclic mode, if any
-   TString name = macro;
-   TString acmode, args, io;
-   name = gSystem->SplitAclicMode(name, acmode, args, io);
-
-   PDB(kGlobal,1)
-      Info("CopyToCache","enter: opt: %d, names: %s, %s", opt, macro, name.Data());
-
-   // Create binary name template
-   TString binname = name;
-   Int_t dot = binname.Last('.');
-   if (dot != kNPOS)
-      binname.Replace(dot,1,"_");
-
-   // Create version file name template
-   TString vername;
-   vername.Form(".%s", name.Data());
-   dot = vername.Last('.');
-   if (dot != kNPOS)
-      vername.Remove(dot);
-   vername += ".binversion";
-   Bool_t savever = kFALSE;
-
-   // Atomic action
-   Bool_t locked = (fCacheLock->IsLocked()) ? kTRUE : kFALSE;
-   if (!locked) fCacheLock->Lock();
-
-   // Action depends on 'opt'
-   if (opt == 0) {
-      // Save name to cache
-      PDB(kCache,1)
-         Info("CopyToCache",
-              "caching %s/%s ...", fCacheDir.Data(), name.Data());
-      gSystem->Exec(TString::Format("%s %s %s", kCP, name.Data(), fCacheDir.Data()));
-      // If needed, remove from the cache any existing binary related to 'name'
-      if (dot != kNPOS) {
-         binname += "*";
-         PDB(kCache,1)
-            Info("CopyToCache", "opt = 0: removing binaries '%s'", binname.Data());
-         gSystem->Exec(TString::Format("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
-         gSystem->Exec(TString::Format("%s %s/%s", kRM, fCacheDir.Data(), vername.Data()));
-      }
-   } else if (opt == 1) {
-      // If needed, copy to the cache any existing binary related to 'name'.
-      if (dot != kNPOS) {
-         void *dirp = gSystem->OpenDirectory(".");
-         if (dirp) {
-            const char *e = 0;
-            while ((e = gSystem->GetDirEntry(dirp))) {
-               if (!strncmp(e, binname.Data(), binname.Length())) {
-                  Bool_t docp = kTRUE;
-                  FileStat_t stlocal, stcache;
-                  if (!gSystem->GetPathInfo(e, stlocal)) {
-                     TString fncache;
-                     fncache.Form("%s/%s", fCacheDir.Data(), e);
-                     Int_t rc = gSystem->GetPathInfo(fncache, stcache);
-                     if (rc == 0 && (stlocal.fMtime <= stcache.fMtime)) {
-                        docp = kFALSE;
-                        if (rc == 0) rc = -1;
-                     }
-                     // If a copy candidate, check also the MD5
-                     if (docp) {
-                        TMD5 *md5local = TMD5::FileChecksum(e);
-                        TMD5 *md5cache = TMD5::FileChecksum(fncache);
-                        if (md5local && md5cache && md5local == md5cache) docp = kFALSE;
-                        SafeDelete(md5local);
-                        SafeDelete(md5cache);
-                        if (!docp) rc = -2;
-                     }
-                     // Copy the file, if needed
-                     if (docp) {
-                        gSystem->Exec(TString::Format("%s %s", kRM, fncache.Data()));
-                        PDB(kCache,1)
-                           Info("CopyToCache","caching %s ... (reason: %d)", e, rc);
-                        gSystem->Exec(TString::Format("%s %s %s", kCP, e, fncache.Data()));
-                        savever = kTRUE;
-                     }
-                  }
-               }
-            }
-            gSystem->FreeDirectory(dirp);
-         }
-         // Save binary version if requested
-         if (savever) {
-            PDB(kCache,1)
-               Info("CopyToCache","updating version file %s ...", vername.Data());
-            FILE *f = fopen(TString::Format("%s/%s", fCacheDir.Data(), vername.Data()), "w");
-            if (f) {
-               fputs(gROOT->GetVersion(), f);
-               fputs(TString::Format("\n%s", gROOT->GetGitCommit()), f);
-               fclose(f);
-            }
-         }
-      }
-   }
-
-   // End of atomicity
-   if (!locked) fCacheLock->Unlock();
-
-   // Done
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
