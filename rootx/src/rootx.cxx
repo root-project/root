@@ -486,10 +486,10 @@ int main(int argc, char **argv)
       // Exec failed
 #ifndef ROOTBINDIR
       fprintf(stderr,
-              "%s: can't start ROOT notebook -- please check that %s/bin/%s exists\n",
+              "%s: can't start ROOT notebook -- this option is only available when building with CMake, please check that %s/bin/%s exists\n",
               argv[0], rootsys, ROOTNBBINARY);
 #else
-      fprintf(stderr, "%s: can't start ROOT notebook -- please check that %s/%s exists\n",
+      fprintf(stderr, "%s: can't start ROOT notebook -- this option is only available when building with CMake, please check that %s/%s exists\n",
               argv[0], ROOTBINDIR, ROOTNBBINARY);
 #endif
 
