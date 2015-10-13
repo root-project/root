@@ -1,13 +1,13 @@
 ROOTTEST_ADD_TESTDIRS()
 
-ROOTTEST_GENERATE_EXECUTABLE(procPoolTreeTest tProcPoolTreeTest.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist)
+ROOTTEST_GENERATE_EXECUTABLE(procPoolTreeTest tProcPoolTreeTest.cpp LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist)
 
 ROOTTEST_ADD_TEST(roottest-root-multicore-procPoolTreeTest
                   EXEC procPoolTreeTest
                   OUTREF tProcPoolTreeTest.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_GENERATE_EXECUTABLE(procPoolProcessTest tProcPoolProcessTest.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist)
+ROOTTEST_GENERATE_EXECUTABLE(procPoolProcessTest tProcPoolProcessTest.cpp LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist)
 
 ROOTTEST_ADD_TEST(roottest-root-multicore-procPoolProcess
                   EXEC procPoolProcessTest
