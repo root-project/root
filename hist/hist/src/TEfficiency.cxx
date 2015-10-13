@@ -2785,7 +2785,8 @@ void TEfficiency::Paint(const Option_t* opt)
       //paint all associated functions
       if(fFunctions) {
          //paint box with fit parameters
-         gStyle->SetOptFit(1);
+         //the fit dtatistics will be painted if gStyle->SetOptFit(1) has been
+         // called by the user 
          TIter next(fFunctions);
          TObject* obj = 0;
          while((obj = next())) {
