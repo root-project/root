@@ -77,44 +77,94 @@ void RichardsonDerivator::SetFunction(const ROOT::Math::IGenFunction & f)
    else fFunction = &f;
 }
 
-double RichardsonDerivator::Derivative1 (double x)
+double RichardsonDerivator::Derivative1 (const IGenFunction & function, double x, double h)
 {
-   const double kC1 = 1.E-15;
+   const double keps = std::numeric_limits<double>::epsilon();
 
-   double h = fStepSize;
 
-   double xx[1];
-   xx[0] = x+h;     double f1 = (*fFunction)(xx);
-   //xx[0] = x;       double fx = (*fFunction)(xx); // not needed
-   xx[0] = x-h;     double f2 = (*fFunction)(xx);
+   double xx; 
+   xx = x+h;     double f1 = (function)(xx);
 
-   xx[0] = x+h/2;   double g1 = (*fFunction)(xx);
-   xx[0] = x-h/2;   double g2 = (*fFunction)(xx);
+   xx = x-h;     double f2 = (function)(xx);
+
+   xx = x+h/2;   double g1 = (function)(xx);
+   xx = x-h/2;   double g2 = (function)(xx);
 
    //compute the central differences
    double h2    = 1/(2.*h);
    double d0    = f1 - f2;
    double d2    = g1 - g2;
    double deriv = h2*(8*d2 - d0)/3.;
-   // compute the error ( to be improved ) this is just a simple truncation error
-   fLastError   = kC1*h2*0.5*(f1+f2);  //compute the error
+   // // compute the error ( to be improved ) this is just a simple truncation error
+   // fLastError   = kC1*h2*0.5*(f1+f2);  //compute the error
 
+   // compute the error ( from GSL deriv implementation)
+
+   double e0 = (std::abs( f1) + std::abs(f2)) * keps; 
+   double e2 = 2* (std::abs( g1) + std::abs(g2)) * keps + e0; 
+   double delta = std::max( std::abs( h2*d0), std::abs( deriv) ) * std::abs( x)/h * keps;
+
+   // estimate the truncation error from d2-d0 which is O(h^2)
+   double err_trunc = std::abs( deriv - h2*d0 );
+   // rounding error due to cancellation
+   double err_round = std::abs( e2/h) + delta; 
+
+   fLastError = err_trunc + err_round; 
    return deriv;
 }
 
-double RichardsonDerivator::Derivative2 (double x)
+double RichardsonDerivator::DerivativeForward (const IGenFunction & function, double x, double h)
 {
-   const double kC1 = 2*1e-15;
+   const double keps = std::numeric_limits<double>::epsilon();
 
-   double h = fStepSize;
 
-   double xx[1];
-   xx[0] = x+h;     double f1 = (*fFunction)(xx);
-   xx[0] = x;       double f2 = (*fFunction)(xx);
-   xx[0] = x-h;     double f3 = (*fFunction)(xx);
+   double xx;
+   xx = x+h/4.0;         double f1 = (function)(xx);
+   xx = x+h/2.0;         double f2 = (function)(xx);
 
-   xx[0] = x+h/2;   double g1 = (*fFunction)(xx);
-   xx[0] = x-h/2;   double g3 = (*fFunction)(xx);
+   xx = x+(3.0/4.0)*h;   double f3 = (function)(xx);
+   xx = x+h;             double f4 = (function)(xx);
+
+   //compute the forward differences
+
+   double r2 = 2.0*(f4 - f2);
+   double r4 = (22.0 / 3.0) * (f4 - f3) - (62.0 / 3.0) * (f3 - f2) +
+    (52.0 / 3.0) * (f2 - f1);
+
+   // Estimate the rounding error for r4 
+
+   double e4 = 2 * 20.67 * (fabs (f4) + fabs (f3) + fabs (f2) + fabs (f1)) * keps;
+
+   // The next term is due to finite precision in x+h = O (eps * x) 
+   
+   double dy = std::max (fabs (r2 / h), fabs (r4 / h)) * fabs (x / h) * keps;
+      
+   // The truncation error in the r4 approximation itself is O(h^3).
+   //  However, for safety, we estimate the error from r4-r2, which is
+   //  O(h).  By scaling h we will minimise this estimated error, not
+   //  the actual truncation error in r4. 
+   
+   double result = r4 / h;
+   double abserr_trunc = fabs ((r4 - r2) / h); // Estimated truncation error O(h) 
+   double abserr_round = fabs (e4 / h) + dy;
+
+   fLastError = abserr_trunc + abserr_round; 
+   
+   return result;
+}
+   
+
+   double RichardsonDerivator::Derivative2 (const IGenFunction & function, double x, double h)
+{
+   const double kC1 = 4*std::numeric_limits<double>::epsilon();
+
+   double xx;
+   xx = x+h;     double f1 = (function)(xx);
+   xx = x;       double f2 = (function)(xx);
+   xx = x-h;     double f3 = (function)(xx);
+
+   xx = x+h/2;   double g1 = (function)(xx);
+   xx = x-h/2;   double g3 = (function)(xx);
 
    //compute the central differences
    double hh    = 1/(h*h);
@@ -125,20 +175,18 @@ double RichardsonDerivator::Derivative2 (double x)
    return deriv;
 }
 
-double RichardsonDerivator::Derivative3 (double x)
+double RichardsonDerivator::Derivative3 (const IGenFunction & function, double x, double h)
 {
-   const double kC1 = 1e-15;
+   const double kC1 = 4*std::numeric_limits<double>::epsilon();
 
-   double h = fStepSize;
-
-   double xx[1];
-   xx[0] = x+2*h;   double f1 = (*fFunction)(xx);
-   xx[0] = x+h;     double f2 = (*fFunction)(xx);
-   xx[0] = x-h;     double f3 = (*fFunction)(xx);
-   xx[0] = x-2*h;   double f4 = (*fFunction)(xx);
-   xx[0] = x;       double fx = (*fFunction)(xx);
-   xx[0] = x+h/2;   double g2 = (*fFunction)(xx);
-   xx[0] = x-h/2;   double g3 = (*fFunction)(xx);
+   double xx;
+   xx = x+2*h;   double f1 = (function)(xx);
+   xx = x+h;     double f2 = (function)(xx);
+   xx = x-h;     double f3 = (function)(xx);
+   xx = x-2*h;   double f4 = (function)(xx);
+   xx = x;       double fx = (function)(xx);
+   xx = x+h/2;   double g2 = (function)(xx);
+   xx = x-h/2;   double g3 = (function)(xx);
 
    //compute the central differences
    double hhh  = 1/(h*h*h);
