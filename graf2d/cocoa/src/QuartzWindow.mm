@@ -1777,12 +1777,10 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) updateTrackingAreas
 {
+   [super updateTrackingAreas];
+
    if (!fID)
       return;
-
-   if (NSIsEmptyRect([self visibleRect]))
-      return;
-
 
    const Util::AutoreleasePool pool;
 
