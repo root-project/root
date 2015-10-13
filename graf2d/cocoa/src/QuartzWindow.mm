@@ -726,7 +726,12 @@ void GetWindowAttributes(NSObject<X11Window> *window, WindowAttributes_t *dst)
 #pragma mark - Comparators (I need them when changing a window's z-order).
 
 //______________________________________________________________________________
+// SDK 10.11 and above ...
+#ifdef MAC_OS_X_VERSION_10_11
+NSComparisonResult CompareViewsToLower(__kindof NSView *view1, __kindof NSView *view2, void *context)
+#else
 NSComparisonResult CompareViewsToLower(id view1, id view2, void *context)
+#endif
 {
     id topView = (id)context;
     if (view1 == topView)
@@ -738,7 +743,12 @@ NSComparisonResult CompareViewsToLower(id view1, id view2, void *context)
 }
 
 //______________________________________________________________________________
+// SDK 10.11 and above ...
+#ifdef MAC_OS_X_VERSION_10_11
+NSComparisonResult CompareViewsToRaise(__kindof NSView *view1, __kindof NSView *view2, void *context)
+#else
 NSComparisonResult CompareViewsToRaise(id view1, id view2, void *context)
+#endif
 {
    id topView = (id)context;
    if (view1 == topView)
@@ -1767,12 +1777,10 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) updateTrackingAreas
 {
+   [super updateTrackingAreas];
+
    if (!fID)
       return;
-
-   if (NSIsEmptyRect([self visibleRect]))
-      return;
-
 
    const Util::AutoreleasePool pool;
 
@@ -2152,7 +2160,7 @@ void print_mask_info(ULong_t mask)
       NSLog(@"QuartzView: -readColorBits:, bitmapImageRepForCachingDisplayInRect failed");
       return nullptr;
    }
-   
+
    CGContextRef ctx = self.fContext; //Save old context if any.
    [self cacheDisplayInRect : visRect toBitmapImageRep : imageRep];
    self.fContext = ctx; //Restore old context.
@@ -2180,7 +2188,7 @@ void print_mask_info(ULong_t mask)
 
    //We have a source data now. Let's allocate buffer for ROOT's GUI and convert source data.
    unsigned char *data = nullptr;
-   
+
    try {
       data = new unsigned char[area.fWidth * area.fHeight * 4];//bgra?
    } catch (const std::bad_alloc &) {
@@ -2191,7 +2199,7 @@ void print_mask_info(ULong_t mask)
    unsigned char *dstPixel = data;
    const unsigned char *line = srcData + area.fY * dataWidth * 4;
    const unsigned char *srcPixel = line + area.fX * 4;
-      
+
    for (unsigned i = 0; i < area.fHeight; ++i) {
       for (unsigned j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
          dstPixel[0] = srcPixel[2];
@@ -2203,7 +2211,7 @@ void print_mask_info(ULong_t mask)
       line += dataWidth * 4;
       srcPixel = line + area.fX * 4;
    }
-   
+
    return data;
 }
 
