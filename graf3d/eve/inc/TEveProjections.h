@@ -54,7 +54,7 @@ protected:
    EGeoMode_e          fGeoMode;       // strategy of polygon projection (what to try first)
    TString             fName;          // name
 
-   TEveVector          fCenter;        // center of distortionprivate:
+   TEveVector          fCenter;        // center of distortion
 
    bool                fDisplaceOrigin; // displace point before projection
 
@@ -94,6 +94,7 @@ public:
    const   Char_t*     GetName() const            { return fName.Data(); }
    void                SetName(const Char_t* txt) { fName = txt; }
 
+   const TEveVector&   RefCenter() const { return fCenter; }
    virtual void        SetCenter(TEveVector& v) { fCenter = v; }
    virtual Float_t*    GetProjectedCenter();
 
