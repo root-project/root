@@ -735,11 +735,9 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 \
 \
 
-<a name="patchreleases"/>
-
 # Patch Releases
 
-## Release v6.04/02
+## Release 6.04/02
 
 ### Platform Support
  - Added support for Intel icc 15
@@ -813,7 +811,7 @@ directory - this behavior is now implement by the default constructor.
 
 ----------------------------------------------------------------------------------------------------------------------
 
-## Release v6.04/04
+## Release 6.04/04
 
 ### Build System
 - Fix generation of PCH with CXX flags with spaces [ROOT-7478]
@@ -848,14 +846,41 @@ directory - this behavior is now implement by the default constructor.
 ### Geom
 - Fix missing OCC header file for the version [ROOT-7536]
 
-## JIRA generated release notes
-- [All resolved JIRA issues attached to this release](https://sft.its.cern.ch/jira/secure/ReleaseNote.jspa?projectId=10010&version=13213)
+### Bugs
+
+*   [[ROOT-6419](https://sft.its.cern.ch/jira/browse/ROOT-6419)] - ROOT-6.00.01 fails to build with geocad support due to conficting function definition
+*   [[ROOT-6966](https://sft.its.cern.ch/jira/browse/ROOT-6966)] - MacOS 10.9 build cannot run on 10.10
+*   [[ROOT-7342](https://sft.its.cern.ch/jira/browse/ROOT-7342)] - Conflicting definitions of Printf function
+*   [[ROOT-7402](https://sft.its.cern.ch/jira/browse/ROOT-7402)] - Fix the inconsistency in ROOT_LINKER_LIBRARY() macro between 5 and 6 versions
+*   [[ROOT-7423](https://sft.its.cern.ch/jira/browse/ROOT-7423)] - Activating prefetching makes TTree iteration slower when reading through HTTP
+*   [[ROOT-7475](https://sft.its.cern.ch/jira/browse/ROOT-7475)] - TTreeReader is retrieving the containers properly, but when used in a for loop, the elements get somehow "overridden"
+*   [[ROOT-7478](https://sft.its.cern.ch/jira/browse/ROOT-7478)] - Generating PCH fails with CXX flags with spaces
+*   [[ROOT-7491](https://sft.its.cern.ch/jira/browse/ROOT-7491)] - TLatex display issues with root 6.04
+*   [[ROOT-7509](https://sft.its.cern.ch/jira/browse/ROOT-7509)] - Build Failure on FreeBSD 10.1
+*   [[ROOT-7515](https://sft.its.cern.ch/jira/browse/ROOT-7515)] - C++14 needs GCC 5.1
+*   [[ROOT-7536](https://sft.its.cern.ch/jira/browse/ROOT-7536)] - Missing include file
+*   [[ROOT-7537](https://sft.its.cern.ch/jira/browse/ROOT-7537)] - Root tries to find include files in ROOTINCDIR/include instead of ROOTINCDIR
+*   [[ROOT-7575](https://sft.its.cern.ch/jira/browse/ROOT-7575)] - ROOT 6 can't compile with python 3.3
+*   [[ROOT-7586](https://sft.its.cern.ch/jira/browse/ROOT-7586)] - CMS missing symbol / function body of template
+*   [[ROOT-7598](https://sft.its.cern.ch/jira/browse/ROOT-7598)] - Size shown in dmg installer is wrong
+*   [[ROOT-7602](https://sft.its.cern.ch/jira/browse/ROOT-7602)] - CMake: Touching core/meta/inc/Linkdef.h, core/base/G__Base.cxx does not get regenerated
+*   [[ROOT-7605](https://sft.its.cern.ch/jira/browse/ROOT-7605)] - cmake -Dminimal=ON not working
+*   [[ROOT-7606](https://sft.its.cern.ch/jira/browse/ROOT-7606)] - cmake -Dfail-on-missing=ON -Dmathmore=ON not consistent
+*   [[ROOT-7663](https://sft.its.cern.ch/jira/browse/ROOT-7663)] - failure to compile master branch on ubuntu 15.04
+*   [[ROOT-7683](https://sft.its.cern.ch/jira/browse/ROOT-7683)] - Memory leak in ROOT::TSchemaRuleSet reported in ATLAS job
+*   [[ROOT-7706](https://sft.its.cern.ch/jira/browse/ROOT-7706)] - thisroot.sh not working properly for zsh
+
+### Improvements
+
+*   [[ROOT-7480](https://sft.its.cern.ch/jira/browse/ROOT-7480)] - improvement of the occincdir search in configure
+
+### Tasks
+
+*   [[ROOT-7583](https://sft.its.cern.ch/jira/browse/ROOT-7583)] - Let thisroot add ROOT to CMAKE_PREFIX_PATH
 
 ---------------------------------------------------------------------------------------------------------------------
 
-## HEAD of the v6-04-00-patches branch
-
-Changes will be part of the future v6.04/06.
+## Release 6.04/06
 
 ### Build
 - Building ROOT with `cmake` command not in my PATH now fixed [ROOT-7715]
@@ -866,4 +891,15 @@ Changes will be part of the future v6.04/06.
 ### Core
 - Fix thread safety of the creation of `TMethodCall` from a `TFunction`.
 - Fix dictionary generation of STL collection involving one of ROOT's core classes when the user header contains only a forward declaration of the class [ROOT-7695].
+
+### Bugs
+*   [[ROOT-7680](https://sft.its.cern.ch/jira/browse/ROOT-7680)] - Can't build v6-02-12 on MacOS X 10.11
+*   [[ROOT-7695](https://sft.its.cern.ch/jira/browse/ROOT-7695)] - Segmentation violation in rootcint
+*   [[ROOT-7709](https://sft.its.cern.ch/jira/browse/ROOT-7709)] - PyROOT not functional with system-default Python version on MacOS X 10.11
+*   [[ROOT-7715](https://sft.its.cern.ch/jira/browse/ROOT-7715)] - Building ROOT with CMake not in my PATH fails
+
+-------------------------------------------------------------------------------------------------------------------------
+## HEAD of the v6-04-00-patches branch
+
+Changes will be part of the future 6.04/08
 
