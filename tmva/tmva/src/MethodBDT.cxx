@@ -1518,10 +1518,9 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
      
       //Store the weighted median as a first boosweight for later use
       fBoostWeights.push_back(weightedMedian);
-      std::map<const TMVA::Event*, std::pair<Double_t, Double_t> >::iterator res = fWeightedResiduals.begin();
-      for (; res!=fWeightedResiduals.end(); ++res ) {
+      for (auto &r : fWeightedResiduals) {
          //substract the gloabl median from all residuals
-         (*res).second.first -= weightedMedian;  
+         r.second.first -= weightedMedian;
       }
 
       UpdateTargetsRegression(*fTrainSample,kTRUE);
