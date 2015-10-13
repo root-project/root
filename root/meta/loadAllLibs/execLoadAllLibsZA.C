@@ -12,6 +12,7 @@ void execLoadAllLibsZA(){
   libList.sort();
   libList.reverse();
   libList.unique();
+  libList.remove_if([](std::string){ static int n = 0; return (n++ % 2 == 0);});
   loadLibrariesInList(libList);
 
 }
