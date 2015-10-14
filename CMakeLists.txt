@@ -61,6 +61,7 @@ else()# testing using an installation
     find_program(ROOT_root_CMD root.exe PATHS ${ROOTSYS}/bin)
     find_program(ROOT_genreflex_CMD genreflex PATHS ${ROOTSYS}/bin)
     find_program(ROOT_rootcint_CMD rootcint PATHS ${ROOTSYS}/bin)
+    find_program(ROOT_rootcling_CMD rootcling PATHS ${ROOTSYS}/bin)
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules)
     include(RootNewMacros)
   endif()
