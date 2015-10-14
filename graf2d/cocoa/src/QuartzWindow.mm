@@ -1888,8 +1888,7 @@ void print_mask_info(ULong_t mask)
 
    const NSUInteger trackerOptions = NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited |
                                      NSTrackingActiveInActiveApp | NSTrackingInVisibleRect |
-                                     NSTrackingEnabledDuringMouseDrag | NSTrackingCursorUpdate |
-                                     NSTrackingActiveInKeyWindow;
+                                     NSTrackingEnabledDuringMouseDrag | NSTrackingCursorUpdate;
 
    NSRect frame = {};
    frame.size.width = self.fWidth;
