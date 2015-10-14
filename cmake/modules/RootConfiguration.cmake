@@ -542,9 +542,10 @@ if(WIN32)
   # We cannot use the compiledata.sh script for windows
   configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in include/compiledata.h NEWLINE_STYLE UNIX)
 else()
-  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh include/compiledata.h "${CXX}" ""
-       "${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}"
-        "${CMAKE_CXX_FLAGS}" "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "${LibSuffix}" "${SYSLIBS}"
+  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh include/compiledata.h "${CXX}"
+        "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_FLAGS}"
+        "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}"
+        "${LibSuffix}" "${SYSLIBS}"
         "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
 endif()
 
