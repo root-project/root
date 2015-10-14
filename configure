@@ -100,6 +100,7 @@ options="                    \
    enable_ruby               \
    enable_rfio               \
    enable_rpath              \
+   enable_search_usrlocal    \
    enable_sapdb              \
    enable_shadowpw           \
    enable_shared             \
@@ -186,6 +187,7 @@ enable_builtin_zlib=no
 enable_builtin_lzma=no
 enable_builtin_llvm=yes
 enable_afdsmgrd=no
+enable_search_usrlocal=yes
 
 if test "x$ENABLEALL" = "xyes"; then
     enable_gdml=yes
@@ -597,6 +599,16 @@ check_library() {
         libdirs="$sdklibs"
     fi
 
+    if test "x$enable_search_usrlocal" = "xno" ; then
+       no_usrlocal=""
+       for i in libdirs; do
+           if [[ $i != /usr/local/* ]] ; then
+               no_usrlocal="$no_usrlocal $i"
+           fi
+       done
+       libdirs="$no_usrlocal"
+    fi
+
     # Write a message
     checking_msg $lib
 
@@ -843,6 +855,15 @@ check_header()  {
             #fi
         done
         hdrdirs="$sdkhdrs"
+    fi
+    if test "x$enable_search_usrlocal" = "xno" ; then
+       no_usrlocal=""
+       for i in $hdrdirs; do
+           if [[ $i != /usr/local/* ]] ; then
+               no_usrlocal="$no_usrlocal $i"
+           fi
+       done
+       hdrdirs="$no_usrlocal"
     fi
 
     # Write a message
@@ -1715,6 +1736,7 @@ enable/disable options, prefix with either --enable- or --disable-
   rpath              Set run-time library load path on executables
   ruby               Ruby ROOT bindings, requires ruby >= 1.8
   sapdb              MaxDB/SapDB support, requires libsqlod and libsqlrte
+  search-usrlocal    Search for libraries and headers in /usr/local
   shadowpw           Shadow password support
   shared             Use shared 3rd party libraries if possible
   soversion          Set version number in sonames (recommended)
