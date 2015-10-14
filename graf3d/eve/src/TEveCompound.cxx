@@ -12,6 +12,7 @@
 #include "TEveCompound.h"
 
 /** \class TEveCompound
+\ingroup TEve
 Description of TEveCompound
 */
 

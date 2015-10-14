@@ -33,6 +33,7 @@
 #include <algorithm>
 
 /** \class TEveCaloLegoGL
+\ingroup TEve
 OpenGL renderer class for TEveCaloLego.
 */
 

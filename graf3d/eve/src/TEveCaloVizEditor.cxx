@@ -32,6 +32,7 @@
 #include "TMath.h"
 
 /** \class TEveCaloVizEditor
+\ingroup TEve
 GUI editor for TEveCaloEditor.
 */
 
