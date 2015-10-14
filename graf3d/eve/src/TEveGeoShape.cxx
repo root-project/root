@@ -60,6 +60,7 @@ namespace
 }
 
 /** \class TEveGeoShape
+\ingroup TEve
 Wrapper for TGeoShape with absolute positioning and color
 attributes allowing display of extracted TGeoShape's (without an
 active TGeoManager) and simplified geometries (needed for non-linear

@@ -25,6 +25,7 @@
 #include "TGDoubleSlider.h"
 
 /** \class TEveGeoNodeEditor
+\ingroup TEve
 Editor for TEveGeoNode class.
 */
 

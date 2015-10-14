@@ -17,6 +17,7 @@
 #include "TGDoubleSlider.h"
 
 /** \class TEveGValuatorBase
+\ingroup TEve
 Base class for composite GUI elements for setting of numeric values.
 */
 

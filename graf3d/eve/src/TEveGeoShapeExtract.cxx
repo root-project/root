@@ -18,6 +18,7 @@
 #include "TGeoShape.h"
 
 /** \class TEveGeoShapeExtract
+\ingroup TEve
 Globally positioned TGeoShape with rendering attributes and an
 optional list of daughter shape-extracts.
 

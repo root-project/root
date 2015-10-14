@@ -23,6 +23,7 @@
 #include "TContextMenu.h"
 
 /** \class TEveGedEditor
+\ingroup TEve
 Specialization of TGedEditor for proper update propagation to TEveManager.
 */
 
@@ -263,6 +264,7 @@ TContextMenu* TEveGedEditor::GetContextMenu()
 }
 
 /** \class TEveGedNameFrame
+\ingroup TEve
 Specialization of TGedNameFrame used in EVE.
 It provides the ability to undock given editor for easier use.
 Support for that is also provided from the TEveManager.

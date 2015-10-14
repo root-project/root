@@ -36,6 +36,7 @@
 #include "TVirtualGeoPainter.h"
 
 /** \class TEveGeoNode
+\ingroup TEve
 Wrapper for TGeoNode that allows it to be shown in GUI and controlled as a TEveElement.
 */
 

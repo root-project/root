@@ -26,6 +26,7 @@
 #include "TGeoMatrix.h"
 
 /** \class TEveGeoPolyShape
+\ingroup TEve
 Description of TEveGeoPolyShape
 */
 
