@@ -213,6 +213,11 @@ When the first canvas created by ROOT was in batch mode, it was note possible to
 comme back in interactive mode for the next canvases. this problem was reported here:
 https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20354
 
+### Cocoa Backend
+
+Sometimes the mouse cursor did not change back to the window manager arrow when
+exiting a `TCanvas`.
+
 ## 3D Graphics Libraries
 
 
