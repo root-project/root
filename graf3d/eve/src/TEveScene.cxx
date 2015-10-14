@@ -23,6 +23,7 @@
 #include "TExMap.h"
 
 /** \class TEveScene
+\ingroup TEve
 Eve representation of TGLScene.
 The GLScene is owned by this class - it is created on construction
 time and deleted at destruction.
@@ -224,6 +225,7 @@ const TGPicture* TEveScene::GetListTreeIcon(Bool_t)
 }
 
 /** \class TEveSceneList
+\ingroup TEve
 List of Scenes providing common operations on TEveScene collections.
 */
 

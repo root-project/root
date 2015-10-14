@@ -23,6 +23,7 @@
 
 
 /** \class TEveShapeEditor
+\ingroup TEve
 GUI editor for TEveShape.
 */
 
