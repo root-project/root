@@ -19,6 +19,7 @@
 #include "TGLIncludes.h"
 
 /** \class TEveJetConeGL
+\ingroup TEve
 OpenGL renderer class for TEveJetCone.
 */
 

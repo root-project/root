@@ -23,6 +23,7 @@
 #include "TGedEditor.h"
 
 /** \class TEveParamList
+\ingroup TEve
 Collection of named parameters.
 */
 
@@ -86,6 +87,7 @@ void TEveParamList::ParamChanged(const char* name)
 }
 
 /** \class TEveParamListEditor
+\ingroup TEve
 GUI editor for TEveParamList.
 
 Slot methods from this object do not call Update, instead they call

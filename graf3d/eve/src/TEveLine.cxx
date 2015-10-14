@@ -18,6 +18,7 @@ namespace
 }
 
 /** \class TEveLine
+\ingroup TEve
 An arbitrary polyline with fixed line and marker attributes.
 */
 
@@ -311,6 +312,7 @@ void TEveLine::SetDefaultSmooth(Bool_t r)
 }
 
 /** \class TEveLineProjected
+\ingroup TEve
 Projected copy of a TEveLine.
 */
 
