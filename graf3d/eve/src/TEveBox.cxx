@@ -98,6 +98,7 @@ TClass* TEveBox::ProjectedClass(const TEveProjection*) const
 
 
 /** \class TEveBoxProjected
+\ingroup TEve
 Projection of TEveBox.
 */
 

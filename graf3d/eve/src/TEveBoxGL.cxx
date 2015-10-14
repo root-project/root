@@ -225,6 +225,7 @@ void TEveBoxGL::DirectDraw(TGLRnrCtx&) const
 
 
 /** \class TEveBoxProjectedGL
+\ingroup TEve
 OpenGL renderer class for TEveBoxProjected.
 */
 

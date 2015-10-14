@@ -452,6 +452,7 @@ TBuffer3D* TEveGeoShape::MakeBuffer3D()
 
 
 /** \class TEveGeoShapeProjected
+\ingroup TEve
 A 3D projected TEveGeoShape.
 */
 

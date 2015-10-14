@@ -381,6 +381,7 @@ void TEveCaloVizEditor::DoSliceTransparency(Long_t t)
 }
 
 /** \class TEveCalo3DEditor
+\ingroup TEve
 GUI editor for TEveCalo3D.
 */
 

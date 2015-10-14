@@ -127,6 +127,7 @@ void TEveGeoNodeEditor::DoVizVolumeDaughters()
 }
 
 /** \class TEveGeoTopNodeEditor
+\ingroup TEve
 Editor for TEveGeoTopNode class.
 */
 

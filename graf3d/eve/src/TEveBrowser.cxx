@@ -103,6 +103,7 @@ void TEveListTreeItem::Toggle()
 }
 
 /** \class TEveGListTreeEditorFrame
+\ingroup TEve
 Composite GUI frame for parallel display of a TGListTree and TEveGedEditor.
 */
 
@@ -473,6 +474,7 @@ void TEveGListTreeEditorFrame::ItemKeyPress(TGListTreeItem *entry, UInt_t keysym
 
 
 /** \class TEveBrowser
+\ingroup TEve
 Specialization of TRootBrowser for Eve.
 */
 

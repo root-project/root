@@ -158,6 +158,7 @@ TClass* TEveCompound::ProjectedClass(const TEveProjection*) const
 
 
 /** \class TEveCompoundProjected
+\ingroup TEve
 Description of TEveCompoundProjected
 */
 

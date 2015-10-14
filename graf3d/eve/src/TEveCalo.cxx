@@ -430,6 +430,7 @@ void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice, Float_t& outH) co
 }
 
 /** \class TEveCalo3D
+\ingroup TEve
 Visualization of a calorimeter event data in 3D.
 */
 
@@ -482,6 +483,7 @@ void TEveCalo3D::ComputeBBox()
 }
 
 /** \class TEveCalo2D
+\ingroup TEve
 Visualization of a calorimeter event data in 2D.
 */
 
@@ -767,6 +769,7 @@ void TEveCalo2D::ComputeBBox()
 
 
 /** \class TEveCaloLego
+\ingroup TEve
 Visualization of calorimeter data as eta/phi histogram.
 */
 

@@ -25,6 +25,7 @@
 #include <set>
 
 /** \class  TEveCaloData::CellGeom_t
+\ingroup TEve
 Cell geometry inner structure.
 */
 
@@ -59,6 +60,7 @@ void TEveCaloData::CellGeom_t::Configure(Float_t etaMin, Float_t etaMax, Float_t
 }
 
 /** \class TEveCaloData::CellData_t
+\ingroup TEve
 Cell data inner structure.
 */
 
@@ -99,6 +101,7 @@ Float_t* TEveCaloData::RebinData_t::GetSliceVals(Int_t bin)
 }
 
 /** \class TEveCaloData
+\ingroup TEve
 A central manager for calorimeter event data. It provides a list of
 cells within requested phi and eta range.
 */
@@ -417,6 +420,7 @@ Float_t TEveCaloData::EtaToTheta(Float_t eta)
 
 
 /** \class  TEveCaloDataVec
+\ingroup TEve
 Calo data for universal cell geometry.
 */
 
