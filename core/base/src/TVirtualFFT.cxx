@@ -180,6 +180,9 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
 
    TVirtualFFT *fft = 0;
    if (opt.Contains("K") || !fgFFT) {
+
+      R__LOCKGUARD2(gROOTMutex);
+
       TPluginHandler *h;
       TString pluginname;
       if (fgDefault.Length()==0) fgDefault="fftw";
@@ -217,6 +220,9 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
          }
       }
    } else {
+
+      R__LOCKGUARD2(gROOTMutex);
+
       //if the global transform already exists and just needs to be reinitialised
       //with different parameters
       if (fgFFT->GetSign()!=sign || !opt.Contains(fgFFT->GetTransformFlag()) || !opt.Contains(fgFFT->GetType())) {
@@ -300,7 +306,10 @@ TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Optio
       }
    }
    TVirtualFFT *fft = 0;
-   if (!fgFFT || opt.Contains("K")) {
+   
+   R__LOCKGUARD2(gROOTMutex);
+   
+   if (!fgFFT || opt.Contains("K")) {      
       TPluginHandler *h;
       TString pluginname;
       if (fgDefault.Length()==0) fgDefault="fftw";

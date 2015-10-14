@@ -151,27 +151,26 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
 #else  // case of using Plugin Manager
 
 
+   {
+      R__LOCKGUARD2(gROOTMutex);            
+      TPluginHandler *h;
+      //gDebug = 3;
+      if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::VirtualIntegrator", "GSLIntegrator"))) {
+         if (h->LoadPlugin() == -1) {
+            MATH_WARN_MSG("IntegratorOneDim::CreateIntegrator","Error loading one dimensional GSL integrator - use Gauss integrator");
+            return new GaussIntegrator();
+         }
 
-   TPluginHandler *h;
-   //gDebug = 3;
-   if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::VirtualIntegrator", "GSLIntegrator"))) {
-      if (h->LoadPlugin() == -1) {
-         MATH_WARN_MSG("IntegratorOneDim::CreateIntegrator","Error loading one dimensional GSL integrator - use Gauss integrator");
-         return new GaussIntegrator();
-      }
-
-      // plugin manager requires a string
-      std::string typeName = GetName(type);
-
-      ig = reinterpret_cast<ROOT::Math::VirtualIntegratorOneDim *>( h->ExecPlugin(5,typeName.c_str(), rule, absTol, relTol, size ) );
-      assert(ig != 0);
-
-
+         // plugin manager requires a string
+         std::string typeName = GetName(type);
+         
+         ig = reinterpret_cast<ROOT::Math::VirtualIntegratorOneDim *>( h->ExecPlugin(5,typeName.c_str(), rule, absTol, relTol, size ) );
+         assert(ig != 0);
+      }      
 #ifdef DEBUG
       std::cout << "Loaded Integrator " << typeid(*ig).name() << std::endl;
 #endif
    }
-
 #endif
 
    return ig;
@@ -208,24 +207,27 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
 #endif
 
 #else  // use ROOT Plugin-Manager to instantiate GSLMCIntegrator
-   
-   const char * pluginName = "GSLMCIntegrator";
-   TPluginHandler *h = nullptr;
-   //gDebug = 3;
-   if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::VirtualIntegrator", pluginName))) {
-      if (h->LoadPlugin() == -1) {
-         MATH_WARN_MSG("IntegratorMultiDim::CreateIntegrator","Error loading GSL MC multidim integrator - use adaptive method");
-         return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall);
-      }
 
-      std::string typeName = GetName(type);
-
-      ig = reinterpret_cast<ROOT::Math::VirtualIntegratorMultiDim *>( h->ExecPlugin(4,typeName.c_str(), absTol, relTol, ncall ) );
-      assert(ig != 0);
-
+   {
+      R__LOCKGUARD2(gROOTMutex);                  
+      const char * pluginName = "GSLMCIntegrator";
+      TPluginHandler *h = nullptr;
+      //gDebug = 3;
+      if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::VirtualIntegrator", pluginName))) {
+         if (h->LoadPlugin() == -1) {
+            MATH_WARN_MSG("IntegratorMultiDim::CreateIntegrator","Error loading GSL MC multidim integrator - use adaptive method");
+            return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall);
+         }
+         
+         std::string typeName = GetName(type);
+         
+         ig = reinterpret_cast<ROOT::Math::VirtualIntegratorMultiDim *>( h->ExecPlugin(4,typeName.c_str(), absTol, relTol, ncall ) );
+         assert(ig != 0);
+         
 #ifdef DEBUG
-      std::cout << "Loaded Integrator " << typeid(*ig).name() << std::endl;
+         std::cout << "Loaded Integrator " << typeid(*ig).name() << std::endl;
 #endif
+      }
    }
 #endif
    return ig;
