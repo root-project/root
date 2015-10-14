@@ -170,6 +170,7 @@ void TEveJetConeGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 }
 
 /** \class TEveJetConeProjectedGL
+\ingroup TEve
 OpenGL renderer class for TEveJetConeProjected.
 */
 

@@ -20,6 +20,7 @@
 #include "TGLabel.h"
 
 /** \class TEveTransSubEditor
+\ingroup TEve
 Sub-editor for TEveTrans class.
 */
 
@@ -217,6 +218,7 @@ void TEveTransSubEditor::DoTransChanged()
 }
 
 /** \class TEveTransEditor
+\ingroup TEve
 Editor for TEveTrans class.
 */
 

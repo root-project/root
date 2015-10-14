@@ -30,6 +30,7 @@
 #include "TAttMarkerEditor.h"
 
 /** \class TEveTrackPropagatorSubEditor
+\ingroup TEve
 Sub-editor for TEveTrackPropagator class.
 */
 
@@ -420,6 +421,7 @@ void TEveTrackPropagatorSubEditor::DoRnrPTB()
 }
 
 /** \class TEveTrackPropagatorEditor
+\ingroup TEve
 GUI editor for TEveTrackPropagator.
 It's only a wrapper around a TEveTrackPropagatorSubEditor that holds actual
 widgets.

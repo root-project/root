@@ -19,6 +19,7 @@
 #include <cassert>
 
 /** \class TEveMagField
+\ingroup TEve
 Abstract base-class for interfacing to magnetic field needed by the
 TEveTrackPropagator.
 See sub-classes for two simple implementations.
@@ -29,6 +30,7 @@ NOTE: Magnetic field direction convention is inverted.
 ClassImp(TEveMagField);
 
 /** \class TEveMagFieldConst
+\ingroup TEve
 Implements constant magnetic field, given by a vector fB.
 
 NOTE: Magnetic field direction convention is inverted.
@@ -37,6 +39,7 @@ NOTE: Magnetic field direction convention is inverted.
 ClassImp(TEveMagFieldConst);
 
 /** \class TEveMagFieldDuo
+\ingroup TEve
 Implements constant magnetic filed that switches on given axial radius fR2
 from vector fBIn to fBOut.
 
@@ -183,6 +186,7 @@ void TEveTrackPropagator::Helix_t::Step(const TEveVector4D& v, const TEveVectorD
 }
 
 /** \class TEveTrackPropagator
+\ingroup TEve
 Holding structure for a number of track rendering parameters.
 Calculates path taking into account the parameters.
 

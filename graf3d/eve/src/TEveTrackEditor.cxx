@@ -30,6 +30,7 @@
 #include "TGDoubleSlider.h"
 
 /** \class TEveTrackEditor
+\ingroup TEve
 Editor for TEveTrack class.
 */
 
@@ -72,6 +73,7 @@ void TEveTrackEditor::DoEditPropagator()
 }
 
 /** \class TEveTrackListEditor
+\ingroup TEve
 Editor for TEveTrackList class.
 */
 

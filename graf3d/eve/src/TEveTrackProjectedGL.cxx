@@ -18,6 +18,7 @@
 #include "TGLRnrCtx.h"
 
 /** \class TEveTrackProjectedGL
+\ingroup TEve
 GL-renderer for TEveTrackProjected class.
 */
 
