@@ -556,6 +556,9 @@ class ModuleFacade( types.ModuleType ):
     # set the display hook
       sys.displayhook = _displayhook
 
+    # manually load libMathCore, for example to obtain gRandom
+    # This can be removed once autoloading on selected variables is available
+      _root.gSystem.Load( "libMathCore" )
 
 sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade
