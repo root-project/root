@@ -17,6 +17,7 @@
 #include "TGLIncludes.h"
 
 /** \class TEveDigitSetGL
+\ingroup TEve
 OpenGL renderer class for TEveDigitSet.
 */
 

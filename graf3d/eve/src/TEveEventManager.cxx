@@ -14,8 +14,8 @@
 #include "TObjString.h"
 #include "TInterpreter.h"
 
-//______________________________________________________________________________
 /** \class TEveEventManager
+\ingroup TEve
 Base class for event management and navigation.
 */
 

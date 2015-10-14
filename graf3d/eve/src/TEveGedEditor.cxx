@@ -319,6 +319,7 @@ void TEveGedNameFrame::SpawnEditorClone()
 }
 
 /** \class TEveGedNameTextButton
+\ingroup TEve
 Specialization of TGTextButton for EVE name frame.
 It opens a context-menu on right-click.
 */
