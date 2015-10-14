@@ -703,12 +703,12 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
          }
       }
       // treat as Poisson ratio
-      if(bPoissonRatio && eff != 1)
+      if(bPoissonRatio)
       {
-         Double_t cor = 1./pow(1 - eff,2);
          Double_t ratio = eff/(1 - eff);
-         low = ratio - cor * (eff - low);
-         upper = ratio + cor * (upper - eff);
+         // take the intervals in eff as intervals in the Poisson ratio
+         low = low/(1. - low);
+         upper = upper/(1.-upper);
          eff = ratio;
       }
       //Set the point center and its errors
