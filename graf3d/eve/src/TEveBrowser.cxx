@@ -57,6 +57,7 @@
 #include "TGeoNode.h"
 
 /** \class TEveListTreeItem
+\ingroup TEve
 Special list-tree-item for Eve.
 
 Most state is picked directly from TEveElement, no need to store it

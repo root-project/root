@@ -18,6 +18,7 @@
 #include "TMath.h"
 
 /** \class TEveBoxGL
+\ingroup TEve
 OpenGL renderer class for TEveBox.
 */
 

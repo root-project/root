@@ -23,6 +23,7 @@
 #include "TAxis.h"
 
 /** \class TEveCalo2DGL
+\ingroup TEve
 OpenGL renderer class for TEveCalo2D.
 */
 

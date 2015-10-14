@@ -27,6 +27,7 @@
 #include <cassert>
 
 /** \class TEveCaloViz
+\ingroup TEve
 Base class for calorimeter data visualization.
 See TEveCalo2D and TEveCalo3D for concrete implementations.
 */
