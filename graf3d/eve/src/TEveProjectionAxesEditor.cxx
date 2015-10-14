@@ -19,6 +19,7 @@
 #include "TG3DLine.h"
 
 /** \class TEveProjectionAxesEditor
+\ingroup TEve
 GUI editor for TEveProjectionAxes.
 */
 

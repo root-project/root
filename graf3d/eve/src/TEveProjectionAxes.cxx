@@ -15,6 +15,7 @@
 
 
 /** \class TEveProjectionAxes
+\ingroup TEve
 Axes for non-linear projections. Show scale of TEveProjectionManager
 children. With different step mode tick-marks can positioned
 equidistant or placed with value monotonically increasing from lower left corner
