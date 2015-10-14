@@ -152,7 +152,7 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
 
 
    {
-      R__LOCKGUARD2(gROOTMutex);            
+      R__LOCKGUARD2(gROOTMutex);
       TPluginHandler *h;
       //gDebug = 3;
       if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::VirtualIntegrator", "GSLIntegrator"))) {
@@ -163,10 +163,10 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
 
          // plugin manager requires a string
          std::string typeName = GetName(type);
-         
+
          ig = reinterpret_cast<ROOT::Math::VirtualIntegratorOneDim *>( h->ExecPlugin(5,typeName.c_str(), rule, absTol, relTol, size ) );
          assert(ig != 0);
-      }      
+      }
 #ifdef DEBUG
       std::cout << "Loaded Integrator " << typeid(*ig).name() << std::endl;
 #endif
@@ -180,10 +180,10 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
    // create concrete class for multidimensional integration
 
 #ifndef R__HAS_MATHMORE
-   // when Mathmore is not built only possible type is ADAPTIVE. There is no other choice 
+   // when Mathmore is not built only possible type is ADAPTIVE. There is no other choice
    type = IntegrationMultiDim::kADAPTIVE;
-#endif   
-   
+#endif
+
    if (type == IntegrationMultiDim::kDEFAULT) type = GetType(IntegratorMultiDimOptions::DefaultIntegrator().c_str());
    if (absTol < 0) absTol = IntegratorMultiDimOptions::DefaultAbsTolerance();
    if (relTol < 0) relTol = IntegratorMultiDimOptions::DefaultRelTolerance();
@@ -194,7 +194,7 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
    // no need for PM in the adaptive  case using Genz method (class is in MathCore)
    if (type == IntegrationMultiDim::kADAPTIVE)
       return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall, size);
-   
+
    // use now plugin-manager for creating the GSL integrator
 
    VirtualIntegratorMultiDim * ig = 0;
@@ -209,7 +209,7 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
 #else  // use ROOT Plugin-Manager to instantiate GSLMCIntegrator
 
    {
-      R__LOCKGUARD2(gROOTMutex);                  
+      R__LOCKGUARD2(gROOTMutex);
       const char * pluginName = "GSLMCIntegrator";
       TPluginHandler *h = nullptr;
       //gDebug = 3;
@@ -218,12 +218,12 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
             MATH_WARN_MSG("IntegratorMultiDim::CreateIntegrator","Error loading GSL MC multidim integrator - use adaptive method");
             return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall);
          }
-         
+
          std::string typeName = GetName(type);
-         
+
          ig = reinterpret_cast<ROOT::Math::VirtualIntegratorMultiDim *>( h->ExecPlugin(4,typeName.c_str(), absTol, relTol, ncall ) );
          assert(ig != 0);
-         
+
 #ifdef DEBUG
          std::cout << "Loaded Integrator " << typeid(*ig).name() << std::endl;
 #endif

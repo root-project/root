@@ -306,10 +306,10 @@ TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Optio
       }
    }
    TVirtualFFT *fft = 0;
-   
+
    R__LOCKGUARD2(gROOTMutex);
-   
-   if (!fgFFT || opt.Contains("K")) {      
+
+   if (!fgFFT || opt.Contains("K")) {
       TPluginHandler *h;
       TString pluginname;
       if (fgDefault.Length()==0) fgDefault="fftw";
