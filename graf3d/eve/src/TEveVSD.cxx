@@ -13,6 +13,7 @@
 #include "TFile.h"
 
 /** \class TEveVSD
+\ingroup TEve
 Visualization Summary Data - a collection of trees holding standard
 event data in experiment independent format.
 */

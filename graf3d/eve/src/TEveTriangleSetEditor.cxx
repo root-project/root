@@ -16,6 +16,7 @@
 #include "TGLabel.h"
 
 /** \class TEveTriangleSetEditor
+\ingroup TEve
 Editor for TEveTriangleSet class.
 */
 

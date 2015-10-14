@@ -14,6 +14,7 @@
 #include "TEveGValuators.h"
 
 /** \class TEveViewerListEditor
+\ingroup TEve
 GUI editor for TEveViewerList.
 */
 

@@ -13,7 +13,7 @@
 #include "TEveWindow.h"
 
 /** \class TEveWindowManager
-
+\ingroup TEve
 Manager for EVE windows.
 
 Provides the concept of the current window and takes care for proper
