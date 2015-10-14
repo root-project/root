@@ -14,6 +14,7 @@
 
 
 /** \class TEveArrow
+\ingroup TEve
 Class used for display of a thick arrow.
 */
 
