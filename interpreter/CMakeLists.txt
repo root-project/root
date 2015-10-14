@@ -11,6 +11,17 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON)
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF)
 
+#---Protect against warnings clang/gcc would fire----------------------------------------------------
+set(INTERP_COMMON_ADDITIONAL_FLAGS "-Wno-comment -Wno-unused-parameter")
+if(CMAKE_COMPILER_IS_GNUCXX)
+   set(INTERP_ADDITIONAL_FLAGS "${INTERP_COMMON_ADDITIONAL_FLAGS} -Wno-maybe-uninitialized -Wno-unused-but-set-variable -Wno-missing-field-initializers")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+   set(INTERP_ADDITIONAL_FLAGS "${INTERP_COMMON_ADDITIONAL_FLAGS} -Wno-conditional-uninitialized
+       -Wno-inconsistent-missing-override -Wno-parentheses-equality -Wno-unused-private-field")
+endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
+
 #---Build type--------------------------------------------------------------------------------------
 if(NOT DEFINED LLVM_BUILD_TYPE)
   set(LLVM_BUILD_TYPE Release CACHE STRING "Build type for LLVM (used to set CMAKE_BUILD_TYPE)")
