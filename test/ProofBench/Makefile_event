@@ -13,7 +13,6 @@ include Makefile.arch
 EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
 EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)
 EVENTSO       = libEvent.$(DllSuf)
-EVENT         = Event$(ExeSuf)
 ifeq ($(PLATFORM),win32)
 EVENTLIB      = libEvent.lib
 else
@@ -25,8 +24,6 @@ MAINEVENTS    = MainEvent.$(SrcSuf)
 
 OBJS          = $(EVENTO) $(MAINEVENTO)
 
-PROGRAMS      = $(EVENT)
-
 #------------------------------------------------------------------------------
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf)
@@ -34,23 +31,11 @@ PROGRAMS      = $(EVENT)
 all:            $(EVENTLIB)
 
 $(EVENTSO):     $(EVENTO)
-ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
 ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+		$(MAKESHARED) $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@
-ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
-ifeq ($(MACOSX_MINOR),4)
-		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-else
-		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
-endif
-endif
+		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 else
 ifeq ($(PLATFORM),win32)
 		bindexplib $* $^ > $*.def
@@ -58,24 +43,19 @@ ifeq ($(PLATFORM),win32)
 		   $(OutPutOpt)$(EVENTLIB)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
 		   $(OutPutOpt)$@
+		$(MT_DLL)
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 endif
 endif
 endif
-endif
-		@echo "$@ done"
-
-$(EVENT):       $(EVENTSO) $(MAINEVENTO)
-		$(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTLIB) $(LIBS) \
-		   $(OutPutOpt)$(EVENT)
 		@echo "$@ done"
 
 clean:
 		@rm -f $(OBJS) core
 
 distclean:      clean
-		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
+		@rm -f $(EVENTSO) $(EVENTLIB) *Dict.* *.pcm *.def *.exp \
 		   *.so *.lib *.dll *.d *.log .def so_locations
 		@rm -rf cxx_repository
 
@@ -86,7 +66,7 @@ MainEvent.$(ObjSuf): Event.h
 
 EventDict.$(SrcSuf): Event.h EventLinkDef.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	$(ROOTCINT) -f $@ -c $^
 
 .$(SrcSuf).$(ObjSuf):
 	$(CXX) $(CXXFLAGS) -c $<
