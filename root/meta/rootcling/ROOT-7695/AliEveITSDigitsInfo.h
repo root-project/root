@@ -10,7 +10,7 @@
 #ifndef AliEveITSDigitsInfo_H
 #define AliEveITSDigitsInfo_H
 
-#include <TEveUtil.h>
+// #include <TEveUtil.h>
 #include <TObject.h>
 
 #include <map>
@@ -69,7 +69,7 @@ protected:
 // AliEveITSDigitsInfo
 /******************************************************************************/
 
-class AliEveITSDigitsInfo : public TObject, public TEveRefCnt
+class AliEveITSDigitsInfo : public TObject // , public TEveRefCnt
 {
 public:
   TTree*                   fTree;         // Tree from which the digits are read.
