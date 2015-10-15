@@ -906,3 +906,7 @@ Changes will be part of the future 6.04/08
 ### Build
 - Add --disable-search-usrlocal to configure/make to be able to avoid conflict with incompatible installation (e.g. homebrew).
 - Add /opt/X11 to configure/make search for include files and libraries.
+
+### Interpreter
+- Prevent crash in expressions which contain use undefined identifier [ROOT-7737]
+
