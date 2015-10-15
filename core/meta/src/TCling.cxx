@@ -5185,6 +5185,8 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
             if ((clang::NamedDecl*)-1 == previousScopeAsNamedDecl) break;
             previousScopeAsContext = llvm::dyn_cast_or_null<clang::DeclContext>(previousScopeAsNamedDecl);
             if (!previousScopeAsContext) break; // this is not a context
+            previousScopeAsContext = previousScopeAsContext->getPrimaryContext();
+            assert(previousScopeAsContext != 0 && "Internal error (context without primary context)");
          }
          delete tokens;
          // Now, let's check if the last scope, the template, has a definition, i.e. it's not a fwd decl

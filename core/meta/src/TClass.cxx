@@ -1034,6 +1034,10 @@ TClass::TClass() :
    // Default ctor.
 
    R__LOCKGUARD2(gInterpreterMutex);
+   {
+      TMmallocDescTemp setreset;
+      fStreamerInfo = new TObjArray(1, -2);
+   }
    fDeclFileLine   = -2;    // -2 for standalone TClass (checked in dtor)
 }
 
@@ -1069,6 +1073,10 @@ TClass::TClass(const char *name, Bool_t silent) :
    if (!gROOT)
       ::Fatal("TClass::TClass", "ROOT system not initialized");
 
+   {
+      TMmallocDescTemp setreset;
+      fStreamerInfo = new TObjArray(1, -2);
+   }
    fDeclFileLine   = -2;    // -2 for standalone TClass (checked in dtor)
 
    SetBit(kLoading);
@@ -1599,7 +1607,7 @@ TClass::~TClass()
 
    if (fStreamerInfo)
       fStreamerInfo->Delete();
-   delete fStreamerInfo; fStreamerInfo=0;
+   delete fStreamerInfo; fStreamerInfo = nullptr;
 
    if (fDeclFileLine >= -1)
       TClass::RemoveClass(this);
@@ -4263,16 +4271,11 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
    if (version == 0) {
       version = fClassVersion;
    }
-   if (!fStreamerInfo) {
-      TMmallocDescTemp setreset;
-      fStreamerInfo = new TObjArray(version + 10, -2);
-   } else {
-      Int_t ninfos = fStreamerInfo->GetSize();
-      if ((version < -1) || (version >= ninfos)) {
-         Error("GetStreamerInfo", "class: %s, attempting to access a wrong version: %d", GetName(), version);
-         // FIXME: Shouldn't we go to -1 here, or better just abort?
-         version = 0;
-      }
+   Int_t ninfos = fStreamerInfo->GetSize();
+   if ((version < -1) || (version >= ninfos)) {
+      Error("GetStreamerInfo", "class: %s, attempting to access a wrong version: %d", GetName(), version);
+      // FIXME: Shouldn't we go to -1 here, or better just abort?
+      version = 0;
    }
    TVirtualStreamerInfo* sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(version);
    if (!sinfo && (version != fClassVersion)) {
