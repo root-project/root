@@ -1580,7 +1580,7 @@ void TFormula::ProcessFormula(TString &formula)
             TString functionName = fun.fName(index + 2, fun.fName.Length());
 
             Bool_t silent = true;
-            TClass *tclass = new TClass(className,silent);
+            TClass *tclass = TClass::GetClass(className,silent);
             // std::cout << "looking for class " << className << std::endl;
             const TList *methodList = tclass->GetListOfAllPublicMethods();
             TIter next(methodList);
