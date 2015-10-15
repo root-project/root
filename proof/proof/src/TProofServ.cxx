@@ -6008,7 +6008,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
             // Atomic action
             fCacheLock->Lock();
 
-            TString ocwd = gSystem->WorkingDirectory();
+            TString originalCwd = gSystem->WorkingDirectory();
             gSystem->ChangeDirectory(fCacheDir.Data());
 
             // Load the macro
@@ -6019,7 +6019,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
             gROOT->ProcessLine(TString::Format(".L %s", pack.Data()));
 
             // Release atomicity
-            gSystem->ChangeDirectory(ocwd.Data());
+            gSystem->ChangeDirectory(originalCwd.Data());
             fCacheLock->Unlock();
 
             // Now we collect the result from the unique workers and send the load request
