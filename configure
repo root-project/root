@@ -615,7 +615,7 @@ check_library() {
 
     if test "x$enable_search_usrlocal" = "xno" ; then
        no_usrlocal=""
-       for i in libdirs; do
+       for i in $libdirs; do
            if [[ $i != /usr/local/* ]] ; then
                no_usrlocal="$no_usrlocal $i"
            fi
