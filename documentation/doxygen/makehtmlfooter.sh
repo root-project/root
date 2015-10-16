@@ -9,7 +9,6 @@ echo '<small>'
 echo '<img class="footer" src="rootlogo_s.gif" alt="root"/></a>'
 # Doxygen unconditionally adds a space in front of $DOXYGEN_ROOT_VERSION
 echo 'ROOT'$DOXYGEN_ROOT_VERSION' - Reference Guide Generated on $datetime using Doxygen '`doxygen --version`'.'
-echo '© Copyright CERN 2015.  All rights reserved.'
 echo '</small>'
 echo '</div>'
 echo '</body>'
