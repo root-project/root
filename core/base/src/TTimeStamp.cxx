@@ -108,7 +108,7 @@ TTimeStamp::TTimeStamp()
 /// or
 /// ~~~ {.cpp}
 ///    Int_t secOffset = 8*60*60;
-///    TTimeStamp(year,month,day,hour,min,sec,nsec,kTRUE,8*60*60);
+///    TTimeStamp timeStamp(year,month,day,hour,min,sec,nsec,kTRUE,8*60*60);
 /// ~~~
 
 TTimeStamp::TTimeStamp(UInt_t year, UInt_t month,
@@ -123,6 +123,15 @@ TTimeStamp::TTimeStamp(UInt_t year, UInt_t month,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TTimeStamp and set it to the specified date, time, nanosec.
 /// If !isUTC then it is assumed to be the standard local time zone.
+///
+/// \warning Watch out! C++ overload resolution often chooses the constructor
+/// `TTimeStamp(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate)`
+/// instead of this one. Your best bet is to explicitly pass UInt_t values instead
+/// of Int_t values. When calling with integer literals, pass for instance
+/// ~~~ {.cpp}
+/// TTimeStamp timeStamp(20150610u,80448u,0u)
+/// ~~~
+/// to disambiguate.
 
 TTimeStamp::TTimeStamp(UInt_t date, UInt_t time,
                        UInt_t nsec,
