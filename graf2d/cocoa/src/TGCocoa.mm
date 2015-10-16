@@ -1034,9 +1034,9 @@ void TGCocoa::ReparentTopLevel(Window_t wid, Window_t pid, Int_t x, Int_t y)
    const Util::AutoreleasePool pool;
 
    NSView<X11Window> * const contentView = fPimpl->GetWindow(wid).fContentView;
+   QuartzWindow * const topLevel = (QuartzWindow *)[contentView window];
    [contentView retain];
    [contentView removeFromSuperview];
-   QuartzWindow * const topLevel = (QuartzWindow *)[contentView window];
    [topLevel setContentView : nil];
    fPimpl->ReplaceDrawable(wid, contentView);
    [contentView setX : x Y : y];

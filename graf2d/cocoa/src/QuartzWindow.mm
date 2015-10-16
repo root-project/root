@@ -1204,6 +1204,16 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
+- (void) setContentView:(NSView *)cv
+{
+    [super setContentView:cv];
+    if ([cv isKindOfClass:[QuartzView class]])
+        fContentView = (QuartzView *)cv;
+    else
+        fContentView = nil;
+}
+
+//______________________________________________________________________________
 - (void) setFIsDeleted : (BOOL) deleted
 {
    fIsDeleted = deleted;
@@ -1214,7 +1224,8 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) forwardInvocation : (NSInvocation *) anInvocation
 {
-   assert(fContentView != nil && "-forwardInvocation:, fContentView is nil");
+   if (!fContentView)
+      return;
 
    if ([fContentView respondsToSelector : [anInvocation selector]]) {
       [anInvocation invokeWithTarget : fContentView];
@@ -1229,8 +1240,8 @@ void print_mask_info(ULong_t mask)
    NSMethodSignature *signature = [super methodSignatureForSelector : selector];
 
    if (!signature) {
-      assert(fContentView != nil && "-methodSignatureForSelector:, fContentView is nil");
-      signature = [fContentView methodSignatureForSelector : selector];
+      if (fContentView)
+         signature = [fContentView methodSignatureForSelector : selector];
    }
 
    return signature;
@@ -1395,7 +1406,8 @@ void print_mask_info(ULong_t mask)
 - (void) copy : (NSObject<X11Drawable> *) src area : (X11::Rectangle) area withMask : (QuartzImage *) mask
          clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
-   assert(fContentView != nil && "-copy:area:toPoint:, fContentView is nil");
+   if (!fContentView)
+      return;
 
    [fContentView copy : src area : area withMask : mask clipOrigin : clipXY toPoint : dstPoint];
 }
@@ -1403,7 +1415,8 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (unsigned char *) readColorBits : (X11::Rectangle) area
 {
-   assert(fContentView != nil && "-readColorBits:, fContentView is nil");
+   if (!fContentView)
+      return nullptr;
 
    return [fContentView readColorBits : area];
 }
@@ -1439,7 +1452,8 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) setFBackgroundPixel : (unsigned long) backgroundColor
 {
-   assert(fContentView != nil && "-setFBackgroundPixel:, fContentView is nil");
+   if (!fContentView)
+      return;
 
    if (!fShapeCombineMask) {
       CGFloat rgba[] = {0., 0., 0., 1.};
@@ -1454,7 +1468,8 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (unsigned long) fBackgroundPixel
 {
-   assert(fContentView != nil && "-fBackgroundPixel, fContentView is nil");
+   if (!fContentView)
+       return 0;
 
    return fContentView.fBackgroundPixel;
 }
@@ -1463,7 +1478,8 @@ void print_mask_info(ULong_t mask)
 - (int) fMapState
 {
    //Top-level window can be only kIsViewable or kIsUnmapped (not unviewable).
-   assert(fContentView != nil && "-fMapState, fContentView is nil");
+   if (!fContentView)
+      return kIsUnmapped;
 
    if ([fContentView isHidden])
       return kIsUnmapped;
@@ -1491,7 +1507,9 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) getAttributes : (WindowAttributes_t *) attr
 {
-   assert(fContentView != 0 && "-getAttributes:, fContentView is nil");
+   if (!fContentView)
+      return;
+ 
    assert(attr && "-getAttributes:, parameter 'attr' is nil");
 
    X11::GetWindowAttributes(self, attr);
@@ -1512,7 +1530,8 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) mapRaised
 {
-   assert(fContentView && "-mapRaised, fContentView is nil");
+   if (!fContentView)
+      return;
 
    const Util::AutoreleasePool pool;
 
@@ -1529,7 +1548,8 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) mapWindow
 {
-   assert(fContentView != nil && "-mapWindow, fContentView is nil");
+   if (!fContentView)
+      return;
 
    const Util::AutoreleasePool pool;
 
@@ -1546,7 +1566,8 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) mapSubwindows
 {
-   assert(fContentView != nil && "-mapSubwindows, fContentView is nil");
+   if (!fContentView)
+      return;
 
    const Util::AutoreleasePool pool;
 
@@ -1557,7 +1578,8 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) unmapWindow
 {
-   assert(fContentView != nil && "-unmapWindow, fContentView is nil");
+   if (!fContentView)
+      return;
 
    [fContentView setHidden : YES];
    [self orderOut : self];
@@ -1577,7 +1599,8 @@ void print_mask_info(ULong_t mask)
    //window does not move, menu closes, and after that you can start draggin a window again.
    //With Cocoa I can not do such a thing (window WILL move), but still can report button release event
    //to close a menu.
-   assert(fContentView != nil && "-sendEvent:, fContentView is nil");
+   if (!fContentView)
+      return;
 
    if (theEvent.type == NSLeftMouseDown || theEvent.type == NSRightMouseDown) {
       bool generateFakeRelease = false;
@@ -1619,8 +1642,8 @@ void print_mask_info(ULong_t mask)
 - (BOOL) windowShouldClose : (id) sender
 {
 #pragma unused(sender)
-
-   assert(fContentView != nil && "-windowShouldClose:, fContentView is nil");
+   if (!fContentView)
+      return NO;
 
    //TODO: check this!!! Children are
    //transient windows and ROOT does not handle
@@ -1652,7 +1675,8 @@ void print_mask_info(ULong_t mask)
 {
 #pragma unused(aNotification)
 
-   assert(fContentView != nil && "-windowDidBecomeKey:, fContentView is nil");
+   if (!fContentView)
+      return;
 
    if (!fContentView.fOverrideRedirect) {
       fHasFocus = YES;
