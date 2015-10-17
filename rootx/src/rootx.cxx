@@ -45,6 +45,14 @@
 #   ifndef ut_user
 #      define ut_user ut_name
 #   endif
+// Clang modules require a config macro to make this work. However it
+// is out of our control because it homes from an OSX modulemap.
+// (See https://llvm.org/bugs/show_bug.cgi?id=24533)
+#ifdef __has_feature
+#  if __has_feature(modules)
+#    undef ut_user
+#  endif
+#endif
 #endif
 
 #if defined(R__FBSD)
@@ -193,8 +201,17 @@ static STRUCT_UTMP *SearchEntry(int n, const char *tty)
    STRUCT_UTMP *ue = gUtmpContents;
 
    while (n--) {
-      if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
-         return ue;
+      // Clang modules require a config macro to make this work. However it
+      // is out of our control because it homes from an OSX modulemap.
+      // (See https://llvm.org/bugs/show_bug.cgi?id=24533)
+#ifdef __has_feature
+#  if __has_feature(modules)
+      if (ue->ut_user[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
+#  endif
+#elif
+         if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
+#endif
+            return ue;
       ue++;
    }
    return 0;
