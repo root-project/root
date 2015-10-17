@@ -55,6 +55,12 @@
 #ifndef ROOT_ThreadLocalStorage
 #define ROOT_ThreadLocalStorage
 
+#include <stddef.h>
+
+#ifdef __cplusplus
+#include "Rtypes.h"
+#endif
+
 #ifndef ROOT_RConfig
 #include "RConfig.h"
 #endif
