@@ -311,6 +311,12 @@ module String {
   header "TString.h"
   export *
 }
+module RStringView {
+  header "RStringView.h"
+  textual header "RWrap_libcpp_string_view.h"
+  export *
+}
+
 module MathBase { header "TMathBase.h" export * }
 
 module Riosfwd {
@@ -382,8 +388,6 @@ module Parameter { export * header "TParameter.h" }
 module core_base {
   requires cplusplus
   export *
-
-  //header "RWrap_libcpp_string_view.h"
 
   header "TCanvasImp.h"
   header "Buttons.h"
