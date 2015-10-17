@@ -585,8 +585,11 @@ module core_base {
   header "TPosixThread.h"
   header "TPosixCondition.h"
   header "TMutex.h"
-  header "ThreadLocalStorage.h"
   //header "TAtomicCountGcc.h" // never included itself
+}
+module ThreadLocalStorage {
+  header "ThreadLocalStorage.h"
+  export *
 }
 
 module math_unuran {
