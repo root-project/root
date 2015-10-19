@@ -139,7 +139,7 @@ void TRandom2::SetSeed(UInt_t seed)
       fSeed1  =  UInt_t(uuid[7])*16777216 + UInt_t(uuid[6])*65536 + UInt_t(uuid[5])*256 + UInt_t(uuid[4]);
       fSeed2  =  UInt_t(uuid[11])*16777216 + UInt_t(uuid[10])*65536 + UInt_t(uuid[9])*256 + UInt_t(uuid[8]);
       // use also the other bytes
-      UInt_t seed3 = UInt_t(uuid[15])*16777216 + UInt_t(uuid[14])*65536 + UInt_t(uuid[13])*256 + int(uuid[12]);
+      UInt_t seed3 = UInt_t(uuid[15])*16777216 + UInt_t(uuid[14])*65536 + UInt_t(uuid[13])*256 + UInt_t(uuid[12]);
       fSeed2 += seed3; 
 
 
