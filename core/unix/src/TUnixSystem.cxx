@@ -667,8 +667,6 @@ Bool_t TUnixSystem::Init()
    if (TSystem::Init())
       return kTRUE;
 
-   CachePidInfo();
-
    fReadmask   = new TFdSet;
    fWritemask  = new TFdSet;
    fReadready  = new TFdSet;
@@ -702,6 +700,8 @@ Bool_t TUnixSystem::Init()
 #else
    gRootDir = ROOTPREFIX;
 #endif
+
+   CachePidInfo();
 
    return kFALSE;
 }
@@ -5371,21 +5371,23 @@ void TUnixSystem::CachePidInfo()
       return;
    }
 #else
-   if(sprintf(fPidString, "%s/etc/gdb-backtrace.sh", Getenv("ROOTSYS")) >= fPidStringLength) {
+   if(sprintf(fPidString, "%s/etc/gdb-backtrace.sh", gSystem->Getenv("ROOTSYS")) >= fPidStringLength) {
       FullErrWrite("Unable to pre-allocate executable information");
       return;
-   }
+   }   
 #endif
    if(sprintf(pidNum, "%d", GetPid()) >= fPidStringLength) {
       FullErrWrite("Unable to pre-allocate process id information");
       return;
    }
+
    close(fChildToParent[0]);
    close(fChildToParent[1]);
    fChildToParent[0] = -1; fChildToParent[1] = -1;
    close(fParentToChild[0]);
    close(fParentToChild[1]);
    fParentToChild[0] = -1; fParentToChild[1] = -1;
+
    if (-1 == pipe2(fChildToParent, O_CLOEXEC)) {
       fprintf(stdout, "pipe fChildToParent failed\n");
       return;
@@ -5396,6 +5398,7 @@ void TUnixSystem::CachePidInfo()
       fprintf(stdout, "pipe parentToChild failed\n");
       return;
    }
+
    fHelperThread.reset(new std::thread(StackTraceHelperThread));
    fHelperThread->detach();
 }
