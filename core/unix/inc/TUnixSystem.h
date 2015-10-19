@@ -34,18 +34,14 @@
 #include <thread>
 #include <memory>
 
-namespace std {
-  class thread;
-}
-
-int global_stacktrace(void *);
+int StackTraceExec(void *);
 
 typedef void (*SigHandler_t)(ESignals);
 
 
 class TUnixSystem : public TSystem {
 
-   friend int global_stacktrace(void *);
+   friend int     StackTraceExec(void *);
 
 protected:
    const char    *FindDynamicLibrary(TString &lib, Bool_t quiet = kFALSE);
@@ -83,15 +79,15 @@ protected:
    static int          UnixSend(int sock, const void *buf, int len, int flag);
 
    // added helper static members for stacktrace
-   static const int pidStringLength_ = 255;
-   static char pidString_[pidStringLength_];
-   static char * const pstackArgv_[];
-   static char *const *getPstackArgv();
-   static int          parentToChild_[2];
-   static int          childToParent_[2];
-   static std::unique_ptr<std::thread> helperThread_;   
-   static void         stacktraceHelperThread();
-   void         cachePidInfo();
+   static const int                    fPidStringLength = 255;
+   static char                         fPidString[fPidStringLength];
+   static int                          fParentToChild[2];
+   static int                          fChildToParent[2];
+   static std::unique_ptr<std::thread> fHelperThread;   
+   static char *const                  kStackArgv[];
+   static char *const *                GetStackArgv();
+   static void                         StackTraceHelperThread();
+   void                                CachePidInfo();
 
 public:
    TUnixSystem();
@@ -143,7 +139,7 @@ public:
    void              Abort(int code = 0);
    int               GetPid();
    void              StackTrace();
-   static void       stacktraceFromThread();
+   static void       StackTraceFromThread();
 
    //---- Directories ------------------------------------------
    int               MakeDirectory(const char *name);

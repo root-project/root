@@ -40,10 +40,15 @@
 #include <algorithm>
 #include <atomic>
 
+#ifdef __linux__
+#include <syscall.h>
+#endif
+
 //#define G__OLDEXPAND
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <poll.h>
 #include <sys/types.h>
 #if defined(R__SUN) || defined(R__AIX) || \
     defined(R__LINUX) || defined(R__SOLARIS) || \
@@ -570,65 +575,99 @@ TUnixSystem::~TUnixSystem()
 /// Initialize Unix system interface.
 extern "C"
 {
-    static int full_write(int fd, const char *text)
-    {
+   static int FullWrite(int fd, const char *text)
+   {
       const char *buffer = text;
       size_t count = strlen(text);
       ssize_t written = 0;
-      while (count)
-      {
-        written = write(fd, buffer, count);
-        if (written == -1) 
-        {
-          if (errno == EINTR) {continue;}
-          else {return -errno;}
-        }
-        count -= written;
-        buffer += written;
+      while (count) {
+         written = write(fd, buffer, count);
+         if (written == -1) {
+          if (errno == EINTR) { continue; }
+          else { return -errno; }
+         }
+         count -= written;
+         buffer += written;
       }
       return 0;
-    }
+   }
 
-    static int full_read(int fd, char *inbuf, size_t len)
-    {
+   static int FullRead(int fd, char *inbuf, size_t len, int timeout=-1) {
       char *buf = inbuf;
       size_t count = len;
       ssize_t complete = 0;
-      while (count)
-      {
-        complete = read(fd, buf, count);
-        if (complete == -1)
-        {
-          if (errno == EINTR) {continue;}
-          else {return -errno;}
-        }
-        count -= complete;
-        buf += complete;
+      std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now() + std::chrono::seconds(timeout);
+      int flags;
+      if (timeout < 0) {
+         flags = O_NONBLOCK;  // Prevents us from trying to set / restore flags later.
+      } else if ((-1 == (flags = fcntl(fd, F_GETFL)))) {
+         return -errno;
+      } else { }
+      if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+         if (-1 == fcntl(fd, F_SETFL, flags | O_NONBLOCK)) {
+            return -errno;
+         }
+      }
+      while (count) {
+         if (timeout >= 0) {
+            struct pollfd pollInfo{fd, POLLIN, 0};
+            int msRemaining = std::chrono::duration_cast<std::chrono::milliseconds>(endTime-std::chrono::steady_clock::now()).count();
+            if (msRemaining > 0) {
+               if (poll(&pollInfo, 1, msRemaining) == 0) {
+                  if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+                     fcntl(fd, F_SETFL, flags);
+                  }
+                  return -ETIMEDOUT;
+               }
+            } else if (msRemaining < 0) {
+               if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+                  fcntl(fd, F_SETFL, flags);
+               }
+               return -ETIMEDOUT;
+            } else { }
+         }
+         complete = read(fd, buf, count);
+         if (complete == -1) {
+            if (errno == EINTR) { continue; }
+            else if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) { continue; }
+            else {
+               int origErrno = errno;
+               if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+                  fcntl(fd, F_SETFL, flags);
+               }
+               return -origErrno;
+            }
+         }
+         count -= complete;
+         buf += complete;
+      }
+      if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+         fcntl(fd, F_SETFL, flags);
       }
       return 0;
-    }
+   }
 
-    static int full_cerr_write(const char *text)
-    {
-      return full_write(2, text);
-    }
+   static int FullErrWrite(const char *text) {
+      return FullWrite(2, text);
+   }
 
 }
 
-static char pshellExec[8] = "/bin/sh";
-char TUnixSystem::pidString_[TUnixSystem::pidStringLength_] = {};
-static char pidNum[11] = {}; //--- The largest PID number could be converted to 10 characters.
-char * const TUnixSystem::pstackArgv_[] = {pshellExec, TUnixSystem::pidString_, pidNum, nullptr};
-int TUnixSystem::parentToChild_[2] = {-1, -1};
-int TUnixSystem::childToParent_[2] = {-1, -1};
-std::unique_ptr<std::thread> TUnixSystem::helperThread_;
+std::unique_ptr<std::thread> TUnixSystem::fHelperThread;
+
+static char shellExec[]                                     = "/bin/sh";
+char TUnixSystem::fPidString[TUnixSystem::fPidStringLength] = {};
+static char pidNum[11]                                      = {}; //--- The largest PID number could be converted to 10 characters.
+char * const TUnixSystem::kStackArgv[]                      = {shellExec, TUnixSystem::fPidString, pidNum, nullptr};
+int TUnixSystem::fParentToChild[2]                          = {-1, -1};
+int TUnixSystem::fChildToParent[2]                          = {-1, -1};
 
 Bool_t TUnixSystem::Init()
 {
    if (TSystem::Init())
       return kTRUE;
 
-   cachePidInfo();
+   CachePidInfo();
 
    fReadmask   = new TFdSet;
    fWritemask  = new TFdSet;
@@ -3621,12 +3660,12 @@ void TUnixSystem::DispatchSignals(ESignals sig)
    if ((sig == kSigIllegalInstruction) || (sig == kSigSegmentationViolation) || (sig == kSigBus))
    {
 
-      full_cerr_write("\n\nA fatal system signal has occurred: ");
-      full_cerr_write(signalname);
-      full_cerr_write("\nThe following is the call stack containing the origin of the signal.\n"
+      FullErrWrite("\n\nA fatal system signal has occurred: ");
+      FullErrWrite(signalname);
+      FullErrWrite("\nThe following is the call stack containing the origin of the signal.\n"
         "NOTE:The first few functions on the stack are artifacts of processing the signal and can be ignored\n\n");
 
-      TUnixSystem::stacktraceFromThread();
+      TUnixSystem::StackTraceFromThread();
 
       signal(sig, SIG_DFL);
       raise(sig);
@@ -5223,153 +5262,140 @@ int TUnixSystem::GetProcInfo(ProcInfo_t *info) const
    return 0;
 }
 
-static void stacktrace_fork();
+static void StackTraceFork();
 
-void TUnixSystem::stacktraceHelperThread()
+void SetDefaultSignals() {
+   signal(SIGILL, SIG_DFL);
+   signal(SIGSEGV, SIG_DFL);
+   signal(SIGBUS, SIG_DFL);
+}
+
+void TUnixSystem::StackTraceHelperThread()
 {
-      int toParent = childToParent_[1];
-      int fromParent = parentToChild_[0];
-      char buf[2]; buf[1] = '\0';
-      while(true)
-      {
-        int result = full_read(fromParent, buf, 1);
-        if (result < 0)
-        {
-          close(toParent);
-          full_cerr_write("\n\nTraceback helper thread failed to read from parent: ");
-          full_cerr_write(strerror(-result));
-          full_cerr_write("\n");
-          ::abort();
-        }
-        if (buf[0] == '1')
-        {
-          stacktrace_fork();
-          full_write(toParent, buf);
-        }
-        else if (buf[0] == '2')
-        {
+   int toParent = fChildToParent[1];
+   int fromParent = fParentToChild[0];
+   char buf[2]; buf[1] = '\0';
+   while(true) {
+      int result = FullRead(fromParent, buf, 1, 5*60);
+      if (result < 0) {
+         SetDefaultSignals();
+         close(toParent);
+         FullErrWrite("\n\nTraceback helper thread failed to read from parent: ");
+         FullErrWrite(strerror(-result));
+         FullErrWrite("\n");
+         ::abort();
+      }
+      if (buf[0] == '1') {
+          SetDefaultSignals();
+          StackTraceFork();
+          FullWrite(toParent, buf);
+      } else if (buf[0] == '2') {
           close(toParent);
           close(fromParent);
-          toParent = childToParent_[1];
-          fromParent = parentToChild_[0];
-        }
-        else if (buf[0] == '3')
-        {
+          toParent = fChildToParent[1];
+          fromParent = fParentToChild[0];
+      } else if (buf[0] == '3') {
           break;
-        }
-        else
-        {
+      } else {
+          SetDefaultSignals();
           close(toParent);
-          full_cerr_write("\n\nTraceback helper thread got unknown command from parent: ");
-          full_cerr_write(buf);
-          full_cerr_write("\n");
+          FullErrWrite("\n\nTraceback helper thread got unknown command from parent: ");
+          FullErrWrite(buf);
+          FullErrWrite("\n");
           ::abort();
-        }
       }
+   }
 }
 
-void TUnixSystem::stacktraceFromThread()
+void TUnixSystem::StackTraceFromThread()
 {
-      int result = full_write(parentToChild_[1], "1"); 
-      if (result < 0)
-      {
-        full_cerr_write("\n\nAttempt to request stacktrace failed: ");
-        full_cerr_write(strerror(-result));
-        full_cerr_write("\n");
-        return;
-      }
-      char buf[2]; buf[1] = '\0';
-      if ((result = full_read(childToParent_[0], buf, 1)) < 0)
-      {
-        full_cerr_write("\n\nWaiting for stacktrace completion failed: ");
-        full_cerr_write(strerror(-result));
-        full_cerr_write("\n");
-        return;
-      }
-
+   int result = FullWrite(fParentToChild[1], "1"); 
+   if (result < 0) {
+      FullErrWrite("\n\nAttempt to request stacktrace failed: ");
+      FullErrWrite(strerror(-result));
+      FullErrWrite("\n");
+      return;
+    }
+    char buf[2]; buf[1] = '\0';
+    if ((result = FullRead(fChildToParent[0], buf, 1)) < 0) {
+       FullErrWrite("\n\nWaiting for stacktrace completion failed: ");
+       FullErrWrite(strerror(-result));
+       FullErrWrite("\n");
+       return;
+    }
 }
 
-void stacktrace_fork()
+void StackTraceFork()
 {
-      char child_stack[4*1024];
-      char *child_stack_ptr = child_stack + 4*1024;
-      int pid =
+   char childStack[4*1024];
+   char *childStackPtr = childStack + 4*1024;
+   int pid =
 #ifdef __linux__
-        clone(global_stacktrace, child_stack_ptr, CLONE_VM|CLONE_FS|SIGCHLD, nullptr);
+      clone(StackTraceExec, childStackPtr, CLONE_VM|CLONE_FS|SIGCHLD, nullptr);
 #else
-        fork();
-      if (child_stack_ptr) {} // Suppress 'unused variable' warning on non-Linux
-      if (pid == 0) {global_stacktrace(nullptr); ::abort();}
+      fork();
+   if (childStackPtr) {} // Suppress 'unused variable' warning on non-Linux
+   if (pid == 0) { StackTraceExec(nullptr); ::abort(); }
 #endif
-      if (pid == -1)
-      {
-        full_cerr_write("(Attempt to perform stack dump failed.)\n");
-      }
-      else
-      {
-        int status;
-        if (waitpid(pid, &status, 0) == -1)
-        {
-          full_cerr_write("(Failed to wait on stack dump output.)\n");
-        } else {}
-      }
+   if (pid == -1) {
+      FullErrWrite("(Attempt to perform stack dump failed.)\n");
+   } else {
+      int status;
+      if (waitpid(pid, &status, 0) == -1) {
+         FullErrWrite("(Failed to wait on stack dump output.)\n");
+      } else {}
+   }
 }
 
-int global_stacktrace(void * /*arg*/)
+int StackTraceExec(void *)
 {
-      char *const *argv = TUnixSystem::getPstackArgv();
-      execv("/bin/sh", argv);
-      ::abort();
-      return 1;
+   char *const *argv = TUnixSystem::GetStackArgv();
+#ifdef __linux__
+   syscall(SYS_execve, "/bin/sh", argv, __environ);
+#else
+   execv("/bin/sh", argv);
+#endif
+   ::abort();
+   return 1;
 }
 
-char *const *TUnixSystem::getPstackArgv() {
-   return pstackArgv_;
+char *const *TUnixSystem::GetStackArgv() {
+   return kStackArgv;
 }
 
-void TUnixSystem::cachePidInfo()
+void TUnixSystem::CachePidInfo()
 {
 #ifdef ROOTETCDIR
-      if(sprintf(pidString_, "%s/gdb-backtrace.sh", ROOTETCDIR) >= pidStringLength_)
-      {
-        full_cerr_write("Unable to pre-allocate executable information");
-	exit(1);
-      }
+   if(sprintf(fPidString, "%s/gdb-backtrace.sh", ROOTETCDIR) >= fPidStringLength) {
+      FullErrWrite("Unable to pre-allocate executable information");
+      return;
+   }
 #else
-      if(sprintf(pidString_, "%s/etc/gdb-backtrace.sh", Getenv("ROOTSYS")) >= pidStringLength_)
-      {
-        full_cerr_write("Unable to pre-allocate executable information");
-	exit(1);
-      }
+   if(sprintf(fPidString, "%s/etc/gdb-backtrace.sh", Getenv("ROOTSYS")) >= fPidStringLength) {
+      FullErrWrite("Unable to pre-allocate executable information");
+      return;
+   }
 #endif
-
-      if(sprintf(pidNum, "%d", getpid()) >= pidStringLength_)
-      {
-        full_cerr_write("Unable to pre-allocate process id information");
-	exit(1);
-      }
-
-      close(childToParent_[0]);
-      close(childToParent_[1]);
-      childToParent_[0] = -1; childToParent_[1] = -1;
-      close(parentToChild_[0]);
-      close(parentToChild_[1]);
-      parentToChild_[0] = -1; parentToChild_[1] = -1;
-
-      if (-1 == pipe2(childToParent_, O_CLOEXEC))
-      {
-        fprintf(stdout, "pipe childToParent failed\n");
-	exit(1);
-      }
-
-      if (-1 == pipe2(parentToChild_, O_CLOEXEC))
-      {
-        close(childToParent_[0]); close(childToParent_[1]);
-        childToParent_[0] = -1; childToParent_[1] = -1;
-        fprintf(stdout, "pipe parentToChild failed\n");
-	exit(1);
-      }
-
-      helperThread_.reset(new std::thread(stacktraceHelperThread));
-      helperThread_->detach();
+   if(sprintf(pidNum, "%d", GetPid()) >= fPidStringLength) {
+      FullErrWrite("Unable to pre-allocate process id information");
+      return;
+   }
+   close(fChildToParent[0]);
+   close(fChildToParent[1]);
+   fChildToParent[0] = -1; fChildToParent[1] = -1;
+   close(fParentToChild[0]);
+   close(fParentToChild[1]);
+   fParentToChild[0] = -1; fParentToChild[1] = -1;
+   if (-1 == pipe2(fChildToParent, O_CLOEXEC)) {
+      fprintf(stdout, "pipe fChildToParent failed\n");
+      return;
+   }
+   if (-1 == pipe2(fParentToChild, O_CLOEXEC)){
+      close(fChildToParent[0]); close(fChildToParent[1]);
+      fChildToParent[0] = -1; fChildToParent[1] = -1;
+      fprintf(stdout, "pipe parentToChild failed\n");
+      return;
+   }
+   fHelperThread.reset(new std::thread(StackTraceHelperThread));
+   fHelperThread->detach();
 }
