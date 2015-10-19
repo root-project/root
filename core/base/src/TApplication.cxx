@@ -116,6 +116,17 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    fAppRemote(0)
 {
    R__LOCKGUARD2(gInterpreterMutex);
+
+   // Create the list of applications the first time
+   if (!fgApplications)
+      fgApplications = new TList;
+
+   // Add the new TApplication early, so that the destructor of the
+   // default TApplication (if it is called in the block of code below)
+   // will not destroy the files, socket or TColor that have already been
+   // created.
+   fgApplications->Add(this);
+
    if (gApplication && gApplication->TestBit(kDefaultApplication)) {
       // allow default TApplication to be replaced by a "real" TApplication
       delete gApplication;
@@ -126,6 +137,7 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
 
    if (gApplication) {
       Error("TApplication", "only one instance of TApplication allowed");
+      fgApplications->Remove(this);
       return;
    }
 
@@ -135,16 +147,13 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    if (!gSystem)
       ::Fatal("TApplication::TApplication", "gSystem not initialized");
 
-   if (!gApplication) {
+   static Bool_t hasRegisterAtExit(kFALSE);
+   if (!hasRegisterAtExit) {
       // If we are the first TApplication register the atexit)
       atexit(CallEndOfProcessCleanups);
+      hasRegisterAtExit = kTRUE;
    }
    gROOT->SetName(appClassName);
-
-   // Create the list of applications the first time
-   if (!fgApplications)
-      fgApplications = new TList;
-   fgApplications->Add(this);
 
    // copy command line arguments, can be later accessed via Argc() and Argv()
    if (argc && *argc > 0) {
