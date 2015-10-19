@@ -1,6 +1,6 @@
 #include "libraryLister.h"
 
-void execLoadAllLibsAZ(){
+int assertLoadAllLibsAZ(){
 
   gSystem->Setenv("DISPLAY",""); // avoid spurrious warning when loading libGui
 
@@ -13,4 +13,5 @@ void execLoadAllLibsAZ(){
   libList.unique();
   loadLibrariesInList(libList);
 
+  return 0;
 }
