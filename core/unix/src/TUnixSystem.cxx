@@ -392,6 +392,83 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Async-signal-safe Read/Write functions.
+static int SignalSafeWrite(int fd, const char *text) {
+   const char *buffer = text;
+   size_t count = strlen(text);
+   ssize_t written = 0;
+   while (count) {
+      written = write(fd, buffer, count);
+      if (written == -1) {
+         if (errno == EINTR) { continue; }
+         else { return -errno; }
+      }
+      count -= written;
+      buffer += written;
+   }
+   return 0;
+}
+
+static int SignalSafeRead(int fd, char *inbuf, size_t len, int timeout=-1) {
+   char *buf = inbuf;
+   size_t count = len;
+   ssize_t complete = 0;
+   std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now() + std::chrono::seconds(timeout);
+   int flags;
+   if (timeout < 0) {
+      flags = O_NONBLOCK;  // Prevents us from trying to set / restore flags later.
+   } else if ((-1 == (flags = fcntl(fd, F_GETFL)))) {
+      return -errno;
+   } else { }
+   if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+      if (-1 == fcntl(fd, F_SETFL, flags | O_NONBLOCK)) {
+         return -errno;
+      }
+   }
+   while (count) {
+      if (timeout >= 0) {
+         struct pollfd pollInfo{fd, POLLIN, 0};
+         int msRemaining = std::chrono::duration_cast<std::chrono::milliseconds>(endTime-std::chrono::steady_clock::now()).count();
+         if (msRemaining > 0) {
+            if (poll(&pollInfo, 1, msRemaining) == 0) {
+               if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+                  fcntl(fd, F_SETFL, flags);
+               }
+               return -ETIMEDOUT;
+            }
+         } else if (msRemaining < 0) {
+            if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+               fcntl(fd, F_SETFL, flags);
+            }
+            return -ETIMEDOUT;
+         } else { }
+      }
+      complete = read(fd, buf, count);
+      if (complete == -1) {
+         if (errno == EINTR) { continue; }
+         else if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) { continue; }
+         else {
+            int origErrno = errno;
+            if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+               fcntl(fd, F_SETFL, flags);
+            }
+            return -origErrno;
+         }
+      }
+      count -= complete;
+      buf += complete;
+   }
+   if ((flags & O_NONBLOCK) != O_NONBLOCK) {
+      fcntl(fd, F_SETFL, flags);
+   }
+   return 0;
+}
+
+static int SignalSafeErrWrite(const char *text) {
+   return SignalSafeWrite(2, text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Unix signal handler.
 
 static void SigHandler(ESignals sig)
@@ -573,85 +650,6 @@ TUnixSystem::~TUnixSystem()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize Unix system interface.
-extern "C"
-{
-   static int FullWrite(int fd, const char *text)
-   {
-      const char *buffer = text;
-      size_t count = strlen(text);
-      ssize_t written = 0;
-      while (count) {
-         written = write(fd, buffer, count);
-         if (written == -1) {
-          if (errno == EINTR) { continue; }
-          else { return -errno; }
-         }
-         count -= written;
-         buffer += written;
-      }
-      return 0;
-   }
-
-   static int FullRead(int fd, char *inbuf, size_t len, int timeout=-1) {
-      char *buf = inbuf;
-      size_t count = len;
-      ssize_t complete = 0;
-      std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now() + std::chrono::seconds(timeout);
-      int flags;
-      if (timeout < 0) {
-         flags = O_NONBLOCK;  // Prevents us from trying to set / restore flags later.
-      } else if ((-1 == (flags = fcntl(fd, F_GETFL)))) {
-         return -errno;
-      } else { }
-      if ((flags & O_NONBLOCK) != O_NONBLOCK) {
-         if (-1 == fcntl(fd, F_SETFL, flags | O_NONBLOCK)) {
-            return -errno;
-         }
-      }
-      while (count) {
-         if (timeout >= 0) {
-            struct pollfd pollInfo{fd, POLLIN, 0};
-            int msRemaining = std::chrono::duration_cast<std::chrono::milliseconds>(endTime-std::chrono::steady_clock::now()).count();
-            if (msRemaining > 0) {
-               if (poll(&pollInfo, 1, msRemaining) == 0) {
-                  if ((flags & O_NONBLOCK) != O_NONBLOCK) {
-                     fcntl(fd, F_SETFL, flags);
-                  }
-                  return -ETIMEDOUT;
-               }
-            } else if (msRemaining < 0) {
-               if ((flags & O_NONBLOCK) != O_NONBLOCK) {
-                  fcntl(fd, F_SETFL, flags);
-               }
-               return -ETIMEDOUT;
-            } else { }
-         }
-         complete = read(fd, buf, count);
-         if (complete == -1) {
-            if (errno == EINTR) { continue; }
-            else if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) { continue; }
-            else {
-               int origErrno = errno;
-               if ((flags & O_NONBLOCK) != O_NONBLOCK) {
-                  fcntl(fd, F_SETFL, flags);
-               }
-               return -origErrno;
-            }
-         }
-         count -= complete;
-         buf += complete;
-      }
-      if ((flags & O_NONBLOCK) != O_NONBLOCK) {
-         fcntl(fd, F_SETFL, flags);
-      }
-      return 0;
-   }
-
-   static int FullErrWrite(const char *text) {
-      return FullWrite(2, text);
-   }
-
-}
 
 std::unique_ptr<std::thread> TUnixSystem::fHelperThread;
 
@@ -3660,9 +3658,9 @@ void TUnixSystem::DispatchSignals(ESignals sig)
    if ((sig == kSigIllegalInstruction) || (sig == kSigSegmentationViolation) || (sig == kSigBus))
    {
 
-      FullErrWrite("\n\nA fatal system signal has occurred: ");
-      FullErrWrite(signalname);
-      FullErrWrite("\nThe following is the call stack containing the origin of the signal.\n"
+      SignalSafeErrWrite("\n\nA fatal system signal has occurred: ");
+      SignalSafeErrWrite(signalname);
+      SignalSafeErrWrite("\nThe following is the call stack containing the origin of the signal.\n"
         "NOTE:The first few functions on the stack are artifacts of processing the signal and can be ignored\n\n");
 
       TUnixSystem::StackTraceFromThread();
@@ -5276,19 +5274,19 @@ void TUnixSystem::StackTraceHelperThread()
    int fromParent = fParentToChild[0];
    char buf[2]; buf[1] = '\0';
    while(true) {
-      int result = FullRead(fromParent, buf, 1, 5*60);
+      int result = SignalSafeRead(fromParent, buf, 1, 5*60);
       if (result < 0) {
          SetDefaultSignals();
          close(toParent);
-         FullErrWrite("\n\nTraceback helper thread failed to read from parent: ");
-         FullErrWrite(strerror(-result));
-         FullErrWrite("\n");
+         SignalSafeErrWrite("\n\nTraceback helper thread failed to read from parent: ");
+         SignalSafeErrWrite(strerror(-result));
+         SignalSafeErrWrite("\n");
          ::abort();
       }
       if (buf[0] == '1') {
           SetDefaultSignals();
           StackTraceFork();
-          FullWrite(toParent, buf);
+          SignalSafeWrite(toParent, buf);
       } else if (buf[0] == '2') {
           close(toParent);
           close(fromParent);
@@ -5299,9 +5297,9 @@ void TUnixSystem::StackTraceHelperThread()
       } else {
           SetDefaultSignals();
           close(toParent);
-          FullErrWrite("\n\nTraceback helper thread got unknown command from parent: ");
-          FullErrWrite(buf);
-          FullErrWrite("\n");
+          SignalSafeErrWrite("\n\nTraceback helper thread got unknown command from parent: ");
+          SignalSafeErrWrite(buf);
+          SignalSafeErrWrite("\n");
           ::abort();
       }
    }
@@ -5309,18 +5307,18 @@ void TUnixSystem::StackTraceHelperThread()
 
 void TUnixSystem::StackTraceFromThread()
 {
-   int result = FullWrite(fParentToChild[1], "1"); 
+   int result = SignalSafeWrite(fParentToChild[1], "1"); 
    if (result < 0) {
-      FullErrWrite("\n\nAttempt to request stacktrace failed: ");
-      FullErrWrite(strerror(-result));
-      FullErrWrite("\n");
+      SignalSafeErrWrite("\n\nAttempt to request stacktrace failed: ");
+      SignalSafeErrWrite(strerror(-result));
+      SignalSafeErrWrite("\n");
       return;
     }
     char buf[2]; buf[1] = '\0';
-    if ((result = FullRead(fChildToParent[0], buf, 1)) < 0) {
-       FullErrWrite("\n\nWaiting for stacktrace completion failed: ");
-       FullErrWrite(strerror(-result));
-       FullErrWrite("\n");
+    if ((result = SignalSafeRead(fChildToParent[0], buf, 1)) < 0) {
+       SignalSafeErrWrite("\n\nWaiting for stacktrace completion failed: ");
+       SignalSafeErrWrite(strerror(-result));
+       SignalSafeErrWrite("\n");
        return;
     }
 }
@@ -5338,11 +5336,11 @@ void StackTraceFork()
    if (pid == 0) { StackTraceExec(nullptr); ::abort(); }
 #endif
    if (pid == -1) {
-      FullErrWrite("(Attempt to perform stack dump failed.)\n");
+      SignalSafeErrWrite("(Attempt to perform stack dump failed.)\n");
    } else {
       int status;
       if (waitpid(pid, &status, 0) == -1) {
-         FullErrWrite("(Failed to wait on stack dump output.)\n");
+         SignalSafeErrWrite("(Failed to wait on stack dump output.)\n");
       } else {}
    }
 }
@@ -5367,17 +5365,17 @@ void TUnixSystem::CachePidInfo()
 {
 #ifdef ROOTETCDIR
    if(sprintf(fPidString, "%s/gdb-backtrace.sh", ROOTETCDIR) >= fPidStringLength) {
-      FullErrWrite("Unable to pre-allocate executable information");
+      SignalSafeErrWrite("Unable to pre-allocate executable information");
       return;
    }
 #else
    if(sprintf(fPidString, "%s/etc/gdb-backtrace.sh", gSystem->Getenv("ROOTSYS")) >= fPidStringLength) {
-      FullErrWrite("Unable to pre-allocate executable information");
+      SignalSafeErrWrite("Unable to pre-allocate executable information");
       return;
    }   
 #endif
    if(sprintf(pidNum, "%d", GetPid()) >= fPidStringLength) {
-      FullErrWrite("Unable to pre-allocate process id information");
+      SignalSafeErrWrite("Unable to pre-allocate process id information");
       return;
    }
 
