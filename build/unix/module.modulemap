@@ -762,7 +762,7 @@ module tree_treeplayer {
   header "TFriendProxy.h"
   header "TBranchProxyDirector.h"
   header "TRefProxy.h"
-  header "TBranchProxyTemplate.h"
+  //header "TBranchProxyTemplate.h" // To be included only in dictionaries.
   header "TTreeReader.h"
   header "TFriendProxyDescriptor.h"
   header "TFormLeafInfoReference.h"
