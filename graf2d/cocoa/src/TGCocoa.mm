@@ -950,6 +950,8 @@ void TGCocoa::ChangeWindowAttributes(Window_t wid, SetWindowAttributes_t *attr)
    if (!wid)//From TGX11
       return;
 
+   const Util::AutoreleasePool pool;
+
    assert(!fPimpl->IsRootWindow(wid) && "ChangeWindowAttributes, called for root window");
    assert(attr != 0 && "ChangeWindowAttributes, parameter 'attr' is null");
 
@@ -1070,6 +1072,8 @@ void TGCocoa::MapWindow(Window_t wid)
 
    assert(!fPimpl->IsRootWindow(wid) && "MapWindow, called for root window");
 
+   const Util::AutoreleasePool pool;
+
    if (MakeProcessForeground())
       [fPimpl->GetWindow(wid) mapWindow];
 
@@ -1087,6 +1091,8 @@ void TGCocoa::MapSubwindows(Window_t wid)
    // stacking order.
 
    assert(!fPimpl->IsRootWindow(wid) && "MapSubwindows, called for 'root' window");
+
+   const Util::AutoreleasePool pool;
 
    if (MakeProcessForeground())
       [fPimpl->GetWindow(wid) mapSubwindows];
@@ -1191,7 +1197,7 @@ void TGCocoa::MoveWindow(Window_t wid, Int_t x, Int_t y)
       return;
 
    assert(!fPimpl->IsRootWindow(wid) && "MoveWindow, called for root window");
-
+   const Util::AutoreleasePool pool;
    [fPimpl->GetWindow(wid) setX : x Y : y];
 }
 
@@ -1211,6 +1217,7 @@ void TGCocoa::MoveResizeWindow(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t 
 
    assert(!fPimpl->IsRootWindow(wid) && "MoveResizeWindow, called for 'root' window");
 
+   const Util::AutoreleasePool pool;
    [fPimpl->GetWindow(wid) setX : x Y : y width : w height : h];
 }
 
@@ -1221,6 +1228,8 @@ void TGCocoa::ResizeWindow(Window_t wid, UInt_t w, UInt_t h)
       return;
 
    assert(!fPimpl->IsRootWindow(wid) && "ResizeWindow, called for 'root' window");
+
+   const Util::AutoreleasePool pool;
 
    //We can have this unfortunately.
    const UInt_t siMax = std::numeric_limits<Int_t>::max();
