@@ -1269,7 +1269,6 @@ module MapFile {
   header "TMapFile.h"
 }
 module io_io {
-  //export core_thread // i.e missing module causes a crash...
   export *
   header "TArchiveFile.h"
   header "TBufferFile.h"
