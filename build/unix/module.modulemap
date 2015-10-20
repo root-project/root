@@ -1429,14 +1429,14 @@ module math_mlp {
   header "TMultiLayerPerceptron.h"
   header "TSynapse.h"
 }
-/*module math_matrix {
+module math_matrix {
   export *
   header "TMatrixTSymCramerInv.h"
   header "TMatrix.h"
   header "TMatrixTUtils.h"
   header "TMatrixD.h"
   header "TMatrixTCramerInv.h"
-  //header "TMatrixTSym.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
+  header "TMatrixTSym.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
   header "TMatrixFSymfwd.h"
   header "TVectorF.h"
   header "TVectorFfwd.h"
@@ -1475,10 +1475,10 @@ module math_mlp {
   header "TMatrixFfwd.h"
   header "TMatrixDSparse.h"
   header "TMatrixDBasefwd.h"
-  //header "TMatrixT.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
+  header "TMatrixT.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
   header "TDecompQRH.h"
   header "TVectorDfwd.h"
-}*/
+}
 
 module gui_qtgsi {
   export *
@@ -2418,7 +2418,7 @@ module graf2d_graf {
   header "TGaxis.h"
   header "TLatex.h"
   header "TLink.h"
-  //header "TMathText.h" //#  include FT_FREETYPE_H fishy config
+  header "TMathText.h" //#  include FT_FREETYPE_H fishy config
   header "TPie.h"
   header "TBox.h"
   header "TMarker.h"
@@ -2432,13 +2432,12 @@ module graf2d_graf {
   header "TPoints.h"
   header "TPaveLabel.h"
   header "TCurlyLine.h"
-  header "TTF.h"
   header "TLegendEntry.h"
   header "TPaveText.h"
   header "TCrown.h"
   header "TArc.h"
   header "TFrame.h"
-  //header "TText.h" // fishy typedefs insanity
+  header "TText.h" // fishy typedefs insanity
   header "TPave.h"
   header "TLegend.h"
   header "TPaveStats.h"
@@ -2452,6 +2451,12 @@ module graf2d_graf {
   header "TPolyLine.h"
   header "TImagePlugin.h"
 }
+
+module TTF {
+  export *
+  header "TTF.h"
+}
+
 module core_metautils {
   export *
 
