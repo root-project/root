@@ -80,7 +80,9 @@ protected:
 
    // added helper static members for stacktrace
    static const int                    fPidStringLength = 255;
+   static char                         fShellExec[];
    static char                         fPidString[fPidStringLength];
+   static char                         fPidNum[11];
    static int                          fParentToChild[2];
    static int                          fChildToParent[2];
    static std::unique_ptr<std::thread> fHelperThread;   

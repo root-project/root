@@ -653,10 +653,10 @@ TUnixSystem::~TUnixSystem()
 
 std::unique_ptr<std::thread> TUnixSystem::fHelperThread;
 
-static char shellExec[]                                     = "/bin/sh";
+char TUnixSystem::fShellExec[] = "/bin/sh";
 char TUnixSystem::fPidString[TUnixSystem::fPidStringLength] = {};
-static char pidNum[11]                                      = {}; //--- The largest PID number could be converted to 10 characters.
-char * const TUnixSystem::kStackArgv[]                      = {shellExec, TUnixSystem::fPidString, pidNum, nullptr};
+char TUnixSystem::fPidNum[11]                               = {}; //--- The largest PID number could be converted to 10 characters.
+char * const TUnixSystem::kStackArgv[]                      = {TUnixSystem::fShellExec, TUnixSystem::fPidString, TUnixSystem::fPidNum, nullptr};
 int TUnixSystem::fParentToChild[2]                          = {-1, -1};
 int TUnixSystem::fChildToParent[2]                          = {-1, -1};
 
@@ -5374,7 +5374,7 @@ void TUnixSystem::CachePidInfo()
       return;
    }   
 #endif
-   if(sprintf(pidNum, "%d", GetPid()) >= fPidStringLength) {
+   if(sprintf(fPidNum, "%d", GetPid()) >= fPidStringLength) {
       SignalSafeErrWrite("Unable to pre-allocate process id information");
       return;
    }
