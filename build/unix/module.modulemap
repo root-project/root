@@ -1242,14 +1242,14 @@ module math_core_fit {
   header "Fit/Fitter.h"
   header "Fit/FitConfig.h"
 }
-/*module math_minuit {
+module math_minuit {
   export *
   header "TLinearFitter.h" // Bug in clang MethodInfoMap.count(OverriddenMD) && "Did not find the overridden method!
   header "TLinearMinimizer.h"
   header "TMinuit.h"
   header "TMinuitMinimizer.h" // Bug in clang MethodInfoMap.count(OverriddenMD) && "Did not find the overridden method!
   header "TFitter.h"
-}*/
+}
 module montecarlo_vmc {
   export *
   header "TMCParticleType.h"
