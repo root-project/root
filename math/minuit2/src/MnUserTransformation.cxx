@@ -9,6 +9,7 @@
 
 #include "Minuit2/MnUserTransformation.h"
 #include "Minuit2/MnUserCovariance.h"
+#include "Minuit2/MnMatrix.h"
 
 #include <algorithm>
 #include <stdio.h>

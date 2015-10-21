@@ -25,7 +25,8 @@ namespace ROOT {
 
 
 //#define DEBUG 1
-
+class GradientCalculator;
+jobsclass MnStrategy;
 FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalculator&, const MinimumSeed& seed, const MnStrategy&, unsigned int maxfcn, double minedm) const {
    // find the minimum using the Simplex method of Nelder and Mead (does not use function gradient)
    // method to find initial simplex is slightly different than in the orginal Fortran

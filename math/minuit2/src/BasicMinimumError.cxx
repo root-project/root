@@ -9,6 +9,8 @@
 
 #include "Minuit2/BasicMinimumError.h"
 
+#include "Minuit2/MnMatrix.h"
+
 #if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
 #endif
