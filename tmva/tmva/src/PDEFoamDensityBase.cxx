@@ -65,12 +65,18 @@
 //   dens->FillBinarySearchTree(event);
 // _____________________________________________________________________
 
-#include <numeric>
-#include <functional>
-
-#ifndef ROOT_TMVA_PDEFoamDensityBase
 #include "TMVA/PDEFoamDensityBase.h"
-#endif
+
+#include <functional>
+#include <numeric>
+#include <vector>
+
+#include "TMVA/BinarySearchTree.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+
+#include "RtypesCore.h"
+#include "Rtypes.h"
 
 ClassImp(TMVA::PDEFoamDensityBase)
 

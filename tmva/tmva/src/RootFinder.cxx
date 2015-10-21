@@ -25,10 +25,12 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include "TMath.h"
-
 #include "TMVA/RootFinder.h"
+
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+
+#include "TMath.h"
 
 ClassImp(TMVA::RootFinder)
 

@@ -27,23 +27,24 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include "TMVA/VariablePCATransform.h"
+
+#include "TMVA/DataSet.h"
+#include "TMVA/Event.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+
+#include "TMatrixD.h"
+#include "TMatrixDBase.h"
+#include "TPrincipal.h"
+#include "TVectorD.h"
+#include "TVectorF.h"
+
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
 #include <algorithm>
-
-#include "TVectorF.h"
-#include "TVectorD.h"
-#include "TMatrixD.h"
-#include "TMatrixDBase.h"
-
-#include "TMVA/VariablePCATransform.h"
-
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
-#include "TMVA/DataSet.h"
-#include "TMVA/Tools.h"
 
 ClassImp(TMVA::VariablePCATransform)
 

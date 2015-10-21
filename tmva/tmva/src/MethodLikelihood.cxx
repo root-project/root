@@ -104,6 +104,8 @@
 End_Html */
 //_______________________________________________________________________
 
+#include "TMVA/MethodLikelihood.h"
+
 #include <iomanip>
 #include <vector>
 #include <cstdlib>
@@ -118,10 +120,17 @@ End_Html */
 #include "TClass.h"
 #include "Riostream.h"
 
+#include "TMVA/Configurable.h"
 #include "TMVA/ClassifierFactory.h"
-#include "TMVA/MethodLikelihood.h"
-#include "TMVA/Tools.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDF.h"
 #include "TMVA/Ranking.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
 
 REGISTER_METHOD(Likelihood)
 

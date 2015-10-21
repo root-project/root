@@ -25,11 +25,18 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <vector>
-
 #include "TMVA/ResultsRegression.h"
-#include "TMVA/MsgLogger.h"
+
 #include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
+
+#include "TH1F.h"
+#include "TString.h"
+
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

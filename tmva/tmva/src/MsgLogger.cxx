@@ -29,7 +29,9 @@
 
 // Local include(s):
 #include "TMVA/MsgLogger.h"
+
 #include "TMVA/Config.h"
+#include "TMVA/Types.h"
 
 #include "Riostream.h"
 
@@ -43,6 +45,8 @@
 #include <memory>
 
 // ROOT include(s):
+#include "Rtypes.h"
+#include "TObject.h"
 
 ClassImp(TMVA::MsgLogger)
 

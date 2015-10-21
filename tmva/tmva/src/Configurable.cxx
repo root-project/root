@@ -52,6 +52,7 @@ End_Html */
 #include "TMVA/Configurable.h"
 #include "TMVA/Config.h"
 #include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 
 // don't change this flag without a good reason ! The FitterBase code won't work anymore !!!
 // #define TMVA_Configurable_SanctionUnknownOption kTRUE

@@ -44,6 +44,8 @@ using std::endl;
 #include "TMVA/MsgLogger.h"
 #endif
 
+#include "TMVA/Types.h"
+
 //TMVA::DataSetManager* TMVA::DataSetManager::fgDSManager = 0; // DSMTEST removed
 //TMVA::DataSetManager& TMVA::DataSetManager::Instance() { return *fgDSManager; }      // DSMTEST removed
 // void TMVA::DataSetManager::CreateInstance( DataInputHandler& dataInput ) { fgDSManager = new DataSetManager(dataInput); } // DSMTEST removed

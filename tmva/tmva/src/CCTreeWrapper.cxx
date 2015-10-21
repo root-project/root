@@ -21,6 +21,7 @@
  **********************************************************************************/
 
 #include "TMVA/CCTreeWrapper.h"
+#include "TMVA/DecisionTree.h"
 
 #include <iostream>
 #include <limits>

@@ -27,26 +27,24 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <iostream>
-#include <iomanip>
+#include "TMVA/VariableNormalizeTransform.h"
 
-#include "TVectorF.h"
-#include "TVectorD.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/Event.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
+
 #include "TMatrixD.h"
 #include "TMatrixDBase.h"
+#include "TVectorD.h"
+#include "TVectorF.h"
 
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_VariableNormalizeTransform
-#include "TMVA/VariableNormalizeTransform.h"
-#endif
-#ifndef ROOT_TMVA_Tools
-#include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
-#include "TMVA/DataSet.h"
-#endif
+#include <iostream>
+#include <iomanip>
+#include <cfloat>
 
 ClassImp(TMVA::VariableNormalizeTransform)
 

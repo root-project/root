@@ -47,6 +47,8 @@ End_Html */
 //
 //_______________________________________________________________________
 
+#include "TMVA/MethodTMlpANN.h"
+
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -59,7 +61,12 @@ End_Html */
 #include "TMultiLayerPerceptron.h"
 
 #include "TMVA/Config.h"
-#include "TMVA/MethodTMlpANN.h"
+#include "TMVA/DataSet.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/MethodBase.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+#include "TMVA/VariableInfo.h"
 
 #include "TMVA/ClassifierFactory.h"
 #ifndef ROOT_TMVA_Tools

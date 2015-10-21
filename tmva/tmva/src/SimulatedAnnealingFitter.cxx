@@ -32,8 +32,15 @@
 //_______________________________________________________________________
 
 #include "TMVA/SimulatedAnnealingFitter.h"
-#include "TMVA/SimulatedAnnealing.h"
+
+#include "TMVA/FitterBase.h"
 #include "TMVA/Interval.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/SimulatedAnnealing.h"
+#include "TMVA/Types.h"
+
+#include "Rtypes.h"
+#include "TString.h"
 
 ClassImp(TMVA::SimulatedAnnealingFitter)
 

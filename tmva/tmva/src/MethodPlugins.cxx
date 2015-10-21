@@ -51,8 +51,10 @@ End_Html */
 #include "TROOT.h"
 
 #include "TMVA/ClassifierFactory.h"
-#include "TMVA/Tools.h"
 #include "TMVA/Ranking.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+
 #include <cstdio>
 #include <iostream>
 

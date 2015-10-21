@@ -25,14 +25,20 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include <vector>
+#include "TMVA/Results.h"
+
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
 
 #include "TH1.h"
 #include "TH2.h"
 #include "TGraph.h"
 
-#include "TMVA/Results.h"
-#include "TMVA/MsgLogger.h"
+#include <vector>
+
+namespace TMVA {
+   class DataSetInfo;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

@@ -39,13 +39,19 @@
 //
 //_____________________________________________________________________
 
+#include "TMVA/PDEFoamTarget.h"
+
+#include "TMVA/Event.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDEFoam.h"
+#include "TMVA/PDEFoamCell.h"
+#include "TMVA/Types.h"
+
 #ifndef ROOT_TMath
 #include "TMath.h"
 #endif
 
-#ifndef ROOT_TMVA_PDEFoamTarget
-#include "TMVA/PDEFoamTarget.h"
-#endif
+#include "Rtypes.h"
 
 ClassImp(TMVA::PDEFoamTarget)
 

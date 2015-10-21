@@ -27,6 +27,10 @@
 #include "TMVA/CostComplexityPruneTool.h"
 
 #include "TMVA/MsgLogger.h"
+#include "TMVA/SeparationBase.h"
+#include "TMVA/DecisionTree.h"
+
+#include "RTypesCore.h"
 
 #include <fstream>
 #include <limits>

@@ -73,6 +73,7 @@ End_Html */
 
 #include "TMVA/Interval.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
 
 ClassImp(TMVA::Interval)
 

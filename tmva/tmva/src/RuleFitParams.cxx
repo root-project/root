@@ -24,21 +24,25 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include "TMVA/RuleFitParams.h"
+
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/MethodRuleFit.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/RuleEnsemble.h"
+#include "TMVA/RuleFit.h"
+#include "TMVA/Timer.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+
+#include "TTree.h"
+#include "TMath.h"
+
 #include <iostream>
 #include <iomanip>
 #include <numeric>
 #include <algorithm>
 #include <functional>
-
-#include "TTree.h"
-#include "TMath.h"
-
-#include "TMVA/Timer.h"
-#include "TMVA/RuleFitParams.h"
-#include "TMVA/RuleFit.h"
-#include "TMVA/RuleEnsemble.h"
-#include "TMVA/MethodRuleFit.h"
-#include "TMVA/Tools.h"
 
 Bool_t gFIRSTTST=kTRUE;
 Bool_t gFIRSTORG=kTRUE;

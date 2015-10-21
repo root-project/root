@@ -33,9 +33,15 @@
 // function returns the cell value, given an event 'txvec'.
 // _____________________________________________________________________
 
-#ifndef ROOT_TMVA_PDEFoamKernelTrivial
 #include "TMVA/PDEFoamKernelTrivial.h"
-#endif
+
+#include "TMVA/PDEFoam.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Types.h"
+
+#include "Rtypes.h"
+
+#include <vector>
 
 ClassImp(TMVA::PDEFoamKernelTrivial)
 

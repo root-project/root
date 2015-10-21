@@ -37,6 +37,8 @@
 // Can compute regression value for one dimensional output              //
 //_______________________________________________________________________
 
+#include "TMVA/MethodFDA.h"
+
 #include "Riostream.h"
 #include "TList.h"
 #include "TFormula.h"
@@ -51,15 +53,21 @@
 #include <stdexcept>
 
 #include "TMVA/ClassifierFactory.h"
-#include "TMVA/MethodFDA.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Interval.h"
-#include "TMVA/Timer.h"
-#include "TMVA/GeneticFitter.h"
-#include "TMVA/SimulatedAnnealingFitter.h"
-#include "TMVA/MinuitFitter.h"
-#include "TMVA/MCFitter.h"
 #include "TMVA/Config.h"
+#include "TMVA/Configurable.h"
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/FitterBase.h"
+#include "TMVA/GeneticFitter.h"
+#include "TMVA/Interval.h"
+#include "TMVA/IFitterTarget.h"
+#include "TMVA/MCFitter.h"
+#include "TMVA/MinuitFitter.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/Timer.h"
+#include "TMVA/Tools.h"
+#include "TMVA/TransformationHandler.h"
+#include "TMVA/Types.h"
+#include "TMVA/SimulatedAnnealingFitter.h"
 
 using std::stringstream;
 

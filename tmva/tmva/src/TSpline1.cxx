@@ -30,9 +30,10 @@
 // Linear interpolation of TGraph
 //_______________________________________________________________________
 
-#include "TMath.h"
-
 #include "TMVA/TSpline1.h"
+
+#include "TGraph.h"
+#include "TMath.h"
 
 ClassImp(TMVA::TSpline1)
 

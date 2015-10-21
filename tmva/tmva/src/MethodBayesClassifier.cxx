@@ -31,8 +31,11 @@
 //_______________________________________________________________________
 
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/MethodBase.h"
 #include "TMVA/MethodBayesClassifier.h"
+#include "TMVA/MsgLogger.h"
 #include "TMVA/Tools.h"
+#include "TMVA/Types.h"
 #include "Riostream.h"
 
 REGISTER_METHOD(BayesClassifier)

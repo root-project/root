@@ -42,15 +42,21 @@
 //
 //_____________________________________________________________________
 
+#include "TMVA/PDEFoamDiscriminant.h"
+
 #include <climits>
+
+#include "TMVA/Event.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDEFoam.h"
+#include "TMVA/PDEFoamCell.h"
+#include "TMVA/Types.h"
 
 #ifndef ROOT_TMath
 #include "TMath.h"
 #endif
+#include "TH2D.h"
 
-#ifndef ROOT_TMVA_PDEFoamDiscriminant
-#include "TMVA/PDEFoamDiscriminant.h"
-#endif
 
 ClassImp(TMVA::PDEFoamDiscriminant)
 

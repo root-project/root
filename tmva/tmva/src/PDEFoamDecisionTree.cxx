@@ -54,6 +54,19 @@
 #include "TMVA/PDEFoamDecisionTreeDensity.h"
 #endif
 
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDEFoamCell.h"
+#include "TMVA/PDEFoamDensityBase.h"
+#include "TMVA/PDEFoamVect.h"
+#include "TMVA/SeparationBase.h"
+#include "TMVA/Types.h"
+#include "TMVA/Volume.h"
+
+#include "Rtypes.h"
+#include "TH1D.h"
+
+class TString;
+
 ClassImp(TMVA::PDEFoamDecisionTree)
 
 ////////////////////////////////////////////////////////////////////////////////

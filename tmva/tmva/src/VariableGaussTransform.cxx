@@ -33,28 +33,27 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
+#include "TMVA/VariableGaussTransform.h"
+
+#include "TMVA/DataSetInfo.h"
+#include "TMVA/MsgLogger.h"
+#include "TMVA/PDF.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+#include "TMVA/Version.h"
+
+#include "TCanvas.h"
+#include "TH1F.h"
+#include "TMath.h"
+#include "TVectorF.h"
+#include "TVectorD.h"
+
+#include <exception>
 #include <iostream>
 #include <iomanip>
 #include <list>
 #include <limits>
-#include <exception>
 #include <stdexcept>
-
-#include "TVectorF.h"
-#include "TVectorD.h"
-#include "TMath.h"
-#include "TCanvas.h"
-
-#include "TMVA/VariableGaussTransform.h"
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_Tools
-#include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_Version
-#include "TMVA/Version.h"
-#endif
 
 ClassImp(TMVA::VariableGaussTransform)
 
