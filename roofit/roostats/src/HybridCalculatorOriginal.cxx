@@ -16,7 +16,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "RooStats/HybridCalculatorOriginal.h"
 
+#include "RooStats/ModelConfig.h"
 
 #include "RooDataHist.h"
 #include "RooDataSet.h"
@@ -27,8 +29,6 @@
 #include "RooWorkspace.h"
 
 #include "TH1.h"
-
-#include "RooStats/HybridCalculatorOriginal.h"
 
 using namespace std;
 

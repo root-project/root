@@ -19,6 +19,8 @@ ToyMCSampler as its TestStatSampler.
 #include "RooStats/HypoTestCalculatorGeneric.h"
 #include "RooStats/ToyMCSampler.h"
 #include "RooStats/RatioOfProfiledLikelihoodsTestStat.h"
+#include "RooStats/HypoTestCalculator.h"
+#include "RooStats/HypoTestInverterResult.h"
 
 #include "RooAddPdf.h"
 

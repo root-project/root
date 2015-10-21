@@ -13,6 +13,8 @@
 
 #include "RooStats/SamplingDistPlot.h"
 
+#include "RooStats/SamplingDistribution.h"
+
 #include "RooRealVar.h"
 #include "TStyle.h"
 #include "TLine.h"

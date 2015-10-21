@@ -11,20 +11,19 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
+// include header file of this class
+#include "RooStats/HypoTestInverterOriginal.h"
+
+#include "RooStats/HybridCalculatorOriginal.h"
+#include "RooStats/HybridResult.h"
+#include "RooStats/HypoTestCalculator.h"
+#include "RooStats/HypoTestInverterResult.h"
 
 // include other header files
-
 #include "RooAbsPdf.h"
 #include "RooAbsData.h"
 #include "RooRealVar.h"
 #include "TMath.h"
-
-#include "RooStats/HybridCalculatorOriginal.h"
-#include "RooStats/HybridResult.h"
-
-// include header file of this class 
-#include "RooStats/HypoTestInverterOriginal.h"
-
 
 ClassImp(RooStats::HypoTestInverterOriginal)
 
