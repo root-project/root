@@ -38,6 +38,8 @@ COMPILER      = gnu
 # Linker:
 LD            = clang++
 LDFLAGS       = $(OPT) -m32 -mmacosx-version-min=$(MACOSXVERS)
+LDFLAGS      += $(CXX11LDFLAGS)
+LDFLAGS      += $(EXTRA_LDFLAGS)
 
 FORCELINK     = yes
 NEEDFINK      = yes
@@ -86,10 +88,10 @@ SOEXT         = dylib
 endif
 
 # System libraries:
-SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) $(OSTHREADLIBDIR) \
+SYSLIBS       = -lm $(FINK_LDFLAGS) $(OSTHREADLIBDIR) \
                 $(OSTHREADLIB) -ldl $(ALLOCLIBDIR) $(ALLOCLIB)
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
-CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
+CILIBS        = -lm $(FINK_LDFLAGS) -ldl
 
 # Fortran:
 F77ORG        = gfortran
