@@ -5142,6 +5142,8 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
       if (fLookedUpClasses.insert(normNameHash).second) {
          auto const &iter = fClassesHeadersMap.find(normNameHash);
          if (iter != fClassesHeadersMap.end()) {
+            const cling::Transaction *T = fInterpreter->getCurrentTransaction();
+            fTransactionHeadersMap.insert({T,normNameHash});
             auto const &hNamesPtrs = iter->second;
             if (gDebug > 1) {
                Info("TCling::AutoParse",
@@ -5734,6 +5736,24 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
 // we need to make sure the next request for the same autoparse will be
 // honored.
 void TCling::TransactionRollback(const cling::Transaction &T) {
+   auto const &triter = fTransactionHeadersMap.find(&T);
+   if (triter != fTransactionHeadersMap.end()) {
+      std::size_t normNameHash = triter->second;
+
+      fLookedUpClasses.erase(normNameHash);
+
+      auto const &iter = fClassesHeadersMap.find(normNameHash);
+      if (iter != fClassesHeadersMap.end()) {
+         auto const &hNamesPtrs = iter->second;
+         for (auto &hName : hNamesPtrs) {
+            if (gDebug > 0) {
+               Info("TransactionRollback",
+                    "Restoring ability to autoaparse: %s", hName);
+            }
+            fParsedPayloadsAddresses.erase(hName);
+         }
+      }
+   }
 }
 
 void TCling::LibraryLoaded(const void* dyLibHandle, const char* canonicalName) {

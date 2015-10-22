@@ -106,6 +106,7 @@ private: // Data Members
    TString         fRootmapLoadPath;  // Dynamic load path for rootmap files.
    TEnv*           fMapfile;          // Association of classes to libraries.
    std::map<size_t,std::vector<const char*>> fClassesHeadersMap; // Map of classes hashes and headers associated
+   std::map<const cling::Transaction*,size_t> fTransactionHeadersMap; // Map which transaction contains which autoparse.
    std::set<size_t> fLookedUpClasses; // Set of classes for which headers were looked up already
    std::set<size_t> fPayloads; // Set of payloads
    std::set<const char*> fParsedPayloadsAddresses; // Set of payloads which were parsed
