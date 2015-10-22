@@ -224,6 +224,7 @@ MODULES      += graf2d/gviz
 endif
 ifeq ($(BUILDPYTHON),yes)
 MODULES      += bindings/pyroot
+MODULES      += main/python
 endif
 ifeq ($(BUILDRUBY),yes)
 MODULES      += bindings/ruby
@@ -328,14 +329,15 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 graf2d/qt gui/qtroot gui/qtgsi net/netx net/netxng net/alien \
                 proof/proofd proof/proofx proof/pq2 graf3d/x3d net/davix \
                 sql/oracle io/xmlparser math/mathmore \
-                tmva/tmva tmva/tmvagui math/genetic io/hdfs graf2d/fitsio roofit/roofitcore \
+                tmva/tmva tmva/tmvagui math/genetic io/hdfs graf2d/fitsio \
+                roofit/roofitcore \
                 roofit/roofit roofit/roostats roofit/histfactory \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/geocad geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
                 proof/proofbench proof/afdsmgrd graf2d/ios \
                 graf2d/quartz graf2d/cocoa core/macosx math/vc math/vdt \
-                net/http  bindings/r
+                net/http bindings/r main/python
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
