@@ -7254,6 +7254,9 @@ fi
 if test -d core/pcre/src/pcre-7.4 ; then
    rm -rf core/pcre/src/pcre-7.4
 fi
+if test -d core/pcre/src/pcre-7.8 ; then
+   rm -rf core/pcre/src/pcre-7.8
+fi
 if test -d math/unuran/src/unuran-1.3.0-root ; then
    rm -rf math/unuran/src/unuran-1.3.0-root
 fi
