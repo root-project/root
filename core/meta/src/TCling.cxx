@@ -519,6 +519,10 @@ void TCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
 
    ((TCling*)gCling)->UpdateListsOnUnloaded(T);
 }
+void TCling__TransactionRollback(const cling::Transaction &T) {
+
+   ((TCling*)gCling)->TransactionRollback(T);
+}
 extern "C" void TCling__LibraryLoadedRTTI(const void* dyLibHandle,
                                           const char* canonicalName) {
 
@@ -5725,7 +5729,13 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+// If an autoparse was done during a transaction and that it is rolled back,
+// we need to make sure the next request for the same autoparse will be
+// honored.
+void TCling::TransactionRollback(const cling::Transaction &T) {
+}
+
 void TCling::LibraryLoaded(const void* dyLibHandle, const char* canonicalName) {
    //UpdateListOfLoadedSharedLibraries();
 }

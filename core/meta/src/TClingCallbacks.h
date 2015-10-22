@@ -81,6 +81,10 @@ public:
    //
    virtual void TransactionUnloaded(const cling::Transaction &T);
 
+   // The callback is used to clear the autoparsing caches.
+   //
+   virtual void TransactionRollback(const cling::Transaction &T);
+
    // Used to inform client about a new decl read by the ASTReader.
    //
    virtual void DeclDeserialized(const clang::Decl* D);
