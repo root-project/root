@@ -1024,15 +1024,16 @@ TEfficiency::~TEfficiency()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculates the boundaries for the frequentist Agresti-Coull interval
-///
-/// \param total number of total events
-/// \param passed 0 <= number of passed events <= total
-/// \param level  confidence level
-/// \param bUpper true  - upper boundary is returned
-///               false - lower boundary is returned
-///
-/** 
+/**
+    Calculates the boundaries for the frequentist Agresti-Coull interval
+
+    \param total number of total events
+    \param passed 0 <= number of passed events <= total
+    \param level  confidence level
+    \param bUpper true  - upper boundary is returned
+    false - lower boundary is returned
+
+
    \f{eqnarray*}{
      \alpha &=& 1 - \frac{level}{2} \\
      \kappa &=& \Phi^{-1}(1 - \alpha,1)\ ... normal\ quantile\ function\\
@@ -1040,9 +1041,10 @@ TEfficiency::~TEfficiency()
      \Delta &=& \kappa * \sqrt{\frac{mode * (1 - mode)}{total + \kappa^{2}}}\\
      return &=&  max(0,mode - \Delta)\ or\ min(1,mode + \Delta)
    \f}
- **/
 
-Double_t TEfficiency::AgrestiCoull(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
+*/
+
+Double_t TEfficiency::AgrestiCoull(Double_t total,Double_t passed,Double_t level,Bool_t bUpper)
 {
    Double_t alpha = (1.0 - level)/2;
    Double_t kappa = ROOT::Math::normal_quantile(1 - alpha,1);
@@ -1065,7 +1067,7 @@ Double_t TEfficiency::AgrestiCoull(Int_t total,Int_t passed,Double_t level,Bool_
 /// \param bUpper: true  - upper boundary is returned
 ///                false - lower boundary is returned
 
-Double_t TEfficiency::FeldmanCousins(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
+Double_t TEfficiency::FeldmanCousins(Double_t total,Double_t passed,Double_t level,Bool_t bUpper)
 {
    Double_t lower = 0;
    Double_t upper = 1;
@@ -1098,7 +1100,7 @@ Double_t TEfficiency::FeldmanCousins(Int_t total,Int_t passed,Double_t level,Boo
 /// Implemented using classes developed by Jordan Tucker and Luca Lista
 /// See File hist/hist/src/TEfficiencyHelper.h
 
-Bool_t TEfficiency::FeldmanCousinsInterval(Int_t total,Int_t passed,Double_t level,Double_t & lower, Double_t & upper)
+Bool_t TEfficiency::FeldmanCousinsInterval(Double_t total,Double_t passed,Double_t level,Double_t & lower, Double_t & upper)
 {
    FeldmanCousinsBinomialInterval fc;
    double alpha = 1.-level;
@@ -1110,56 +1112,58 @@ Bool_t TEfficiency::FeldmanCousinsInterval(Int_t total,Int_t passed,Double_t lev
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculates the boundaries for a Bayesian confidence interval (shortest or central interval depending on the option)
-///
-/// \param[in] total number of total events
-/// \param[in] passed 0 <= number of passed events <= total
-/// \param[in] level  confidence level
-/// \param[in] alpha  shape parameter > 0 for the prior distribution (fBeta_alpha)
-/// \param[in] beta  shape parameter > 0 for the prior distribution (fBeta_beta)
-/// \param[in] bUpper
-///            - true  - upper boundary is returned
-///            - false - lower boundary is returned
-/// \param[in] bShortest ??
-///
-/// Note: In the case central confidence interval is calculated.
-///      when passed = 0 (or passed = total) the lower (or upper)
-///      interval values will be larger than 0 (or smaller than 1).
-///
-/// Calculation:
-///
-/// The posterior probability in bayesian statistics is given by:
-/// \f[
-///    P(\varepsilon |k,N) \propto L(\varepsilon|k,N) \times Prior(\varepsilon)
-/// \f]
-/// As an efficiency can be interpreted as probability of a positive outcome of
-/// a Bernoullli trial the likelihood function is given by the binomial
-/// distribution:
-/// \f[
-///   L(\varepsilon|k,N) = Binomial(N,k) \varepsilon ^{k} (1 - \varepsilon)^{N-k}
-/// \f]
-/// At the moment only beta distributions are supported as prior probabilities
-/// of the efficiency (\f$ B(\alpha,\beta)\f$ is the beta function):
-/// \f[
-///   Prior(\varepsilon) = \frac{1}{B(\alpha,\beta)} \varepsilon ^{\alpha - 1} (1 - \varepsilon)^{\beta - 1}
-/// \f]
-/// The posterior probability is therefore again given by a beta distribution:
-/// \f[
-///   P(\varepsilon |k,N) \propto \varepsilon ^{k + \alpha - 1} (1 - \varepsilon)^{N - k + \beta - 1}
-/// \f]
-/// In case of central intervals
-/// the lower boundary for the equal-tailed confidence interval is given by the
-/// inverse cumulative (= quantile) function for the quantile \f$ \frac{1 - level}{2} \f$.
-/// The upper boundary for the equal-tailed confidence interval is given by the
-/// inverse cumulative (= quantile) function for the quantile \f$ \frac{1 + level}{2} \f$.
-/// Hence it is the solution \f$ \varepsilon \f$ of the following equation:
-/// \f[
-///   I_{\varepsilon}(k + \alpha,N - k + \beta) = \frac{1}{norm} \int_{0}^{\varepsilon} dt t^{k + \alpha - 1} (1 - t)^{N - k + \beta - 1} =  \frac{1 \pm level}{2}
-/// \f]
-/// In the case of shortest interval the minimum interval aorund the mode is found by minimizing the length of all intervals whith the
-/// given probability content. See TEfficiency::BetaShortestInterval
+/**
+Calculates the boundaries for a Bayesian confidence interval (shortest or central interval depending on the option)
 
-Double_t TEfficiency::Bayesian(Int_t total,Int_t passed,Double_t level,Double_t alpha,Double_t beta,Bool_t bUpper, Bool_t bShortest)
+\param[in] total number of total events
+\param[in] passed 0 <= number of passed events <= total
+\param[in] level  confidence level
+\param[in] alpha  shape parameter > 0 for the prior distribution (fBeta_alpha)
+\param[in] beta  shape parameter > 0 for the prior distribution (fBeta_beta)
+\param[in] bUpper
+           - true  - upper boundary is returned
+           - false - lower boundary is returned
+\param[in] bShortest ??
+
+Note: In the case central confidence interval is calculated.
+     when passed = 0 (or passed = total) the lower (or upper)
+     interval values will be larger than 0 (or smaller than 1).
+
+Calculation:
+
+The posterior probability in bayesian statistics is given by:
+\f[
+   P(\varepsilon |k,N) \propto L(\varepsilon|k,N) \times Prior(\varepsilon)
+\f]
+As an efficiency can be interpreted as probability of a positive outcome of
+a Bernoullli trial the likelihood function is given by the binomial
+distribution:
+\f[
+  L(\varepsilon|k,N) = Binomial(N,k) \varepsilon ^{k} (1 - \varepsilon)^{N-k}
+\f]
+At the moment only beta distributions are supported as prior probabilities
+of the efficiency (\f$ B(\alpha,\beta)\f$ is the beta function):
+\f[
+  Prior(\varepsilon) = \frac{1}{B(\alpha,\beta)} \varepsilon ^{\alpha - 1} (1 - \varepsilon)^{\beta - 1}
+\f]
+The posterior probability is therefore again given by a beta distribution:
+\f[
+  P(\varepsilon |k,N) \propto \varepsilon ^{k + \alpha - 1} (1 - \varepsilon)^{N - k + \beta - 1}
+\f]
+In case of central intervals
+the lower boundary for the equal-tailed confidence interval is given by the
+inverse cumulative (= quantile) function for the quantile \f$ \frac{1 - level}{2} \f$.
+The upper boundary for the equal-tailed confidence interval is given by the
+inverse cumulative (= quantile) function for the quantile \f$ \frac{1 + level}{2} \f$.
+Hence it is the solution \f$ \varepsilon \f$ of the following equation:
+\f[
+  I_{\varepsilon}(k + \alpha,N - k + \beta) = \frac{1}{norm} \int_{0}^{\varepsilon} dt t^{k + \alpha - 1} (1 - t)^{N - k + \beta - 1} =  \frac{1 \pm level}{2}
+\f]
+In the case of shortest interval the minimum interval aorund the mode is found by minimizing the length of all intervals whith the
+given probability content. See TEfficiency::BetaShortestInterval
+*/
+
+Double_t TEfficiency::Bayesian(Double_t total,Double_t passed,Double_t level,Double_t alpha,Double_t beta,Bool_t bUpper, Bool_t bShortest)
 {
    Double_t a = double(passed)+alpha;
    Double_t b = double(total-passed)+beta;
@@ -1364,10 +1368,10 @@ void TEfficiency::Build(const char* name,const char* title)
 
 Bool_t TEfficiency::CheckBinning(const TH1& pass,const TH1& total)
 {
-   
+
    const TAxis* ax1 = 0;
    const TAxis* ax2 = 0;
-   
+
    //check binning along axis
    for(Int_t j = 0; j < pass.GetDimension(); ++j) {
       switch(j) {
@@ -1667,21 +1671,22 @@ void TEfficiency::FillHistogram(TH2 * hist ) const
 
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculates the boundaries for the frequentist Clopper-Pearson interval
-///
-/// This interval is recommended by the PDG.
-///
-/// \param[in] total number of total events
-/// \param[in] passed 0 <= number of passed events <= total
-/// \param[in] level confidence level
-/// \param[in] bUpper true  - upper boundary is returned
-///                  ;false - lower boundary is returned
-///
-/// Calculation:
-///
-/// The lower boundary of the Clopper-Pearson interval is the "exact" inversion
-/// of the test:
-/** \f{eqnarray*}{
+/**
+Calculates the boundaries for the frequentist Clopper-Pearson interval
+
+This interval is recommended by the PDG.
+
+\param[in] total number of total events
+\param[in] passed 0 <= number of passed events <= total
+\param[in] level confidence level
+\param[in] bUpper true  - upper boundary is returned
+                 ;false - lower boundary is returned
+
+Calculation:
+
+The lower boundary of the Clopper-Pearson interval is the "exact" inversion
+of the test:
+   \f{eqnarray*}{
       P(x \geq passed; total) &=& \frac{1 - level}{2}\\
       P(x \geq passed; total) &=& 1 - P(x \leq passed - 1; total)\\
       &=& 1 - \frac{1}{norm} * \int_{0}^{1 - \varepsilon} t^{total - passed} (1 - t)^{passed - 1} dt\\
@@ -1689,13 +1694,12 @@ void TEfficiency::FillHistogram(TH2 * hist ) const
       &=& \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed - 1} (1 - t)^{total - passed} dt\\
       &=& I_{\varepsilon}(passed,total - passed + 1)
     \f}
-**/
-/// The lower boundary is therfore given by the \f$ \frac{1 - level}{2}\f$ quantile
-/// of the beta distribution.
-///
-/// The upper boundary of the Clopper-Pearson interval is the "exact" inversion
-/// of the test:
-/** \f{eqnarray*}{
+The lower boundary is therfore given by the \f$ \frac{1 - level}{2}\f$ quantile
+of the beta distribution.
+
+The upper boundary of the Clopper-Pearson interval is the "exact" inversion
+of the test:
+   \f{eqnarray*}{
       P(x \leq passed; total) &=& \frac{1 - level}{2}\\
       P(x \leq passed; total) &=& \frac{1}{norm} * \int_{0}^{1 - \varepsilon} t^{total - passed - 1} (1 - t)^{passed} dt\\
       &=& \frac{1}{norm} * \int_{\varepsilon}^{1} t^{passed} (1 - t)^{total - passed - 1} dt\\
@@ -1703,14 +1707,14 @@ void TEfficiency::FillHistogram(TH2 * hist ) const
       \Rightarrow 1 - \frac{1 - level}{2} &=& \frac{1}{norm} * \int_{0}^{\varepsilon} t^{passed} (1 - t)^{total - passed -1} dt\\
       \frac{1 + level}{2} &=& I_{\varepsilon}(passed + 1,total - passed)
     \f}
-**/
-/// The upper boundary is therfore given by the \f$\frac{1 + level}{2}\f$ quantile
-/// of the beta distribution.
-///
-/// Note: The connection between the binomial distribution and the regularized
-///      incomplete beta function \f$ I_{\varepsilon}(\alpha,\beta)\f$ has been used.
+The upper boundary is therfore given by the \f$\frac{1 + level}{2}\f$ quantile
+of the beta distribution.
 
-Double_t TEfficiency::ClopperPearson(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
+Note: The connection between the binomial distribution and the regularized
+     incomplete beta function \f$ I_{\varepsilon}(\alpha,\beta)\f$ has been used.
+*/
+
+Double_t TEfficiency::ClopperPearson(Double_t total,Double_t passed,Double_t level,Bool_t bUpper)
 {
    Double_t alpha = (1.0 - level) / 2;
    if(bUpper)
@@ -2616,29 +2620,31 @@ Long64_t TEfficiency::Merge(TCollection* pList)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the confidence limits for the efficiency supposing that the
-/// efficiency follows a normal distribution with the rms below
-///
-/// \param[in] total number of total events
-/// \param[in] passed 0 <= number of passed events <= total
-/// \param[in] level  confidence level
-/// \param[in] bUpper
-///                 - true  - upper boundary is returned
-///                 - false - lower boundary is returned
-///
-/// Calculation:
-/** \f{eqnarray*}{
+/**
+Returns the confidence limits for the efficiency supposing that the
+efficiency follows a normal distribution with the rms below
+
+\param[in] total number of total events
+\param[in] passed 0 <= number of passed events <= total
+\param[in] level  confidence level
+\param[in] bUpper
+                - true  - upper boundary is returned
+                - false - lower boundary is returned
+
+Calculation:
+
+\f{eqnarray*}{
       \hat{\varepsilon} &=& \frac{passed}{total}\\
       \sigma_{\varepsilon} &=& \sqrt{\frac{\hat{\varepsilon} (1 - \hat{\varepsilon})}{total}}\\
       \varepsilon_{low} &=& \hat{\varepsilon} \pm \Phi^{-1}(\frac{level}{2},\sigma_{\varepsilon})
-    \f}
-**/
+\f}
+*/
 
-Double_t TEfficiency::Normal(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
+Double_t TEfficiency::Normal(Double_t total,Double_t passed,Double_t level,Bool_t bUpper)
 {
    Double_t alpha = (1.0 - level)/2;
    if (total == 0) return (bUpper) ? 1 : 0;
-   Double_t average = ((Double_t)passed) / total;
+   Double_t average = passed / total;
    Double_t sigma = std::sqrt(average * (1 - average) / total);
    Double_t delta = ROOT::Math::normal_quantile(1 - alpha,sigma);
 
@@ -3505,26 +3511,28 @@ void TEfficiency::SetWeight(Double_t weight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculates the boundaries for the frequentist Wilson interval
-///
-/// \param[in] total number of total events
-/// \param[in] passed 0 <= number of passed events <= total
-/// \param[in] level  confidence level
-/// \param[in] bUpper
-///                 - true  - upper boundary is returned
-///                 - false - lower boundary is returned
-///
-/// Calculation:
-/** \f{eqnarray*}{
+/**
+Calculates the boundaries for the frequentist Wilson interval
+
+\param[in] total number of total events
+\param[in] passed 0 <= number of passed events <= total
+\param[in] level  confidence level
+\param[in] bUpper
+                - true  - upper boundary is returned
+                - false - lower boundary is returned
+
+Calculation:
+\f{eqnarray*}{
       \alpha &=& 1 - \frac{level}{2}\\
       \kappa &=& \Phi^{-1}(1 - \alpha,1) ...\ normal\ quantile\ function\\
       mode &=& \frac{passed + \frac{\kappa^{2}}{2}}{total + \kappa^{2}}\\
       \Delta &=& \frac{\kappa}{total + \kappa^{2}} * \sqrt{passed (1 - \frac{passed}{total}) + \frac{\kappa^{2}}{4}}\\
       return &=& max(0,mode - \Delta)\ or\ min(1,mode + \Delta)
-     \f}
-**/ 
+\f}
 
-Double_t TEfficiency::Wilson(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
+*/
+
+Double_t TEfficiency::Wilson(Double_t total,Double_t passed,Double_t level,Bool_t bUpper)
 {
    Double_t alpha = (1.0 - level)/2;
    if (total == 0) return (bUpper) ? 1 : 0;
