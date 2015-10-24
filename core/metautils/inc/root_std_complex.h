@@ -18,13 +18,13 @@ template<class T> class _root_std_complex {
 };
 
 // Asserts about the size of the complex
-static_assert(sizeof(_root_std_complex<double>) == sizeof(complex<double>),
+static_assert(sizeof(_root_std_complex<double>) == sizeof(std::complex<double>),
               "The size of complex<T> and _root_std_complex<T> do not match!");
-static_assert(sizeof(_root_std_complex<float>) == sizeof(complex<float>),
+static_assert(sizeof(_root_std_complex<float>) == sizeof(std::complex<float>),
               "The size of complex<T> and _root_std_complex<T> do not match!");
-static_assert(sizeof(_root_std_complex<long>) == sizeof(complex<long>),
+static_assert(sizeof(_root_std_complex<long>) == sizeof(std::complex<long>),
               "The size of complex<T> and _root_std_complex<T> do not match!");
-static_assert(sizeof(_root_std_complex<int>) == sizeof(complex<int>),
+static_assert(sizeof(_root_std_complex<int>) == sizeof(std::complex<int>),
               "The size of complex<T> and _root_std_complex<T> do not match!");
 
 #endif
