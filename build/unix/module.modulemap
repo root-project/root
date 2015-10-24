@@ -1704,7 +1704,7 @@ module "TQObject.h" {
   header "TQConnection.h"
   header "TQObject.h"
   header "TQObjectEmitVA.h"
-  export * 
+  export *
 }
 //module "TQObjectEmitVA.h" { header "TQObjectEmitVA.h" export * } -- see TQObject
 
