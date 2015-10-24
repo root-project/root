@@ -1,2422 +1,2035 @@
-//module ROOT {
-//requires cplusplus
-module sql_pgsql {
-  export *
-  header "TPgSQLServer.h"
-  header "TPgSQLRow.h"
-  header "TPgSQLStatement.h"
-  header "TPgSQLResult.h"
-}
-module graf3d_x3d {
-  export *
-  header "TViewerX3D.h"
-  header "TX3DFrame.h"
-}
+// make print-ALLHDRS | tr " " '\n' | sort -u | cut -d '/'  -f2,3,4,5 | xargs -I $ echo module \"$\" { header \"$\" export \* }
+module "AuthConst.h" { header "AuthConst.h" export * }
+module "Bswapcpy.h" { header "Bswapcpy.h" export * }
+module "Buttons.h" { header "Buttons.h" export * }
+module "Bytes.h" { header "Bytes.h" export * }
+module "Byteswap.h" { header "Byteswap.h" export * }
+module "CintLDAP.h" { header "CintLDAP.h" export * }
+module "CocoaGuiTypes.h" { header "CocoaGuiTypes.h" export * }
+module "CocoaPrivate.h" { header "CocoaPrivate.h" export * }
+module "CocoaUtils.h" { header "CocoaUtils.h" export * }
+module "Compression.h" { header "Compression.h" export * }
+module "Demangle.h" { header "Demangle.h" export * }
+module "DllImport.h" { header "DllImport.h" export * }
+module "ESTLType.h" { header "ESTLType.h" export * }
+module "Fit/BasicFCN.h" { header "Fit/BasicFCN.h" export * }
+module "Fit/BinData.h" { header "Fit/BinData.h" export * }
+module "Fit/BinPoint.h" { header "Fit/BinPoint.h" export * }
+module "Fit/Chi2FCN.h" { header "Fit/Chi2FCN.h" export * }
+module "Fit/DataOptions.h" { header "Fit/DataOptions.h" export * }
+module "Fit/DataRange.h" { header "Fit/DataRange.h" export * }
+module "Fit/DataVector.h" { header "Fit/DataVector.h" export * }
+module "Fit/DataVectorfwd.h" { header "Fit/DataVectorfwd.h" export * }
+module "Fit/FcnAdapter.h" { header "Fit/FcnAdapter.h" export * }
+module "Fit/FitConfig.h" { header "Fit/FitConfig.h" export * }
+module "Fit/FitResult.h" { header "Fit/FitResult.h" export * }
+module "Fit/FitUtil.h" { header "Fit/FitUtil.h" export * }
+module "Fit/FitUtilParallel.h" { header "Fit/FitUtilParallel.h" export * }
+module "Fit/Fitter.h" { header "Fit/Fitter.h" export * }
+module "Fit/LogLikelihoodFCN.h" { header "Fit/LogLikelihoodFCN.h" export * }
+module "Fit/ParameterSettings.h" { header "Fit/ParameterSettings.h" export * }
+module "Fit/PoissonLikelihoodFCN.h" { header "Fit/PoissonLikelihoodFCN.h" export * }
+module "Fit/SparseData.h" { header "Fit/SparseData.h" export * }
+module "Fit/UnBinData.h" { header "Fit/UnBinData.h" export * }
+module "FontCache.h" { header "FontCache.h" export * }
+module "Foption.h" { header "Foption.h" export * }
+module "GLConstants.h" { header "GLConstants.h" export * }
+module "Getline.h" { header "Getline.h" export * }
+module "Gtypes.h" { header "Gtypes.h" export * }
+module "GuiTypes.h" { header "GuiTypes.h" export * }
+module "HFitInterface.h" { header "HFitInterface.h" export * }
+module "HelpSMText.h" { header "HelpSMText.h" export * }
+module "HelpText.h" { header "HelpText.h" export * }
+module "HelpTextTV.h" { header "HelpTextTV.h" export * }
+module "Hepevt.h" { header "Hepevt.h" export * }
+module "Hoption.h" { header "Hoption.h" export * }
+module "Hparam.h" { header "Hparam.h" export * }
+module "Htypes.h" { header "Htypes.h" export * }
+module "KeySymbols.h" { header "KeySymbols.h" export * }
+module "Krb5Auth.h" { header "Krb5Auth.h" export * }
+module "MPCode.h" { header "MPCode.h" export * }
+module "MPSendRecv.h" { header "MPSendRecv.h" export * }
+module "Match.h" { header "Match.h" export * }
+module "Math/AdaptiveIntegratorMultiDim.h" { header "Math/AdaptiveIntegratorMultiDim.h" export * }
+module "Math/AllIntegrationTypes.h" { header "Math/AllIntegrationTypes.h" export * }
+module "Math/AxisAngle.h" { header "Math/AxisAngle.h" export * }
+module "Math/BasicMinimizer.h" { header "Math/BasicMinimizer.h" export * }
+module "Math/BinaryOpPolicy.h" { header "Math/BinaryOpPolicy.h" export * }
+module "Math/BinaryOperators.h" { header "Math/BinaryOperators.h" export * }
+module "Math/Boost.h" { header "Math/Boost.h" export * }
+module "Math/BoostX.h" { header "Math/BoostX.h" export * }
+module "Math/BoostY.h" { header "Math/BoostY.h" export * }
+module "Math/BoostZ.h" { header "Math/BoostZ.h" export * }
+module "Math/BrentMethods.h" { header "Math/BrentMethods.h" export * }
+module "Math/BrentMinimizer1D.h" { header "Math/BrentMinimizer1D.h" export * }
+module "Math/BrentRootFinder.h" { header "Math/BrentRootFinder.h" export * }
+module "Math/Cartesian2D.h" { header "Math/Cartesian2D.h" export * }
+module "Math/Cartesian3D.h" { header "Math/Cartesian3D.h" export * }
+module "Math/ChebyshevPol.h" { header "Math/ChebyshevPol.h" export * }
+module "Math/CholeskyDecomp.h" { header "Math/CholeskyDecomp.h" export * }
+//module "Math/CramerInversion.icc" { header "Math/CramerInversion.icc" export * }
+//module "Math/CramerInversionSym.icc" { header "Math/CramerInversionSym.icc" export * }
+module "Math/Cylindrical3D.h" { header "Math/Cylindrical3D.h" export * }
+module "Math/CylindricalEta3D.h" { header "Math/CylindricalEta3D.h" export * }
+module "Math/Delaunay2D.h" { header "Math/Delaunay2D.h" export * }
+module "Math/Dfact.h" { header "Math/Dfact.h" export * }
+module "Math/Dfactir.h" { header "Math/Dfactir.h" export * }
+module "Math/Dfinv.h" { header "Math/Dfinv.h" export * }
+module "Math/Dinv.h" { header "Math/Dinv.h" export * }
+module "Math/DisplacementVector2D.h" { header "Math/DisplacementVector2D.h" export * }
+module "Math/DisplacementVector3D.h" { header "Math/DisplacementVector3D.h" export * }
+module "Math/DistFunc.h" { header "Math/DistFunc.h" export * }
+module "Math/DistFuncMathCore.h" { header "Math/DistFuncMathCore.h" export * }
+module "Math/DistSampler.h" { header "Math/DistSampler.h" export * }
+module "Math/DistSamplerOptions.h" { header "Math/DistSamplerOptions.h" export * }
+module "Math/Dsfact.h" { header "Math/Dsfact.h" export * }
+module "Math/Dsinv.h" { header "Math/Dsinv.h" export * }
+module "Math/Error.h" { header "Math/Error.h" export * }
+module "Math/EulerAngles.h" { header "Math/EulerAngles.h" export * }
+module "Math/Expression.h" { header "Math/Expression.h" export * }
+module "Math/Factory.h" { header "Math/Factory.h" export * }
+module "Math/FitMethodFunction.h" { header "Math/FitMethodFunction.h" export * }
+module "Math/Functions.h" { header "Math/Functions.h" export * }
+module "Math/Functor.h" { header "Math/Functor.h" export * }
+module "Math/GaussIntegrator.h" { header "Math/GaussIntegrator.h" export * }
+module "Math/GaussLegendreIntegrator.h" { header "Math/GaussLegendreIntegrator.h" export * }
+module "Math/GenAlgoOptions.h" { header "Math/GenAlgoOptions.h" export * }
+module "Math/GenVector/3DConversions.h" { header "Math/GenVector/3DConversions.h" export * }
+module "Math/GenVector/3DDistances.h" { header "Math/GenVector/3DDistances.h" export * }
+module "Math/GenVector/AxisAngle.h" { header "Math/GenVector/AxisAngle.h" export * }
+module "Math/GenVector/AxisAnglefwd.h" { header "Math/GenVector/AxisAnglefwd.h" export * }
+module "Math/GenVector/BitReproducible.h" { header "Math/GenVector/BitReproducible.h" export * }
+module "Math/GenVector/Boost.h" { header "Math/GenVector/Boost.h" export * }
+module "Math/GenVector/BoostX.h" { header "Math/GenVector/BoostX.h" export * }
+module "Math/GenVector/BoostXfwd.h" { header "Math/GenVector/BoostXfwd.h" export * }
+module "Math/GenVector/BoostY.h" { header "Math/GenVector/BoostY.h" export * }
+module "Math/GenVector/BoostYfwd.h" { header "Math/GenVector/BoostYfwd.h" export * }
+module "Math/GenVector/BoostZ.h" { header "Math/GenVector/BoostZ.h" export * }
+module "Math/GenVector/BoostZfwd.h" { header "Math/GenVector/BoostZfwd.h" export * }
+module "Math/GenVector/Boostfwd.h" { header "Math/GenVector/Boostfwd.h" export * }
+module "Math/GenVector/Cartesian2D.h" { header "Math/GenVector/Cartesian2D.h" export * }
+module "Math/GenVector/Cartesian2Dfwd.h" { header "Math/GenVector/Cartesian2Dfwd.h" export * }
+module "Math/GenVector/Cartesian3D.h" { header "Math/GenVector/Cartesian3D.h" export * }
+module "Math/GenVector/Cartesian3Dfwd.h" { header "Math/GenVector/Cartesian3Dfwd.h" export * }
+module "Math/GenVector/CoordinateSystemTags.h" { header "Math/GenVector/CoordinateSystemTags.h" export * }
+module "Math/GenVector/Cylindrical3D.h" { header "Math/GenVector/Cylindrical3D.h" export * }
+module "Math/GenVector/Cylindrical3Dfwd.h" { header "Math/GenVector/Cylindrical3Dfwd.h" export * }
+module "Math/GenVector/CylindricalEta3D.h" { header "Math/GenVector/CylindricalEta3D.h" export * }
+module "Math/GenVector/CylindricalEta3Dfwd.h" { header "Math/GenVector/CylindricalEta3Dfwd.h" export * }
+module "Math/GenVector/DisplacementVector2D.h" { header "Math/GenVector/DisplacementVector2D.h" export * }
+module "Math/GenVector/DisplacementVector2Dfwd.h" { header "Math/GenVector/DisplacementVector2Dfwd.h" export * }
+module "Math/GenVector/DisplacementVector3D.h" { header "Math/GenVector/DisplacementVector3D.h" export * }
+module "Math/GenVector/DisplacementVector3Dfwd.h" { header "Math/GenVector/DisplacementVector3Dfwd.h" export * }
+module "Math/GenVector/EulerAngles.h" { header "Math/GenVector/EulerAngles.h" export * }
+module "Math/GenVector/EulerAnglesfwd.h" { header "Math/GenVector/EulerAnglesfwd.h" export * }
+module "Math/GenVector/GenVectorIO.h" { header "Math/GenVector/GenVectorIO.h" export * }
+module "Math/GenVector/GenVector_exception.h" { header "Math/GenVector/GenVector_exception.h" export * }
+module "Math/GenVector/LorentzRotation.h" { header "Math/GenVector/LorentzRotation.h" export * }
+module "Math/GenVector/LorentzRotationfwd.h" { header "Math/GenVector/LorentzRotationfwd.h" export * }
+module "Math/GenVector/LorentzVector.h" { header "Math/GenVector/LorentzVector.h" export * }
+module "Math/GenVector/LorentzVectorfwd.h" { header "Math/GenVector/LorentzVectorfwd.h" export * }
+module "Math/GenVector/Plane3D.h" { header "Math/GenVector/Plane3D.h" export * }
+module "Math/GenVector/Polar2D.h" { header "Math/GenVector/Polar2D.h" export * }
+module "Math/GenVector/Polar2Dfwd.h" { header "Math/GenVector/Polar2Dfwd.h" export * }
+module "Math/GenVector/Polar3D.h" { header "Math/GenVector/Polar3D.h" export * }
+module "Math/GenVector/Polar3Dfwd.h" { header "Math/GenVector/Polar3Dfwd.h" export * }
+module "Math/GenVector/PositionVector2D.h" { header "Math/GenVector/PositionVector2D.h" export * }
+module "Math/GenVector/PositionVector2Dfwd.h" { header "Math/GenVector/PositionVector2Dfwd.h" export * }
+module "Math/GenVector/PositionVector3D.h" { header "Math/GenVector/PositionVector3D.h" export * }
+module "Math/GenVector/PositionVector3Dfwd.h" { header "Math/GenVector/PositionVector3Dfwd.h" export * }
+module "Math/GenVector/PtEtaPhiE4D.h" { header "Math/GenVector/PtEtaPhiE4D.h" export * }
+module "Math/GenVector/PtEtaPhiE4Dfwd.h" { header "Math/GenVector/PtEtaPhiE4Dfwd.h" export * }
+module "Math/GenVector/PtEtaPhiM4D.h" { header "Math/GenVector/PtEtaPhiM4D.h" export * }
+module "Math/GenVector/PtEtaPhiM4Dfwd.h" { header "Math/GenVector/PtEtaPhiM4Dfwd.h" export * }
+module "Math/GenVector/PxPyPzE4D.h" { header "Math/GenVector/PxPyPzE4D.h" export * }
+module "Math/GenVector/PxPyPzE4Dfwd.h" { header "Math/GenVector/PxPyPzE4Dfwd.h" export * }
+module "Math/GenVector/PxPyPzM4D.h" { header "Math/GenVector/PxPyPzM4D.h" export * }
+module "Math/GenVector/PxPyPzM4Dfwd.h" { header "Math/GenVector/PxPyPzM4Dfwd.h" export * }
+module "Math/GenVector/Quaternion.h" { header "Math/GenVector/Quaternion.h" export * }
+module "Math/GenVector/Quaternionfwd.h" { header "Math/GenVector/Quaternionfwd.h" export * }
+module "Math/GenVector/Rotation3D.h" { header "Math/GenVector/Rotation3D.h" export * }
+module "Math/GenVector/Rotation3Dfwd.h" { header "Math/GenVector/Rotation3Dfwd.h" export * }
+module "Math/GenVector/RotationX.h" { header "Math/GenVector/RotationX.h" export * }
+module "Math/GenVector/RotationXfwd.h" { header "Math/GenVector/RotationXfwd.h" export * }
+module "Math/GenVector/RotationY.h" { header "Math/GenVector/RotationY.h" export * }
+module "Math/GenVector/RotationYfwd.h" { header "Math/GenVector/RotationYfwd.h" export * }
+module "Math/GenVector/RotationZ.h" { header "Math/GenVector/RotationZ.h" export * }
+module "Math/GenVector/RotationZYX.h" { header "Math/GenVector/RotationZYX.h" export * }
+module "Math/GenVector/RotationZYXfwd.h" { header "Math/GenVector/RotationZYXfwd.h" export * }
+module "Math/GenVector/RotationZfwd.h" { header "Math/GenVector/RotationZfwd.h" export * }
+module "Math/GenVector/Transform3D.h" { header "Math/GenVector/Transform3D.h" export * }
+module "Math/GenVector/Translation3D.h" { header "Math/GenVector/Translation3D.h" export * }
+module "Math/GenVector/VectorUtil.h" { header "Math/GenVector/VectorUtil.h" export * }
+module "Math/GenVector/eta.h" { header "Math/GenVector/eta.h" export * }
+module "Math/GenVector/etaMax.h" { header "Math/GenVector/etaMax.h" export * }
+module "Math/GeneticMinimizer.h" { header "Math/GeneticMinimizer.h" export * }
+module "Math/GoFTest.h" { header "Math/GoFTest.h" export * }
+module "Math/HelperOps.h" { header "Math/HelperOps.h" export * }
+module "Math/IFunction.h" { header "Math/IFunction.h" export * }
+module "Math/IFunctionfwd.h" { header "Math/IFunctionfwd.h" export * }
+module "Math/IMinimizer1D.h" { header "Math/IMinimizer1D.h" export * }
+module "Math/IOptions.h" { header "Math/IOptions.h" export * }
+module "Math/IParamFunction.h" { header "Math/IParamFunction.h" export * }
+module "Math/IParamFunctionfwd.h" { header "Math/IParamFunctionfwd.h" export * }
+module "Math/IRootFinderMethod.h" { header "Math/IRootFinderMethod.h" export * }
+module "Math/Integrator.h" { header "Math/Integrator.h" export * }
+module "Math/IntegratorMultiDim.h" { header "Math/IntegratorMultiDim.h" export * }
+module "Math/IntegratorOptions.h" { header "Math/IntegratorOptions.h" export * }
+module "Math/KDTree.h" { header "Math/KDTree.h" export * }
+//module "Math/KDTree.icc" { header "Math/KDTree.icc" export * }
+module "Math/LorentzRotation.h" { header "Math/LorentzRotation.h" export * }
+module "Math/LorentzVector.h" { header "Math/LorentzVector.h" export * }
+module "Math/MConfig.h" { header "Math/MConfig.h" export * }
+module "Math/Math.h" { header "Math/Math.h" export * }
+module "Math/MatrixFunctions.h" { header "Math/MatrixFunctions.h" export * }
+//module "Math/MatrixInversion.icc" { header "Math/MatrixInversion.icc" export * }
+module "Math/MatrixRepresentationsStatic.h" { header "Math/MatrixRepresentationsStatic.h" export * }
+module "Math/MersenneTwisterEngine.h" { header "Math/MersenneTwisterEngine.h" export * }
+module "Math/MinimTransformFunction.h" { header "Math/MinimTransformFunction.h" export * }
+module "Math/MinimTransformVariable.h" { header "Math/MinimTransformVariable.h" export * }
+module "Math/Minimizer.h" { header "Math/Minimizer.h" export * }
+module "Math/MinimizerOptions.h" { header "Math/MinimizerOptions.h" export * }
+module "Math/MinimizerVariableTransformation.h" { header "Math/MinimizerVariableTransformation.h" export * }
+module "Math/MixMaxEngine.h" { header "Math/MixMaxEngine.h" export * }
+module "Math/MultiDimParamFunctionAdapter.h" { header "Math/MultiDimParamFunctionAdapter.h" export * }
+module "Math/OneDimFunctionAdapter.h" { header "Math/OneDimFunctionAdapter.h" export * }
+module "Math/ParamFunctor.h" { header "Math/ParamFunctor.h" export * }
+module "Math/PdfFunc.h" { header "Math/PdfFunc.h" export * }
+module "Math/PdfFuncMathCore.h" { header "Math/PdfFuncMathCore.h" export * }
+module "Math/Plane3D.h" { header "Math/Plane3D.h" export * }
+module "Math/Point2D.h" { header "Math/Point2D.h" export * }
+module "Math/Point2Dfwd.h" { header "Math/Point2Dfwd.h" export * }
+module "Math/Point3D.h" { header "Math/Point3D.h" export * }
+module "Math/Point3Dfwd.h" { header "Math/Point3Dfwd.h" export * }
+module "Math/Polar2D.h" { header "Math/Polar2D.h" export * }
+module "Math/Polar3D.h" { header "Math/Polar3D.h" export * }
+module "Math/PositionVector2D.h" { header "Math/PositionVector2D.h" export * }
+module "Math/PositionVector3D.h" { header "Math/PositionVector3D.h" export * }
+module "Math/ProbFunc.h" { header "Math/ProbFunc.h" export * }
+module "Math/ProbFuncMathCore.h" { header "Math/ProbFuncMathCore.h" export * }
+module "Math/PtEtaPhiE4D.h" { header "Math/PtEtaPhiE4D.h" export * }
+module "Math/PtEtaPhiM4D.h" { header "Math/PtEtaPhiM4D.h" export * }
+module "Math/PxPyPzE4D.h" { header "Math/PxPyPzE4D.h" export * }
+module "Math/PxPyPzM4D.h" { header "Math/PxPyPzM4D.h" export * }
+module "Math/QuantFunc.h" { header "Math/QuantFunc.h" export * }
+module "Math/QuantFuncMathCore.h" { header "Math/QuantFuncMathCore.h" export * }
+module "Math/Quaternion.h" { header "Math/Quaternion.h" export * }
+module "Math/Random.h" { header "Math/Random.h" export * }
+module "Math/RandomFunctions.h" { header "Math/RandomFunctions.h" export * }
+module "Math/RichardsonDerivator.h" { header "Math/RichardsonDerivator.h" export * }
+module "Math/RootFinder.h" { header "Math/RootFinder.h" export * }
+module "Math/Rotation3D.h" { header "Math/Rotation3D.h" export * }
+module "Math/RotationX.h" { header "Math/RotationX.h" export * }
+module "Math/RotationY.h" { header "Math/RotationY.h" export * }
+module "Math/RotationZ.h" { header "Math/RotationZ.h" export * }
+module "Math/RotationZYX.h" { header "Math/RotationZYX.h" export * }
+module "Math/SMatrix.h" { header "Math/SMatrix.h" export * }
+//module "Math/SMatrix.icc" { header "Math/SMatrix.icc" export * }
+module "Math/SMatrixDfwd.h" { header "Math/SMatrixDfwd.h" export * }
+module "Math/SMatrixFfwd.h" { header "Math/SMatrixFfwd.h" export * }
+module "Math/SVector.h" { header "Math/SVector.h" export * }
+//module "Math/SVector.icc" { header "Math/SVector.icc" export * }
+module "Math/SpecFunc.h" { header "Math/SpecFunc.h" export * }
+module "Math/SpecFuncMathCore.h" { header "Math/SpecFuncMathCore.h" export * }
+module "Math/StaticCheck.h" { header "Math/StaticCheck.h" export * }
+module "Math/StdRandomEngines.h" { header "Math/StdRandomEngines.h" export * }
+module "Math/TDataPoint.h" { header "Math/TDataPoint.h" export * }
+//module "Math/TDataPoint.icc" { header "Math/TDataPoint.icc" export * }
+module "Math/TDataPointN.h" { header "Math/TDataPointN.h" export * }
+//module "Math/TDataPointN.icc" { header "Math/TDataPointN.icc" export * }
+module "Math/TRandomEngine.h" { header "Math/TRandomEngine.h" export * }
+module "Math/Transform3D.h" { header "Math/Transform3D.h" export * }
+module "Math/Translation3D.h" { header "Math/Translation3D.h" export * }
+module "Math/UnaryOperators.h" { header "Math/UnaryOperators.h" export * }
+module "Math/Util.h" { header "Math/Util.h" export * }
+module "Math/Vector2D.h" { header "Math/Vector2D.h" export * }
+module "Math/Vector2Dfwd.h" { header "Math/Vector2Dfwd.h" export * }
+module "Math/Vector3D.h" { header "Math/Vector3D.h" export * }
+module "Math/Vector3Dfwd.h" { header "Math/Vector3Dfwd.h" export * }
+module "Math/Vector4D.h" { header "Math/Vector4D.h" export * }
+module "Math/Vector4Dfwd.h" { header "Math/Vector4Dfwd.h" export * }
+module "Math/VectorUtil.h" { header "Math/VectorUtil.h" export * }
+module "Math/VirtualIntegrator.h" { header "Math/VirtualIntegrator.h" export * }
+module "Math/WrappedFunction.h" { header "Math/WrappedFunction.h" export * }
+module "Math/WrappedMultiTF1.h" { header "Math/WrappedMultiTF1.h" export * }
+module "Math/WrappedParamFunction.h" { header "Math/WrappedParamFunction.h" export * }
+module "Math/WrappedTF1.h" { header "Math/WrappedTF1.h" export * }
+module "MemCheck.h" { header "MemCheck.h" export * }
+module "MenuLoader.h" { header "MenuLoader.h" export * }
+module "MessageTypes.h" { header "MessageTypes.h" export * }
+module "Minuit2/ABObj.h" { header "Minuit2/ABObj.h" export * }
+module "Minuit2/ABProd.h" { header "Minuit2/ABProd.h" export * }
+module "Minuit2/ABSum.h" { header "Minuit2/ABSum.h" export * }
+module "Minuit2/ABTypes.h" { header "Minuit2/ABTypes.h" export * }
+module "Minuit2/AnalyticalGradientCalculator.h" { header "Minuit2/AnalyticalGradientCalculator.h" export * }
+module "Minuit2/BasicFunctionGradient.h" { header "Minuit2/BasicFunctionGradient.h" export * }
+module "Minuit2/BasicFunctionMinimum.h" { header "Minuit2/BasicFunctionMinimum.h" export * }
+module "Minuit2/BasicMinimumError.h" { header "Minuit2/BasicMinimumError.h" export * }
+module "Minuit2/BasicMinimumParameters.h" { header "Minuit2/BasicMinimumParameters.h" export * }
+module "Minuit2/BasicMinimumSeed.h" { header "Minuit2/BasicMinimumSeed.h" export * }
+module "Minuit2/BasicMinimumState.h" { header "Minuit2/BasicMinimumState.h" export * }
+module "Minuit2/CombinedMinimizer.h" { header "Minuit2/CombinedMinimizer.h" export * }
+module "Minuit2/CombinedMinimumBuilder.h" { header "Minuit2/CombinedMinimumBuilder.h" export * }
+module "Minuit2/ContoursError.h" { header "Minuit2/ContoursError.h" export * }
+module "Minuit2/DavidonErrorUpdator.h" { header "Minuit2/DavidonErrorUpdator.h" export * }
+module "Minuit2/FCNAdapter.h" { header "Minuit2/FCNAdapter.h" export * }
+module "Minuit2/FCNBase.h" { header "Minuit2/FCNBase.h" export * }
+module "Minuit2/FCNGradAdapter.h" { header "Minuit2/FCNGradAdapter.h" export * }
+module "Minuit2/FCNGradientBase.h" { header "Minuit2/FCNGradientBase.h" export * }
+module "Minuit2/FumiliBuilder.h" { header "Minuit2/FumiliBuilder.h" export * }
+module "Minuit2/FumiliChi2FCN.h" { header "Minuit2/FumiliChi2FCN.h" export * }
+module "Minuit2/FumiliErrorUpdator.h" { header "Minuit2/FumiliErrorUpdator.h" export * }
+module "Minuit2/FumiliFCNAdapter.h" { header "Minuit2/FumiliFCNAdapter.h" export * }
+module "Minuit2/FumiliFCNBase.h" { header "Minuit2/FumiliFCNBase.h" export * }
+module "Minuit2/FumiliGradientCalculator.h" { header "Minuit2/FumiliGradientCalculator.h" export * }
+module "Minuit2/FumiliMaximumLikelihoodFCN.h" { header "Minuit2/FumiliMaximumLikelihoodFCN.h" export * }
+module "Minuit2/FumiliMinimizer.h" { header "Minuit2/FumiliMinimizer.h" export * }
+module "Minuit2/FumiliStandardChi2FCN.h" { header "Minuit2/FumiliStandardChi2FCN.h" export * }
+module "Minuit2/FumiliStandardMaximumLikelihoodFCN.h" { header "Minuit2/FumiliStandardMaximumLikelihoodFCN.h" export * }
+module "Minuit2/FunctionGradient.h" { header "Minuit2/FunctionGradient.h" export * }
+module "Minuit2/FunctionMinimizer.h" { header "Minuit2/FunctionMinimizer.h" export * }
+module "Minuit2/FunctionMinimum.h" { header "Minuit2/FunctionMinimum.h" export * }
+module "Minuit2/GenericFunction.h" { header "Minuit2/GenericFunction.h" export * }
+module "Minuit2/GradientCalculator.h" { header "Minuit2/GradientCalculator.h" export * }
+module "Minuit2/HessianGradientCalculator.h" { header "Minuit2/HessianGradientCalculator.h" export * }
+module "Minuit2/InitialGradientCalculator.h" { header "Minuit2/InitialGradientCalculator.h" export * }
+module "Minuit2/LASymMatrix.h" { header "Minuit2/LASymMatrix.h" export * }
+module "Minuit2/LAVector.h" { header "Minuit2/LAVector.h" export * }
+module "Minuit2/LaInverse.h" { header "Minuit2/LaInverse.h" export * }
+module "Minuit2/LaOuterProduct.h" { header "Minuit2/LaOuterProduct.h" export * }
+module "Minuit2/LaProd.h" { header "Minuit2/LaProd.h" export * }
+module "Minuit2/LaSum.h" { header "Minuit2/LaSum.h" export * }
+module "Minuit2/MPIProcess.h" { header "Minuit2/MPIProcess.h" export * }
+module "Minuit2/MatrixInverse.h" { header "Minuit2/MatrixInverse.h" export * }
+module "Minuit2/MinimumBuilder.h" { header "Minuit2/MinimumBuilder.h" export * }
+module "Minuit2/MinimumError.h" { header "Minuit2/MinimumError.h" export * }
+module "Minuit2/MinimumErrorUpdator.h" { header "Minuit2/MinimumErrorUpdator.h" export * }
+module "Minuit2/MinimumParameters.h" { header "Minuit2/MinimumParameters.h" export * }
+module "Minuit2/MinimumSeed.h" { header "Minuit2/MinimumSeed.h" export * }
+module "Minuit2/MinimumSeedGenerator.h" { header "Minuit2/MinimumSeedGenerator.h" export * }
+module "Minuit2/MinimumState.h" { header "Minuit2/MinimumState.h" export * }
+module "Minuit2/MinosError.h" { header "Minuit2/MinosError.h" export * }
+module "Minuit2/Minuit2Minimizer.h" { header "Minuit2/Minuit2Minimizer.h" export * }
+module "Minuit2/MinuitParameter.h" { header "Minuit2/MinuitParameter.h" export * }
+module "Minuit2/MnApplication.h" { header "Minuit2/MnApplication.h" export * }
+module "Minuit2/MnConfig.h" { header "Minuit2/MnConfig.h" export * }
+module "Minuit2/MnContours.h" { header "Minuit2/MnContours.h" export * }
+module "Minuit2/MnCovarianceSqueeze.h" { header "Minuit2/MnCovarianceSqueeze.h" export * }
+module "Minuit2/MnCross.h" { header "Minuit2/MnCross.h" export * }
+module "Minuit2/MnEigen.h" { header "Minuit2/MnEigen.h" export * }
+module "Minuit2/MnFcn.h" { header "Minuit2/MnFcn.h" export * }
+module "Minuit2/MnFumiliMinimize.h" { header "Minuit2/MnFumiliMinimize.h" export * }
+module "Minuit2/MnFunctionCross.h" { header "Minuit2/MnFunctionCross.h" export * }
+module "Minuit2/MnGlobalCorrelationCoeff.h" { header "Minuit2/MnGlobalCorrelationCoeff.h" export * }
+module "Minuit2/MnHesse.h" { header "Minuit2/MnHesse.h" export * }
+module "Minuit2/MnLineSearch.h" { header "Minuit2/MnLineSearch.h" export * }
+module "Minuit2/MnMachinePrecision.h" { header "Minuit2/MnMachinePrecision.h" export * }
+module "Minuit2/MnMatrix.h" { header "Minuit2/MnMatrix.h" export * }
+module "Minuit2/MnMigrad.h" { header "Minuit2/MnMigrad.h" export * }
+module "Minuit2/MnMinimize.h" { header "Minuit2/MnMinimize.h" export * }
+module "Minuit2/MnMinos.h" { header "Minuit2/MnMinos.h" export * }
+module "Minuit2/MnParabola.h" { header "Minuit2/MnParabola.h" export * }
+module "Minuit2/MnParabolaFactory.h" { header "Minuit2/MnParabolaFactory.h" export * }
+module "Minuit2/MnParabolaPoint.h" { header "Minuit2/MnParabolaPoint.h" export * }
+module "Minuit2/MnParameterScan.h" { header "Minuit2/MnParameterScan.h" export * }
+module "Minuit2/MnPlot.h" { header "Minuit2/MnPlot.h" export * }
+module "Minuit2/MnPosDef.h" { header "Minuit2/MnPosDef.h" export * }
+module "Minuit2/MnPrint.h" { header "Minuit2/MnPrint.h" export * }
+module "Minuit2/MnRefCountedPointer.h" { header "Minuit2/MnRefCountedPointer.h" export * }
+module "Minuit2/MnReferenceCounter.h" { header "Minuit2/MnReferenceCounter.h" export * }
+module "Minuit2/MnScan.h" { header "Minuit2/MnScan.h" export * }
+module "Minuit2/MnSeedGenerator.h" { header "Minuit2/MnSeedGenerator.h" export * }
+module "Minuit2/MnSimplex.h" { header "Minuit2/MnSimplex.h" export * }
+module "Minuit2/MnStrategy.h" { header "Minuit2/MnStrategy.h" export * }
+module "Minuit2/MnTiny.h" { header "Minuit2/MnTiny.h" export * }
+module "Minuit2/MnTraceObject.h" { header "Minuit2/MnTraceObject.h" export * }
+module "Minuit2/MnUserCovariance.h" { header "Minuit2/MnUserCovariance.h" export * }
+module "Minuit2/MnUserFcn.h" { header "Minuit2/MnUserFcn.h" export * }
+module "Minuit2/MnUserParameterState.h" { header "Minuit2/MnUserParameterState.h" export * }
+module "Minuit2/MnUserParameters.h" { header "Minuit2/MnUserParameters.h" export * }
+module "Minuit2/MnUserTransformation.h" { header "Minuit2/MnUserTransformation.h" export * }
+module "Minuit2/MnVectorTransform.h" { header "Minuit2/MnVectorTransform.h" export * }
+module "Minuit2/ModularFunctionMinimizer.h" { header "Minuit2/ModularFunctionMinimizer.h" export * }
+module "Minuit2/NegativeG2LineSearch.h" { header "Minuit2/NegativeG2LineSearch.h" export * }
+module "Minuit2/Numerical2PGradientCalculator.h" { header "Minuit2/Numerical2PGradientCalculator.h" export * }
+module "Minuit2/ParametricFunction.h" { header "Minuit2/ParametricFunction.h" export * }
+module "Minuit2/ScanBuilder.h" { header "Minuit2/ScanBuilder.h" export * }
+module "Minuit2/ScanMinimizer.h" { header "Minuit2/ScanMinimizer.h" export * }
+module "Minuit2/SimplexBuilder.h" { header "Minuit2/SimplexBuilder.h" export * }
+module "Minuit2/SimplexMinimizer.h" { header "Minuit2/SimplexMinimizer.h" export * }
+module "Minuit2/SimplexParameters.h" { header "Minuit2/SimplexParameters.h" export * }
+module "Minuit2/SimplexSeedGenerator.h" { header "Minuit2/SimplexSeedGenerator.h" export * }
+module "Minuit2/SinParameterTransformation.h" { header "Minuit2/SinParameterTransformation.h" export * }
+module "Minuit2/SqrtLowParameterTransformation.h" { header "Minuit2/SqrtLowParameterTransformation.h" export * }
+module "Minuit2/SqrtUpParameterTransformation.h" { header "Minuit2/SqrtUpParameterTransformation.h" export * }
+module "Minuit2/StackAllocator.h" { header "Minuit2/StackAllocator.h" export * }
+module "Minuit2/VariableMetricBuilder.h" { header "Minuit2/VariableMetricBuilder.h" export * }
+module "Minuit2/VariableMetricEDMEstimator.h" { header "Minuit2/VariableMetricEDMEstimator.h" export * }
+module "Minuit2/VariableMetricMinimizer.h" { header "Minuit2/VariableMetricMinimizer.h" export * }
+module "Minuit2/VectorOuterProduct.h" { header "Minuit2/VectorOuterProduct.h" export * }
+module "NetErrors.h" { header "NetErrors.h" export * }
+module "PoolUtils.h" { header "PoolUtils.h" export * }
+module "PosixThreadInc.h" { header "PosixThreadInc.h" export * }
+module "QuartzFillArea.h" { header "QuartzFillArea.h" export * }
+module "QuartzLine.h" { header "QuartzLine.h" export * }
+module "QuartzMarker.h" { header "QuartzMarker.h" export * }
+module "QuartzPixmap.h" { header "QuartzPixmap.h" export * }
+module "QuartzText.h" { header "QuartzText.h" export * }
+module "QuartzUtils.h" { header "QuartzUtils.h" export * }
+module "QuartzWindow.h" { header "QuartzWindow.h" export * }
+module "RConfig.h" { header "RConfig.h" export * }
+module "RConversionRuleParser.h" { header "RConversionRuleParser.h" export * }
+module "ROOTApplicationDelegate.h" { header "ROOTApplicationDelegate.h" export * }
+module "ROOTOpenGLView.h" { header "ROOTOpenGLView.h" export * }
+module "RQ_OBJECT.h" { header "RQ_OBJECT.h" export * }
+module "RRemoteProtocol.h" { header "RRemoteProtocol.h" export * }
+module "RStipples.h" { header "RStipples.h" export * }
+module "RStringView.h" { header "RStringView.h" export * }
+module "RVersion.h" { header "RVersion.h" export * }
+module "RWrap_libcpp_string_view.h" { header "RWrap_libcpp_string_view.h" export * }
+module "RZip.h" { header "RZip.h" export * }
+module "Riosfwd.h" { header "Riosfwd.h" export * }
+module "Riostream.h" { header "Riostream.h" export * }
+module "Roo1DMomentMorphFunction.h" { header "Roo1DMomentMorphFunction.h" export * }
+module "Roo1DTable.h" { header "Roo1DTable.h" export * }
+module "Roo2DKeysPdf.h" { header "Roo2DKeysPdf.h" export * }
+module "Roo2DMomentMorphFunction.h" { header "Roo2DMomentMorphFunction.h" export * }
+module "RooAICRegistry.h" { header "RooAICRegistry.h" export * }
+module "RooAbsAnaConvPdf.h" { header "RooAbsAnaConvPdf.h" export * }
+module "RooAbsArg.h" { header "RooAbsArg.h" export * }
+module "RooAbsBinning.h" { header "RooAbsBinning.h" export * }
+module "RooAbsCache.h" { header "RooAbsCache.h" export * }
+module "RooAbsCacheElement.h" { header "RooAbsCacheElement.h" export * }
+module "RooAbsCachedPdf.h" { header "RooAbsCachedPdf.h" export * }
+module "RooAbsCachedReal.h" { header "RooAbsCachedReal.h" export * }
+module "RooAbsCategory.h" { header "RooAbsCategory.h" export * }
+module "RooAbsCategoryLValue.h" { header "RooAbsCategoryLValue.h" export * }
+module "RooAbsCollection.h" { header "RooAbsCollection.h" export * }
+module "RooAbsData.h" { header "RooAbsData.h" export * }
+module "RooAbsDataStore.h" { header "RooAbsDataStore.h" export * }
+module "RooAbsFunc.h" { header "RooAbsFunc.h" export * }
+module "RooAbsGenContext.h" { header "RooAbsGenContext.h" export * }
+module "RooAbsHiddenReal.h" { header "RooAbsHiddenReal.h" export * }
+module "RooAbsIntegrator.h" { header "RooAbsIntegrator.h" export * }
+module "RooAbsLValue.h" { header "RooAbsLValue.h" export * }
+module "RooAbsMCStudyModule.h" { header "RooAbsMCStudyModule.h" export * }
+module "RooAbsMoment.h" { header "RooAbsMoment.h" export * }
+module "RooAbsNumGenerator.h" { header "RooAbsNumGenerator.h" export * }
+module "RooAbsOptTestStatistic.h" { header "RooAbsOptTestStatistic.h" export * }
+module "RooAbsPdf.h" { header "RooAbsPdf.h" export * }
+module "RooAbsProxy.h" { header "RooAbsProxy.h" export * }
+module "RooAbsReal.h" { header "RooAbsReal.h" export * }
+module "RooAbsRealLValue.h" { header "RooAbsRealLValue.h" export * }
+module "RooAbsRootFinder.h" { header "RooAbsRootFinder.h" export * }
+module "RooAbsSelfCachedPdf.h" { header "RooAbsSelfCachedPdf.h" export * }
+module "RooAbsSelfCachedReal.h" { header "RooAbsSelfCachedReal.h" export * }
+module "RooAbsString.h" { header "RooAbsString.h" export * }
+module "RooAbsStudy.h" { header "RooAbsStudy.h" export * }
+module "RooAbsTestStatistic.h" { header "RooAbsTestStatistic.h" export * }
+module "RooAcceptReject.h" { header "RooAcceptReject.h" export * }
+module "RooAdaptiveGaussKronrodIntegrator1D.h" { header "RooAdaptiveGaussKronrodIntegrator1D.h" export * }
+module "RooAdaptiveIntegratorND.h" { header "RooAdaptiveIntegratorND.h" export * }
+module "RooAddGenContext.h" { header "RooAddGenContext.h" export * }
+module "RooAddModel.h" { header "RooAddModel.h" export * }
+module "RooAddPdf.h" { header "RooAddPdf.h" export * }
+module "RooAddition.h" { header "RooAddition.h" export * }
+module "RooArgList.h" { header "RooArgList.h" export * }
+module "RooArgProxy.h" { header "RooArgProxy.h" export * }
+module "RooArgSet.h" { header "RooArgSet.h" export * }
+module "RooArgusBG.h" { header "RooArgusBG.h" export * }
+module "RooBCPEffDecay.h" { header "RooBCPEffDecay.h" export * }
+module "RooBCPGenDecay.h" { header "RooBCPGenDecay.h" export * }
+module "RooBDecay.h" { header "RooBDecay.h" export * }
+module "RooBMixDecay.h" { header "RooBMixDecay.h" export * }
+module "RooBanner.h" { header "RooBanner.h" export * }
+module "RooBernstein.h" { header "RooBernstein.h" export * }
+module "RooBifurGauss.h" { header "RooBifurGauss.h" export * }
+module "RooBinIntegrator.h" { header "RooBinIntegrator.h" export * }
+module "RooBinnedGenContext.h" { header "RooBinnedGenContext.h" export * }
+module "RooBinning.h" { header "RooBinning.h" export * }
+module "RooBinningCategory.h" { header "RooBinningCategory.h" export * }
+module "RooBlindTools.h" { header "RooBlindTools.h" export * }
+module "RooBreitWigner.h" { header "RooBreitWigner.h" export * }
+module "RooBrentRootFinder.h" { header "RooBrentRootFinder.h" export * }
+module "RooBukinPdf.h" { header "RooBukinPdf.h" export * }
+module "RooCBShape.h" { header "RooCBShape.h" export * }
+module "RooCFunction1Binding.h" { header "RooCFunction1Binding.h" export * }
+module "RooCFunction2Binding.h" { header "RooCFunction2Binding.h" export * }
+module "RooCFunction3Binding.h" { header "RooCFunction3Binding.h" export * }
+module "RooCFunction4Binding.h" { header "RooCFunction4Binding.h" export * }
+module "RooCacheManager.h" { header "RooCacheManager.h" export * }
+module "RooCachedPdf.h" { header "RooCachedPdf.h" export * }
+module "RooCachedReal.h" { header "RooCachedReal.h" export * }
+module "RooCatType.h" { header "RooCatType.h" export * }
+module "RooCategory.h" { header "RooCategory.h" export * }
+module "RooCategoryProxy.h" { header "RooCategoryProxy.h" export * }
+module "RooCategorySharedProperties.h" { header "RooCategorySharedProperties.h" export * }
+module "RooChangeTracker.h" { header "RooChangeTracker.h" export * }
+module "RooChebychev.h" { header "RooChebychev.h" export * }
+module "RooChi2MCSModule.h" { header "RooChi2MCSModule.h" export * }
+module "RooChi2Var.h" { header "RooChi2Var.h" export * }
+module "RooChiSquarePdf.h" { header "RooChiSquarePdf.h" export * }
+module "RooCintUtils.h" { header "RooCintUtils.h" export * }
+module "RooClassFactory.h" { header "RooClassFactory.h" export * }
+module "RooCmdArg.h" { header "RooCmdArg.h" export * }
+module "RooCmdConfig.h" { header "RooCmdConfig.h" export * }
+module "RooComplex.h" { header "RooComplex.h" export * }
+module "RooCompositeDataStore.h" { header "RooCompositeDataStore.h" export * }
+module "RooConstVar.h" { header "RooConstVar.h" export * }
+module "RooConstraintSum.h" { header "RooConstraintSum.h" export * }
+module "RooConvCoefVar.h" { header "RooConvCoefVar.h" export * }
+module "RooConvGenContext.h" { header "RooConvGenContext.h" export * }
+module "RooConvIntegrandBinding.h" { header "RooConvIntegrandBinding.h" export * }
+module "RooCurve.h" { header "RooCurve.h" export * }
+module "RooCustomizer.h" { header "RooCustomizer.h" export * }
+module "RooDLLSignificanceMCSModule.h" { header "RooDLLSignificanceMCSModule.h" export * }
+module "RooDataHist.h" { header "RooDataHist.h" export * }
+module "RooDataHistSliceIter.h" { header "RooDataHistSliceIter.h" export * }
+module "RooDataProjBinding.h" { header "RooDataProjBinding.h" export * }
+module "RooDataSet.h" { header "RooDataSet.h" export * }
+module "RooDataWeightedAverage.h" { header "RooDataWeightedAverage.h" export * }
+module "RooDecay.h" { header "RooDecay.h" export * }
+module "RooDerivative.h" { header "RooDerivative.h" export * }
+module "RooDirItem.h" { header "RooDirItem.h" export * }
+module "RooDouble.h" { header "RooDouble.h" export * }
+module "RooDstD0BG.h" { header "RooDstD0BG.h" export * }
+module "RooEffGenContext.h" { header "RooEffGenContext.h" export * }
+module "RooEffProd.h" { header "RooEffProd.h" export * }
+module "RooEfficiency.h" { header "RooEfficiency.h" export * }
+module "RooEllipse.h" { header "RooEllipse.h" export * }
+module "RooErrorHandler.h" { header "RooErrorHandler.h" export * }
+module "RooErrorVar.h" { header "RooErrorVar.h" export * }
+module "RooExpensiveObjectCache.h" { header "RooExpensiveObjectCache.h" export * }
+module "RooExponential.h" { header "RooExponential.h" export * }
+module "RooExtendPdf.h" { header "RooExtendPdf.h" export * }
+module "RooExtendedBinding.h" { header "RooExtendedBinding.h" export * }
+module "RooExtendedTerm.h" { header "RooExtendedTerm.h" export * }
+module "RooFFTConvPdf.h" { header "RooFFTConvPdf.h" export * }
+module "RooFactoryWSTool.h" { header "RooFactoryWSTool.h" export * }
+module "RooFirstMoment.h" { header "RooFirstMoment.h" export * }
+module "RooFit.h" { header "RooFit.h" export * }
+module "RooFitResult.h" { header "RooFitResult.h" export * }
+module "RooFoamGenerator.h" { header "RooFoamGenerator.h" export * }
+module "RooFormula.h" { header "RooFormula.h" export * }
+module "RooFormulaVar.h" { header "RooFormulaVar.h" export * }
+module "RooFracRemainder.h" { header "RooFracRemainder.h" export * }
+module "RooFunctor.h" { header "RooFunctor.h" export * }
+module "RooFunctor1DBinding.h" { header "RooFunctor1DBinding.h" export * }
+module "RooFunctorBinding.h" { header "RooFunctorBinding.h" export * }
+module "RooGExpModel.h" { header "RooGExpModel.h" export * }
+module "RooGamma.h" { header "RooGamma.h" export * }
+module "RooGaussKronrodIntegrator1D.h" { header "RooGaussKronrodIntegrator1D.h" export * }
+module "RooGaussModel.h" { header "RooGaussModel.h" export * }
+module "RooGaussian.h" { header "RooGaussian.h" export * }
+module "RooGenContext.h" { header "RooGenContext.h" export * }
+module "RooGenFitStudy.h" { header "RooGenFitStudy.h" export * }
+module "RooGenFunction.h" { header "RooGenFunction.h" export * }
+module "RooGenProdProj.h" { header "RooGenProdProj.h" export * }
+module "RooGenericPdf.h" { header "RooGenericPdf.h" export * }
+module "RooGlobalFunc.h" { header "RooGlobalFunc.h" export * }
+module "RooGrid.h" { header "RooGrid.h" export * }
+module "RooHashTable.h" { header "RooHashTable.h" export * }
+module "RooHist.h" { header "RooHist.h" export * }
+module "RooHistConstraint.h" { header "RooHistConstraint.h" export * }
+module "RooHistError.h" { header "RooHistError.h" export * }
+module "RooHistFunc.h" { header "RooHistFunc.h" export * }
+module "RooHistPdf.h" { header "RooHistPdf.h" export * }
+module "RooImproperIntegrator1D.h" { header "RooImproperIntegrator1D.h" export * }
+module "RooInt.h" { header "RooInt.h" export * }
+module "RooIntegralMorph.h" { header "RooIntegralMorph.h" export * }
+module "RooIntegrator1D.h" { header "RooIntegrator1D.h" export * }
+module "RooIntegrator2D.h" { header "RooIntegrator2D.h" export * }
+module "RooIntegratorBinding.h" { header "RooIntegratorBinding.h" export * }
+module "RooInvTransform.h" { header "RooInvTransform.h" export * }
+module "RooJeffreysPrior.h" { header "RooJeffreysPrior.h" export * }
+module "RooKeysPdf.h" { header "RooKeysPdf.h" export * }
+module "RooLandau.h" { header "RooLandau.h" export * }
+module "RooLegendre.h" { header "RooLegendre.h" export * }
+module "RooLinTransBinning.h" { header "RooLinTransBinning.h" export * }
+module "RooLinearVar.h" { header "RooLinearVar.h" export * }
+module "RooLinkedList.h" { header "RooLinkedList.h" export * }
+module "RooLinkedListElem.h" { header "RooLinkedListElem.h" export * }
+module "RooLinkedListIter.h" { header "RooLinkedListIter.h" export * }
+module "RooList.h" { header "RooList.h" export * }
+module "RooListProxy.h" { header "RooListProxy.h" export * }
+module "RooLognormal.h" { header "RooLognormal.h" export * }
+module "RooMCIntegrator.h" { header "RooMCIntegrator.h" export * }
+module "RooMCStudy.h" { header "RooMCStudy.h" export * }
+module "RooMPSentinel.h" { header "RooMPSentinel.h" export * }
+module "RooMapCatEntry.h" { header "RooMapCatEntry.h" export * }
+module "RooMappedCategory.h" { header "RooMappedCategory.h" export * }
+module "RooMath.h" { header "RooMath.h" export * }
+module "RooMathCoreReg.h" { header "RooMathCoreReg.h" export * }
+module "RooMathMoreReg.h" { header "RooMathMoreReg.h" export * }
+module "RooMinimizer.h" { header "RooMinimizer.h" export * }
+module "RooMinimizerFcn.h" { header "RooMinimizerFcn.h" export * }
+module "RooMinuit.h" { header "RooMinuit.h" export * }
+module "RooMoment.h" { header "RooMoment.h" export * }
+module "RooMomentMorph.h" { header "RooMomentMorph.h" export * }
+module "RooMsgService.h" { header "RooMsgService.h" export * }
+module "RooMultiBinomial.h" { header "RooMultiBinomial.h" export * }
+module "RooMultiCatIter.h" { header "RooMultiCatIter.h" export * }
+module "RooMultiCategory.h" { header "RooMultiCategory.h" export * }
+module "RooMultiGenFunction.h" { header "RooMultiGenFunction.h" export * }
+module "RooMultiVarGaussian.h" { header "RooMultiVarGaussian.h" export * }
+module "RooNDKeysPdf.h" { header "RooNDKeysPdf.h" export * }
+module "RooNLLVar.h" { header "RooNLLVar.h" export * }
+module "RooNameReg.h" { header "RooNameReg.h" export * }
+module "RooNameSet.h" { header "RooNameSet.h" export * }
+module "RooNonCPEigenDecay.h" { header "RooNonCPEigenDecay.h" export * }
+module "RooNonCentralChiSquare.h" { header "RooNonCentralChiSquare.h" export * }
+module "RooNormSetCache.h" { header "RooNormSetCache.h" export * }
+module "RooNovosibirsk.h" { header "RooNovosibirsk.h" export * }
+module "RooNumCdf.h" { header "RooNumCdf.h" export * }
+module "RooNumConvPdf.h" { header "RooNumConvPdf.h" export * }
+module "RooNumConvolution.h" { header "RooNumConvolution.h" export * }
+module "RooNumGenConfig.h" { header "RooNumGenConfig.h" export * }
+module "RooNumGenFactory.h" { header "RooNumGenFactory.h" export * }
+module "RooNumIntConfig.h" { header "RooNumIntConfig.h" export * }
+module "RooNumIntFactory.h" { header "RooNumIntFactory.h" export * }
+module "RooNumRunningInt.h" { header "RooNumRunningInt.h" export * }
+module "RooNumber.h" { header "RooNumber.h" export * }
+module "RooObjCacheManager.h" { header "RooObjCacheManager.h" export * }
+module "RooParamBinning.h" { header "RooParamBinning.h" export * }
+module "RooParamHistFunc.h" { header "RooParamHistFunc.h" export * }
+module "RooParametricStepFunction.h" { header "RooParametricStepFunction.h" export * }
+module "RooPlot.h" { header "RooPlot.h" export * }
+module "RooPlotable.h" { header "RooPlotable.h" export * }
+module "RooPoisson.h" { header "RooPoisson.h" export * }
+module "RooPolyVar.h" { header "RooPolyVar.h" export * }
+module "RooPolynomial.h" { header "RooPolynomial.h" export * }
+module "RooPrintable.h" { header "RooPrintable.h" export * }
+module "RooProdGenContext.h" { header "RooProdGenContext.h" export * }
+module "RooProdPdf.h" { header "RooProdPdf.h" export * }
+module "RooProduct.h" { header "RooProduct.h" export * }
+module "RooProfileLL.h" { header "RooProfileLL.h" export * }
+module "RooProjectedPdf.h" { header "RooProjectedPdf.h" export * }
+module "RooProofDriverSelector.h" { header "RooProofDriverSelector.h" export * }
+module "RooPullVar.h" { header "RooPullVar.h" export * }
+module "RooQuasiRandomGenerator.h" { header "RooQuasiRandomGenerator.h" export * }
+module "RooRandom.h" { header "RooRandom.h" export * }
+module "RooRandomizeParamMCSModule.h" { header "RooRandomizeParamMCSModule.h" export * }
+module "RooRangeBinning.h" { header "RooRangeBinning.h" export * }
+module "RooRangeBoolean.h" { header "RooRangeBoolean.h" export * }
+module "RooRealAnalytic.h" { header "RooRealAnalytic.h" export * }
+module "RooRealBinding.h" { header "RooRealBinding.h" export * }
+module "RooRealConstant.h" { header "RooRealConstant.h" export * }
+module "RooRealIntegral.h" { header "RooRealIntegral.h" export * }
+module "RooRealMPFE.h" { header "RooRealMPFE.h" export * }
+module "RooRealProxy.h" { header "RooRealProxy.h" export * }
+module "RooRealSumPdf.h" { header "RooRealSumPdf.h" export * }
+module "RooRealVar.h" { header "RooRealVar.h" export * }
+module "RooRealVarSharedProperties.h" { header "RooRealVarSharedProperties.h" export * }
+module "RooRecursiveFraction.h" { header "RooRecursiveFraction.h" export * }
+module "RooRefCountList.h" { header "RooRefCountList.h" export * }
+module "RooResolutionModel.h" { header "RooResolutionModel.h" export * }
+module "RooScaledFunc.h" { header "RooScaledFunc.h" export * }
+module "RooSecondMoment.h" { header "RooSecondMoment.h" export * }
+module "RooSegmentedIntegrator1D.h" { header "RooSegmentedIntegrator1D.h" export * }
+module "RooSegmentedIntegrator2D.h" { header "RooSegmentedIntegrator2D.h" export * }
+module "RooSentinel.h" { header "RooSentinel.h" export * }
+module "RooSetPair.h" { header "RooSetPair.h" export * }
+module "RooSetProxy.h" { header "RooSetProxy.h" export * }
+module "RooSharedProperties.h" { header "RooSharedProperties.h" export * }
+module "RooSharedPropertiesList.h" { header "RooSharedPropertiesList.h" export * }
+module "RooSimGenContext.h" { header "RooSimGenContext.h" export * }
+module "RooSimPdfBuilder.h" { header "RooSimPdfBuilder.h" export * }
+module "RooSimSplitGenContext.h" { header "RooSimSplitGenContext.h" export * }
+module "RooSimWSTool.h" { header "RooSimWSTool.h" export * }
+module "RooSimultaneous.h" { header "RooSimultaneous.h" export * }
+module "RooSpHarmonic.h" { header "RooSpHarmonic.h" export * }
+module "RooStats/AsymptoticCalculator.h" { header "RooStats/AsymptoticCalculator.h" export * }
+module "RooStats/BayesianCalculator.h" { header "RooStats/BayesianCalculator.h" export * }
+module "RooStats/BernsteinCorrection.h" { header "RooStats/BernsteinCorrection.h" export * }
+module "RooStats/CombinedCalculator.h" { header "RooStats/CombinedCalculator.h" export * }
+module "RooStats/ConfInterval.h" { header "RooStats/ConfInterval.h" export * }
+module "RooStats/ConfidenceBelt.h" { header "RooStats/ConfidenceBelt.h" export * }
+module "RooStats/DebuggingSampler.h" { header "RooStats/DebuggingSampler.h" export * }
+module "RooStats/DebuggingTestStat.h" { header "RooStats/DebuggingTestStat.h" export * }
+module "RooStats/DetailedOutputAggregator.h" { header "RooStats/DetailedOutputAggregator.h" export * }
+module "RooStats/FeldmanCousins.h" { header "RooStats/FeldmanCousins.h" export * }
+module "RooStats/FrequentistCalculator.h" { header "RooStats/FrequentistCalculator.h" export * }
+module "RooStats/HLFactory.h" { header "RooStats/HLFactory.h" export * }
+module "RooStats/Heaviside.h" { header "RooStats/Heaviside.h" export * }
+module "RooStats/HistFactory/Asimov.h" { header "RooStats/HistFactory/Asimov.h" export * }
+module "RooStats/HistFactory/Channel.h" { header "RooStats/HistFactory/Channel.h" export * }
+module "RooStats/HistFactory/ConfigParser.h" { header "RooStats/HistFactory/ConfigParser.h" export * }
+module "RooStats/HistFactory/Data.h" { header "RooStats/HistFactory/Data.h" export * }
+module "RooStats/HistFactory/EstimateSummary.h" { header "RooStats/HistFactory/EstimateSummary.h" export * }
+module "RooStats/HistFactory/FlexibleInterpVar.h" { header "RooStats/HistFactory/FlexibleInterpVar.h" export * }
+module "RooStats/HistFactory/HistFactoryException.h" { header "RooStats/HistFactory/HistFactoryException.h" export * }
+module "RooStats/HistFactory/HistFactoryModelUtils.h" { header "RooStats/HistFactory/HistFactoryModelUtils.h" export * }
+module "RooStats/HistFactory/HistFactoryNavigation.h" { header "RooStats/HistFactory/HistFactoryNavigation.h" export * }
+module "RooStats/HistFactory/HistFactorySimultaneous.h" { header "RooStats/HistFactory/HistFactorySimultaneous.h" export * }
+module "RooStats/HistFactory/HistRef.h" { header "RooStats/HistFactory/HistRef.h" export * }
+module "RooStats/HistFactory/HistoToWorkspaceFactory.h" { header "RooStats/HistFactory/HistoToWorkspaceFactory.h" export * }
+module "RooStats/HistFactory/HistoToWorkspaceFactoryFast.h" { header "RooStats/HistFactory/HistoToWorkspaceFactoryFast.h" export * }
+module "RooStats/HistFactory/LinInterpVar.h" { header "RooStats/HistFactory/LinInterpVar.h" export * }
+module "RooStats/HistFactory/MakeModelAndMeasurementsFast.h" { header "RooStats/HistFactory/MakeModelAndMeasurementsFast.h" export * }
+module "RooStats/HistFactory/Measurement.h" { header "RooStats/HistFactory/Measurement.h" export * }
+module "RooStats/HistFactory/ParamHistFunc.h" { header "RooStats/HistFactory/ParamHistFunc.h" export * }
+module "RooStats/HistFactory/PiecewiseInterpolation.h" { header "RooStats/HistFactory/PiecewiseInterpolation.h" export * }
+module "RooStats/HistFactory/PreprocessFunction.h" { header "RooStats/HistFactory/PreprocessFunction.h" export * }
+module "RooStats/HistFactory/RooBarlowBeestonLL.h" { header "RooStats/HistFactory/RooBarlowBeestonLL.h" export * }
+module "RooStats/HistFactory/Sample.h" { header "RooStats/HistFactory/Sample.h" export * }
+module "RooStats/HistFactory/Systematics.h" { header "RooStats/HistFactory/Systematics.h" export * }
+module "RooStats/HybridCalculator.h" { header "RooStats/HybridCalculator.h" export * }
+module "RooStats/HybridCalculatorOriginal.h" { header "RooStats/HybridCalculatorOriginal.h" export * }
+module "RooStats/HybridPlot.h" { header "RooStats/HybridPlot.h" export * }
+module "RooStats/HybridResult.h" { header "RooStats/HybridResult.h" export * }
+module "RooStats/HypoTestCalculator.h" { header "RooStats/HypoTestCalculator.h" export * }
+module "RooStats/HypoTestCalculatorGeneric.h" { header "RooStats/HypoTestCalculatorGeneric.h" export * }
+module "RooStats/HypoTestInverter.h" { header "RooStats/HypoTestInverter.h" export * }
+module "RooStats/HypoTestInverterOriginal.h" { header "RooStats/HypoTestInverterOriginal.h" export * }
+module "RooStats/HypoTestInverterPlot.h" { header "RooStats/HypoTestInverterPlot.h" export * }
+module "RooStats/HypoTestInverterResult.h" { header "RooStats/HypoTestInverterResult.h" export * }
+module "RooStats/HypoTestPlot.h" { header "RooStats/HypoTestPlot.h" export * }
+module "RooStats/HypoTestResult.h" { header "RooStats/HypoTestResult.h" export * }
+module "RooStats/IntervalCalculator.h" { header "RooStats/IntervalCalculator.h" export * }
+module "RooStats/LikelihoodInterval.h" { header "RooStats/LikelihoodInterval.h" export * }
+module "RooStats/LikelihoodIntervalPlot.h" { header "RooStats/LikelihoodIntervalPlot.h" export * }
+module "RooStats/MCMCCalculator.h" { header "RooStats/MCMCCalculator.h" export * }
+module "RooStats/MCMCInterval.h" { header "RooStats/MCMCInterval.h" export * }
+module "RooStats/MCMCIntervalPlot.h" { header "RooStats/MCMCIntervalPlot.h" export * }
+module "RooStats/MarkovChain.h" { header "RooStats/MarkovChain.h" export * }
+module "RooStats/MaxLikelihoodEstimateTestStat.h" { header "RooStats/MaxLikelihoodEstimateTestStat.h" export * }
+module "RooStats/MetropolisHastings.h" { header "RooStats/MetropolisHastings.h" export * }
+module "RooStats/MinNLLTestStat.h" { header "RooStats/MinNLLTestStat.h" export * }
+module "RooStats/ModelConfig.h" { header "RooStats/ModelConfig.h" export * }
+module "RooStats/NeymanConstruction.h" { header "RooStats/NeymanConstruction.h" export * }
+module "RooStats/NumEventsTestStat.h" { header "RooStats/NumEventsTestStat.h" export * }
+module "RooStats/NumberCountingPdfFactory.h" { header "RooStats/NumberCountingPdfFactory.h" export * }
+module "RooStats/NumberCountingUtils.h" { header "RooStats/NumberCountingUtils.h" export * }
+module "RooStats/PdfProposal.h" { header "RooStats/PdfProposal.h" export * }
+module "RooStats/PointSetInterval.h" { header "RooStats/PointSetInterval.h" export * }
+module "RooStats/ProfileInspector.h" { header "RooStats/ProfileInspector.h" export * }
+module "RooStats/ProfileLikelihoodCalculator.h" { header "RooStats/ProfileLikelihoodCalculator.h" export * }
+module "RooStats/ProfileLikelihoodTestStat.h" { header "RooStats/ProfileLikelihoodTestStat.h" export * }
+module "RooStats/ProofConfig.h" { header "RooStats/ProofConfig.h" export * }
+module "RooStats/ProposalFunction.h" { header "RooStats/ProposalFunction.h" export * }
+module "RooStats/ProposalHelper.h" { header "RooStats/ProposalHelper.h" export * }
+module "RooStats/RatioOfProfiledLikelihoodsTestStat.h" { header "RooStats/RatioOfProfiledLikelihoodsTestStat.h" export * }
+module "RooStats/RooStatsUtils.h" { header "RooStats/RooStatsUtils.h" export * }
+module "RooStats/SPlot.h" { header "RooStats/SPlot.h" export * }
+module "RooStats/SamplingDistPlot.h" { header "RooStats/SamplingDistPlot.h" export * }
+module "RooStats/SamplingDistribution.h" { header "RooStats/SamplingDistribution.h" export * }
+module "RooStats/SequentialProposal.h" { header "RooStats/SequentialProposal.h" export * }
+module "RooStats/SimpleInterval.h" { header "RooStats/SimpleInterval.h" export * }
+module "RooStats/SimpleLikelihoodRatioTestStat.h" { header "RooStats/SimpleLikelihoodRatioTestStat.h" export * }
+module "RooStats/TestStatSampler.h" { header "RooStats/TestStatSampler.h" export * }
+module "RooStats/TestStatistic.h" { header "RooStats/TestStatistic.h" export * }
+module "RooStats/ToyMCImportanceSampler.h" { header "RooStats/ToyMCImportanceSampler.h" export * }
+module "RooStats/ToyMCSampler.h" { header "RooStats/ToyMCSampler.h" export * }
+module "RooStats/ToyMCStudy.h" { header "RooStats/ToyMCStudy.h" export * }
+module "RooStats/UniformProposal.h" { header "RooStats/UniformProposal.h" export * }
+module "RooStats/UpperLimitMCSModule.h" { header "RooStats/UpperLimitMCSModule.h" export * }
+module "RooStepFunction.h" { header "RooStepFunction.h" export * }
+module "RooStreamParser.h" { header "RooStreamParser.h" export * }
+module "RooStringVar.h" { header "RooStringVar.h" export * }
+module "RooStudyManager.h" { header "RooStudyManager.h" export * }
+module "RooStudyPackage.h" { header "RooStudyPackage.h" export * }
+module "RooSuperCategory.h" { header "RooSuperCategory.h" export * }
+module "RooTFnBinding.h" { header "RooTFnBinding.h" export * }
+module "RooTFnPdfBinding.h" { header "RooTFnPdfBinding.h" export * }
+module "RooTFoamBinding.h" { header "RooTFoamBinding.h" export * }
+module "RooTMathReg.h" { header "RooTMathReg.h" export * }
+module "RooTObjWrap.h" { header "RooTObjWrap.h" export * }
+module "RooTable.h" { header "RooTable.h" export * }
+module "RooThreshEntry.h" { header "RooThreshEntry.h" export * }
+module "RooThresholdCategory.h" { header "RooThresholdCategory.h" export * }
+module "RooTrace.h" { header "RooTrace.h" export * }
+module "RooTreeData.h" { header "RooTreeData.h" export * }
+module "RooTreeDataStore.h" { header "RooTreeDataStore.h" export * }
+module "RooTruthModel.h" { header "RooTruthModel.h" export * }
+module "RooUnblindCPAsymVar.h" { header "RooUnblindCPAsymVar.h" export * }
+module "RooUnblindOffset.h" { header "RooUnblindOffset.h" export * }
+module "RooUnblindPrecision.h" { header "RooUnblindPrecision.h" export * }
+module "RooUnblindUniform.h" { header "RooUnblindUniform.h" export * }
+module "RooUniform.h" { header "RooUniform.h" export * }
+module "RooUniformBinning.h" { header "RooUniformBinning.h" export * }
+module "RooUnitTest.h" { header "RooUnitTest.h" export * }
+module "RooVectorDataStore.h" { header "RooVectorDataStore.h" export * }
+module "RooVoigtian.h" { header "RooVoigtian.h" export * }
+module "RooWorkspace.h" { header "RooWorkspace.h" export * }
+module "RooXYChi2Var.h" { header "RooXYChi2Var.h" export * }
+module "RootMetaSelection.h" { header "RootMetaSelection.h" export * }
+module "Rpair.h" { header "Rpair.h" export * }
+module "Rstrstream.h" { header "Rstrstream.h" export * }
+module "Rtypeinfo.h" { header "Rtypeinfo.h" export * }
 
-module RooMsgService {
-  header "RooMsgService.h"
-  header "RooCmdArg.h"
-  header "RooLinkedList.h"
-  header "RooLinkedListElem.h"
-  header "RooHashTable.h"
-  header "RooGlobalFunc.h"
-  export *
-}
-
-module roofit_roofitcore {
-  export *
-  header "RooAbsCache.h"
-  header "RooNumber.h"
-  header "RooRangeBoolean.h"
-  header "RooRandom.h"
-  header "RooPlot.h"
-  header "RooHistPdf.h"
-  header "RooDataSet.h"
-  header "RooNumConvolution.h"
-  header "RooDirItem.h"
-  header "RooCustomizer.h"
-  header "RooSetProxy.h"
-  header "RooNameSet.h"
-  header "RooBinningCategory.h"
-  header "RooCategoryProxy.h"
-  header "RooAdaptiveIntegratorND.h"
-  header "RooTable.h"
-  header "RooParamBinning.h"
-  header "RooExtendedTerm.h"
-  header "RooSimPdfBuilder.h"
-  header "RooTreeDataStore.h"
-  //header "RooComplex.h" // deprecated must not include
-  header "RooNumGenConfig.h"
-  header "RooIntegratorBinding.h"
-  header "RooAdaptiveGaussKronrodIntegrator1D.h"
-  header "RooNormSetCache.h"
-  header "RooRealMPFE.h"
-  header "RooAbsCachedPdf.h"
-  header "RooPullVar.h"
-  header "RooProduct.h"
-  header "RooConstraintSum.h"
-  header "RooMinuit.h"
-  header "RooSimWSTool.h"
-  header "RooAbsStudy.h"
-  header "RooHistError.h"
-  header "RooFracRemainder.h"
-  header "RooAbsHiddenReal.h"
-  header "RooMapCatEntry.h"
-  header "RooCacheManager.h"
-  header "RooMCStudy.h"
-  header "RooLinkedListIter.h"
-  header "RooResolutionModel.h"
-  header "RooMPSentinel.h"
-  header "RooEffGenContext.h"
-  header "RooNumIntFactory.h"
-  header "RooRealIntegral.h"
-  header "RooMultiVarGaussian.h"
-  header "RooGenContext.h"
-  header "RooFit.h"
-  header "RooAbsBinning.h"
-  header "RooLinTransBinning.h"
-  header "RooMath.h"
-  header "RooRealVarSharedProperties.h"
-  header "RooAbsCollection.h"
-  header "RooDataHist.h"
-  header "RooSuperCategory.h"
-  header "RooExtendPdf.h"
-  header "RooArgSet.h"
-  header "RooSimultaneous.h"
-  header "RooCatType.h"
-  header "RooNumConvPdf.h"
-  header "RooBrentRootFinder.h"
-  header "RooAbsAnaConvPdf.h"
-  header "RooScaledFunc.h"
-  header "RooAbsCacheElement.h"
-  header "RooExtendedBinding.h"
-  header "RooAbsArg.h"
-  header "RooAddition.h"
-  header "RooGaussKronrodIntegrator1D.h"
-  header "RooErrorVar.h"
-  header "RooAbsRootFinder.h"
-  header "RooRealSumPdf.h"
-  header "RooHistFunc.h"
-  header "RooAcceptReject.h"
-  header "RooMoment.h"
-  header "RooAbsCategoryLValue.h"
-  header "RooProdGenContext.h"
-  header "Roo1DTable.h"
-  header "RooArgProxy.h"
-  header "RooGenFitStudy.h"
-  header "RooAbsRealLValue.h"
-  header "RooGrid.h"
-  header "RooFactoryWSTool.h"
-  header "RooCurve.h"
-  header "RooNumCdf.h"
-  header "RooGenFunction.h"
-  header "RooDerivative.h"
-  header "RooTrace.h"
-  header "RooFitResult.h"
-  header "RooRandomizeParamMCSModule.h"
-  header "RooSharedPropertiesList.h"
-  header "RooVectorDataStore.h"
-  header "RooAbsMCStudyModule.h"
-  header "RooAbsSelfCachedPdf.h"
-  header "RooAbsLValue.h"
-  header "RooErrorHandler.h"
-  header "RooDataHistSliceIter.h"
-  header "RooBinnedGenContext.h"
-  header "RooAbsString.h"
-  header "RooSentinel.h"
-  header "RooCachedPdf.h"
-  header "RooSimSplitGenContext.h"
-  header "RooThreshEntry.h"
-  header "RooUnitTest.h"
-  header "RooAbsIntegrator.h"
-  header "RooAICRegistry.h"
-  header "RooStudyManager.h"
-  header "RooProjectedPdf.h"
-  header "RooChi2Var.h"
-  header "RooPolyVar.h"
-  header "RooStudyPackage.h"
-  header "RooEllipse.h"
-  header "RooAbsOptTestStatistic.h"
-  header "RooThresholdCategory.h"
-  header "RooAbsNumGenerator.h"
-  header "RooAddGenContext.h"
-  header "RooDataProjBinding.h"
-  header "RooAbsData.h"
-  header "RooAbsFunc.h"
-  header "RooNumRunningInt.h"
-  header "RooMinimizer.h"
-  header "RooDataWeightedAverage.h"
-  header "RooFormulaVar.h"
-  header "RooInt.h"
-  header "RooRealBinding.h"
-  header "RooAddModel.h"
-  header "RooObjCacheManager.h"
-  header "RooNumGenFactory.h"
-  header "RooAbsDataStore.h"
-  header "RooWorkspace.h"
-  header "RooInvTransform.h"
-  header "RooGenProdProj.h"
-  header "RooPrintable.h"
-  header "RooEffProd.h"
-  header "RooRealProxy.h"
-  header "RooProofDriverSelector.h"
-  header "RooChangeTracker.h"
-  header "RooTreeData.h"
-  header "RooRangeBinning.h"
-  header "RooNumIntConfig.h"
-  header "RooIntegrator1D.h"
-  header "RooAbsSelfCachedReal.h"
-  header "RooClassFactory.h"
-  header "RooTruthModel.h"
-  header "RooAbsProxy.h"
-  header "RooAbsPdf.h"
-  header "RooConvCoefVar.h"
-  header "RooFormula.h"
-  header "RooSimGenContext.h"
-  header "RooMinimizerFcn.h"
-  header "RooStringVar.h"
-  header "RooRecursiveFraction.h"
-  header "RooAbsTestStatistic.h"
-  header "RooLinearVar.h"
-  header "RooNameReg.h"
-  header "RooMCIntegrator.h"
-  header "RooFFTConvPdf.h"
-  header "RooBinIntegrator.h"
-  header "RooEfficiency.h"
-  header "RooBanner.h"
-  header "RooConstVar.h"
-  header "RooPlotable.h"
-  header "RooAddPdf.h"
-  header "RooFunctor.h"
-  header "RooList.h"
-  header "RooDLLSignificanceMCSModule.h"
-  header "RooCmdConfig.h"
-  header "RooAbsGenContext.h"
-  header "RooStreamParser.h"
-  header "RooSegmentedIntegrator2D.h"
-  header "RooExpensiveObjectCache.h"
-  header "RooBinning.h"
-  header "RooCintUtils.h"
-  header "RooCategory.h"
-  header "RooRefCountList.h"
-  header "RooNLLVar.h"
-  header "RooGenericPdf.h"
-  header "RooProfileLL.h"
-  header "RooDouble.h"
-  header "RooArgList.h"
-  header "RooAbsCachedReal.h"
-  header "RooCategorySharedProperties.h"
-  header "RooRealConstant.h"
-  header "RooRealVar.h"
-  header "RooTObjWrap.h"
-  header "RooConvIntegrandBinding.h"
-  header "RooTFoamBinding.h"
-  header "RooListProxy.h"
-  header "RooXYChi2Var.h"
-  header "RooSharedProperties.h"
-  header "RooIntegrator2D.h"
-  header "RooAbsCategory.h"
-  header "RooCompositeDataStore.h"
-  header "RooSegmentedIntegrator1D.h"
-  header "RooRealAnalytic.h"
-  header "RooMultiCatIter.h"
-  header "RooMultiCategory.h"
-  header "RooMappedCategory.h"
-  header "RooProdPdf.h"
-  header "RooFoamGenerator.h"
-  header "RooUniformBinning.h"
-  header "RooConvGenContext.h"
-  header "RooAbsReal.h"
-  header "RooImproperIntegrator1D.h"
-  header "RooMultiGenFunction.h"
-  header "RooSetPair.h"
-  header "RooQuasiRandomGenerator.h"
-  header "RooCachedReal.h"
-  header "RooHist.h"
-}
-module math_splot {
-  export *
-  header "TSPlot.h"
-}
-module gui_guihtml {
-  export *
-  header "TGHtmlTokens.h"
-  header "TGHtmlBrowser.h"
-  header "TGHtmlUri.h"
-  header "TGHtml.h"
-}
-module gui_sessionviewer {
-  export *
-  header "TProofProgressMemoryPlot.h"
-  header "TProofProgressLog.h"
-  header "TProofProgressDialog.h"
-  header "TSessionViewer.h"
-  header "TSessionLogView.h"
-  header "TSessionDialogs.h"
-}
-module net_ldap {
-  export *
-  header "TLDAPEntry.h"
-  header "CintLDAP.h"
-  header "TLDAPServer.h"
-  header "TLDAPAttribute.h"
-  header "TLDAPResult.h"
-}
-module html {
-  export *
-  header "TDocParser.h"
-  header "THtml.h"
-  header "TDocInfo.h"
-  header "TDocDirective.h"
-  header "TClassDocOutput.h"
-  header "TDocOutput.h"
-}
-
-// Modules needed by rootcling. When building rootcling we must not import info from core_base 
-
-module DllImport [extern_c] {
-  header "DllImport.h"
-  export *
-}
-
-module RVersion [extern_c]{
-  header "RVersion.h"
-  export *
-}
-
-module Rtypes {
-  module SchemaHelper {
-    header "TSchemaHelper.h"
-    export *
-  }
-  module GenericClassInfo {
-    header "TGenericClassInfo.h"
-    export *
-  }
-
+module "Rtypes.h" {
+  // Cyclic dependency Rtypes.h -> TGenericClassInfo.h -> Rtypes.h
   header "Rtypes.h"
-
+  header "TGenericClassInfo.h"
   export *
 }
 
-module RtypesCore { header "RtypesCore.h" export * }
-module Rtypeinfo { header "Rtypeinfo.h" export * }
+module "RtypesCore.h" { header "RtypesCore.h" export * }
+//module "RtypesImp.h" { header "RtypesImp.h" export * } -- should be included only from dictionaries, i.e. if G__DICTIONARY is defined
+module "Strlen.h" { header "Strlen.h" export * }
+module "TASImage.h" { header "TASImage.h" export * }
+module "TASImagePlugin.h" { header "TASImagePlugin.h" export * }
+module "TASPaletteEditor.h" { header "TASPaletteEditor.h" export * }
+module "TASPluginGS.h" { header "TASPluginGS.h" export * }
+module "TAdvancedGraphicsDialog.h" { header "TAdvancedGraphicsDialog.h" export * }
+module "TApplication.h" { header "TApplication.h" export * }
+module "TApplicationImp.h" { header "TApplicationImp.h" export * }
+module "TApplicationRemote.h" { header "TApplicationRemote.h" export * }
+module "TApplicationServer.h" { header "TApplicationServer.h" export * }
+module "TArc.h" { header "TArc.h" export * }
+module "TArchiveFile.h" { header "TArchiveFile.h" export * }
+module "TArray.h" { header "TArray.h" export * }
+module "TArrayC.h" { header "TArrayC.h" export * }
+module "TArrayD.h" { header "TArrayD.h" export * }
+module "TArrayF.h" { header "TArrayF.h" export * }
+module "TArrayI.h" { header "TArrayI.h" export * }
+module "TArrayL.h" { header "TArrayL.h" export * }
+module "TArrayL64.h" { header "TArrayL64.h" export * }
+module "TArrayS.h" { header "TArrayS.h" export * }
+module "TArrow.h" { header "TArrow.h" export * }
+module "TArrowEditor.h" { header "TArrowEditor.h" export * }
+module "TAtomicCount.h" { header "TAtomicCount.h" export * }
+module "TAtomicCountGcc.h" { header "TAtomicCountGcc.h" export * }
+module "TAtomicCountPthread.h" { header "TAtomicCountPthread.h" export * }
+module "TAtt3D.h" { header "TAtt3D.h" export * }
+module "TAttAxis.h" { header "TAttAxis.h" export * }
+module "TAttBBox.h" { header "TAttBBox.h" export * }
+module "TAttBBox2D.h" { header "TAttBBox2D.h" export * }
+module "TAttCanvas.h" { header "TAttCanvas.h" export * }
+module "TAttFill.h" { header "TAttFill.h" export * }
+module "TAttFillEditor.h" { header "TAttFillEditor.h" export * }
+module "TAttImage.h" { header "TAttImage.h" export * }
+module "TAttLine.h" { header "TAttLine.h" export * }
+module "TAttLineEditor.h" { header "TAttLineEditor.h" export * }
+module "TAttMarker.h" { header "TAttMarker.h" export * }
+module "TAttMarkerEditor.h" { header "TAttMarkerEditor.h" export * }
+module "TAttPad.h" { header "TAttPad.h" export * }
+module "TAttParticle.h" { header "TAttParticle.h" export * }
+module "TAttText.h" { header "TAttText.h" export * }
+module "TAttTextEditor.h" { header "TAttTextEditor.h" export * }
+module "TAuthenticate.h" { header "TAuthenticate.h" export * }
+module "TAxis.h" { header "TAxis.h" export * }
+module "TAxis3D.h" { header "TAxis3D.h" export * }
+module "TAxisEditor.h" { header "TAxisEditor.h" export * }
+module "TBRIK.h" { header "TBRIK.h" export * }
+module "TBackCompFitter.h" { header "TBackCompFitter.h" export * }
+module "TBase64.h" { header "TBase64.h" export * }
+module "TBaseClass.h" { header "TBaseClass.h" export * }
+module "TBasket.h" { header "TBasket.h" export * }
+module "TBasketSQL.h" { header "TBasketSQL.h" export * }
+module "TBenchmark.h" { header "TBenchmark.h" export * }
+module "TBinomialEfficiencyFitter.h" { header "TBinomialEfficiencyFitter.h" export * }
+module "TBits.h" { header "TBits.h" export * }
+module "TBonjourBrowser.h" { header "TBonjourBrowser.h" export * }
+module "TBonjourRecord.h" { header "TBonjourRecord.h" export * }
+module "TBonjourRegistrar.h" { header "TBonjourRegistrar.h" export * }
+module "TBonjourResolver.h" { header "TBonjourResolver.h" export * }
+module "TBox.h" { header "TBox.h" export * }
+module "TBranch.h" { header "TBranch.h" export * }
+module "TBranchBrowsable.h" { header "TBranchBrowsable.h" export * }
+module "TBranchClones.h" { header "TBranchClones.h" export * }
+module "TBranchElement.h" { header "TBranchElement.h" export * }
+module "TBranchObject.h" { header "TBranchObject.h" export * }
+module "TBranchProxy.h" { header "TBranchProxy.h" export * }
+module "TBranchProxyClassDescriptor.h" { header "TBranchProxyClassDescriptor.h" export * }
+module "TBranchProxyDescriptor.h" { header "TBranchProxyDescriptor.h" export * }
+module "TBranchProxyDirector.h" { header "TBranchProxyDirector.h" export * }
+module "TBranchProxyTemplate.h" { header "TBranchProxyTemplate.h" export * }
+module "TBranchRef.h" { header "TBranchRef.h" export * }
+module "TBranchSTL.h" { header "TBranchSTL.h" export * }
+module "TBrowser.h" { header "TBrowser.h" export * }
+module "TBrowserImp.h" { header "TBrowserImp.h" export * }
+module "TBtree.h" { header "TBtree.h" export * }
+module "TBuffer.h" { header "TBuffer.h" export * }
+module "TBuffer3D.h" { header "TBuffer3D.h" export * }
+module "TBuffer3DTypes.h" { header "TBuffer3DTypes.h" export * }
+module "TBufferFile.h" { header "TBufferFile.h" export * }
+module "TBufferJSON.h" { header "TBufferJSON.h" export * }
+module "TBufferSQL.h" { header "TBufferSQL.h" export * }
+module "TBufferSQL2.h" { header "TBufferSQL2.h" export * }
+module "TBufferXML.h" { header "TBufferXML.h" export * }
+module "TButton.h" { header "TButton.h" export * }
+module "TCONE.h" { header "TCONE.h" export * }
+module "TCONS.h" { header "TCONS.h" export * }
+module "TCTUB.h" { header "TCTUB.h" export * }
+module "TCanvas.h" { header "TCanvas.h" export * }
+module "TCanvasImp.h" { header "TCanvasImp.h" export * }
+module "TCernLib.h" { header "TCernLib.h" export * }
+module "TChain.h" { header "TChain.h" export * }
+module "TChainElement.h" { header "TChainElement.h" export * }
+module "TChainIndex.h" { header "TChainIndex.h" export * }
+module "TChair.h" { header "TChair.h" export * }
+module "TCivetweb.h" { header "TCivetweb.h" export * }
+module "TClass.h" { header "TClass.h" export * }
+module "TClassDocOutput.h" { header "TClassDocOutput.h" export * }
+module "TClassEdit.h" { header "TClassEdit.h" export * }
+module "TClassGenerator.h" { header "TClassGenerator.h" export * }
+module "TClassMenuItem.h" { header "TClassMenuItem.h" export * }
+module "TClassRef.h" { header "TClassRef.h" export * }
+module "TClassStreamer.h" { header "TClassStreamer.h" export * }
+module "TClassTable.h" { header "TClassTable.h" export * }
+module "TClassTree.h" { header "TClassTree.h" export * }
+module "TClingRuntime.h" { header "TClingRuntime.h" export * }
+module "TClonesArray.h" { header "TClonesArray.h" export * }
+module "TCollection.h" { header "TCollection.h" export * }
+module "TCollectionProxyFactory.h" { header "TCollectionProxyFactory.h" export * }
+module "TCollectionProxyInfo.h" { header "TCollectionProxyInfo.h" export * }
+module "TColor.h" { header "TColor.h" export * }
+module "TColorGradient.h" { header "TColorGradient.h" export * }
+module "TColorWheel.h" { header "TColorWheel.h" export * }
+module "TColumnView.h" { header "TColumnView.h" export * }
+module "TComplex.h" { header "TComplex.h" export * }
+module "TCondition.h" { header "TCondition.h" export * }
+module "TConditionImp.h" { header "TConditionImp.h" export * }
+module "TCondor.h" { header "TCondor.h" export * }
+module "TConfidenceLevel.h" { header "TConfidenceLevel.h" export * }
+module "TContainerConverters.h" { header "TContainerConverters.h" export * }
+module "TContextMenu.h" { header "TContextMenu.h" export * }
+module "TContextMenuImp.h" { header "TContextMenuImp.h" export * }
+module "TControlBar.h" { header "TControlBar.h" export * }
+module "TControlBarButton.h" { header "TControlBarButton.h" export * }
+module "TControlBarImp.h" { header "TControlBarImp.h" export * }
+module "TCreatePrimitives.h" { header "TCreatePrimitives.h" export * }
+module "TCrown.h" { header "TCrown.h" export * }
+module "TCurlyArc.h" { header "TCurlyArc.h" export * }
+module "TCurlyArcEditor.h" { header "TCurlyArcEditor.h" export * }
+module "TCurlyLine.h" { header "TCurlyLine.h" export * }
+module "TCurlyLineEditor.h" { header "TCurlyLineEditor.h" export * }
+module "TCut.h" { header "TCut.h" export * }
+module "TCutG.h" { header "TCutG.h" export * }
+module "TDOMParser.h" { header "TDOMParser.h" export * }
+module "TDSet.h" { header "TDSet.h" export * }
+module "TDSetProxy.h" { header "TDSetProxy.h" export * }
+module "TDataMember.h" { header "TDataMember.h" export * }
+module "TDataSet.h" { header "TDataSet.h" export * }
+module "TDataSetIter.h" { header "TDataSetIter.h" export * }
+module "TDataSetManager.h" { header "TDataSetManager.h" export * }
+module "TDataSetManagerAliEn.h" { header "TDataSetManagerAliEn.h" export * }
+module "TDataSetManagerFile.h" { header "TDataSetManagerFile.h" export * }
+module "TDataType.h" { header "TDataType.h" export * }
+module "TDatabasePDG.h" { header "TDatabasePDG.h" export * }
+module "TDatime.h" { header "TDatime.h" export * }
+module "TDecayChannel.h" { header "TDecayChannel.h" export * }
+module "TDecompBK.h" { header "TDecompBK.h" export * }
+module "TDecompBase.h" { header "TDecompBase.h" export * }
+module "TDecompChol.h" { header "TDecompChol.h" export * }
+module "TDecompLU.h" { header "TDecompLU.h" export * }
+module "TDecompQRH.h" { header "TDecompQRH.h" export * }
+module "TDecompSVD.h" { header "TDecompSVD.h" export * }
+module "TDecompSparse.h" { header "TDecompSparse.h" export * }
+module "TDialogCanvas.h" { header "TDialogCanvas.h" export * }
+module "TDiamond.h" { header "TDiamond.h" export * }
+module "TDictAttributeMap.h" { header "TDictAttributeMap.h" export * }
+module "TDictionary.h" { header "TDictionary.h" export * }
+module "TDirectory.h" { header "TDirectory.h" export * }
+module "TDirectoryFile.h" { header "TDirectoryFile.h" export * }
+module "TDocDirective.h" { header "TDocDirective.h" export * }
+module "TDocInfo.h" { header "TDocInfo.h" export * }
+module "TDocOutput.h" { header "TDocOutput.h" export * }
+module "TDocParser.h" { header "TDocParser.h" export * }
+module "TDrawFeedback.h" { header "TDrawFeedback.h" export * }
+module "TDsKey.h" { header "TDsKey.h" export * }
+module "TELTU.h" { header "TELTU.h" export * }
+module "TEfficiency.h" { header "TEfficiency.h" export * }
+module "TEllipse.h" { header "TEllipse.h" export * }
+module "TEmulatedCollectionProxy.h" { header "TEmulatedCollectionProxy.h" export * }
+module "TEmulatedMapProxy.h" { header "TEmulatedMapProxy.h" export * }
+module "TEntryList.h" { header "TEntryList.h" export * }
+module "TEntryListArray.h" { header "TEntryListArray.h" export * }
+module "TEntryListBlock.h" { header "TEntryListBlock.h" export * }
+module "TEntryListFromFile.h" { header "TEntryListFromFile.h" export * }
+module "TEnum.h" { header "TEnum.h" export * }
+module "TEnumConstant.h" { header "TEnumConstant.h" export * }
+module "TEnv.h" { header "TEnv.h" export * }
+module "TError.h" { header "TError.h" export * }
+module "TEventIter.h" { header "TEventIter.h" export * }
+module "TEventList.h" { header "TEventList.h" export * }
+module "TExMap.h" { header "TExMap.h" export * }
+module "TException.h" { header "TException.h" export * }
+module "TExec.h" { header "TExec.h" export * }
+module "TF1.h" { header "TF1.h" export * }
+module "TF12.h" { header "TF12.h" export * }
+module "TF1Convolution.h" { header "TF1Convolution.h" export * }
+module "TF1Editor.h" { header "TF1Editor.h" export * }
+module "TF1NormSum.h" { header "TF1NormSum.h" export * }
+module "TF2.h" { header "TF2.h" export * }
+module "TF3.h" { header "TF3.h" export * }
+module "TFFTComplex.h" { header "TFFTComplex.h" export * }
+module "TFFTComplexReal.h" { header "TFFTComplexReal.h" export * }
+module "TFFTReal.h" { header "TFFTReal.h" export * }
+module "TFFTRealComplex.h" { header "TFFTRealComplex.h" export * }
+module "TFPBlock.h" { header "TFPBlock.h" export * }
+module "TFTP.h" { header "TFTP.h" export * }
+module "TFastCgi.h" { header "TFastCgi.h" export * }
+module "TFeldmanCousins.h" { header "TFeldmanCousins.h" export * }
+module "TFile.h" { header "TFile.h" export * }
+module "TFileCacheRead.h" { header "TFileCacheRead.h" export * }
+module "TFileCacheWrite.h" { header "TFileCacheWrite.h" export * }
+module "TFileCollection.h" { header "TFileCollection.h" export * }
+module "TFileDrawMap.h" { header "TFileDrawMap.h" export * }
+module "TFileInfo.h" { header "TFileInfo.h" export * }
+module "TFileIter.h" { header "TFileIter.h" export * }
+module "TFileMergeInfo.h" { header "TFileMergeInfo.h" export * }
+module "TFileMerger.h" { header "TFileMerger.h" export * }
+module "TFilePrefetch.h" { header "TFilePrefetch.h" export * }
+module "TFileSet.h" { header "TFileSet.h" export * }
+module "TFileStager.h" { header "TFileStager.h" export * }
+module "TFitEditor.h" { header "TFitEditor.h" export * }
+module "TFitParametersDialog.h" { header "TFitParametersDialog.h" export * }
+module "TFitResult.h" { header "TFitResult.h" export * }
+module "TFitResultPtr.h" { header "TFitResultPtr.h" export * }
+module "TFitter.h" { header "TFitter.h" export * }
+module "TFoam.h" { header "TFoam.h" export * }
+module "TFoamCell.h" { header "TFoamCell.h" export * }
+module "TFoamIntegrand.h" { header "TFoamIntegrand.h" export * }
+module "TFoamMaxwt.h" { header "TFoamMaxwt.h" export * }
+module "TFoamSampler.h" { header "TFoamSampler.h" export * }
+module "TFoamVect.h" { header "TFoamVect.h" export * }
+module "TFolder.h" { header "TFolder.h" export * }
+module "TFormLeafInfo.h" { header "TFormLeafInfo.h" export * }
+module "TFormLeafInfoReference.h" { header "TFormLeafInfoReference.h" export * }
+module "TFormula.h" { header "TFormula.h" export * }
+module "TFractionFitter.h" { header "TFractionFitter.h" export * }
+module "TFrame.h" { header "TFrame.h" export * }
+module "TFrameEditor.h" { header "TFrameEditor.h" export * }
+module "TFree.h" { header "TFree.h" export * }
+module "TFriendElement.h" { header "TFriendElement.h" export * }
+module "TFriendProxy.h" { header "TFriendProxy.h" export * }
+module "TFriendProxyDescriptor.h" { header "TFriendProxyDescriptor.h" export * }
+module "TFumili.h" { header "TFumili.h" export * }
+module "TFumiliMinimizer.h" { header "TFumiliMinimizer.h" export * }
+module "TFunction.h" { header "TFunction.h" export * }
+module "TFunctionParametersDialog.h" { header "TFunctionParametersDialog.h" export * }
+module "TFunctionTemplate.h" { header "TFunctionTemplate.h" export * }
+module "TG3DLine.h" { header "TG3DLine.h" export * }
+module "TGApplication.h" { header "TGApplication.h" export * }
+module "TGButton.h" { header "TGButton.h" export * }
+module "TGButtonGroup.h" { header "TGButtonGroup.h" export * }
+module "TGCanvas.h" { header "TGCanvas.h" export * }
+module "TGClient.h" { header "TGClient.h" export * }
+module "TGCocoa.h" { header "TGCocoa.h" export * }
+module "TGColorDialog.h" { header "TGColorDialog.h" export * }
+module "TGColorSelect.h" { header "TGColorSelect.h" export * }
+module "TGComboBox.h" { header "TGComboBox.h" export * }
+module "TGCommandPlugin.h" { header "TGCommandPlugin.h" export * }
+module "TGDMLParse.h" { header "TGDMLParse.h" export * }
+module "TGDMLWrite.h" { header "TGDMLWrite.h" export * }
+module "TGDNDManager.h" { header "TGDNDManager.h" export * }
+module "TGDimension.h" { header "TGDimension.h" export * }
+module "TGDockableFrame.h" { header "TGDockableFrame.h" export * }
+module "TGDoubleSlider.h" { header "TGDoubleSlider.h" export * }
+module "TGEventHandler.h" { header "TGEventHandler.h" export * }
+module "TGFSComboBox.h" { header "TGFSComboBox.h" export * }
+module "TGFSContainer.h" { header "TGFSContainer.h" export * }
+module "TGFileBrowser.h" { header "TGFileBrowser.h" export * }
+module "TGFileDialog.h" { header "TGFileDialog.h" export * }
+module "TGFont.h" { header "TGFont.h" export * }
+module "TGFontDialog.h" { header "TGFontDialog.h" export * }
+module "TGFrame.h" { header "TGFrame.h" export * }
+module "TGGC.h" { header "TGGC.h" export * }
+module "TGHtml.h" { header "TGHtml.h" export * }
+module "TGHtmlBrowser.h" { header "TGHtmlBrowser.h" export * }
+module "TGHtmlTokens.h" { header "TGHtmlTokens.h" export * }
+module "TGHtmlUri.h" { header "TGHtmlUri.h" export * }
+module "TGIcon.h" { header "TGIcon.h" export * }
+module "TGIdleHandler.h" { header "TGIdleHandler.h" export * }
+module "TGImageMap.h" { header "TGImageMap.h" export * }
+module "TGInputDialog.h" { header "TGInputDialog.h" export * }
+module "TGLabel.h" { header "TGLabel.h" export * }
+module "TGLayout.h" { header "TGLayout.h" export * }
+module "TGListBox.h" { header "TGListBox.h" export * }
+module "TGListTree.h" { header "TGListTree.h" export * }
+module "TGListView.h" { header "TGListView.h" export * }
+module "TGMdi.h" { header "TGMdi.h" export * }
+module "TGMdiDecorFrame.h" { header "TGMdiDecorFrame.h" export * }
+module "TGMdiFrame.h" { header "TGMdiFrame.h" export * }
+module "TGMdiMainFrame.h" { header "TGMdiMainFrame.h" export * }
+module "TGMdiMenu.h" { header "TGMdiMenu.h" export * }
+module "TGMenu.h" { header "TGMenu.h" export * }
+module "TGMimeTypes.h" { header "TGMimeTypes.h" export * }
+module "TGMsgBox.h" { header "TGMsgBox.h" export * }
+module "TGNumberEntry.h" { header "TGNumberEntry.h" export * }
+module "TGOSXGL.h" { header "TGOSXGL.h" export * }
+module "TGObject.h" { header "TGObject.h" export * }
+module "TGPack.h" { header "TGPack.h" export * }
+module "TGPasswdDialog.h" { header "TGPasswdDialog.h" export * }
+module "TGPicture.h" { header "TGPicture.h" export * }
+module "TGProgressBar.h" { header "TGProgressBar.h" export * }
+module "TGQuartz.h" { header "TGQuartz.h" export * }
+module "TGRedirectOutputGuard.h" { header "TGRedirectOutputGuard.h" export * }
+module "TGResourcePool.h" { header "TGResourcePool.h" export * }
+module "TGScrollBar.h" { header "TGScrollBar.h" export * }
+module "TGShapedFrame.h" { header "TGShapedFrame.h" export * }
+module "TGShutter.h" { header "TGShutter.h" export * }
+module "TGSimpleTable.h" { header "TGSimpleTable.h" export * }
+module "TGSimpleTableInterface.h" { header "TGSimpleTableInterface.h" export * }
+module "TGSlider.h" { header "TGSlider.h" export * }
+module "TGSpeedo.h" { header "TGSpeedo.h" export * }
+module "TGSplitFrame.h" { header "TGSplitFrame.h" export * }
+module "TGSplitter.h" { header "TGSplitter.h" export * }
+module "TGStatusBar.h" { header "TGStatusBar.h" export * }
+module "TGString.h" { header "TGString.h" export * }
+module "TGTRA.h" { header "TGTRA.h" export * }
+module "TGTab.h" { header "TGTab.h" export * }
+module "TGTable.h" { header "TGTable.h" export * }
+module "TGTableCell.h" { header "TGTableCell.h" export * }
+module "TGTableContainer.h" { header "TGTableContainer.h" export * }
+module "TGTableHeader.h" { header "TGTableHeader.h" export * }
+module "TGTableLayout.h" { header "TGTableLayout.h" export * }
+module "TGText.h" { header "TGText.h" export * }
+module "TGTextBuffer.h" { header "TGTextBuffer.h" export * }
+module "TGTextEdit.h" { header "TGTextEdit.h" export * }
+module "TGTextEditDialogs.h" { header "TGTextEditDialogs.h" export * }
+module "TGTextEditor.h" { header "TGTextEditor.h" export * }
+module "TGTextEntry.h" { header "TGTextEntry.h" export * }
+module "TGTextView.h" { header "TGTextView.h" export * }
+module "TGTextViewStream.h" { header "TGTextViewStream.h" export * }
+module "TGToolBar.h" { header "TGToolBar.h" export * }
+module "TGToolTip.h" { header "TGToolTip.h" export * }
+module "TGTreeTable.h" { header "TGTreeTable.h" export * }
+module "TGTripleSlider.h" { header "TGTripleSlider.h" export * }
+module "TGView.h" { header "TGView.h" export * }
+module "TGWidget.h" { header "TGWidget.h" export * }
+module "TGWindow.h" { header "TGWindow.h" export * }
+module "TGXYLayout.h" { header "TGXYLayout.h" export * }
+module "TGaxis.h" { header "TGaxis.h" export * }
+module "TGedEditor.h" { header "TGedEditor.h" export * }
+module "TGedFrame.h" { header "TGedFrame.h" export * }
+module "TGedMarkerSelect.h" { header "TGedMarkerSelect.h" export * }
+module "TGedPatternSelect.h" { header "TGedPatternSelect.h" export * }
+module "TGenCollectionProxy.h" { header "TGenCollectionProxy.h" export * }
+module "TGenCollectionStreamer.h" { header "TGenCollectionStreamer.h" export * }
+module "TGenPhaseSpace.h" { header "TGenPhaseSpace.h" export * }
+module "TGenerator.h" { header "TGenerator.h" export * }
+//module "TGenericClassInfo.h" { header "TGenericClassInfo.h" export * } -- see Rtypes.h
+module "TGenericTable.h" { header "TGenericTable.h" export * }
+module "TGeoArb8.h" { header "TGeoArb8.h" export * }
+module "TGeoAtt.h" { header "TGeoAtt.h" export * }
+module "TGeoBBox.h" { header "TGeoBBox.h" export * }
+module "TGeoBBoxEditor.h" { header "TGeoBBoxEditor.h" export * }
+module "TGeoBoolNode.h" { header "TGeoBoolNode.h" export * }
+module "TGeoBranchArray.h" { header "TGeoBranchArray.h" export * }
+module "TGeoBuilder.h" { header "TGeoBuilder.h" export * }
+module "TGeoCache.h" { header "TGeoCache.h" export * }
+module "TGeoChecker.h" { header "TGeoChecker.h" export * }
+module "TGeoCompositeShape.h" { header "TGeoCompositeShape.h" export * }
+module "TGeoCone.h" { header "TGeoCone.h" export * }
+module "TGeoConeEditor.h" { header "TGeoConeEditor.h" export * }
+module "TGeoElement.h" { header "TGeoElement.h" export * }
+module "TGeoEltu.h" { header "TGeoEltu.h" export * }
+module "TGeoEltuEditor.h" { header "TGeoEltuEditor.h" export * }
+module "TGeoExtension.h" { header "TGeoExtension.h" export * }
+module "TGeoGedFrame.h" { header "TGeoGedFrame.h" export * }
+module "TGeoGlobalMagField.h" { header "TGeoGlobalMagField.h" export * }
+module "TGeoHalfSpace.h" { header "TGeoHalfSpace.h" export * }
+module "TGeoHelix.h" { header "TGeoHelix.h" export * }
+module "TGeoHype.h" { header "TGeoHype.h" export * }
+module "TGeoHypeEditor.h" { header "TGeoHypeEditor.h" export * }
+module "TGeoMCGeometry.h" { header "TGeoMCGeometry.h" export * }
+module "TGeoManager.h" { header "TGeoManager.h" export * }
+module "TGeoManagerEditor.h" { header "TGeoManagerEditor.h" export * }
+module "TGeoMaterial.h" { header "TGeoMaterial.h" export * }
+module "TGeoMaterialEditor.h" { header "TGeoMaterialEditor.h" export * }
+module "TGeoMatrix.h" { header "TGeoMatrix.h" export * }
+module "TGeoMatrixEditor.h" { header "TGeoMatrixEditor.h" export * }
+module "TGeoMedium.h" { header "TGeoMedium.h" export * }
+module "TGeoMediumEditor.h" { header "TGeoMediumEditor.h" export * }
+module "TGeoNavigator.h" { header "TGeoNavigator.h" export * }
+module "TGeoNode.h" { header "TGeoNode.h" export * }
+module "TGeoNodeEditor.h" { header "TGeoNodeEditor.h" export * }
+module "TGeoOverlap.h" { header "TGeoOverlap.h" export * }
+module "TGeoPainter.h" { header "TGeoPainter.h" export * }
+module "TGeoPara.h" { header "TGeoPara.h" export * }
+module "TGeoParaEditor.h" { header "TGeoParaEditor.h" export * }
+module "TGeoParaboloid.h" { header "TGeoParaboloid.h" export * }
+module "TGeoParallelWorld.h" { header "TGeoParallelWorld.h" export * }
+module "TGeoPatternFinder.h" { header "TGeoPatternFinder.h" export * }
+module "TGeoPcon.h" { header "TGeoPcon.h" export * }
+module "TGeoPconEditor.h" { header "TGeoPconEditor.h" export * }
+module "TGeoPgon.h" { header "TGeoPgon.h" export * }
+module "TGeoPgonEditor.h" { header "TGeoPgonEditor.h" export * }
+module "TGeoPhysicalNode.h" { header "TGeoPhysicalNode.h" export * }
+module "TGeoPolygon.h" { header "TGeoPolygon.h" export * }
+module "TGeoRCPtr.h" { header "TGeoRCPtr.h" export * }
+module "TGeoScaledShape.h" { header "TGeoScaledShape.h" export * }
+module "TGeoShape.h" { header "TGeoShape.h" export * }
+module "TGeoShapeAssembly.h" { header "TGeoShapeAssembly.h" export * }
+module "TGeoSphere.h" { header "TGeoSphere.h" export * }
+module "TGeoSphereEditor.h" { header "TGeoSphereEditor.h" export * }
+module "TGeoStateInfo.h" { header "TGeoStateInfo.h" export * }
+module "TGeoTabManager.h" { header "TGeoTabManager.h" export * }
+module "TGeoTorus.h" { header "TGeoTorus.h" export * }
+module "TGeoTorusEditor.h" { header "TGeoTorusEditor.h" export * }
+module "TGeoTrack.h" { header "TGeoTrack.h" export * }
+module "TGeoTrapEditor.h" { header "TGeoTrapEditor.h" export * }
+module "TGeoTrd1.h" { header "TGeoTrd1.h" export * }
+module "TGeoTrd1Editor.h" { header "TGeoTrd1Editor.h" export * }
+module "TGeoTrd2.h" { header "TGeoTrd2.h" export * }
+module "TGeoTrd2Editor.h" { header "TGeoTrd2Editor.h" export * }
+module "TGeoTube.h" { header "TGeoTube.h" export * }
+module "TGeoTubeEditor.h" { header "TGeoTubeEditor.h" export * }
+module "TGeoUniformMagField.h" { header "TGeoUniformMagField.h" export * }
+module "TGeoVolume.h" { header "TGeoVolume.h" export * }
+module "TGeoVolumeEditor.h" { header "TGeoVolumeEditor.h" export * }
+module "TGeoVoxelFinder.h" { header "TGeoVoxelFinder.h" export * }
+module "TGeoXtru.h" { header "TGeoXtru.h" export * }
+module "TGeometry.h" { header "TGeometry.h" export * }
+module "TGlobal.h" { header "TGlobal.h" export * }
+module "TGondzioSolver.h" { header "TGondzioSolver.h" export * }
+module "TGraph.h" { header "TGraph.h" export * }
+module "TGraph2D.h" { header "TGraph2D.h" export * }
+module "TGraph2DErrors.h" { header "TGraph2DErrors.h" export * }
+module "TGraph2DPainter.h" { header "TGraph2DPainter.h" export * }
+module "TGraphAsymmErrors.h" { header "TGraphAsymmErrors.h" export * }
+module "TGraphBentErrors.h" { header "TGraphBentErrors.h" export * }
+module "TGraphDelaunay.h" { header "TGraphDelaunay.h" export * }
+module "TGraphDelaunay2D.h" { header "TGraphDelaunay2D.h" export * }
+module "TGraphEdge.h" { header "TGraphEdge.h" export * }
+module "TGraphEditor.h" { header "TGraphEditor.h" export * }
+module "TGraphErrors.h" { header "TGraphErrors.h" export * }
+module "TGraphNode.h" { header "TGraphNode.h" export * }
+module "TGraphPainter.h" { header "TGraphPainter.h" export * }
+module "TGraphPolar.h" { header "TGraphPolar.h" export * }
+module "TGraphPolargram.h" { header "TGraphPolargram.h" export * }
+module "TGraphQQ.h" { header "TGraphQQ.h" export * }
+module "TGraphSmooth.h" { header "TGraphSmooth.h" export * }
+module "TGraphStruct.h" { header "TGraphStruct.h" export * }
+module "TGraphTime.h" { header "TGraphTime.h" export * }
+module "TGrid.h" { header "TGrid.h" export * }
+module "TGridCollection.h" { header "TGridCollection.h" export * }
+module "TGridJDL.h" { header "TGridJDL.h" export * }
+module "TGridJob.h" { header "TGridJob.h" export * }
+module "TGridJobStatus.h" { header "TGridJobStatus.h" export * }
+module "TGridJobStatusList.h" { header "TGridJobStatusList.h" export * }
+module "TGridResult.h" { header "TGridResult.h" export * }
+module "TGroupButton.h" { header "TGroupButton.h" export * }
+module "TGuiBldDragManager.h" { header "TGuiBldDragManager.h" export * }
+module "TGuiBldEditor.h" { header "TGuiBldEditor.h" export * }
+module "TGuiBldGeometryFrame.h" { header "TGuiBldGeometryFrame.h" export * }
+module "TGuiBldHintsButton.h" { header "TGuiBldHintsButton.h" export * }
+module "TGuiBldHintsEditor.h" { header "TGuiBldHintsEditor.h" export * }
+module "TGuiBldNameFrame.h" { header "TGuiBldNameFrame.h" export * }
+module "TGuiBuilder.h" { header "TGuiBuilder.h" export * }
+module "TGuiFactory.h" { header "TGuiFactory.h" export * }
+module "TH1.h" { header "TH1.h" export * }
+module "TH1C.h" { header "TH1C.h" export * }
+module "TH1D.h" { header "TH1D.h" export * }
+module "TH1Editor.h" { header "TH1Editor.h" export * }
+module "TH1F.h" { header "TH1F.h" export * }
+module "TH1I.h" { header "TH1I.h" export * }
+module "TH1K.h" { header "TH1K.h" export * }
+module "TH1S.h" { header "TH1S.h" export * }
+module "TH2.h" { header "TH2.h" export * }
+module "TH2C.h" { header "TH2C.h" export * }
+module "TH2D.h" { header "TH2D.h" export * }
+module "TH2Editor.h" { header "TH2Editor.h" export * }
+module "TH2F.h" { header "TH2F.h" export * }
+module "TH2I.h" { header "TH2I.h" export * }
+module "TH2Poly.h" { header "TH2Poly.h" export * }
+module "TH2S.h" { header "TH2S.h" export * }
+module "TH3.h" { header "TH3.h" export * }
+module "TH3C.h" { header "TH3C.h" export * }
+module "TH3D.h" { header "TH3D.h" export * }
+module "TH3F.h" { header "TH3F.h" export * }
+module "TH3I.h" { header "TH3I.h" export * }
+module "TH3S.h" { header "TH3S.h" export * }
+module "THLimitsFinder.h" { header "THLimitsFinder.h" export * }
+module "THStack.h" { header "THStack.h" export * }
+module "THYPE.h" { header "THYPE.h" export * }
+module "THashList.h" { header "THashList.h" export * }
+module "THashTable.h" { header "THashTable.h" export * }
+module "THelix.h" { header "THelix.h" export * }
+module "THistPainter.h" { header "THistPainter.h" export * }
+module "THn.h" { header "THn.h" export * }
+module "THnBase.h" { header "THnBase.h" export * }
+module "THnSparse.h" { header "THnSparse.h" export * }
+module "THnSparse_Internal.h" { header "THnSparse_Internal.h" export * }
+module "THostAuth.h" { header "THostAuth.h" export * }
+module "THtml.h" { header "THtml.h" export * }
+module "THttpCallArg.h" { header "THttpCallArg.h" export * }
+module "THttpEngine.h" { header "THttpEngine.h" export * }
+module "THttpServer.h" { header "THttpServer.h" export * }
+module "TImage.h" { header "TImage.h" export * }
+module "TImageDump.h" { header "TImageDump.h" export * }
+module "TImagePlugin.h" { header "TImagePlugin.h" export * }
+module "TIndArray.h" { header "TIndArray.h" export * }
+module "TIndexTable.h" { header "TIndexTable.h" export * }
+module "TInetAddress.h" { header "TInetAddress.h" export * }
+module "TInspectCanvas.h" { header "TInspectCanvas.h" export * }
+module "TInspectorImp.h" { header "TInspectorImp.h" export * }
+module "TInterpreter.h" { header "TInterpreter.h" export * }
+module "TInterpreterValue.h" { header "TInterpreterValue.h" export * }
+module "TIsAProxy.h" { header "TIsAProxy.h" export * }
+module "TIterator.h" { header "TIterator.h" export * }
+module "TKDE.h" { header "TKDE.h" export * }
+module "TKDTree.h" { header "TKDTree.h" export * }
+module "TKDTreeBinning.h" { header "TKDTreeBinning.h" export * }
+module "TKSocket.h" { header "TKSocket.h" export * }
+module "TKey.h" { header "TKey.h" export * }
+module "TKeyMapFile.h" { header "TKeyMapFile.h" export * }
+module "TKeySQL.h" { header "TKeySQL.h" export * }
+module "TKeyXML.h" { header "TKeyXML.h" export * }
+module "TLDAPAttribute.h" { header "TLDAPAttribute.h" export * }
+module "TLDAPEntry.h" { header "TLDAPEntry.h" export * }
+module "TLDAPResult.h" { header "TLDAPResult.h" export * }
+module "TLDAPServer.h" { header "TLDAPServer.h" export * }
+module "TLatex.h" { header "TLatex.h" export * }
+module "TLeaf.h" { header "TLeaf.h" export * }
+module "TLeafB.h" { header "TLeafB.h" export * }
+module "TLeafC.h" { header "TLeafC.h" export * }
+module "TLeafD.h" { header "TLeafD.h" export * }
+module "TLeafElement.h" { header "TLeafElement.h" export * }
+module "TLeafF.h" { header "TLeafF.h" export * }
+module "TLeafI.h" { header "TLeafI.h" export * }
+module "TLeafL.h" { header "TLeafL.h" export * }
+module "TLeafO.h" { header "TLeafO.h" export * }
+module "TLeafObject.h" { header "TLeafObject.h" export * }
+module "TLeafS.h" { header "TLeafS.h" export * }
+module "TLegend.h" { header "TLegend.h" export * }
+module "TLegendEntry.h" { header "TLegendEntry.h" export * }
+module "TLego.h" { header "TLego.h" export * }
+module "TLimit.h" { header "TLimit.h" export * }
+module "TLimitDataSource.h" { header "TLimitDataSource.h" export * }
+module "TLine.h" { header "TLine.h" export * }
+module "TLineEditor.h" { header "TLineEditor.h" export * }
+module "TLinearFitter.h" { header "TLinearFitter.h" export * }
+module "TLinearMinimizer.h" { header "TLinearMinimizer.h" export * }
+module "TLink.h" { header "TLink.h" export * }
+module "TList.h" { header "TList.h" export * }
+module "TListOfDataMembers.h" { header "TListOfDataMembers.h" export * }
+module "TListOfEnums.h" { header "TListOfEnums.h" export * }
+module "TListOfEnumsWithLock.h" { header "TListOfEnumsWithLock.h" export * }
+module "TListOfFunctionTemplates.h" { header "TListOfFunctionTemplates.h" export * }
+module "TListOfFunctions.h" { header "TListOfFunctions.h" export * }
+module "TLockFile.h" { header "TLockFile.h" export * }
+module "TLorentzRotation.h" { header "TLorentzRotation.h" export * }
+module "TLorentzVector.h" { header "TLorentzVector.h" export * }
+module "TMCOptical.h" { header "TMCOptical.h" export * }
+module "TMCParticleType.h" { header "TMCParticleType.h" export * }
+module "TMCProcess.h" { header "TMCProcess.h" export * }
+module "TMCVerbose.h" { header "TMCVerbose.h" export * }
+module "TMCtls.h" { header "TMCtls.h" export * }
+module "TMD5.h" { header "TMD5.h" export * }
+module "TMLPAnalyzer.h" { header "TMLPAnalyzer.h" export * }
+module "TMPClient.h" { header "TMPClient.h" export * }
+module "TMPWorker.h" { header "TMPWorker.h" export * }
+module "TMVA/BDT.h" { header "TMVA/BDT.h" export * }
+module "TMVA/BDTControlPlots.h" { header "TMVA/BDTControlPlots.h" export * }
+module "TMVA/BDTEventWrapper.h" { header "TMVA/BDTEventWrapper.h" export * }
+module "TMVA/BDT_Reg.h" { header "TMVA/BDT_Reg.h" export * }
+module "TMVA/BinarySearchTree.h" { header "TMVA/BinarySearchTree.h" export * }
+module "TMVA/BinarySearchTreeNode.h" { header "TMVA/BinarySearchTreeNode.h" export * }
+module "TMVA/BinaryTree.h" { header "TMVA/BinaryTree.h" export * }
+module "TMVA/BoostControlPlots.h" { header "TMVA/BoostControlPlots.h" export * }
+module "TMVA/CCPruner.h" { header "TMVA/CCPruner.h" export * }
+module "TMVA/CCTreeWrapper.h" { header "TMVA/CCTreeWrapper.h" export * }
+module "TMVA/ClassInfo.h" { header "TMVA/ClassInfo.h" export * }
+module "TMVA/ClassifierFactory.h" { header "TMVA/ClassifierFactory.h" export * }
+module "TMVA/Config.h" { header "TMVA/Config.h" export * }
+module "TMVA/Configurable.h" { header "TMVA/Configurable.h" export * }
+module "TMVA/ConvergenceTest.h" { header "TMVA/ConvergenceTest.h" export * }
+module "TMVA/CorrGui.h" { header "TMVA/CorrGui.h" export * }
+module "TMVA/CorrGuiMultiClass.h" { header "TMVA/CorrGuiMultiClass.h" export * }
+module "TMVA/CostComplexityPruneTool.h" { header "TMVA/CostComplexityPruneTool.h" export * }
+module "TMVA/CrossEntropy.h" { header "TMVA/CrossEntropy.h" export * }
+module "TMVA/DataInputHandler.h" { header "TMVA/DataInputHandler.h" export * }
+module "TMVA/DataSet.h" { header "TMVA/DataSet.h" export * }
+module "TMVA/DataSetFactory.h" { header "TMVA/DataSetFactory.h" export * }
+module "TMVA/DataSetInfo.h" { header "TMVA/DataSetInfo.h" export * }
+module "TMVA/DataSetManager.h" { header "TMVA/DataSetManager.h" export * }
+module "TMVA/DecisionTree.h" { header "TMVA/DecisionTree.h" export * }
+module "TMVA/DecisionTreeNode.h" { header "TMVA/DecisionTreeNode.h" export * }
+module "TMVA/Event.h" { header "TMVA/Event.h" export * }
+module "TMVA/ExpectedErrorPruneTool.h" { header "TMVA/ExpectedErrorPruneTool.h" export * }
+module "TMVA/Factory.h" { header "TMVA/Factory.h" export * }
+module "TMVA/FitterBase.h" { header "TMVA/FitterBase.h" export * }
+module "TMVA/GeneticAlgorithm.h" { header "TMVA/GeneticAlgorithm.h" export * }
+module "TMVA/GeneticFitter.h" { header "TMVA/GeneticFitter.h" export * }
+module "TMVA/GeneticGenes.h" { header "TMVA/GeneticGenes.h" export * }
+module "TMVA/GeneticPopulation.h" { header "TMVA/GeneticPopulation.h" export * }
+module "TMVA/GeneticRange.h" { header "TMVA/GeneticRange.h" export * }
+module "TMVA/GiniIndex.h" { header "TMVA/GiniIndex.h" export * }
+module "TMVA/GiniIndexWithLaplace.h" { header "TMVA/GiniIndexWithLaplace.h" export * }
+module "TMVA/IFitterTarget.h" { header "TMVA/IFitterTarget.h" export * }
+module "TMVA/IMethod.h" { header "TMVA/IMethod.h" export * }
+module "TMVA/IPruneTool.h" { header "TMVA/IPruneTool.h" export * }
+module "TMVA/Interval.h" { header "TMVA/Interval.h" export * }
+module "TMVA/KDEKernel.h" { header "TMVA/KDEKernel.h" export * }
+module "TMVA/LDA.h" { header "TMVA/LDA.h" export * }
+module "TMVA/LogInterval.h" { header "TMVA/LogInterval.h" export * }
+module "TMVA/MCFitter.h" { header "TMVA/MCFitter.h" export * }
+module "TMVA/MethodANNBase.h" { header "TMVA/MethodANNBase.h" export * }
+module "TMVA/MethodBDT.h" { header "TMVA/MethodBDT.h" export * }
+module "TMVA/MethodBase.h" { header "TMVA/MethodBase.h" export * }
+module "TMVA/MethodBayesClassifier.h" { header "TMVA/MethodBayesClassifier.h" export * }
+module "TMVA/MethodBoost.h" { header "TMVA/MethodBoost.h" export * }
+module "TMVA/MethodCFMlpANN.h" { header "TMVA/MethodCFMlpANN.h" export * }
+module "TMVA/MethodCFMlpANN_Utils.h" { header "TMVA/MethodCFMlpANN_Utils.h" export * }
+module "TMVA/MethodCFMlpANN_def.h" { header "TMVA/MethodCFMlpANN_def.h" export * }
+module "TMVA/MethodCategory.h" { header "TMVA/MethodCategory.h" export * }
+module "TMVA/MethodCompositeBase.h" { header "TMVA/MethodCompositeBase.h" export * }
+module "TMVA/MethodCuts.h" { header "TMVA/MethodCuts.h" export * }
+module "TMVA/MethodDT.h" { header "TMVA/MethodDT.h" export * }
+module "TMVA/MethodFDA.h" { header "TMVA/MethodFDA.h" export * }
+module "TMVA/MethodFisher.h" { header "TMVA/MethodFisher.h" export * }
+module "TMVA/MethodHMatrix.h" { header "TMVA/MethodHMatrix.h" export * }
+module "TMVA/MethodKNN.h" { header "TMVA/MethodKNN.h" export * }
+module "TMVA/MethodLD.h" { header "TMVA/MethodLD.h" export * }
+module "TMVA/MethodLikelihood.h" { header "TMVA/MethodLikelihood.h" export * }
+module "TMVA/MethodMLP.h" { header "TMVA/MethodMLP.h" export * }
+module "TMVA/MethodPDEFoam.h" { header "TMVA/MethodPDEFoam.h" export * }
+module "TMVA/MethodPDERS.h" { header "TMVA/MethodPDERS.h" export * }
+module "TMVA/MethodRuleFit.h" { header "TMVA/MethodRuleFit.h" export * }
+module "TMVA/MethodSVM.h" { header "TMVA/MethodSVM.h" export * }
+module "TMVA/MethodTMlpANN.h" { header "TMVA/MethodTMlpANN.h" export * }
+module "TMVA/MinuitFitter.h" { header "TMVA/MinuitFitter.h" export * }
+module "TMVA/MinuitWrapper.h" { header "TMVA/MinuitWrapper.h" export * }
+module "TMVA/MisClassificationError.h" { header "TMVA/MisClassificationError.h" export * }
+module "TMVA/ModulekNN.h" { header "TMVA/ModulekNN.h" export * }
+module "TMVA/MovieMaker.h" { header "TMVA/MovieMaker.h" export * }
+module "TMVA/MsgLogger.h" { header "TMVA/MsgLogger.h" export * }
+module "TMVA/Node.h" { header "TMVA/Node.h" export * }
+module "TMVA/NodekNN.h" { header "TMVA/NodekNN.h" export * }
+module "TMVA/OptimizeConfigParameters.h" { header "TMVA/OptimizeConfigParameters.h" export * }
+module "TMVA/Option.h" { header "TMVA/Option.h" export * }
+module "TMVA/PDEFoam.h" { header "TMVA/PDEFoam.h" export * }
+module "TMVA/PDEFoamCell.h" { header "TMVA/PDEFoamCell.h" export * }
+module "TMVA/PDEFoamDecisionTree.h" { header "TMVA/PDEFoamDecisionTree.h" export * }
+module "TMVA/PDEFoamDecisionTreeDensity.h" { header "TMVA/PDEFoamDecisionTreeDensity.h" export * }
+module "TMVA/PDEFoamDensityBase.h" { header "TMVA/PDEFoamDensityBase.h" export * }
+module "TMVA/PDEFoamDiscriminant.h" { header "TMVA/PDEFoamDiscriminant.h" export * }
+module "TMVA/PDEFoamDiscriminantDensity.h" { header "TMVA/PDEFoamDiscriminantDensity.h" export * }
+module "TMVA/PDEFoamEvent.h" { header "TMVA/PDEFoamEvent.h" export * }
+module "TMVA/PDEFoamEventDensity.h" { header "TMVA/PDEFoamEventDensity.h" export * }
+module "TMVA/PDEFoamKernelBase.h" { header "TMVA/PDEFoamKernelBase.h" export * }
+module "TMVA/PDEFoamKernelGauss.h" { header "TMVA/PDEFoamKernelGauss.h" export * }
+module "TMVA/PDEFoamKernelLinN.h" { header "TMVA/PDEFoamKernelLinN.h" export * }
+module "TMVA/PDEFoamKernelTrivial.h" { header "TMVA/PDEFoamKernelTrivial.h" export * }
+module "TMVA/PDEFoamMultiTarget.h" { header "TMVA/PDEFoamMultiTarget.h" export * }
+module "TMVA/PDEFoamTarget.h" { header "TMVA/PDEFoamTarget.h" export * }
+module "TMVA/PDEFoamTargetDensity.h" { header "TMVA/PDEFoamTargetDensity.h" export * }
+module "TMVA/PDEFoamVect.h" { header "TMVA/PDEFoamVect.h" export * }
+module "TMVA/PDF.h" { header "TMVA/PDF.h" export * }
+module "TMVA/PlotFoams.h" { header "TMVA/PlotFoams.h" export * }
+module "TMVA/QuickMVAProbEstimator.h" { header "TMVA/QuickMVAProbEstimator.h" export * }
+module "TMVA/ROCCalc.h" { header "TMVA/ROCCalc.h" export * }
+module "TMVA/Ranking.h" { header "TMVA/Ranking.h" export * }
+module "TMVA/Reader.h" { header "TMVA/Reader.h" export * }
+module "TMVA/RegressionVariance.h" { header "TMVA/RegressionVariance.h" export * }
+module "TMVA/Results.h" { header "TMVA/Results.h" export * }
+module "TMVA/ResultsClassification.h" { header "TMVA/ResultsClassification.h" export * }
+module "TMVA/ResultsMulticlass.h" { header "TMVA/ResultsMulticlass.h" export * }
+module "TMVA/ResultsRegression.h" { header "TMVA/ResultsRegression.h" export * }
+module "TMVA/RootFinder.h" { header "TMVA/RootFinder.h" export * }
+module "TMVA/Rule.h" { header "TMVA/Rule.h" export * }
+module "TMVA/RuleCut.h" { header "TMVA/RuleCut.h" export * }
+module "TMVA/RuleEnsemble.h" { header "TMVA/RuleEnsemble.h" export * }
+module "TMVA/RuleFit.h" { header "TMVA/RuleFit.h" export * }
+module "TMVA/RuleFitAPI.h" { header "TMVA/RuleFitAPI.h" export * }
+module "TMVA/RuleFitParams.h" { header "TMVA/RuleFitParams.h" export * }
+module "TMVA/SVEvent.h" { header "TMVA/SVEvent.h" export * }
+module "TMVA/SVKernelFunction.h" { header "TMVA/SVKernelFunction.h" export * }
+module "TMVA/SVKernelMatrix.h" { header "TMVA/SVKernelMatrix.h" export * }
+module "TMVA/SVWorkingSet.h" { header "TMVA/SVWorkingSet.h" export * }
+module "TMVA/SdivSqrtSplusB.h" { header "TMVA/SdivSqrtSplusB.h" export * }
+module "TMVA/SeparationBase.h" { header "TMVA/SeparationBase.h" export * }
+module "TMVA/SimulatedAnnealing.h" { header "TMVA/SimulatedAnnealing.h" export * }
+module "TMVA/SimulatedAnnealingFitter.h" { header "TMVA/SimulatedAnnealingFitter.h" export * }
+module "TMVA/TActivation.h" { header "TMVA/TActivation.h" export * }
+module "TMVA/TActivationChooser.h" { header "TMVA/TActivationChooser.h" export * }
+module "TMVA/TActivationIdentity.h" { header "TMVA/TActivationIdentity.h" export * }
+module "TMVA/TActivationRadial.h" { header "TMVA/TActivationRadial.h" export * }
+module "TMVA/TActivationReLU.h" { header "TMVA/TActivationReLU.h" export * }
+module "TMVA/TActivationSigmoid.h" { header "TMVA/TActivationSigmoid.h" export * }
+module "TMVA/TActivationTanh.h" { header "TMVA/TActivationTanh.h" export * }
+module "TMVA/TMVAGui.h" { header "TMVA/TMVAGui.h" export * }
+module "TMVA/TMVAMultiClassGui.h" { header "TMVA/TMVAMultiClassGui.h" export * }
+module "TMVA/TMVARegGui.h" { header "TMVA/TMVARegGui.h" export * }
+module "TMVA/TNeuron.h" { header "TMVA/TNeuron.h" export * }
+module "TMVA/TNeuronInput.h" { header "TMVA/TNeuronInput.h" export * }
+module "TMVA/TNeuronInputAbs.h" { header "TMVA/TNeuronInputAbs.h" export * }
+module "TMVA/TNeuronInputChooser.h" { header "TMVA/TNeuronInputChooser.h" export * }
+module "TMVA/TNeuronInputSqSum.h" { header "TMVA/TNeuronInputSqSum.h" export * }
+module "TMVA/TNeuronInputSum.h" { header "TMVA/TNeuronInputSum.h" export * }
+module "TMVA/TSpline1.h" { header "TMVA/TSpline1.h" export * }
+module "TMVA/TSpline2.h" { header "TMVA/TSpline2.h" export * }
+module "TMVA/TSynapse.h" { header "TMVA/TSynapse.h" export * }
+module "TMVA/Timer.h" { header "TMVA/Timer.h" export * }
+module "TMVA/Tools.h" { header "TMVA/Tools.h" export * }
+module "TMVA/TransformationHandler.h" { header "TMVA/TransformationHandler.h" export * }
+module "TMVA/Types.h" { header "TMVA/Types.h" export * }
+module "TMVA/VariableDecorrTransform.h" { header "TMVA/VariableDecorrTransform.h" export * }
+module "TMVA/VariableGaussTransform.h" { header "TMVA/VariableGaussTransform.h" export * }
+module "TMVA/VariableIdentityTransform.h" { header "TMVA/VariableIdentityTransform.h" export * }
+module "TMVA/VariableInfo.h" { header "TMVA/VariableInfo.h" export * }
+module "TMVA/VariableNormalizeTransform.h" { header "TMVA/VariableNormalizeTransform.h" export * }
+module "TMVA/VariablePCATransform.h" { header "TMVA/VariablePCATransform.h" export * }
+module "TMVA/VariableRearrangeTransform.h" { header "TMVA/VariableRearrangeTransform.h" export * }
+module "TMVA/VariableTransformBase.h" { header "TMVA/VariableTransformBase.h" export * }
+module "TMVA/Version.h" { header "TMVA/Version.h" export * }
+module "TMVA/Volume.h" { header "TMVA/Volume.h" export * }
+module "TMVA/annconvergencetest.h" { header "TMVA/annconvergencetest.h" export * }
+module "TMVA/compareanapp.h" { header "TMVA/compareanapp.h" export * }
+module "TMVA/correlations.h" { header "TMVA/correlations.h" export * }
+module "TMVA/correlationsMultiClass.h" { header "TMVA/correlationsMultiClass.h" export * }
+module "TMVA/correlationscatters.h" { header "TMVA/correlationscatters.h" export * }
+module "TMVA/correlationscattersMultiClass.h" { header "TMVA/correlationscattersMultiClass.h" export * }
+module "TMVA/deviations.h" { header "TMVA/deviations.h" export * }
+module "TMVA/efficiencies.h" { header "TMVA/efficiencies.h" export * }
+module "TMVA/likelihoodrefs.h" { header "TMVA/likelihoodrefs.h" export * }
+module "TMVA/mvaeffs.h" { header "TMVA/mvaeffs.h" export * }
+module "TMVA/mvas.h" { header "TMVA/mvas.h" export * }
+module "TMVA/mvasMulticlass.h" { header "TMVA/mvasMulticlass.h" export * }
+module "TMVA/mvaweights.h" { header "TMVA/mvaweights.h" export * }
+module "TMVA/network.h" { header "TMVA/network.h" export * }
+module "TMVA/paracoor.h" { header "TMVA/paracoor.h" export * }
+module "TMVA/probas.h" { header "TMVA/probas.h" export * }
+module "TMVA/regression_averagedevs.h" { header "TMVA/regression_averagedevs.h" export * }
+module "TMVA/rulevis.h" { header "TMVA/rulevis.h" export * }
+module "TMVA/rulevisCorr.h" { header "TMVA/rulevisCorr.h" export * }
+module "TMVA/rulevisHists.h" { header "TMVA/rulevisHists.h" export * }
+module "TMVA/tmvaglob.h" { header "TMVA/tmvaglob.h" export * }
+module "TMVA/variables.h" { header "TMVA/variables.h" export * }
+module "TMVA/variablesMultiClass.h" { header "TMVA/variablesMultiClass.h" export * }
+module "TMacOSXSystem.h" { header "TMacOSXSystem.h" export * }
+module "TMacro.h" { header "TMacro.h" export * }
+module "TMakeProject.h" { header "TMakeProject.h" export * }
+module "TMap.h" { header "TMap.h" export * }
+module "TMapFile.h" { header "TMapFile.h" export * }
+module "TMarker.h" { header "TMarker.h" export * }
+module "TMarker3DBox.h" { header "TMarker3DBox.h" export * }
+module "TMaterial.h" { header "TMaterial.h" export * }
+module "TMath.h" { header "TMath.h" export * }
+module "TMathBase.h" { header "TMathBase.h" export * }
+module "TMathText.h" { header "TMathText.h" export * }
+module "TMatrix.h" { header "TMatrix.h" export * }
+module "TMatrixD.h" { header "TMatrixD.h" export * }
+module "TMatrixDBase.h" { header "TMatrixDBase.h" export * }
+module "TMatrixDBasefwd.h" { header "TMatrixDBasefwd.h" export * }
+module "TMatrixDEigen.h" { header "TMatrixDEigen.h" export * }
+module "TMatrixDLazy.h" { header "TMatrixDLazy.h" export * }
+module "TMatrixDSparse.h" { header "TMatrixDSparse.h" export * }
+module "TMatrixDSparsefwd.h" { header "TMatrixDSparsefwd.h" export * }
+module "TMatrixDSym.h" { header "TMatrixDSym.h" export * }
+module "TMatrixDSymEigen.h" { header "TMatrixDSymEigen.h" export * }
+module "TMatrixDSymfwd.h" { header "TMatrixDSymfwd.h" export * }
+module "TMatrixDUtils.h" { header "TMatrixDUtils.h" export * }
+module "TMatrixDUtilsfwd.h" { header "TMatrixDUtilsfwd.h" export * }
+module "TMatrixDfwd.h" { header "TMatrixDfwd.h" export * }
+module "TMatrixF.h" { header "TMatrixF.h" export * }
+module "TMatrixFBase.h" { header "TMatrixFBase.h" export * }
+module "TMatrixFBasefwd.h" { header "TMatrixFBasefwd.h" export * }
+module "TMatrixFLazy.h" { header "TMatrixFLazy.h" export * }
+module "TMatrixFSparse.h" { header "TMatrixFSparse.h" export * }
+module "TMatrixFSparsefwd.h" { header "TMatrixFSparsefwd.h" export * }
+module "TMatrixFSym.h" { header "TMatrixFSym.h" export * }
+module "TMatrixFSymfwd.h" { header "TMatrixFSymfwd.h" export * }
+module "TMatrixFUtils.h" { header "TMatrixFUtils.h" export * }
+module "TMatrixFUtilsfwd.h" { header "TMatrixFUtilsfwd.h" export * }
+module "TMatrixFfwd.h" { header "TMatrixFfwd.h" export * }
+module "TMatrixT.h" { header "TMatrixT.h" export * }
+module "TMatrixTBase.h" { header "TMatrixTBase.h" export * }
+module "TMatrixTCramerInv.h" { header "TMatrixTCramerInv.h" export * }
+module "TMatrixTLazy.h" { header "TMatrixTLazy.h" export * }
+module "TMatrixTSparse.h" { header "TMatrixTSparse.h" export * }
+module "TMatrixTSym.h" { header "TMatrixTSym.h" export * }
+module "TMatrixTSymCramerInv.h" { header "TMatrixTSymCramerInv.h" export * }
+module "TMatrixTUtils.h" { header "TMatrixTUtils.h" export * }
+module "TMehrotraSolver.h" { header "TMehrotraSolver.h" export * }
+module "TMemFile.h" { header "TMemFile.h" export * }
+module "TMemStat.h" { header "TMemStat.h" export * }
+module "TMemStatBacktrace.h" { header "TMemStatBacktrace.h" export * }
+module "TMemStatDef.h" { header "TMemStatDef.h" export * }
+module "TMemStatHelpers.h" { header "TMemStatHelpers.h" export * }
+module "TMemStatHook.h" { header "TMemStatHook.h" export * }
+module "TMemStatMng.h" { header "TMemStatMng.h" export * }
+module "TMemStatShow.h" { header "TMemStatShow.h" export * }
+module "TMemberInspector.h" { header "TMemberInspector.h" export * }
+module "TMemberStreamer.h" { header "TMemberStreamer.h" export * }
+module "TMessage.h" { header "TMessage.h" export * }
+module "TMessageHandler.h" { header "TMessageHandler.h" export * }
+module "TMetaUtils.h" { header "TMetaUtils.h" export * }
+module "TMethod.h" { header "TMethod.h" export * }
+module "TMethodArg.h" { header "TMethodArg.h" export * }
+module "TMethodCall.h" { header "TMethodCall.h" export * }
+module "TMinuit.h" { header "TMinuit.h" export * }
+module "TMinuit2TraceObject.h" { header "TMinuit2TraceObject.h" export * }
+module "TMinuitMinimizer.h" { header "TMinuitMinimizer.h" export * }
+module "TMixture.h" { header "TMixture.h" export * }
+module "TMonitor.h" { header "TMonitor.h" export * }
+module "TMultiDimFit.h" { header "TMultiDimFit.h" export * }
+module "TMultiGraph.h" { header "TMultiGraph.h" export * }
+module "TMultiLayerPerceptron.h" { header "TMultiLayerPerceptron.h" export * }
+module "TMutex.h" { header "TMutex.h" export * }
+module "TMutexImp.h" { header "TMutexImp.h" export * }
+module "TNDArray.h" { header "TNDArray.h" export * }
+module "TNamed.h" { header "TNamed.h" export * }
+module "TNetFile.h" { header "TNetFile.h" export * }
+module "TNetFileStager.h" { header "TNetFileStager.h" export * }
+module "TNeuron.h" { header "TNeuron.h" export * }
+module "TNode.h" { header "TNode.h" export * }
+module "TNodeDiv.h" { header "TNodeDiv.h" export * }
+module "TNtuple.h" { header "TNtuple.h" export * }
+module "TNtupleD.h" { header "TNtupleD.h" export * }
+module "TODBCResult.h" { header "TODBCResult.h" export * }
+module "TODBCRow.h" { header "TODBCRow.h" export * }
+module "TODBCServer.h" { header "TODBCServer.h" export * }
+module "TODBCStatement.h" { header "TODBCStatement.h" export * }
+module "TObjArray.h" { header "TObjArray.h" export * }
+module "TObjString.h" { header "TObjString.h" export * }
+module "TObject.h" { header "TObject.h" export * }
+module "TObjectSet.h" { header "TObjectSet.h" export * }
+module "TObjectSpy.h" { header "TObjectSpy.h" export * }
+module "TObjectTable.h" { header "TObjectTable.h" export * }
+module "TOrdCollection.h" { header "TOrdCollection.h" export * }
+module "TOutputListSelectorDataMap.h" { header "TOutputListSelectorDataMap.h" export * }
+module "TPARA.h" { header "TPARA.h" export * }
+module "TPCON.h" { header "TPCON.h" export * }
+module "TPDF.h" { header "TPDF.h" export * }
+module "TPDGCode.h" { header "TPDGCode.h" export * }
+module "TPGON.h" { header "TPGON.h" export * }
+module "TPRegexp.h" { header "TPRegexp.h" export * }
+module "TPServerSocket.h" { header "TPServerSocket.h" export * }
+module "TPSocket.h" { header "TPSocket.h" export * }
+module "TPacketizer.h" { header "TPacketizer.h" export * }
+module "TPacketizerAdaptive.h" { header "TPacketizerAdaptive.h" export * }
+module "TPacketizerFile.h" { header "TPacketizerFile.h" export * }
+module "TPacketizerMulti.h" { header "TPacketizerMulti.h" export * }
+module "TPacketizerUnit.h" { header "TPacketizerUnit.h" export * }
+module "TPad.h" { header "TPad.h" export * }
+module "TPadEditor.h" { header "TPadEditor.h" export * }
+module "TPadPainter.h" { header "TPadPainter.h" export * }
+module "TPainter3dAlgorithms.h" { header "TPainter3dAlgorithms.h" export * }
+module "TPaletteAxis.h" { header "TPaletteAxis.h" export * }
+module "TParallelCoord.h" { header "TParallelCoord.h" export * }
+module "TParallelCoordEditor.h" { header "TParallelCoordEditor.h" export * }
+module "TParallelCoordRange.h" { header "TParallelCoordRange.h" export * }
+module "TParallelCoordVar.h" { header "TParallelCoordVar.h" export * }
+module "TParallelMergingFile.h" { header "TParallelMergingFile.h" export * }
+module "TParameter.h" { header "TParameter.h" export * }
+module "TParticle.h" { header "TParticle.h" export * }
+module "TParticleClassPDG.h" { header "TParticleClassPDG.h" export * }
+module "TParticlePDG.h" { header "TParticlePDG.h" export * }
+module "TPave.h" { header "TPave.h" export * }
+module "TPaveClass.h" { header "TPaveClass.h" export * }
+module "TPaveLabel.h" { header "TPaveLabel.h" export * }
+module "TPaveStats.h" { header "TPaveStats.h" export * }
+module "TPaveStatsEditor.h" { header "TPaveStatsEditor.h" export * }
+module "TPaveText.h" { header "TPaveText.h" export * }
+module "TPavesText.h" { header "TPavesText.h" export * }
+module "TPerfStats.h" { header "TPerfStats.h" export * }
+module "TPie.h" { header "TPie.h" export * }
+module "TPieEditor.h" { header "TPieEditor.h" export * }
+module "TPieSlice.h" { header "TPieSlice.h" export * }
+module "TPieSliceEditor.h" { header "TPieSliceEditor.h" export * }
+module "TPluginManager.h" { header "TPluginManager.h" export * }
+module "TPoint.h" { header "TPoint.h" export * }
+module "TPointSet3D.h" { header "TPointSet3D.h" export * }
+module "TPoints.h" { header "TPoints.h" export * }
+module "TPoints3D.h" { header "TPoints3D.h" export * }
+module "TPoints3DABC.h" { header "TPoints3DABC.h" export * }
+module "TPointsArray3D.h" { header "TPointsArray3D.h" export * }
+module "TPolyLine.h" { header "TPolyLine.h" export * }
+module "TPolyLine3D.h" { header "TPolyLine3D.h" export * }
+module "TPolyLineShape.h" { header "TPolyLineShape.h" export * }
+module "TPolyMarker.h" { header "TPolyMarker.h" export * }
+module "TPolyMarker3D.h" { header "TPolyMarker3D.h" export * }
+module "TPoolProcessor.h" { header "TPoolProcessor.h" export * }
+module "TPoolWorker.h" { header "TPoolWorker.h" export * }
+module "TPosixCondition.h" { header "TPosixCondition.h" export * }
+module "TPosixMutex.h" { header "TPosixMutex.h" export * }
+module "TPosixThread.h" { header "TPosixThread.h" export * }
+module "TPosixThreadFactory.h" { header "TPosixThreadFactory.h" export * }
+module "TPostScript.h" { header "TPostScript.h" export * }
+module "TPrimary.h" { header "TPrimary.h" export * }
+module "TPrincipal.h" { header "TPrincipal.h" export * }
+module "TProcPool.h" { header "TProcPool.h" export * }
+module "TProcessID.h" { header "TProcessID.h" export * }
+module "TProcessUUID.h" { header "TProcessUUID.h" export * }
+module "TProfile.h" { header "TProfile.h" export * }
+module "TProfile2D.h" { header "TProfile2D.h" export * }
+module "TProfile3D.h" { header "TProfile3D.h" export * }
+module "TProof.h" { header "TProof.h" export * }
+module "TProofBench.h" { header "TProofBench.h" export * }
+module "TProofBenchDataSet.h" { header "TProofBenchDataSet.h" export * }
+module "TProofBenchRun.h" { header "TProofBenchRun.h" export * }
+module "TProofBenchRunCPU.h" { header "TProofBenchRunCPU.h" export * }
+module "TProofBenchRunDataRead.h" { header "TProofBenchRunDataRead.h" export * }
+module "TProofBenchTypes.h" { header "TProofBenchTypes.h" export * }
+module "TProofChain.h" { header "TProofChain.h" export * }
+module "TProofCondor.h" { header "TProofCondor.h" export * }
+module "TProofDebug.h" { header "TProofDebug.h" export * }
+module "TProofDraw.h" { header "TProofDraw.h" export * }
+module "TProofLimitsFinder.h" { header "TProofLimitsFinder.h" export * }
+module "TProofLite.h" { header "TProofLite.h" export * }
+module "TProofLog.h" { header "TProofLog.h" export * }
+module "TProofMgr.h" { header "TProofMgr.h" export * }
+module "TProofMgrLite.h" { header "TProofMgrLite.h" export * }
+module "TProofMonSender.h" { header "TProofMonSender.h" export * }
+module "TProofMonSenderML.h" { header "TProofMonSenderML.h" export * }
+module "TProofMonSenderSQL.h" { header "TProofMonSenderSQL.h" export * }
+module "TProofNodeInfo.h" { header "TProofNodeInfo.h" export * }
+module "TProofNodes.h" { header "TProofNodes.h" export * }
+module "TProofOutputFile.h" { header "TProofOutputFile.h" export * }
+module "TProofOutputList.h" { header "TProofOutputList.h" export * }
+module "TProofPerfAnalysis.h" { header "TProofPerfAnalysis.h" export * }
+module "TProofPlayer.h" { header "TProofPlayer.h" export * }
+module "TProofPlayerLite.h" { header "TProofPlayerLite.h" export * }
+module "TProofProgressDialog.h" { header "TProofProgressDialog.h" export * }
+module "TProofProgressLog.h" { header "TProofProgressLog.h" export * }
+module "TProofProgressMemoryPlot.h" { header "TProofProgressMemoryPlot.h" export * }
+module "TProofProgressStatus.h" { header "TProofProgressStatus.h" export * }
+module "TProofQueryResult.h" { header "TProofQueryResult.h" export * }
+module "TProofResources.h" { header "TProofResources.h" export * }
+module "TProofResourcesStatic.h" { header "TProofResourcesStatic.h" export * }
+module "TProofServ.h" { header "TProofServ.h" export * }
+module "TProofServLite.h" { header "TProofServLite.h" export * }
+module "TProofSuperMaster.h" { header "TProofSuperMaster.h" export * }
+module "TProtoClass.h" { header "TProtoClass.h" export * }
+module "TPyArg.h" { header "TPyArg.h" export * }
+module "TPyDispatcher.h" { header "TPyDispatcher.h" export * }
+module "TPyException.h" { header "TPyException.h" export * }
+module "TPyFitFunction.h" { header "TPyFitFunction.h" export * }
+module "TPyROOTApplication.h" { header "TPyROOTApplication.h" export * }
+module "TPyReturn.h" { header "TPyReturn.h" export * }
+module "TPySelector.h" { header "TPySelector.h" export * }
+module "TPython.h" { header "TPython.h" export * }
+module "TQClass.h" { header "TQClass.h" export * }
+module "TQCommand.h" { header "TQCommand.h" export * }
+//module "TQConnection.h" { header "TQConnection.h" export * } -- see TQObject
 
-module VersionCheck {
-  header "TVersionCheck.h"
-  export *
-}
-
-module String {
-  header "TString.h"
-  export *
-}
-module RStringView {
-  header "RStringView.h"
-  textual header "RWrap_libcpp_string_view.h"
-  export *
-}
-
-module MathBase { header "TMathBase.h" export * }
-
-module Riosfwd {
-  header "Riosfwd.h"
-  export *
-}
-module Riostream { header "Riostream.h" export * }
-
-module ESTLType {
-  header "ESTLType.h"
-  export *
-}
-
-module Application {
-  export *
-}
-
-module ClassEdit {
-  header "TClassEdit.h"
-  header "ESTLType.h"
-
-  export *
-}
-
-module Rstrstream { header "Rstrstream.h" export * }
-module RootMetaSelection { header "RootMetaSelection.h" export * }
-
-
-module SchemaType {
-  header "TSchemaType.h"
-  export *
-}
-
-module CoversionRuleParser {
-  header "RConversionRuleParser.h"
-  export *
-}
-
-module SchemaRuleProcessor {
-  header "TSchemaRuleProcessor.h"
-  export *
-}
-
-module RConfig [extern_c]{ header "RConfig.h" export * }
-module RConfigOptions [extern_c]{ header "RConfigOptions.h" export * }
-module RConfigure [extern_c]{ header "RConfigure.h" export * }
-
-module Named { header "TNamed.h" export * }
-module Object {
-  header "TObject.h"
-  header "TBuffer.h"
-  export *
-}
-module Storage { header "TStorage.h" export * }
-module AttLine { header "TAttLine.h" export * }
-module GuiTypes { header "GuiTypes.h" export * }
-
-module Canvas {
-  header "TCanvas.h"
-  export *
-}
-
-module Varargs { header "Varargs.h" export * }
-module MessageTypes {   header "MessageTypes.h" export * }
-
-// in core_base causes a name clash because pyroot redefines the name in pyroot/src/TCallContext.h
-module Parameter { export * header "TParameter.h" }
-
-module core_base {
-  requires cplusplus
-  export *
-
-  header "TCanvasImp.h"
-  header "Buttons.h"
-  header "TAttFill.h"
-  header "TAttMarker.h"
-  header "TAttPad.h"
-  header "TAttText.h"
-  header "TVirtualPad.h"
-  header "TVirtualX.h"
-
-  header "Htypes.h"
-  header "TObjectSpy.h"
-  header "TQObjectEmitVA.h"
-  header "TVirtualPadEditor.h"
-  header "TQClass.h"
-  //header "config.h" //deprecated use RConfigure.h
-  header "TBenchmark.h"
-  header "TVirtualMutex.h"
-  header "Bytes.h"
-  header "Byteswap.h"
-  header "GLConstants.h"
-  header "Gtypes.h"
-  header "KeySymbols.h"
-  header "Match.h"
-  header "Strlen.h"
-  header "TApplication.h"
-  header "TApplicationImp.h"
-  header "TContextMenu.h"
-  header "TContextMenuImp.h"
-  textual header "RtypesImp.h" // Must be included only from the dictionaries.
-
-  //module Exception { header "TException.h" export * } // We need to suppress TRY macro
-  header "TMD5.h"
-  header "TAtt3D.h"
-  header "TThreadSlots.h"
-  header "TGuiFactory.h"
-  header "TAttAxis.h"
-  header "TPluginManager.h"
-  header "TVirtualViewer3D.h"
-  header "TVirtualPerfStats.h"
-  header "TEnv.h"
-  header "TColor.h"
-  header "TMemberInspector.h"
-  header "TVirtualFFT.h"
-  header "TRefCnt.h"
-  header "TVirtualAuth.h"
-  header "TSystemFile.h"
-  header "TBuffer3DTypes.h"
-  header "TPoint.h"
+module "TQObject.h" {
+  // There is a cross dependency between TQObject and TQConnection.
+  // FIXME: Why TQObject need to know anything about TQConnection...
   header "TQConnection.h"
-  header "TRef.h"
-  header "TSystem.h"
   header "TQObject.h"
-  header "TROOT.h"
-  header "TRemoteObject.h"
-  header "TObjString.h"
-  header "TMacro.h"
-  header "TDirectory.h"
-  header "TStringLong.h"
-  header "TBrowser.h"
-  header "TUUID.h"
-  header "TError.h"
-  header "TDatime.h"
-  header "TUrl.h"
-  header "TProcessUUID.h"
-  header "TUri.h"
-  header "TVirtualPadPainter.h"
-  header "RStipples.h"
-  header "TSysEvtHandler.h"
-  header "TVirtualGL.h"
-  header "TAttBBox2D.h"
-  header "TControlBarImp.h"
-  header "TFileInfo.h"
-  header "TVirtualMonitoring.h"
-  header "TFileCollection.h"
-  header "TStyle.h"
-  header "Rpair.h"
-  header "TExec.h"
-  header "TInetAddress.h"
-  header "TRedirectOutputGuard.h"
-  header "TProcessID.h"
-  header "TAttBBox.h"
-  //header "Windows4Root.h" // not windows!
-  header "TVirtualPS.h"
-  header "TTask.h"
-  header "TTimeStamp.h"
-  header "TBuffer3D.h"
-  header "TBrowserImp.h"
-  header "TStopwatch.h"
-  header "TVirtualTableInterface.h"
-  header "TQCommand.h"
-  header "TPRegexp.h"
-  header "TSystemDirectory.h"
-  header "Bswapcpy.h"
-  header "TRegexp.h"
-  header "TFolder.h"
-  header "TTime.h"
-  header "RQ_OBJECT.h"
-  header "TRootIOCtor.h"
-  header "TColorGradient.h"
-  header "TMessageHandler.h"
-  header "TInspectorImp.h"
-  header "TTimer.h"
-  header "TBase64.h"
-//}// because of cyclic dependencies
-//module core_meta {
-//  export *
-  header "TClassStreamer.h"
-  header "TFunction.h"
-  header "TMethodCall.h"
-  header "TInterpreter.h"
-  header "TFunctionTemplate.h"
-  header "TDataMember.h"
-  header "TVirtualRefProxy.h"
-  header "TListOfFunctionTemplates.h"
-  header "TGlobal.h"
-  header "TSchemaRule.h"
-  header "TListOfDataMembers.h"
-  header "TEnum.h"
-  header "TBaseClass.h"
-  header "TInterpreterValue.h"
-  header "TDataType.h"
-  header "TClassGenerator.h"
-  header "TMemberStreamer.h"
-  header "TClassMenuItem.h"
-  header "TClass.h"
-  header "TStreamerElement.h"
-  header "TDictAttributeMap.h"
-  header "TProtoClass.h"
-  header "TEnumConstant.h"
-  header "TIsAProxy.h"
-  header "TClassRef.h"
-  header "TMethod.h"
-  header "TDictionary.h"
-  header "TSchemaRuleSet.h"
-  header "TStreamer.h"
-  header "TFileMergeInfo.h"
-  header "TListOfFunctions.h"
-  header "TVirtualIsAProxy.h"
-  header "TRealData.h"
-  header "TToggle.h"
-  header "TMethodArg.h"
-  header "TListOfEnums.h"
-  header "TVirtualStreamerInfo.h"
-  header "TToggleGroup.h"
-//}// because of cyclic dependencies
-//module core_cont {
-//  export *
-  header "TArray.h"
-  header "TArrayC.h"
-  header "TArrayD.h"
-  header "TArrayF.h"
-  header "TArrayI.h"
-  header "TArrayL.h"
-  header "TArrayL64.h"
-  header "TArrayS.h"
-  header "TSortedList.h"
-  header "TRefTable.h"
-  header "TRefArray.h"
-  header "TVirtualCollectionProxy.h"
-  header "TOrdCollection.h"
-  header "TBtree.h"
-  header "TClonesArray.h"
-  header "THashList.h"
-  header "TExMap.h"
-  header "TObjectTable.h"
-  header "TMap.h"
-  header "TBits.h"
-  header "TObjArray.h"
-  header "TCollectionProxyInfo.h"
-  header "TList.h"
-  header "TClassTable.h"
-  header "TIterator.h"
-  header "TSeqCollection.h"
-  header "TCollection.h"
-  header "THashTable.h"
-//} // because of cyclic dependencies
-//module core_thread {
-//  export core_base
-//  export *
-  header "PosixThreadInc.h"
-  header "TSemaphore.h"
-  header "TPosixMutex.h"
-  header "TMutexImp.h"
-  header "TThread.h"
-  header "TThreadPool.h"
-  header "TThreadFactory.h"
-  header "TPosixThreadFactory.h"
-  header "TConditionImp.h"
-  header "TAtomicCount.h"
-  header "TThreadImp.h"
-  header "TCondition.h"
-  header "TRWLock.h"
-  //header "TAtomicCountPthread.h" // never included itself
-  header "TPosixThread.h"
-  header "TPosixCondition.h"
-  header "TMutex.h"
-  //header "TAtomicCountGcc.h" // never included itself
+  header "TQObjectEmitVA.h"
+  export * 
 }
-module ThreadLocalStorage {
-  header "ThreadLocalStorage.h"
-  export *
-}
+//module "TQObjectEmitVA.h" { header "TQObjectEmitVA.h" export * } -- see TQObject
 
-module math_unuran {
-  export *
-  header "TUnuranSampler.h"
-  header "TUnuranBaseDist.h"
-  header "TUnuranContDist.h"
-  header "TUnuranMultiContDist.h"
-  header "TUnuranEmpDist.h"
-  header "TUnuranDiscrDist.h"
-  header "TUnuran.h"
-}
-module math_physics {
-  export *
-  header "TRolke.h"
-  header "TRotation.h"
-  header "TFeldmanCousins.h"
-  header "TVector2.h"
-  header "TLorentzRotation.h"
-  header "TLorentzVector.h"
-  header "TQuaternion.h"
-  header "TGenPhaseSpace.h"
-  header "TVector3.h"
-  header "TRobustEstimator.h"
-}
-module net_rpddefs {
-  header "rpddefs.h"
-  export *
-}
-module net_rpdutils {
-  export *
-  header "rpderr.h"
-  header "rpdconn.h"
-  header "rpdpriv.h"
-  header "rpdp.h"
-}
-module hist_hbook {
-  export *
-  header "THbookFile.h"
-  header "THbookTree.h"
-  header "THbookBranch.h"
-  header "THbookKey.h"
-}
-module hist_spectrum {
-  export *
-  header "TSpectrum2Transform.h"
-  header "TSpectrumFit.h"
-  header "TSpectrum2Fit.h"
-  header "TSpectrum.h"
-  header "TSpectrum2.h"
-  header "TSpectrum3.h"
-  header "TSpectrumTransform.h"
-}
-module graf2d_fitsio {
-  export *
-  header "TFITS.h"
-}
-module misc_memstat {
-  export *
-  header "TMemStatBacktrace.h"
-  header "TMemStat.h"
-  header "TMemStatHook.h"
-  header "TMemStatMng.h"
-  header "TMemStatHelpers.h"
-  header "TMemStatDef.h"
-}
-module math_fumili {
-  export *
-  header "TFumili.h"
-  header "TFumiliMinimizer.h"
-}
-
-module NetErrors {
-  header "NetErrors.h"
-  export *
-}
-
-module net_net {
-  export *
-  header "TPSocket.h"
-  header "TGridJobStatus.h"
-  header "TSQLMonitoring.h"
-  header "TGridJDL.h"
-  header "TApplicationServer.h"
-  header "TGrid.h"
-  header "TMonitor.h"
-  header "TSQLServer.h"
-  header "TGridResult.h"
-  header "TApplicationRemote.h"
-  header "TS3HTTPRequest.h"
-  header "TWebFile.h"
-  header "TUDPSocket.h"
-  header "TNetFileStager.h"
-  header "TSecContext.h"
-  header "TFileStager.h"
-  header "TGridJob.h"
-  header "TSocket.h"
-  header "TSQLRow.h"
-  header "TSQLResult.h"
-  header "TMessage.h"
-  header "TSQLStatement.h"
-  header "TSSLSocket.h"
-  header "TFTP.h"
-  header "TPServerSocket.h"
-  header "TParallelMergingFile.h"
-  header "TGridCollection.h"
-  header "TSQLTableInfo.h"
-  header "TNetFile.h"
-  header "TSQLColumnInfo.h"
-  header "TS3WebFile.h"
-  header "TServerSocket.h"
-  header "TGridJobStatusList.h"
-  header "RRemoteProtocol.h"
-}
-module math_foam {
-  export *
-  header "TFoamMaxwt.h"
-  header "TFoamCell.h"
-  header "TFoam.h"
-  header "TFoamIntegrand.h"
-  header "TFoamVect.h"
-  header "TFoamSampler.h"
-}
-module graf2d_asimage {
-  export *
-  header "TASImage.h"
-  header "TASPaletteEditor.h"
-  header "TASImagePlugin.h"
-  header "TASPluginGS.h"
-}
-module core_clib [extern_c] {
-  export *
-  header "Demangle.h"
-  header "snprintf.h"
-  header "strlcpy.h"
-  header "mmconfig.h"
-}
-module mmprivate [extern_c] {
-  header "mmprivate.h"  // enabling this + enabling TMapFile leads to clashing macro BLOCK with Clang's DeclNode.inc
-  header "mmalloc.h" // enabling this leads to clashing macro PTR with Clang's Expr.h
-  export *
-}
-
-module bindings_pyroot {
-  export *
-  header "TPySelector.h"
-  header "TPyException.h"
-  header "TPyArg.h"
-  header "TPyDispatcher.h"
-  header "TPyReturn.h"
-  header "TPython.h"
-  header "TPyROOTApplication.h"
-  header "TPyFitFunction.h"
-}
-module TreeFormula {
-  header "TTreeFormula.h"
-  export *
-}
-module TreeIndex {
-  header "TTreeIndex.h"
-  export *
-}
-module ChainIndex {
-  header "TChainIndex.h"
-  export *
-}
-module tree_treeplayer {
-  export *
-  header "TSelectorEntries.h"
-  header "TFriendProxy.h"
-  header "TBranchProxyDirector.h"
-  header "TRefProxy.h"
-  //header "TBranchProxyTemplate.h" // To be included only in dictionaries.
-  header "TTreeReader.h"
-  header "TFriendProxyDescriptor.h"
-  header "TFormLeafInfoReference.h"
-  header "TTreeReaderUtils.h"
-  header "TFileDrawMap.h"
-  header "TTreePerfStats.h"
-  header "TFormLeafInfo.h"
-  header "TBranchProxyDescriptor.h"
-  header "TBranchProxyClassDescriptor.h"
-  header "TTreeReaderArray.h"
-  header "TTreePlayer.h"
-  header "TTreeDrawArgsParser.h"
-  header "TTreeTableInterface.h"
-  header "TTreeProxyGenerator.h"
-  header "TTreeFormulaManager.h"
-  header "TBranchProxy.h"
-  header "TRefArrayProxy.h"
-  header "TTreeReaderValue.h"
-  header "TSelectorDraw.h"
-}
-module math_genvector {
-  export *
-  header "Math/Point3Dfwd.h"
-  header "Math/Quaternion.h"
-  header "Math/Vector3D.h"
-  header "Math/BoostY.h"
-  header "Math/RotationY.h"
-  header "Math/PositionVector3D.h"
-  header "Math/PtEtaPhiM4D.h"
-  header "Math/Point2Dfwd.h"
-  header "Math/Boost.h"
-  header "Math/Plane3D.h"
-  header "Math/GenVector/PxPyPzE4Dfwd.h"
-  header "Math/GenVector/Quaternion.h"
-  header "Math/GenVector/RotationXfwd.h"
-  header "Math/GenVector/BoostY.h"
-  header "Math/GenVector/RotationY.h"
-  header "Math/GenVector/PositionVector3D.h"
-  header "Math/GenVector/RotationYfwd.h"
-  header "Math/GenVector/PtEtaPhiM4D.h"
-  header "Math/GenVector/LorentzRotationfwd.h"
-  header "Math/GenVector/Boost.h"
-  header "Math/GenVector/Plane3D.h"
-  header "Math/GenVector/LorentzVector.h"
-  header "Math/GenVector/3DDistances.h"
-  header "Math/GenVector/RotationZfwd.h"
-  header "Math/GenVector/BoostZ.h"
-  header "Math/GenVector/Transform3D.h"
-  header "Math/GenVector/GenVector_exception.h"
-  header "Math/GenVector/Cylindrical3D.h"
-  header "Math/GenVector/PtEtaPhiE4D.h"
-  header "Math/GenVector/etaMax.h"
-  header "Math/GenVector/BoostX.h"
-  header "Math/GenVector/BoostXfwd.h"
-  header "Math/GenVector/BoostYfwd.h"
-  header "Math/GenVector/Cartesian3D.h"
-  header "Math/GenVector/PositionVector2Dfwd.h"
-  header "Math/GenVector/DisplacementVector2D.h"
-  header "Math/GenVector/RotationZ.h"
-  header "Math/GenVector/Rotation3D.h"
-  header "Math/GenVector/eta.h"
-  header "Math/GenVector/CylindricalEta3Dfwd.h"
-  header "Math/GenVector/LorentzVectorfwd.h"
-  header "Math/GenVector/Cartesian2Dfwd.h"
-  header "Math/GenVector/Quaternionfwd.h"
-  header "Math/GenVector/RotationX.h"
-  header "Math/GenVector/Polar3D.h"
-  header "Math/GenVector/PxPyPzM4D.h"
-  header "Math/GenVector/Cartesian2D.h"
-  header "Math/GenVector/DisplacementVector2Dfwd.h"
-  header "Math/GenVector/BoostZfwd.h"
-  header "Math/GenVector/RotationZYXfwd.h"
-  header "Math/GenVector/DisplacementVector3D.h"
-  header "Math/GenVector/PositionVector3Dfwd.h"
-  header "Math/GenVector/EulerAngles.h"
-  header "Math/GenVector/PxPyPzE4D.h"
-  header "Math/GenVector/LorentzRotation.h"
-  header "Math/GenVector/CylindricalEta3D.h"
-  header "Math/GenVector/Polar2D.h"
-  header "Math/GenVector/PositionVector2D.h"
-  header "Math/GenVector/CoordinateSystemTags.h"
-  header "Math/GenVector/RotationZYX.h"
-  header "Math/GenVector/Rotation3Dfwd.h"
-  header "Math/GenVector/AxisAnglefwd.h"
-  header "Math/GenVector/AxisAngle.h"
-  header "Math/GenVector/Polar3Dfwd.h"
-  header "Math/GenVector/DisplacementVector3Dfwd.h"
-  header "Math/GenVector/Boostfwd.h"
-  header "Math/GenVector/Translation3D.h"
-  header "Math/GenVector/VectorUtil.h"
-  header "Math/GenVector/Cartesian3Dfwd.h"
-  header "Math/GenVector/GenVectorIO.h"
-  header "Math/GenVector/BitReproducible.h"
-  header "Math/GenVector/Cylindrical3Dfwd.h"
-  header "Math/GenVector/PtEtaPhiM4Dfwd.h"
-  header "Math/GenVector/PxPyPzM4Dfwd.h"
-  header "Math/GenVector/3DConversions.h"
-  header "Math/GenVector/PtEtaPhiE4Dfwd.h"
-  header "Math/GenVector/Polar2Dfwd.h"
-  header "Math/GenVector/EulerAnglesfwd.h"
-  header "Math/LorentzVector.h"
-  header "Math/Vector3Dfwd.h"
-  header "Math/BoostZ.h"
-  header "Math/Vector2D.h"
-  header "Math/Point2D.h"
-  header "Math/Transform3D.h"
-  header "Math/Cylindrical3D.h"
-  header "Math/PtEtaPhiE4D.h"
-  header "Math/BoostX.h"
-  header "Math/Vector2Dfwd.h"
-  header "Math/Cartesian3D.h"
-  header "Math/DisplacementVector2D.h"
-  header "Math/RotationZ.h"
-  header "Math/Rotation3D.h"
-  header "Math/Point3D.h"
-  header "Math/RotationX.h"
-  header "Math/Polar3D.h"
-  header "Math/PxPyPzM4D.h"
-  header "Math/Cartesian2D.h"
-  header "Math/Vector4D.h"
-  header "Math/DisplacementVector3D.h"
-  header "Math/EulerAngles.h"
-  header "Math/PxPyPzE4D.h"
-  header "Math/LorentzRotation.h"
-  header "Math/CylindricalEta3D.h"
-  header "Math/Polar2D.h"
-  header "Math/PositionVector2D.h"
-  header "Math/RotationZYX.h"
-  header "Math/AxisAngle.h"
-  header "Math/Vector4Dfwd.h"
-  header "Math/Translation3D.h"
-  header "Math/VectorUtil.h"
-}
-module math_quadp {
-  export *
-  header "TQpVar.h"
-  header "TQpResidual.h"
-  header "TQpDataDens.h"
-  header "TQpProbSparse.h"
-  header "TMehrotraSolver.h"
-  header "TQpSolverBase.h"
-  header "TQpProbDens.h"
-  header "TQpLinSolverBase.h"
-  header "TQpDataSparse.h"
-  header "TQpLinSolverSparse.h"
-  header "TQpDataBase.h"
-  header "TGondzioSolver.h"
-  header "TQpProbBase.h"
-  header "TQpLinSolverDens.h"
-}
-module core_zip [extern_c] {
-  export *
-  header "Compression.h"
-  header "RZip.h"
-}
-
-module Pad {
-  header "TPad.h"
-  header "TAttCanvas.h"
-  export *
-}
-module graf2d_gpad {
-  export *
-  header "TControlBarButton.h"
-  header "TColorWheel.h"
-  header "TButton.h"
-  header "TInspectCanvas.h"
-  header "TCreatePrimitives.h"
-  header "TGroupButton.h"
-  header "TSliderBox.h"
-  header "TViewer3DPad.h"
-  header "TPadPainter.h"
-  header "TView.h"
-  header "TControlBar.h"
-  header "TDialogCanvas.h"
-  header "TClassTree.h"
-  header "TPaveClass.h"
-  header "TSlider.h"
-}
-module misc_table {
-  export *
-  header "TPoints3D.h"
-  header "TCernLib.h"
-  header "TVolumePosition.h"
-  header "TObjectSet.h"
-  header "TTableDescriptor.h"
-  header "TTable3Points.h"
-  header "TPolyLineShape.h"
-  header "Ttypes.h"
-  header "TFileSet.h"
-  header "TTablePadView3D.h"
-  header "TTablePoints.h"
-  header "TIndexTable.h"
-  header "TTableSorter.h"
-  header "tableDescriptor.h"
-  header "TResponseTable.h"
-  header "TDsKey.h"
-  header "TVolume.h"
-  header "TVolumeView.h"
-  header "TDataSet.h"
-  header "TGenericTable.h"
-  header "TFileIter.h"
-  header "TColumnView.h"
-  header "TVolumeViewIter.h"
-  header "TPointsArray3D.h"
-  header "TChair.h"
-  header "TTable.h"
-  header "TTableIter.h"
-  header "TDataSetIter.h"
-  header "TTableMap.h"
-}
-module gui_gui {
-  export *
-  header "TGColorDialog.h"
-  header "TRootEmbeddedCanvas.h"
-  header "TGTextEditDialogs.h"
-  header "TGMdi.h"
-  header "TGSlider.h"
-  header "TGSplitter.h"
-  header "TGSimpleTable.h"
-  header "TGGC.h"
-  header "HelpText.h"
-  header "TGTripleSlider.h"
-  header "TGListView.h"
-  header "TGImageMap.h"
-  header "TGMimeTypes.h"
-  header "TGShutter.h"
-  header "TRootBrowser.h"
-  header "TGMenu.h"
-  header "TGDoubleSlider.h"
-  header "TRootCanvas.h"
-  header "TGView.h"
-  header "TGTableContainer.h"
-  header "TGWidget.h"
-  header "TGPicture.h"
-  header "TGLayout.h"
-  header "TGFileBrowser.h"
-  header "TGSimpleTableInterface.h"
-  header "TGDockableFrame.h"
-  header "TRootDialog.h"
-  header "TGTable.h"
-  header "TGToolTip.h"
-  header "TGToolBar.h"
-  header "TGTextEntry.h"
-  header "TGApplication.h"
-  header "TGIcon.h"
-  header "TGClient.h"
-  header "TGFont.h"
-  header "TGStatusBar.h"
-  header "TGRedirectOutputGuard.h"
-  header "TRootControlBar.h"
-  header "TGShapedFrame.h"
-  header "TGTab.h"
-  header "TGWindow.h"
-  header "TGFileDialog.h"
-  header "TG3DLine.h"
-  header "TGTableLayout.h"
-  header "TGScrollBar.h"
-  header "TGText.h"
-  header "TRootBrowserLite.h"
-  header "TGListBox.h"
-  header "TGNumberEntry.h"
-  header "TVirtualDragManager.h"
-  header "TGMdiDecorFrame.h"
-  header "TGObject.h"
-  header "TGTextBuffer.h"
-  header "TRootContextMenu.h"
-  header "TGXYLayout.h"
-  header "TGIdleHandler.h"
-  header "TGDNDManager.h"
-  header "TGFSContainer.h"
-  header "TRootHelpDialog.h"
-  header "TGPack.h"
-  header "TGResourcePool.h"
-  header "WidgetMessageTypes.h"
-  header "TGMdiFrame.h"
-  header "TGDimension.h"
-  header "TGCommandPlugin.h"
-  header "TGFrame.h"
-  header "TGString.h"
-  header "TGCanvas.h"
-  header "TGSpeedo.h"
-  header "TGTableHeader.h"
-  header "TRootApplication.h"
-  header "TGTextEditor.h"
-  header "TGColorSelect.h"
-  header "TGTextView.h"
-  header "TGEventHandler.h"
-  header "TGListTree.h"
-  header "TGLabel.h"
-  header "TGTextEdit.h"
-  header "TGMsgBox.h"
-  header "TGButton.h"
-  header "TGProgressBar.h"
-  header "TGPasswdDialog.h"
-  header "TGSplitFrame.h"
-  header "TGComboBox.h"
-  header "TRootGuiFactory.h"
-  header "TGFSComboBox.h"
-  header "TGMdiMenu.h"
-  header "TGInputDialog.h"
-  header "TGMdiMainFrame.h"
-  header "TGuiBuilder.h"
-  header "TGFontDialog.h"
-  header "TGTableCell.h"
-  header "TGButtonGroup.h"
-}
-module graf2d_x11ttf {
-  export *
-  header "TGX11TTF.h"
-}
-module io_xmlparser {
-  export *
-  header "TXMLParser.h"
-  header "TXMLNode.h"
-  header "TDOMParser.h"
-  header "TSAXParser.h"
-  header "TXMLAttr.h"
-  header "TXMLDocument.h"
-}
-module montecarlo_eg {
-  export *
-  header "TDecayChannel.h"
-  header "TParticlePDG.h"
-  //header "Hepevt.h" // leads to multiple definitions of hepevt_
-  header "TPrimary.h"
-  header "cfortran.h"
-  header "TParticle.h"
-  header "TVirtualMCDecayer.h"
-  header "TGenerator.h"
-  header "TParticleClassPDG.h"
-  header "TAttParticle.h"
-  header "TDatabasePDG.h"
-}
-module graf2d_postscript {
-  export *
-  header "TSVG.h"
-  header "TPostScript.h"
-  header "TPDF.h"
-  header "TTeXDump.h"
-  header "TImageDump.h"
-}
-module graf2d_gviz {
-  export *
-  header "TGraphEdge.h"
-  header "TGraphNode.h"
-  header "TGraphStruct.h"
-}
-module TProofSuperMaster {
-  header "TProofSuperMaster.h"
-  export *
-}
-module proof_proof {
-  export *
-  header "TProofLite.h"
-  header "TDataSetManagerFile.h"
-  header "TProofQueryResult.h"
-  header "TProofCondor.h"
-  header "TProofDebug.h"
-  header "TProofLog.h"
-  header "TDataSetManager.h"
-  header "TSelVerifyDataSet.h"
-  header "TProofResources.h"
-  header "TProofServ.h"
-  header "TProofProgressStatus.h"
-  header "TProofResourcesStatic.h"
-  header "TSlaveLite.h"
-  header "TQueryResultManager.h"
-  header "TProofChain.h"
-  header "TProofOutputList.h"
-  header "TDSet.h"
-  header "TProofServLite.h"
-  header "TVirtualProofPlayer.h"
-  header "TProofNodeInfo.h"
-  header "TDSetProxy.h"
-  header "TProofMgrLite.h"
-  header "TSlave.h"
-  header "TProofMgr.h"
-  header "TDataSetManagerAliEn.h"
-  header "TProofOutputFile.h"
-  header "TProof.h"
-  header "TCondor.h"
-}
-module proof_pq2 {
-  export *
-  header "pq2ping.h"
-  header "redirguard.h"
-  header "pq2actions.h"
-  header "pq2wrappers.h"
-}
-module math_mathcore {
-  export *
-  header "TRandom.h"
-  header "TRandom2.h"
-  header "TStatistic.h"
-  header "TKDTree.h"
-  header "Math/BrentMinimizer1D.h"
-  header "Math/IFunctionfwd.h"
-  header "Math/TDataPointN.h"
-  header "Math/VirtualIntegrator.h"
-  header "Math/ProbFuncMathCore.h"
-  header "Math/Util.h"
-  header "Math/KDTree.h"
-  header "Math/BasicMinimizer.h"
-  header "Math/IMinimizer1D.h"
-  header "Math/GenAlgoOptions.h"
-  header "Math/BrentRootFinder.h"
-  header "Math/ProbFunc.h"
-  header "Math/GaussLegendreIntegrator.h"
-  header "Math/ParamFunctor.h"
-  header "Math/WrappedParamFunction.h"
-  header "Math/Math.h"
-  header "Math/RootFinder.h"
-  header "Math/MinimizerVariableTransformation.h"
-  header "Math/MinimTransformFunction.h"
-  header "Math/DistSamplerOptions.h"
-  header "Math/RichardsonDerivator.h"
-  header "Math/QuantFunc.h"
-  header "Math/MinimizerOptions.h"
-  header "Math/PdfFunc.h"
-  header "Math/TDataPoint.h"
-  header "Math/FitMethodFunction.h"
-  header "Math/IntegratorMultiDim.h"
-  header "Math/MinimTransformVariable.h"
-  header "Math/AdaptiveIntegratorMultiDim.h"
-  header "Math/IParamFunction.h"
-  header "Math/WrappedFunction.h"
-  header "Math/QuantFuncMathCore.h"
-  header "Math/OneDimFunctionAdapter.h"
-  header "Math/IParamFunctionfwd.h"
-  header "Math/DistSampler.h"
-  header "Math/Error.h"
-  header "Math/AllIntegrationTypes.h"
-  header "Math/Minimizer.h"
-  header "Math/ChebyshevPol.h"
-  header "Math/BrentMethods.h"
-  header "Math/Functor.h"
-  header "Math/DistFuncMathCore.h"
-  header "Math/GoFTest.h"
-  header "Math/Integrator.h"
-  header "Math/IOptions.h"
-  header "Math/GaussIntegrator.h"
-  header "Math/SpecFuncMathCore.h"
-  header "Math/IFunction.h"
-  header "Math/SpecFunc.h"
-  header "Math/PdfFuncMathCore.h"
-  header "Math/IRootFinderMethod.h"
-  header "Math/MultiDimParamFunctionAdapter.h"
-  header "Math/DistFunc.h"
-  header "Math/IntegratorOptions.h"
-  header "Math/Factory.h"
-  header "TKDTreeBinning.h"
-  header "TComplex.h"
-  header "TRandom1.h"
-  header "TMath.h"
-  header "TRandom3.h"
-}
-
-module math_core_fit {
-  export *
-  header "Fit/FitUtil.h"
-  header "Fit/DataVectorfwd.h"
-  header "Fit/FitUtilParallel.h"
-  header "Fit/PoissonLikelihoodFCN.h"
-  header "Fit/UnBinData.h"
-  header "Fit/Chi2FCN.h"
-  header "Fit/DataVector.h"
-  header "Fit/SparseData.h"
-  header "Fit/DataRange.h"
-  header "Fit/FitResult.h"
-  header "Fit/DataOptions.h"
-  header "Fit/FcnAdapter.h"
-  header "Fit/BinPoint.h"
-  header "Fit/ParameterSettings.h"
-  header "Fit/LogLikelihoodFCN.h"
-  header "Fit/BinData.h"
-  header "Fit/Fitter.h"
-  header "Fit/FitConfig.h"
-}
-module math_minuit {
-  export *
-  header "TLinearFitter.h" // Bug in clang MethodInfoMap.count(OverriddenMD) && "Did not find the overridden method!
-  header "TLinearMinimizer.h"
-  header "TMinuit.h"
-  header "TMinuitMinimizer.h" // Bug in clang MethodInfoMap.count(OverriddenMD) && "Did not find the overridden method!
-  header "TFitter.h"
-}
-module montecarlo_vmc {
-  export *
-  header "TMCParticleType.h"
-  header "TPDGCode.h"
-  header "TVirtualMCApplication.h"
-  header "TVirtualMCGeometry.h"
-  header "TGeoMCGeometry.h"
-  header "TVirtualMC.h"
-  header "TVirtualMCStack.h"
-  header "TMCtls.h"
-  header "TMCProcess.h"
-  header "TMCOptical.h"
-  header "TMCVerbose.h"
-}
-module MapFile {
-  export *
-  header "TMapFile.h"
-}
-module io_io {
-  export *
-  header "TArchiveFile.h"
-  header "TBufferFile.h"
-  header "TGenCollectionProxy.h"
-  header "TStreamerInfo.h"
-  header "TMakeProject.h"
-  header "TEmulatedCollectionProxy.h"
-  header "TEmulatedMapProxy.h"
-  header "TZIPFile.h"
-  header "TVirtualObject.h"
-  header "TFPBlock.h"
-  header "TVirtualCollectionIterators.h"
-  header "TCollectionProxyFactory.h"
-  header "TContainerConverters.h"
-  header "TVirtualArray.h"
-  header "TFile.h"
-  header "TFree.h"
-  header "TGenCollectionStreamer.h"
-  header "TFileCacheRead.h"
-  header "TKey.h"
-  header "TDirectoryFile.h"
-  header "TFilePrefetch.h"
-  header "TFileCacheWrite.h"
-  header "TFileMerger.h"
-  header "TKeyMapFile.h"
-  header "TStreamerInfoActions.h"
-  header "TLockFile.h"
-  header "TMemFile.h"
-}
-module geom_geombuilder {
-  export *
-  header "TGeoMediumEditor.h"
-  header "TGeoEltuEditor.h"
-  header "TGeoHypeEditor.h"
-  header "TGeoPconEditor.h"
-  header "TGeoTubeEditor.h"
-  header "TGeoTabManager.h"
-  header "TGeoPgonEditor.h"
-  header "TGeoVolumeEditor.h"
-  header "TGeoTorusEditor.h"
-  header "TGeoConeEditor.h"
-  header "TGeoTrd2Editor.h"
-  header "TGeoMatrixEditor.h"
-  header "TGeoTrd1Editor.h"
-  header "TGeoGedFrame.h"
-  header "TGeoMaterialEditor.h"
-  header "TGeoBBoxEditor.h"
-  header "TGeoTrapEditor.h"
-  header "TGeoNodeEditor.h"
-  header "TGeoParaEditor.h"
-  header "TGeoManagerEditor.h"
-  header "TGeoSphereEditor.h"
-}
-module graf2d_qt {
-  export *
-  header "TQtRootSlot.h"
-  header "TQtBrush.h"
-  header "TQtClientFilter.h"
-  header "TQMimeTypes.h"
-  header "TQtRConfig.h"
-  header "TQtEmitter.h"
-  header "TGQt.h"
-  header "TObjectExecute.h"
-  header "TQtPadFont.h"
-  header "TQtMarker.h"
-  header "TQtRootApplication.h"
-  header "TQtLock.h"
-  header "TQtWidget.h"
-  header "TWaitCondition.h"
-  header "TQtSymbolCodec.h"
-  header "TQtApplication.h"
-  header "TQtUtil.h"
-  header "TQtEvent.h"
-  header "TQtPen.h"
-  header "TQtTimer.h"
-  header "TQtClientGuard.h"
-  header "TQtCanvasPainter.h"
-  header "TQtEventQueue.h"
-  header "TQUserEvent.h"
-  header "TQtLockGuard.h"
-  header "TVirtualX.interface.h"
-  header "TQtClientWidget.h"
-}
-module graf3d_g3d {
-  requires cplusplus
-  export *
-  header "TCONE.h"
-  header "TShape.h"
-  header "TPolyMarker3D.h"
-  header "THYPE.h"
-  header "TSPHE.h"
-  header "TTRD1.h"
-  header "TGeometry.h"
-  header "TPCON.h"
-  header "TGTRA.h"
-  header "TMixture.h"
-  header "TTUBE.h"
-  header "TPARA.h"
-  header "TPoints3DABC.h"
-  header "TPointSet3D.h"
-  header "TXTRU.h"
-  header "TAxis3D.h"
-  header "TPolyLine3D.h"
-  header "TView3D.h"
-  header "TMaterial.h"
-  header "X3DBuffer.h"
-  header "TCTUB.h"
-  header "TTRD2.h"
-  header "TTUBS.h"
-  header "TMarker3DBox.h"
-  header "TCONS.h"
-  header "TNodeDiv.h"
-  header "TTRAP.h"
-  header "TNode.h"
-  header "TELTU.h"
-  header "TRotMatrix.h"
-  header "THelix.h"
-  header "TBRIK.h"
-  header "TPGON.h"
-}
-module graf3d_gviz3d {
-  export *
-  header "TStructNode.h"
-  header "TStructNodeProperty.h"
-  header "TStructNodeEditor.h"
-  header "TStructViewerGUI.h"
-  header "TStructViewer.h"
-}
-module roofit_histfactory {
-  export *
-  header "RooStats/HistFactory/ParamHistFunc.h"
-  header "RooStats/HistFactory/HistFactoryModelUtils.h"
-  header "RooStats/HistFactory/EstimateSummary.h"
-  header "RooStats/HistFactory/HistoToWorkspaceFactoryFast.h"
-  header "RooStats/HistFactory/HistRef.h"
-  header "RooStats/HistFactory/RooBarlowBeestonLL.h"
-  header "RooStats/HistFactory/Data.h"
-  header "RooStats/HistFactory/HistFactorySimultaneous.h"
-  header "RooStats/HistFactory/PiecewiseInterpolation.h"
-  header "RooStats/HistFactory/HistoToWorkspaceFactory.h"
-  header "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
-  header "RooStats/HistFactory/Asimov.h"
-  header "RooStats/HistFactory/ConfigParser.h"
-  header "RooStats/HistFactory/HistFactoryException.h"
-  header "RooStats/HistFactory/Sample.h"
-  header "RooStats/HistFactory/PreprocessFunction.h"
-  header "RooStats/HistFactory/Channel.h"
-  header "RooStats/HistFactory/FlexibleInterpVar.h"
-  header "RooStats/HistFactory/Measurement.h"
-  header "RooStats/HistFactory/HistFactoryNavigation.h"
-  header "RooStats/HistFactory/LinInterpVar.h"
-  header "RooStats/HistFactory/Systematics.h"
-}
-module math_mlp {
-  export *
-  header "TNeuron.h"
-  header "TMLPAnalyzer.h"
-  header "TMultiLayerPerceptron.h"
-  header "TSynapse.h"
-}
-module math_matrix {
-  export *
-  header "TMatrixTSymCramerInv.h"
-  header "TMatrix.h"
-  header "TMatrixTUtils.h"
-  header "TMatrixD.h"
-  header "TMatrixTCramerInv.h"
-  header "TMatrixTSym.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
-  header "TMatrixFSymfwd.h"
-  header "TVectorF.h"
-  header "TVectorFfwd.h"
-  header "TMatrixDSymfwd.h"
-  header "TDecompLU.h"
-  header "TMatrixTSparse.h"
-  header "TMatrixDUtilsfwd.h"
-  header "TMatrixFSparse.h"
-  header "TMatrixTBase.h"
-  header "TVectorD.h"
-  header "TMatrixF.h"
-  header "TVectorT.h"
-  header "TMatrixDSym.h"
-  header "TMatrixDUtils.h"
-  header "TMatrixDLazy.h"
-  header "TVector.h"
-  header "TMatrixDSparsefwd.h"
-  header "TDecompSVD.h"
-  header "TMatrixFUtils.h"
-  header "TMatrixDEigen.h"
-  header "TDecompBase.h"
-  header "TMatrixFUtilsfwd.h"
-  header "TVectorfwd.h"
-  header "TMatrixFSym.h"
-  header "TMatrixDfwd.h"
-  header "TDecompSparse.h"
-  header "TMatrixFBasefwd.h"
-  header "TMatrixDSymEigen.h"
-  header "TMatrixDBase.h"
-  header "TMatrixFSparsefwd.h"
-  header "TDecompChol.h"
-  header "TMatrixTLazy.h"
-  header "TDecompBK.h"
-  header "TMatrixFBase.h"
-  header "TMatrixFLazy.h"
-  header "TMatrixFfwd.h"
-  header "TMatrixDSparse.h"
-  header "TMatrixDBasefwd.h"
-  header "TMatrixT.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
-  header "TDecompQRH.h"
-  header "TVectorDfwd.h"
-}
-
-module gui_qtgsi {
-  export *
-  header "TQRootApplication.h"
-  header "TQRootCanvas.h"
-  header "TQApplication.h"
-  header "TQRootDialog.h"
-  header "TQCanvasMenu.h"
-  header "TQCanvasImp.h"
-  header "TQRootGuiFactory.h"
-}
-module sql_mysql {
-  export *
-  header "TMySQLStatement.h"
-  header "TMySQLRow.h"
-  header "TMySQLResult.h"
-  header "TMySQLServer.h"
-}
-module hist_hist {
-  export *
-  header "TF12.h"
-  header "TLimitDataSource.h"
-  header "TGraph2DErrors.h"
-  header "TH3I.h"
-  header "TSVDUnfold.h"
-  header "TProfile2D.h"
-  header "TF1.h"
-  header "TMultiGraph.h"
-  header "TFitResult.h"
-  header "TH1S.h"
-  header "TFormula.h"
-  header "TUnfoldDensity.h"
-  header "TH2F.h"
-  header "TH2C.h"
-  header "TNDArray.h"
-  header "TH1I.h"
-  header "THnSparse.h"
-  header "TH3F.h"
-  header "TH3.h"
-  header "TH1C.h"
-  header "TH2Poly.h"
-  header "TF3.h"
-  header "TGraphBentErrors.h"
-  header "TUnfoldSys.h"
-  header "TFractionFitter.h"
-  header "TH3D.h"
-  header "TH1F.h"
-  header "TGraphSmooth.h"
-  header "HFitInterface.h"
-  header "TKDE.h"
-  header "TVirtualGraphPainter.h"
-  header "Math/WrappedMultiTF1.h"
-  header "Math/WrappedTF1.h"
-  header "TH1K.h"
-  header "TH2D.h"
-  header "TH1.h"
-  header "THn.h"
-  header "THnSparse_Internal.h"
-  header "TMultiDimFit.h"
-  header "TPrincipal.h"
-  header "TSpline.h"
-  header "TH2S.h"
-  header "TUnfold.h"
-  header "TAxis.h"
-  header "THLimitsFinder.h"
-  header "TH3S.h"
-  header "TH2.h"
-  header "TGraphDelaunay.h"
-  header "TProfile.h"
-  header "THStack.h"
-  header "TUnfoldBinning.h"
-  header "TH1D.h"
-  header "Foption.h"
-  header "TGraph2D.h"
-  header "TGraphErrors.h"
-  header "THnBase.h"
-  header "TFitResultPtr.h"
-  header "TGraphTime.h"
-  header "TGraphAsymmErrors.h"
-  header "TPolyMarker.h"
-  header "TH2I.h"
-  header "TF2.h"
-  header "TVirtualHistPainter.h"
-  header "TVirtualFitter.h"
-  header "TEfficiency.h"
-  header "TProfile3D.h"
-  header "TLimit.h"
-  header "TH3C.h"
-  header "TGraph.h"
-  header "TBinomialEfficiencyFitter.h"
-  header "TBackCompFitter.h"
-  header "TConfidenceLevel.h"
-}
-module net_http {
-  export *
-  header "TRootSniffer.h"
-  header "TBufferJSON.h"
-  header "TCivetweb.h"
-  header "TFastCgi.h"
-  header "THttpEngine.h"
-  header "TRootSnifferStore.h"
-  header "THttpServer.h"
-}
-module tree_treeviewer {
-  export *
-  header "TMemStatShow.h"
-  header "TTVLVContainer.h"
-  header "TParallelCoordVar.h"
-  header "TTreeViewer.h"
-  header "TSpiderEditor.h"
-  header "TParallelCoord.h"
-  header "TSpider.h"
-  header "TTVSession.h"
-  header "TGTreeTable.h"
-  header "TParallelCoordEditor.h"
-  header "TParallelCoordRange.h"
-  header "HelpTextTV.h"
-}
-module proof_proofbench {
-  export *
-  header "TProofBenchRun.h"
-  header "TProofBenchDataSet.h"
-  header "TProofNodes.h"
-  header "TProofBenchRunCPU.h"
-  header "TProofBenchRunDataRead.h"
-  header "TProofBench.h"
-  header "TProofPerfAnalysis.h"
-  header "TProofBenchTypes.h"
-}
-module gui_recorder {
-  export *
-  header "TRecorder.h"
-}
-module math_genetic {
-  export *
-  header "Math/GeneticMinimizer.h"
-}
-module hist_spectrumpainter {
-  export *
-  header "TSpectrum2Painter.h"
-}
-module geom_geom {
-  export *
-  header "TGeoVolume.h"
-  header "TGeoBuilder.h"
-  header "TGeoMaterial.h"
-  header "TGeoMatrix.h"
-  header "TGeoExtension.h"
-  header "TGeoEltu.h"
-  header "TGeoPgon.h"
-  header "TGeoBranchArray.h"
-  header "TGeoShapeAssembly.h"
-  header "TGeoCone.h"
-  header "TGeoNavigator.h"
-  header "TGeoMedium.h"
-  header "TGeoTrd2.h"
-  header "TVirtualGeoPainter.h"
-  header "TVirtualGeoTrack.h"
-  header "TGeoParaboloid.h"
-  header "TGeoTrd1.h"
-  header "TGeoPatternFinder.h"
-  header "TGeoPcon.h"
-  header "TGeoPolygon.h"
-  header "TGeoArb8.h"
-  header "TVirtualMagField.h"
-  header "TGeoGlobalMagField.h"
-  header "TGeoPara.h"
-  header "TGeoVoxelFinder.h"
-  header "TGeoNode.h"
-  header "TGeoAtt.h"
-  header "TGeoXtru.h"
-  header "TGeoSphere.h"
-  header "TGeoStateInfo.h"
-  header "TGeoBBox.h"
-  header "TGeoManager.h"
-  header "TGeoTube.h"
-  header "TGeoShape.h"
-  header "TGeoHype.h"
-  header "TGeoScaledShape.h"
-  header "TGeoUniformMagField.h"
-  header "TGeoCache.h"
-  header "TGeoBoolNode.h"
-  header "TGeoRCPtr.h"
-  header "TGeoHalfSpace.h"
-  header "TGeoParallelWorld.h"
-  header "TGeoHelix.h"
-  header "TGeoCompositeShape.h"
-  header "TGeoPhysicalNode.h"
-  header "TGeoTorus.h"
-  header "TGeoElement.h"
-}
-module gui_ged {
-  export *
-  header "TF1Editor.h"
-  header "TAttLineEditor.h"
-  header "TAttMarkerEditor.h"
-  header "TGedMarkerSelect.h"
-  header "TCurlyLineEditor.h"
-  header "TGedPatternSelect.h"
-  header "TStyleDialog.h"
-  header "TGedFrame.h"
-  header "TFrameEditor.h"
-  header "TTextEditor.h"
-  header "TH1Editor.h"
-  header "TLineEditor.h"
-  header "TPieSliceEditor.h"
-  header "TFunctionParametersDialog.h"
-  header "TCurlyArcEditor.h"
-  header "TGedEditor.h"
-  header "TH2Editor.h"
-  header "TGraphEditor.h"
-  header "TStyleManager.h"
-  header "TArrowEditor.h"
-  header "TStylePreview.h"
-  header "HelpSMText.h"
-  header "TAttTextEditor.h"
-  header "TPaveStatsEditor.h"
-  header "TAttFillEditor.h"
-  header "TAxisEditor.h"
-  header "TPadEditor.h"
-  header "TPieEditor.h"
-}
-module RooStats {
-  umbrella "RooStats"
-
-  module * { export * }
-}
-
-module gui_fitpanel {
-  export *
-  header "TAdvancedGraphicsDialog.h"
-  header "TTreeInput.h"
-  header "TFitParametersDialog.h"
-  header "TFitEditor.h"
-}
-module math_fftw {
-  export *
-  header "TFFTRealComplex.h"
-  header "TFFTComplex.h"
-  header "TFFTReal.h"
-  header "TFFTComplexReal.h"
-}
-module graf2d_x11 {
-  export *
-  header "TGX11.h"
-}
-module hist_histpainter {
-  export *
-  header "TPainter3dAlgorithms.h"
-  header "TGraph2DPainter.h"
-  header "Hoption.h"
-  header "TLego.h"
-  header "TGraphPainter.h"
-  header "THistPainter.h"
-  header "Hparam.h"
-  header "TPaletteAxis.h"
-}
-module graf3d_eve {
-  export *
-  header "TEveCalo2DGL.h"
-  header "TEveTrans.h"
-  header "TEveSelection.h"
-  header "TEveProjectionManagerEditor.h"
-  header "TEveRGBAPaletteEditor.h"
-  header "TEveVector.h"
-  header "TEveProjectionAxesEditor.h"
-  header "TEveDigitSetGL.h"
-  header "TEveCaloData.h"
-  header "TEveEventManager.h"
-  header "TEveStraightLineSetEditor.h"
-  header "TEveArrow.h"
-  header "TEveArrowEditor.h"
-  header "TEveLine.h"
-  header "TEveTriangleSet.h"
-  header "TEveTrack.h"
-  header "TEveGedEditor.h"
-  header "TEveCaloLegoEditor.h"
-  header "TEveQuadSetGL.h"
-  header "TEveVSD.h"
-  header "TEveTrackEditor.h"
-  header "TEveProjections.h"
-  header "TEveWindowManager.h"
-  header "TEveWindow.h"
-  header "TEveStraightLineSetGL.h"
-  header "TEveBox.h"
-  header "TEveTriangleSetGL.h"
-  header "TEveTextEditor.h"
-  header "TEveRGBAPaletteOverlay.h"
-  header "TEveGeoNodeEditor.h"
-  header "TEveBrowser.h"
-  header "TEveShapeEditor.h"
-  header "TEveLegoEventHandler.h"
-  header "TEvePlot3D.h"
-  header "TEveJetCone.h"
-  header "TEveText.h"
-  header "TEveTransEditor.h"
-  header "TEveGValuators.h"
-  header "TEveTrackGL.h"
-  header "TEveParamList.h"
-  header "TEveFrameBoxGL.h"
-  header "TEveManager.h"
-  header "TEveRGBAPalette.h"
-  header "TEveStraightLineSet.h"
-  header "TEveCaloVizEditor.h"
-  header "TEveTrackProjected.h"
-  header "TEveElementEditor.h"
-  header "TEveSecondarySelectable.h"
-  header "TEveProjectionBases.h"
-  header "TEveWindowEditor.h"
-  header "TEveProjectionManager.h"
-  header "TEvePad.h"
-  header "TEvePointSet.h"
-  header "TEveCalo3DGL.h"
-  header "TEveTrackPropagatorEditor.h"
-  header "TEveViewer.h"
-  header "TEveProjectionAxesGL.h"
-  header "TEvePathMark.h"
-  header "TEveTreeTools.h"
-  header "TEveElement.h"
-  header "TEveTextGL.h"
-  header "TEveUtil.h"
-  header "TEveGeoShapeExtract.h"
-  header "TEvePointSetArrayEditor.h"
-  header "TEveViewerListEditor.h"
-  header "TEveJetConeEditor.h"
-  header "TEveVSDStructs.h"
-  header "TEveSceneInfo.h"
-  header "TEveTrackProjectedGL.h"
-  header "TEveGridStepper.h"
-  header "TEveJetConeGL.h"
-  header "TEveLineEditor.h"
-  header "TEvePolygonSetProjected.h"
-  header "TEveBoxSet.h"
-  header "TEveBoxSetGL.h"
-  header "TEveDigitSetEditor.h"
-  header "TEvePolygonSetProjectedGL.h"
-  header "TEvePlot3DGL.h"
-  header "TEveTriangleSetEditor.h"
-  header "TEveProjectionAxes.h"
-  header "TEveShape.h"
-  header "TEveDigitSet.h"
-  header "TEveBoxGL.h"
-  header "TEveScalableStraightLineSet.h"
-  header "TEveCaloLegoOverlay.h"
-  header "TEveChunkManager.h"
-  header "TEveCompound.h"
-  header "TEveCalo.h"
-  header "TEveMacro.h"
-  header "TEveCaloLegoGL.h"
-  header "TEveTrackPropagator.h"
-  header "TEveGridStepperEditor.h"
-  header "TEveFrameBox.h"
-  header "TEveGeoShape.h"
-  header "TEveGeoNode.h"
-  header "TEveQuadSet.h"
-  header "TEveArrowGL.h"
-  header "TEveLineGL.h"
-  header "TEveScene.h"
-  header "TEveGeoPolyShape.h"
-}
-module core_rint {
-  export *
-  header "TRint.h"
-  header "TTabCom.h"
-}
-module roofit_roofit {
-  export *
-  header "RooCFunction2Binding.h"
-  header "RooPolynomial.h"
-  header "RooNonCentralChiSquare.h"
-  header "RooDstD0BG.h"
-  header "RooBCPGenDecay.h"
-  header "RooGaussModel.h"
-  header "RooUnblindUniform.h"
-  header "RooBernstein.h"
-  header "RooUnblindPrecision.h"
-  header "RooCBShape.h"
-  header "RooTFnPdfBinding.h"
-  header "RooGaussian.h"
-  header "RooSpHarmonic.h"
-  header "RooParamHistFunc.h"
-  header "RooMathMoreReg.h"
-  header "RooPoisson.h"
-  header "RooMultiBinomial.h"
-  header "RooBMixDecay.h"
-  header "RooGExpModel.h"
-  header "RooIntegralMorph.h"
-  header "RooHistConstraint.h"
-  header "RooBifurGauss.h"
-  header "RooKeysPdf.h"
-  header "Roo2DKeysPdf.h"
-  header "RooBreitWigner.h"
-  header "RooCFunction4Binding.h"
-  header "RooFunctorBinding.h"
-  header "RooExponential.h"
-  header "RooGamma.h"
-  header "RooTFnBinding.h"
-  header "Roo2DMomentMorphFunction.h"
-  header "RooBlindTools.h"
-  header "RooFunctor1DBinding.h"
-  header "RooBukinPdf.h"
-  header "RooBDecay.h"
-  header "Roo1DMomentMorphFunction.h"
-  header "RooChiSquarePdf.h"
-  header "RooStepFunction.h"
-  header "RooNovosibirsk.h"
-  header "RooBCPEffDecay.h"
-  header "RooDecay.h"
-  header "RooChi2MCSModule.h"
-  header "RooUnblindOffset.h"
-  header "RooCFunction3Binding.h"
-  header "RooLandau.h"
-  header "RooLognormal.h"
-  header "RooNonCPEigenDecay.h"
-  header "RooLegendre.h"
-  header "RooJeffreysPrior.h"
-  header "RooParametricStepFunction.h"
-  header "RooMathCoreReg.h"
-  header "RooNDKeysPdf.h"
-  header "RooCFunction1Binding.h"
-  header "RooUniform.h"
-  header "RooMomentMorph.h"
-  header "RooTMathReg.h"
-  header "RooArgusBG.h"
-  header "RooVoigtian.h"
-  header "RooUnblindCPAsymVar.h"
-  header "RooChebychev.h"
-}
-module TMVA {
-  export *
-  umbrella "TMVA"
-  module * { export * }
-}
-
-// FIXME: These are to build G__ProofPlayer dict, it is putting together proof_proofplayer and proof...
-module ProofPlayerLight {
-  header "TProofPlayerLite.h"
-  export *
-}
-module Packetizer {
-  header "TPacketizer.h"
-  header "TPacketizerAdaptive.h"
-  export *
-}
-module proof_proofplayer {
-  export *
-  header "TProofPlayer.h"
-  header "TPacketizerMulti.h"
-  header "TProofLimitsFinder.h"
-  header "TStatsFeedback.h"
-  header "TPacketizerFile.h"
-  header "TStatus.h"
-  header "TPerfStats.h"
-  header "TProofMonSenderML.h"
-  header "TPacketizerUnit.h"
-  header "TProofDraw.h"
-  header "TEventIter.h"
-  header "TVirtualPacketizer.h"
-  header "TOutputListSelectorDataMap.h"
-  header "TProofMonSender.h"
-  header "TProofMonSenderSQL.h"
-  header "TDrawFeedback.h"
-}
-module math_mathmore {
-  export *
-  header "Math/GSLNLSMinimizer.h"
-  header "Math/MCIntegrationTypes.h"
-  header "Math/GSLRootFinder.h"
-  header "Math/GSLRootHelper.h"
-  header "Math/GSLQuasiRandom.h"
-  header "Math/VavilovAccurateCdf.h"
-  header "Math/VavilovAccurateQuantile.h"
-  header "Math/GSLMCIntegrator.h"
-  header "Math/PdfFuncMathMore.h"
-  header "Math/InterpolationTypes.h"
-  header "Math/GSLMultiRootFinder.h"
-  header "Math/GSLMinimizer.h"
-  header "Math/DistFuncMathMore.h"
-  header "Math/QuantFuncMathMore.h"
-  header "Math/Vavilov.h"
-  header "Math/ParamFunction.h"
-  header "Math/Derivator.h"
-  header "Math/SpecFuncMathMore.h"
-  header "Math/QuasiRandom.h"
-  header "Math/GSLMinimizer1D.h"
-  header "Math/VavilovAccuratePdf.h"
-  header "Math/KelvinFunctions.h"
-  header "Math/GSLRootFinderDeriv.h"
-  header "Math/Interpolator.h"
-  header "Math/IntegrationTypes.h"
-  header "Math/GSLSimAnMinimizer.h"
-  header "Math/MCParameters.h"
-  header "Math/MultiNumGradFunction.h"
-  header "Math/MultiRootFinder.h"
-  header "Math/VavilovFast.h"
-  header "Math/ChebyshevApprox.h"
-  header "Math/GSLFunctionAdapter.h"
-  header "Math/RootFinderAlgorithms.h"
-  header "Math/VavilovAccurate.h"
-  header "Math/Random.h"
-  header "Math/GSLIntegrator.h"
-  header "Math/Polynomial.h"
-  header "Math/GSLRndmEngines.h"
-  header "Math/GSLSimAnnealing.h"
-}
-module geom_geompainter {
-  export *
-  header "TGeoPainter.h"
-  header "TGeoChecker.h"
-  header "TGeoTrack.h"
-  header "TGeoOverlap.h"
-}
-module io_sql {
-  export *
-  header "TSQLClassInfo.h"
-  header "TSQLFile.h"
-  header "TSQLObjectData.h"
-  header "TSQLStructure.h"
-  header "TKeySQL.h"
-  header "TBufferSQL2.h"
-}
-module gui_guibuilder {
-  export *
-  header "TRootGuiBuilder.h"
-  header "TGuiBldGeometryFrame.h"
-  header "TGuiBldDragManager.h"
-  header "TGuiBldNameFrame.h"
-  header "TGuiBldHintsEditor.h"
-  header "TGuiBldEditor.h"
-  header "TGuiBldHintsButton.h"
-}
-module math_smatrix {
-  export *
-  header "Math/MatrixFunctions.h"
-  header "Math/Dfinv.h"
-  header "Math/SVector.h"
-  header "Math/StaticCheck.h"
-  header "Math/UnaryOperators.h"
-  header "Math/MConfig.h"
-  header "Math/BinaryOpPolicy.h"
-  header "Math/HelperOps.h"
-  header "Math/Functions.h"
-  header "Math/Dinv.h"
-  header "Math/SMatrixFfwd.h"
-  header "Math/SMatrixDfwd.h"
-  header "Math/Dsinv.h"
-  header "Math/Expression.h"
-  header "Math/Dfact.h"
-  header "Math/CholeskyDecomp.h"
-  header "Math/Dfactir.h"
-  header "Math/BinaryOperators.h"
-  header "Math/SMatrix.h"
-  header "Math/Dsfact.h"
-  header "Math/MatrixRepresentationsStatic.h"
-}
-module core_newdelete {
-  export *
-  header "MemCheck.h"
-}
-module graf3d_gl {
-  export *
-  header "TGLViewerEditor.h"
-  header "TGLFaceSet.h"
-  header "TGLEventHandler.h"
-  header "TGLSceneBase.h"
-  header "TGLH2PolyPainter.h"
-  header "TGLFormat.h"
-  header "TGLClip.h"
-  header "TGLOrthoCamera.h"
-  header "TGLViewerBase.h"
-  header "TGLSelectBuffer.h"
-  header "TGLQuadric.h"
-  header "TKDEAdapter.h"
-  header "TGLPolyLine.h"
-  header "TGLBoxPainter.h"
-  header "TGLWidget.h"
-  header "TGLTF3Painter.h"
-  header "TGLFontManager.h"
-  header "TGLAdapter.h"
-  header "TGLAnnotation.h"
-  header "TGLPadUtils.h"
-  header "TGLContextPrivate.h"
-  header "TGLIncludes.h"
-  header "TGLContext.h"
-  header "TGLCylinder.h"
-  header "TGLSAViewer.h"
-  header "TX11GL.h"
-  header "TGLVoxelPainter.h"
-  header "CsgOps.h"
-  header "TGLScenePad.h"
-  header "TGLAutoRotator.h"
-  header "TGLLegoPainter.h"
-  header "TGLTransManip.h"
-  header "TGLPShapeObjEditor.h"
-  header "TGLCameraOverlay.h"
-  header "TGLScene.h"
-  header "TGLBoundingBox.h"
-  header "TGLAxisPainter.h"
-  header "TGLSphere.h"
-  header "TKDEFGT.h"
-  header "TGLSAFrame.h"
-  header "TGL5DDataSetEditor.h"
-  header "TGLObject.h"
-  header "TGLPadPainter.h"
-  header "TGLManipSet.h"
-  header "TGLStopwatch.h"
-  header "gl2ps.h"
-  header "TGLText.h"
-  header "TGLPlotPainter.h"
-  header "TArcBall.h"
-  header "TGLPShapeObj.h"
-  header "TGLWSIncludes.h"
-  header "TGLClipSetEditor.h"
-  header "TGLMarchingCubes.h"
-  header "TGLPShapeRef.h"
-  header "TGLPolyMarker.h"
-  header "TGLPlot3D.h"
-  header "TH3GL.h"
-  header "TGLScaleManip.h"
-  header "TGLRotateManip.h"
-  header "TPointSet3DGL.h"
-  header "TGLSelectRecord.h"
-  header "TGLPlotBox.h"
-  header "TGLCameraGuide.h"
-  header "TGLManip.h"
-  header "TGLLockable.h"
-  header "TGLFBO.h"
-  header "TGLPlotCamera.h"
-  header "TGLTH3Composition.h"
-  header "TGLAxis.h"
-  header "TF2GL.h"
-  header "TGLPerspectiveCamera.h"
-  header "TGLSurfacePainter.h"
-  header "TGLSceneInfo.h"
-  header "TGLParametric.h"
-  header "TGLParametricEquationGL.h"
-  header "TGLLogicalShape.h"
-  header "TGLPhysicalShape.h"
-  header "TGLHistPainter.h"
-  header "TGL5DPainter.h"
-  header "TGL5D.h"
-  header "TGLIsoMesh.h"
-  header "TH2GL.h"
-  header "TGLOverlayButton.h"
-  header "TGLRnrCtx.h"
-  header "TGLOutput.h"
-  header "TGLLightSet.h"
-  header "TGLViewer.h"
-  header "TGLOverlay.h"
-  header "TGLUtil.h"
-  header "TGLLightSetEditor.h"
-  header "TGLEmbeddedViewer.h"
-  header "TGLCamera.h"
-}
-module core_lzma {
-  export *
-  header "ZipLZMA.h"
-}
-module geom_gdml {
-  export *
-  header "TGDMLWrite.h"
-  header "TGDMLParse.h"
-}
-module core_unix {
-  export *
-  header "TUnixSystem.h" // ambiguous expansion of macro 'SIGSYS'
-}
-module io_xml {
-  export *
-  header "TXMLFile.h"
-  header "TKeyXML.h"
-  header "TBufferXML.h"
-  header "TXMLSetup.h"
-  header "TXMLPlayer.h"
-  header "TXMLEngine.h"
-}
-module core_textinput {
-  export *
-  header "Getline.h"
-}
-module Tree { // Because we don't want TTreeIndex to be polluted all tree_tree
-  header "TBranch.h"
-  header "TTree.h"
-  header "TVirtualTreePlayer.h"
-  export *
-}
-module tree_tree {
-  export *
-  header "TEntryListArray.h"
-  header "TFriendElement.h"
-  header "TLeafB.h"
-  header "TBranchElement.h"
-  header "TLeafS.h"
-  header "TLeafElement.h"
-  header "TIndArray.h"
-  header "TSelectorScalar.h"
-  header "TEntryListFromFile.h"
-  header "TBasket.h"
-  header "TBranchObject.h"
-  header "TNtupleD.h"
-  header "TLeafC.h"
-  header "TCut.h"
-  header "TSelector.h"
-  header "TBranchBrowsable.h"
-  header "TBranchClones.h"
-  header "TBranchRef.h"
-  header "TSelectorList.h"
-  header "TTreeCloner.h"
-  header "TBranchSTL.h"
-  header "TreeUtils.h"
-  header "TLeafO.h"
-  header "TLeafI.h"
-  header "TTreeCache.h"
-  header "TEventList.h"
-  header "TBufferSQL.h"
-  header "TTreeSQL.h"
-  header "TQueryResult.h"
-  header "TLeafL.h"
-  header "TEntryList.h"
-  header "TLeafObject.h"
-  header "TNtuple.h"
-  header "TChainElement.h"
-  header "TEntryListBlock.h"
-  header "TLeaf.h"
-  header "TTreeRow.h"
-  header "TTreeResult.h"
-  header "TTreeCacheUnzip.h"
-  header "TLeafD.h"
-  header "TBasketSQL.h"
-  header "TLeafF.h"
-  header "TSelectorCint.h"
-  header "TVirtualIndex.h"
-  header "TChain.h"
-}
-module graf2d_graf {
-  export *
-  header "TGaxis.h"
-  header "TLatex.h"
-  header "TLink.h"
-  header "TMathText.h" //#  include FT_FREETYPE_H fishy config
-  header "TPie.h"
-  header "TBox.h"
-  header "TMarker.h"
-  header "TLine.h"
-  header "TGraphPolargram.h"
-  header "TPavesText.h"
-  header "TCutG.h"
-  header "TCurlyArc.h"
-  header "TWbox.h"
-  header "TArrow.h"
-  header "TPoints.h"
-  header "TPaveLabel.h"
-  header "TCurlyLine.h"
-  header "TLegendEntry.h"
-  header "TPaveText.h"
-  header "TCrown.h"
-  header "TArc.h"
-  header "TFrame.h"
-  header "TText.h" // fishy typedefs insanity
-  header "TPave.h"
-  header "TLegend.h"
-  header "TPaveStats.h"
-  header "TPieSlice.h"
-  header "TGraphQQ.h"
-  header "TEllipse.h"
-  header "TGraphPolar.h"
-  header "TImage.h"
-  header "TDiamond.h"
-  header "TAttImage.h"
-  header "TPolyLine.h"
-  header "TImagePlugin.h"
-}
-
-module TTF {
-  export *
-  header "TTF.h"
-}
-
-module core_metautils {
-  export *
-
-  //header "TMetaUtils.h" // AXEL is on it.
-  module ClingRuntime {header "TClingRuntime.h" export *}
-}
-module gui_qtroot {
-  export *
-  header "TQtRootGuiFactory.h"
-}
-module sql_sqlite {
-  export *
-  header "TSQLiteStatement.h"
-  header "TSQLiteServer.h"
-  header "TSQLiteResult.h"
-  header "TSQLiteRow.h"
-}
-module net_rsa [extern_c] {
-  header "rsadef.h"
-  header "rsalib.h"
-  header "rsafun.h"
-  header "rsaaux.h"
-  export *
-}
-
-module AuthConst {
-  header "AuthConst.h"
-  export *
-}
-module net_auth {
-  export *
-  header "TAuthenticate.h"
-  header "THostAuth.h"
-  header "TRootAuth.h"
-  header "TRootSecContext.h"
-}
-module math_minuit2 {
-  module TMinuit2TraceObject { header "TMinuit2TraceObject.h" export * }
-  umbrella "Minuit2"
-  module * { export * }
-}
-
-module Vc {
-  export *
-  //header "Vc/ushort_v" // depracated
-  header "Vc/Allocator"
-  header "Vc/Vc"
-  header "Vc/IO"
-  header "Vc/short_v"
-  header "Vc/sfloat_v"
-  header "Vc/global.h"
-  header "Vc/uint_v"
-  header "Vc/Utils"
-  header "Vc/float_v"
-  header "Vc/support.h"
-  header "Vc/Memory"
-  header "Vc/cpuid.h"
-  header "Vc/version.h"
-  header "Vc/limits"
-  header "Vc/vector.h"
-  header "Vc/double_v"
-  header "Vc/int_v"
-  header "Vc/internal/namespace.h"
-
-  module vc_common {
-    header "Vc/common/windows_fix_intrin.h"
-    header "Vc/common/types.h"
-    header "Vc/common/memorybase.h"
-    header "Vc/common/undomacros.h"
-    header "Vc/common/operators.h"
-    header "Vc/common/operand.h"
-    header "Vc/common/exponential.h"
-    header "Vc/common/aliasingentryhelper.h"
-    header "Vc/common/iif.h"
-    header "Vc/common/memoryfwd.h"
-    header "Vc/common/fix_clang_emmintrin.h"
-    header "Vc/common/deinterleave.h"
-    header "Vc/common/macros.h"
-    header "Vc/common/storage.h"
-    header "Vc/common/support.h"
-    header "Vc/common/trigonometric.h"
-    header "Vc/common/interleavedmemory.h"
-    header "Vc/common/vectortuple.h"
-    header "Vc/common/memory.h"
-    header "Vc/common/bitscanintrinsics.h"
-    header "Vc/common/logarithm.h"
-    export *
-  }
-
-  module vc_sse {
-    requires sse
-    header "Vc/sse/casts.h"
-    //header "Vc/sse/forceToRegisters.tcc"
-    header "Vc/sse/vectorhelper.h"
-    header "Vc/sse/types.h"
-    header "Vc/sse/undomacros.h"
-    header "Vc/sse/const_data.h"
-    header "Vc/sse/shuffle.h"
-    header "Vc/sse/vector.tcc"
-    header "Vc/sse/limits.h"
-    header "Vc/sse/vectorhelper.tcc"
-    header "Vc/sse/deinterleave.tcc"
-    //header "Vc/sse/intrinsics.h"
-    header "Vc/sse/macros.h"
-    header "Vc/sse/helperimpl.h"
-    header "Vc/sse/mask.h"
-    header "Vc/sse/debug.h"
-    header "Vc/sse/const.h"
-    header "Vc/sse/math.h"
-    header "Vc/sse/interleavedmemory.tcc"
-    header "Vc/sse/helperimpl.tcc"
-    header "Vc/sse/vector.h"
-    header "Vc/sse/prefetches.tcc"
-    export *
-  }
-  
-  module vc_scalar {
-    header "Vc/scalar/writemaskedvector.h"
-    header "Vc/scalar/types.h"
-    header "Vc/scalar/undomacros.h"
-    header "Vc/scalar/vector.tcc"
-    header "Vc/scalar/limits.h"
-    header "Vc/scalar/macros.h"
-    header "Vc/scalar/helperimpl.h"
-    header "Vc/scalar/mask.h"
-    header "Vc/scalar/math.h"
-    header "Vc/scalar/interleavedmemory.tcc"
-    header "Vc/scalar/helperimpl.tcc"
-    header "Vc/scalar/vector.h"
-    export *
-  }
-  module vc_avx {
-    requires avx
-    header "Vc/avx/writemaskedvector.h"
-    header "Vc/avx/casts.h"
-    //header "Vc/avx/forceToRegisters.tcc"
-    header "Vc/avx/vectorhelper.h"
-    header "Vc/avx/types.h"
-    header "Vc/avx/undomacros.h"
-    header "Vc/avx/const_data.h"
-    header "Vc/avx/shuffle.h"
-    header "Vc/avx/vector.tcc"
-    header "Vc/avx/limits.h"
-    header "Vc/avx/vectorhelper.tcc"
-    header "Vc/avx/writemaskedvector.tcc"
-    header "Vc/avx/deinterleave.tcc"
-    header "Vc/avx/intrinsics.h"
-    header "Vc/avx/macros.h"
-    header "Vc/avx/helperimpl.h"
-    header "Vc/avx/mask.h"
-    header "Vc/avx/mask.tcc"
-    header "Vc/avx/debug.h"
-    header "Vc/avx/const.h"
-    header "Vc/avx/math.h"
-    header "Vc/avx/interleavedmemory.tcc"
-    header "Vc/avx/sorthelper.h"
-    header "Vc/avx/helperimpl.tcc"
-    header "Vc/avx/vector.h"
-    header "Vc/avx/prefetches.tcc"
-    export *
-  }
-}
-//}// end module ROOT
+module "TQpDataBase.h" { header "TQpDataBase.h" export * }
+module "TQpDataDens.h" { header "TQpDataDens.h" export * }
+module "TQpDataSparse.h" { header "TQpDataSparse.h" export * }
+module "TQpLinSolverBase.h" { header "TQpLinSolverBase.h" export * }
+module "TQpLinSolverDens.h" { header "TQpLinSolverDens.h" export * }
+module "TQpLinSolverSparse.h" { header "TQpLinSolverSparse.h" export * }
+module "TQpProbBase.h" { header "TQpProbBase.h" export * }
+module "TQpProbDens.h" { header "TQpProbDens.h" export * }
+module "TQpProbSparse.h" { header "TQpProbSparse.h" export * }
+module "TQpResidual.h" { header "TQpResidual.h" export * }
+module "TQpSolverBase.h" { header "TQpSolverBase.h" export * }
+module "TQpVar.h" { header "TQpVar.h" export * }
+module "TQuaternion.h" { header "TQuaternion.h" export * }
+module "TQueryResult.h" { header "TQueryResult.h" export * }
+module "TQueryResultManager.h" { header "TQueryResultManager.h" export * }
+module "TROOT.h" { header "TROOT.h" export * }
+module "TRWLock.h" { header "TRWLock.h" export * }
+module "TRandom.h" { header "TRandom.h" export * }
+module "TRandom1.h" { header "TRandom1.h" export * }
+module "TRandom2.h" { header "TRandom2.h" export * }
+module "TRandom3.h" { header "TRandom3.h" export * }
+module "TRealData.h" { header "TRealData.h" export * }
+module "TRecorder.h" { header "TRecorder.h" export * }
+module "TRedirectOutputGuard.h" { header "TRedirectOutputGuard.h" export * }
+module "TRef.h" { header "TRef.h" export * }
+module "TRefArray.h" { header "TRefArray.h" export * }
+module "TRefArrayProxy.h" { header "TRefArrayProxy.h" export * }
+module "TRefCnt.h" { header "TRefCnt.h" export * }
+module "TRefProxy.h" { header "TRefProxy.h" export * }
+module "TRefTable.h" { header "TRefTable.h" export * }
+module "TRegexp.h" { header "TRegexp.h" export * }
+module "TRemoteObject.h" { header "TRemoteObject.h" export * }
+module "TResponseTable.h" { header "TResponseTable.h" export * }
+module "TRint.h" { header "TRint.h" export * }
+module "TRobustEstimator.h" { header "TRobustEstimator.h" export * }
+module "TRolke.h" { header "TRolke.h" export * }
+module "TRootApplication.h" { header "TRootApplication.h" export * }
+module "TRootAuth.h" { header "TRootAuth.h" export * }
+module "TRootBrowser.h" { header "TRootBrowser.h" export * }
+module "TRootBrowserLite.h" { header "TRootBrowserLite.h" export * }
+module "TRootCanvas.h" { header "TRootCanvas.h" export * }
+module "TRootContextMenu.h" { header "TRootContextMenu.h" export * }
+module "TRootControlBar.h" { header "TRootControlBar.h" export * }
+module "TRootDialog.h" { header "TRootDialog.h" export * }
+module "TRootEmbeddedCanvas.h" { header "TRootEmbeddedCanvas.h" export * }
+module "TRootGuiBuilder.h" { header "TRootGuiBuilder.h" export * }
+module "TRootGuiFactory.h" { header "TRootGuiFactory.h" export * }
+module "TRootHelpDialog.h" { header "TRootHelpDialog.h" export * }
+module "TRootIOCtor.h" { header "TRootIOCtor.h" export * }
+module "TRootSecContext.h" { header "TRootSecContext.h" export * }
+module "TRootSniffer.h" { header "TRootSniffer.h" export * }
+module "TRootSnifferStore.h" { header "TRootSnifferStore.h" export * }
+module "TRotMatrix.h" { header "TRotMatrix.h" export * }
+module "TRotation.h" { header "TRotation.h" export * }
+module "TS3HTTPRequest.h" { header "TS3HTTPRequest.h" export * }
+module "TS3WebFile.h" { header "TS3WebFile.h" export * }
+module "TSAXParser.h" { header "TSAXParser.h" export * }
+module "TSPHE.h" { header "TSPHE.h" export * }
+module "TSPlot.h" { header "TSPlot.h" export * }
+module "TSQLClassInfo.h" { header "TSQLClassInfo.h" export * }
+module "TSQLColumnInfo.h" { header "TSQLColumnInfo.h" export * }
+module "TSQLFile.h" { header "TSQLFile.h" export * }
+module "TSQLMonitoring.h" { header "TSQLMonitoring.h" export * }
+module "TSQLObjectData.h" { header "TSQLObjectData.h" export * }
+module "TSQLResult.h" { header "TSQLResult.h" export * }
+module "TSQLRow.h" { header "TSQLRow.h" export * }
+module "TSQLServer.h" { header "TSQLServer.h" export * }
+module "TSQLStatement.h" { header "TSQLStatement.h" export * }
+module "TSQLStructure.h" { header "TSQLStructure.h" export * }
+module "TSQLTableInfo.h" { header "TSQLTableInfo.h" export * }
+module "TSQLiteResult.h" { header "TSQLiteResult.h" export * }
+module "TSQLiteRow.h" { header "TSQLiteRow.h" export * }
+module "TSQLiteServer.h" { header "TSQLiteServer.h" export * }
+module "TSQLiteStatement.h" { header "TSQLiteStatement.h" export * }
+module "TSSLSocket.h" { header "TSSLSocket.h" export * }
+module "TSVDUnfold.h" { header "TSVDUnfold.h" export * }
+module "TSVG.h" { header "TSVG.h" export * }
+module "TSchemaHelper.h" { header "TSchemaHelper.h" export * }
+module "TSchemaRule.h" { header "TSchemaRule.h" export * }
+module "TSchemaRuleProcessor.h" { header "TSchemaRuleProcessor.h" export * }
+module "TSchemaRuleSet.h" { header "TSchemaRuleSet.h" export * }
+module "TSchemaType.h" { header "TSchemaType.h" export * }
+module "TSecContext.h" { header "TSecContext.h" export * }
+module "TSelVerifyDataSet.h" { header "TSelVerifyDataSet.h" export * }
+module "TSelector.h" { header "TSelector.h" export * }
+module "TSelectorCint.h" { header "TSelectorCint.h" export * }
+module "TSelectorDraw.h" { header "TSelectorDraw.h" export * }
+module "TSelectorEntries.h" { header "TSelectorEntries.h" export * }
+module "TSelectorList.h" { header "TSelectorList.h" export * }
+module "TSelectorScalar.h" { header "TSelectorScalar.h" export * }
+module "TSemaphore.h" { header "TSemaphore.h" export * }
+module "TSeqCollection.h" { header "TSeqCollection.h" export * }
+module "TServerSocket.h" { header "TServerSocket.h" export * }
+module "TSessionDialogs.h" { header "TSessionDialogs.h" export * }
+module "TSessionLogView.h" { header "TSessionLogView.h" export * }
+module "TSessionViewer.h" { header "TSessionViewer.h" export * }
+module "TShape.h" { header "TShape.h" export * }
+module "TSlave.h" { header "TSlave.h" export * }
+module "TSlaveLite.h" { header "TSlaveLite.h" export * }
+module "TSlider.h" { header "TSlider.h" export * }
+module "TSliderBox.h" { header "TSliderBox.h" export * }
+module "TSocket.h" { header "TSocket.h" export * }
+module "TSortedList.h" { header "TSortedList.h" export * }
+module "TSpectrum.h" { header "TSpectrum.h" export * }
+module "TSpectrum2.h" { header "TSpectrum2.h" export * }
+module "TSpectrum2Fit.h" { header "TSpectrum2Fit.h" export * }
+module "TSpectrum2Painter.h" { header "TSpectrum2Painter.h" export * }
+module "TSpectrum2Transform.h" { header "TSpectrum2Transform.h" export * }
+module "TSpectrum3.h" { header "TSpectrum3.h" export * }
+module "TSpectrumFit.h" { header "TSpectrumFit.h" export * }
+module "TSpectrumTransform.h" { header "TSpectrumTransform.h" export * }
+module "TSpider.h" { header "TSpider.h" export * }
+module "TSpiderEditor.h" { header "TSpiderEditor.h" export * }
+module "TSpline.h" { header "TSpline.h" export * }
+module "TStatistic.h" { header "TStatistic.h" export * }
+module "TStatsFeedback.h" { header "TStatsFeedback.h" export * }
+module "TStatus.h" { header "TStatus.h" export * }
+module "TStopwatch.h" { header "TStopwatch.h" export * }
+module "TStorage.h" { header "TStorage.h" export * }
+module "TStreamer.h" { header "TStreamer.h" export * }
+module "TStreamerElement.h" { header "TStreamerElement.h" export * }
+module "TStreamerInfo.h" { header "TStreamerInfo.h" export * }
+module "TStreamerInfoActions.h" { header "TStreamerInfoActions.h" export * }
+module "TString.h" { header "TString.h" export * }
+module "TStringLong.h" { header "TStringLong.h" export * }
+module "TStyle.h" { header "TStyle.h" export * }
+module "TStyleDialog.h" { header "TStyleDialog.h" export * }
+module "TStyleManager.h" { header "TStyleManager.h" export * }
+module "TStylePreview.h" { header "TStylePreview.h" export * }
+module "TSynapse.h" { header "TSynapse.h" export * }
+module "TSysEvtHandler.h" { header "TSysEvtHandler.h" export * }
+module "TSystem.h" { header "TSystem.h" export * }
+module "TSystemDirectory.h" { header "TSystemDirectory.h" export * }
+module "TSystemFile.h" { header "TSystemFile.h" export * }
+module "TTF.h" { header "TTF.h" export * }
+module "TTRAP.h" { header "TTRAP.h" export * }
+module "TTRD1.h" { header "TTRD1.h" export * }
+module "TTRD2.h" { header "TTRD2.h" export * }
+module "TTUBE.h" { header "TTUBE.h" export * }
+module "TTUBS.h" { header "TTUBS.h" export * }
+module "TTVLVContainer.h" { header "TTVLVContainer.h" export * }
+module "TTVSession.h" { header "TTVSession.h" export * }
+module "TTabCom.h" { header "TTabCom.h" export * }
+module "TTable.h" { header "TTable.h" export * }
+module "TTable3Points.h" { header "TTable3Points.h" export * }
+module "TTableDescriptor.h" { header "TTableDescriptor.h" export * }
+module "TTableIter.h" { header "TTableIter.h" export * }
+module "TTableMap.h" { header "TTableMap.h" export * }
+module "TTablePadView3D.h" { header "TTablePadView3D.h" export * }
+module "TTablePoints.h" { header "TTablePoints.h" export * }
+module "TTableSorter.h" { header "TTableSorter.h" export * }
+module "TTask.h" { header "TTask.h" export * }
+module "TTeXDump.h" { header "TTeXDump.h" export * }
+module "TText.h" { header "TText.h" export * }
+module "TTextEditor.h" { header "TTextEditor.h" export * }
+module "TThread.h" { header "TThread.h" export * }
+module "TThreadFactory.h" { header "TThreadFactory.h" export * }
+module "TThreadImp.h" { header "TThreadImp.h" export * }
+module "TThreadPool.h" { header "TThreadPool.h" export * }
+module "TThreadSlots.h" { header "TThreadSlots.h" export * }
+module "TTime.h" { header "TTime.h" export * }
+module "TTimeStamp.h" { header "TTimeStamp.h" export * }
+module "TTimer.h" { header "TTimer.h" export * }
+module "TToggle.h" { header "TToggle.h" export * }
+module "TToggleGroup.h" { header "TToggleGroup.h" export * }
+module "TTree.h" { header "TTree.h" export * }
+module "TTreeCache.h" { header "TTreeCache.h" export * }
+module "TTreeCacheUnzip.h" { header "TTreeCacheUnzip.h" export * }
+module "TTreeCloner.h" { header "TTreeCloner.h" export * }
+module "TTreeDrawArgsParser.h" { header "TTreeDrawArgsParser.h" export * }
+module "TTreeFormula.h" { header "TTreeFormula.h" export * }
+module "TTreeFormulaManager.h" { header "TTreeFormulaManager.h" export * }
+module "TTreeGeneratorBase.h" { header "TTreeGeneratorBase.h" export * }
+module "TTreeIndex.h" { header "TTreeIndex.h" export * }
+module "TTreeInput.h" { header "TTreeInput.h" export * }
+module "TTreePerfStats.h" { header "TTreePerfStats.h" export * }
+module "TTreePlayer.h" { header "TTreePlayer.h" export * }
+module "TTreeProxyGenerator.h" { header "TTreeProxyGenerator.h" export * }
+module "TTreeReader.h" { header "TTreeReader.h" export * }
+module "TTreeReaderArray.h" { header "TTreeReaderArray.h" export * }
+module "TTreeReaderGenerator.h" { header "TTreeReaderGenerator.h" export * }
+module "TTreeReaderUtils.h" { header "TTreeReaderUtils.h" export * }
+module "TTreeReaderValue.h" { header "TTreeReaderValue.h" export * }
+module "TTreeResult.h" { header "TTreeResult.h" export * }
+module "TTreeRow.h" { header "TTreeRow.h" export * }
+module "TTreeSQL.h" { header "TTreeSQL.h" export * }
+module "TTreeTableInterface.h" { header "TTreeTableInterface.h" export * }
+module "TTreeViewer.h" { header "TTreeViewer.h" export * }
+module "TUDPSocket.h" { header "TUDPSocket.h" export * }
+module "TUUID.h" { header "TUUID.h" export * }
+module "TUnfold.h" { header "TUnfold.h" export * }
+module "TUnfoldBinning.h" { header "TUnfoldBinning.h" export * }
+module "TUnfoldDensity.h" { header "TUnfoldDensity.h" export * }
+module "TUnfoldSys.h" { header "TUnfoldSys.h" export * }
+module "TUnixSystem.h" { header "TUnixSystem.h" export * }
+module "TUnuran.h" { header "TUnuran.h" export * }
+module "TUnuranBaseDist.h" { header "TUnuranBaseDist.h" export * }
+module "TUnuranContDist.h" { header "TUnuranContDist.h" export * }
+module "TUnuranDiscrDist.h" { header "TUnuranDiscrDist.h" export * }
+module "TUnuranEmpDist.h" { header "TUnuranEmpDist.h" export * }
+module "TUnuranMultiContDist.h" { header "TUnuranMultiContDist.h" export * }
+module "TUnuranSampler.h" { header "TUnuranSampler.h" export * }
+module "TUri.h" { header "TUri.h" export * }
+module "TUrl.h" { header "TUrl.h" export * }
+module "TVector.h" { header "TVector.h" export * }
+module "TVector2.h" { header "TVector2.h" export * }
+module "TVector3.h" { header "TVector3.h" export * }
+module "TVectorD.h" { header "TVectorD.h" export * }
+module "TVectorDfwd.h" { header "TVectorDfwd.h" export * }
+module "TVectorF.h" { header "TVectorF.h" export * }
+module "TVectorFfwd.h" { header "TVectorFfwd.h" export * }
+module "TVectorT.h" { header "TVectorT.h" export * }
+module "TVectorfwd.h" { header "TVectorfwd.h" export * }
+module "TVersionCheck.h" { header "TVersionCheck.h" export * }
+module "TView.h" { header "TView.h" export * }
+module "TView3D.h" { header "TView3D.h" export * }
+module "TViewer3DPad.h" { header "TViewer3DPad.h" export * }
+module "TVirtualArray.h" { header "TVirtualArray.h" export * }
+module "TVirtualAuth.h" { header "TVirtualAuth.h" export * }
+module "TVirtualCollectionIterators.h" { header "TVirtualCollectionIterators.h" export * }
+module "TVirtualCollectionProxy.h" { header "TVirtualCollectionProxy.h" export * }
+module "TVirtualDragManager.h" { header "TVirtualDragManager.h" export * }
+module "TVirtualFFT.h" { header "TVirtualFFT.h" export * }
+module "TVirtualFitter.h" { header "TVirtualFitter.h" export * }
+module "TVirtualGL.h" { header "TVirtualGL.h" export * }
+module "TVirtualGeoPainter.h" { header "TVirtualGeoPainter.h" export * }
+module "TVirtualGeoTrack.h" { header "TVirtualGeoTrack.h" export * }
+module "TVirtualGraphPainter.h" { header "TVirtualGraphPainter.h" export * }
+module "TVirtualHistPainter.h" { header "TVirtualHistPainter.h" export * }
+module "TVirtualIndex.h" { header "TVirtualIndex.h" export * }
+module "TVirtualIsAProxy.h" { header "TVirtualIsAProxy.h" export * }
+module "TVirtualMC.h" { header "TVirtualMC.h" export * }
+module "TVirtualMCApplication.h" { header "TVirtualMCApplication.h" export * }
+module "TVirtualMCDecayer.h" { header "TVirtualMCDecayer.h" export * }
+module "TVirtualMCGeometry.h" { header "TVirtualMCGeometry.h" export * }
+module "TVirtualMCStack.h" { header "TVirtualMCStack.h" export * }
+module "TVirtualMagField.h" { header "TVirtualMagField.h" export * }
+module "TVirtualMonitoring.h" { header "TVirtualMonitoring.h" export * }
+module "TVirtualMutex.h" { header "TVirtualMutex.h" export * }
+module "TVirtualObject.h" { header "TVirtualObject.h" export * }
+module "TVirtualPS.h" { header "TVirtualPS.h" export * }
+module "TVirtualPacketizer.h" { header "TVirtualPacketizer.h" export * }
+module "TVirtualPad.h" { header "TVirtualPad.h" export * }
+module "TVirtualPadEditor.h" { header "TVirtualPadEditor.h" export * }
+module "TVirtualPadPainter.h" { header "TVirtualPadPainter.h" export * }
+module "TVirtualPerfStats.h" { header "TVirtualPerfStats.h" export * }
+module "TVirtualProofPlayer.h" { header "TVirtualProofPlayer.h" export * }
+module "TVirtualRefProxy.h" { header "TVirtualRefProxy.h" export * }
+module "TVirtualStreamerInfo.h" { header "TVirtualStreamerInfo.h" export * }
+module "TVirtualTableInterface.h" { header "TVirtualTableInterface.h" export * }
+module "TVirtualTreePlayer.h" { header "TVirtualTreePlayer.h" export * }
+module "TVirtualViewer3D.h" { header "TVirtualViewer3D.h" export * }
+module "TVirtualX.h" { header "TVirtualX.h" export * }
+module "TVolume.h" { header "TVolume.h" export * }
+module "TVolumePosition.h" { header "TVolumePosition.h" export * }
+module "TVolumeView.h" { header "TVolumeView.h" export * }
+module "TVolumeViewIter.h" { header "TVolumeViewIter.h" export * }
+module "TWbox.h" { header "TWbox.h" export * }
+module "TWebFile.h" { header "TWebFile.h" export * }
+module "TXMLAttr.h" { header "TXMLAttr.h" export * }
+module "TXMLDocument.h" { header "TXMLDocument.h" export * }
+module "TXMLEngine.h" { header "TXMLEngine.h" export * }
+module "TXMLFile.h" { header "TXMLFile.h" export * }
+module "TXMLNode.h" { header "TXMLNode.h" export * }
+module "TXMLParser.h" { header "TXMLParser.h" export * }
+module "TXMLPlayer.h" { header "TXMLPlayer.h" export * }
+module "TXMLSetup.h" { header "TXMLSetup.h" export * }
+module "TXTRU.h" { header "TXTRU.h" export * }
+module "TZIPFile.h" { header "TZIPFile.h" export * }
+module "ThreadLocalStorage.h" { header "ThreadLocalStorage.h" export * }
+module "TreeUtils.h" { header "TreeUtils.h" export * }
+module "Ttypes.h" { header "Ttypes.h" export * }
+module "Varargs.h" { header "Varargs.h" export * }
+module "WidgetMessageTypes.h" { header "WidgetMessageTypes.h" export * }
+module "Windows4Root.h" { header "Windows4Root.h" export * }
+module "X11Atoms.h" { header "X11Atoms.h" export * }
+module "X11Buffer.h" { header "X11Buffer.h" export * }
+module "X11Colors.h" { header "X11Colors.h" export * }
+module "X11Drawable.h" { header "X11Drawable.h" export * }
+module "X11Events.h" { header "X11Events.h" export * }
+module "X3DBuffer.h" { header "X3DBuffer.h" export * }
+module "XLFDParser.h" { header "XLFDParser.h" export * }
+module "ZipLZMA.h" { header "ZipLZMA.h" export * }
+module "cfortran.h" [extern_c] { header "cfortran.h" export * }
+module "config.h" { header "config.h" export * }
+module "libcpp_string_view.h" { header "libcpp_string_view.h" export * }
+module "mmalloc.h" { header "mmalloc.h" export * }
+module "mmconfig.h" { header "mmconfig.h" export * }
+module "mmprivate.h" { header "mmprivate.h" export * }
+module "module.modulemap" { header "module.modulemap" export * }
+module "pq2actions.h" { header "pq2actions.h" export * }
+module "pq2ping.h" { header "pq2ping.h" export * }
+module "pq2wrappers.h" { header "pq2wrappers.h" export * }
+module "proofdp.h" { header "proofdp.h" export * }
+module "redirguard.h" { header "redirguard.h" export * }
+module "root_std_complex.h" { header "root_std_complex.h" export * }
+module "rootdp.h" { header "rootdp.h" export * }
+module "rpdconn.h" { header "rpdconn.h" export * }
+module "rpddefs.h" { header "rpddefs.h" export * }
+module "rpderr.h" { header "rpderr.h" export * }
+module "rpdp.h" { header "rpdp.h" export * }
+module "rpdpriv.h" { header "rpdpriv.h" export * }
+module "rsaaux.h" [extern_c] { header "rsaaux.h" export * }
+module "rsadef.h" [extern_c] { header "rsadef.h" export * }
+module "rsafun.h" [extern_c] { header "rsafun.h" export * }
+module "rsalib.h" [extern_c] { header "rsalib.h" export * }
+module "snprintf.h" { header "snprintf.h" export * }
+module "strlcpy.h" { header "strlcpy.h" export * }
+module "tableDescriptor.h" { header "tableDescriptor.h" export * }
+module "v5/TF1Data.h" { header "v5/TF1Data.h" export * }
+module "v5/TFormula.h" { header "v5/TFormula.h" export * }
+module "v5/TFormulaPrimitive.h" { header "v5/TFormulaPrimitive.h" export * }
+module "vdt/asin.h" { header "vdt/asin.h" export * }
+module "vdt/atan.h" { header "vdt/atan.h" export * }
+module "vdt/atan2.h" { header "vdt/atan2.h" export * }
+module "vdt/cos.h" { header "vdt/cos.h" export * }
+module "vdt/exp.h" { header "vdt/exp.h" export * }
+module "vdt/inv.h" { header "vdt/inv.h" export * }
+module "vdt/log.h" { header "vdt/log.h" export * }
+module "vdt/sin.h" { header "vdt/sin.h" export * }
+module "vdt/sincos.h" { header "vdt/sincos.h" export * }
+module "vdt/sqrt.h" { header "vdt/sqrt.h" export * }
+module "vdt/tan.h" { header "vdt/tan.h" export * }
+module "vdt/vdtMath.h" { header "vdt/vdtMath.h" export * }
+module "vdt/vdtcore_common.h" { header "vdt/vdtcore_common.h" export * }
