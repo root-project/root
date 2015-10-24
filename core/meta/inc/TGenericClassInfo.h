@@ -17,7 +17,7 @@
 #include "TSchemaHelper.h"
 //#endif
 //#ifndef ROOT_Rtypes
-//#inlcude "Rtypes.h"
+#include "Rtypes.h"
 //#endif
 
 // Forward declarations
