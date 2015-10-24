@@ -24,6 +24,7 @@
 //End_Html
 #include "TGeoVoxelFinder.h"
 
+#include "TBuffer.h"
 #include "TObject.h"
 #include "TMath.h"
 #include "TThread.h"

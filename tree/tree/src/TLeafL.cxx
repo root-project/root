@@ -15,6 +15,7 @@ A TLeaf for a 64 bit Integer data type.
 
 #include "TLeafL.h"
 #include "TBranch.h"
+#include "TBuffer.h"
 #include "TClonesArray.h"
 #include "Riostream.h"
 

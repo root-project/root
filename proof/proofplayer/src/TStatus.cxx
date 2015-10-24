@@ -22,6 +22,7 @@
 
 #include "TStatus.h"
 #include "Riostream.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TProofDebug.h"
 

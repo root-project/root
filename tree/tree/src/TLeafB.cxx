@@ -15,6 +15,7 @@ A TLeaf for an 8 bit Integer data type.
 
 #include "TLeafB.h"
 #include "TBranch.h"
+#include "TBuffer.h"
 #include "TClonesArray.h"
 #include "Riostream.h"
 

@@ -160,6 +160,8 @@ theta plane) to the (x,y,z) frame.
 //
 
 #include "TVector3.h"
+
+#include "TBuffer.h"
 #include "TRotation.h"
 #include "TMath.h"
 #include "TClass.h"

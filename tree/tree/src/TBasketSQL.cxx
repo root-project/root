@@ -13,6 +13,7 @@
 #define TBASKETSQL_CXX
 
 #include "TBasket.h"
+#include "TBuffer.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TFile.h"

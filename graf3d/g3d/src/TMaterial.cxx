@@ -9,8 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TGeometry.h"
 #include "TMaterial.h"
+
+#include "TBuffer.h"
+#include "TGeometry.h"
 
 ClassImp(TMaterial)
 

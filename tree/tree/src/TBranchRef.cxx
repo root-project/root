@@ -30,6 +30,7 @@ TObjArray.
 */
 
 #include "TBranchRef.h"
+#include "TBuffer.h"
 #include "TTree.h"
 #include "TBasket.h"
 #include "TFile.h"

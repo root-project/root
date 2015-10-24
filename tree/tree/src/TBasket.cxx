@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "TBasket.h"
+#include "TBuffer.h"
 #include "TBufferFile.h"
 #include "TTree.h"
 #include "TBranch.h"

@@ -22,6 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrixTSym.h"
+#include "TBuffer.h"
 #include "TMatrixTLazy.h"
 #include "TMatrixTSymCramerInv.h"
 #include "TDecompLU.h"

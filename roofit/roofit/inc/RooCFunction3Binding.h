@@ -12,11 +12,14 @@
 #ifndef ROOCFUNCTION3BINDING
 #define ROOCFUNCTION3BINDING
 
-#include "TString.h"
 #include "RooAbsReal.h"
 #include "RooRealProxy.h"
 #include "RooMsgService.h"
 #include "RooAbsPdf.h"
+
+#include "TBuffer.h"
+#include "TString.h"
+
 #include <string>
 #include <map>
 #include <vector>

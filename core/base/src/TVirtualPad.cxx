@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TVirtualPad.h"
+#include "TBuffer.h"
 #include "X3DBuffer.h"
 #include "TClass.h"
 #include "TThreadSlots.h"

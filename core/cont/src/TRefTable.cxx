@@ -37,6 +37,7 @@ for quick non-persistent lookup.
 */
 
 #include "TRefTable.h"
+#include "TBuffer.h"
 #include "TObjArray.h"
 #include "TProcessID.h"
 #include <algorithm>

@@ -15,6 +15,7 @@
 #include "TBasket.h"
 #include "TBranchBrowsable.h"
 #include "TBrowser.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TBufferFile.h"
 #include "TClonesArray.h"

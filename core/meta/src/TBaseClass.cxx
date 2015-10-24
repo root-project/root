@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TBaseClass.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TInterpreter.h"
 #include <limits.h>

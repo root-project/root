@@ -40,7 +40,7 @@ The following people have contributed to this new version:
 
 
 ## Core Libraries
-
+TObject.h doesn't include TBuffer.h anymore. Third party headers replying on the definition of TBufer will need to include TBuffer.h.
 
 ## Histogram Libraries
 
@@ -64,7 +64,7 @@ The following people have contributed to this new version:
 
 
 ## I/O Libraries
-
+Custom streamers need to #include TBuffer.h explicitly.
 
 ## Database Libraries
 

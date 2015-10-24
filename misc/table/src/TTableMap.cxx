@@ -10,8 +10,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TArrayL.h"
 #include "TTableMap.h"
+
+#include "TArrayL.h"
+#include "TBuffer.h"
 
 //////////////////////////////////////////////////////////////////////////////
 // TTableMap class is helper class to keep the list of the referencs to the

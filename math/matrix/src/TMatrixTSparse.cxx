@@ -71,6 +71,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrixTSparse.h"
+#include "TBuffer.h"
 #include "TMatrixT.h"
 #include "TMath.h"
 
