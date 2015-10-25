@@ -4673,6 +4673,7 @@ int RootCling(int argc,
       // priority first.
       if (!interpreteronly) {
          constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("TRootIOCtor", interp));
+         constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("__void__", interp)); // ROOT-7723
          constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("", interp));
       }
    }
