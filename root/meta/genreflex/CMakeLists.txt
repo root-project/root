@@ -1,11 +1,5 @@
 ROOTTEST_ADD_TESTDIRS()
 
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(CheckSplitTestClass CheckSplitTestClass.h SELECTION CheckSplitTestClass_selection.xml)
-
-ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-CheckSplitTestClass
-                  MACRO runCheckSplitTestClass.C
-                  DEPENDS ${GENERATE_REFLEX_TEST})
-
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-conflictingSelections
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/conflictingNameRule.h
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/conflictingNameRule_selection.xml
