@@ -24,6 +24,15 @@ public:
    G4(G4_ROOT_IO*) { cout << "Called G4::G4(G4_ROOT_IO*)\n"; }
 };
 
+// G4_v2 test ROOT-7723
+class __void__;
+class G4_v2 {
+private:
+   G4_v2();
+public:
+   G4_v2(__void__&) { cout << "Called G4_v2::G4_v2(__void__&)\n"; }
+};
+
 class OTHER_ROOT_IO;
 class Other {
    private:

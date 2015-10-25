@@ -1,6 +1,7 @@
 #pragma link C++ class None+;
 #pragma link C++ class Regular+;
 #pragma link C++ class G4+;
+#pragma link C++ class G4_v2+;
 #pragma link C++ class Other+;
 #pragma link C++ class Private+;
 #pragma link C++ class Default+;

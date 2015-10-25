@@ -12,6 +12,9 @@
    c = gROOT->GetClass("G4");
    c->New();
 
+   c = gROOT->GetClass("G4_v2");
+   c->New();
+
    c = gROOT->GetClass("Private");
    c->New();
 
