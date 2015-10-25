@@ -951,12 +951,12 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
 }
 
 //______________________________________________________________________________
-bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
-                                        const RConstructorType &ioctortype)
+ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
+                                                                     const RConstructorType &ioctortype)
 {
    const char *arg = ioctortype.GetName();
    if ( (arg == 0 || arg[0] == '\0') && !cl->hasUserDeclaredConstructor() ) {
-      return true;
+      return EIOCtorCategory::kDefault;
    }
 
    if (ioctortype.GetType() ==0 && (arg == 0 || arg[0] == '\0')) {
@@ -971,10 +971,10 @@ bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
          // We can reach this constructor.
 
          if (iter->getNumParams() == 0) {
-            return true;
+            return EIOCtorCategory::kDefault;
          }
          if ( (*iter->param_begin())->hasDefaultArg()) {
-            return true;
+            return EIOCtorCategory::kDefault;
          }
       } // For each constructor.
    }
@@ -990,21 +990,28 @@ bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
          if (iter->getNumParams() == 1) {
             clang::QualType argType( (*iter->param_begin())->getType() );
             argType = argType.getDesugaredType(cl->getASTContext());
+            // Deal with pointers and references: ROOT-7723
+            auto ioCtorCategory = EIOCtorCategory::kAbsent;
             if (argType->isPointerType()) {
+               ioCtorCategory = EIOCtorCategory::kIOPtrType;
                argType = argType->getPointeeType();
+            } else if (argType->isReferenceType()){
+               ioCtorCategory = EIOCtorCategory::kIORefType;
+               argType = argType.getNonReferenceType();
+            }
+            if (ioCtorCategory !=  EIOCtorCategory::kAbsent) {
                argType = argType.getDesugaredType(cl->getASTContext());
-
                const clang::CXXRecordDecl *argDecl = argType->getAsCXXRecordDecl();
                if (argDecl && ioctortype.GetType()) {
                   if (argDecl->getCanonicalDecl() == ioctortype.GetType()->getCanonicalDecl()) {
-                     return true;
+                     return ioCtorCategory;
                   }
                } else {
                   std::string realArg = argType.getAsString();
                   std::string clarg("class ");
                   clarg += arg;
                   if (realArg == clarg) {
-                     return true;
+                     return ioCtorCategory;
 
                   }
                }
@@ -1013,7 +1020,7 @@ bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
       } // for each constructor
    }
 
-   return false;
+   return EIOCtorCategory::kAbsent;
 }
 
 
@@ -1064,24 +1071,27 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
 
    for (RConstructorTypes::const_iterator ctorTypeIt = ctorTypes.begin();
         ctorTypeIt!=ctorTypes.end(); ++ctorTypeIt) {
-      std::string proto( ctorTypeIt->GetName() );
-      bool defaultCtor = proto.empty();
-      if (!defaultCtor) {
-         // I/O constructors take pointers to ctorTypes
-         proto += " *";
-      }
+     
+      auto ioCtorCat = ROOT::TMetaUtils::CheckConstructor(cl, *ctorTypeIt);
 
-      if (!ROOT::TMetaUtils::CheckConstructor(cl, *ctorTypeIt))
+      if (EIOCtorCategory::kAbsent == ioCtorCat)
          continue;
 
+      std::string proto( ctorTypeIt->GetName() );
+      bool defaultCtor = proto.empty();
       if (defaultCtor) {
          arg.clear();
       } else {
-         arg = "( (";
-         arg += proto;
-         arg += ")0 )";
+         // I/O constructors can take pointers or references to ctorTypes
+        proto += " *";
+        if (EIOCtorCategory::kIOPtrType == ioCtorCat){
+           arg = "( ("; //(MyType*)nullptr
+        } else if (EIOCtorCategory::kIORefType == ioCtorCat) {
+           arg = "( *("; //*(MyType*)nullptr
+        }
+        arg += proto;
+        arg += ")nullptr )";
       }
-
       // Check for private operator new
       const clang::CXXMethodDecl *method
          = GetMethodWithProto(cl, "operator new", "size_t", interp,

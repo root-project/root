@@ -342,8 +342,10 @@ llvm::StringRef DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, 
 // Return the ROOT include directory
 std::string GetROOTIncludeDir(bool rootbuild);
 
+enum class EIOCtorCategory : short {kAbsent, kDefault, kIOPtrType, kIORefType};
+
 //______________________________________________________________________________
-bool CheckConstructor(const clang::CXXRecordDecl*, const RConstructorType&);
+EIOCtorCategory CheckConstructor(const clang::CXXRecordDecl*, const RConstructorType&);
 
 //______________________________________________________________________________
 const clang::FunctionDecl* ClassInfo__HasMethod(const clang::DeclContext *cl, char const*, const cling::Interpreter& interp);
