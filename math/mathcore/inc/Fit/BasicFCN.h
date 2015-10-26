@@ -21,6 +21,7 @@
 #include "Math/IParamFunction.h"
 #endif
 
+#include "Math/IParamFunctionfwd.h"
 
 #include <memory>
 

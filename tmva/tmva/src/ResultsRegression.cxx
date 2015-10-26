@@ -34,6 +34,7 @@
 #include "TMVA/VariableInfo.h"
 
 #include "TH1F.h"
+#include "TH2F.h"
 #include "TString.h"
 
 #include <vector>

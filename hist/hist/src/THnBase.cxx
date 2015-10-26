@@ -27,6 +27,7 @@
 #include "TVirtualPad.h"
 
 #include "HFitInterface.h"
+#include "Fit/DataRange.h"
 #include "Fit/SparseData.h"
 #include "Math/MinimizerOptions.h"
 #include "Math/WrappedMultiTF1.h"

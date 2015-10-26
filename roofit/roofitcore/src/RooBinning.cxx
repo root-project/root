@@ -30,13 +30,13 @@
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include "RooBinning.h"
 #include "RooDouble.h"
 #include "RooAbsPdf.h"
 #include "RooRealVar.h"
 #include "RooNumber.h"
 #include "RooMsgService.h"
+#include "TBuffer.h"
 #include "TList.h"
 
 using namespace std;

@@ -9,14 +9,13 @@
 // END_HTML
 //
 
-#include <exception>
+#include "RooStats/HistFactory/PiecewiseInterpolation.h"
+
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
+#include "TBuffer.h"
 
-#include "RooStats/HistFactory/PiecewiseInterpolation.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
 #include "RooErrorHandler.h"
@@ -27,6 +26,9 @@
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
 #include "RooTrace.h"
+
+#include <exception>
+#include <math.h>
 
 using namespace std;
 

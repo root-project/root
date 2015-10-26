@@ -147,6 +147,7 @@ Any serious inconsistency results in an error.
 #include "TMath.h"
 #include "TClass.h"
 
+#include "Fit/FitConfig.h"
 #include "Fit/Fitter.h"
 #include "TFitResult.h"
 #include "Math/Functor.h"

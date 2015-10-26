@@ -15,6 +15,7 @@
 #include "Math/Error.h"
 
 #include "Math/IFunction.h"
+#include "Math/IFunctionfwd.h"
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Fit/DataRange.h"

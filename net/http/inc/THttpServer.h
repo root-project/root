@@ -16,6 +16,10 @@
 #include "TMutex.h"
 #endif
 
+#ifndef ROOT_TNamed
+#include "TNamed.h"
+#endif
+
 #ifndef ROOT_THttpCallArg
 #include "THttpCallArg.h"
 #endif

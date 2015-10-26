@@ -15,6 +15,8 @@
 #include "TF1.h"
 #include "TUUID.h"
 #include "TROOT.h"
+#include "Fit/BasicFCN.h"
+#include "Fit/BinData.h"
 #include "Fit/Chi2FCN.h"
 
 #include "TLinearFitter.h"

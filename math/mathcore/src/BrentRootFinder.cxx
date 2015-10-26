@@ -10,6 +10,7 @@
 
 #include "Math/BrentRootFinder.h"
 #include "Math/BrentMethods.h"
+#include "Math/IFunctionfwd.h"
 #include <cmath>
 
 #ifndef ROOT_Math_Error

@@ -53,6 +53,7 @@
 #include "TH2.h"
 #include "TMarker.h"
 #include "TGraph.h"
+#include "Fit/FitConfig.h"
 #include "TStopwatch.h"
 #include "TDirectory.h"
 #include "TMatrixDSym.h"

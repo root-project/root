@@ -84,6 +84,8 @@
 #include "TSpline.h"
 #include "TMatrix.h"
 #include "TMath.h"
+#include "TH1F.h"
+#include "TH2F.h"
 #include "TFile.h"
 #include "TKey.h"
 #include "TGraph.h"

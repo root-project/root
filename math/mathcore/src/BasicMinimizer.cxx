@@ -14,6 +14,10 @@
 
 #include "Math/IFunction.h"
 
+#include "Math/IFunctionfwd.h"
+
+#include "Math/IParamFunctionfwd.h"
+
 #include "Math/FitMethodFunction.h"
 
 #include "Math/MinimTransformFunction.h"

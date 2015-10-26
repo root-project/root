@@ -43,6 +43,7 @@
 #include "TMVA/Version.h"
 
 #include "TCanvas.h"
+#include "TGraph.h"
 #include "TH1F.h"
 #include "TMath.h"
 #include "TVectorF.h"

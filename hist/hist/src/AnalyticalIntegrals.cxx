@@ -15,14 +15,15 @@
 //
 //
 
-#include <stdio.h>
+#include "AnalyticalIntegrals.h"
+
 #include "TROOT.h"
 #include "TF1.h"
 #include "TFormula.h"
 #include "TMath.h"
-#include "AnalyticalIntegrals.h"
 #include "Math/DistFuncMathCore.h" //for cdf
 
+#include <stdio.h>
 
 using namespace std;
 

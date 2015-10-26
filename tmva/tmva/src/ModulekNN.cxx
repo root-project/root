@@ -33,6 +33,7 @@
 #include <algorithm>
 
 #include "TMath.h"
+#include "TRandom3.h"
 
 // TMVA
 #include "TMVA/MsgLogger.h"
