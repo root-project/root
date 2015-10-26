@@ -6,7 +6,6 @@ module "Bytes.h" { header "Bytes.h" export * }
 module "Byteswap.h" { header "Byteswap.h" export * }
 module "CintLDAP.h" { header "CintLDAP.h" export * }
 module "CocoaGuiTypes.h" { header "CocoaGuiTypes.h" export * }
-module "CocoaPrivate.h" { header "CocoaPrivate.h" export * }
 module "CocoaUtils.h" { header "CocoaUtils.h" export * }
 module "Compression.h" { header "Compression.h" export * }
 module "Demangle.h" { header "Demangle.h" export * }
