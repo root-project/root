@@ -950,16 +950,10 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
    return 0;
 }
 
-<<<<<<< HEAD
-//______________________________________________________________________________
-bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
-                                        const RConstructorType &ioctortype)
-=======
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
                                                                      const RConstructorType &ioctortype)
->>>>>>> 88b72f1... Fix ROOT-7723: allow IOCtors to have as argument a ref to a type called __void__
 {
    const char *arg = ioctortype.GetName();
    if ( (arg == 0 || arg[0] == '\0') && !cl->hasUserDeclaredConstructor() ) {
@@ -1078,24 +1072,6 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
 
    if (cl->isAbstract()) return false;
 
-<<<<<<< HEAD
-   for(RConstructorTypes::const_iterator ctorTypeIt=ctorTypes.begin();
-       ctorTypeIt!=ctorTypes.end();++ctorTypeIt){
-      std::string proto( ctorTypeIt->GetName() );
-      int extra = (proto.size()==0) ? 0 : 1;
-      if (extra==0) {
-         // Looking for default constructor
-         result = true;
-      } else {
-         proto += " *";
-      }
-
-      result = ROOT::TMetaUtils::CheckConstructor(cl,*ctorTypeIt);
-      if (result && extra) {
-         arg = "( (";
-         arg += proto;
-         arg += ")0 )";
-=======
    for (RConstructorTypes::const_iterator ctorTypeIt = ctorTypes.begin();
         ctorTypeIt!=ctorTypes.end(); ++ctorTypeIt) {
      
@@ -1118,7 +1094,6 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
         }
         arg += proto;
         arg += ")nullptr )";
->>>>>>> 88b72f1... Fix ROOT-7723: allow IOCtors to have as argument a ref to a type called __void__
       }
       // Check for private operator new
       if (result) {
