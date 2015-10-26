@@ -18,6 +18,8 @@
 #include "GuiTypes.h"
 #endif
 
+#include "CocoaUtils.h"
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // EventTranslator class translates Cocoa events to 'ROOT's X11' events.//

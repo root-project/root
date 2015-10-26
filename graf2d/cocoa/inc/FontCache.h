@@ -26,6 +26,8 @@
 #include "GuiTypes.h"
 #endif
 
+#include "CocoaUtils.h"
+
 //////////////////////////////////////////////////////////////////
 //                                                              //
 // FontCache class:                                             //
