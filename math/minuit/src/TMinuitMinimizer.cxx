@@ -22,6 +22,8 @@
 
 #include "TMatrixDSym.h" // needed for inverting the matrix
 
+#include "ThreadLocalStorage.h"
+
 #include <iostream>
 #include <cassert>
 #include <algorithm>
@@ -41,7 +43,10 @@
 // initialize the static instances
 
 
-ROOT::Math::IMultiGenFunction * TMinuitMinimizer::fgFunc = 0;
+namespace {
+   TTHREAD_TLS(ROOT::Math::IMultiGenFunction*) fgFunc = 0;
+}
+
 TMinuit * TMinuitMinimizer::fgMinuit = 0;
 bool TMinuitMinimizer::fgUsed = false;
 bool TMinuitMinimizer::fgUseStaticMinuit = true;   // default case use static Minuit instance
