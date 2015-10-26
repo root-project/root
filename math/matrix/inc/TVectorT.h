@@ -212,7 +212,7 @@ template<class Element> inline const Element &TVectorT<Element>::operator()(Int_
    const Int_t aind = ind-fRowLwb;
    if (aind >= fNrows || aind < 0) {
       Error("operator()","Request index(%d) outside vector range of %d - %d",ind,fRowLwb,fRowLwb+fNrows);
-      return fElements[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
 
    return fElements[aind];
@@ -225,7 +225,7 @@ template<class Element> inline Element &TVectorT<Element>::operator()(Int_t ind)
    const Int_t aind = ind-fRowLwb;
    if (aind >= fNrows || aind < 0) {
       Error("operator()","Request index(%d) outside vector range of %d - %d",ind,fRowLwb,fRowLwb+fNrows);
-      return fElements[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
 
    return fElements[aind];
