@@ -913,5 +913,6 @@ Changes will be part of the future 6.04/08
 ### Minuit
 - Make function pointer held by TMinuitMinimize thread local
 
-
+### IO
+- For backward compatibility with ROOT5, allow to define IO constructors with the signature MyClass::MyClass(__void__&) where void is a forward declared type.
 
