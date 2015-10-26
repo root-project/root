@@ -99,7 +99,7 @@ namespace TMVA {
       virtual ~DecisionTree( void );
 
       // Retrieves the address of the root node
-      virtual DecisionTreeNode* GetRoot() const { return dynamic_cast<TMVA::DecisionTreeNode*>(fRoot); }
+      virtual DecisionTreeNode* GetRoot() const { return static_cast<TMVA::DecisionTreeNode*>(fRoot); }
       virtual DecisionTreeNode * CreateNode(UInt_t) const { return new DecisionTreeNode(); }
       virtual BinaryTree* CreateTree() const { return new DecisionTree(); }
       static  DecisionTree* CreateFromXML(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);

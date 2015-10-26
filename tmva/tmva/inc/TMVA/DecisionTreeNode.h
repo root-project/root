@@ -282,14 +282,14 @@ namespace TMVA {
       // get pointers to children, mother in the tree
 
       // return pointer to the left/right daughter or parent node
-      inline virtual DecisionTreeNode* GetLeft( )   const { return dynamic_cast<DecisionTreeNode*>(fLeft); }
-      inline virtual DecisionTreeNode* GetRight( )  const { return dynamic_cast<DecisionTreeNode*>(fRight); }
-      inline virtual DecisionTreeNode* GetParent( ) const { return dynamic_cast<DecisionTreeNode*>(fParent); }
+      inline virtual DecisionTreeNode* GetLeft( )   const { return static_cast<DecisionTreeNode*>(fLeft); }
+      inline virtual DecisionTreeNode* GetRight( )  const { return static_cast<DecisionTreeNode*>(fRight); }
+      inline virtual DecisionTreeNode* GetParent( ) const { return static_cast<DecisionTreeNode*>(fParent); }
 
       // set pointer to the left/right daughter and parent node
-      inline virtual void SetLeft  (Node* l) { fLeft   = dynamic_cast<DecisionTreeNode*>(l);} 
-      inline virtual void SetRight (Node* r) { fRight  = dynamic_cast<DecisionTreeNode*>(r);} 
-      inline virtual void SetParent(Node* p) { fParent = dynamic_cast<DecisionTreeNode*>(p);} 
+      inline virtual void SetLeft  (Node* l) { fLeft   = l; } 
+      inline virtual void SetRight (Node* r) { fRight  = r; } 
+      inline virtual void SetParent(Node* p) { fParent = p; } 
 
 
 

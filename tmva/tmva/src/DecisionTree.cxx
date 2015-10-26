@@ -206,7 +206,7 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d ):
    fAnalysisType(d.fAnalysisType),
    fDataSetInfo    (d.fDataSetInfo)
 {
-   this->SetRoot( new TMVA::DecisionTreeNode ( *((DecisionTreeNode*)(d.GetRoot())) ) );
+   this->SetRoot( new TMVA::DecisionTreeNode ( *(d.GetRoot()) ) );
    this->SetParentTreeInNodes();
    fNNodes = d.fNNodes;
 }
@@ -547,9 +547,9 @@ void TMVA::DecisionTree::FillEvent( const TMVA::Event & event,
 
    if (node->GetNodeType() == 0) { //intermediate node --> go down
       if (node->GoesRight(event))
-         this->FillEvent(event,dynamic_cast<TMVA::DecisionTreeNode*>(node->GetRight())) ;
+         this->FillEvent(event, node->GetRight());
       else
-         this->FillEvent(event,dynamic_cast<TMVA::DecisionTreeNode*>(node->GetLeft())) ;
+         this->FillEvent(event, node->GetLeft());
    }
 
 
@@ -1675,11 +1675,11 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
 
 TMVA::DecisionTreeNode* TMVA::DecisionTree::GetEventNode(const TMVA::Event & e) const
 {
-   TMVA::DecisionTreeNode *current = (TMVA::DecisionTreeNode*)this->GetRoot();
+   TMVA::DecisionTreeNode *current = this->GetRoot();
    while(current->GetNodeType() == 0) { // intermediate node in a tree
       current = (current->GoesRight(e)) ?
-         (TMVA::DecisionTreeNode*)current->GetRight() :
-         (TMVA::DecisionTreeNode*)current->GetLeft();
+         current->GetRight() :
+         current->GetLeft();
    }
    return current;
 }
