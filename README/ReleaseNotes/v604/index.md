@@ -910,3 +910,8 @@ Changes will be part of the future 6.04/08
 ### Interpreter
 - Prevent crash in expressions which contain use undefined identifier [ROOT-7737]
 
+### Minuit
+- Make function pointer held by TMinuitMinimize thread local
+
+
+
