@@ -50,9 +50,6 @@
 #ifndef ROOT_TQpVars
 #include "TQpVar.h"
 #endif
-#ifndef ROOT_TQpLinSolverSparse
-#include "TQpLinSolverSparse.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

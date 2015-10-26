@@ -42,6 +42,7 @@
 
 #include "TQpProbSparse.h"
 #include "TMatrixD.h"
+#include "TQpLinSolverSparse.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
