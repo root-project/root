@@ -29,11 +29,11 @@ if(WIN32)
     set(freetypebuild "freetype - Win32 Release Multithreaded")
   endif()
   add_custom_command( OUTPUT ${freetypeliba}
-                      COMMAND cmake -E copy_directory ${FREETYPE_SRCDIR}/win win
-                      COMMAND cmake -E tar xvzf ${FREETYPE_TARGZFILE}
-                      COMMAND cmake -E copy win/freetype.mak ${FREETYPE_VERSION}/builds/windows/visualc/
-                      COMMAND cmake -E copy win/freetype.dep ${FREETYPE_VERSION}/builds/windows/visualc/
-                      COMMAND cmake -E chdir ${FREETYPE_VERSION}/builds/windows/visualc/
+                      COMMAND ${CMAKE_COMMAND} -E copy_directory ${FREETYPE_SRCDIR}/win win
+                      COMMAND ${CMAKE_COMMAND} -E tar xvzf ${FREETYPE_TARGZFILE}
+                      COMMAND ${CMAKE_COMMAND} -E copy win/freetype.mak ${FREETYPE_VERSION}/builds/windows/visualc/
+                      COMMAND ${CMAKE_COMMAND} -E copy win/freetype.dep ${FREETYPE_VERSION}/builds/windows/visualc/
+                      COMMAND ${CMAKE_COMMAND} -E chdir ${FREETYPE_VERSION}/builds/windows/visualc/
                               nmake -nologo -f freetype.mak CFG=${freetypebuild} NMAKECXXFLAGS="${BLDCXXFLAGS} -D_CRT_SECURE_NO_DEPRECATE" )
 else()
   set(freetypelib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libfreetype.a)
@@ -74,11 +74,11 @@ else()
 
   # copy tarfile from source directory to build directory, unpack the tarfile
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FREETYPE_VERSION}/unpacked
-                     COMMAND cmake -E copy ${FREETYPE_TARGZFILE} .
+                     COMMAND ${CMAKE_COMMAND} -E copy ${FREETYPE_TARGZFILE} .
                      COMMAND gunzip ${FREETYPE_VERSION}.tar.gz
                      COMMAND tar xf ${FREETYPE_VERSION}.tar
                      COMMAND touch ${FREETYPE_VERSION}/unpacked
-                     COMMAND cmake -E remove -f ${FREETYPE_VERSION}.tar
+                     COMMAND ${CMAKE_COMMAND} -E remove -f ${FREETYPE_VERSION}.tar
                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
   # configure and make freetype, this command depends on the unpacked package
   add_custom_command(OUTPUT ${freetypeliba}
@@ -93,13 +93,13 @@ endif()
 # This command depends on the created libfreetype.a
 if(ROOT_PLATFORM MATCHES macosx)
   add_custom_command(OUTPUT ${freetypelib}
-                     COMMAND cmake -E copy_if_different ${freetypeliba} ${freetypelib}
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypeliba} ${freetypelib}
                      COMMAND ranlib ${freetypeliba}
                      DEPENDS ${freetypeliba}
                    )
 else()
   add_custom_command(OUTPUT ${freetypelib}
-                     COMMAND cmake -E copy_if_different ${freetypeliba} ${freetypelib}
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypeliba} ${freetypelib}
                      DEPENDS ${freetypeliba}
                    )
 endif()
