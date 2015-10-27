@@ -907,12 +907,16 @@ Changes will be part of the future 6.04/08
 - Add --disable-search-usrlocal to configure/make to be able to avoid conflict with incompatible installation (e.g. homebrew).
 - Add /opt/X11 to configure/make search for include files and libraries.
 
+### Core
+- Add missing protection when creating new StreamerInfo
+
 ### Interpreter
 - Prevent crash in expressions which contain use undefined identifier [ROOT-7737]
+
+### IO
+- For backward compatibility with ROOT5, allow to define IO constructors with the signature MyClass::MyClass(__void__&) where void is a forward declared type.
 
 ### Minuit
 - Make function pointer held by TMinuitMinimize thread local
 
-### IO
-- For backward compatibility with ROOT5, allow to define IO constructors with the signature MyClass::MyClass(__void__&) where void is a forward declared type.
 
