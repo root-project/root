@@ -170,7 +170,7 @@ Implement the Log option for `CANDLE` plots as requested
 
 From Dmitry Kalinkin (via github): Fix file corruption in `TTeXDump::DrawPolyMarker`
 The current implementation of `TTeXDump` uses `TVirtualPS::PrintFast` based methods
-to output TeX markup with automatic linewraps. Yet these methods are optimized for
+to output TeX markup with automatic line-wraps. Yet these methods are optimized for
 PostScript format where there are a lot of space characters that are used for newline
 placement. Current `TTeXDump::DrawPolyMarker` would often produce a long contiguous lines
 that trigger a forceful linewrap that can happen in the middle of real number constant
@@ -225,13 +225,30 @@ based on pixel to avoid the problem reported
 ### TCanvas
 
 When the first canvas created by ROOT was in batch mode, it was note possible to
-comme back in interactive mode for the next canvases. this problem was reported here:
-https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20354
+comme back in interactive mode for the next canvases. this problem was reported
+[here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20354).
 
 ### Cocoa Backend
 
 Sometimes the mouse cursor did not change back to the window manager arrow when
 exiting a `TCanvas`.
+
+### `freetype` library
+
+Updates `builtin_freetype` to 2.6.1 (current upstream version), which can detect
+`PPC64LE` machine. This was compiled and tested on `SLC6 + ICC + x86_64`,
+`F21 + GCC + ppc64le`, `MacOSX 10.11.1 + Xcode 7.1` and `Windows (ROOT 5.34)`.
+`$ROOTSYS/graf2d/freetype/src/README` was removed, because no issues were noticed
+with `ICC` compiler and `-Wall -pedantic -ansi` flags.
+Additionally `--with-png=no --with-bzip2=no` flags are passed to freetype
+configuration script. Default values for these options are auto.
+`freetype` finds `libpng` and `libbzip2` on the system and builds extra
+modules. Then attempting to link against `freetype` one would need to link
+`-lpng -lbzip2` explicitly otherwise linking will returns in undefined
+references. Otherwise we would need to check for `libpng` and `libbzip2` on the system
+and adjust `FREETYPE_LIBRARIES` to include `-lpng` and `-lbzip2`.
+The current solution goes for the minimal configuration. The original request for
+this update was posted [here](https://sft.its.cern.ch/jira/browse/ROOT-7631).
 
 ## 3D Graphics Libraries
 

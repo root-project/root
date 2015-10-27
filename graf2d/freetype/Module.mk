@@ -23,7 +23,7 @@ else
 MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 
-FREETYPEVERS := freetype-2.3.12
+FREETYPEVERS := freetype-2.6.1
 FREETYPEDIR  := $(call stripsrc,$(MODDIR))
 FREETYPEDIRS := $(call stripsrc,$(MODDIRS))
 FREETYPEDIRI := $(FREETYPEDIRS)/$(FREETYPEVERS)/include
@@ -35,10 +35,10 @@ ifeq ($(PLATFORM),win32)
 FREETYPELIBB := $(LPATH)/libfreetype.lib
 FREETYPELIB  := $(FREETYPELIBB)
 ifeq (yes,$(WINRTDEBUG))
-FREETYPELIBA := $(call stripsrc,$(MODDIRS)/$(FREETYPEVERS)/objs/freetype2312MT_D.lib)
+FREETYPELIBA := $(call stripsrc,$(MODDIRS)/$(FREETYPEVERS)/objs/freetype261MT_D.lib)
 FTNMCFG      := "freetype - Win32 Debug Multithreaded"
 else
-FREETYPELIBA := $(call stripsrc,$(MODDIRS)/$(FREETYPEVERS)/objs/freetype2312MT.lib)
+FREETYPELIBA := $(call stripsrc,$(MODDIRS)/$(FREETYPEVERS)/objs/freetype261MT.lib)
 FTNMCFG      := "freetype - Win32 Release Multithreaded"
 endif
 else
@@ -80,7 +80,7 @@ endif
 		if [ ! -d $(FREETYPEVERS) ]; then \
 			gunzip -c $(FREETYPELIBS) | tar xf -; \
 		fi; \
-		cd $(FREETYPEVERS)/builds/win32/visualc; \
+		cd $(FREETYPEVERS)/builds/windows/visualc; \
 		cp ../../../../win/freetype.mak .; \
 		cp ../../../../win/freetype.dep .; \
 		unset MAKEFLAGS; \
@@ -101,6 +101,9 @@ else
 		if [ "$(CC)" = "icc" ]; then \
 			FREECC="icc -wd188 -wd181"; \
 		fi; \
+		if [ $(ARCH) = "alphacxx6" ]; then \
+			FREECC="cc"; \
+		fi; \
 		if [ $(ARCH) = "linux" ]; then \
 			FREECC="$$FREECC -m32"; \
 			FREE_CFLAGS="-m32"; \
@@ -108,10 +111,6 @@ else
 		if [ $(ARCH) = "linuxx8664gcc" ]; then \
 			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \
-		fi; \
-		if [ $(ARCH) = "linuxx32gcc" ]; then \
-			FREECC="$$FREECC -mx32"; \
-			FREE_CFLAGS="-mx32"; \
 		fi; \
 		if [ $(ARCH) = "linuxicc" ]; then \
 			FREECC="$$FREECC -m32"; \
@@ -146,14 +145,14 @@ else
 			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "sgicc64" ]; then \
+			FREECC="cc"; \
+			FREE_CFLAGS="-64"; \
+		fi; \
 		if [ $(ARCH) = "linuxppc64gcc" ]; then \
 			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \
 		fi; \
-	        if [ $(ARCH) = "linuxppcgcc" ]; then \
-	               FREECC="$$FREECC -m32"; \
-	               FREE_CFLAGS="-m32"; \
-	        fi; \
 		if [ $(ARCH) = "hpuxia64acc" ]; then \
 			FREECC="cc"; \
 			FREE_CFLAGS="+DD64 -Ae +W863"; \
@@ -174,8 +173,8 @@ all-$(MODNAME): $(FREETYPELIBB)
 
 clean-$(MODNAME):
 ifeq ($(PLATFORM),win32)
-		-@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/win32/visualc ]; then \
-			cd $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/win32/visualc; \
+		-@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/windows/visualc ]; then \
+			cd $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/windows/visualc; \
 			unset MAKEFLAGS; \
 			nmake -nologo -f freetype.mak \
 			CFG=$(FTNMCFG) clean; \

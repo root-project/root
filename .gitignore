@@ -158,7 +158,7 @@ core/base/src/RGitCommit.h
 /graf2d/asimage/src/libAfterImage/libAfterImage.a
 
 # /graf2d/freetype/src/
-/graf2d/freetype/src/freetype-2.3.12
+/graf2d/freetype/src/freetype-2.6.1
 
 # /graf2d/qt/src/
 /graf2d/qt/src/moc_*.cxx
