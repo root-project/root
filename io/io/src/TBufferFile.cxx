@@ -3716,6 +3716,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
          // AND the checksum is the same.
          if ( version == cl->GetClassVersion() || version == 1 ) {
             const_cast<TClass*>(cl)->BuildRealData(pointer);
+            // This creation is alright since we just checked within the
+            // current 'locked' section.
             sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
             const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
             if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
@@ -3840,17 +3842,30 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             if (v2file || version == cl->GetClassVersion() || version == 1 ) {
                R__LOCKGUARD(gInterpreterMutex);
 
-               const_cast<TClass*>(cl)->BuildRealData(pointer);
-               sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
-               sinfo->SetClassVersion(version);
-               const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
-               if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
-               if (v2file) {
-                  sinfo->Build(); // Get the elements.
-                  sinfo->Clear("build"); // Undo compilation.
-                  sinfo->BuildEmulated(file); // Fix the types and redo compilation.
-               } else {
-                  sinfo->Build();
+               // We need to check if another thread did not get here first
+               // and did the StreamerInfo creation already.
+               auto infos = cl->GetStreamerInfos();
+               auto ninfos = infos->GetSize();
+               if (!(version < -1 || version >= ninfos)) {
+                  sinfo = (TStreamerInfo *) infos->At(version);
+               }
+               if (!sinfo) {
+                  const_cast<TClass *>(cl)->BuildRealData(pointer);
+                  sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
+                  sinfo->SetClassVersion(version);
+                  const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
+                  if (gDebug > 0)
+                     printf(
+                           "Creating StreamerInfo for class: %s, version: %d\n",
+                           cl->GetName(), version);
+                  if (v2file) {
+                     sinfo->Build(); // Get the elements.
+                     sinfo->Clear("build"); // Undo compilation.
+                     sinfo->BuildEmulated(
+                           file); // Fix the types and redo compilation.
+                  } else {
+                     sinfo->Build();
+                  }
                }
             } else if (version==0) {
                // When the object was written the class was version zero, so
