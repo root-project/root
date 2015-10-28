@@ -82,7 +82,7 @@ else()
                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
   # configure and make freetype, this command depends on the unpacked package
   add_custom_command(OUTPUT ${freetypeliba}
-                     COMMAND CC=${FREETYPE_CC} CFLAGS=${FREETYPE_CFLAGS} ./configure --with-pic --disable-shared --with-png=no --with-bzip2=no ${FREETYPE_ZLIB} > /dev/null 2>&1
+                     COMMAND CC=${FREETYPE_CC} CFLAGS=${FREETYPE_CFLAGS} ./configure --with-pic --disable-shared --with-png=no --with-bzip2=no --with-harfbuzz=no ${FREETYPE_ZLIB} > /dev/null 2>&1
                      COMMAND make modules all > /dev/null 2>&1
                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${FREETYPE_VERSION}
                      DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FREETYPE_VERSION}/unpacked
