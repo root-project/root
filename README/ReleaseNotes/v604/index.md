@@ -912,6 +912,8 @@ Changes will be part of the future 6.04/08
 
 ### Interpreter
 - Prevent crash in expressions which contain use undefined identifier [ROOT-7737]
+- Disable unnecessary code during dictionary generation that triggered problem due to the lack of support for template parameter packs [ROOT-7708]
+- Add suport in the type and name normalization routine for template parameter packs [ROOT-7708]
 
 ### IO
 - For backward compatibility with ROOT5, allow to define IO constructors with the signature MyClass::MyClass(__void__&) where void is a forward declared type.
