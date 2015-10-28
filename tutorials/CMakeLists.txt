@@ -234,7 +234,7 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-io-hadd
                        tutorial-io-loopdir
                        tutorial-io-copyFiles)
-set(geom-na49view-depends tutorial-pyroot-geometry)
+set(geom-na49view-depends tutorial-geom-geometry)
 
 #--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
