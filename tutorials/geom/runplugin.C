@@ -1,3 +1,5 @@
+#include "iterplugin.cxx"
+
 iterplugin *plugin = 0;
 
 void runplugin()

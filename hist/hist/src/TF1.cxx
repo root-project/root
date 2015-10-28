@@ -698,7 +698,9 @@ TF1::TF1(const TF1 &f1) :
    fNpfits(0), fNDF(0), fChisquare(0),
    fMinimum(-1111), fMaximum(-1111),
    fParent(0), fHistogram(0),
-   fMethodCall(0), fFormula(0), fParams(0)
+   fMethodCall(0),
+   fNormalized(false), fNormIntegral(0),
+   fFormula(0), fParams(0)
 {
    ((TF1&)f1).Copy(*this);
 }
@@ -760,6 +762,8 @@ void TF1::Copy(TObject &obj) const
    ((TF1&)obj).fSave      = fSave;
    ((TF1&)obj).fHistogram = 0;
    ((TF1&)obj).fMethodCall = 0;
+   ((TF1&)obj).fNormalized = fNormalized;
+   ((TF1&)obj).fNormIntegral = fNormIntegral;
    ((TF1&)obj).fFormula   = 0;
 
    if (fFormula) assert(fFormula->GetNpar() == fNpar);
@@ -782,7 +786,7 @@ void TF1::Copy(TObject &obj) const
    if (fParams) {
       TF1Parameters * paramsToCopy = ((TF1&)obj).fParams;
       if (paramsToCopy) *paramsToCopy = *fParams;
-      ((TF1&)obj).fParams = new TF1Parameters(*fParams);
+      else ((TF1&)obj).fParams = new TF1Parameters(*fParams);
    }
 }
 

@@ -27,7 +27,7 @@ directory specified in $ROOTSYS/etc/system.rootrc. Additional
 directories can be specified by adding them to the end of the list.
 Macros for identical plugin handlers in later directories will
 override previous ones (the inverse of normal search path behavior).
-The macros must have names like <BaseClass>/PX0_<PluginClass>.C,
+The macros must have names like `<BaseClass>/PX0_<PluginClass>.C`,
 e.g.:
 
    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.
@@ -406,10 +406,10 @@ void TPluginManager::LoadHandlerMacros(const char *path)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Load plugin handlers specified via macros in a list of plugin
-/// directories. The $ROOTSYS/etc/plugins is the default top plugin directory
-/// specified in $ROOTSYS/etc/system.rootrc. The macros must have names
-/// like <BaseClass>/PX0_<PluginClass>.C, e.g.:
-///    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.
+/// directories. The `$ROOTSYS/etc/plugins` is the default top plugin directory
+/// specified in `$ROOTSYS/etc/system.rootrc`. The macros must have names
+/// like `<BaseClass>/PX0_<PluginClass>.C`, e.g.:
+///    `TFile/P10_TRFIOFile.C`, `TSQLServer/P20_TMySQLServer.C`, etc.
 /// to allow easy sorting and grouping. If the BaseClass is in a namespace
 /// the directory must have the name NameSpace@@BaseClass as : is a reserved
 /// pathname character on some operating systems. Macros not beginning with

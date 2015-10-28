@@ -12,16 +12,6 @@
 #ifndef ROOT_TGX11
 #define ROOT_TGX11
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGX11                                                                //
-//                                                                      //
-// Interface to low level X11 (Xlib). This class gives access to basic  //
-// X11 graphics, pixmap, text and font handling routines.               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
 #endif
@@ -59,31 +49,33 @@ struct RXSetWindowAttributes;
 struct RXVisualInfo;
 struct RVisual;
 
+/// Description of a X11 window.
 struct XWindow_t {
-   Int_t    fOpen;                // 1 if the window is open, 0 if not
-   Int_t    fDoubleBuffer;        // 1 if the double buffer is on, 0 if not
-   Int_t    fIsPixmap;            // 1 if pixmap, 0 if not
-   Drawable fDrawing;             // drawing area, equal to window or buffer
-   Drawable fWindow;              // X11 window
-   Drawable fBuffer;              // pixmap used for double buffer
-   UInt_t   fWidth;               // width of the window
-   UInt_t   fHeight;              // height of the window
-   Int_t    fClip;                // 1 if the clipping is on
-   Int_t    fXclip;               // x coordinate of the clipping rectangle
-   Int_t    fYclip;               // y coordinate of the clipping rectangle
-   UInt_t   fWclip;               // width of the clipping rectangle
-   UInt_t   fHclip;               // height of the clipping rectangle
-   ULong_t *fNewColors;           // new image colors (after processing)
-   Int_t    fNcolors;             // number of different colors
-   Bool_t   fShared;              // notify when window is shared
+   Int_t    fOpen;                ///< 1 if the window is open, 0 if not
+   Int_t    fDoubleBuffer;        ///< 1 if the double buffer is on, 0 if not
+   Int_t    fIsPixmap;            ///< 1 if pixmap, 0 if not
+   Drawable fDrawing;             ///< drawing area, equal to window or buffer
+   Drawable fWindow;              ///< X11 window
+   Drawable fBuffer;              ///< pixmap used for double buffer
+   UInt_t   fWidth;               ///< width of the window
+   UInt_t   fHeight;              ///< height of the window
+   Int_t    fClip;                ///< 1 if the clipping is on
+   Int_t    fXclip;               ///< x coordinate of the clipping rectangle
+   Int_t    fYclip;               ///< y coordinate of the clipping rectangle
+   UInt_t   fWclip;               ///< width of the clipping rectangle
+   UInt_t   fHclip;               ///< height of the clipping rectangle
+   ULong_t *fNewColors;           ///< new image colors (after processing)
+   Int_t    fNcolors;             ///< number of different colors
+   Bool_t   fShared;              ///< notify when window is shared
 };
 
+/// Description of a X11 color.
 struct XColor_t {
-   ULong_t  fPixel;               // color pixel value
-   UShort_t fRed;                 // red value in range [0,kBIGGEST_RGB_VALUE]
-   UShort_t fGreen;               // green value
-   UShort_t fBlue;                // blue value
-   Bool_t   fDefined;             // true if pixel value is defined
+   ULong_t  fPixel;               ///< color pixel value
+   UShort_t fRed;                 ///< red value in range [0,kBIGGEST_RGB_VALUE]
+   UShort_t fGreen;               ///< green value
+   UShort_t fBlue;                ///< blue value
+   Bool_t   fDefined;             ///< true if pixel value is defined
    XColor_t() { fPixel = 0; fRed = fGreen = fBlue = 0; fDefined = kFALSE; }
 };
 
@@ -93,11 +85,11 @@ class TExMap;
 class TGX11 : public TVirtualX {
 
 private:
-   Int_t      fMaxNumberOfWindows;    //Maximum number of windows
-   XWindow_t *fWindows;               //List of windows
-   TExMap    *fColors;                //Hash list of colors
-   Cursor     fCursors[kNumCursors];  //List of cursors
-   void      *fXEvent;                //Current native (X11) event
+   Int_t      fMaxNumberOfWindows;    ///< Maximum number of windows
+   XWindow_t *fWindows;               ///< List of windows
+   TExMap    *fColors;                ///< Hash list of colors
+   Cursor     fCursors[kNumCursors];  ///< List of cursors
+   void      *fXEvent;                ///< Current native (X11) event
 
    void   CloseWindow1();
    void   ClearPixmap(Drawable *pix);
@@ -135,29 +127,29 @@ private:
    void MapKeySym(UInt_t &keysym, UInt_t &xkeysym, Bool_t tox = kTRUE);
 
 protected:
-   void      *fDisplay;            //Pointer to display
-   RVisual   *fVisual;             //Pointer to visual used by all windows
-   Drawable   fRootWin;            //Root window used as parent of all windows
-   Drawable   fVisRootWin;         //Root window with fVisual to be used to create GC's and XImages
-   Colormap   fColormap;           //Default colormap, 0 if b/w
-   ULong_t    fBlackPixel;         //Value of black pixel in colormap
-   ULong_t    fWhitePixel;         //Value of white pixel in colormap
-   Int_t      fScreenNumber;       //Screen number
-   Int_t      fTextAlignH;         //Text Alignment Horizontal
-   Int_t      fTextAlignV;         //Text Alignment Vertical
-   Int_t      fTextAlign;          //Text alignment (set in SetTextAlign)
-   Float_t    fCharacterUpX;       //Character Up vector along X
-   Float_t    fCharacterUpY;       //Character Up vector along Y
-   Float_t    fTextMagnitude;      //Text Magnitude
-   Int_t      fDepth;              //Number of color planes
-   Int_t      fRedDiv;             //Red value divider, -1 if no TrueColor visual
-   Int_t      fGreenDiv;           //Green value divider
-   Int_t      fBlueDiv;            //Blue value divider
-   Int_t      fRedShift;           //Bits to left shift red, -1 if no TrueColor visual
-   Int_t      fGreenShift;         //Bits to left shift green
-   Int_t      fBlueShift;          //Bits to left shift blue
-   Bool_t     fHasTTFonts;         //True when TrueType fonts are used
-   Bool_t     fHasXft;             //True when XftFonts are used
+   void      *fDisplay;            ///< Pointer to display
+   RVisual   *fVisual;             ///< Pointer to visual used by all windows
+   Drawable   fRootWin;            ///< Root window used as parent of all windows
+   Drawable   fVisRootWin;         ///< Root window with fVisual to be used to create GC's and XImages
+   Colormap   fColormap;           ///< Default colormap, 0 if b/w
+   ULong_t    fBlackPixel;         ///< Value of black pixel in colormap
+   ULong_t    fWhitePixel;         ///< Value of white pixel in colormap
+   Int_t      fScreenNumber;       ///< Screen number
+   Int_t      fTextAlignH;         ///< Text Alignment Horizontal
+   Int_t      fTextAlignV;         ///< Text Alignment Vertical
+   Int_t      fTextAlign;          ///< Text alignment (set in SetTextAlign)
+   Float_t    fCharacterUpX;       ///< Character Up vector along X
+   Float_t    fCharacterUpY;       ///< Character Up vector along Y
+   Float_t    fTextMagnitude;      ///< Text Magnitude
+   Int_t      fDepth;              ///< Number of color planes
+   Int_t      fRedDiv;             ///< Red value divider, -1 if no TrueColor visual
+   Int_t      fGreenDiv;           ///< Green value divider
+   Int_t      fBlueDiv;            ///< Blue value divider
+   Int_t      fRedShift;           ///< Bits to left shift red, -1 if no TrueColor visual
+   Int_t      fGreenShift;         ///< Bits to left shift green
+   Int_t      fBlueShift;          ///< Bits to left shift blue
+   Bool_t     fHasTTFonts;         ///< True when TrueType fonts are used
+   Bool_t     fHasXft;             ///< True when XftFonts are used
 
    // needed by TGX11TTF
    Bool_t     AllocColor(Colormap cmap, RXColor *color);

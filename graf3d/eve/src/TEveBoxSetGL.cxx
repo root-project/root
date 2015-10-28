@@ -18,6 +18,7 @@
 #include "TGLQuadric.h"
 
 /** \class TEveBoxSetGL
+\ingroup TEve
 A GL rendering class for TEveBoxSet.
 */
 

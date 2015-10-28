@@ -16,7 +16,9 @@
 #ifndef ROO_POLY_VAR
 #define ROO_POLY_VAR
 
-#include "RooAbsPdf.h"
+#include <vector>
+
+#include "RooAbsReal.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
 
@@ -43,7 +45,8 @@ protected:
   RooRealProxy _x;
   RooListProxy _coefList ;
   Int_t _lowestOrder ;
-  TIterator* _coefIter ;  //! do not persist
+
+  mutable std::vector<Double_t> _wksp; //! do not persist
 
   Double_t evaluate() const;
 

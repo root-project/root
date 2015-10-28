@@ -9,39 +9,37 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TChirpFile                                                           //
-//                                                                      //
-// A TChirpFile is like a normal TFile except that it may read and      //
-// write its data via a Chirp server. The primary API for accessing     //
-// Chirp is through the chirp_reli interface, which corresponds closely //
-// to Unix.  Most operations return an integer where >=0 indicates      //
-// success and <0 indicates failure, setting the global errno.          //
-// This allows most TFile methods to be implemented with a single       //
-// line or two of Chirp (for more on the Chirp filesystem.              //
-//
-// Note that this class overrides ReadBuffers so as to take advantage   //
-// of the Chirp "bulk I/O" feature which does multiple remote ops       //
-// in a single call.                                                    //
-//                                                                      //
-// Most users of Chirp will access a named remote server url:           //
-//     chirp://host.somewhere.edu/path                                  //
-//                                                                      //
-// The special host CONDOR is used to indicate a connection to the      //
-// Chirp I/O proxy service when running inside of Condor:               //
-//     chirp://CONDOR/path                                              //
-//                                                                      //
-// This module recognizes the following environment variables:          //
-//    CHIRP_DEBUG_FILE  - Send debugging output to this file.           //
-//    CHIRP_DEBUG_FLAGS - Turn on select debugging flags (e.g. 'all')   //
-//    CHIRP_AUTH        - Select a specific auth type (e.g. 'globus')   //
-//    CHIRP_TIMEOUT     - Specify how long to attempt each op, in secs  //
-//                                                                      //
-// For more information about the Chirp fileystem and protocol:         //
-//    http://www.cse.nd.edu/~ccl/software/chirp                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TChirpFile
+\ingroup IO
+
+Read and write data via a Chirp server.
+
+A TChirpFile is like a normal TFile except that it may read and
+write its data via a Chirp server. The primary API for accessing
+Chirp is through the chirp_reli interface, which corresponds closely
+to Unix.  Most operations return an integer where >=0 indicates
+success and <0 indicates failure, setting the global errno.
+This allows most TFile methods to be implemented with a single
+line or two of Chirp (for more on the Chirp filesystem.
+Note that this class overrides ReadBuffers so as to take advantage
+of the Chirp "bulk I/O" feature which does multiple remote ops
+in a single call.
+Most users of Chirp will access a named remote server url:
+    chirp://host.somewhere.edu/path
+The special host CONDOR is used to indicate a connection to the     
+Chirp I/O proxy service when running inside of Condor:
+    chirp://CONDOR/path
+
+This module recognizes the following environment variables:
+  - \b CHIRP_DEBUG_FILE: Send debugging output to this file.
+  - \b CHIRP_DEBUG_FLAGS: Turn on select debugging flags (e.g. 'all').
+  - \b CHIRP_AUTH: Select a specific auth type (e.g. 'globus').
+  - \b CHIRP_TIMEOUT: Specify how long to attempt each op, in secs.
+
+For more information about the Chirp fileystem and protocol:
+    http://www.cse.nd.edu/~ccl/software/chirp
+*/
 
 #include "TChirpFile.h"
 #include "TError.h"
@@ -95,6 +93,7 @@ static void chirp_root_global_setup()
 ClassImp(TChirpFile)
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 TChirpFile::TChirpFile(const char *path, Option_t * option, const char *ftitle, Int_t compress):TFile(path, "NET", ftitle, compress)
 {
@@ -158,6 +157,7 @@ zombie:
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
 
 TChirpFile::~TChirpFile()
 {

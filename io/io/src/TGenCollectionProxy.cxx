@@ -9,20 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGenCollectionProxy
-//
-// Proxy around an arbitrary container, which implements basic
-// functionality and iteration.
-//
-// In particular this is used to implement splitting and abstract
-// element access of any container. Access to compiled code is necessary
-// to implement the abstract iteration sequence and functionality like
-// size(), clear(), resize(). resize() may be a void operation.
-//
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGenCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
 #include "TStreamerElement.h"
@@ -42,17 +28,16 @@
 
 #define MESSAGE(which,text)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  class TGenVectorProxy
-//
-//   Local optimization class.
-//
-//   Collection proxies get copied. On copy we switch the type of the
-//   proxy to the concrete STL type. The concrete types are optimized
-//   for element access.
-//
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TGenVectorProxy
+\ingroup IO
+Local optimization class.
+
+Collection proxies get copied. On copy we switch the type of the
+proxy to the concrete STL type. The concrete types are optimized
+for element access.
+*/
+
 class TGenVectorProxy : public TGenCollectionProxy {
 public:
    // Standard Destructor
@@ -93,17 +78,15 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  class TGenVectorBoolProxy
-//
-//   Local optimization class.
-//
-//   Collection proxies get copied. On copy we switch the type of the
-//   proxy to the concrete STL type. The concrete types are optimized
-//   for element access.
-//
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TGenVectorBoolProxy
+\ingroup IO
+Local optimization class.
+
+Collection proxies get copied. On copy we switch the type of the
+proxy to the concrete STL type. The concrete types are optimized
+for element access.
+*/
 class TGenVectorBoolProxy : public TGenCollectionProxy {
    Bool_t fLastValue;
 
@@ -209,17 +192,16 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  class TGenListProxy
-//
-//   Localoptimization class.
-//
-//   Collection proxies get copied. On copy we switch the type of the
-//   proxy to the concrete STL type. The concrete types are optimized
-//   for element access.
-//
-//////////////////////////////////////////////////////////////////////////
+/*
+\class TGenListProxy
+\ingroup IO
+Local optimization class.
+
+Collection proxies get copied. On copy we switch the type of the
+proxy to the concrete STL type. The concrete types are optimized
+for element access.
+**/
+
 class TGenListProxy : public TGenVectorProxy {
 public:
    // Standard Destructor
@@ -252,17 +234,16 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// class TGenSetProxy
-//
-//   Localoptimization class.
-//
-//   Collection proxies get copied. On copy we switch the type of the
-//   proxy to the concrete STL type. The concrete types are optimized
-//   for element access.
-//
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TGenSetProxy
+\ingroup IO
+Localoptimization class.
+
+Collection proxies get copied. On copy we switch the type of the
+proxy to the concrete STL type. The concrete types are optimized
+for element access.
+*/
+
 class TGenSetProxy : public TGenVectorProxy {
 public:
    // Standard Destructor
@@ -298,17 +279,16 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  class TGenMapProxy
-//
-//   Localoptimization class.
-//
-//   Collection proxies get copied. On copy we switch the type of the
-//   proxy to the concrete STL type. The concrete types are optimized
-//   for element access.
-//
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TGenMapProxy
+\ingroup IO
+Localoptimization class.
+
+Collection proxies get copied. On copy we switch the type of the
+proxy to the concrete STL type. The concrete types are optimized
+for element access.
+*/
+
 class TGenMapProxy : public TGenSetProxy {
 public:
    // Standard Destructor
@@ -531,9 +511,12 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the Value has been properly initialized.
+
 Bool_t TGenCollectionProxy::Value::IsValid()
 {
-   // Return true if the Value has been properly initialized.
+   
 
    return fSize != std::string::npos;
 }
@@ -554,6 +537,24 @@ void TGenCollectionProxy::Value::DeleteItem(void* ptr)
       }
    }
 }
+
+/**
+ \class TGenCollectionProxy TGenCollectionProxy.cxx
+ \ingroup IO
+
+ Proxy around an arbitrary container, which implements basic
+ functionality and iteration.
+
+ The purpose of this implementation
+ is to shield any generated dictionary implementation from the
+ underlying streamer/proxy implementation and only expose
+ the creation functions.
+
+ In particular this is used to implement splitting and abstract
+ element access of any container. Access to compiled code is necessary
+ to implement the abstract iteration sequence and functionality like
+ size(), clear(), resize(). resize() may be a void operation.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Build a proxy for an emulated container.
@@ -1747,4 +1748,3 @@ TStreamerInfoActions::TActionSequence *TGenCollectionProxy::GetWriteMemberWiseAc
   }
   return result;
 }
-

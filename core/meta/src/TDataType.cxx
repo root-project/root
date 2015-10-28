@@ -9,14 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //                                                                      //
-// Basic data type descriptor (datatype information is obtained from    //
-// CINT). This class describes the attributes of type definitions       //
-// (typedef's). The TROOT class contains a list of all currently        //
-// defined types (accessible via TROOT::GetListOfTypes()).              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TDataType
+Basic data type descriptor (datatype information is obtained from
+CINT). This class describes the attributes of type definitions
+(typedef's). The TROOT class contains a list of all currently
+defined types (accessible via TROOT::GetListOfTypes()).
+*/
 
 #include "TDataType.h"
 #include "TInterpreter.h"
@@ -83,7 +81,7 @@ TDataType::TDataType(const TDataType& dt) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignement operator
+/// assignment operator
 
 TDataType& TDataType::operator=(const TDataType& dt)
 {

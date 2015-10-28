@@ -9,25 +9,29 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_EMPCode
-#define ROOT_EMPCode
+#ifndef ROOT_MPCode
+#define ROOT_MPCode
 
 /////////////////////////////////////////////////////////////////////////
-///
-/// An enumeration of the message codes handled by the base client and
-/// server classes (TMPClient and TMPServer).
-///
-/////////////////////////////////////////////////////////////////////////
+/// This namespace prevents conflicts between MPCode::kError and
+/// ELogLevel::kError
+namespace MPCode {
 
-//namespace prevents conflicts with the global variable kError
-namespace EMPCode {
+   /////////////////////////////////////////////////////////////////////////
+   ///
+   /// An enumeration of the message codes handled by TMPClient and
+   /// TMPWorker.
+   ///
+   /////////////////////////////////////////////////////////////////////////
+
    enum EMPCode : unsigned {
+   //not an enum class because we want to be able to easily cast back and forth from unsigned
       kMessage = 1000,  ///< Generic message
       kError,           ///< Error message
       kFatalError,      ///< Fatal error: whoever sends this message is terminating execution
       kShutdownOrder,   ///< Used by the client to tell servers to shutdown
-      kShutdownNotice,  ///< Used by the servers to notify client of shutdown
-      kRecvError        ///< MPRecv returns this code when it couldn't read from the socket
+      kShutdownNotice,  ///< Used by the workers to notify client of shutdown
+      kRecvError        ///< Error while reading from the socket
    };
 }
 

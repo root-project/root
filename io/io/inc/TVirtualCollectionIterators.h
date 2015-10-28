@@ -12,13 +12,11 @@
 #ifndef ROOT_TVirtualCollectionIterators
 #define ROOT_TVirtualCollectionIterators
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualCollectionIterators                                          //
-//                                                                      //
-// Small helper class to generically acquire and release iterators      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TVirtualCollectionIterators
+\ingroup IO
+Small helper class to generically acquire and release iterators.
+*/
 
 #ifndef ROOT_TVirtualCollectionProxy
 #include "TVirtualCollectionProxy.h"
@@ -192,7 +190,10 @@ inline TGenericCollectionIterator *TGenericCollectionIterator::New(void *collect
    }
 }
 
-
+/**
+\class TVirtualCollectionPtrIterators
+\ingroup IO
+*/
 class TVirtualCollectionPtrIterators
 {
 public:

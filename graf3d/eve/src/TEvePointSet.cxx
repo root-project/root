@@ -22,6 +22,7 @@
 #include "TColor.h"
 
 /** \class TEvePointSet
+\ingroup TEve
 TEvePointSet is a render-element holding a collection of 3D points with
 optional per-point TRef and an arbitrary number of integer ids (to
 be used for signal, volume-id, track-id, etc).
@@ -410,6 +411,7 @@ void TEvePointSet::PointSelected(Int_t id)
 
 //==============================================================================
 /** \class TEvePointSetArray
+\ingroup TEve
 An array of point-sets with each point-set playing a role of a bin
 in a histogram. When a new point is added to a TEvePointSetArray,
 an additional separating quantity needs to be specified: it
@@ -721,6 +723,7 @@ void TEvePointSetArray::SetRange(Double_t min, Double_t max)
 }
 
 /** \class TEvePointSetProjected
+\ingroup TEve
 Projected copy of a TEvePointSet.
 */
 ClassImp(TEvePointSetProjected);

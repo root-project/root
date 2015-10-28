@@ -9,16 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Utility class for browsing TMapFile objects.                         //
-// When the browser is invoked for a TMapFile, a TKeyMapFile object     //
-// is created for each object in the mapped file.                       //
-// When a TKeyMapFile object is clicked in the browser, a new copy      //
-// of this object is copied into the local directory and the action     //
-// corresponding to object->Browse is executed (typically Draw).        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TKeyMapFile
+\ingroup IO
+ Utility class for browsing TMapFile objects.
+
+ When the browser is invoked for a TMapFile, a TKeyMapFile object
+ is created for each object in the mapped file.
+ When a TKeyMapFile object is clicked in the browser, a new copy
+ of this object is copied into the local directory and the action
+ corresponding to object->Browse is executed (typically Draw).
+*/
 
 #include "TKeyMapFile.h"
 #include "TDirectory.h"
@@ -44,7 +45,7 @@ TKeyMapFile::TKeyMapFile(const char *name, const char *classname, TMapFile *mapf
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Browse the contained objects
+/// Browse the contained objects.
 
 void TKeyMapFile::Browse(TBrowser *b)
 {

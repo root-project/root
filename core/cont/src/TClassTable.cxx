@@ -9,14 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// This class registers for all classes their name, id and dictionary   //
-// function in a hash table. Classes are automatically added by the     //
-// ctor of a special init class when a global of this init class is     //
-// initialized when the program starts (see the ClassImp macro).        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TClassTable
+This class registers for all classes their name, id and dictionary
+function in a hash table. Classes are automatically added by the
+ctor of a special init class when a global of this init class is
+initialized when the program starts (see the ClassImp macro).
+*/
 
 #include "RConfig.h"
 #include <stdlib.h>
@@ -94,7 +92,7 @@ namespace ROOT {
       std::unique_ptr<TClassAlt> fNext;
    };
 
-
+#define R__USE_STD_MAP
    class TMapTypeToClassRec {
 #if defined R__USE_STD_MAP
      // This wrapper class allow to avoid putting #include <map> in the
@@ -136,7 +134,7 @@ namespace ROOT {
       void Print() {
          Info("TMapTypeToClassRec::Print", "printing the typeinfo map in TClassTable");
          for (const_iterator iter = fMap.begin(); iter != fMap.end(); iter++) {
-            printf("Key: %40s 0x%lx\n", iter->first.c_str(), iter->second);
+            printf("Key: %40s 0x%lx\n", iter->first.c_str(), (unsigned long)iter->second);
          }
       }
 #else
@@ -226,7 +224,7 @@ TClassTable::TClassTable()
 
 TClassTable::~TClassTable()
 {
-   // Try to avoid spurrious warning from memory leak checkers.
+   // Try to avoid spurious warning from memory leak checkers.
    if (gClassTable != this) return;
 
    for (UInt_t i = 0; i < fgSize; i++) {
@@ -241,7 +239,7 @@ TClassTable::~TClassTable()
 /// Print the class table. Before printing the table is sorted
 /// alphabetically. Only classes specified in option are listed.
 /// The default is to list all classes.
-/// Standard wilcarding notation supported.
+/// Standard wildcarding notation supported.
 
 void TClassTable::Print(Option_t *option) const
 {
@@ -731,10 +729,10 @@ void ROOT::AddClassAlternate(const char *normName, const char *alternate)
 /// and also ignore the request if fVersionUsed is true.
 ///
 /// Note on class version number:
-///   If no class has been specified, TClass::GetVersion will return -1
-///   The Class Version 0 request the whole object to be transient
-///   The Class Version 1, unless specify via ClassDef indicates that the
-///      I/O should use the TClass checksum to distinguish the layout of the class
+///  - If no class has been specified, TClass::GetVersion will return -1
+///  - The Class Version 0 request the whole object to be transient
+///  - The Class Version 1, unless specify via ClassDef indicates that the
+///    I/O should use the TClass checksum to distinguish the layout of the class
 
 void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 {

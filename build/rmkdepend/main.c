@@ -28,7 +28,7 @@ in this Software without prior written authorization from the X Consortium.
 */
 
 #if !defined(USGISH) || !defined(_SEQUENT_) || !defined(USE_CHMOD)
-#define _BSD_SOURCE /* def.h includes sys/stat and we need _BSD_SOURCE for fchmod see man fchmod */
+#define _DEFAULT_SOURCE /* def.h includes sys/stat and we need _BSD_SOURCE for fchmod see man fchmod */
 #endif
 
 #include "def.h"

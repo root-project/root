@@ -1,3 +1,5 @@
+void align();
+
 //______________________________________________________________________________
 void parallel_world(Bool_t usepw=kTRUE, Bool_t useovlp=kTRUE)
 {

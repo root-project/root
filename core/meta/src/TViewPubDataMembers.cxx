@@ -9,18 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TViewPubDataMembers                                                  //
-//                                                                      //
-// View implementing the TList interface and giving access all the      //
-// TDictionary describing public data members in a class and all its    //
-// base classes without caching any of the TDictionary pointers.        //
-//                                                                      //
-// Adding to this collection directly is prohibited.                    //
-// Iteration can only be done via the TIterator interfaces.             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TViewPubDataMembers
+View implementing the TList interface and giving access all the
+TDictionary describing public data members in a class and all its
+base classes without caching any of the TDictionary pointers.
+
+Adding to this collection directly is prohibited.
+Iteration can only be done via the TIterator interfaces.
+*/
 
 #include "TViewPubDataMembers.h"
 
@@ -292,7 +288,7 @@ Int_t TViewPubDataMembers::GetSize() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Load all the DataMembers known to the intepreter for the scope 'fClass'
+/// Load all the DataMembers known to the interpreter for the scope 'fClass'
 /// and all its bases classes.
 
 void TViewPubDataMembers::Load()
@@ -352,13 +348,9 @@ TObject   *TViewPubDataMembers::Remove(TObjLink * /* lnk */)
    return 0;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TViewPubDataMembersIter                                                //
-//                                                                      //
-// Iterator of over the view's content                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TViewPubDataMembersIter
+Iterator of over the view's content.
+*/
 
 // ClassImp(TViewPubDataMembersIter)
 
@@ -450,7 +442,7 @@ TObject *TViewPubDataMembersIter::Next()
       }
 
    }
-   // Not reacheable.
+   // Not reachable.
    return 0;
 }
 

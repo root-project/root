@@ -18,6 +18,7 @@
 
 
 /** \class TEveDigitSet
+\ingroup TEve
 Base-class for storage of digit collections; provides
 transformation matrix (TEveTrans), signal to color mapping
 (TEveRGBAPalette) and visual grouping (TEveFrameBox).

@@ -28,8 +28,6 @@ to create new primitives in gPad from the TPad toolbar.
 #include "KeySymbols.h"
 #include "TCutG.h"
 
-
-
 #include <iostream>
 
 TLatex *TCreatePrimitives::fgText = 0;
@@ -48,24 +46,24 @@ TGraph *TCreatePrimitives::fgPolyLine = 0;
 TBox *TCreatePrimitives::fgPadBBox = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TCreatePrimitives default constructor
+/// TCreatePrimitives default constructor.
 
 TCreatePrimitives::TCreatePrimitives()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TCreatePrimitives destructor
+/// TCreatePrimitives destructor.
 
 TCreatePrimitives::~TCreatePrimitives()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a new arc/ellipse in this gPad
+/// Create a new arc/ellipse in this gPad.
 ///
-/// Click left button to indicate arrow starting position.
-/// Release left button to terminate the arrow.
+///  - Click left button to indicate arrow starting position.
+///  - Release left button to terminate the arrow.
 
 void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
@@ -97,8 +95,7 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
             fgArc->SetR2(r1);
             fgArc->SetX1(xc);
             fgArc->SetY1(yc);
-         }
-         else {
+         } else {
             fgArc = new TArc(xc, yc, r1);
             fgArc->Draw();
          }
@@ -113,8 +110,7 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
             fgEllipse->SetR2(r2);
             fgEllipse->SetX1(xc);
             fgEllipse->SetY1(yc);
-         }
-         else {
+         } else {
             fgEllipse = new TEllipse(xc, yc, r1, r2);
             fgEllipse->Draw();
          }
@@ -152,10 +148,10 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a new line/arrow in this gPad
+/// Create a new line/arrow in this gPad.
 ///
-/// Click left button to indicate arrow starting position.
-/// Release left button to terminate the arrow.
+///  - Click left button to indicate arrow starting position.
+///  - Release left button to terminate the arrow.
 
 void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
@@ -193,8 +189,7 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
          if (fgLine){
             fgLine->SetX2(gPad->AbsPixeltoX(pxold));
             fgLine->SetY2(gPad->AbsPixeltoY(pyold));
-         }
-         else {
+         } else {
             fgLine = new TLine(x0,y0,gPad->AbsPixeltoX(pxold),gPad->AbsPixeltoY(pyold));
             fgLine->Draw();
          }
@@ -206,8 +201,7 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
          if (fgArrow){
             fgArrow->SetX2(gPad->AbsPixeltoX(pxold));
             fgArrow->SetY2(gPad->AbsPixeltoY(pyold));
-         }
-         else {
+         } else {
             fgArrow = new TArrow(x0,y0,gPad->AbsPixeltoX(pxold),gPad->AbsPixeltoY(pyold)
                                  , TArrow::GetDefaultArrowSize()
                                  , TArrow::GetDefaultOption());
@@ -236,8 +230,7 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
          if (fgCArc) {
             fgCArc->SetStartPoint(gPad->AbsPixeltoX(pxold), gPad->AbsPixeltoY(pyold));
             fgCArc->SetRadius(radius);
-         }
-         else {
+         } else {
             phimin = 0;
             phimax = 360;
             fgCArc = new TCurlyArc(x0,y0,radius,phimin,phimax
@@ -273,10 +266,10 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a new pad in gPad
+/// Create a new pad in gPad.
 ///
-/// Click left button to indicate one corner of the pad
-/// Click left button to indicate the opposite corner
+///  - Click left button to indicate one corner of the pad.
+///  - Click left button to indicate the opposite corner.
 ///
 /// The new pad is inserted in the pad where the first point is selected.
 
@@ -327,8 +320,7 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
          fgPadBBox->SetY1(gPad->AbsPixeltoY(pyl));
          fgPadBBox->SetX2(gPad->AbsPixeltoX(pxt));
          fgPadBBox->SetY2(gPad->AbsPixeltoY(pyt));
-      }
-      else {
+      } else {
          fgPadBBox = new TBox(pxl, pyl, pxt, pyt);
          fgPadBBox->Draw("l");
       }
@@ -357,10 +349,10 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a new pavetext in gPad
+/// Create a new pavetext in gPad.
 ///
-/// Click left button to indicate one corner of the pavelabel.
-/// Release left button at the opposite corner.
+///  - Click left button to indicate one corner of the pavelabel.
+///  - Release left button at the opposite corner.
 
 void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
@@ -423,21 +415,18 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
             if (xold < x0) {
                fgPave->SetX1(xold);
                fgPave->SetX2(x0);
-            }
-            else {
+            } else {
                fgPave->SetX1(x0);
                fgPave->SetX2(xold);
             }
             if (yold < y0) {
                fgPave->SetY1(yold);
                fgPave->SetY2(y0);
-            }
-            else {
+            } else {
                fgPave->SetY1(y0);
                fgPave->SetY2(yold);
             }
-         }
-         else {
+         } else {
             fgPave = new TPave(xp0,yp0,xp1,yp1);
             fgPave->Draw();
          }
@@ -450,21 +439,18 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
             if (xold < x0) {
                fgPaveText->SetX1(xold);
                fgPaveText->SetX2(x0);
-            }
-            else {
+            } else {
                fgPaveText->SetX1(x0);
                fgPaveText->SetX2(xold);
             }
             if (yold < y0) {
                fgPaveText->SetY1(yold);
                fgPaveText->SetY2(y0);
-            }
-            else {
+            } else {
                fgPaveText->SetY1(y0);
                fgPaveText->SetY2(yold);
             }
-         }
-         else {
+         } else {
             fgPaveText = new TPaveText(xp0,yp0,xp1,yp1);
             fgPaveText->Draw();
          }
@@ -477,21 +463,18 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
             if (xold < x0) {
                fgPavesText->SetX1(xold);
                fgPavesText->SetX2(x0);
-            }
-            else {
+            } else {
                fgPavesText->SetX1(x0);
                fgPavesText->SetX2(xold);
             }
             if (yold < y0) {
                fgPavesText->SetY1(yold);
                fgPavesText->SetY2(y0);
-            }
-            else {
+            } else {
                fgPavesText->SetY1(y0);
                fgPavesText->SetY2(yold);
             }
-         }
-         else {
+         } else {
             fgPavesText = new TPavesText(xp0,yp0,xp1,yp1);
             fgPavesText->Draw();
          }
@@ -504,21 +487,18 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
             if (xold < x0) {
                fgPaveLabel->SetX1(xold);
                fgPaveLabel->SetX2(x0);
-            }
-            else {
+            } else {
                fgPaveLabel->SetX1(x0);
                fgPaveLabel->SetX2(xold);
             }
             if (yold < y0) {
                fgPaveLabel->SetY1(yold);
                fgPaveLabel->SetY2(y0);
-            }
-            else {
+            } else {
                fgPaveLabel->SetY1(y0);
                fgPaveLabel->SetY2(yold);
             }
-         }
-         else {
+         } else {
             fgPaveLabel = new TPaveLabel(xp0,yp0,xp1,yp1,">");
             fgPaveLabel->Draw();
          }
@@ -531,21 +511,18 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
             if (xold < x0) {
                fgDiamond->SetX1(xold);
                fgDiamond->SetX2(x0);
-            }
-            else {
+            } else {
                fgDiamond->SetX1(x0);
                fgDiamond->SetX2(xold);
             }
             if (yold < y0) {
                fgDiamond->SetY1(yold);
                fgDiamond->SetY2(y0);
-            }
-            else {
+            } else {
                fgDiamond->SetY1(y0);
                fgDiamond->SetY2(yold);
             }
-         }
-         else {
+         } else {
             fgDiamond = new TDiamond(x0,y0,xold,yold);
             fgDiamond->Draw();
          }
@@ -588,17 +565,16 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a new PolyLine in gPad
+/// Create a new PolyLine in gPad.
 ///
-/// Click left button to indicate a new point
-/// Click left button at same place or double click to close the polyline
+///  - Click left button to indicate a new point.
+///  - Click left button at same place or double click to close the polyline.
 
 void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
-   static Int_t pxnew, pynew;
+   static Int_t pxnew, pynew, pxold, pyold, dp;
    Double_t xnew, ynew, xold, yold;
    static Int_t npoints = 0;
-   Double_t dp;
 
    switch (event) {
 
@@ -609,24 +585,25 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (fgPolyLine) {
          fgPolyLine->Set(fgPolyLine->GetN() +1);
          fgPolyLine->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
-                gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
-         // stop collecting new points if new point is close ( < 5 pixels) of previous point
+                                       gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
+         // stop collecting new points if new point is close to previous point
          if (npoints > 1) {
-            fgPolyLine->GetPoint(fgPolyLine->GetN()-3, xold, yold);
             xnew = gPad->PadtoX(gPad->AbsPixeltoX(pxnew));
             ynew = gPad->PadtoY(gPad->AbsPixeltoY(pynew));
-            dp = TMath::Abs(xnew-xold) +TMath::Abs(ynew-yold);
-            if (dp < 0.007) {
+            fgPolyLine->GetPoint(fgPolyLine->GetN()-3, xold, yold);
+            pxold = gPad->XtoAbsPixel(xold);
+            pyold = gPad->YtoAbsPixel(yold);
+            dp   = TMath::Abs(pxnew-pxold) +TMath::Abs(pynew-pyold);
+            if (dp < 7) {
                if (mode == kPolyLine) {
                   fgPolyLine->Set(npoints-1);
-               }
-               else {
+               } else {
                   fgPolyLine->GetPoint(0, xnew, ynew);
                   fgPolyLine->SetPoint(npoints, xnew, ynew);
                }
                gPad->GetCanvas()->Selected(gPad, fgPolyLine, kButton1Down);
                fgPolyLine = 0;
-               npoints = 0;
+               npoints    = 0;
                gPad->Modified();
                gPad->Update();
                gROOT->SetEditorMode();
@@ -639,8 +616,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (fgPolyLine) {
          if (mode == kPolyLine) {
             fgPolyLine->Set(npoints);
-         }
-         else {
+         } else {
             fgPolyLine->GetPoint(0, xnew, ynew);
             fgPolyLine->SetPoint(npoints, xnew, ynew);
          }
@@ -656,13 +632,12 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
    case kMouseMotion:
       pxnew = px;
       pynew = py;
-      if (fgPolyLine){
+      if (fgPolyLine) {
          fgPolyLine->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
-                         gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
+                                       gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
          gPad->Modified();
          gPad->Update();
-      }
-      else {
+      } else {
          if (mode == kPolyLine) {
             fgPolyLine = new TGraph(1);
             fgPolyLine->ResetBit(TGraph::kClipFrame);
@@ -670,7 +645,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
             fgPolyLine = (TGraph*) new TCutG("CUTG",1);
          }
          fgPolyLine->SetPoint(0, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
-                         gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
+                                 gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
          fgPolyLine->Draw("L");
       }
       break;
@@ -678,9 +653,9 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a new TLatex at the cursor position in gPad
+/// Create a new TLatex at the cursor position in gPad.
 ///
-/// Click left button to indicate the text position
+///  - Click left button to indicate the text position.
 
 void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
 {

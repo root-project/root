@@ -14,17 +14,6 @@
 #ifndef ROOT_TDCacheFile
 #define ROOT_TDCacheFile
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TDCacheFile                                                          //
-//                                                                      //
-// A TDCacheFile is like a normal TFile except that it reads and writes //
-// its data via a dCache server.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif
@@ -42,8 +31,8 @@
 class TDCacheFile : public TFile {
 
 private:
-   Bool_t fStatCached;       //! (transient) is file status cached?
-   struct stat64 fStatBuffer;  //! (transient) Cached file status buffer (for performance)
+   Bool_t fStatCached;       ///<! (transient) is file status cached?
+   struct stat64 fStatBuffer;  ///<! (transient) Cached file status buffer (for performance)
 
    TDCacheFile() : fStatCached(kFALSE) { }
 
@@ -74,7 +63,7 @@ public:
                        const char *location = 0);
    static Bool_t CheckFile(const char *path, const char *location = 0);
 
-   // Note: This must be kept in sync with values #defined in dcap.h
+   /// Note: This must be kept in sync with values #defined in dcap.h
    enum EOnErrorAction {
       kOnErrorRetry   =  1,
       kOnErrorFail    =  0,
@@ -96,7 +85,7 @@ public:
 class TDCacheSystem : public TSystem {
 
 private:
-   void    *fDirp;   // directory handler
+   void    *fDirp;   ///< directory handler
 
    void    *GetDirPtr() const { return fDirp; }
 

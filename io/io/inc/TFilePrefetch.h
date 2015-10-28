@@ -12,22 +12,6 @@
 #ifndef ROOT_TFilePrefetch
 #define ROOT_TFilePrefetch
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFilePrefetch                                                        //
-//                                                                      //
-// The prefetching mechanism uses two classes (TFilePrefetch and        //
-// TFPBlock) to prefetch in advance a block of tree entries. There is   //
-// a thread which takes care of actually transferring the blocks and    //
-// making them available to the main requesting thread. Therefore,      //
-// the time spent by the main thread waiting for the data before        //
-// processing considerably decreases. Besides the prefetching           //
-// mechanisms there is also a local caching option which can be         //
-// enabled by the user. Both capabilities are disabled by default       //
-// and must be explicitly enabled by the user.                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif

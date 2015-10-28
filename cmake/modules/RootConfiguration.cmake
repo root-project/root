@@ -252,7 +252,6 @@ set(buildbonjour ${value${bonjour}})
 set(dnssdlibdir ${BONJOUR_LIBRARY_DIR})
 set(dnssdlib ${BONJOUR_LIBRARY})
 set(dnsdincdir ${BONJOUR_INCLUDE_DIR})
-set(bonjourcppflags)
 
 set(buildchirp ${value${chirp}})
 set(chirplibdir ${CHIRP_LIBRARY_DIR})
@@ -410,6 +409,11 @@ if(mathmore)
   set(hasmathmore define)
 else()
   set(hasmathmore undef)
+endif()
+if(mt)
+  set(usemt define)
+else()
+  set(usemt undef)
 endif()
 if(CMAKE_USE_PTHREADS_INIT)
   set(haspthread define)
@@ -595,9 +599,10 @@ if(WIN32)
   # We cannot use the compiledata.sh script for windows
   configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in include/compiledata.h NEWLINE_STYLE UNIX)
 else()
-  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh include/compiledata.h "${CXX}" ""
-       "${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}"
-        "${CMAKE_CXX_FLAGS}" "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "${LibSuffix}" "${SYSLIBS}"
+  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh include/compiledata.h "${CXX}"
+        "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_FLAGS}"
+        "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}"
+        "${LibSuffix}" "${SYSLIBS}"
         "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
 endif()
 

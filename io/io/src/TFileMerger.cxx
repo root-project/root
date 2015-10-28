@@ -9,20 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFileMerger                                                          //
-//                                                                      //
-// This class provides file copy and merging services.                  //
-//                                                                      //
-// It can be used to copy files (not only ROOT files), using TFile or   //
-// any of its remote file access plugins. It is therefore usefull in    //
-// a Grid environment where the files might be accessable via Castor,   //
-// rfio, dcap, etc.                                                     //
-// The merging interface allows files containing histograms and trees   //
-// to be merged, like the standalone hadd program.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TFileMerger TFileMerger.cxx
+\ingroup IO
+
+This class provides file copy and merging services.
+                                                                  
+It can be used to copy files (not only ROOT files), using TFile or
+any of its remote file access plugins. It is therefore usefull in
+a Grid environment where the files might be accessable via Castor,
+rfio, dcap, etc.
+The merging interface allows files containing histograms and trees
+to be merged, like the standalone hadd program.
+*/
 
 #include "TFileMerger.h"
 #include "TDirectory.h"
@@ -288,8 +287,10 @@ Bool_t TFileMerger::OutputFile(const char *outputfile, Bool_t force)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Open merger output file.  'mode' is passed to the TFile constructor as the option, it should
-/// be one of 'NEW','CREATE','RECREATE','UPDATE'
+/// Open merger output file.
+///
+/// The 'mode' parameter is passed to the TFile constructor as the option, it 
+/// should be one of 'NEW','CREATE','RECREATE','UPDATE'
 /// 'UPDATE' is usually used in conjunction with IncrementalMerge.
 
 Bool_t TFileMerger::OutputFile(const char *outputfile, const char *mode, Int_t compressionLevel)
@@ -333,7 +334,9 @@ void TFileMerger::PrintFiles(Option_t *options)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Merge the files. If no output file was specified it will write into
+/// Merge the files. 
+///
+/// If no output file was specified it will write into
 /// the file "FileMerger.root" in the working directory. Returns true
 /// on success, false in case of error.
 
@@ -344,15 +347,8 @@ Bool_t TFileMerger::Merge(Bool_t)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Merge all objects in a directory
-/// The type is defined by the bit values in EPartialMergeType:
-///   kRegular      : normal merge, overwritting the output file (default)
-///   kIncremental  : merge the input file with the (existing) content of the output file (if already exising)
-///   kAll          : merge all type of objects (default)
-///   kResetable    : merge only the objects with a MergeAfterReset member function.
-///   kNonResetable : merge only the objects without a MergeAfterReset member function.
-///   kOnlyListed   : merge only objects listed in fObjectNames
-///   kSkipListed   : skip merging of objects listed in fObjectNames
-///   kKeepCompression : Keep compression level of the buffer as it is in each the original input files.
+///
+/// The type is defined by the bit values in TFileMerger::EPartialMergeType.
 
 Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t type /* = kRegular | kAll */)
 {
@@ -934,6 +930,7 @@ void TFileMerger::RecursiveRemove(TObject *obj)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a limit to the number file that TFileMerger will opened at one time.
+///
 /// If the request is higher than the system limit, we reset it to the system limit.
 /// If the request is less than two, we reset it to 2 (one for the output file and one for the input file).
 

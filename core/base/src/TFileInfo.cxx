@@ -127,24 +127,24 @@ TFileInfo::~TFileInfo()
 /// string is tokenized on ' '; the tokens can be prefixed by the following
 /// keys:
 ///
-///  - url:<url1>,<url2>,...     URLs for the file; stored in the order given
-///  - sz:<size>                 size of the file in bytes
-///  - md5:<md5_ascii>           MD5 sum of the file in ASCII form
-///  - uuid:<uuid>               UUID of the file
+///  - `url:<url1>,<url2>,...`     URLs for the file; stored in the order given
+///  - `sz:<size>`                 size of the file in bytes
+///  - `md5:<md5_ascii>`           MD5 sum of the file in ASCII form
+///  - `uuid:<uuid>`               UUID of the file
 ///
-///  - tree:<name>,<entries>,<first>,<last>
+///  - `tree:<name>,<entries>,<first>,<last>`
 ///                              meta-information about a tree in the file; the
-///                              should be in the form <subdir>/tree-name;'entries' is
+///                              should be in the form "<subdir>/tree-name";'entries' is
 ///                              the number of entries in the tree; 'first' and 'last'
 ///                              define the entry range.
 ///
-///  - obj:<name>,<class>,<entries>
+///  - `obj:<name>,<class>,<entries>`
 ///                              meta-information about a generic object in the file;
-///                              the should be in the form <subdir>/obj-name; 'class'
+///                              the should be in the form "<subdir>/obj-name"; 'class'
 ///                              is the object class; 'entries' is the number of occurrences
 ///                              for this object.
 ///
-///  - idx:<index>               Index of this file if sorting with index
+///  - `idx:<index>`             Index of this file if sorting with index
 ///
 /// Multiple occurrences of 'tree:' or 'obj:' can be specified.
 /// The initializations done via the input string are super-seeded by the ones by other

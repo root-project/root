@@ -9,18 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// SelectionRules                                                       //
-//                                                                      //
-// the class representing all selection rules                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
-#include "SelectionRules.h"
+/**
+\class SelectionRules
+The class representing the collection of selection rules.
+*/
 #include <iostream>
+#include <sstream>
 #include <algorithm>
+#include "fnmatch.h"
+#include "SelectionRules.h"
 #include "TString.h"
 #include "llvm/Support/raw_ostream.h"
 #include "clang/Basic/SourceLocation.h"
@@ -165,6 +162,110 @@ void SelectionRules::ClearSelectionRules()
    fFunctionSelectionRules.clear();
    fVariableSelectionRules.clear();
    fEnumSelectionRules.clear();
+}
+
+template<class RULE>
+static bool HasDuplicate(RULE* rule, 
+                         std::unordered_map<std::string,RULE*>& storedRules,
+                         const std::string& attrName){
+   auto itRetCodePair = storedRules.emplace( attrName, rule );
+
+   auto storedRule = storedRules[attrName];
+   
+   if (itRetCodePair.second ||
+       storedRule->GetSelected() != rule->GetSelected())  return false;
+   auto areEqual = SelectionRulesUtils::areEqual(storedRule,rule);
+
+   std::stringstream sstr; sstr << "Rule:\n";
+   rule->Print(sstr);
+   sstr << (areEqual ? "Identical " : "Conflicting ");
+   sstr << "rule already stored:\n";
+   storedRule->Print(sstr);
+   ROOT::TMetaUtils::Warning("SelectionRules::CheckDuplicates",
+                             "Duplicated rule found.\n%s",sstr.str().c_str());
+   return !areEqual;
+}
+
+template<class RULESCOLLECTION, class RULE = typename RULESCOLLECTION::value_type>
+static int CheckDuplicatesImp(RULESCOLLECTION& rules){
+   int nDuplicates = 0;
+   std::unordered_map<std::string, RULE*> patterns,names;
+   for (auto&& rule : rules){
+      if (rule.HasAttributeName() && HasDuplicate(&rule,names,rule.GetAttributeName())) nDuplicates++;
+      if (rule.HasAttributePattern() && HasDuplicate(&rule,patterns,rule.GetAttributePattern())) nDuplicates++;
+   }
+   return nDuplicates;
+}
+
+int SelectionRules::CheckDuplicates(){
+
+   int nDuplicates = 0;
+   nDuplicates += CheckDuplicatesImp(fClassSelectionRules);
+   nDuplicates += CheckDuplicatesImp(fFunctionSelectionRules);
+   nDuplicates += CheckDuplicatesImp(fVariableSelectionRules);
+   nDuplicates += CheckDuplicatesImp(fEnumSelectionRules);
+   if (0 != nDuplicates){
+      ROOT::TMetaUtils::Error("SelectionRules::CheckDuplicates",
+            "Duplicates in rules were found.\n");
+   }
+   return nDuplicates;
+}
+
+static bool Implies(ClassSelectionRule& patternRule, ClassSelectionRule& nameRule){
+
+   // Check if these both select or both exclude
+   if (patternRule.GetSelected() != nameRule.GetSelected()) return false;
+
+   // If the two rules are not compatible modulo their name/pattern, bail out
+   auto nAttrsPattern = patternRule.GetAttributes().size();
+   auto nAttrsName = nameRule.GetAttributes().size();
+   if ((nAttrsPattern != 1 || nAttrsName !=1) &&
+       !SelectionRulesUtils::areEqual(&patternRule, &nameRule, true /*moduloNameOrPattern*/)) {
+      return false;
+   }
+
+   auto pattern = patternRule.GetAttributePattern().c_str();
+   auto name = nameRule.GetAttributeName().c_str();
+
+   // Now check if the pattern matches the name
+   auto implies = 0 ==  fnmatch(pattern, name, FNM_PATHNAME);
+   
+   if (implies){
+      static const auto msg = "The pattern rule %s matches the name rule %s. "
+      "Since the name rule has compatible attributes, "
+      "it will be removed: the pattern rule will match the necessary classes if needed.\n";
+
+      ROOT::TMetaUtils::Info("SelectionRules::Optimize", msg, pattern, name);
+   }
+
+
+   return implies;
+
+}
+
+void SelectionRules::Optimize(){
+
+   // Remove name rules "implied" by pattern rules
+
+   if (!IsSelectionXMLFile()) return;
+
+   auto ruleIt = fClassSelectionRules.begin();
+   std::list<decltype(ruleIt)> itPositionsToErase;
+
+   for (; ruleIt != fClassSelectionRules.end(); ruleIt++ ){
+      if (ruleIt->HasAttributeName()) {
+         for (auto&& intRule : fClassSelectionRules){
+            if (intRule.HasAttributePattern() && Implies(intRule, *ruleIt)){
+               itPositionsToErase.push_back(ruleIt);
+            }
+         }
+      }
+   }
+   itPositionsToErase.unique();
+   for (auto&& itPositionToErase : itPositionsToErase){
+      fClassSelectionRules.erase(itPositionToErase);
+   }
+
 }
 
 void SelectionRules::SetDeep(bool deep)

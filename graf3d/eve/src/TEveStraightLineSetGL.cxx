@@ -17,6 +17,7 @@
 #include "TGLSelectRecord.h"
 
 /** \class TEveStraightLineSetGL
+\ingroup TEve
 GL-renderer for TEveStraightLineSet class.
 */
 

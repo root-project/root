@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TArrayC                                                              //
-//                                                                      //
-// Array of chars or bytes (8 bits per element).                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TArrayC
+Array of chars or bytes (8 bits per element).
+*/
 
 #include "TArrayC.h"
 #include "TBuffer.h"

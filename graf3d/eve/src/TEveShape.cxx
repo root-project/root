@@ -13,6 +13,7 @@
 #include "Riostream.h"
 
 /** \class TEveShape
+\ingroup TEve
 Abstract base-class for 2D/3D shapes.
 
 It provides:

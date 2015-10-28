@@ -1352,13 +1352,17 @@ namespace utils {
     if (!Within)
       S->LookupName(R, S->TUScope);
     else {
-      if (const clang::TagDecl* TD = dyn_cast<clang::TagDecl>(Within)) {
-        if (!TD->getDefinition()) {
-          // No definition, no lookup result.
-          return 0;
-        }
+      const DeclContext* primaryWithin = nullptr;
+      if (const clang::TagDecl *TD = dyn_cast<clang::TagDecl>(Within)) {
+        primaryWithin = dyn_cast_or_null<DeclContext>(TD->getDefinition());
+      } else {
+        primaryWithin = Within->getPrimaryContext();
       }
-      S->LookupQualifiedName(R, const_cast<DeclContext*>(Within));
+      if (!primaryWithin) {
+        // No definition, no lookup result.
+        return 0;
+      }
+      S->LookupQualifiedName(R, const_cast<DeclContext*>(primaryWithin));
     }
 
     if (R.empty())
@@ -1513,6 +1517,19 @@ namespace utils {
       // Add back the qualifiers.
       QT = Ctx.getQualifiedType(QT, quals);
       return QT;
+    }
+
+    // Remove the part of the type related to the type being a template
+    // parameter (we won't report it as part of the 'type name' and it is
+    // actually make the code below to be more complex (to handle those)
+    while (isa<SubstTemplateTypeParmType>(QT.getTypePtr())) {
+      // Get the qualifiers.
+      Qualifiers quals = QT.getQualifiers();
+
+      QT = dyn_cast<SubstTemplateTypeParmType>(QT.getTypePtr())->desugar();
+
+      // Add back the qualifiers.
+      QT = Ctx.getQualifiedType(QT, quals);
     }
 
     NestedNameSpecifier* prefix = 0;

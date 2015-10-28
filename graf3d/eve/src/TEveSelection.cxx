@@ -17,6 +17,7 @@
 #include "TClass.h"
 
 /** \class TEveSelection
+\ingroup TEve
 Make sure there is a SINGLE running TEveSelection for each
 selection type (select/highlight).
 */

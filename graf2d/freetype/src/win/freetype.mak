@@ -2,58 +2,58 @@
 !IF "$(CFG)" == ""
 CFG=freetype - Win32 Debug Singlethreaded
 !MESSAGE No configuration specified. Defaulting to freetype - Win32 Debug Singlethreaded.
-!ENDIF 
+!ENDIF
 
 !IF "$(CFG)" != "freetype - Win32 Release" && "$(CFG)" != "freetype - Win32 Debug" && "$(CFG)" != "freetype - Win32 Debug Multithreaded" && "$(CFG)" != "freetype - Win32 Release Multithreaded" && "$(CFG)" != "freetype - Win32 Release Singlethreaded" && "$(CFG)" != "freetype - Win32 Debug Singlethreaded"
 !MESSAGE Invalid configuration "$(CFG)" specified.
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
-!MESSAGE 
+!MESSAGE
 !MESSAGE NMAKE /f "freetype.mak" CFG="freetype - Win32 Debug Singlethreaded"
-!MESSAGE 
+!MESSAGE
 !MESSAGE Possible choices for configuration are:
-!MESSAGE 
+!MESSAGE
 !MESSAGE "freetype - Win32 Release" (based on "Win32 (x86) Static Library")
 !MESSAGE "freetype - Win32 Debug" (based on "Win32 (x86) Static Library")
 !MESSAGE "freetype - Win32 Debug Multithreaded" (based on "Win32 (x86) Static Library")
 !MESSAGE "freetype - Win32 Release Multithreaded" (based on "Win32 (x86) Static Library")
 !MESSAGE "freetype - Win32 Release Singlethreaded" (based on "Win32 (x86) Static Library")
 !MESSAGE "freetype - Win32 Debug Singlethreaded" (based on "Win32 (x86) Static Library")
-!MESSAGE 
+!MESSAGE
 !ERROR An invalid configuration is specified.
-!ENDIF 
+!ENDIF
 
 !IF "$(OS)" == "Windows_NT"
 NULL=
-!ELSE 
+!ELSE
 NULL=nul
-!ENDIF 
+!ENDIF
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 OUTDIR=.\..\..\..\objs\release
 INTDIR=.\..\..\..\objs\release
-CPP_SWITCHES=$(NMAKECXXFLAGS) /Z7 /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /Z7 /O2 /I "..\\..\\..\\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 OUTDIR=.\..\..\..\objs\debug
 INTDIR=.\..\..\..\objs\debug
-CPP_SWITCHES=$(NMAKECXXFLAGS) /Z7 /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /Z7 /Od /I "..\\..\\..\\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 OUTDIR=.\..\..\..\objs\debug_mt
 INTDIR=.\..\..\..\objs\debug_mt
-CPP_SWITCHES=$(NMAKECXXFLAGS) /Z7 /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /Z7 /Od /I "..\\..\\..\\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 OUTDIR=.\..\..\..\objs\release_mt
 INTDIR=.\..\..\..\objs\release_mt
-CPP_SWITCHES=$(NMAKECXXFLAGS) /Z7 /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /Z7 /O2 /I "..\\..\\..\\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 OUTDIR=.\..\..\..\objs\release_st
 INTDIR=.\..\..\..\objs\release_st
-CPP_SWITCHES=$(NMAKECXXFLAGS) /Z7 /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /Z7 /O2 /I "..\\..\\..\\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 OUTDIR=.\..\..\..\objs\debug_st
 INTDIR=.\..\..\..\objs\debug_st
-CPP_SWITCHES=$(NMAKECXXFLAGS) /Z7 /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-!ENDIF 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /Z7 /Od /I "..\\..\\..\\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
+!ENDIF
 
 LIB32_OBJS= \
 	"$(INTDIR)\autofit.obj" \
@@ -82,7 +82,6 @@ LIB32_OBJS= \
 	"$(INTDIR)\ftsystem.obj" \
 	"$(INTDIR)\fttype1.obj" \
 	"$(INTDIR)\ftwinfnt.obj" \
-	"$(INTDIR)\ftxf86.obj" \
 	"$(INTDIR)\pcf.obj" \
 	"$(INTDIR)\pfr.obj" \
 	"$(INTDIR)\psaux.obj" \
@@ -99,362 +98,362 @@ LIB32_OBJS= \
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-ALL : "..\..\..\objs\freetype2312.lib"
+ALL : "..\..\..\objs\freetype261.lib"
 
 CLEAN :
 	-@erase /q "$(INTDIR)\*.obj" >nul 2>&1
 	-@erase /q "$(INTDIR)\*.idb" >nul 2>&1
-	-@erase /q "..\..\..\objs\freetype2312.lib" >nul 2>&1
+	-@erase /q "..\..\..\objs\freetype261.lib" >nul 2>&1
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=$(NMAKECXXFLAGS) /Z7 /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=$(NMAKECXXFLAGS) /Z7 /O2 /I "..\\..\\..\\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
 
 .c{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .c{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 RSC=rc.exe
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc" 
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc"
 BSC32_SBRS= \
-	
-LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype2312.lib" 
 
-"..\..\..\objs\freetype2312.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+LIB32=link.exe -lib
+LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype261.lib"
+
+"..\..\..\objs\freetype261.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-ALL : "..\..\..\objs\freetype2312_D.lib"
+ALL : "..\..\..\objs\freetype261_D.lib"
 
 CLEAN :
 	-@erase /q "$(INTDIR)\*.obj" >nul 2>&1
 	-@erase /q "$(INTDIR)\*.idb" >nul 2>&1
-	-@erase /q "..\..\..\objs\freetype2312_D.lib" >nul 2>&1
+	-@erase /q "..\..\..\objs\freetype261_D.lib" >nul 2>&1
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=$(NMAKECXXFLAGS) /Z7 /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=$(NMAKECXXFLAGS) /Z7 /Od /I "..\\..\\..\\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
 
 .c{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .c{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 RSC=rc.exe
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc" 
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc"
 BSC32_SBRS= \
-	
-LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype2312_D.lib" 
 
-"..\..\..\objs\freetype2312_D.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+LIB32=link.exe -lib
+LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype261_D.lib"
+
+"..\..\..\objs\freetype261_D.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-ALL : "..\..\..\objs\freetype2312MT_D.lib"
+ALL : "..\..\..\objs\freetype261MT_D.lib"
 
 CLEAN :
 	-@erase /q "$(INTDIR)\*.obj" >nul 2>&1
 	-@erase /q "$(INTDIR)\*.idb" >nul 2>&1
-	-@erase /q "..\..\..\objs\freetype2312MT_D.lib" >nul 2>&1
+	-@erase /q "..\..\..\objs\freetype261MT_D.lib" >nul 2>&1
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=$(NMAKECXXFLAGS) /Z7 /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=$(NMAKECXXFLAGS) /Z7 /Od /I "..\\..\\..\\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
 
 .c{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .c{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 RSC=rc.exe
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc" 
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc"
 BSC32_SBRS= \
-	
-LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype2312MT_D.lib" 
 
-"..\..\..\objs\freetype2312MT_D.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+LIB32=link.exe -lib
+LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype261MT_D.lib"
+
+"..\..\..\objs\freetype261MT_D.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-ALL : "..\..\..\objs\freetype2312MT.lib"
+ALL : "..\..\..\objs\freetype261MT.lib"
 
 CLEAN :
 	-@erase /q "$(INTDIR)\*.obj" >nul 2>&1
 	-@erase /q "$(INTDIR)\*.idb" >nul 2>&1
-	-@erase /q "..\..\..\objs\freetype2312MT.lib" >nul 2>&1
+	-@erase /q "..\..\..\objs\freetype261MT.lib" >nul 2>&1
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=$(NMAKECXXFLAGS) /Z7 /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=$(NMAKECXXFLAGS) /Z7 /O2 /I "..\\..\\..\\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
 
 .c{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .c{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 RSC=rc.exe
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc" 
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc"
 BSC32_SBRS= \
-	
-LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype2312MT.lib" 
 
-"..\..\..\objs\freetype2312MT.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+LIB32=link.exe -lib
+LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype261MT.lib"
+
+"..\..\..\objs\freetype261MT.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-ALL : "..\..\..\objs\freetype2312ST.lib"
+ALL : "..\..\..\objs\freetype261ST.lib"
 
 CLEAN :
 	-@erase /q "$(INTDIR)\*.obj" >nul 2>&1
 	-@erase /q "$(INTDIR)\*.idb" >nul 2>&1
-	-@erase /q "..\..\..\objs\freetype2312ST.lib" >nul 2>&1
+	-@erase /q "..\..\..\objs\freetype261ST.lib" >nul 2>&1
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=$(NMAKECXXFLAGS) /Z7 /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=$(NMAKECXXFLAGS) /Z7 /O2 /I "..\\..\\..\\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
 
 .c{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .c{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 RSC=rc.exe
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc" 
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc"
 BSC32_SBRS= \
-	
-LIB32=link.exe -lib
-LIB32_FLAGS=/out:"..\..\..\objs\freetype2312ST.lib" 
 
-"..\..\..\objs\freetype2312ST.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+LIB32=link.exe -lib
+LIB32_FLAGS=/out:"..\..\..\objs\freetype261ST.lib"
+
+"..\..\..\objs\freetype261ST.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-ALL : "..\..\..\objs\freetype2312ST_D.lib"
+ALL : "..\..\..\objs\freetype261ST_D.lib"
 
 CLEAN :
 	-@erase /q "$(INTDIR)\*.obj" >nul 2>&1
 	-@erase /q "$(INTDIR)\*.idb" >nul 2>&1
-	-@erase /q "..\..\..\objs\freetype2312ST_D.lib" >nul 2>&1
+	-@erase /q "..\..\..\objs\freetype261ST_D.lib" >nul 2>&1
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=$(NMAKECXXFLAGS) /Z7 /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=$(NMAKECXXFLAGS) /Z7 /Od /I "..\\..\\..\\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /D "FT2_BUILD_LIBRARY" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
 
 .c{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.obj::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .c{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.sbr::
    $(CPP) -nologo @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 RSC=rc.exe
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc" 
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc"
 BSC32_SBRS= \
-	
-LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype2312ST_D.lib" 
 
-"..\..\..\objs\freetype2312ST_D.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+LIB32=link.exe -lib
+LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype261ST_D.lib"
+
+"..\..\..\objs\freetype261ST_D.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
 
-!ENDIF 
+!ENDIF
 
 
 !IF "$(NO_EXTERNAL_DEPS)" != "1"
 !IF EXISTS("freetype.dep")
 !INCLUDE "freetype.dep"
-!ELSE 
+!ELSE
 !MESSAGE Warning: cannot find "freetype.dep"
-!ENDIF 
-!ENDIF 
+!ENDIF
+!ENDIF
 
 SOURCE=..\..\..\src\autofit\autofit.c
 "$(INTDIR)\autofit.obj" : $(SOURCE) "$(INTDIR)"
@@ -583,10 +582,6 @@ SOURCE=..\..\..\src\base\fttype1.c
 
 SOURCE=..\..\..\src\base\ftwinfnt.c
 "$(INTDIR)\ftwinfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-SOURCE=..\..\..\src\base\ftxf86.c
-"$(INTDIR)\ftxf86.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 SOURCE=..\..\..\src\pcf\pcf.c

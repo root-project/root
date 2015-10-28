@@ -971,23 +971,24 @@ Int_t TProofPlayer::AssertSelector(const char *selector_file)
 {
    if (selector_file && strlen(selector_file)) {
       if (fCreateSelObj) SafeDelete(fSelector);
+
       // Get selector files from cache
       if (gProofServ) {
          gProofServ->GetCacheLock()->Lock();
-         gProofServ->CopyFromCache(selector_file, 1);
+         TString ocwd = gSystem->WorkingDirectory();
+         gSystem->ChangeDirectory(gProofServ->GetCacheDir());
+
+         fSelector = TSelector::GetSelector(selector_file);
+
+         gSystem->ChangeDirectory(ocwd);
+         gProofServ->GetCacheLock()->Unlock();
+
+         if (!fSelector) {
+            Error("AssertSelector", "cannot load: %s", selector_file );
+           return -1;
+         }
       }
 
-      if (!(fSelector = TSelector::GetSelector(selector_file))) {
-         Error("AssertSelector", "cannot load: %s", selector_file );
-         gProofServ->GetCacheLock()->Unlock();
-         return -1;
-      }
-
-      // Save binaries to cache, if any
-      if (gProofServ) {
-         gProofServ->CopyToCache(selector_file, 1);
-         gProofServ->GetCacheLock()->Unlock();
-      }
       fCreateSelObj = kTRUE;
       Info("AssertSelector", "Processing via filename");
    } else if (!fSelector) {

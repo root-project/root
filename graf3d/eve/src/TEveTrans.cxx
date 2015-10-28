@@ -40,6 +40,7 @@
 #define F33 15
 
 /** \class TEveTrans
+\ingroup TEve
 TEveTrans is a 4x4 transformation matrix for homogeneous coordinates
 stored internally in a column-major order to allow direct usage by
 GL. The element type is Double32_t as statically the floats would

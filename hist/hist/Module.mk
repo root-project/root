@@ -86,6 +86,7 @@ clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(HISTDEP) $(HISTDS) $(HISTDH) $(HISTLIB) $(HISTMAP)
+		@rm -rf include/v5
 
 distclean::     distclean-$(MODNAME)
 

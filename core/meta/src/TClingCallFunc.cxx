@@ -11,20 +11,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClingCallFunc                                                       //
-//                                                                      //
-// Emulation of the CINT CallFunc class.                                //
-//                                                                      //
-// The CINT C++ interpreter provides an interface for calling           //
-// functions through the generated wrappers in dictionaries with        //
-// the CallFunc class. This class provides the same functionality,      //
-// using an interface as close as possible to CallFunc but the          //
-// function metadata and calling service comes from the Cling           //
-// C++ interpreter and the Clang C++ compiler, not CINT.                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TClingCallFunc
+Emulation of the CINT CallFunc class.
+
+The CINT C++ interpreter provides an interface for calling
+functions through the generated wrappers in dictionaries with
+the CallFunc class. This class provides the same functionality,
+using an interface as close as possible to CallFunc but the
+function metadata and calling service comes from the Cling
+C++ interpreter and the Clang C++ compiler, not CINT.
+*/
 
 #include "TClingCallFunc.h"
 
@@ -109,7 +105,12 @@ EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
    if (E->EvaluateAsInt(res, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
       // IntTy or maybe better E->getType()?
       V = cling::Value(C.IntTy, interp);
-      V.getULL() = res.getZExtValue();
+      // We must use the correct signedness otherwise the zero extension
+      // fails if the actual type is strictly less than long long.
+      if (res.isSigned())
+        V.getLL() = res.getSExtValue();
+      else
+        V.getULL() = res.getZExtValue();
       return;
    }
    // TODO: Build a wrapper around the expression to avoid decompilation and
@@ -2338,8 +2339,7 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
       const FunctionDecl *decl = fMethod->GetMethodDecl();
 
       R__LOCKGUARD(gInterpreterMutex);
-      map<const FunctionDecl *, void *>::iterator I =
-      gWrapperStore.find(decl);
+      map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
       if (I != gWrapperStore.end()) {
          fWrapper = (tcling_callfunc_Wrapper_t) I->second;
       } else {

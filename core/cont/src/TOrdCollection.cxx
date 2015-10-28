@@ -9,24 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TOrdCollection                                                       //
-//                                                                      //
-// Ordered collection. An ordered collection has TList insertion        //
-// semantics but is implemented using an array of TObject*'s. It uses   //
-// less space than a TList (since there is no need for the prev and     //
-// next pointers), but it is more costly to insert objects (since it    //
-// has to create a gap by copying object pointers). TOrdCollection      //
-// is better than TList when objects are only added at the end of the   //
-// collection since no copying needs to be done.                        //
-//Begin_Html
-/*
-<img src=gif/tordcollection.gif>
+/** \class TOrdCollection
+Ordered collection. An ordered collection has TList insertion
+semantics but is implemented using an array of TObject*'s. It uses
+less space than a TList (since there is no need for the prev and
+next pointers), but it is more costly to insert objects (since it
+has to create a gap by copying object pointers). TOrdCollection
+is better than TList when objects are only added at the end of the
+collection since no copying needs to be done.
 */
-//End_Html
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TOrdCollection.h"
 #include "TError.h"
@@ -448,14 +439,9 @@ Int_t TOrdCollection::BinarySearch(TObject *obj)
    return -1;
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TOrdCollectionIter                                                   //
-//                                                                      //
-// Iterator of ordered collection.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TOrdCollectionIter
+Iterator of ordered collection.
+*/
 
 ClassImp(TOrdCollectionIter)
 

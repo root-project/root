@@ -212,7 +212,7 @@ template<class Element> inline const Element &TVectorT<Element>::operator()(Int_
    const Int_t aind = ind-fRowLwb;
    if (aind >= fNrows || aind < 0) {
       Error("operator()","Request index(%d) outside vector range of %d - %d",ind,fRowLwb,fRowLwb+fNrows);
-      return fElements[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
 
    return fElements[aind];
@@ -225,7 +225,7 @@ template<class Element> inline Element &TVectorT<Element>::operator()(Int_t ind)
    const Int_t aind = ind-fRowLwb;
    if (aind >= fNrows || aind < 0) {
       Error("operator()","Request index(%d) outside vector range of %d - %d",ind,fRowLwb,fRowLwb+fNrows);
-      return fElements[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
 
    return fElements[aind];
@@ -239,6 +239,9 @@ template<class Element> TVectorT<Element>   operator*   (const TMatrixT      <El
 template<class Element> TVectorT<Element>   operator*   (const TMatrixTSym   <Element>  &a,      const TVectorT <Element>  &source);
 template<class Element> TVectorT<Element>   operator*   (const TMatrixTSparse<Element>  &a,      const TVectorT <Element>  &source);
 template<class Element> TVectorT<Element>   operator*   (      Element                   val,    const TVectorT <Element>  &source);
+template<class Element>
+inline
+TVectorT<Element> operator*   (const TVectorT <Element>  &source, Element val) { return val * source; }
 
 template<class Element> Element             Dot         (const TVectorT      <Element>  &source1,const TVectorT <Element>  &source2);
 template <class Element1,class Element2>

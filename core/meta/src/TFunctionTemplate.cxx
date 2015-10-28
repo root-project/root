@@ -9,12 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Dictionary for function template                                     //
-// This class describes one single function template.                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TFunctionTemplate
+Dictionary for function template
+This class describes one single function template.
+*/
 
 #include "TFunctionTemplate.h"
 #include "TInterpreter.h"

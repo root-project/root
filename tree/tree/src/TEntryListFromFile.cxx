@@ -34,6 +34,7 @@ list.
 #include "TFile.h"
 #include "TKey.h"
 #include "TError.h"
+#include "TTree.h"
 
 ClassImp(TEntryListFromFile)
 
@@ -64,9 +65,9 @@ TEntryListFromFile::TEntryListFromFile(const char *filename, const char *listnam
    fListOffset = new Long64_t[fNFiles+1];
    fListOffset[0]=0;
    for (Int_t i=1; i<fNFiles+1; i++){
-      fListOffset[i]=kBigNumber;
+      fListOffset[i]=TTree::kMaxEntries;
    }
-   fN = kBigNumber;
+   fN = TTree::kMaxEntries;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +89,7 @@ Long64_t TEntryListFromFile::GetEntry(Int_t index)
 {
    if (index<0) return -1;
 
-   if (index > fListOffset[fNFiles] && fListOffset[fNFiles]!=kBigNumber){
+   if (index > fListOffset[fNFiles] && fListOffset[fNFiles]!=TTree::kMaxEntries){
       Error("GetEntry", "Index value is too large\n");
       return -1;
    }
@@ -120,7 +121,7 @@ Long64_t TEntryListFromFile::GetEntry(Int_t index)
       itree = fTreeNumber;
       while (itree < fNFiles){
          itree++;
-         if (fListOffset[itree+1]==kBigNumber){
+         if (fListOffset[itree+1]==TTree::kMaxEntries){
             //this list hasn't been loaded yet
             LoadList(itree);
          }
@@ -162,9 +163,9 @@ Long64_t TEntryListFromFile::GetEntryAndTree(Int_t index, Int_t &treenum)
 
 Long64_t TEntryListFromFile::GetEntries()
 {
-   if (fN==kBigNumber){
+   if (fN==TTree::kMaxEntries){
       for (Int_t i=0; i<fNFiles; i++){
-         if (fListOffset[i+1]==kBigNumber){
+         if (fListOffset[i+1]==TTree::kMaxEntries){
             LoadList(i);
          }
       }

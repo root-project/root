@@ -9,15 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TListOfFunctions                                                     //
-//                                                                      //
-// A collection of TFunction objects designed for fast access given a   //
-// DeclId_t and for keep track of TFunction that were described         //
-// unloaded function.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TListOfFunctions
+A collection of TFunction objects designed for fast access given a
+DeclId_t and for keep track of TFunction that were described
+unloaded function.
+*/
 
 #include "TListOfFunctions.h"
 #include "TClass.h"
@@ -373,7 +369,7 @@ TObject* TListOfFunctions::Remove(TObjLink *lnk)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Load all the functions known to the intepreter for the scope 'fClass'
+/// Load all the functions known to the interpreter for the scope 'fClass'
 /// into this collection.
 
 void TListOfFunctions::Load()
@@ -549,13 +545,9 @@ Int_t TListOfFunctions::GetSize() const
    return THashList::GetSize();
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TListOfFunctionsIter                                                 //
-//                                                                      //
-// Iterator for TListOfFunctions.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TListOfFunctionsIter
+Iterator for TListOfFunctions.
+*/
 
 ClassImp(TListOfFunctionsIter)
 

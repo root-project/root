@@ -34,7 +34,8 @@ namespace
 }
 
 /** \class TEvePolygonSetProjected
- A set of projected polygons.
+\ingroup TEve
+A set of projected polygons.
 Used for storage of projected geometrical shapes.
 
 Internal struct Polygon_t holds only indices into the master vertex

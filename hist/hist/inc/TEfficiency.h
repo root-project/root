@@ -51,7 +51,7 @@ protected:
       Double_t      fBeta_beta;              //global parameter for prior beta distribution (default = 1)
       std::vector<std::pair<Double_t, Double_t> > fBeta_bin_params;  // parameter for prior beta distribution different bin by bin
                                                                  // (default vector is empty)
-      Double_t      (*fBoundary)(Int_t,Int_t,Double_t,Bool_t);               //!pointer to a method calculating the boundaries of confidence intervals
+      Double_t      (*fBoundary)(Double_t,Double_t,Double_t,Bool_t);               //!pointer to a method calculating the boundaries of confidence intervals
       Double_t      fConfLevel;              //confidence level (default = 0.683, 1 sigma)
       TDirectory*   fDirectory;              //!pointer to directory holding this TEfficiency object
       TList*        fFunctions;              //->pointer to list of functions
@@ -173,14 +173,14 @@ public:
       static TGraphAsymmErrors* Combine(TCollection* pList,Option_t* opt="",Int_t n=0,const Double_t* w=0);
 
       //calculating boundaries of confidence intervals
-      static Double_t AgrestiCoull(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
-      static Double_t ClopperPearson(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
-      static Double_t Normal(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
-      static Double_t Wilson(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
-      static Double_t FeldmanCousins(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
-      static Bool_t FeldmanCousinsInterval(Int_t total,Int_t passed,Double_t level,Double_t & lower, Double_t & upper);
+      static Double_t AgrestiCoull(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
+      static Double_t ClopperPearson(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
+      static Double_t Normal(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
+      static Double_t Wilson(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
+      static Double_t FeldmanCousins(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
+      static Bool_t FeldmanCousinsInterval(Double_t total,Double_t passed,Double_t level,Double_t & lower, Double_t & upper);
       // Bayesian functions
-      static Double_t Bayesian(Int_t total,Int_t passed,Double_t level,Double_t alpha,Double_t beta,Bool_t bUpper, Bool_t bShortest = false);
+      static Double_t Bayesian(Double_t total,Double_t passed,Double_t level,Double_t alpha,Double_t beta,Bool_t bUpper, Bool_t bShortest = false);
       // helper functions for Bayesian statistics
       static Double_t BetaCentralInterval(Double_t level,Double_t alpha,Double_t beta,Bool_t bUpper);
       static Bool_t   BetaShortestInterval(Double_t level,Double_t alpha,Double_t beta,Double_t & lower, Double_t & upper);

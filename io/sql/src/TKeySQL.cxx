@@ -9,12 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//________________________________________________________________________
-//
-// TKeySQL is represents a metainforamtion about object, which was written to
-// SQL database. It keeps object id, which used to locate object data
-// from database tables.
-//________________________________________________________________________
+/**
+\class TKeySQL
+\ingroup IO
+
+TKeySQL represents metainforamtion about object, which was written to
+SQL database. It keeps object id, which used to locate object data
+from database tables.
+*/
 
 
 #include "TKeySQL.h"
@@ -251,7 +253,7 @@ TObject* TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// read object of any type from SQL database
+/// Read object of any type from SQL database
 
 void* TKeySQL::ReadObjectAny(const TClass* expectedClass)
 {

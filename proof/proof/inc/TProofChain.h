@@ -53,10 +53,10 @@ public:
    virtual void         Browse(TBrowser *b);
    Int_t                Debug() const {return fDebug;}
    virtual Long64_t     Draw(const char *varexp, const TCut &selection, Option_t *option=""
-                             ,Long64_t nentries=1000000000, Long64_t firstentry=0);
+                             ,Long64_t nentries=TTree::kMaxEntries, Long64_t firstentry=0);
    virtual Long64_t     Draw(const char *varexp, const char *selection, Option_t *option=""
-                             ,Long64_t nentries=1000000000, Long64_t firstentry=0); // *MENU*
-   virtual void         Draw(Option_t *opt) { Draw(opt, "", "", 1000000000, 0); }
+                             ,Long64_t nentries=TTree::kMaxEntries, Long64_t firstentry=0); // *MENU*
+   virtual void         Draw(Option_t *opt) { Draw(opt, "", "", TTree::kMaxEntries, 0); }
    virtual TBranch     *FindBranch(const char *name);
    virtual TLeaf       *FindLeaf(const char *name);
    virtual TBranch     *GetBranch(const char *name);
@@ -77,10 +77,10 @@ public:
    virtual Long64_t     GetReadEntry()  const;
    Bool_t               HasTreeHeader() const { return (fTree ? kTRUE : kFALSE); }
    virtual Long64_t     Process(const char *filename, Option_t *option="",
-                                Long64_t nentries=1000000000, Long64_t firstentry=0); // *MENU*
+                                Long64_t nentries=TTree::kMaxEntries, Long64_t firstentry=0); // *MENU*
    virtual void         Progress(Long64_t total, Long64_t processed);
    virtual Long64_t     Process(TSelector *selector, Option_t *option="",
-                                Long64_t nentries=1000000000, Long64_t firstentry=0);
+                                Long64_t nentries=TTree::kMaxEntries, Long64_t firstentry=0);
    virtual void         SetDebug(Int_t level=1, Long64_t min=0, Long64_t max=9999999); // *MENU*
    virtual void         SetEventList(TEventList *evlist) { fEventList = evlist; }
    virtual void         SetEntryList(TEntryList *enlist, const Option_t *) { fEntryList = enlist; }

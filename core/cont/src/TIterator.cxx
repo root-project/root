@@ -9,18 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TIterator                                                            //
-//                                                                      //
-// Iterator abstract base class. This base class provides the interface //
-// for collection iterators.                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TIterator
+Iterator abstract base class. This base class provides the interface
+for collection iterators.
+*/
 
 #include "TIterator.h"
 #include "TError.h"
-
 
 ClassImp(TIterator)
 

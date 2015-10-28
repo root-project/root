@@ -30,6 +30,7 @@
 #include "TGDoubleSlider.h"
 
 /** \class TEveDigitSetEditor
+\ingroup TEve
 Editor for TEveDigitSet class.
 */
 

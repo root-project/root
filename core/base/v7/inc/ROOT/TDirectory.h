@@ -59,8 +59,8 @@ public:
   /// Create an object of type `T` (passing some arguments to its constructor).
   /// The `TDirectory` will register the object.
   ///
-  /// \param name - Key of the object.
-  /// \param args... - arguments to be passed to the constructor of `T`
+  /// \param name  - Key of the object.
+  /// \param args  - arguments to be passed to the constructor of `T`
   template <class T, class... ARGS>
   TCoopPtr<T> Create(const std::string& name, ARGS... args) {
     TCoopPtr<T> ptr(new T(args...));

@@ -9,14 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Global functions class (global functions are obtaine from CINT).     //
-// This class describes one single global function.                     //
-// The TROOT class contains a list of all currently defined global      //
-// functions (accessible via TROOT::GetListOfGlobalFunctions()).        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TFunction
+Global functions class (global functions are obtained from CINT).
+This class describes one single global function.
+The TROOT class contains a list of all currently defined global
+functions (accessible via TROOT::GetListOfGlobalFunctions()).
+*/
 
 #include "TFunction.h"
 #include "TMethodArg.h"

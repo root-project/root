@@ -10,7 +10,7 @@ include_directories(${MONALISA_INCLUDE_DIR})
 ROOT_GENERATE_DICTIONARY(G__Monalisa *.h MODULE Monalisa LINKDEF LinkDef.h)
 
 ROOT_LINKER_LIBRARY(Monalisa *.cxx G__Monalisa.cxx LIBRARIES ${MONALISA_LIBRARIES}
-                                                   DEPENDENCIES Net RIO MathCore )
+                                                   DEPENDENCIES Net RIO )
 
 ROOT_INSTALL_HEADERS()
 

@@ -30,5 +30,6 @@
 #@hasstdstringview@ R__HAS_STD_STRING_VIEW   /**/
 #@hasstdexpstringview@ R__HAS_STD_EXPERIMENTAL_STRING_VIEW   /**/
 #@hasllvm@ R__EXTERN_LLVMDIR @llvmdir@
+#@usemt@ R__USE_MT   /**/
 
 #endif

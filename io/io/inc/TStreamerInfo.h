@@ -12,14 +12,6 @@
 #ifndef ROOT_TStreamerInfo
 #define ROOT_TStreamerInfo
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStreamerInfo                                                        //
-//                                                                      //
-// Describe Streamer information for one class version                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 #include <atomic>
 
 #ifndef ROOT_TVirtualStreamerInfo
@@ -32,11 +24,11 @@
 
 #include "TVirtualCollectionProxy.h"
 
-#if (defined(_MSC_VER) && (_MSC_VER < 1300) && !defined (__CLING__)) || defined(R__ALPHA) || \
-    (defined(R__MACOSX) && defined(R__GNU) && __GNUC__==3 && __GNUC_MINOR__<=3) || \
-    (defined(R__MACOSX) && defined(__xlC__))
-#error C++ template support is insufficient (member function template)
-#endif
+/**
+\class TStreamerInfo
+\ingroup IO
+Describe Streamer information for one class version
+*/
 
 class TFile;
 class TClass;
@@ -48,6 +40,7 @@ class TStreamerBasicType;
 class TClassStreamer;
 class TVirtualArray;
 namespace ROOT { namespace Detail { class TCollectionProxyInfo; } }
+namespace ROOT { class TSchemaRule; }
 
 namespace TStreamerInfoActions { class TActionSequence; }
 
@@ -63,12 +56,12 @@ class TStreamerInfo : public TVirtualStreamerInfo {
       Int_t             fNewType;
       Int_t             fOffset;
       Int_t             fLength;
-      TStreamerElement *fElem;     // Not Owned
+      TStreamerElement *fElem;     ///< Not Owned
       ULong_t           fMethod;
-      TClass           *fClass;    // Not Owned
-      TClass           *fNewClass; // Not Owned
+      TClass           *fClass;    ///< Not Owned
+      TClass           *fNewClass; ///< Not Owned
       TString           fClassName;
-      TMemberStreamer  *fStreamer; // Not Owned
+      TMemberStreamer  *fStreamer; ///< Not Owned
       TCompInfo() : fType(-1), fNewType(0), fOffset(0), fLength(0), fElem(0), fMethod(0),
                     fClass(0), fNewClass(0), fClassName(), fStreamer(0) {};
       ~TCompInfo() {};
@@ -100,38 +93,38 @@ protected:
    };
 
 private:
-   UInt_t            fCheckSum;          //checksum of original class
-   Int_t             fClassVersion;      //Class version identifier
-   Int_t             fOnFileClassVersion;//!Class version identifier as stored on file.
-   Int_t             fNumber;            //!Unique identifier
-   Int_t             fSize;              //!size of the persistent class
-   Int_t             fNdata;             //!number of optimized elements
-   Int_t             fNfulldata;         //!number of elements
-   Int_t             fNslots;            //!total numbrer of slots in fComp.
-   TCompInfo        *fComp;              //![fNslots with less than fElements->GetEntries()*1.5 used] Compiled info
-   TCompInfo       **fCompOpt;           //![fNdata]
-   TCompInfo       **fCompFull;          //![fElements->GetEntries()]
-   TClass           *fClass;             //!pointer to class
-   TObjArray        *fElements;          //Array of TStreamerElements
-   Version_t         fOldVersion;        //! Version of the TStreamerInfo object read from the file
-   Int_t             fNVirtualInfoLoc;   //! Number of virtual info location to update.
-   ULong_t          *fVirtualInfoLoc;    //![fNVirtualInfoLoc] Location of the pointer to the TStreamerInfo inside the object (when emulated)
-   std::atomic<ULong_t> fLiveCount;      //! Number of outstanding pointer to this StreamerInfo.
-   TStreamerInfoActions::TActionSequence *fReadObjectWise;        //! List of read action resulting from the compilation.
-   TStreamerInfoActions::TActionSequence *fReadMemberWise;        //! List of read action resulting from the compilation for use in member wise streaming.
-   TStreamerInfoActions::TActionSequence *fReadMemberWiseVecPtr;  //! List of read action resulting from the compilation for use in member wise streaming.
-   TStreamerInfoActions::TActionSequence *fWriteObjectWise;       //! List of write action resulting from the compilation.
-   TStreamerInfoActions::TActionSequence *fWriteMemberWise;       //! List of write action resulting from the compilation for use in member wise streaming.
-   TStreamerInfoActions::TActionSequence *fWriteMemberWiseVecPtr; //! List of write action resulting from the compilation for use in member wise streaming.
+   UInt_t            fCheckSum;          ///<Checksum of original class
+   Int_t             fClassVersion;      ///<Class version identifier
+   Int_t             fOnFileClassVersion;///<!Class version identifier as stored on file.
+   Int_t             fNumber;            ///<!Unique identifier
+   Int_t             fSize;              ///<!size of the persistent class
+   Int_t             fNdata;             ///<!number of optimized elements
+   Int_t             fNfulldata;         ///<!number of elements
+   Int_t             fNslots;            ///<!total numbrer of slots in fComp.
+   TCompInfo        *fComp;              ///<![fNslots with less than fElements->GetEntries()*1.5 used] Compiled info
+   TCompInfo       **fCompOpt;           ///<![fNdata]
+   TCompInfo       **fCompFull;          ///<![fElements->GetEntries()]
+   TClass           *fClass;             ///<!pointer to class
+   TObjArray        *fElements;          ///<Array of TStreamerElements
+   Version_t         fOldVersion;        ///<! Version of the TStreamerInfo object read from the file
+   Int_t             fNVirtualInfoLoc;   ///<! Number of virtual info location to update.
+   ULong_t          *fVirtualInfoLoc;    ///<![fNVirtualInfoLoc] Location of the pointer to the TStreamerInfo inside the object (when emulated)
+   std::atomic<ULong_t> fLiveCount;      ///<! Number of outstanding pointer to this StreamerInfo.
+   TStreamerInfoActions::TActionSequence *fReadObjectWise;        ///<! List of read action resulting from the compilation.
+   TStreamerInfoActions::TActionSequence *fReadMemberWise;        ///<! List of read action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fReadMemberWiseVecPtr;  ///<! List of read action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fWriteObjectWise;       ///<! List of write action resulting from the compilation.
+   TStreamerInfoActions::TActionSequence *fWriteMemberWise;       ///<! List of write action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fWriteMemberWiseVecPtr; ///<! List of write action resulting from the compilation for use in member wise streaming.
 
-   static std::atomic<Int_t>             fgCount;     //Number of TStreamerInfo instances
+   static std::atomic<Int_t>             fgCount;     ///<Number of TStreamerInfo instances
 
    template <typename T> static T GetTypedValueAux(Int_t type, void *ladd, int k, Int_t len);
    static void       PrintValueAux(char *ladd, Int_t atype, TStreamerElement * aElement, Int_t aleng, Int_t *count);
 
    UInt_t            GenerateIncludes(FILE *fp, char *inclist, const TList *extrainfos);
    void              GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subClasses, Bool_t top = kTRUE);
-   void              InsertArtificialElements(const TObjArray *rules);
+   void              InsertArtificialElements(std::vector<const ROOT::TSchemaRule*> &rules);
    void              DestructorImpl(void* p, Bool_t dtorOnly);
 
 private:
@@ -144,20 +137,42 @@ private:
 
 public:
 
-   //status bits
+   /// Status bits
    enum { kCannotOptimize        = BIT(12),
-          kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
+          kIgnoreTObjectStreamer = BIT(13),  ///< Eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
           kRecovered             = BIT(14),
           kNeedCheck             = BIT(15),
           kIsCompiled            = BIT(16),
           kBuildOldUsed          = BIT(17)
    };
 
+/// EReadWrite Enumerator
+/// | Enum Constant | Description   |
+/// |----------|--------------------|
+/// | kBase    | Base class element |
+/// | kOffsetL | Fixed size array |
+/// | kOffsetP | Pointer to object |
+/// | kCounter | Counter for array size |
+/// | kCharStar| Pointer to array of char |
+/// | kLegacyChar | Equal to TDataType's kchar |
+/// | kBits    | TObject::fBits in case of a referenced object |
+/// | kObject  | Class  derived from TObject |
+/// | kObjectp | Class* derived from TObject and with    comment field //->Class |
+/// | kObjectP | Class* derived from TObject and with NO comment field //->Class |
+/// | kAny     | Class  not derived from TObject |
+/// | kAnyp    | Class* not derived from TObject with    comment field //->Class |
+/// | kAnyP    | Class* not derived from TObject with NO comment field //->Class |
+/// | kAnyPnoVT | Class* not derived from TObject with NO comment field //->Class and Class has NO virtual table |
+/// | kSTLp    | Pointer to STL container |
+/// | kTString | TString, special case |
+/// | kTObject | TObject, special case |
+/// | kTNamed  | TNamed , special case |
+/// | kCache   | Cache the value in memory than is not part of the object but is accessible via a SchemaRule |
    enum EReadWrite {
       kBase        =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,  kCharStar = 7,
       kChar        =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat    = 5,
       kDouble      =  8,  kDouble32=  9,
-      kLegacyChar  = 10,  // Equal to TDataType's kchar
+      kLegacyChar  = 10, /// Equal to TDataType's kchar
       kUChar       = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,  kBits     = 15,
       kLong64      = 16,  kULong64 = 17,  kBool    = 18,  kFloat16 = 19,
       kObject      = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,  kTString  = 65,
@@ -167,34 +182,13 @@ public:
       kConv        = 200, kConvL = 220, kConvP   = 240,
       kSTL         = 300, kSTLstring = 365,
       kStreamer    = 500, kStreamLoop = 501,
-      kCache       = 600,  // Cache the value in memory than is not part of the object but is accessible via a SchemaRule
+      kCache       = 600,  /// Cache the value in memory than is not part of the object but is accessible via a SchemaRule
       kArtificial  = 1000,
       kCacheNew    = 1001,
       kCacheDelete = 1002,
       kNeedObjectForVirtualBaseClass = 99997,
       kMissing     = 99999
    };
-
-// Some comments about EReadWrite
-// kBase    : base class element
-// kOffsetL : fixed size array
-// kOffsetP : pointer to object
-// kCounter : counter for array size
-// kCharStar: pointer to array of char
-// kBits    : TObject::fBits in case of a referenced object
-// kObject  : Class  derived from TObject
-// kObjectp : Class* derived from TObject and with    comment field //->Class
-// kObjectP : Class* derived from TObject and with NO comment field //->Class
-// kAny     : Class  not derived from TObject
-// kAnyp    : Class* not derived from TObject with    comment field //->Class
-// kAnyP    : Class* not derived from TObject with NO comment field //->Class
-// kAnyPnoVT: Class* not derived from TObject with NO comment field //->Class and Class has NO virtual table
-// kSTLp    : Pointer to STL container.
-// kTString : TString, special case
-// kTObject : TObject, special case
-// kTNamed  : TNamed , special case
-
-
 
    TStreamerInfo();
    TStreamerInfo(TClass *cl);

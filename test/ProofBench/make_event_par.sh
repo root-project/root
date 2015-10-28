@@ -17,12 +17,17 @@
 
 EDIR=event
 
+if [ -d $EDIR ]; then
+   rm -rf $EDIR
+fi
+
 mkdir $EDIR
 
 
 SRC=$ROOTSYS/test
+ETC=$ROOTSYS/etc
 cp $SRC/Event.cxx $SRC/Event.h $SRC/EventLinkDef.h \
-   $SRC/Makefile.arch $EDIR
+   $ETC/Makefile.arch $EDIR
 cp Makefile_event $EDIR/Makefile
 mkdir $EDIR/PROOF-INF
 cd $EDIR/PROOF-INF
@@ -54,6 +59,7 @@ cd ../..
 
 tar zcvf event.par $EDIR
 
-rm -rf event
+# don't remove the directory as it is needed locally by PROOF-Lite
+#rm -rf $EDIR
 
 exit 0

@@ -9,13 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TArrayS                                                              //
-//                                                                      //
-// Array of shorts (16 bits per element).                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TArrayS
+Array of shorts (16 bits per element).
+*/
 
 #include "TArrayS.h"
 #include "TBuffer.h"

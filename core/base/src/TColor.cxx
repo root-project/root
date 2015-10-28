@@ -22,9 +22,19 @@
 
 ClassImp(TColor)
 
-Bool_t  TColor::fgGrayscaleMode = kFALSE;
-Bool_t  TColor::fgInitDone = kFALSE;
-TArrayI TColor::fgPalette(0);
+namespace {
+   static Bool_t& TColor__GrayScaleMode() {
+      static Bool_t grayScaleMode;
+      return grayScaleMode;
+   }
+   static TArrayI& TColor__Palette() {
+      static TArrayI globalPalette(0);
+      return globalPalette;
+   }
+}
+
+#define fgGrayscaleMode TColor__GrayScaleMode()
+#define fgPalette TColor__Palette()
 
 using std::floor;
 
@@ -353,8 +363,10 @@ TColor::TColor(const TColor &color) : TNamed(color)
 
 void TColor::InitializeColors()
 {
-   if (fgInitDone) return;
-   fgInitDone = kTRUE;
+   static Bool_t initDone = kFALSE;
+
+   if (initDone) return;
+   initDone = kTRUE;
 
    if (gROOT->GetListOfColors()->First() == 0) {
 
@@ -1001,7 +1013,7 @@ void TColor::Allocate()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static method returning color number for color specified by
-/// hex color string of form: #rrggbb, where rr, gg and bb are in
+/// hex color string of form: "#rrggbb", where rr, gg and bb are in
 /// hex between [0,FF], e.g. "#c0c0c0".
 ///
 /// If specified color does not exist it will be created with as
@@ -1346,7 +1358,6 @@ void TColor::SaveColor(std::ostream &out, Int_t ci)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return whether all colors return grayscale values.
-
 Bool_t TColor::IsGrayscale()
 {
    return fgGrayscaleMode;
@@ -1614,7 +1625,7 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
 /// ~~~
 /// For example:
 /// ~~~ {.cpp}
-/// gStyle->SetPalette->(kBird);
+/// gStyle->SetPalette(kBird);
 /// ~~~
 /// Set the current palette as "Bird" (number 57).
 ///

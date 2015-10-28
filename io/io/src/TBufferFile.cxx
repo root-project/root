@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBufferFile                                                          //
-//                                                                      //
-// The concrete implementation of TBuffer for writing/reading to/from a //
-// ROOT file or socket.                                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TBufferFile.cxx
+\class TBufferFile
+\ingroup IO
+
+The concrete implementation of TBuffer for writing/reading to/from a ROOT file or socket.
+*/
 
 #include <string.h>
 #include <typeinfo>
@@ -119,12 +118,13 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an I/O buffer object. Mode should be either TBuffer::kRead or
+/// Create an I/O buffer object. 
+/// Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite. By default the I/O buffer has a size of
 /// TBuffer::kInitialSize (1024) bytes. An external buffer can be passed
 /// to TBuffer via the buf argument. By default this buffer will be adopted
 /// unless adopt is false.
-/// If the new buffer is _not_ adopted and no memory allocation routine
+/// If the new buffer is <b>not</b> adopted and no memory allocation routine
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
@@ -200,6 +200,8 @@ void TBufferFile::DecrementLevel(TVirtualStreamerInfo* /*info*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Handle old file formats.
+///
 /// Files written with versions older than 3.00/06 had a non-portable
 /// implementation of Long_t/ULong_t. These types should not have been
 /// used at all. However, because some users had already written many
@@ -560,39 +562,40 @@ void TBufferFile::ReadWithNbits(Double_t *ptr, Int_t nbits)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// write a Float16_t to the buffer.
+/// Write a Float16_t to the buffer.
+/// 
 /// The following cases are supported for streaming a Float16_t type
 /// depending on the range declaration in the comment field of the data member:
-///  A-    Float16_t     fNormal;
-///  B-    Float16_t     fTemperature; //[0,100]
-///  C-    Float16_t     fCharge;      //[-1,1,2]
-///  D-    Float16_t     fVertex[3];   //[-30,30,10]
-///  E-    Float16_t     fChi2;        //[0,0,6]
-///  F-    Int_t          fNsp;
-///        Float16_t*    fPointValue;   //[fNsp][0,3]
+/// Case | Example |
+/// -----|---------| 
+///  A   | Float16_t     fNormal; |
+///  B   | Float16_t     fTemperature; //[0,100]|
+///  C   | Float16_t     fCharge;      //[-1,1,2]|
+///  D   | Float16_t     fVertex[3];   //[-30,30,10]|
+///  E   | Float16_t     fChi2;        //[0,0,6]|
+///  F   | Int_t         fNsp;<br>Float16_t*    fPointValue;   //[fNsp][0,3]|
 ///
-/// In case A fNormal is converted from a Float_t to a Float_t with mantissa truncated to 12 bits
-/// In case B fTemperature is converted to a 32 bit unsigned integer
-/// In case C fCharge is converted to a 2 bits unsigned integer
-/// In case D the array elements of fVertex are converted to an unsigned 10 bits integer
-/// In case E fChi2 is converted to a Float_t with truncated precision at 6 bits
-/// In case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
-///           Note that the range specifier must follow the dimension specifier.
-/// the case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
+///   - In case A fNormal is converted from a Float_t to a Float_t with mantissa truncated to 12 bits
+///   - In case B fTemperature is converted to a 32 bit unsigned integer
+///   - In case C fCharge is converted to a 2 bits unsigned integer
+///   - In case D the array elements of fVertex are converted to an unsigned 10 bits integer
+///   - In case E fChi2 is converted to a Float_t with truncated precision at 6 bits
+///   - In case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
+/// Note that the range specifier must follow the dimension specifier.
+/// Case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
 ///
 /// The range specifier has the general format: [xmin,xmax] or [xmin,xmax,nbits]
-///  [0,1]
-///  [-10,100];
-///  [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
-///  [-10,100,16]
-///  [0,0,8]
-/// if nbits is not specified, or nbits <2 or nbits>16 it is set to 16
-/// if (xmin==0 and xmax==0 and nbits <=14) the float word will have
+///   - [0,1];
+///   - [-10,100];
+///   - [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
+///   - [-10,100,16]
+///   - [0,0,8]
+/// if nbits is not specified, or nbits <2 or nbits>16 it is set to 16. If 
+/// (xmin==0 and xmax==0 and nbits <=14) the float word will have
 /// its mantissa truncated to nbits significative bits.
 ///
-/// IMPORTANT NOTE
-/// --------------
-/// --NOTE 1
+/// ## IMPORTANT NOTE
+/// ### NOTE 1
 /// Lets assume an original variable float x:
 /// When using the format [0,0,8] (ie range not specified) you get the best
 /// relative precision when storing and reading back the truncated x, say xt.
@@ -602,22 +605,17 @@ void TBufferFile::ReadWithNbits(Double_t *ptr, Int_t nbits)
 /// The format [0,0,8] is also interesting when the range of x is infinite
 /// or unknown.
 ///
-/// --NOTE 2
+/// ### NOTE 2
 /// It is important to understand the difference with the meaning of nbits
-///  -in case of [-1,1,nbits], nbits is the total number of bits used to make
-///    the conversion from a float to an integer
-///  -in case of [0,0,nbits], nbits is the number of bits used for the mantissa
+///   - in case of [-1,1,nbits], nbits is the total number of bits used to make
+/// the conversion from a float to an integer
+///   - in case of [0,0,nbits], nbits is the number of bits used for the mantissa
 ///
-///  see example of use of the Float16_t data type in tutorial double32.C
-///
-///Begin_Html
+///  See example of use of the Float16_t data type in tutorial double32.C
+///  \image html tbufferfile_double32.gif
 
 void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *ele)
 {
-   /*
-     <img src="gif/double32.gif">
-   */
-   //End_Html
 
    if (ele && ele->GetFactor() != 0) {
       //A range is specified. We normalize the double to the range and
@@ -654,16 +652,18 @@ void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *ele)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// write a Double32_t to the buffer.
+/// Write a Double32_t to the buffer.
+///
 /// The following cases are supported for streaming a Double32_t type
 /// depending on the range declaration in the comment field of the data member:
-///  A-    Double32_t     fNormal;
-///  B-    Double32_t     fTemperature; //[0,100]
-///  C-    Double32_t     fCharge;      //[-1,1,2]
-///  D-    Double32_t     fVertex[3];   //[-30,30,10]
-///  E-    Double32_t     fChi2;        //[0,0,6]
-///  F-    Int_t          fNsp;
-///        Double32_t*    fPointValue;   //[fNsp][0,3]
+/// Case | Example |
+/// -----|---------| 
+///  A   | Double32_t     fNormal; |
+///  B   | Double32_t     fTemperature; //[0,100]|
+///  C   | Double32_t     fCharge;      //[-1,1,2]|
+///  D   | Double32_t     fVertex[3];   //[-30,30,10]|
+///  E   | Double32_t     fChi2;        //[0,0,6]|
+///  F   | Int_t         fNsp;<br>Double32_t*    fPointValue;   //[fNsp][0,3]|
 ///
 /// In case A fNormal is converted from a Double_t to a Float_t
 /// In case B fTemperature is converted to a 32 bit unsigned integer
@@ -672,46 +672,14 @@ void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *ele)
 /// In case E fChi2 is converted to a Float_t with mantissa truncated precision at 6 bits
 /// In case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
 ///           Note that the range specifier must follow the dimension specifier.
-/// the case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
-///
-/// The range specifier has the general format: [xmin,xmax] or [xmin,xmax,nbits]
-///  [0,1]
-///  [-10,100];
-///  [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
-///  [-10,100,16]
-///  [0,0,8]
-/// if nbits is not specified, or nbits <2 or nbits>32 it is set to 32
-/// if (xmin==0 and xmax==0 and nbits <=14) the double word will be converted
-/// to a float and its mantissa truncated to nbits significative bits.
-///
-/// IMPORTANT NOTEs
-/// --------------
-/// --NOTE 1
-/// Lets assume an original variable double x:
-/// When using the format [0,0,8] (ie range not specified) you get the best
-/// relative precision when storing and reading back the truncated x, say xt.
-/// The variance of (x-xt)/x will be better than when specifying a range
-/// for the same number of bits. However the precision relative to the
-/// range (x-xt)/(xmax-xmin) will be worst, and vice-versa.
-/// The format [0,0,8] is also interesting when the range of x is infinite
-/// or unknown.
-///
-/// --NOTE 2
-/// It is important to understand the difference with the meaning of nbits
-///  -in case of [-1,1,nbits], nbits is the total number of bits used to make
-///    the conversion from a double to an integer
-///  -in case of [0,0,nbits], nbits is the number of bits used for the mantissa
+/// Case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
+/// See TBufferFile::WriteFloat16 for more information.
 ///
 ///  see example of use of the Double32_t data type in tutorial double32.C
-///
-///Begin_Html
+///  \image html tbufferfile_double32.gif
 
 void TBufferFile::WriteDouble32(Double_t *d, TStreamerElement *ele)
 {
-   /*
-     <img src="gif/double32.gif">
-   */
-   //End_Html
 
    if (ele && ele->GetFactor() != 0) {
       //A range is specified. We normalize the double to the range and
@@ -1670,6 +1638,7 @@ void TBufferFile::ReadFastArray(void  *start, const TClass *cl, Int_t n,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read an array of 'n' objects from the I/O buffer.
+///
 /// The objects read are stored starting at the address '*start'
 /// The objects in the array are assumed to be of class 'cl' or a derived class.
 /// 'mode' indicates whether the data member is marked with '->'
@@ -2320,8 +2289,8 @@ void TBufferFile::WriteFastArray(void  *start, const TClass *cl, Int_t n,
 /// the objects in the array are of class 'cl'
 /// 'isPreAlloc' indicates whether the data member is marked with '->'
 /// Return:
-///  0: success
-///  2: truncated success (i.e actual class is missing. Only ptrClass saved.)
+///   - 0: success
+///   - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
 
 Int_t TBufferFile::WriteFastArray(void **start, const TClass *cl, Int_t n,
                                   Bool_t isPreAlloc, TMemberStreamer *streamer)
@@ -2368,6 +2337,7 @@ Int_t TBufferFile::WriteFastArray(void **start, const TClass *cl, Int_t n,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object from I/O buffer. clReq is NOT used.
+///
 /// The value returned is the address of the actual start in memory of
 /// the object. Note that if the actual class of the object does not
 /// inherit first from TObject, the type of the pointer is NOT 'TObject*'.
@@ -2392,8 +2362,11 @@ void TBufferFile::SkipObjectAny()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object from I/O buffer.
+///
 /// A typical use for this function is:
-///    MyClass *ptr = (MyClass*)b.ReadObjectAny(MyClass::Class());
+///
+///     MyClass *ptr = (MyClass*)b.ReadObjectAny(MyClass::Class());
+///
 /// I.e. clCast should point to a TClass object describing the class pointed
 /// to by your pointer.
 /// In case of multiple inheritance, the return value might not be the
@@ -2623,13 +2596,14 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object to I/O buffer.
+///
 /// This function assumes that the value in 'obj' is the value stored in
 /// a pointer to a "ptrClass". The actual type of the object pointed to
 /// can be any class derived from "ptrClass".
 /// Return:
-///  0: failure
-///  1: success
-///  2: truncated success (i.e actual class is missing. Only ptrClass saved.)
+///   - 0: failure
+///   - 1: success
+///   - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
 
 Int_t TBufferFile::WriteObjectAny(const void *obj, const TClass *ptrClass)
 {
@@ -2667,9 +2641,10 @@ Int_t TBufferFile::WriteObjectAny(const void *obj, const TClass *ptrClass)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read class definition from I/O buffer. clReq can be used to cross check
-/// if the actually read object is of the requested class. objTag is
-/// set in case the object is a reference to an already read object.
+/// Read class definition from I/O buffer. 
+///
+/// \param[in] clReq Can be used to cross check if the actually read object is of the requested class. 
+/// \param[in] objTag Set in case the object is a reference to an already read object.
 
 TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
 {
@@ -3008,10 +2983,11 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read class version from I/O buffer ; to be used when streaming out
-/// memberwise streamed collection where we do not care (not save) about
-/// the byte count and can safely ignore missing streamerInfo (since they
-/// usually indicate empty collections).
+/// Read class version from I/O buffer
+///
+/// To be used when streaming out emberwise streamed collection where we do not 
+/// care (not save) about the byte count and can safely ignore missing streamerInfo 
+/// (since they usually indicate empty collections).
 
 Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
 {
@@ -3330,6 +3306,7 @@ void TBufferFile::GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) con
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add object to the fMap container.
+///
 /// If obj is not 0 add object to the map (in read mode also add 0 objects to
 /// the map). This method may only be called outside this class just before
 /// calling obj->Streamer() to prevent self reference of obj, in case obj
@@ -3361,6 +3338,7 @@ void TBufferFile::MapObject(const TObject *obj, UInt_t offset)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add object to the fMap container.
+///
 /// If obj is not 0 add object to the map (in read mode also add 0 objects to
 /// the map). This method may only be called outside this class just before
 /// calling obj->Streamer() to prevent self reference of obj, in case obj
@@ -3391,7 +3369,7 @@ void TBufferFile::MapObject(const void *obj, const TClass* cl, UInt_t offset)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the initial size of the map used to store object and class
-/// references during reading. The default size is kMapSize=503.
+/// references during reading. The default size is TBufferFile::kMapSize.
 /// Increasing the default has the benefit that when reading many
 /// small objects the map does not need to be resized too often
 /// (the system is always dynamic, even with the default everything
@@ -3410,7 +3388,7 @@ void TBufferFile::SetReadParam(Int_t mapsize)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the initial size of the hashtable used to store object and class
-/// references during writing. The default size is kMapSize=503.
+/// references during writing. The default size is TBufferFile::kMapSize.
 /// Increasing the default has the benefit that when writing many
 /// small objects the hashtable does not get too many collisions
 /// (the system is always dynamic, even with the default everything
@@ -3686,14 +3664,14 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
 ////////////////////////////////////////////////////////////////////////////////
 /// Deserialize information from a buffer into an object.
 ///
-/// Note: This function is called by the xxx::Streamer()
-///       functions in rootcint-generated dictionaries.
-///   // This function assumes that the class version and the byte count
+/// Note: This function is called by the xxx::Streamer() functions in 
+/// rootcint-generated dictionaries.
+/// This function assumes that the class version and the byte count 
 /// information have been read.
 ///
-///   version  is the version number of the class
-///   start    is the starting position in the buffer b
-///   count    is the number of bytes for this object in the buffer
+/// \param[in] version The version number of the class
+/// \param[in] start   The starting position in the buffer b
+/// \param[in] count   The number of bytes for this object in the buffer
 ///
 
 Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onFileClass)
@@ -3738,6 +3716,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
          // AND the checksum is the same.
          if ( version == cl->GetClassVersion() || version == 1 ) {
             const_cast<TClass*>(cl)->BuildRealData(pointer);
+            // This creation is alright since we just checked within the
+            // current 'locked' section.
             sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
             const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
             if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
@@ -3775,7 +3755,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
 /// Deserialize information from a buffer into an object.
 ///
 /// Note: This function is called by the xxx::Streamer()
-///       functions in rootcint-generated dictionaries.
+/// functions in rootcint-generated dictionaries.
 ///
 
 Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onFileClass)
@@ -3862,17 +3842,30 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             if (v2file || version == cl->GetClassVersion() || version == 1 ) {
                R__LOCKGUARD(gInterpreterMutex);
 
-               const_cast<TClass*>(cl)->BuildRealData(pointer);
-               sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
-               sinfo->SetClassVersion(version);
-               const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
-               if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
-               if (v2file) {
-                  sinfo->Build(); // Get the elements.
-                  sinfo->Clear("build"); // Undo compilation.
-                  sinfo->BuildEmulated(file); // Fix the types and redo compilation.
-               } else {
-                  sinfo->Build();
+               // We need to check if another thread did not get here first
+               // and did the StreamerInfo creation already.
+               auto infos = cl->GetStreamerInfos();
+               auto ninfos = infos->GetSize();
+               if (!(version < -1 || version >= ninfos)) {
+                  sinfo = (TStreamerInfo *) infos->At(version);
+               }
+               if (!sinfo) {
+                  const_cast<TClass *>(cl)->BuildRealData(pointer);
+                  sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
+                  sinfo->SetClassVersion(version);
+                  const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
+                  if (gDebug > 0)
+                     printf(
+                           "Creating StreamerInfo for class: %s, version: %d\n",
+                           cl->GetName(), version);
+                  if (v2file) {
+                     sinfo->Build(); // Get the elements.
+                     sinfo->Clear("build"); // Undo compilation.
+                     sinfo->BuildEmulated(
+                           file); // Fix the types and redo compilation.
+                  } else {
+                     sinfo->Build();
+                  }
                }
             } else if (version==0) {
                // When the object was written the class was version zero, so
@@ -4045,7 +4038,9 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the initial size of the map used to store object and class
-/// references during reading. The default size is kMapSize=503.
+/// references during reading. 
+///
+/// The default size is kMapSize.
 /// Increasing the default has the benefit that when reading many
 /// small objects the array does not need to be resized too often
 /// (the system is always dynamic, even with the default everything
@@ -4058,14 +4053,15 @@ void TBufferFile::SetGlobalReadParam(Int_t mapsize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the initial size of the hashtable used to store object and class
-/// references during writing. The default size is kMapSize=503.
-/// Increasing the default has the benefit that when writing many
-/// small objects the hashtable does not get too many collisions
+/// Set the initial size of the map used to store object and class
+/// references during reading. 
+///
+/// The default size is kMapSize.
+/// Increasing the default has the benefit that when reading many
+/// small objects the array does not need to be resized too often
 /// (the system is always dynamic, even with the default everything
-/// will work, only a large number of collisions will cost performance).
-/// For optimal performance hashsize should always be a prime.
-/// Per TBuffer object this option can be changed using SetWriteParam().
+/// will work, only the initial resizing will cost some time).
+/// Per TBuffer object this option can be changed using SetReadParam().
 
 void TBufferFile::SetGlobalWriteParam(Int_t mapsize)
 {

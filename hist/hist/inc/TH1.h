@@ -574,7 +574,7 @@ public:
    TH1F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup);
    TH1F(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
    TH1F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
-   TH1F(const TVectorF &v);
+   explicit TH1F(const TVectorF &v);
    TH1F(const TH1F &h1f);
    TH1F& operator=(const TH1F &h1);
    virtual ~TH1F();
@@ -617,7 +617,7 @@ public:
    TH1D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup);
    TH1D(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
    TH1D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
-   TH1D(const TVectorD &v);
+   explicit TH1D(const TVectorD &v);
    TH1D(const TH1D &h1d);
    TH1D& operator=(const TH1D &h1);
    virtual ~TH1D();

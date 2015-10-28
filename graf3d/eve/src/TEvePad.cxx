@@ -13,6 +13,7 @@
 #include "THashList.h"
 
 /** \class TEvePad
+\ingroup TEve
 This was intended as a TPad wrapper to allow smart updates of
 groups of pads. Uses THashList instead of TList for faster removal
 of objects from the pad.

@@ -44,7 +44,7 @@ if(NOT builtin_freetype)
   endif()
 endif()
 if(builtin_freetype)
-  set(FREETYPE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/graf2d/freetype/freetype-2.3.12/include)
+  set(FREETYPE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/graf2d/freetype/freetype-2.6.1/include)
   set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
   if(WIN32)
     set(FREETYPE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/freetype.lib)
@@ -64,7 +64,7 @@ if(NOT builtin_pcre)
   endif()
 endif()
 if(builtin_pcre)
-  set(PCRE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/core/pcre/pcre-7.8)
+  set(PCRE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/core/pcre/pcre-8.37)
   if(WIN32)
     set(PCRE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpcre.lib)
   else()
@@ -93,7 +93,7 @@ if(builtin_lzma)
      PREFIX LZMA
      INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
-     INSTALL_COMMAND cmake -E copy lib/liblzma.dll <INSTALL_DIR>/bin
+     INSTALL_COMMAND ${CMAKE_COMMAND} -E copy lib/liblzma.dll <INSTALL_DIR>/bin
      BUILD_IN_SOURCE 1)
     install(FILES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
@@ -110,9 +110,9 @@ if(builtin_lzma)
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
       URL_MD5 3e44c766c3fb4f19e348e646fcd5778a
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib 
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
                         --with-pic --disable-shared --quiet
-                        CFLAGS=${LZMA_CFLAGS} LDFLAGS=${LZMA_LDFLAGS}
+                        CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${LZMA_CFLAGS} LDFLAGS=${LZMA_LDFLAGS}
       BUILD_IN_SOURCE 1)
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)

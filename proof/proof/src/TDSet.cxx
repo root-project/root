@@ -827,7 +827,7 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
          msd = "";
       }
       Long64_t nent = (elem->GetEntries() > 0 &&
-                       elem->GetEntries() != TChain::kBigNumber) ? elem->GetEntries() : -1;
+                       elem->GetEntries() != TTree::kMaxEntries) ? elem->GetEntries() : -1;
       if (Add(file, tree, dir, 0, nent, ((msd.IsNull()) ? 0 : msd.Data()))) {
          if (elem->HasBeenLookedUp()) {
             // Save lookup information, if any

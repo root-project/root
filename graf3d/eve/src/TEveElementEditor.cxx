@@ -23,6 +23,7 @@
 #include "TGDoubleSlider.h"
 
 /** \class TEveElementEditor
+\ingroup TEve
 Editor for TEveElement class.
 */
 

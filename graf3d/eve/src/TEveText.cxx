@@ -19,6 +19,7 @@
 #include "TMath.h"
 
 /** \class TEveText
+\ingroup TEve
 TEveElement class used for displaying FreeType GL fonts. Holds a
 set of parameters to define FTGL font and its rendering style.
 */

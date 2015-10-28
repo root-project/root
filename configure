@@ -100,6 +100,7 @@ options="                    \
    enable_ruby               \
    enable_rfio               \
    enable_rpath              \
+   enable_search_usrlocal    \
    enable_sapdb              \
    enable_shadowpw           \
    enable_shared             \
@@ -186,6 +187,7 @@ enable_builtin_zlib=no
 enable_builtin_lzma=no
 enable_builtin_llvm=yes
 enable_afdsmgrd=no
+enable_search_usrlocal=yes
 
 if test "x$ENABLEALL" = "xyes"; then
     enable_gdml=yes
@@ -406,16 +408,30 @@ check_libcompat() {
 
     case $arch in
     macosx)
-        logmsg " lipo $chklibcompat -verify_arch i386"
-        if lipo $chklibcompat -verify_arch i386 ; then
+        case $chklibcompat in
+        *.tbd)
             ret=1
-        fi
+            ;;
+        *)
+            logmsg " lipo $chklibcompat -verify_arch i386"
+            if lipo $chklibcompat -verify_arch i386 ; then
+                ret=1
+            fi
+            ;;
+        esac
         ;;
     macosx64)
-        logmsg " lipo $chklibcompat -verify_arch x86_64"
-        if lipo $chklibcompat -verify_arch x86_64 ; then
+        case $chklibcompat in
+        *.tbd)
             ret=1
-        fi
+            ;;
+        *)
+            logmsg " lipo $chklibcompat -verify_arch x86_64"
+            if lipo $chklibcompat -verify_arch x86_64 ; then
+                ret=1
+            fi
+            ;;
+        esac
         ;;
     esac
 
@@ -597,6 +613,16 @@ check_library() {
         libdirs="$sdklibs"
     fi
 
+    if test "x$enable_search_usrlocal" = "xno" ; then
+       no_usrlocal=""
+       for i in $libdirs; do
+           if [[ $i != /usr/local/* ]] ; then
+               no_usrlocal="$no_usrlocal $i"
+           fi
+       done
+       libdirs="$no_usrlocal"
+    fi
+
     # Write a message
     checking_msg $lib
 
@@ -620,7 +646,7 @@ check_library() {
     done
     slibs=""
     for i in $lib ; do
-        for ext in .so .sl .dylib .dll.a ; do      # .dll.a for cygwin gcc
+        for ext in .so .sl .tbd .dylib .dll.a ; do      # .dll.a for cygwin gcc
             slibs="$slibs $i$ext"
         done
     done
@@ -843,6 +869,15 @@ check_header()  {
             #fi
         done
         hdrdirs="$sdkhdrs"
+    fi
+    if test "x$enable_search_usrlocal" = "xno" ; then
+       no_usrlocal=""
+       for i in $hdrdirs; do
+           if [[ $i != /usr/local/* ]] ; then
+               no_usrlocal="$no_usrlocal $i"
+           fi
+       done
+       hdrdirs="$no_usrlocal"
     fi
 
     # Write a message
@@ -1713,6 +1748,7 @@ enable/disable options, prefix with either --enable- or --disable-
   rpath              Set run-time library load path on executables
   ruby               Ruby ROOT bindings, requires ruby >= 1.8
   sapdb              MaxDB/SapDB support, requires libsqlod and libsqlrte
+  search-usrlocal    Search for libraries and headers in /usr/local
   shadowpw           Shadow password support
   shared             Use shared 3rd party libraries if possible
   soversion          Set version number in sonames (recommended)
@@ -2862,7 +2898,7 @@ if test ! "x$enable_x11" = "xno" ; then
         ${finkdir:+$finkdir/lib} \
         /usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
         /usr/local/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
-        /usr/X11/lib /usr/lib/X11R5
+        /usr/X11/lib /usr/lib/X11R5 /opt/X11/lib
     x11libdir=$found_dir
 
     if test "x$found_lib" = "x" ; then
@@ -2875,7 +2911,7 @@ if test ! "x$enable_x11" = "xno" ; then
         ${finkdir:+$finkdir/include} \
         /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
         /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
-        /usr/X11/include /usr/include/X11R5
+        /usr/X11/include /usr/include/X11R5 /opt/X11/include
     x11incdir=$found_dir
 
     if test "x$found_dir" = "x" ; then
@@ -2889,7 +2925,7 @@ if test ! "x$enable_x11" = "xno" ; then
         ${finkdir:+$finkdir/include} \
         /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
         /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
-        /usr/X11/include /usr/include/X11R5
+        /usr/X11/include /usr/include/X11R5 /opt/X11/include
 
     if test "x$found_dir" = "x" ; then
         result "`basename $0`: xpm headers MUST be installed"
@@ -2901,7 +2937,7 @@ if test ! "x$enable_x11" = "xno" ; then
         ${finkdir:+$finkdir/include} \
         /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
         /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
-        /usr/X11/include /usr/include/X11R5
+        /usr/X11/include /usr/include/X11R5 /opt/X11/include
 
     if test "x$found_dir" = "x" ; then
         result "`basename $0`: Xft headers MUST be installed"
@@ -2914,7 +2950,8 @@ if test ! "x$enable_x11" = "xno" ; then
             ${finkdir:+$finkdir/include} \
             /usr/include /usr/X11R6/include /usr/include/X11 \
             /usr/openwin/include /usr/local/include /usr/local/include/X11 \
-            /usr/local/X11R6/include /usr/X11/include /usr/include/X11R5
+            /usr/local/X11R6/include /usr/X11/include /usr/include/X11R5 \
+            /opt/X11/include
 
         if test "x$found_dir" = "x" ; then
             result "`basename $0`: X11/extensions/shape.h header MUST be installed"
@@ -2928,7 +2965,7 @@ if test ! "x$enable_x11" = "xno" ; then
         ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib /usr/lib/X11 \
         /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
-        /usr/X11/lib
+        /usr/X11/lib /opt/X11/lib
     xpmlib=$found_lib
     xpmlibdir=$found_dir
 
@@ -2942,7 +2979,7 @@ if test ! "x$enable_x11" = "xno" ; then
         ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib /usr/lib/X11 \
         /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
-        /usr/X11/lib
+        /usr/X11/lib /opt/X11/lib
 
     if test "x$found_lib" = "x" ; then
         result "`basename $0`: libXft MUST be installed"
@@ -2960,7 +2997,7 @@ if test ! "x$enable_x11" = "xno" ; then
         ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib /usr/lib/X11 \
         /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
-        /usr/X11/lib
+        /usr/X11/lib /opt/X11/lib
 
     if test "x$found_lib" = "x" ; then
         result "`basename $0`: libXext MUST be installed"
@@ -4542,7 +4579,6 @@ check_explicit "$enable_hdfs" "$enable_hdfs_explicit" \
 #
 # Check for libdns_sd
 #
-bonjourcppflags=
 case $platform in
     linux|macosx|ios)
         ;;
@@ -4627,9 +4663,6 @@ if test ! "x$enable_bonjour" = "xno" ; then
         if test "x$avahiincdir" = "x"; then
             enable_bonjour="no"
         fi
-    fi
-    if test ! "x$enable_bonjour" = "xno" ; then
-       bonjourcppflags="-DBUILD_BONJOUR"
     fi
 fi
 check_explicit "$enable_bonjour" "$enable_bonjour_explicit" \
@@ -5251,7 +5284,7 @@ if test "x$enable_xrootd" = "xyes" ; then
    #
    # Check libraries now
    hasxrdutils="no"
-   libxrdoucbjr=""
+   libxrdutils=""
    #
    # Release date of version 3.1.0 containing the new lib packaging
    decreftre=300000000
@@ -5291,8 +5324,8 @@ if test "x$enable_xrootd" = "xyes" ; then
       else
          xrdlibext="$found_ext"
          tmpxrdlibdir="$found_dir"
-         if test "x$ll" = "xlibXrdUtils" || test "x$ll" = "xlibXrdOuc"; then
-            libxrdoucbjr="$found_lib"
+         if test "x$ll" = "xlibXrdUtils"; then
+            libxrdutils="$found_lib"
          fi
       fi
    done
@@ -5318,15 +5351,9 @@ if test "x$enable_xrootd" = "xyes" ; then
    fi
 
    #
-   # Check if bonjour is available for code potentially using it ...
+   # Set xrdlibdir if XrdUtils is available for code potentially using it ...
    if test "x$enable_xrootd" = "xyes"; then
       xrdlibdir="$tmpxrdlibdir"
-      if test "x$enable_bonjour" = "xyes"; then
-         check_symbol XrdOucBonjour "$libxrdoucbjr" "$xrdlibdir"
-         if test  $found_symbol -eq 0 ; then
-            bonjourcppflags=
-         fi
-      fi
    fi
 
    #
@@ -7227,6 +7254,9 @@ fi
 if test -d core/pcre/src/pcre-7.4 ; then
    rm -rf core/pcre/src/pcre-7.4
 fi
+if test -d core/pcre/src/pcre-7.8 ; then
+   rm -rf core/pcre/src/pcre-7.8
+fi
 if test -d math/unuran/src/unuran-1.3.0-root ; then
    rm -rf math/unuran/src/unuran-1.3.0-root
 fi
@@ -7502,7 +7532,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@asimagelib@|$asimagelib|"            \
     -e "s|@asimagelibdir@|$asimagelibdir|"      \
     -e "s|@bindir@|$bindir|"                    \
-    -e "s|@bonjourcppflags@|$bonjourcppflags|"  \
     -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@builtinafterimage@|$enable_builtin_afterimage|"  \
     -e "s|@buildftgl@|$enable_builtin_ftgl|"    \
@@ -7827,6 +7856,7 @@ sed \
     -e "s|@hasstdexpstringview@|$hasstdexpstringview|" \
     -e "s|@hasllvm@|$hasllvm|"             \
     -e "s|@llvmdir@|$llvmdir|"             \
+    -e "s|@usemt@|undef|"                  \
     < RConfigure.tmp > RConfigure-out.tmp
 rm -f RConfigure.tmp
 

@@ -24,6 +24,10 @@
 #include "clang/Sema/Template.h"
 #include "clang/Sema/TemplateDeduction.h"
 
+#if defined(_MSC_VER) && (_MSC_VER <= 1800)
+#define constexpr const
+#endif
+
 using namespace clang;
 
 namespace clang {
@@ -39,28 +43,35 @@ namespace clang {
   private:
     Parser* P;
     Preprocessor& PP;
+    decltype(Parser::TemplateIds) OldTemplateIds;
     bool ResetIncrementalProcessing;
     bool OldSuppressAllDiagnostics;
+    bool OldPPSuppressAllDiagnostics;
     bool OldSpellChecking;
-    DestroyTemplateIdAnnotationsRAIIObj CleanupTemplateIds;
     SourceLocation OldPrevTokLocation;
     unsigned short OldParenCount, OldBracketCount, OldBraceCount;
     unsigned OldTemplateParameterDepth;
-
+    decltype(P->getActions().InNonInstantiationSFINAEContext)
+       OldInNonInstantiationSFINAEContext;
 
   public:
     ParserStateRAII(Parser& p)
       : P(&p), PP(p.getPreprocessor()),
         ResetIncrementalProcessing(p.getPreprocessor()
                                    .isIncrementalProcessingEnabled()),
-        OldSuppressAllDiagnostics(p.getPreprocessor().getDiagnostics()
+        OldSuppressAllDiagnostics(P->getActions().getDiagnostics()
+                                  .getSuppressAllDiagnostics()),
+        OldPPSuppressAllDiagnostics(p.getPreprocessor().getDiagnostics()
                                   .getSuppressAllDiagnostics()),
         OldSpellChecking(p.getPreprocessor().getLangOpts().SpellChecking),
-        CleanupTemplateIds(p), OldPrevTokLocation(p.PrevTokLocation),
+        OldPrevTokLocation(p.PrevTokLocation),
         OldParenCount(p.ParenCount), OldBracketCount(p.BracketCount),
         OldBraceCount(p.BraceCount),
-        OldTemplateParameterDepth(p.TemplateParameterDepth)
+        OldTemplateParameterDepth(p.TemplateParameterDepth),
+        OldInNonInstantiationSFINAEContext(P->getActions()
+                                           .InNonInstantiationSFINAEContext)
     {
+       OldTemplateIds.swap(P->TemplateIds);
     }
 
     ~ParserStateRAII()
@@ -70,11 +81,18 @@ namespace clang {
       //
       // Note: Consuming the EOF token will pop the include stack.
       //
+      {
+         // Cleanup the TemplateIds before swapping the previous set back.
+         DestroyTemplateIdAnnotationsRAIIObj CleanupTemplateIds(*P);
+      }
+      P->TemplateIds.swap(OldTemplateIds);
       P->SkipUntil(tok::eof);
       PP.enableIncrementalProcessing(ResetIncrementalProcessing);
       // Doesn't reset the diagnostic mappings
       P->getActions().getDiagnostics().Reset(/*soft=*/true);
-      PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
+      P->getActions().getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
+      PP.getDiagnostics().Reset(/*soft=*/true);
+      PP.getDiagnostics().setSuppressAllDiagnostics(OldPPSuppressAllDiagnostics);
       const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking =
          OldSpellChecking;
 
@@ -83,6 +101,8 @@ namespace clang {
       P->BracketCount = OldBracketCount;
       P->BraceCount = OldBraceCount;
       P->TemplateParameterDepth = OldTemplateParameterDepth;
+      P->getActions().InNonInstantiationSFINAEContext =
+         OldInNonInstantiationSFINAEContext;
     }
   };
 }
@@ -117,8 +137,14 @@ namespace cling {
     //
     //  Tell the diagnostic engine to ignore all diagnostics.
     //
+    P.getActions().getDiagnostics().setSuppressAllDiagnostics(
+                                      diagOnOff == LookupHelper::NoDiagnostics);
     PP.getDiagnostics().setSuppressAllDiagnostics(
-                                                  diagOnOff == LookupHelper::NoDiagnostics);
+                                      diagOnOff == LookupHelper::NoDiagnostics);
+    //
+    //  Tell Sema we are not in the process of doing an instantiation.
+    //
+    P.getActions().InNonInstantiationSFINAEContext = true;
     //
     //  Tell the parser to not attempt spelling correction.
     //
@@ -154,41 +180,6 @@ namespace cling {
     PP.Lex(const_cast<Token&>(P.getCurToken()));
   }
 
-  QualType LookupHelper::findType(llvm::StringRef typeName,
-                                  DiagSetting diagOnOff) const {
-    //
-    //  Our return value.
-    //
-    QualType TheQT;
-
-    if (typeName.empty()) return TheQT;
-
-    // Could trigger deserialization of decls.
-    Interpreter::PushTransactionRAII RAII(m_Interpreter);
-
-    // Use P for shortness
-    Parser& P = *m_Parser;
-    ParserStateRAII ResetParserState(P);
-    prepareForParsing(P,m_Interpreter,
-                      typeName, llvm::StringRef("lookup.type.by.name.file"),
-                      diagOnOff);
-    //
-    //  Try parsing the type name.
-    //
-    clang::ParsedAttributes Attrs(P.getAttrFactory());
-
-    TypeResult Res(P.ParseTypeName(0,Declarator::TypeNameContext,clang::AS_none,
-                                   0,&Attrs));
-    if (Res.isUsable()) {
-      // Accept it only if the whole name was parsed.
-      if (P.NextToken().getKind() == clang::tok::eof) {
-        TypeSourceInfo* TSI = 0;
-        TheQT = clang::Sema::GetTypeFromParser(Res.get(), &TSI);
-      }
-    }
-    return TheQT;
-  }
-
   static const TagDecl* RequireCompleteDeclContext(Sema& S,
                                                    Preprocessor& PP,
                                                    const TagDecl *tobeCompleted,
@@ -214,6 +205,320 @@ namespace cling {
     } else return 0;
   }
 
+  ///\brief Look for a tag decl based on its name
+  ///
+  ///\param declName name of the class, enum, uniorn or namespace being
+  ///       looked for
+  ///\param resultDecl pointer that will be updated with the answer
+  ///\param P Parse to use for the search
+  ///\param diagOnOff whether the error diagnostics are printed or not.
+  ///\return returns true if the answer is authoritative or false if a more
+  ///        detailed search is needed (usually this is for class template
+  ///        instances).
+  ///
+  static bool quickFindDecl(llvm::StringRef declName,
+                            const Decl *& resultDecl,
+                            Parser &P,
+                            LookupHelper::DiagSetting diagOnOff) {
+
+    Sema &S = P.getActions();
+    Preprocessor &PP = P.getPreprocessor();
+    resultDecl = nullptr;
+    const clang::DeclContext *sofar = nullptr;
+    const clang::Decl *next = nullptr;
+    for (size_t c = 0, last = 0; c < declName.size(); ++c) {
+      const char current = declName[c];
+      if (current == '<' || current == '>' ||
+          current == ' ' || current == '&' ||
+          current == '*' || current == '[' ||
+          current == ']') {
+        // For now we do not know how to deal with
+        // template instances.
+        return false;
+      }
+      if (current == ':') {
+        if (c + 2 >= declName.size() || declName[c + 1] != ':') {
+          // Looks like an invalid name, we won't find anything.
+          return true;
+        }
+        next = utils::Lookup::Named(&S, declName.substr(last, c - last), sofar);
+        if (next && next != (void *) -1) {
+          // Need to handle typedef here too.
+          const TypedefNameDecl *typedefDecl = dyn_cast<TypedefNameDecl>(next);
+          if (typedefDecl) {
+            // We are stripping the typedef, this is technically incorrect,
+            // as the result (if resultType has been specified) will not be
+            // an accurate representation of the input string.
+            // As we strip the typedef we ought to rebuild the nested name
+            // specifier.
+            // Since we do not use this path for template handling, this
+            // is not relevant for ROOT itself ....
+            ASTContext &Context = S.getASTContext();
+            QualType T = Context.getTypedefType(typedefDecl);
+            const TagType *TagTy = T->getAs<TagType>();
+            if (TagTy) next = TagTy->getDecl();
+          }
+
+          // To use Lookup::Named we need to fit the assertion:
+          //    ((!isa<TagDecl>(LookupCtx) || LookupCtx->isDependentContext()
+          //     || cast<TagDecl>(LookupCtx)->isCompleteDefinition()
+          //     || cast<TagDecl>(LookupCtx)->isBeingDefined()) &&
+          //      "Declaration context must already be complete!"),
+          //      function LookupQualifiedName, file SemaLookup.cpp, line 1614.
+          const clang::TagDecl *tdecl = dyn_cast<TagDecl>(next);
+          if (tdecl && !(next = tdecl->getDefinition())) {
+            //fprintf(stderr,"Incomplete (inner) type for %s (part %s).\n",
+            //        declName.str().c_str(),
+            //        declName.substr(last,c-last).str().c_str());
+            // Incomplete type we will not be able to go on.
+
+            // We always require completeness of the scope, if the caller
+            // want piece-meal instantiation, the calling code will need to
+            // split the call to findScope.
+
+            // if (instantiateTemplate) {
+            if (dyn_cast<ClassTemplateSpecializationDecl>(tdecl)) {
+              // Go back to the normal schedule since we need a valid point
+              // of instantiation:
+              // Assertion failed: (Loc.isValid() &&
+              //    "point of instantiation must be valid!"),
+              //    function setPointOfInstantiation, file DeclTemplate.h,
+              //    line 1520.
+              // Which can happen here because the simple name maybe a
+              // typedef to a template (for example std::string).
+              return false;
+            }
+            next = RequireCompleteDeclContext(S, PP, tdecl, diagOnOff);
+            // } else {
+            //   return false;
+            // }
+          }
+          sofar = dyn_cast_or_null<DeclContext>(next);
+        } else {
+          sofar = 0;
+        }
+        if (!sofar) {
+          // We are looking into something that is not a decl context,
+          // we won't find anything.
+          return true;
+        }
+        last = c + 2;
+        ++c; // Consume the second ':'
+      } else if (c + 1 == declName.size()) {
+        // End of the line.
+        next = utils::Lookup::Named(&S, declName.substr(last, c + 1 - last), sofar);
+        if (next == (void *) -1) next = 0;
+        if (next) {
+          resultDecl = next;
+        }
+        return true;
+      }
+    } // for each characters
+    // Should be unreacheable.
+    return false;
+  }
+
+  static QualType findBuiltinType(llvm::StringRef typeName, ASTContext &Context)
+  {
+    bool issigned = false;
+    bool isunsigned = false;
+    if (typeName.startswith("signed ")) {
+      issigned = true;
+      typeName = StringRef(typeName.data()+7, typeName.size()-7);
+    }
+    if (!issigned && typeName.startswith("unsigned ")) {
+      isunsigned = true;
+      typeName = StringRef(typeName.data()+9, typeName.size()-9);
+    }
+    if (typeName.equals("char")) {
+      if (isunsigned) return Context.UnsignedCharTy;
+      return Context.SignedCharTy;
+    }
+    if (typeName.equals("short")) {
+      if (isunsigned) return Context.UnsignedShortTy;
+      return Context.ShortTy;
+    }
+    if (typeName.equals("int")) {
+      if (isunsigned) return Context.UnsignedIntTy;
+      return Context.IntTy;
+    }
+    if (typeName.equals("long")) {
+      if (isunsigned) return Context.UnsignedLongTy;
+      return Context.LongTy;
+    }
+    if (typeName.equals("long long")) {
+      if (isunsigned) return Context.LongLongTy;
+      return Context.UnsignedLongLongTy;
+    }
+    if (!issigned && !isunsigned) {
+      if (typeName.equals("bool")) return Context.BoolTy;
+      if (typeName.equals("float")) return Context.FloatTy;
+      if (typeName.equals("double")) return Context.DoubleTy;
+      if (typeName.equals("long double")) return Context.LongDoubleTy;
+
+      if (typeName.equals("wchar_t")) return Context.WCharTy;
+      if (typeName.equals("char16_t")) return Context.Char16Ty;
+      if (typeName.equals("char32_t")) return Context.Char32Ty;
+    }
+    /* Missing
+   CanQualType WideCharTy; // Same as WCharTy in C++, integer type in C99.
+   CanQualType WIntTy;   // [C99 7.24.1], integer type unchanged by default promotions.
+     */
+    return QualType();
+  }
+
+  ///\brief Look for a tag decl based on its name
+  ///
+  ///\param typeName name of the class, enum, uniorn or namespace being
+  ///       looked for
+  ///\param resultType reference to QualType that will be updated with the answer
+  ///\param P Parse to use for the search
+  ///\param diagOnOff whether the error diagnostics are printed or not.
+  ///\return returns true if the answer is authoritative or false if a more
+  ///        detailed search is needed (usually this is for class template
+  ///        instances).
+  ///
+  static bool quickFindType(llvm::StringRef typeName,
+                            QualType &resultType,
+                            Parser &P,
+                            LookupHelper::DiagSetting diagOnOff) {
+
+    resultType = QualType();
+
+    llvm::StringRef quickTypeName = typeName.trim();
+    bool innerConst = false;
+    bool outerConst = false;
+    if (quickTypeName.startswith("const ")) {
+      // Use this syntax to avoid the redudant tests in substr.
+      quickTypeName = StringRef(quickTypeName.data()+6,
+                                quickTypeName.size()-6);
+      innerConst = true;
+    }
+    constexpr int pointerType = 0;
+    constexpr int lrefType = 1;
+    constexpr int rrefType = 2;
+    if (quickTypeName.endswith("const")) {
+      if (quickTypeName.size() < 6) return true;
+      auto c = quickTypeName[quickTypeName.size()-6];
+      if (c==' ' || c=='&' || c=='*') {
+        outerConst = true;
+        if (c == ' ')
+          quickTypeName = StringRef(quickTypeName.data(),
+                                    quickTypeName.size() - 6);
+        else quickTypeName = StringRef(quickTypeName.data(),
+                                       quickTypeName.size() - 5);
+      }
+    }
+    std::vector<int> ptrref;
+    for(auto c = quickTypeName.end()-1; c != quickTypeName.begin(); --c) {
+      if (*c == '*')  ptrref.push_back(pointerType);
+      else if (*c == '&') {
+        if (*(c-1)== '&') {
+          --c;
+          ptrref.push_back(rrefType);
+
+        } else
+          ptrref.push_back(lrefType);
+      }
+      else break;
+    }
+    if (!ptrref.empty()) quickTypeName = StringRef(quickTypeName.data(),quickTypeName.size()-ptrref.size());
+
+    Sema &S = P.getActions();
+    ASTContext &Context = S.getASTContext();
+    QualType quickFind = findBuiltinType(quickTypeName, Context);
+    const Decl *quickDecl = nullptr;
+    if (quickFind.isNull() &&
+        quickFindDecl(quickTypeName, quickDecl, P, diagOnOff)) {
+      // The result of quickFindDecl was definitive, we don't need
+      // to check any further.
+      //const TypeDecl *typedecl = dyn_cast<TypeDecl>(quickDecl);
+      if (quickDecl) {
+        const TypeDecl *typedecl = dyn_cast<TypeDecl>(quickDecl);
+        if (typedecl) {
+          quickFind = Context.getTypeDeclType(typedecl);
+        } else {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    }
+    if (!quickFind.isNull()) {
+      if (innerConst && !quickFind->isReferenceType()) quickFind.addConst();
+
+      for(auto t : ptrref) {
+        switch (t) {
+          case pointerType :
+            quickFind = Context.getPointerType(quickFind);
+            break;
+          case rrefType :
+            quickFind = Context.getRValueReferenceType(quickFind);
+            break;
+          case lrefType :
+            quickFind = Context.getLValueReferenceType(quickFind);
+            break;
+        }
+      }
+      if (outerConst && !quickFind->isReferenceType()) quickFind.addConst();
+      resultType = quickFind;
+      return true;
+    }
+    return false;
+  }
+
+  QualType LookupHelper::findType(llvm::StringRef typeName,
+                                  DiagSetting diagOnOff) const {
+    //
+    //  Our return value.
+    //
+    QualType TheQT;
+
+    if (typeName.empty()) return TheQT;
+
+    // Could trigger deserialization of decls.
+    Interpreter::PushTransactionRAII RAII(m_Interpreter);
+
+    // Deal with the most common case.
+    // Going through this custom finder is both much faster
+    // (6 times faster, 10.6s to 57.5s for 1 000 000 calls) and consumes
+    // infinite less memory (0B vs 181 B per call for 'Float_t*').
+    QualType quickFind;
+    if (quickFindType(typeName,quickFind, *m_Parser, diagOnOff)) {
+      // The result of quickFindDecl was definitive, we don't need
+      // to check any further.
+      return quickFind;
+    }
+
+    // Use P for shortness
+    Parser& P = *m_Parser;
+    ParserStateRAII ResetParserState(P);
+    prepareForParsing(P,m_Interpreter,
+                      typeName, llvm::StringRef("lookup.type.by.name.file"),
+                      diagOnOff);
+    //
+    //  Try parsing the type name.
+    //
+    clang::ParsedAttributes Attrs(P.getAttrFactory());
+
+    TypeResult Res(P.ParseTypeName(0,Declarator::TypeNameContext,clang::AS_none,
+                                   0,&Attrs));
+    if (Res.isUsable()) {
+      // Accept it only if the whole name was parsed.
+      if (P.NextToken().getKind() == clang::tok::eof) {
+        TypeSourceInfo* TSI = 0;
+        TheQT = clang::Sema::GetTypeFromParser(Res.get(), &TSI);
+      }
+    }
+//    if (!quickFind.isNull() && !TheQT.isNull() && TheQT != quickFind) {
+//      fprintf(stderr,"Different result\n");
+//      fprintf(stderr,"quickFindType:"); quickFind.dump();
+//      fprintf(stderr,"TheQT        :"); TheQT.dump();
+//
+//    }
+    return TheQT;
+  }
+
   const Decl* LookupHelper::findScope(llvm::StringRef className,
                                       DiagSetting diagOnOff,
                                       const Type** resultType /* = 0 */,
@@ -223,143 +528,67 @@ namespace cling {
     //  Some utilities.
     //
     // Use P for shortness
-    Parser& P = *m_Parser;
-    Sema& S = P.getActions();
-    Preprocessor& PP = P.getPreprocessor();
-    ASTContext& Context = S.getASTContext();
+    Parser &P = *m_Parser;
+    Sema &S = P.getActions();
+    Preprocessor &PP = P.getPreprocessor();
+    ASTContext &Context = S.getASTContext();
 
     // See if we can find it without a buffer and any clang parsing,
     // We need to go scope by scope.
-    if (1) {
-      const clang::DeclContext *sofar = 0;
-      const clang::Decl *next = 0;
-      for(size_t c = 0, last = 0; c < className.size(); ++c) {
-        if ( className[c] == '<' || className[c] == '>') {
-          // For now we do not know how to deal with
-          // template instances.
-          break;
-        }
-        if ( className[c] == ':' ) {
-          if ( c+2 >= className.size() || className[c+1] != ':' ) {
-            // Looks like an invalid name, we won't find anything.
-            return 0;
+    {
+      const Decl *quickResult = nullptr;
+      if (quickFindDecl(className, quickResult, *m_Parser, diagOnOff)) {
+        // The result of quickFindDecl was definitive, we don't need
+        // to check any further.
+        if (!quickResult) {
+          return nullptr;
+        } else {
+          const TagDecl *tagdecl = dyn_cast<TagDecl>(quickResult);
+          const TypedefNameDecl *typedefDecl = dyn_cast<TypedefNameDecl>(quickResult);
+          if (typedefDecl) {
+            QualType T = Context.getTypedefType(typedefDecl);
+            const TagType *TagTy = T->getAs<TagType>();
+            if (TagTy) tagdecl = TagTy->getDecl();
+            // NOTE: Should we instantiate here? ... maybe ...
+            if (tagdecl && resultType) *resultType = T.getTypePtr();
+
+          } else if (tagdecl && resultType) {
+            *resultType = tagdecl->getTypeForDecl();
           }
-          next = utils::Lookup::Named(&S,className.substr(last,c-last),sofar);
-          if (next && next != (void*)-1) {
-            // Need to handle typedef here too.
-            const TypedefNameDecl *typedefDecl=dyn_cast<TypedefNameDecl>(next);
-            if (typedefDecl) {
-              // We are stripping the typedef, this is technically incorrect,
-              // as the result (if resultType has been specified) will not be
-              // an accurate representation of the input string.
-              // As we strip the typedef we ought to rebuild the nested name
-              // specifier.
-              // Since we do not use this path for template handling, this
-              // is not relevant for ROOT itself ....
-              QualType T = Context.getTypedefType(typedefDecl);
-              const TagType* TagTy = T->getAs<TagType>();
-              if (TagTy) next = TagTy->getDecl();
-            }
+          // fprintf(stderr,"Short cut taken for %s.\n",className.str().c_str());
+          if (tagdecl) {
+            const TagDecl *defdecl = tagdecl->getDefinition();
+            if (!defdecl || !defdecl->isCompleteDefinition()) {
+              // fprintf(stderr,"Incomplete type for %s.\n",className.str().c_str());
+              if (instantiateTemplate) {
+                if (dyn_cast<ClassTemplateSpecializationDecl>(tagdecl)) {
+                  // Go back to the normal schedule since we need a valid point
+                  // of instantiation:
+                  // Assertion failed: (Loc.isValid() &&
+                  //    "point of instantiation must be valid!"),
+                  //    function setPointOfInstantiation, file DeclTemplate.h,
+                  //    line 1520.
+                  // Which can happen here because the simple name maybe a
+                  // typedef to a template (for example std::string).
 
-            // To use Lookup::Named we need to fit the assertion:
-            //    ((!isa<TagDecl>(LookupCtx) || LookupCtx->isDependentContext()
-            //     || cast<TagDecl>(LookupCtx)->isCompleteDefinition()
-            //     || cast<TagDecl>(LookupCtx)->isBeingDefined()) &&
-            //      "Declaration context must already be complete!"),
-            //      function LookupQualifiedName, file SemaLookup.cpp, line 1614.
-
-            const clang::TagDecl *tdecl = dyn_cast<TagDecl>(next);
-            if (tdecl && !(next = tdecl->getDefinition())) {
-              //fprintf(stderr,"Incomplete (inner) type for %s (part %s).\n",
-              //        className.str().c_str(),
-              //        className.substr(last,c-last).str().c_str());
-              // Incomplete type we will not be able to go on.
-
-              // We always require completeness of the scope, if the caller
-              // want piece-meal instantiation, the calling code will need to
-              // split the call to findScope.
-
-              // if (instantiateTemplate) {
-              if (dyn_cast<ClassTemplateSpecializationDecl>(tdecl)) {
-                // Go back to the normal schedule since we need a valid point
-                // of instantiation:
-                // Assertion failed: (Loc.isValid() &&
-                //    "point of instantiation must be valid!"),
-                //    function setPointOfInstantiation, file DeclTemplate.h,
-                //    line 1520.
-                // Which can happen here because the simple name maybe a
-                // typedef to a template (for example std::string).
-                break;
+                  // break;
+                  // the next code executed must be the TransactionRAII below
+                } else
+                  return RequireCompleteDeclContext(S, PP, tagdecl, diagOnOff);
+              } else {
+                return nullptr;
               }
-              next = RequireCompleteDeclContext(S,PP,tdecl,diagOnOff);
-              // } else {
-              //   return 0;
-              // }
-            }
-            sofar = dyn_cast_or_null<DeclContext>(next);
-          } else {
-            sofar = 0;
-          }
-          if (!sofar) {
-            // We are looking into something that is not a decl context,
-            // we won't find anything.
-            return 0;
-          }
-          last = c+2;
-          ++c; // Consume the second ':'
-        } else if ( c+1 == className.size() ) {
-          // End of the line.
-          next = utils::Lookup::Named(&S,className.substr(last,c+1-last),sofar);
-          if (next == (void*)-1) next = 0;
-          if (next) {
-
-            const TagDecl *tagdecl = dyn_cast<TagDecl>(next);
-            const TypedefNameDecl *typedefDecl=dyn_cast<TypedefNameDecl>(next);
-            if (typedefDecl) {
-              QualType T = Context.getTypedefType(typedefDecl);
-              const TagType* TagTy = T->getAs<TagType>();
-              if (TagTy) tagdecl = TagTy->getDecl();
-              // NOTE: Should we instantiate here? ... maybe ...
-              if (tagdecl && resultType) *resultType = T.getTypePtr();
-
-            } else if (tagdecl && resultType) {
-              *resultType = tagdecl->getTypeForDecl();
-            }
-
-            // fprintf(stderr,"Short cut taken for %s.\n",className.str().c_str());
-            if (tagdecl) {
-              const TagDecl *defdecl = tagdecl->getDefinition();
-              if (!defdecl || !defdecl->isCompleteDefinition()) {
-                // fprintf(stderr,"Incomplete type for %s.\n",className.str().c_str());
-                if (instantiateTemplate) {
-                  if (dyn_cast<ClassTemplateSpecializationDecl>(tagdecl)) {
-                    // Go back to the normal schedule since we need a valid point
-                    // of instantiation:
-                    // Assertion failed: (Loc.isValid() &&
-                    //    "point of instantiation must be valid!"),
-                    //    function setPointOfInstantiation, file DeclTemplate.h,
-                    //    line 1520.
-                    // Which can happen here because the simple name maybe a
-                    // typedef to a template (for example std::string).
-                    break;
-                  }
-                  return RequireCompleteDeclContext(S,PP,tagdecl,diagOnOff);
-                } else {
-                  return 0;
-                }
-              }
-              return defdecl; // now pointing to the definition.
-            } else if (isa<NamespaceDecl>(next)) {
-              return next->getCanonicalDecl();
-            } else if (auto alias = dyn_cast<NamespaceAliasDecl>(next) ) {
-              return alias->getNamespace()->getCanonicalDecl();
             } else {
-              //fprintf(stderr,"Not a scope decl for %s.\n",className.str().c_str());
-              // The name exist and does not point to a 'scope' decl.
-              return 0;
+              return defdecl; // now pointing to the definition.
             }
+          } else if (isa<NamespaceDecl>(quickResult)) {
+            return quickResult->getCanonicalDecl();
+          } else if (auto alias = dyn_cast<NamespaceAliasDecl>(quickResult)) {
+            return alias->getNamespace()->getCanonicalDecl();
           } else {
-            return 0;
+            //fprintf(stderr,"Not a scope decl for %s.\n",className.str().c_str());
+            // The name exist and does not point to a 'scope' decl.
+            return nullptr;
           }
         }
       }
@@ -1527,8 +1756,6 @@ namespace cling {
   struct ParseArgs {
 
     typedef llvm::StringRef ArgsInput;
-
-    llvm::SmallVector<ExprAlloc, 4> ExprMemory;
 
     bool operator()(llvm::SmallVectorImpl<Expr*> &GivenArgs,
                     const ArgsInput &funcArgs,

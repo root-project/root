@@ -13,6 +13,7 @@
 #include "TColor.h"
 
 /** \class TEveFrameBox
+\ingroup TEve
 Description of a 2D or 3D frame that can be used to visually group
 a set of objects.
 */

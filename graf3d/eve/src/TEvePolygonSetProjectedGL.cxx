@@ -19,6 +19,7 @@
 #include "TGLIncludes.h"
 
 /** \class TEvePolygonSetProjectedGL
+\ingroup TEve
 GL-renderer for TEvePolygonSetProjected class.
 */
 

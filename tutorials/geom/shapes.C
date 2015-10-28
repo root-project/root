@@ -1,4 +1,5 @@
 #include "TGeometry.h"
+#include "TGeoManager.h"
 
 void shapes() {
 //The old geometry shapes (see script geodemo.C)

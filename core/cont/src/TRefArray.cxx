@@ -9,80 +9,90 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TRefArray                                                              //
-//                                                                        //
-// An array of references to TObjects. The array expands automatically    //
-// when  objects are added (shrinking can be done by hand using Expand() )//
-//                                                                        //
-// The TRefArray can be filled with:                                      //
-//     array.Add(obj)                                                     //
-//     array.AddAt(obj,i)                                                 //
-//     but not array[i] = obj  !!!                                        //
-//                                                                        //
-// The array elements can be retrieved with:                              //
-//     TObject *obj = array.At(i);                                        //
-//                                                                        //
-// By default the TRefArray 'points' to the current process and can only  //
-// receive object that have been created in this process.                 //
-// To point the TRefArray to a different process do:                      //
-//     TRefArray array( processId );                                      //
-//                                                                        //
-// For example, if 'obj' is an instance that was created in the different //
-// process and you do:                                                    //
-//     TRefArray array( TProcessID::GetProcessWithUID( obj ) );           //
-// Then                                                                   //
-//     array.Add(obj);                                                    //
-// is correct (obj comes from the process the array is pointed to         //
-// while                                                                  //
-//     TObject *nobj = new TObject;                                       //
-//     array.Add(nobj);                                                   //
-// is incorrect since 'nobj' was created in a different process than the  //
-// one the array is pointed to. In this case you will see error message:  //
-//     Error in <TRefArray::AddAtAndExpand>: The object at 0x... is not   //
-//     registered in the process the TRefArray point to                   //
-//     (pid = ProcessID../....)                                           //
-//                                                                        //
-// When a TRefArray is Streamed, only the pointer unique id is written,   //
-// not the referenced object. TRefArray may be assigned to different      //
-// branches of one Tree or several Trees.                                 //
-// The branch containing the TRefArray can be read before or after the    //
-// array (eg TClonesArray, STL vector,..) of the referenced objects.      //
-//                                                                        //
-// See an example in $ROOTSYS/test/Event.h                                //
-//                                                                        //
-// RESTRICTIONS when using TRefArray                                      //
-// ---------------------------------                                      //
-//  - Elements in a TRefArray cannot point to a TFile or TDirectory.      //
-//  - All elements of a TRefArray must be set in the same process,        //
-//    In particular, one cannot modify some elements of the array in      //
-//    a different process.                                                //
-// Use an array of TRef when one of the above restrictions is met.        //
-//                                                                        //
-// The number of TRef handled by a single process id is limited to        //
-// 16777215 (see TRef for more detail).   When the TProcessID is full     //
-// (has seen 16777215 objects), we switch to new one TProcessID           //
-// maximum 65535 including the TProcessIDs read from file).               //
-// However TRefArray can not switch to new TProcessID if they already     //
-// contain objects.                                                       //
-//                                                                        //
-// When the TProcessID has been switched due to overflow and an new       //
-// object is added to an existing, empty TRefArray, you will see:         //
-//
-// Warning in <TRefArray::AddAtAndExpand>: The ProcessID for the 0x5f83819e8 has been switched to ProcessID4/6c89f37e-8259-11e2-9717-166ee183beef:4
-//
-// If the TRefArray was not empty, you will se:
-//
-// Error in <TRefArray::AddAtAndExpand>: The object at %p can not be registered in the process the TRefArray points to (pid = ProcessID4/6c89f37e-8259-11e2-9717-166ee183beef) because the ProcessID has too many objects and the TRefArray already contains other objects.
-//
-// When running out of TProcessIds, you will se:
-//
-// Warning in <TProcessID::AddProcessID>: Maximum number of TProcessID (65535) is almost reached (one left).  TRef will stop being functional when the limit is reached.
-//
-// Fatal in <TProcessID::AddProcessID>: Maximum number of TProcessID (65535) has been reached.  TRef are not longer functional.
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
+/** \class TRefArray
+An array of references to TObjects. The array expands automatically
+when  objects are added (shrinking can be done by hand using Expand() )
+
+The TRefArray can be filled with:
+~~~ {.cpp}
+    array.Add(obj)
+    array.AddAt(obj,i)
+    but not array[i] = obj  !!!
+~~~
+The array elements can be retrieved with:
+~~~ {.cpp}
+    TObject *obj = array.At(i);
+~~~
+By default the TRefArray 'points' to the current process and can only
+receive object that have been created in this process.
+To point the TRefArray to a different process do:
+~~~ {.cpp}
+    TRefArray array( processId );
+~~~
+For example, if 'obj' is an instance that was created in the different
+process and you do:
+~~~ {.cpp}
+    TRefArray array( TProcessID::GetProcessWithUID( obj ) );
+~~~
+Then
+~~~ {.cpp}
+    array.Add(obj);
+~~~
+is correct (obj comes from the process the array is pointed to
+while
+~~~ {.cpp}
+    TObject *nobj = new TObject;
+    array.Add(nobj);
+~~~
+is incorrect since 'nobj' was created in a different process than the
+one the array is pointed to. In this case you will see error message:
+~~~ {.cpp}
+    Error in <TRefArray::AddAtAndExpand>: The object at 0x... is not
+    registered in the process the TRefArray point to
+    (pid = ProcessID../....)
+~~~
+When a TRefArray is Streamed, only the pointer unique id is written,
+not the referenced object. TRefArray may be assigned to different
+branches of one Tree or several Trees.
+The branch containing the TRefArray can be read before or after the
+array (eg TClonesArray, STL vector,..) of the referenced objects.
+
+See an example in $ROOTSYS/test/Event.h
+
+### RESTRICTIONS when using TRefArray
+
+  - Elements in a TRefArray cannot point to a TFile or TDirectory.
+  - All elements of a TRefArray must be set in the same process,
+    In particular, one cannot modify some elements of the array in
+    a different process.
+
+Use an array of TRef when one of the above restrictions is met.
+
+The number of TRef handled by a single process id is limited to
+16777215 (see TRef for more detail).   When the TProcessID is full
+(has seen 16777215 objects), we switch to new one TProcessID
+maximum 65535 including the TProcessIDs read from file).
+However TRefArray can not switch to new TProcessID if they already
+contain objects.
+
+When the TProcessID has been switched due to overflow and an new
+object is added to an existing, empty TRefArray, you will see:
+
+~~~ {.cpp}
+Warning in <TRefArray::AddAtAndExpand>: The ProcessID for the 0x5f83819e8 has been switched to ProcessID4/6c89f37e-8259-11e2-9717-166ee183beef:4
+~~~
+If the TRefArray was not empty, you will see:
+
+~~~ {.cpp}
+Error in <TRefArray::AddAtAndExpand>: The object at %p can not be registered in the process the TRefArray points to (pid = ProcessID4/6c89f37e-8259-11e2-9717-166ee183beef) because the ProcessID has too many objects and the TRefArray already contains other objects.
+~~~
+When running out of TProcessIds, you will see:
+
+~~~ {.cpp}
+Warning in <TProcessID::AddProcessID>: Maximum number of TProcessID (65535) is almost reached (one left).  TRef will stop being functional when the limit is reached.
+Fatal in <TProcessID::AddProcessID>: Maximum number of TProcessID (65535) has been reached.  TRef are not longer functional.
+~~~
+*/
 
 #include "TRefArray.h"
 #include "TRefTable.h"
@@ -162,7 +172,7 @@ TRefArray::TRefArray(const TRefArray &a) : TSeqCollection()
 TRefArray& TRefArray::operator=(const TRefArray &a)
 {
    if (this != &a) {
-      // Copy this by hand because the assigment operator
+      // Copy this by hand because the assignment operator
       // of TCollection is private
       fName   = a.fName;
       fSize   = a.fSize;
@@ -235,7 +245,7 @@ Bool_t TRefArray::GetObjectUID(Int_t &uid, TObject *obj, const char *methodname)
                     this,fPID->GetName(),fPID->GetTitle(),fPID->GetUniqueID());
             return kTRUE;
         } else {
-            Error(TString::Format("TRefArray::%s",methodname),"The object at %p can not be registered in the process the TRefArray points to (pid = %s/%s) because the ProcessID has too many objects and the TRefArray already contains other objecs.",obj,fPID->GetName(),fPID->GetTitle());
+            Error(TString::Format("TRefArray::%s",methodname),"The object at %p can not be registered in the process the TRefArray points to (pid = %s/%s) because the ProcessID has too many objects and the TRefArray already contains other objects.",obj,fPID->GetName(),fPID->GetTitle());
             return kFALSE;
          }
       }
@@ -639,11 +649,11 @@ UInt_t TRefArray::GetUID(Int_t at) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// obj != 0 Return index of object in array.
-///          Returns lowerBound-1 in case array doesn't contain the obj.
+///  - obj != 0 Return index of object in array.
+///             Returns lowerBound-1 in case array doesn't contain the obj.
 ///
-/// obj == 0 Return the index of the first empty slot.
-///          Returns lowerBound-1 in case array doesn't contain any empty slot.
+///  - obj == 0 Return the index of the first empty slot.
+///             Returns lowerBound-1 in case array doesn't contain any empty slot.
 
 Int_t TRefArray::IndexOf(const TObject *obj) const
 {
@@ -825,14 +835,9 @@ Int_t TRefArray::BinarySearch(TObject *, Int_t)
    return -1;
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRefArrayIter                                                        //
-//                                                                      //
-// Iterator of object array.                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRefArrayIter
+Iterator of object array.
+*/
 
 ClassImp(TRefArrayIter)
 

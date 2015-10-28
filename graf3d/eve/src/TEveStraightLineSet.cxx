@@ -15,6 +15,7 @@
 #include "TEveProjectionManager.h"
 
 /** \class TEveStraightLineSet
+\ingroup TEve
 Set of straight lines with optional markers along the lines.
 */
 
@@ -198,6 +199,7 @@ void TEveStraightLineSet::Paint(Option_t*)
 }
 
 /** \class TEveStraightLineSetProjected
+\ingroup TEve
 Projected replica of a TEveStraightLineSet.
 */
 

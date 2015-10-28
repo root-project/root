@@ -3659,9 +3659,10 @@ std::string GenerateFwdDeclString(const RScanner &scan,
    for (auto* TD: scan.fSelectedTypedefs)
       selectedDecls.push_back(TD);
 
-   fwdDeclString += "R\"DICTFWDDCLS(\n";
+   // The "R\"DICTFWDDCLS(\n" ")DICTFWDDCLS\"" pieces have been moved to
+   // TModuleGenerator to be able to make the diagnostics more telling in presence
+   // of an issue ROOT-6752.
    fwdDeclString += Decls2FwdDecls(selectedDecls,interp);
-   fwdDeclString += ")DICTFWDDCLS\"";
 
    // Functions
 //    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
@@ -3677,7 +3678,7 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 //          fwdDeclString+="\""+buffer+"\"\n";
 //    }
 
-   if (fwdDeclString.empty()) fwdDeclString = R"("")";
+   if (fwdDeclString.empty()) fwdDeclString = "";
    return fwdDeclString;
 }
 
@@ -4221,7 +4222,7 @@ int RootCling(int argc,
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
-   ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt, 0);
+   ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt, 0, 0);
    TClassEdit::Init(&helper);
 
    // flags used only for the pragma parser:
@@ -4546,10 +4547,19 @@ int RootCling(int argc,
 
    }
 
+   // Speed up the operations with rules
+   selectionRules.FillCache();
+   selectionRules.Optimize();
+
+   if (isGenreflex){
+      if (0 != selectionRules.CheckDuplicates()){
+         return 1;
+      }
+   }
+
    // If we want to validate the selection only, we just quit.
    if (selSyntaxOnly)
       return 0;
-
 
    //---------------------------------------------------------------------------
    // Write schema evolution related headers and declarations
@@ -4663,6 +4673,7 @@ int RootCling(int argc,
       // priority first.
       if (!interpreteronly) {
          constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("TRootIOCtor", interp));
+         constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("__void__", interp)); // ROOT-7723
          constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("", interp));
       }
    }

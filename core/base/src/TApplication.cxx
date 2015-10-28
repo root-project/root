@@ -116,6 +116,17 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    fAppRemote(0)
 {
    R__LOCKGUARD2(gInterpreterMutex);
+
+   // Create the list of applications the first time
+   if (!fgApplications)
+      fgApplications = new TList;
+
+   // Add the new TApplication early, so that the destructor of the
+   // default TApplication (if it is called in the block of code below)
+   // will not destroy the files, socket or TColor that have already been
+   // created.
+   fgApplications->Add(this);
+
    if (gApplication && gApplication->TestBit(kDefaultApplication)) {
       // allow default TApplication to be replaced by a "real" TApplication
       delete gApplication;
@@ -126,6 +137,7 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
 
    if (gApplication) {
       Error("TApplication", "only one instance of TApplication allowed");
+      fgApplications->Remove(this);
       return;
    }
 
@@ -135,16 +147,13 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    if (!gSystem)
       ::Fatal("TApplication::TApplication", "gSystem not initialized");
 
-   if (!gApplication) {
+   static Bool_t hasRegisterAtExit(kFALSE);
+   if (!hasRegisterAtExit) {
       // If we are the first TApplication register the atexit)
       atexit(CallEndOfProcessCleanups);
+      hasRegisterAtExit = kTRUE;
    }
    gROOT->SetName(appClassName);
-
-   // Create the list of applications the first time
-   if (!fgApplications)
-      fgApplications = new TList;
-   fgApplications->Add(this);
 
    // copy command line arguments, can be later accessed via Argc() and Argv()
    if (argc && *argc > 0) {
@@ -245,13 +254,9 @@ void TApplication::NeedGraphicsLibs()
 
 void TApplication::InitializeGraphics()
 {
-   if (fgGraphInit || !fgGraphNeeded)
-      return;
-
-   fgGraphInit = kTRUE;
+   if (fgGraphInit || !fgGraphNeeded) return;
 
    // Load the graphics related libraries
-
 
 #if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
    gVirtualX = new ROOT::iOS::TGIOS("TGIOS", "VirtualX for iOS");
@@ -372,15 +377,15 @@ char *TApplication::Argv(Int_t index) const
 /// i.e. they don't start with - or + are treated as follows (and also removed
 /// from the argument array):
 ///
-///  - <dir>       is considered the desired working directory and available
-///                via WorkingDirectory(), if more than one dir is specified the
-///                first one will prevail
-///  - <file>      if the file exists its added to the InputFiles() list
-///  - <file>.root are considered ROOT files and added to the InputFiles() list,
-///                the file may be a remote file url
-///  - <macro>.C   are considered ROOT macros and also added to the InputFiles() list
+///  - `<dir>`       is considered the desired working directory and available
+///                  via WorkingDirectory(), if more than one dir is specified the
+///                  first one will prevail
+///  - `<file>`      if the file exists its added to the InputFiles() list
+///  - `<file>.root` are considered ROOT files and added to the InputFiles() list,
+///                  the file may be a remote file url
+///  - `<macro>.C`   are considered ROOT macros and also added to the InputFiles() list
 ///
-/// In TRint we set the working directory to the <dir>, the ROOT files are
+/// In TRint we set the working directory to the `<dir>`, the ROOT files are
 /// connected, and the macros are executed. If your main TApplication is not
 /// TRint you have to decide yourself what to do with these options.
 /// All specified arguments (also the ones removed) can always be retrieved
@@ -653,6 +658,7 @@ void TApplication::LoadGraphicsLibs()
          return;
       }
       gVirtualX = (TVirtualX *) h->ExecPlugin(2, name.Data(), title.Data());
+      fgGraphInit = kTRUE;
    }
    if ((h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory))) {
       if (h->LoadPlugin() == -1) {

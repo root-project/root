@@ -27,19 +27,12 @@
 // END_HTML
 //
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-#include "TMath.h"
+#include <cmath>
 
 #include "RooPolyVar.h"
-#include "RooAbsReal.h"
-#include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
-#include "TMath.h"
+//#include "Riostream.h"
 
 #include "TError.h"
 
@@ -53,9 +46,7 @@ ClassImp(RooPolyVar)
 /// Default constructor
 
 RooPolyVar::RooPolyVar() : _lowestOrder(0)
-{
-  _coefIter = _coefList.createIterator() ;
-}
+{ }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +54,6 @@ RooPolyVar::RooPolyVar() : _lowestOrder(0)
 /// lowestOrder is not zero, then the first element in coefList is
 /// interpreted as as the 'lowestOrder' coefficients and all
 /// subsequent coeffient elements are shifted by a similar amount.
-
 RooPolyVar::RooPolyVar(const char* name, const char* title, 
 			     RooAbsReal& x, const RooArgList& coefList, Int_t lowestOrder) :
   RooAbsReal(name, title),
@@ -71,9 +61,6 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
   _coefList("coefList","List of coefficients",this),
   _lowestOrder(lowestOrder) 
 {
-
-  _coefIter = _coefList.createIterator() ;
-
   // Check lowest order
   if (_lowestOrder<0) {
     coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() 
@@ -81,19 +68,17 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
     _lowestOrder=0 ;
   }
 
-  TIterator* coefIter = coefList.createIterator() ;
+  RooFIter coefIter = coefList.fwdIterator() ;
   RooAbsArg* coef ;
-  while((coef = (RooAbsArg*)coefIter->Next())) {
+  while((coef = (RooAbsArg*)coefIter.next())) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
-      assert(0) ;
+      R__ASSERT(0) ;
     }
     _coefList.add(*coef) ;
   }
-  delete coefIter ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,9 +90,7 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
   _x("x", "Dependent", this, x),
   _coefList("coefList","List of coefficients",this),
   _lowestOrder(1)
-{
-  _coefIter = _coefList.createIterator() ;
-}                                                                                                                                 
+{ }                                                                                                                                 
 
 
 
@@ -119,9 +102,7 @@ RooPolyVar::RooPolyVar(const RooPolyVar& other, const char* name) :
   _x("x", this, other._x), 
   _coefList("coefList",this,other._coefList),
   _lowestOrder(other._lowestOrder) 
-{
-  _coefIter = _coefList.createIterator() ;
-}
+{ }
 
 
 
@@ -130,9 +111,7 @@ RooPolyVar::RooPolyVar(const RooPolyVar& other, const char* name) :
 /// Destructor
 
 RooPolyVar::~RooPolyVar() 
-{
-  delete _coefIter ;
-}
+{ }
 
 
 
@@ -142,17 +121,21 @@ RooPolyVar::~RooPolyVar()
 
 Double_t RooPolyVar::evaluate() const 
 {
-  Double_t sum(0) ;
-  Int_t order(_lowestOrder) ;
-  _coefIter->Reset() ;
-
-  RooAbsReal* coef ;
-  const RooArgSet* nset = _coefList.nset() ;
-  while((coef=(RooAbsReal*)_coefIter->Next())) {
-    sum += coef->getVal(nset)*TMath::Power(_x,order++) ;
+  const unsigned sz = _coefList.getSize();
+  const int lowestOrder = _lowestOrder;
+  if (!sz) return lowestOrder ? 1. : 0.;
+  _wksp.clear();
+  _wksp.reserve(sz);
+  {
+    const RooArgSet* nset = _coefList.nset();
+    RooFIter it = _coefList.fwdIterator();
+    RooAbsReal* c;
+    while ((c = (RooAbsReal*) it.next())) _wksp.push_back(c->getVal(nset));
   }
-
-  return sum;
+  const Double_t x = _x;
+  Double_t retVal = _wksp[sz - 1];
+  for (unsigned i = sz - 1; i--; ) retVal = _wksp[i] + x * retVal;
+  return retVal * std::pow(x, lowestOrder);
 }
 
 
@@ -175,19 +158,24 @@ Double_t RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
 
-  Double_t sum(0) ;
-
-  const RooArgSet* nset = _coefList.nset() ;
-  Int_t order(_lowestOrder) ;
-  _coefIter->Reset() ;
-  RooAbsReal* coef ;
-
-  // Primitive = sum(k) coef_k * 1/(k+1) x^(k+1)
-  while((coef=(RooAbsReal*)_coefIter->Next())) {
-    sum += coef->getVal(nset)*(TMath::Power(_x.max(rangeName),order+1)-TMath::Power(_x.min(rangeName),order+1))/(order+1) ; 
-    order++ ;
+  const Double_t xmin = _x.min(rangeName), xmax = _x.max(rangeName);
+  const int lowestOrder = _lowestOrder;
+  const unsigned sz = _coefList.getSize();
+  if (!sz) return xmax - xmin;
+  _wksp.clear();
+  _wksp.reserve(sz);
+  {
+    const RooArgSet* nset = _coefList.nset();
+    RooFIter it = _coefList.fwdIterator();
+    unsigned i = 1 + lowestOrder;
+    RooAbsReal* c;
+    while ((c = (RooAbsReal*) it.next())) {
+      _wksp.push_back(c->getVal(nset) / Double_t(i));
+      ++i;
+    }
   }
-
-  return sum;  
-  
+  Double_t min = _wksp[sz - 1], max = _wksp[sz - 1];
+  for (unsigned i = sz - 1; i--; )
+    min = _wksp[i] + xmin * min, max = _wksp[i] + xmax * max;
+  return max * std::pow(xmax, 1 + lowestOrder) - min * std::pow(xmin, 1 + lowestOrder);
 }

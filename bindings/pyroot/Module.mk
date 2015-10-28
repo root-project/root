@@ -77,7 +77,7 @@ $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTPY) $(ROOTPYC) $(ROOTPYO) \
 		  "$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
 		  "$(PYROOTO) $(PYROOTDO)" \
 		  "$(ROOTULIBS) $(RPATH) $(ROOTLIBS) $(PYROOTLIBEXTRA) \
-		   $(PYTHONLIBDIR) $(PYTHONLIB)" "$(PYTHONLIBFLAGS)"
+		   $(PYTHONLIBDIR) $(PYTHONLIB) $(PYTHONLIBFLAGS)"
 ifeq ($(ARCH),win32)
 	link -dll -nologo -IGNORE:4001 -machine:ix86 -export:initlibPyROOT \
 	lib/libPyROOT.lib -nodefaultlib kernel32.lib msvcrt.lib \

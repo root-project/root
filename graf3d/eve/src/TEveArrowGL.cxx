@@ -18,6 +18,7 @@
 #include "TGLQuadric.h"
 
 /** \class TEveArrowGL
+\ingroup TEve
 OpenGL renderer class for TEveArrow.
 */
 

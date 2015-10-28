@@ -79,6 +79,7 @@ extern "C" {
    void TCling__UpdateListsOnCommitted(const cling::Transaction&,
                                        cling::Interpreter*);
    void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
+   void TCling__TransactionRollback(const cling::Transaction&);
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    const clang::Decl* TCling__GetObjectDecl(TObject *obj);
    void TCling__LibraryLoaded(const void* dyLibHandle,
@@ -105,6 +106,7 @@ private: // Data Members
    TString         fRootmapLoadPath;  // Dynamic load path for rootmap files.
    TEnv*           fMapfile;          // Association of classes to libraries.
    std::map<size_t,std::vector<const char*>> fClassesHeadersMap; // Map of classes hashes and headers associated
+   std::map<const cling::Transaction*,size_t> fTransactionHeadersMap; // Map which transaction contains which autoparse.
    std::set<size_t> fLookedUpClasses; // Set of classes for which headers were looked up already
    std::set<size_t> fPayloads; // Set of payloads
    std::set<const char*> fParsedPayloadsAddresses; // Set of payloads which were parsed
@@ -139,6 +141,8 @@ private: // Data Members
 
    Bool_t fHeaderParsingOnDemand;
    Bool_t fIsAutoParsingSuspended;
+
+   UInt_t AutoParseImplRecurse(const char *cls, bool topLevel);
 
 protected:
    Bool_t SetSuspendAutoParsing(Bool_t value) {
@@ -500,6 +504,7 @@ public: // Public Interface
    void HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*>& modifiedClasses);
    void UpdateListsOnCommitted(const cling::Transaction &T);
    void UpdateListsOnUnloaded(const cling::Transaction &T);
+   void TransactionRollback(const cling::Transaction &T);
    void LibraryLoaded(const void* dyLibHandle, const char* canonicalName);
    void LibraryUnloaded(const void* dyLibHandle, const char* canonicalName);
 

@@ -38,10 +38,16 @@ class TH1D;
 struct _object;
 typedef _object PyObject;
 
+// needed by NPY_API_VERSION
+#include "numpy/numpyconfig.h"
+
+#if (NPY_API_VERSION >= 0x00000007 )
 struct tagPyArrayObject;
 typedef tagPyArrayObject PyArrayObject;
-//class PyObject;
-//class PyArrayObject;
+#else
+struct PyArrayObject;
+#endif
+
 
 namespace TMVA {
 

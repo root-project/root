@@ -15,6 +15,7 @@
 #include "TGLSelectRecord.h"
 
 /** \class TEveSecondarySelectable
+\ingroup TEve
 Semi-abstract interface for classes supporting secondary-selection.
 
 Element class that inherits from this, should also implement the

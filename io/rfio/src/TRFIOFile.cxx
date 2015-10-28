@@ -9,40 +9,34 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// TRFIOFile                                                             //
-//                                                                       //
-// A TRFIOFile is like a normal TFile except that it reads and writes    //
-// its data via a rfiod server (for more on the rfiod daemon see         //
-// http://wwwinfo.cern.ch/pdp/serv/shift.html). TRFIOFile file names     //
-// are in standard URL format with protocol "rfio". The following are    //
-// valid TRFIOFile URL's:                                                //
-//                                                                       //
-//    rfio:/afs/cern.ch/user/r/rdm/galice.root                           //
-//         where galice.root is a symlink of the type /shift/.../...     //
-//    rfio:na49db1:/data1/raw.root                                       //
-//    rfio:/castor/cern.ch/user/r/rdm/test.root                          //
-//                                                                       //
-// If Castor 2.1 is used the file names can be given also in the         //
-// following ways:                                                       //
-//                                                                       //
-//  rfio://host:port/?path=FILEPATH                                      //
-//  rfio://host/?path=FILEPATH                                           //
-//  rfio:///castor?path=FILEPATH                                         //
-//  rfio://stager_host:stager_port/?path=/castor/cern.ch/user/r/         //
-//    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
-//  rfio://stager_host/?path=/castor/cern.ch/user/r/                     //
-//    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
-//  rfio:///castor?path=/castor/cern.ch/user/r/                          //
-//    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
-//                                                                       //
-// path is mandatory as parameter but all the other ones are optional.   //
-//                                                                       //
-// For the ultimate description of supported urls see:                   //
-//    https://twiki.cern.ch/twiki/bin/view/FIOgroup/RfioRootTurl         //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
+/**
+\class TRFIOFile
+\ingroup IO
+A ROOT file that reads/writes via a rfiod server.
+
+A TRFIOFile is like a normal TFile except that it reads and writes
+its data via a rfiod server.
+TRFIOFile file names are in standard URL format with protocol "rfio". The following are
+valid TRFIOFile URL's:
+~~~{.bash}
+rfio:/afs/cern.ch/user/r/rdm/galice.root                       
+# where galice.root is a symlink of the type /shift/.../... 
+rfio:na49db1:/data1/raw.root                                   
+rfio:/castor/cern.ch/user/r/rdm/test.root                      
+~~~                      
+If Castor 2.1 is used the file names can be given also in the     
+following ways:                                                   
+~~~{.bash}                                                            
+rfio://host:port/?path=FILEPATH                                  
+rfio://host/?path=FILEPATH                                       
+rfio:///castor?path=FILEPATH                                     
+rfio://stager_host:stager_port/?path=/castor/cern.ch/user/r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION  
+rfio://stager_host/?path=/castor/cern.ch/user/r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION  
+rfio:///castor?path=/castor/cern.ch/user/r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION  
+~~~
+path is mandatory as parameter but all the other ones are optional.
+For the ultimate description of supported urls see: https://twiki.cern.ch/twiki/bin/view/FIOgroup/RfioRootTurl     
+*/
 
 #include "TRFIOFile.h"
 #include "TROOT.h"
@@ -75,7 +69,9 @@ ClassImp(TRFIOFile)
 ClassImp(TRFIOSystem)
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a RFIO file object. A RFIO file is the same as a TFile
+/// Create a RFIO file object.
+///
+/// A RFIO file is the same as a TFile
 /// except that it is being accessed via a rfiod server. The url
 /// argument must be of the form: rfio:/path/file.root (where file.root
 /// is a symlink of type /shift/aaa/bbb/ccc) or rfio:server:/path/file.root.

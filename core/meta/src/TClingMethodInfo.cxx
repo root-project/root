@@ -9,19 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClingMethodInfo                                                     //
-//                                                                      //
-// Emulation of the CINT MethodInfo class.                              //
-//                                                                      //
-// The CINT C++ interpreter provides an interface to metadata about     //
-// a function through the MethodInfo class.  This class provides the    //
-// same functionality, using an interface as close as possible to       //
-// MethodInfo but the typedef metadata comes from the Clang C++         //
-// compiler, not CINT.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TClingMethodInfo
+Emulation of the CINT MethodInfo class.
+
+The CINT C++ interpreter provides an interface to metadata about
+a function through the MethodInfo class.  This class provides the
+same functionality, using an interface as close as possible to
+MethodInfo but the typedef metadata comes from the Clang C++
+compiler, not CINT.
+*/
 
 #include "TClingMethodInfo.h"
 
@@ -572,7 +568,7 @@ const char *TClingMethodInfo::Title()
 
    // Try to get the comment either from the annotation or the header file if present
 
-   // Iterate over the redeclarations, we can have muliple definitions in the
+   // Iterate over the redeclarations, we can have multiple definitions in the
    // redecl chain (came from merging of pcms).
    const FunctionDecl *FD = GetMethodDecl();
 

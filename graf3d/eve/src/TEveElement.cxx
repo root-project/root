@@ -35,6 +35,7 @@
 #include <algorithm>
 
 /** \class TEveElement::TEveListTreeInfo
+\ingroup TEve
 Structure holding information about TGListTree and TGListTreeItem
 that represents given TEveElement. This needed because each element
 can appear in several list-trees as well as several times in the
@@ -44,6 +45,7 @@ same list-tree.
 ClassImp(TEveElement::TEveListTreeInfo);
 
 /** \class TEveElement
+\ingroup TEve
 Base class for TEveUtil visualization elements, providing hierarchy
 management, rendering control and list-tree item management.
 */
@@ -2068,6 +2070,7 @@ const char* TEveElement::ToString(Bool_t b)
 }
 
 /** \class TEveElementObjectPtr
+\ingroup TEve
 TEveElement with external TObject as a holder of visualization data.
 */
 
@@ -2161,6 +2164,7 @@ TEveElementObjectPtr::~TEveElementObjectPtr()
 }
 
 /** \class  TEveElementList
+\ingroup TEve
 A list of TEveElements.
 
 Class of acceptable children can be limited by setting the
@@ -2233,6 +2237,7 @@ TClass* TEveElementList::ProjectedClass(const TEveProjection*) const
 }
 
 /** \class TEveElementListProjected
+\ingroup TEve
 A projected element list -- required for proper propagation
 of render state to projected views.
 */

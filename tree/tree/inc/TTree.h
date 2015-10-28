@@ -213,6 +213,9 @@ protected:
    };
 
 public:
+   // Used as the max value for any TTree range operation.
+   static constexpr Long64_t kMaxEntries = TVirtualTreePlayer::kMaxEntries;
+
    // SetBranchAddress return values
    enum ESetBranchAddressStatus {
       kMissingBranch = -5,
@@ -345,20 +348,20 @@ public:
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
    virtual void            CopyAddresses(TTree*,Bool_t undo = kFALSE);
    virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1, Option_t *option = "");
-   virtual TTree          *CopyTree(const char* selection, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
+   virtual TTree          *CopyTree(const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual TBasket        *CreateBasket(TBranch*);
    virtual void            DirectoryAutoAdd(TDirectory *);
    Int_t                   Debug() const { return fDebug; }
    virtual void            Delete(Option_t* option = ""); // *MENU*
-   virtual void            Draw(Option_t* opt) { Draw(opt, "", "", 1000000000, 0); }
-   virtual Long64_t        Draw(const char* varexp, const TCut& selection, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
-   virtual Long64_t        Draw(const char* varexp, const char* selection, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
+   virtual void            Draw(Option_t* opt) { Draw(opt, "", "", kMaxEntries, 0); }
+   virtual Long64_t        Draw(const char* varexp, const TCut& selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
+   virtual Long64_t        Draw(const char* varexp, const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
    virtual void            DropBaskets();
    virtual void            DropBuffers(Int_t nbytes);
    virtual Int_t           Fill();
    virtual TBranch        *FindBranch(const char* name);
    virtual TLeaf          *FindLeaf(const char* name);
-   virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
+   virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
    virtual Int_t           FlushBaskets() const;
    virtual const char     *GetAlias(const char* aliasName) const;
    virtual Long64_t        GetAutoFlush() const {return fAutoFlush;}
@@ -469,19 +472,19 @@ public:
    static  TTree          *MergeTrees(TList* list, Option_t* option = "");
    virtual Bool_t          Notify();
    virtual void            OptimizeBaskets(ULong64_t maxMemory=10000000, Float_t minComp=1.1, Option_t *option="");
-   TPrincipal             *Principal(const char* varexp = "", const char* selection = "", Option_t* option = "np", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
+   TPrincipal             *Principal(const char* varexp = "", const char* selection = "", Option_t* option = "np", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual void            Print(Option_t* option = "") const; // *MENU*
    virtual void            PrintCacheStats(Option_t* option = "") const;
-   virtual Long64_t        Process(const char* filename, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
+   virtual Long64_t        Process(const char* filename, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
 #if defined(__CINT__)
 #if defined(R__MANUAL_DICT)
-   virtual Long64_t        Process(void* selector, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
+   virtual Long64_t        Process(void* selector, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
 #endif
 #else
-   virtual Long64_t        Process(TSelector* selector, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
+   virtual Long64_t        Process(TSelector* selector, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
 #endif
-   virtual Long64_t        Project(const char* hname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
-   virtual TSQLResult     *Query(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
+   virtual Long64_t        Project(const char* hname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
+   virtual TSQLResult     *Query(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual Long64_t        ReadFile(const char* filename, const char* branchDescriptor = "", char delimiter = ' ');
    virtual Long64_t        ReadStream(std::istream& inputStream, const char* branchDescriptor = "", char delimiter = ' ');
    virtual void            Refresh();
@@ -491,7 +494,7 @@ public:
    virtual void            ResetAfterMerge(TFileMergeInfo *);
    virtual void            ResetBranchAddress(TBranch *);
    virtual void            ResetBranchAddresses();
-   virtual Long64_t        Scan(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
+   virtual Long64_t        Scan(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
    virtual Bool_t          SetAlias(const char* aliasName, const char* aliasFormula);
    virtual void            SetAutoSave(Long64_t autos = -300000000);
    virtual void            SetAutoFlush(Long64_t autof = -30000000);
@@ -533,7 +536,7 @@ public:
    virtual void            SetEventList(TEventList* list);
    virtual void            SetEntryList(TEntryList* list, Option_t *opt="");
    virtual void            SetMakeClass(Int_t make);
-   virtual void            SetMaxEntryLoop(Long64_t maxev = 1000000000) { fMaxEntryLoop = maxev; } // *MENU*
+   virtual void            SetMaxEntryLoop(Long64_t maxev = kMaxEntries) { fMaxEntryLoop = maxev; } // *MENU*
    static  void            SetMaxTreeSize(Long64_t maxsize = 1900000000);
    virtual void            SetMaxVirtualSize(Long64_t size = 0) { fMaxVirtualSize = size; } // *MENU*
    virtual void            SetName(const char* name); // *MENU*
@@ -549,7 +552,7 @@ public:
    virtual void            Show(Long64_t entry = -1, Int_t lenmax = 20);
    virtual void            StartViewer(); // *MENU*
    virtual Int_t           StopCacheLearningPhase();
-   virtual Int_t           UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
+   virtual Int_t           UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    void                    UseCurrentStyle();
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;

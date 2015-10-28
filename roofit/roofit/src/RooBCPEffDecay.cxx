@@ -14,14 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// P.d.f describing decay time distribution of B meson including
-// effects of standard model CP violation. This function can be analytically 
-// convolved with any RooResolutionModel implementation
-// END_HTML
-//
+/** \class RooBCPEffDecay
+    \ingroup Roofitpdf
+
+PDF describing decay time distribution of B meson including effects of standard model CP violation.
+This function can be analytically convolved with any RooResolutionModel implementation.
+*/
+
 
 #include "RooFit.h"
 
@@ -40,7 +39,7 @@ ClassImp(RooBCPEffDecay)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor
+/// Constructor.
 
 RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title, 
 			       RooRealVar& t, RooAbsCategory& tag,
@@ -85,7 +84,7 @@ RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
+/// Copy constructor.
 
 RooBCPEffDecay::RooBCPEffDecay(const RooBCPEffDecay& other, const char* name) : 
   RooAbsAnaConvPdf(other,name), 
@@ -110,7 +109,7 @@ RooBCPEffDecay::RooBCPEffDecay(const RooBCPEffDecay& other, const char* name) :
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
+/// Destructor.
 
 RooBCPEffDecay::~RooBCPEffDecay()
 {
@@ -119,8 +118,10 @@ RooBCPEffDecay::~RooBCPEffDecay()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// B0    : _tag = +1 
-/// B0bar : _tag = -1 
+/// B0    : _tag = +1
+///
+/// B0bar : _tag = -1
+/// \param[in] basisIndex
 
 Double_t RooBCPEffDecay::coefficient(Int_t basisIndex) const 
 {
@@ -216,7 +217,8 @@ void RooBCPEffDecay::initGenerator(Int_t code)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generate mix-state dependent
+/// Generates mix-state dependent.
+/// \param[in] code
 
 void RooBCPEffDecay::generateEvent(Int_t code)
 {

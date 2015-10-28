@@ -9,20 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClassRef is used to implement a permanent reference to a TClass     //
-// object.  In particular this reference will change if and when the    //
-// TClass object is regenerated.  This regeneration usually happens     //
-// when a library containing the described class is loaded after a      //
-// file containing an instance of this class has been opened.           //
-//                                                                      //
-// The references kept track of using an intrusive double linked list.  //
-// The intrusive list is maintained by TClass::AddRef and               //
-// TClass::RemoveRef.  The 'start' of the list is held in               //
-// TClass::fRefStart.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TClassRef
+TClassRef is used to implement a permanent reference to a TClass
+object.  In particular this reference will change if and when the
+TClass object is regenerated.  This regeneration usually happens
+when a library containing the described class is loaded after a
+file containing an instance of this class has been opened.
+
+The references kept track of using an intrusive double linked list.
+The intrusive list is maintained by TClass::AddRef and
+TClass::RemoveRef.  The 'start' of the list is held in
+TClass::fRefStart.
+*/
 
 #include "TClassRef.h"
 

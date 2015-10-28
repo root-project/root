@@ -134,8 +134,6 @@ void CocoaPrivate::DeleteDrawable(Drawable_t drawableID)
    drawable_iterator drawableIter = fDrawables.find(drawableID);
    assert(drawableIter != fDrawables.end() && "DeleteDrawable, non existing drawableID");
 
-   //Probably, I'll need some additional cleanup here later. Now just delete NSObject and
-   //reuse its id.
    NSObject<X11Drawable> * const base = drawableIter->second.Get();
    if ([base isKindOfClass : [QuartzView class]]) {
       [(QuartzView *)base removeFromSuperview];
@@ -146,22 +144,15 @@ void CocoaPrivate::DeleteDrawable(Drawable_t drawableID)
       [qw.fContentView removeFromSuperview];
       qw.contentView = nil;
       qw.fIsDeleted = YES;
-      //Remove transient windows?
-      /*
-      const Util::NSScopeGuard<NSArray> children([[qw childWindows] copy]);
-      for (QuartzWindow *child in children.Get()) {
-         child.fMainWindow = nil;
-         [qw removeChildWindow : child];
-      }
-      */
 
       if (qw.fMainWindow) {
          [qw.fMainWindow removeChildWindow : qw];
          qw.fMainWindow = nil;
       }
+
+      [qw orderOut:nil];
    }
 
-//   fFreeDrawableIDs.push_back(drawableID);
    fDrawables.erase(drawableIter);//StrongReference should do work here.
 }
 

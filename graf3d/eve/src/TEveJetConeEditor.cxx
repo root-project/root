@@ -23,6 +23,7 @@
 #include "TGDoubleSlider.h"
 
 /** \class TEveJetConeEditor
+\ingroup TEve
 GUI editor for TEveJetCone.
 */
 

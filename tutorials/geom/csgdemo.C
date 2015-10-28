@@ -3,6 +3,7 @@
 
 Bool_t raytracing = kTRUE;
 
+#include "TGeoManager.h"
 //______________________________________________________________________________
 void csgdemo ()
 {

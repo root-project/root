@@ -759,7 +759,7 @@ TObjString *TFileCollection::ExportInfo(const char *name, Int_t popt)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the subset of files served by 'server'. The syntax for 'server' is
-/// the standard URI one, i.e. [<scheme>://]<host>[:port]
+/// the standard URI one, i.e. `[<scheme>://]<host>[:port]`
 
 TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
 {

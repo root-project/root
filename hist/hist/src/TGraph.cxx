@@ -45,7 +45,6 @@ extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, I
 
 ClassImp(TGraph)
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class TGraph
@@ -75,7 +74,6 @@ Begin_Macro(source)
 End_Macro
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph default constructor.
 
@@ -84,7 +82,6 @@ TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(1, 1001), TAttMarker()
    fNpoints = -1;  //will be reset to 0 in CtorAllocate
    if (!CtorAllocate()) return;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with only the number of points set
@@ -97,7 +94,6 @@ TGraph::TGraph(Int_t n)
    if (!CtorAllocate()) return;
    FillZero(0, fNpoints);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph normal constructor with ints.
@@ -117,7 +113,6 @@ TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph normal constructor with floats.
 
@@ -136,7 +131,6 @@ TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph normal constructor with doubles.
 
@@ -153,7 +147,6 @@ TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
    memcpy(fX, x, n);
    memcpy(fY, y, n);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor for this graph
@@ -180,7 +173,6 @@ TGraph::TGraph(const TGraph &gr)
    memcpy(fX, gr.fX, n);
    memcpy(fY, gr.fY, n);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Equal operator for this graph
@@ -240,7 +232,6 @@ TGraph& TGraph::operator=(const TGraph &gr)
    return *this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph constructor with two vectors of floats in input
 /// A graph is build with the X coordinates taken from vx and Y coord from vy
@@ -260,7 +251,6 @@ TGraph::TGraph(const TVectorF &vx, const TVectorF &vy)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph constructor with two vectors of doubles in input
 /// A graph is build with the X coordinates taken from vx and Y coord from vy
@@ -279,7 +269,6 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
       fY[i]  = vy(i + ivylow);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph constructor importing its parameters from the TH1 object passed as argument
@@ -314,7 +303,6 @@ TGraph::TGraph(const TH1 *h)
    SetName(gname.c_str());
    SetTitle(h->GetTitle());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph constructor importing its parameters from the TF1 object passed as argument
@@ -372,7 +360,6 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
    SetTitle(f->GetTitle());
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph constructor reading input from filename.
 /// filename is assumed to contain at least two columns of numbers.
@@ -385,7 +372,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
 /// e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';')
 /// used once (e.g. "1;1") or in a combined way (" 1;,;;  1").
-/// Note in that case, the instanciation is about 2 times slower.
+/// Note in that case, the instantiation is about 2 times slower.
 
 TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    : TNamed("Graph", filename), TAttLine(), TAttFill(1, 1001), TAttMarker()
@@ -505,7 +492,6 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    infile.close();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph default destructor.
 
@@ -530,7 +516,6 @@ TGraph::~TGraph()
    delete fHistogram;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Allocate arrays.
 
@@ -551,7 +536,6 @@ Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
    return newarrays;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Apply function f to all the data points
 /// f may be a 1-D function TF1 or 2-d function TF2
@@ -570,7 +554,6 @@ void TGraph::Apply(TF1 *f)
    if (gPad) gPad->Modified();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse
 
@@ -584,7 +567,6 @@ void TGraph::Browse(TBrowser *b)
    Draw(opt.Data());
    gPad->Update();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the chisquare of this graph with respect to f1.
@@ -614,44 +596,6 @@ Double_t TGraph::Chisquare(TF1 *func, Option_t * option) const
    return ROOT::Fit::Chisquare(*this, *func,useRange);
 }
 
-
-//    Double_t cu, eu, exh, exl, ey, eux, fu, fsum;
-//    Double_t x[1];
-//    Double_t chi2 = 0;
-//    TF1 *func = (TF1*)f1; //EvalPar is not const !
-//    for (Int_t i = 0; i < fNpoints; i++) {
-//       func->InitArgs(x, 0); //must be inside the loop because of TF1::Derivative calling InitArgs
-//       x[0] = fX[i];
-//       if (!func->IsInside(x)) continue;
-//       cu   = fY[i];
-//       TF1::RejectPoint(kFALSE);
-//       fu   = func->EvalPar(x);
-//       if (TF1::RejectedPoint()) continue;
-//       fsum = (cu - fu);
-//       //npfits++;
-//       exh = GetErrorXhigh(i);
-//       exl = GetErrorXlow(i);
-//       if (fsum < 0)
-//          ey = GetErrorYhigh(i);
-//       else
-//          ey = GetErrorYlow(i);
-//       if (exl < 0) exl = 0;
-//       if (exh < 0) exh = 0;
-//       if (ey < 0)  ey  = 0;
-//       if (exh > 0 || exl > 0) {
-//          //"Effective Variance" method introduced by Anna Kreshuk
-//          //a copy of the algorithm in GraphFitChisquare from TFitter
-//          eux = 0.5 * (exl + exh) * func->Derivative(x[0]);
-//       } else
-//          eux = 0.;
-//       eu = ey * ey + eux * eux;
-//       if (eu <= 0) eu = 1;
-//       chi2 += fsum * fsum / eu;
-//    }
-//    return chi2;
-// }
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if point number "left"'s argument (angle with respect to positive
 /// x-axis) is bigger than that of point number "right". Can be used by Sort.
@@ -664,7 +608,6 @@ Bool_t TGraph::CompareArg(const TGraph* gr, Int_t left, Int_t right)
    return (TMath::ATan2(yl, xl) > TMath::ATan2(yr, xr));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if fX[left] > fX[right]. Can be used by Sort.
 
@@ -673,7 +616,6 @@ Bool_t TGraph::CompareX(const TGraph* gr, Int_t left, Int_t right)
    return gr->fX[left] > gr->fX[right];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if fY[left] > fY[right]. Can be used by Sort.
 
@@ -681,7 +623,6 @@ Bool_t TGraph::CompareY(const TGraph* gr, Int_t left, Int_t right)
 {
    return gr->fY[left] > gr->fY[right];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if point number "left"'s distance to origin is bigger than
@@ -692,7 +633,6 @@ Bool_t TGraph::CompareRadius(const TGraph* gr, Int_t left, Int_t right)
    return gr->fX[left] * gr->fX[left] + gr->fY[left] * gr->fY[left]
           > gr->fX[right] * gr->fX[right] + gr->fY[right] * gr->fY[right];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the x/y range of the points in this graph
@@ -705,14 +645,22 @@ void TGraph::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double
    }
    xmin = xmax = fX[0];
    ymin = ymax = fY[0];
+
+   Double_t xminl = 0; // Positive minimum. Used in case of log scale along X axis.
+   Double_t yminl = 0; // Positive minimum. Used in case of log scale along Y axis.
+
    for (Int_t i = 1; i < fNpoints; i++) {
       if (fX[i] < xmin) xmin = fX[i];
       if (fX[i] > xmax) xmax = fX[i];
       if (fY[i] < ymin) ymin = fY[i];
       if (fY[i] > ymax) ymax = fY[i];
+      if (ymin>0 && (yminl==0 || ymin<yminl)) yminl = ymin;
+      if (xmin>0 && (xminl==0 || xmin<xminl)) xminl = xmin;
    }
-}
 
+   if (gPad && gPad->GetLogy() && yminl>0) ymin = yminl;
+   if (gPad && gPad->GetLogx() && xminl>0) xmin = xminl;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy points from fX and fY to arrays[0] and arrays[1]
@@ -732,7 +680,6 @@ void TGraph::CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend,
       delete[] newarrays;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy points from fX and fY to arrays[0] and arrays[1]
@@ -757,7 +704,6 @@ Bool_t TGraph::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
    }
    return kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// In constructors set fNpoints than call this method.
@@ -785,7 +731,6 @@ Bool_t TGraph::CtorAllocate()
    }
    return kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this graph with its current attributes.
@@ -827,7 +772,6 @@ void TGraph::Draw(Option_t *option)
    AppendPad(opt);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a graph.
 ///
@@ -840,7 +784,6 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
    if (painter) return painter->DistancetoPrimitiveHelper(this, px, py);
    else return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this graph with new attributes.
@@ -855,7 +798,6 @@ void TGraph::DrawGraph(Int_t n, const Int_t *x, const Int_t *y, Option_t *option
    newgraph->AppendPad(option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this graph with new attributes.
 
@@ -868,7 +810,6 @@ void TGraph::DrawGraph(Int_t n, const Float_t *x, const Float_t *y, Option_t *op
    newgraph->SetBit(kCanDelete);
    newgraph->AppendPad(option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this graph with new attributes.
@@ -887,7 +828,6 @@ void TGraph::DrawGraph(Int_t n, const Double_t *x, const Double_t *y, Option_t *
    newgraph->AppendPad(option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Display a panel with all graph drawing options.
 
@@ -896,7 +836,6 @@ void TGraph::DrawPanel()
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
    if (painter) painter->DrawPanelHelper(this);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interpolate points in this graph at x using a TSpline
@@ -987,7 +926,6 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
@@ -1005,7 +943,6 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (painter) painter->ExecuteEventHelper(this, event, px, py);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// If array sizes <= newsize, expand storage to 2*newsize.
 
@@ -1014,7 +951,6 @@ void TGraph::Expand(Int_t newsize)
    Double_t **ps = ExpandAndCopy(newsize, fNpoints);
    CopyAndRelease(ps, 0, 0, 0);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If graph capacity is less than newsize points then make array sizes
@@ -1030,10 +966,9 @@ void TGraph::Expand(Int_t newsize, Int_t step)
    CopyAndRelease(ps, 0, fNpoints, 0);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// if size > fMaxSize allocate new arrays of 2*size points
-///  and copy oend first points.
+/// if size > fMaxSize allocate new arrays of 2*size points and copy iend first
+/// points.
 /// Return pointer to new arrays.
 
 Double_t **TGraph::ExpandAndCopy(Int_t size, Int_t iend)
@@ -1046,7 +981,6 @@ Double_t **TGraph::ExpandAndCopy(Int_t size, Int_t iend)
    return newarrays;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set zero values for point arrays in the range [begin, end)
 /// Should be redefined in descendant classes
@@ -1057,7 +991,6 @@ void TGraph::FillZero(Int_t begin, Int_t end, Bool_t)
    memset(fY + begin, 0, (end - begin)*sizeof(Double_t));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Search object named name in the list of functions
 
@@ -1066,7 +999,6 @@ TObject *TGraph::FindObject(const char *name) const
    if (fFunctions) return fFunctions->FindObject(name);
    return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Search object obj in the list of functions
@@ -1077,7 +1009,6 @@ TObject *TGraph::FindObject(const TObject *obj) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fit this graph with function with name fname.
 ///
@@ -1086,6 +1017,7 @@ TObject *TGraph::FindObject(const TObject *obj) const
 /// fname is the name of an already predefined function created by TF1 or TF2
 /// Predefined functions such as gaus, expo and poln are automatically
 /// created by ROOT.
+///
 /// fname can also be a formula, accepted by the linear fitter (linear parts divided
 /// by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
 
@@ -1105,7 +1037,6 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
    }
    return Fit(f1, option, "", xmin, xmax);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fit this graph with function f1.
@@ -1151,7 +1082,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 ///
 /// Note that this function is called when calling TGraphErrors::Fit
 /// or TGraphAsymmErrors::Fit ot TGraphBentErrors::Fit
-/// See the discussion below on error calulation.
+/// See the discussion below on error calculation.
 ///
 /// ## Linear fitting:
 ///   When the fitting function is linear (contains the "++" sign) or the fitting
@@ -1239,7 +1170,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 /// 3. The standard chi2 (least square) method without error in the coordinates (x) can
 ///    be forced by using option "EX0"
 /// 4. The linear fitter doesn't take into account the errors in x. When fitting a
-///    TGraphErrors with a linear functions the errors in x willnot be considere.
+///    TGraphErrors with a linear functions the errors in x will not be considered.
 ///    If errors in x are important, go through minuit (use option "F" for polynomial fitting).
 /// 5. When fitting a TGraph (i.e. no errors associated with each point),
 ///    a correction is applied to the errors on the parameters with the following
@@ -1278,7 +1209,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 ///
 /// ## Access to the fit status
 ///  The status of the fit can be obtained converting the TFitResultPtr to an integer
-///  indipendently if the fit option "S" is used or not:
+///  independently if the fit option "S" is used or not:
 ///
 ///       TFitResultPtr r = h->Fit(myFunc,opt);
 ///       Int_t fitStatus = r;
@@ -1321,7 +1252,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 ///
 ///       v = 1;  print name/values of parameters
 ///       e = 1;  print errors (if e=1, v must be 1)
-///       c = 1;  print Chisquare/Number of degress of freedom
+///       c = 1;  print Chisquare/Number of degrees of freedom
 ///       p = 1;  print Probability
 ///
 ///   For example: gStyle->SetOptFit(1011);
@@ -1343,7 +1274,6 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    ROOT::Math::MinimizerOptions minOption;
    return ROOT::Fit::FitObject(this, f1 , fitOption , minOption, goption, range);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Display a GUI panel with all graph fit options.
@@ -1369,7 +1299,6 @@ void TGraph::FitPanel()
       Error("FitPanel", "Unable to find the FitPanel plug-in");
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return graph correlation factor
 
@@ -1381,7 +1310,6 @@ Double_t TGraph::GetCorrelationFactor() const
    if (rms2 == 0) return 0;
    return GetCovariance() / rms1 / rms2;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return covariance of vectors x,y
@@ -1399,7 +1327,6 @@ Double_t TGraph::GetCovariance() const
    return sumxy / sum - sumx / sum * sumy / sum;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return mean value of X (axis=1)  or Y (axis=2)
 
@@ -1414,7 +1341,6 @@ Double_t TGraph::GetMean(Int_t axis) const
    }
    return sumx / fNpoints;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return RMS of X (axis=1)  or Y (axis=2)
@@ -1438,7 +1364,6 @@ Double_t TGraph::GetRMS(Int_t axis) const
    return TMath::Sqrt(rms2);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
@@ -1448,7 +1373,6 @@ Double_t TGraph::GetErrorX(Int_t) const
    return -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
@@ -1457,7 +1381,6 @@ Double_t TGraph::GetErrorY(Int_t) const
 {
    return -1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by GraphFitChisquare.
@@ -1469,7 +1392,6 @@ Double_t TGraph::GetErrorXhigh(Int_t) const
    return -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
@@ -1479,7 +1401,6 @@ Double_t TGraph::GetErrorXlow(Int_t) const
 {
    return -1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by GraphFitChisquare.
@@ -1491,7 +1412,6 @@ Double_t TGraph::GetErrorYhigh(Int_t) const
    return -1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
@@ -1501,7 +1421,6 @@ Double_t TGraph::GetErrorYlow(Int_t) const
 {
    return -1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to function with name.
@@ -1515,12 +1434,11 @@ TF1 *TGraph::GetFunction(const char *name) const
    return (TF1*)fFunctions->FindObject(name);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns a pointer to the histogram used to draw the axis
 /// Takes into account the two following cases.
-///    1- option 'A' was specified in TGraph::Draw. Return fHistogram
-///    2- user had called TPad::DrawFrame. return pointer to hframe histogram
+///  1. option 'A' was specified in TGraph::Draw. Return fHistogram
+///  2. user had called TPad::DrawFrame. return pointer to hframe histogram
 
 TH1F *TGraph::GetHistogram() const
 {
@@ -1555,6 +1473,7 @@ TH1F *TGraph::GetHistogram() const
    uxmax    = rwxmax + dx;
    minimum  = rwymin - dy;
    maximum  = rwymax + dy;
+
    if (fMinimum != -1111) minimum = fMinimum;
    if (fMaximum != -1111) maximum = fMaximum;
 
@@ -1562,15 +1481,15 @@ TH1F *TGraph::GetHistogram() const
    // to permit zooming on the full range
    if (uxmin < 0 && rwxmin >= 0) {
       if (gPad && gPad->GetLogx()) uxmin = 0.9 * rwxmin;
-      else                 uxmin = 0;
+      else                         uxmin = 0;
    }
    if (uxmax > 0 && rwxmax <= 0) {
       if (gPad && gPad->GetLogx()) uxmax = 1.1 * rwxmax;
-      else                 uxmax = 0;
+      else                         uxmax = 0;
    }
    if (minimum < 0 && rwymin >= 0) {
       if (gPad && gPad->GetLogy()) minimum = 0.9 * rwymin;
-      else                minimum = 0;
+      else                         minimum = 0;
    }
    if (minimum <= 0 && gPad && gPad->GetLogy()) minimum = 0.001 * maximum;
    if (uxmin <= 0 && gPad && gPad->GetLogx()) {
@@ -1622,7 +1541,6 @@ TH1F *TGraph::GetHistogram() const
    return fHistogram;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get x and y values for point number i.
 /// The function returns -1 in case of an invalid request or the point number otherwise
@@ -1636,7 +1554,6 @@ Int_t TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y) const
    return i;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get x axis of the graph.
 
@@ -1647,7 +1564,6 @@ TAxis *TGraph::GetXaxis() const
    return h->GetXaxis();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get y axis of the graph.
 
@@ -1657,7 +1573,6 @@ TAxis *TGraph::GetYaxis() const
    if (!h) return 0;
    return h->GetYaxis();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Initial values of parameters for a gaussian.
@@ -1697,7 +1612,6 @@ void TGraph::InitGaus(Double_t xmin, Double_t xmax)
    f1->SetParLimits(2, 0, 10 * rms);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Initial values of parameters for an exponential.
 
@@ -1719,7 +1633,6 @@ void TGraph::InitExpo(Double_t xmin, Double_t xmax)
    f1->SetParameter(1, slope);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Initial values of parameters for a polynom.
 
@@ -1739,7 +1652,6 @@ void TGraph::InitPolynom(Double_t xmin, Double_t xmax)
 
    for (Int_t i = 0; i < npar; i++) f1->SetParameter(i, fitpar[i]);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Insert a new point at the mouse position
@@ -1780,7 +1692,7 @@ Int_t TGraph::InsertPoint()
    Double_t **ps = ExpandAndCopy(fNpoints + 1, ipoint);
    CopyAndRelease(ps, ipoint, fNpoints++, ipoint + 1);
 
-   // To avoid redefenitions in descendant classes
+   // To avoid redefinitions in descendant classes
    FillZero(ipoint, ipoint + 1);
 
    fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(px));
@@ -1797,25 +1709,28 @@ Int_t TGraph::InsertPoint()
 /// with the first one. It is clear that the order of the point is essential in defining the polygon.
 /// Also note that the segments should not intersect.
 ///
-/// NB: if last=-1 (default) last is set to the last point.
-///     if (first <0) the first point (0) is taken.
+/// NB:
+///  - if last=-1 (default) last is set to the last point.
+///  - if (first <0) the first point (0) is taken.
 ///
-/// Method:
+/// ### Method:
 ///
 /// There are many ways to calculate the surface of a polygon. It all depends on what kind of data
 /// you have to deal with. The most evident solution would be to divide the polygon in triangles and
 /// calculate the surface of them. But this can quickly become complicated as you will have to test
 /// every segments of every triangles and check if they are intersecting with a current polygon's
 /// segment or if it goes outside the polygon. Many calculations that would lead to many problems...
-///      The solution (implemented by R.Brun)
+///
+/// ### The solution (implemented by R.Brun)
 /// Fortunately for us, there is a simple way to solve this problem, as long as the polygon's
 /// segments don't intersect.
 /// It takes the x coordinate of the current vertex and multiply it by the y coordinate of the next
 /// vertex. Then it subtracts from it the result of the y coordinate of the current vertex multiplied
 /// by the x coordinate of the next vertex. Then divide the result by 2 to get the surface/area.
-///      Sources
-///      http://forums.wolfram.com/mathgroup/archive/1998/Mar/msg00462.html
-///      http://stackoverflow.com/questions/451426/how-do-i-calculate-the-surface-area-of-a-2d-polygon
+///
+/// ### Sources
+///  - http://forums.wolfram.com/mathgroup/archive/1998/Mar/msg00462.html
+///  - http://stackoverflow.com/questions/451426/how-do-i-calculate-the-surface-area-of-a-2d-polygon
 
 Double_t TGraph::Integral(Int_t first, Int_t last) const
 {
@@ -1837,12 +1752,12 @@ Double_t TGraph::Integral(Int_t first, Int_t last) const
    return 0.5 * TMath::Abs(sum);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 1 if the point (x,y) is inside the polygon defined by
 /// the graph vertices 0 otherwise.
 ///
 /// Algorithm:
+///
 /// The loop is executed with the end-point coordinates of a line segment
 /// (X1,Y1)-(X2,Y2) and the Y-coordinate of a horizontal line.
 /// The counter inter is incremented if the line (X1,Y1)-(X2,Y2) intersects
@@ -1855,16 +1770,15 @@ Int_t TGraph::IsInside(Double_t x, Double_t y) const
    return (Int_t)TMath::IsInside(x, y, fNpoints, fX, fY);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Least squares polynomial fitting without weights.
 ///
-///  m     number of parameters
-///  a     array of parameters
-///  first 1st point number to fit (default =0)
-///  last  last point number to fit (default=fNpoints-1)
+/// \param [in] m     number of parameters
+/// \param [in] ma     array of parameters
+/// \param [in] mfirst 1st point number to fit (default =0)
+/// \param [in] mlast  last point number to fit (default=fNpoints-1)
 ///
-///   based on CERNLIB routine LSQ: Translated to C++ by Rene Brun
+/// based on CERNLIB routine LSQ: Translated to C++ by Rene Brun
 
 void TGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t xmax)
 {
@@ -1927,17 +1841,17 @@ void TGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t xmax)
    for (i = 0; i < m; ++i) a[i] = da[i];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Least square linear fit without weights.
 ///
 ///  Fit a straight line (a0 + a1*x) to the data in this graph.
-///  ndata:  if ndata<0, fits the logarithm of the graph (used in InitExpo() to set
-///          the initial parameter values for a fit with exponential function.
-///  a0:     constant
-///  a1:     slope
-///  ifail:  return parameter indicating the status of the fit (ifail=0, fit is OK)
-///  xmin, xmax: fitting range
+///
+/// \param [in] ndata        if ndata<0, fits the logarithm of the graph (used in InitExpo() to set
+///                          the initial parameter values for a fit with exponential function.
+/// \param [in] a0           constant
+/// \param [in] a1           slope
+/// \param [in] ifail        return parameter indicating the status of the fit (ifail=0, fit is OK)
+/// \param [in] xmin, xmax   fitting range
 ///
 ///  extracted from CERNLIB LLSQ: Translated to C++ by Rene Brun
 
@@ -1984,7 +1898,6 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
    a1 = (fn * xybar - xbar * ybar) / det;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this graph with its current attributes.
 
@@ -1993,7 +1906,6 @@ void TGraph::Paint(Option_t *option)
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
    if (painter) painter->PaintHelper(this, option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the (x,y) as a graph.
@@ -2004,7 +1916,6 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
    if (painter) painter->PaintGraph(this, npoints, x, y, chopt);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the (x,y) as a histogram.
 
@@ -2014,7 +1925,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
    if (painter) painter->PaintGrapHist(this, npoints, x, y, chopt);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the stats
 
@@ -2023,7 +1933,6 @@ void TGraph::PaintStats(TF1 *fit)
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
    if (painter) painter->PaintStats(this, fit);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print graph values.
@@ -2035,7 +1944,6 @@ void TGraph::Print(Option_t *) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Recursively remove object from the list of functions
 
@@ -2046,7 +1954,6 @@ void TGraph::RecursiveRemove(TObject *obj)
    }
    if (fHistogram == obj) fHistogram = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete point close to the mouse position
@@ -2071,7 +1978,6 @@ Int_t TGraph::RemovePoint()
    return RemovePoint(ipoint);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete point number ipoint
 
@@ -2085,7 +1991,6 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
    if (gPad) gPad->Modified();
    return ipoint;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
@@ -2160,7 +2065,6 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   graph->Draw(" << quote << option << quote << ");" << std::endl;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set number of points in the graph
 /// Existing coordinates are preserved
@@ -2178,7 +2082,6 @@ void TGraph::Set(Int_t n)
    fNpoints = n;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if kNotEditable bit is not set, kFALSE otherwise.
 
@@ -2186,7 +2089,6 @@ Bool_t TGraph::GetEditable() const
 {
    return TestBit(kNotEditable) ? kFALSE : kTRUE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// if editable=kFALSE, the graph cannot be modified with the mouse
@@ -2198,7 +2100,6 @@ void TGraph::SetEditable(Bool_t editable)
    else          SetBit(kNotEditable);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the maximum of the graph.
 
@@ -2208,7 +2109,6 @@ void TGraph::SetMaximum(Double_t maximum)
    GetHistogram()->SetMaximum(maximum);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the minimum of the graph.
 
@@ -2217,7 +2117,6 @@ void TGraph::SetMinimum(Double_t minimum)
    fMinimum = minimum;
    GetHistogram()->SetMinimum(minimum);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set x and y values for point number i.
@@ -2235,7 +2134,7 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
    }
    if (i >= fNpoints) {
       // points above i can be not initialized
-      // set zero up to i-th point to avoid redefenition
+      // set zero up to i-th point to avoid redefinition
       // of this method in descendant classes
       FillZero(fNpoints, i + 1);
       fNpoints = i + 1;
@@ -2245,7 +2144,6 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
    if (gPad) gPad->Modified();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set graph title.
 
@@ -2254,7 +2152,6 @@ void TGraph::SetTitle(const char* title)
    fTitle = title;
    if (fHistogram) fHistogram->SetTitle(title);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// if size*2 <= fMaxSize allocate new arrays of size points,
@@ -2272,7 +2169,6 @@ Double_t **TGraph::ShrinkAndCopy(Int_t size, Int_t oend)
    return newarrays;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Sorts the points of this TGraph using in-place quicksort (see e.g. older glibc).
 /// To compare two points the function parameter greaterfunc is used (see TGraph::CompareX for an
@@ -2283,6 +2179,7 @@ Double_t **TGraph::ShrinkAndCopy(Int_t size, Int_t oend)
 /// The last two parameters are used for the recursive quick sort, stating the range to be sorted
 ///
 /// Examples:
+/// ~~~ {.cpp}
 ///   // sort points along x axis
 ///   graph->Sort();
 ///   // sort points along their distance to origin
@@ -2293,6 +2190,7 @@ Double_t **TGraph::ShrinkAndCopy(Int_t size, Int_t oend)
 ///     return (ge->GetEY()[i]>ge->GetEY()[j]); }
 ///   // sort using the above comparison function, largest errors first
 ///   graph->Sort(&CompareErrors, kFALSE);
+/// ~~~
 
 void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph*, Int_t, Int_t) /*=TGraph::CompareX()*/,
                   Bool_t ascending /*=kTRUE*/, Int_t low /* =0 */, Int_t high /* =-1111 */)
@@ -2320,7 +2218,6 @@ void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph*, Int_t, Int_t) /*=TGraph::
    Sort(greaterfunc, ascending, low, right - 1);
    Sort(greaterfunc, ascending, right + 1, high);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TGraph.
@@ -2389,7 +2286,6 @@ void TGraph::Streamer(TBuffer &b)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Swap points.
 
@@ -2398,7 +2294,6 @@ void TGraph::SwapPoints(Int_t pos1, Int_t pos2)
    SwapValues(fX, pos1, pos2);
    SwapValues(fY, pos1, pos2);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Swap values.
@@ -2409,7 +2304,6 @@ void TGraph::SwapValues(Double_t* arr, Int_t pos1, Int_t pos2)
    arr[pos1] = arr[pos2];
    arr[pos2] = tmp;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set current style settings in this graph
@@ -2446,7 +2340,6 @@ void TGraph::UseCurrentStyle()
       obj->UseCurrentStyle();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adds all graphs from the collection to this graph.

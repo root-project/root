@@ -22,6 +22,7 @@
 #include "TGNumberEntry.h"
 
 /** \class TEveGridStepperSubEditor
+\ingroup TEve
 Sub-editor for TEveGridStepper class.
 */
 
@@ -160,6 +161,7 @@ void TEveGridStepperSubEditor::DoDs()
 }
 
 /** \class TEveGridStepperEditor
+\ingroup TEve
 Editor for TEveGridStepper class.
 */
 

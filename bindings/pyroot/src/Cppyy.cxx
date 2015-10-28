@@ -537,14 +537,14 @@ std::string Cppyy::GetFinalName( TCppType_t klass )
       return "";
    // TODO: either this or GetScopedFinalName is wrong
    TClassRef& cr = type_from_handle( klass );
-   return ResolveName( cr->GetName() );
+   return cr->GetName();
 }
 
 std::string Cppyy::GetScopedFinalName( TCppType_t klass )
 {
    // TODO: either this or GetFinalName is wrong
    TClassRef& cr = type_from_handle( klass );
-   return ResolveName( cr->GetName() );
+   return cr->GetName();
 }   
 
 Bool_t Cppyy::HasComplexHierarchy( TCppType_t /* handle */ )

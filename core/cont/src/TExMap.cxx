@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TExMap                                                               //
-//                                                                      //
-// This class stores a (key,value) pair using an external hash.         //
-// The (key,value) are Long64_t's and therefore can contain object      //
-// pointers or any longs. The map uses an open addressing hashing       //
-// method (linear probing).                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TExMap
+This class stores a (key,value) pair using an external hash.
+The (key,value) are Long64_t's and therefore can contain object
+pointers or any longs. The map uses an open addressing hashing
+method (linear probing).
+*/
 
 #include "TExMap.h"
 #include "TError.h"
@@ -61,7 +57,7 @@ TExMap::TExMap(const TExMap &map) : TObject(map)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignement operator.
+/// Assignment operator.
 
 TExMap& TExMap::operator=(const TExMap &map)
 {
@@ -106,12 +102,14 @@ void TExMap::Add(ULong64_t hash, Long64_t key, Long64_t value)
 /// Add an (key,value) pair to the table. The key should be unique.
 /// If the 'slot' is open, use it to store the value,
 /// otherwise revert to Add(hash,key,value)
-/// This is usually used in conjuction with GetValue wiht 3 parameters:
+/// This is usually used in conjunction with GetValue with 3 parameters:
+/// ~~~ {.cpp}
 /// if ((idx = (ULong64_t)fMap->GetValue(hash, key, slot)) != 0) {
 ///    ...
 /// } else {
 ///    fMap->AddAt(slot,hash,key,value);
 /// }
+/// ~~~
 
 void TExMap::AddAt(UInt_t slot, ULong64_t hash, Long64_t key, Long64_t value)
 {

@@ -9,16 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  Each ROOT class (see TClass) has a linked list of methods.          //
-//  This class describes one single method (member function).           //
-//  The method info is obtained via the CINT api. See class TCling.      //
-//                                                                      //
-//  The method information is used a.o. by the THml class and by the    //
-//  TTree class.                                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMethod
+ Each ROOT class (see TClass) has a linked list of methods.
+ This class describes one single method (member function).
+ The method info is obtained via the CINT api. See class TCling.
+
+ The method information is used a.o. by the THml class and by the
+ TTree class.
+*/
 
 #include "TClass.h"
 #include "TMethod.h"
@@ -153,7 +151,7 @@ TDataMember *TMethod::FindDataMember()
       char *ptr2 = 0;
       Int_t i;
 
-      strlcpy(argstr,argstring,nchs+1);       //let's move it to "worksapce"  copy
+      strlcpy(argstr,argstring,nchs+1);       //let's move it to "workspace"  copy
       ptr2 = strtok(argstr,"{}");     //extract the data!
       if (ptr2 == 0) {
          Fatal("FindDataMember","Internal error found '*ARGS=\"' but not \"{}\" in %s",GetCommentString());

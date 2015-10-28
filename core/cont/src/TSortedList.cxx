@@ -9,12 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A sorted doubly linked list. All sortable classes inheriting from    //
-// TObject can be inserted in a TSortedList.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSortedList
+A sorted doubly linked list. All sortable classes inheriting from
+TObject can be inserted in a TSortedList.
+*/
 
 #include "TSortedList.h"
 

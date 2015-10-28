@@ -9,33 +9,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Collection abstract base class. This class describes the base        //
-// protocol all collection classes have to implement. The ROOT          //
-// collection classes always store pointers to objects that inherit     //
-// from TObject. They never adopt the objects. Therefore, it is the     //
-// user's responsability to take care of deleting the actual objects    //
-// once they are not needed anymore. In exceptional cases, when the     //
-// user is 100% sure nothing else is referencing the objects in the     //
-// collection, one can delete all objects and the collection at the     //
-// same time using the Delete() function.                               //
-//                                                                      //
-// Collections can be iterated using an iterator object (see            //
-// TIterator). Depending on the concrete collection class there may be  //
-// some additional methods of iterating. See the repective classes.     //
-//                                                                      //
-// TCollection inherits from TObject since we want to be able to have   //
-// collections of collections.                                          //
-//                                                                      //
-// In a later release the collections may become templatized.           //
-//                                                                      //
-//Begin_Html
-/*
-<img src="gif/tcollection_classtree.gif">
+/** \class TCollection
+Collection abstract base class. This class describes the base
+protocol all collection classes have to implement. The ROOT
+collection classes always store pointers to objects that inherit
+from TObject. They never adopt the objects. Therefore, it is the
+user's responsibility to take care of deleting the actual objects
+once they are not needed anymore. In exceptional cases, when the
+user is 100% sure nothing else is referencing the objects in the
+collection, one can delete all objects and the collection at the
+same time using the Delete() function.
+
+Collections can be iterated using an iterator object (see
+TIterator). Depending on the concrete collection class there may be
+some additional methods of iterating. See the respective classes.
+
+TCollection inherits from TObject since we want to be able to have
+collections of collections.
+
+In a later release the collections may become templatized.
 */
-//End_Html
-//////////////////////////////////////////////////////////////////////////
 
 #include "TCollection.h"
 #include "Riostream.h"
@@ -72,7 +65,7 @@ void TCollection::AddAll(const TCollection *col)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add all arguments to the collection. The list of objects must be
-/// temrinated by 0, e.g.: l.AddVector(o1, o2, o3, o4, 0);
+/// terminated by 0, e.g.: l.AddVector(o1, o2, o3, o4, 0);
 
 void TCollection::AddVector(TObject *va_(obj1), ...)
 {
@@ -321,12 +314,16 @@ void TCollection::PrintCollectionEntry(TObject* entry, Option_t* option, Int_t r
 /// If you want to override Print() for a collection class, first
 /// see if you can accomplish it by overriding the following protected
 /// methods:
+/// ~~~ {.cpp}
 ///   void        PrintCollectionHeader(Option_t* option) const;
 ///   const char* GetCollectionEntryName(TObject* entry) const;
 ///   void        PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const;
-/// Otherwise override the Print(Option_t *option, Int_t)
+/// ~~~
+/// Otherwise override the `Print(Option_t *option, Int_t)`
 /// variant. Remember to declare:
+/// ~~~ {.cpp]
 ///   using TCollection::Print;
+/// ~~~
 /// somewhere close to the method declaration.
 
 void TCollection::Print(Option_t *option) const
@@ -530,7 +527,6 @@ Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize)
    return ((const TCollection*)this)->Write(name,option,bsize);
 }
 
-// -------------------- Static data members access -----------------------------
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the globally accessible collection.
 
@@ -622,7 +618,7 @@ TIter::TIter(const TIter &iter)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assigning an TIter to another. This involves allocatiing a new TIterator
+/// Assigning an TIter to another. This involves allocating a new TIterator
 /// of the right sub class and assigning it with the original.
 
 TIter &TIter::operator=(const TIter &rhs)

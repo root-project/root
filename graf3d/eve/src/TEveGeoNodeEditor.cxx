@@ -25,6 +25,7 @@
 #include "TGDoubleSlider.h"
 
 /** \class TEveGeoNodeEditor
+\ingroup TEve
 Editor for TEveGeoNode class.
 */
 
@@ -126,6 +127,7 @@ void TEveGeoNodeEditor::DoVizVolumeDaughters()
 }
 
 /** \class TEveGeoTopNodeEditor
+\ingroup TEve
 Editor for TEveGeoTopNode class.
 */
 

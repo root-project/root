@@ -24,6 +24,7 @@
 #include "TGDoubleSlider.h"
 
 /** \class TEveRGBAPaletteSubEditor
+\ingroup TEve
 Sub-editor for TEveRGBAPalette class.
 */
 
@@ -297,6 +298,7 @@ void TEveRGBAPaletteSubEditor::DoOverflowAction(Int_t mode)
 
 
 /** \class TEveRGBAPaletteEditor
+\ingroup TEve
 Editor for TEveRGBAPalette class.
 */
 

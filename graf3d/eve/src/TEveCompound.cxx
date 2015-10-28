@@ -12,6 +12,7 @@
 #include "TEveCompound.h"
 
 /** \class TEveCompound
+\ingroup TEve
 Description of TEveCompound
 */
 
@@ -157,6 +158,7 @@ TClass* TEveCompound::ProjectedClass(const TEveProjection*) const
 
 
 /** \class TEveCompoundProjected
+\ingroup TEve
 Description of TEveCompoundProjected
 */
 

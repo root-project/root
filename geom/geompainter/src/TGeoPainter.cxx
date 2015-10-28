@@ -706,10 +706,9 @@ void TGeoPainter::DrawBatemanSol(TGeoBatemanSol *sol, Option_t *option)
           lambda > 0.) lambdamin = lambda;
    }
    if (autorange) thi = 10./lambdamin;
-   formula += ";time[s]";
-   formula += TString::Format(";Concentration_of_%s",sol->GetElement()->GetName());
    // Create a function
    TF1 *func = new TF1(TString::Format("conc%s",sol->GetElement()->GetName()), formula.Data(), tlo,thi);
+   func->SetTitle(formula + ";time[s]" + TString::Format(";Concentration_of_%s",sol->GetElement()->GetName()));
    func->SetMinimum(1.e-3);
    func->SetMaximum(1.25*TMath::Max(sol->Concentration(tlo), sol->Concentration(thi)));
    func->SetLineColor(sol->GetLineColor());

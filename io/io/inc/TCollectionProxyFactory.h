@@ -59,25 +59,23 @@ class TEmulatedCollectionProxy;
 #endif
 
 
-/** @class TCollectionProxyFactory TCollectionProxyFactory.h cont/TCollectionProxyFactory.h
-  *
-  * TCollectionProxyFactory
-  * Interface to collection proxy and streamer generator.
-  *
-  * Proxy around an arbitrary container, which implements basic
-  * functionality and iteration. The purpose of this implementation
-  * is to shield any generated dictionary implementation from the
-  * underlying streamer/proxy implementation and only expose
-  * the creation functions.
-  *
-  * In particular this is used to implement splitting and abstract
-  * element access of any container. Access to compiled code is necessary
-  * to implement the abstract iteration sequence and functionality like
-  * size(), clear(), resize(). resize() may be a void operation.
-  *
-  * @author  M.Frank
-  * @version 1.0
-  */
+/** \class TCollectionProxyFactory TCollectionProxyFactory.h
+ TCollectionProxyFactory
+ Interface to collection proxy and streamer generator.
+ Proxy around an arbitrary container, which implements basic
+ functionality and iteration. The purpose of this implementation
+ is to shield any generated dictionary implementation from the
+ underlying streamer/proxy implementation and only expose
+ the creation functions.
+
+ In particular this is used to implement splitting and abstract
+ element access of any container. Access to compiled code is necessary
+ to implement the abstract iteration sequence and functionality like
+ size(), clear(), resize(). resize() may be a void operation.
+
+ \author  M.Frank
+ \version 1.0
+*/
 class TCollectionProxyFactory  {
 public:
 
@@ -87,9 +85,6 @@ public:
 #else
    typedef const std::type_info& Info_t;
 #endif
-
-
-
 
    /// Generate emulated collection proxy for a given class
    static TVirtualCollectionProxy* GenEmulatedProxy(const char* class_name, Bool_t silent);
@@ -132,22 +127,21 @@ public:
    }
 };
 
-/** @class TCollectionStreamer TCollectionProxyFactory.h cont/TCollectionProxyFactory.h
- *
- * TEmulatedClassStreamer
- *
- * Class streamer object to implement TClassStreamr functionality
- * for I/O emulation.
- *
- * @author  M.Frank
- * @version 1.0
- */
+/**
+ \class TCollectionStreamer TCollectionProxyFactory.h
+ \ingroup IO
+
+ Class streamer object to implement TClassStreamer functionality for I/O emulation.
+
+ @author  M.Frank
+ @version 1.0
+*/
 class TCollectionStreamer   {
 private:
    TCollectionStreamer& operator=(const TCollectionStreamer&);   // not implemented
 
 protected:
-   TGenCollectionProxy* fStreamer;   /// Pointer to worker streamer
+   TGenCollectionProxy* fStreamer;   ///< Pointer to worker streamer
 
    /// Issue Error about invalid proxy
    void InvalidProxyError();
@@ -165,16 +159,15 @@ public:
    void Streamer(TBuffer &refBuffer, void *obj, int siz, TClass *onFileClass );
 };
 
-/** @class TEmulatedClassStreamer TCollectionProxy.h cont/TCollectionProxy.h
-  *
-  * TEmulatedClassStreamer
-  *
-  * Class streamer object to implement TClassStreamr functionality
-  * for I/O emulation.
-  *
-  * @author  M.Frank
-  * @version 1.0
-  */
+/**
+ \class TCollectionClassStreamer TCollectionProxy.h
+ \ingroup IO
+
+ Class streamer object to implement TClassStreamer functionality
+ for I/O emulation.
+ \author  M.Frank
+ \version 1.0
+*/
 class TCollectionClassStreamer : public TClassStreamer, public TCollectionStreamer {
  protected:
    TCollectionClassStreamer &operator=(const TCollectionClassStreamer &rhs); // Not implemented.
@@ -214,15 +207,14 @@ public:
 
 };
 
-/** @class TCollectionMemberStreamer TCollectionProxyFactory.h cont/TCollectionProxyFactory.h
-  *
-  * TCollectionMemberStreamer
-  *
-  * Class streamer object to implement TMemberStreamer functionality
-  * for I/O emulation.
-  *
-  * @author  M.Frank
-  * @version 1.0
+/** 
+ \class TCollectionMemberStreamer TCollectionProxyFactory.h
+ \ingroup IO
+
+ Class streamer object to implement TMemberStreamer functionality
+ for I/O emulation.
+ \author  M.Frank
+ \version 1.0
   */
 class TCollectionMemberStreamer : public TMemberStreamer, public TCollectionStreamer {
 private:

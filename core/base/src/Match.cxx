@@ -118,13 +118,13 @@ static int          esc(const char**);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a pattern template from the string pointed to by exp. Stop when
-/// '\0' is found in exp.  The pattern template is assembled
+/// `\0` is found in exp.  The pattern template is assembled
 /// in pat whose length is given by maxpat.
 ///
 /// Return:
-/// E_ILLEGAL       Illegal input pattern.
-/// E_NOMEM         out of memory.
-/// E_PAT           pattern too long.
+///  - E_ILLEGAL       Illegal input pattern.
+///  - E_NOMEM         out of memory.
+///  - E_PAT           pattern too long.
 
 int Makepat(const char*     exp,        // Regular expression
             Pattern_t*      pat,        // Assembled compiled pattern
@@ -424,16 +424,16 @@ static int oct2bin(int c)
 /// current character is returned and the string is advanced by
 /// one. The following are recognized:
 ///
-///  \b     backspace
-///  \f     formfeed
-///  \n     newline
-///  \r     carriage return
-///  \s     space
-///  \t     tab
-///  \e     ASCII ESC character ('\033')
-///  \DDD   number formed of 1-3 octal digits
-///  \xDD   number formed of 1-2 hex digits
-///  \^C    C = any letter. Control code
+///  - `\b`     backspace
+///  - `\f`     formfeed
+///  - `\n`     newline
+///  - `\r`     carriage return
+///  - `\s`     space
+///  - `\t`     tab
+///  - `\e`     ASCII ESC character ('\033')
+///  - `\DDD`   number formed of 1-3 octal digits
+///  - `\xDD`   number formed of 1-2 hex digits
+///  - `\^C`    C = any letter. Control code
 
 static int esc(const char** s)
 {

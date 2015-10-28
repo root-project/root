@@ -31,19 +31,18 @@
 #include "llvm/Support/FileSystem.h"
 
 #include "TMetaUtils.h"
-// #include "TCling.h"
 
 using namespace clang;
 using namespace cling;
 
 class TObject;
-class TCling;
 
 // Functions used to forward calls from code compiled with no-rtti to code
 // compiled with rtti.
 extern "C" {
    void TCling__UpdateListsOnCommitted(const cling::Transaction&, Interpreter*);
    void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
+   void TCling__TransactionRollback(const cling::Transaction&);
    void TCling__GetNormalizedContext(const ROOT::TMetaUtils::TNormalizedCtxt*&);
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    Decl* TCling__GetObjectDecl(TObject *obj);
@@ -111,7 +110,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
 bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
                                    llvm::SmallVectorImpl<char> &RecoveryPath) {
    // Method called via Callbacks->FileNotFound(Filename, RecoveryPath)
-   // in Preprocessor::HandleIncludeDirective(), initally allowing to
+   // in Preprocessor::HandleIncludeDirective(), initially allowing to
    // change the include path, and allowing us to compile code via ACLiC
    // when specifying #include "myfile.C+", and suppressing the preprocessor
    // error message:
@@ -160,7 +159,7 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
                                                 SemaR.TUScope);
          int retcode = TCling__CompileMacro(fname.c_str(), options.c_str());
          if (retcode) {
-            // complation was successful, let's remember the original
+            // compilation was successful, let's remember the original
             // preprocessor "include not found" error suppression flag
             if (!fPPChanged)
                fPPOldFlag = PP.GetSuppressIncludeNotFoundError();
@@ -268,7 +267,8 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
 
 bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
    // Clang needs Tag's complete definition. Can we parse it?
-   if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
+   //if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
+   if (fIsAutoloadingRecursively) return false;
 
    if (RecordDecl* RD = dyn_cast<RecordDecl>(Tag)) {
       Sema &SemaR = m_Interpreter->getSema();
@@ -446,7 +446,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
    Preprocessor::CleanupAndRestoreCacheRAII cleanupPPRAII(PP);
    TObject *obj = TCling__GetObjectAddress(Name.getAsString().c_str(),
                                            fLastLookupCtx);
-   cleanupPPRAII.pop(); // force restroing the cache
+   cleanupPPRAII.pop(); // force restoring the cache
 
    if (obj) {
 
@@ -687,13 +687,22 @@ void TClingCallbacks::TransactionUnloaded(const Transaction &T) {
    TCling__UpdateListsOnUnloaded(T);
 }
 
+// The callback is used to clear the autoparsing caches.
+//
+void TClingCallbacks::TransactionRollback(const Transaction &T) {
+   if (T.empty())
+      return;
+
+   TCling__TransactionRollback(T);
+}
+
 void TClingCallbacks::DeclDeserialized(const clang::Decl* D) {
    if (const RecordDecl* RD = dyn_cast<RecordDecl>(D)) {
       // FIXME: Our autoloading doesn't work (load the library) when the looked
       // up decl is found in the PCH/PCM. We have to do that extra step, which
       // loads the corresponding library when a decl was deserialized.
       //
-      // Unfortunatelly we cannot do that with the current implementation,
+      // Unfortunately we cannot do that with the current implementation,
       // because the library load will pull in the header files of the library
       // as well, even though they are in the PCH/PCM and available.
       (void)RD;//TCling__AutoLoadCallback(RD->getNameAsString().c_str());

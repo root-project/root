@@ -8,8 +8,20 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+/**
+  \defgroup tree Tree Library
+
+  To store large quantities of same-class objects, ROOT provides the TTree and
+  TNtuple classes. The TTree class is optimized to
+  reduce disk space and enhance access speed. A TNtuple is a TTree that is limited
+  to only hold floating-point numbers; a TTree on the other hand can hold all kind
+  of data, such as objects or arrays in addition to all the simple types.
+
+*/
 
 /** \class TTree
+\ingroup tree
+
 A TTree object has a header with a name and a title.
 
 It consists of a list of independent branches (TBranch). Each branch has its own
@@ -211,7 +223,9 @@ the performance.
 For these reasons, ROOT offers the concept of friends for trees (and chains).
 We encourage you to use TTree::AddFriend rather than adding a branch manually.
 
-\image html ttree_layout.png
+Begin_Macro
+../../../tutorials/tree/tree.C
+End_Macro
 
 ~~~ {.cpp}
     // A simple example with histograms and a tree
@@ -2764,7 +2778,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
 
       if ( ptrClass->GetCollectionProxy() && expectedClass->GetCollectionProxy() ) {
          if (gDebug > 7)
-            Info("SetBranchAddress", "Matching STL colleciton (at least according to the SchemaRuleSet when "
+            Info("SetBranchAddress", "Matching STL collection (at least according to the SchemaRuleSet when "
                "reading a %s into a %s",expectedClass->GetName(),ptrClass->GetName());
 
          bEl->SetTargetClass( ptrClass->GetName() );
@@ -3454,7 +3468,7 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
 /// Only selected entries are copied to the new tree.
 /// NOTE that only the active branches are copied.
 
-TTree* TTree::CopyTree(const char* selection, Option_t* option /* = 0 */, Long64_t nentries /* = 1000000000 */, Long64_t firstentry /* = 0 */)
+TTree* TTree::CopyTree(const char* selection, Option_t* option /* = 0 */, Long64_t nentries /* = TTree::kMaxEntries */, Long64_t firstentry /* = 0 */)
 {
    GetPlayer();
    if (fPlayer) {
@@ -3999,7 +4013,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// ## Making a Profile histogram
 ///
 ///  In case of a 2-Dim expression, one can generate a TProfile histogram
-///  instead of a TH2F histogram by specyfying option=prof or option=profs
+///  instead of a TH2F histogram by specifying option=prof or option=profs
 ///  or option=profi or option=profg ; the trailing letter select the way
 ///  the bin error are computed, See TProfile2D::SetErrorOption for
 ///  details on the differences.
@@ -4906,7 +4920,7 @@ Int_t TTree::GetBranchStyle()
 ///
 /// Estimates a suitable size for the tree cache based on AutoFlush.
 /// A cache sizing factor is taken from the configuration. If this yields zero
-/// and withDefault is true the historical algoirthm for default size is used.
+/// and withDefault is true the historical algorithm for default size is used.
 
 Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
 {
@@ -5203,7 +5217,7 @@ Long64_t TTree::GetEntryNumber(Long64_t entry) const
 /// the BuildIndex function has created a table of Long64_t* of sorted values
 /// corresponding to val = major<<31 + minor;
 /// The function performs binary search in this sorted table.
-/// If it finds a pair that maches val, it returns directly the
+/// If it finds a pair that matches val, it returns directly the
 /// index in the table.
 /// If an entry corresponding to major and minor is not found, the function
 /// returns the index of the major,minor pair immediately lower than the
@@ -5227,7 +5241,7 @@ Long64_t TTree::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) cons
 /// the BuildIndex function has created a table of Long64_t* of sorted values
 /// corresponding to val = major<<31 + minor;
 /// The function performs binary search in this sorted table.
-/// If it finds a pair that maches val, it returns directly the
+/// If it finds a pair that matches val, it returns directly the
 /// index in the table, otherwise it returns -1.
 ///
 /// See also GetEntryNumberWithBestIndex

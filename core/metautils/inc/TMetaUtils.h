@@ -146,17 +146,20 @@ public:
 class TClingLookupHelper : public TClassEdit::TInterpreterLookupHelper {
 public:
    typedef bool (*ExistingTypeCheck_t)(const std::string &tname, std::string &result);
+   typedef bool (*AutoParse_t)(const char *name);
 
 private:
    cling::Interpreter *fInterpreter;
    TNormalizedCtxt    *fNormalizedCtxt;
    ExistingTypeCheck_t fExistingTypeCheck;
+   AutoParse_t         fAutoParse;
    const int          *fPDebug; // debug flag, might change at runtime thus *
    bool WantDiags() const { return fPDebug && *fPDebug > 5; }
 
 public:
    TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
                       ExistingTypeCheck_t existingTypeCheck,
+                      AutoParse_t autoParse,
                       const int *pgDebug = 0);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
 
@@ -339,8 +342,10 @@ llvm::StringRef DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, 
 // Return the ROOT include directory
 std::string GetROOTIncludeDir(bool rootbuild);
 
+enum class EIOCtorCategory : short {kAbsent, kDefault, kIOPtrType, kIORefType};
+
 //______________________________________________________________________________
-bool CheckConstructor(const clang::CXXRecordDecl*, const RConstructorType&);
+EIOCtorCategory CheckConstructor(const clang::CXXRecordDecl*, const RConstructorType&);
 
 //______________________________________________________________________________
 const clang::FunctionDecl* ClassInfo__HasMethod(const clang::DeclContext *cl, char const*, const cling::Interpreter& interp);

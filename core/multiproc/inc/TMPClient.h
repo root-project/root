@@ -13,89 +13,75 @@
 #define ROOT_TMPClient
 
 #include "TMonitor.h"
-#include "TSocket.h"
-#include "TClass.h"
-#include "TCollection.h"
-#include "TMPServer.h"
-#include "TSysEvtHandler.h"
+#include "TMPWorker.h"
 #include "MPSendRecv.h"
 #include <vector>
 #include <unistd.h> //pid_t
-#include <iostream>
 #include <memory> //unique_ptr
-
-//////////////////////////////////////////////////////////////////////////
-///
-/// This is an implementation of a TSignalHandler that is added to the
-/// eventloop in the children processes spawned by a TClient. It reacts
-/// to SIGINT messages shutting down the worker and performing clean-up
-/// operation before exiting. 
-///
-//////////////////////////////////////////////////////////////////////////
-
-class TMPInterruptHandler : public TSignalHandler {
-   ClassDef(TMPInterruptHandler, 0);
-public:
-   TMPInterruptHandler();
-   Bool_t Notify();
-};
-
-//////////////////////////////////////////////////////////////////////////
-///
-/// Base class for multiprocess applications' clients. It provides a
-/// simple interface to fork a ROOT session into "server" worker sessions
-/// and exchange messages with them. Multiprocessing applications can build
-/// on TMPClient and TMPServer.
-///
-//////////////////////////////////////////////////////////////////////////
+#include <iostream>
 
 class TMPClient {
 public:
    explicit TMPClient(unsigned nWorkers = 0);
    ~TMPClient();
    //it doesn't make sense to copy a TMPClient
-   TMPClient(const TMPClient&) = delete;
-   TMPClient& operator=(const TMPClient&) = delete;
+   TMPClient(const TMPClient &) = delete;
+   TMPClient &operator=(const TMPClient &) = delete;
 
-   bool Fork(TMPServer *server); //using a unique_ptr here would be cumbersome: passing unique_ptr is verbose and children must not delete server when leaving Fork's scope
+   bool Fork(TMPWorker &server); // we expect application to pass a reference to an inheriting class and take advantage of polymorphism
    unsigned Broadcast(unsigned code, unsigned nMessages = 0);
    template<class T> unsigned Broadcast(unsigned code, const std::vector<T> &objs);
    template<class T> unsigned Broadcast(unsigned code, std::initializer_list<T> &objs);
    template<class T> unsigned Broadcast(unsigned code, T obj, unsigned nMessages = 0);
-   inline TMonitor &GetMonitor() { return fMon; }
-   inline bool GetIsParent() const { return fIsParent; }
-   inline void SetNWorkers(unsigned n) { fNWorkers = n; }
-   inline unsigned GetNWorkers() const { return fNWorkers; }
+   TMonitor &GetMonitor() { return fMon; }
+   bool GetIsParent() const { return fIsParent; }
+   /// Set the number of workers that will be spawned by the next call to Fork()
+   void SetNWorkers(unsigned n) { fNWorkers = n; }
+   unsigned GetNWorkers() const { return fNWorkers; }
    void DeActivate(TSocket *s);
    void Remove(TSocket *s);
-   void ReapServers();
-   void HandleMPCode(MPCodeBufPair& msg, TSocket *sender);
+   void ReapWorkers();
+   void HandleMPCode(MPCodeBufPair &msg, TSocket *sender);
 
 private:
    bool fIsParent; ///< This is true if this is the parent/client process, false if this is a child/worker process
-   static constexpr unsigned fPortN = 9090; ///< Number of the port over which the communication between client and workers happen
-   std::vector<pid_t> fServerPids; ///< A vector containing the PIDs of children processes/workers
-   TMonitor fMon; ///< A TMonitor is used to manage the sockets and detect socket events
-   unsigned fNWorkers; ///< The number of workers that should be spawned upon forking (i.e. the number of times Fork will fork)
+   std::vector<pid_t> fWorkerPids; ///< A vector containing the PIDs of children processes/workers
+   TMonitor fMon; ///< This object manages the sockets and detect socket events via TMonitor::Select
+   unsigned fNWorkers; ///< The number of workers that should be spawned upon forking
 };
 
 
 //////////////////////////////////////////////////////////////////////////
 /// Send a message with a different object to each server.
-/// The number of messages successfully sent is returned.
+/// Sockets can either be in an "active" or "non-active" state. This method
+/// activates all the sockets through which the client is connected to the
+/// workers, and deactivates them when a message is sent to the corresponding
+/// worker. This way the sockets pertaining to workers who have been left
+/// idle will be the only ones in the active list
+/// (TSocket::GetMonitor()->GetListOfActives()) after execution.
+/// \param code the code of the message to send (e.g. EMPCode)
+/// \param args
+/// \parblock
+/// a vector containing the different messages to be sent. If the size of
+/// the vector is smaller than the number of workers, a message will be
+/// sent only to the first args.size() workers. If the size of the args vector
+/// is bigger than the number of workers, only the first fNWorkers arguments
+/// will be sent.
+/// \endparblock
+/// \return the number of messages successfully sent
 template<class T>
 unsigned TMPClient::Broadcast(unsigned code, const std::vector<T> &args)
 {
    fMon.ActivateAll();
 
-   std::unique_ptr<TList> l(fMon.GetListOfActives());
-   TIter nextSocket(l.get());
-   TSocket *s = nullptr;
+   std::unique_ptr<TList> lp(fMon.GetListOfActives());
    unsigned count = 0;
-   unsigned size = args.size();
-   while ((s = (TSocket *)nextSocket()) && count < size) {
-      if(MPSend(s, code, args[count])) {
-         fMon.DeActivate(s);
+   unsigned nArgs = args.size();
+   for (auto s : *lp) {
+      if (count == nArgs)
+         break;
+      if (MPSend((TSocket *)s, code, args[count])) {
+         fMon.DeActivate((TSocket *)s);
          ++count;
       } else {
          std::cerr << "[E] Could not send message to server\n";
@@ -108,9 +94,10 @@ unsigned TMPClient::Broadcast(unsigned code, const std::vector<T> &args)
 
 //////////////////////////////////////////////////////////////////////////
 /// Send a message with a different object to each server.
-/// The number of messages successfully sent is returned.
+/// See TMPClient::Broadcast(unsigned code, const std::vector<T> &args)
+/// for more informations.
 template<class T>
-unsigned TMPClient::Broadcast(unsigned code, std::initializer_list<T>& args)
+unsigned TMPClient::Broadcast(unsigned code, std::initializer_list<T> &args)
 {
    std::vector<T> vargs(std::move(args));
    return Broadcast(code, vargs);
@@ -118,25 +105,32 @@ unsigned TMPClient::Broadcast(unsigned code, std::initializer_list<T>& args)
 
 
 //////////////////////////////////////////////////////////////////////////
-/// Send a message containing obj to each worker, up to a maximum
-/// of nMessages workers.
-/// If nMessages = 0, send a message to every worker.
-/// The number of messages successfully sent is returned.
+/// Send a message containing code and obj to each worker, up to a
+/// maximum number of nMessages workers. See
+/// Broadcast(unsigned code, unsigned nMessages) for more informations.
+/// \param code the code of the message to send (e.g. EMPCode)
+/// \param obj the object to send
+/// \param nMessages
+/// \parblock
+/// the maximum number of messages to send.
+/// If nMessages == 0, send a message to every worker.
+/// \endparblock
+/// \return the number of messages successfully sent
 template<class T>
-unsigned TMPClient::Broadcast(unsigned code, T obj, unsigned nMessages) 
+unsigned TMPClient::Broadcast(unsigned code, T obj, unsigned nMessages)
 {
-   if(!nMessages)
+   if (nMessages == 0)
       nMessages = fNWorkers;
    unsigned count = 0;
    fMon.ActivateAll();
 
    //send message to all sockets
-   std::unique_ptr<TList> l(fMon.GetListOfActives());
-   TIter next(l.get());
-   TSocket *s = nullptr;
-   while ((s = (TSocket *)next()) && count < nMessages) {
-      if(MPSend(s, code, obj)) {
-         fMon.DeActivate(s);
+   std::unique_ptr<TList> lp(fMon.GetListOfActives());
+   for (auto s : *lp) {
+      if (count == nMessages)
+         break;
+      if (MPSend((TSocket *)s, code, obj)) {
+         fMon.DeActivate((TSocket *)s);
          ++count;
       } else {
          std::cerr << "[E] Could not send message to server\n";

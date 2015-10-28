@@ -24,6 +24,7 @@
 #include <list>
 
 /** \class TEveProjectionManager
+\ingroup TEve
 Manager class for steering of projections and managing projected objects.
 
 Recursively projects TEveElement's and draws axis in the projected

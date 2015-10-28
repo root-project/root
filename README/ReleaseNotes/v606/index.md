@@ -48,13 +48,23 @@ The following people have contributed to this new version:
 Fixed the dictionary generation in the case of class inside a namespace
 marked inlined.
 
+### Thread safety
+
+We added the function `TMethodCall::GetCallFunc` to allow direct access to the function wrapper.
+
+We reduced thread serialization in `TClass::GetCheckSum`, `TClass::GetBaseClassOffset` and `TClass::Property`
+
+`TObjArray::Delete` was updated to allow its caller to explicitly avoid costly checks (extra RecursiveRemove and lock)
+
+We removed the need to create a TThread object per thread in a multi-threaded application.
+
 ### TDirectory::TContext
 
-We added a default constructor to TDirectory::TContext which record the current directory
+We added a default constructor to `TDirectory::TContext` which record the current directory
 and will restore it at destruction time and does not change the current directory.
 
-The constructor for TDirectory::TContext that takes a single TDirectory pointer as
-an argument was changed to set gDirectory to zero when being passed a null pointer;
+The constructor for `TDirectory::TContext` that takes a single TDirectory pointer as
+an argument was changed to set `gDirectory` to zero when being passed a null pointer;
 previously it was interpreting a null pointer as a request to *not* change the current
 directory - this behavior is now implement by the default constructor.
 
@@ -75,17 +85,18 @@ New options:
 - The verbosity level is now optional after -v
 
 ### Command line utilities
+
 We added command line utilities to streamline very common operations performed on root files, like listing their content or creating directories.
 The command line utilities are:
-- rootbrowse: to open the file in a TBrowser
-- rootcp: to copy content from one file to another
-- rooteventselector: to select a subset of the events in a tree contained in a file
-- rootls: to list the content of a rootfile
-- rootmkdir: to create a directory in a rootfile
-- rootmv: to move content across files
-- rootprint: to plot content (histograms, graphs) of files
-- rootrm: to remove content from files
-These utilities took inspiration from the well known *nix commands and all offer the -h switch which provides documentation for all options available and example invocation lines.
+- `rootbrowse`: to open the file in a TBrowser
+- `rootcp`: to copy content from one file to another
+- `rooteventselector`: to select a subset of the events in a tree contained in a file
+- `rootls`: to list the content of a rootfile
+- `rootmkdir`: to create a directory in a rootfile
+- `rootmv`: to move content across files
+- `rootprint`: to plot content (histograms, graphs) of files
+- `rootrm`: to remove content from files
+These utilities took inspiration from the well known *nix commands and all offer the `-h` switch which provides documentation for all options available and example invocation lines.
 
 
 ### I/O New functionalities
@@ -93,16 +104,51 @@ These utilities took inspiration from the well known *nix commands and all offer
 ### I/O Behavior change.
 
 
+
+## TTree Libraries
+
+### Improvement of handling of default number of entries
+
+A new const expression value: `TTree::kMaxEntries` has been introduced to
+express the largest possible entry number in a `TTree`.  This is used in
+two main cases:
+
+- as the default value for the requested number of entries a routine should be
+applied to; for example this is used for `TTree::Draw` and `TTree::Process`.
+Previously the default was only 1 billions entries, causing those routines to
+end early in case of very large trees.
+
+- as the default value for the number of entries returned by TChain::GetEntriesFast.
+The previous value was kBigNumber (set to 1234567890) and internally (but somewhat
+inconsistently, see [ROOT-6885]) a larger value was used (named theBigNumber).  Now
+`TTree::kMaxEntries` is used throughout TChain.
+
+`TChain::kBigNumber` is deprecated and its value has been changed to be equal
+to `TTree::kMaxEntries`.
+
+
+
 ## Histogram Libraries
 
+### Change `TGraph::ComputeRange`: in case of log scale the minimum along X and
+Y axis are now set to the lowest positive values of the graph. Previously a % of the
+maximum was used which may hide some points like in the following example
+``` {.cpp}
+{
+   TGraph * gr = new TGraph(10);
+   for (int i = 0;i<10;i++) gr->SetPoint(i,i,TMath::Exp(-10.0*i));
+   for (int i = 5;i<10;i++) gr->SetPoint(i,i,0.);
+   gr->Draw("apl");
+   gr->SetMarkerStyle(20);
+   gPad->SetLogy(true);
+}
+```
+The problem was reported [here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20484).
 
 ## Math Libraries
 
 
 ## RooFit Libraries
-
-
-## TTree Libraries
 
 
 ## 2D Graphics Libraries
@@ -122,9 +168,9 @@ Implement the Log option for `CANDLE` plots as requested
 
 ### TTeXDump
 
-From Dmitry Kalinkin (via github): Fix file corruption in TTeXDump::DrawPolyMarker`
+From Dmitry Kalinkin (via github): Fix file corruption in `TTeXDump::DrawPolyMarker`
 The current implementation of `TTeXDump` uses `TVirtualPS::PrintFast` based methods
-to output TeX markup with automatic linewraps. Yet these methods are optimized for
+to output TeX markup with automatic line-wraps. Yet these methods are optimized for
 PostScript format where there are a lot of space characters that are used for newline
 placement. Current `TTeXDump::DrawPolyMarker` would often produce a long contiguous lines
 that trigger a forceful linewrap that can happen in the middle of real number constant
@@ -168,6 +214,41 @@ Ignore empty graphs when computing the multi-graph range at painting time.
 ### TASImage
 
 A left click on a image produced a one pixel zoom.
+
+### TCreatePrimitives
+
+The ending of a polyline creation is based on the closeness of the two last
+entered points. The previous algorithm was based on user coordinates. It is now
+based on pixel to avoid the problem reported
+[here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20343).
+
+### TCanvas
+
+When the first canvas created by ROOT was in batch mode, it was note possible to
+comme back in interactive mode for the next canvases. this problem was reported
+[here](https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20354).
+
+### Cocoa Backend
+
+Sometimes the mouse cursor did not change back to the window manager arrow when
+exiting a `TCanvas`.
+
+### `freetype` library
+
+Updates `builtin_freetype` to 2.6.1 (current upstream version), which can detect
+`PPC64LE` machine. This was compiled and tested on `SLC6 + ICC + x86_64`,
+`F21 + GCC + ppc64le`, `MacOSX 10.11.1 + Xcode 7.1` and `Windows (ROOT 5.34)`.
+`$ROOTSYS/graf2d/freetype/src/README` was removed, because no issues were noticed
+with `ICC` compiler and `-Wall -pedantic -ansi` flags.
+Additionally `--with-png=no --with-bzip2=no` flags are passed to freetype
+configuration script. Default values for these options are auto.
+`freetype` finds `libpng` and `libbzip2` on the system and builds extra
+modules. Then attempting to link against `freetype` one would need to link
+`-lpng -lbzip2` explicitly otherwise linking will returns in undefined
+references. Otherwise we would need to check for `libpng` and `libbzip2` on the system
+and adjust `FREETYPE_LIBRARIES` to include `-lpng` and `-lbzip2`.
+The current solution goes for the minimal configuration. The original request for
+this update was posted [here](https://sft.its.cern.ch/jira/browse/ROOT-7631).
 
 ## 3D Graphics Libraries
 
@@ -230,6 +311,7 @@ If host has several network interfaces, one could select one for binding:
 ### Notebooks
 We provided integration of ROOT with Jupyter notebooks. For what concerns Python notebooks, tab completion, output and graphics capturing have been enabled. It is possible to switch from Python to C++ and have a C++ notebook at disposal.
 New tutorials and code examples have been provided here: https://root.cern.ch/code-examples#notebooks
+We made it easier to use ROOT notebooks locally, by providing a 'root --notebook' command option to start a local notebook server customised with all the ROOT features. This command option is only present when building with CMake.
 
 ## JavaScript ROOT
 
@@ -245,7 +327,3 @@ New tutorials and code examples have been provided here: https://root.cern.ch/co
 
 
 ## Build, Configuration and Testing Infrastructure
-
-- The option cxx14 requires GCC > 5.1 because std::string_view needs member to_string
-
-

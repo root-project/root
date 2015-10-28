@@ -19,12 +19,13 @@ void Function()
   TRFunctionImport lines("lines");
   TRFunctionImport devnew("dev.new");
   TRFunctionImport devoff("dev.off");
+  TRFunctionImport devcur("dev.cur");
   TRFunctionImport min("min");
   TRFunctionImport max("max");
   TRFunctionImport seq("seq");
   TRFunctionImport predict("predict");
   
-  r<<"options(device='png')";
+  r<<"options(device='pdf')";
   
   ////////////////////////
   //doing the procedure //
@@ -47,5 +48,5 @@ void Function()
    
    TRObject xgrid=seq(min(xdata),max(xdata),Label["len"]=10);
    lines(xgrid,predict(fit,xgrid),Label["col"] = "green");
-   devoff();
+   devoff(Label["which"] = devcur() );
 }

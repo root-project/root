@@ -9,21 +9,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TLockFile                                                            //
-//                                                                      //
-// Lock an object using a file.                                         //
-// Constructor blocks until lock is obtained. Lock is released in the   //
-// destructor.                                                          //
-//                                                                      //
-// Use it in scope-blocks like:                                         //
-// {                                                                    //
-//    TLockFile lock("path.to.lock.file");                              //
-//    // do something you need the lock for                             //
-// } // lock is automatically released                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TLockFile
+\ingroup IO
+
+A scoped lock based on files.
+
+The RAAI idiom is used: the constructor blocks until lock is obtained. 
+Lock is released in the destructor.
+Use it in scope-blocks like:
+~~~{.cpp}
+{
+   TLockFile lock("path.to.lock.file");
+   // do something you need the lock for
+} // lock is automatically released
+~~~
+*/
 
 #include "TLockFile.h"
 #include "TSystem.h"
@@ -33,7 +34,9 @@
 ClassImp(TLockFile)
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor. Blocks until lock is obtained.
+/// Default constructor.
+///
+/// Blocks until lock is obtained.
 /// If a lock exists that is older than the given time limit,
 /// the file is removed. If timeLimit <= 0, wait for ever.
 

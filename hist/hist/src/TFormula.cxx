@@ -1178,17 +1178,24 @@ void TFormula::HandleExponentiation(TString &formula)
          // handle cases x^-2 or x^+2
          // need to handle also cases x^sin(x+y)
          Int_t depth = 0;
+         // stop right expression if is an operator or if is a ")" from a zero depth
          while(temp < formula.Length() && ( (depth > 0) || !IsOperator(formula[temp]) ) )
          {
             temp++;
             // handle scientific notation cases (1.e-2 ^ 3 )
             if (temp>=2 && IsScientificNotation(formula, temp) ) temp+=2;
             // for internal parenthesis
-            if (formula[temp] == '(') depth++;
-            if (depth > 0 && formula[temp] == ')') depth--;
+            if (temp < formula.Length() && formula[temp] == '(') depth++;
+            if (temp < formula.Length() && formula[temp] == ')') { 
+               if (depth > 0) 
+                  depth--;
+               else
+                  break;  // case of end of a previously started expression e.g. sin(x^2)
+            }
          }
       }
       right = formula(caretPos + 1, (temp - 1) - caretPos );
+      //std::cout << "right to replace is " << right << std::endl;
 
       TString pattern = TString::Format("%s^%s",left.Data(),right.Data());
       TString replacement = TString::Format("pow(%s,%s)",left.Data(),right.Data());
@@ -1573,7 +1580,7 @@ void TFormula::ProcessFormula(TString &formula)
             TString functionName = fun.fName(index + 2, fun.fName.Length());
 
             Bool_t silent = true;
-            TClass *tclass = new TClass(className,silent);
+            TClass *tclass = TClass::GetClass(className,silent);
             // std::cout << "looking for class " << className << std::endl;
             const TList *methodList = tclass->GetListOfAllPublicMethods();
             TIter next(methodList);

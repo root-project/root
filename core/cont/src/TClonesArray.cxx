@@ -9,121 +9,118 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// An array of clone (identical) objects. Memory for the objects        //
-// stored in the array is allocated only once in the lifetime of the    //
-// clones array. All objects must be of the same class. For the rest    //
-// this class has the same properties as TObjArray.                     //
-//                                                                      //
-// To reduce the very large number of new and delete calls in large     //
-// loops like this (O(100000) x O(10000) times new/delete):             //
-//                                                                      //
-//   TObjArray a(10000);                                                //
-//   while (TEvent *ev = (TEvent *)next()) {      // O(100000) events   //
-//      for (int i = 0; i < ev->Ntracks; i++) {   // O(10000) tracks    //
-//         a[i] = new TTrack(x,y,z,...);                                //
-//         ...                                                          //
-//         ...                                                          //
-//      }                                                               //
-//      ...                                                             //
-//      a.Delete();                                                     //
-//   }                                                                  //
-//                                                                      //
-// One better uses a TClonesArray which reduces the number of           //
-// new/delete calls to only O(10000):                                   //
-//                                                                      //
-//   TClonesArray a("TTrack", 10000);                                   //
-//   while (TEvent *ev = (TEvent *)next()) {      // O(100000) events   //
-//      for (int i = 0; i < ev->Ntracks; i++) {   // O(10000) tracks    //
-//         new(a[i]) TTrack(x,y,z,...);                                 //
-//         ...                                                          //
-//         ...                                                          //
-//      }                                                               //
-//      ...                                                             //
-//      a.Delete(); // or a.Clear() or a.Clear("C")                     //
-//   }                                                                  //
-//                                                                      //
-// To reduce the number of call to the constructor (especially useful   //
-// if the user class requires memory allocation), the object can be     //
-// added (and constructed when needed) using ConstructedAt which only   //
-// calls the constructor once per slot.                                 //
-//                                                                      //
-//   TClonesArray a("TTrack", 10000);                                   //
-//   while (TEvent *ev = (TEvent *)next()) {      // O(100000) events   //
-//      for (int i = 0; i < ev->Ntracks; i++) {   // O(10000) tracks    //
-//         TTrack *track = (TTrack*)a.ConstructedAt(i);                 //
-//         track->Set(x,y,z,....);                                      //
-//         ...                                                          //
-//         ...                                                          //
-//      }                                                               //
-//      ...                                                             //
-//      a.Clear(); // or a.Clear("C");                                  //
-//   }                                                                  //
-//                                                                      //
-// Note: the only supported way to add objects to a TClonesArray is     //
-// via the new with placement method or the ConstructedAt method.       //
-// The other Add() methods ofTObjArray and its base classes are not     //
-// allowed.                                                             //
-//                                                                      //
-// Considering that a new/delete costs about 70 mus on a 300 MHz HP,    //
-// O(10^9) new/deletes will save about 19 hours.                        //
-//                                                                      //
-//  NOTE 1
-//  ======
-// C/C++ offers the possibility of allocating and deleting memory.
-// Forgetting to delete allocated memory is a programming error called a
-// "memory leak", i.e. the memory of your process grows and eventually
-// your program crashes. Even if you *always* delete the allocated
-// memory, the recovered space may not be efficiently reused. The
-// process knows that there are portions of free memory, but when you
-// allocate it again, a fresh piece of memory is grabbed. Your program
-// is free from semantic errors, but the total memory of your process
-// still grows, because your program's memory is full of "holes" which
-// reduce the efficiency of memory access; this is called "memory
-// fragmentation". Moreover new / delete are expensive operations in
-// terms of CPU time.
-//
-// Without entering into technical details, TClonesArray allows you to
-// "reuse" the same portion of memory for new/delete avoiding memory
-// fragmentation and memory growth and improving the performance by
-// orders of magnitude. Every time the memory of the TClonesArray has
-// to be reused, the Clear() method is used. To provide its benefits,
-// each TClonesArray must be allocated *once* per process and disposed
-// of (deleted) *only when not needed any more*.
-//
-// So a job should see *only one* deletion for each TClonesArray,
-// which should be Clear()ed during the job several times. Deleting a
-// TClonesArray is a double waste. Not only you do not avoid memory
-// fragmentation, but you worsen it because the TClonesArray itself
-// is a rather heavy structure, and there is quite some code in the
-// destructor, so you have more memory fragmentation and slower code.
-//
-//  NOTE 2
-//  ======
-//
-// When investigating misuse of TClonesArray, please make sure of the following:
-//
-//    * Use Clear() or Clear("C") instead of Delete(). This will improve
-//      program execution time.
-//    * TClonesArray object classes containing pointers allocate memory.
-//      To avoid causing memory leaks, special Clear("C") must be used
-//      for clearing TClonesArray. When option "C" is specified, ROOT
-//      automatically executes the Clear() method (by default it is
-//      empty contained in TObject). This method must be overridden in
-//      the relevant TClonesArray object class, implementing the reset
-//      procedure for pointer objects.
-//    * If the objects are added using the placement new then the Clear must
-//      deallocate the memory.
-//    * If the objects are added using TClonesArray::ConstructedAt then the
-//      heap-based memory can stay allocated and reused as the constructor is
-//      not called for already constructed/added object.
-//    * To reduce memory fragmentation, please make sure that the
-//      TClonesArrays are not destroyed and created on every event. They
-//      must only be constructed/destructed at the beginning/end of the
-//      run.
-//
-//////////////////////////////////////////////////////////////////////////
+/** \class TClonesArray
+An array of clone (identical) objects. Memory for the objects        //
+// stored in the array is allocated only once in the lifetime of the
+clones array. All objects must be of the same class. For the rest
+this class has the same properties as TObjArray.
+
+To reduce the very large number of new and delete calls in large
+loops like this (O(100000) x O(10000) times new/delete):
+~~~ {.cpp}
+  TObjArray a(10000);
+  while (TEvent *ev = (TEvent *)next()) {      // O(100000) events
+     for (int i = 0; i < ev->Ntracks; i++) {   // O(10000) tracks
+        a[i] = new TTrack(x,y,z,...);
+        ...
+        ...
+     }
+     ...
+     a.Delete();
+  }
+~~~
+One better uses a TClonesArray which reduces the number of
+new/delete calls to only O(10000):
+~~~ {.cpp}
+  TClonesArray a("TTrack", 10000);
+  while (TEvent *ev = (TEvent *)next()) {      // O(100000) events
+     for (int i = 0; i < ev->Ntracks; i++) {   // O(10000) tracks
+        new(a[i]) TTrack(x,y,z,...);
+        ...
+        ...
+     }
+     ...
+     a.Delete(); // or a.Clear() or a.Clear("C")
+  }
+~~~
+To reduce the number of call to the constructor (especially useful
+if the user class requires memory allocation), the object can be
+added (and constructed when needed) using ConstructedAt which only
+calls the constructor once per slot.
+~~~ {.cpp}
+  TClonesArray a("TTrack", 10000);
+  while (TEvent *ev = (TEvent *)next()) {      // O(100000) events
+     for (int i = 0; i < ev->Ntracks; i++) {   // O(10000) tracks
+        TTrack *track = (TTrack*)a.ConstructedAt(i);
+        track->Set(x,y,z,....);
+        ...
+        ...
+     }
+     ...
+     a.Clear(); // or a.Clear("C");
+  }
+~~~
+Note: the only supported way to add objects to a TClonesArray is
+via the new with placement method or the ConstructedAt method.
+The other Add() methods ofTObjArray and its base classes are not
+allowed.
+
+Considering that a new/delete costs about 70 mus on a 300 MHz HP,
+O(10^9) new/deletes will save about 19 hours.
+
+### NOTE 1
+
+C/C++ offers the possibility of allocating and deleting memory.
+Forgetting to delete allocated memory is a programming error called a
+"memory leak", i.e. the memory of your process grows and eventually
+your program crashes. Even if you *always* delete the allocated
+memory, the recovered space may not be efficiently reused. The
+process knows that there are portions of free memory, but when you
+allocate it again, a fresh piece of memory is grabbed. Your program
+is free from semantic errors, but the total memory of your process
+still grows, because your program's memory is full of "holes" which
+reduce the efficiency of memory access; this is called "memory
+fragmentation". Moreover new / delete are expensive operations in
+terms of CPU time.
+
+Without entering into technical details, TClonesArray allows you to
+"reuse" the same portion of memory for new/delete avoiding memory
+fragmentation and memory growth and improving the performance by
+orders of magnitude. Every time the memory of the TClonesArray has
+to be reused, the Clear() method is used. To provide its benefits,
+each TClonesArray must be allocated *once* per process and disposed
+of (deleted) *only when not needed any more*.
+
+So a job should see *only one* deletion for each TClonesArray,
+which should be Clear()ed during the job several times. Deleting a
+TClonesArray is a double waste. Not only you do not avoid memory
+fragmentation, but you worsen it because the TClonesArray itself
+is a rather heavy structure, and there is quite some code in the
+destructor, so you have more memory fragmentation and slower code.
+
+### NOTE 2
+
+When investigating misuse of TClonesArray, please make sure of the following:
+
+   - Use Clear() or Clear("C") instead of Delete(). This will improve
+     program execution time.
+   - TClonesArray object classes containing pointers allocate memory.
+     To avoid causing memory leaks, special Clear("C") must be used
+     for clearing TClonesArray. When option "C" is specified, ROOT
+     automatically executes the Clear() method (by default it is
+     empty contained in TObject). This method must be overridden in
+     the relevant TClonesArray object class, implementing the reset
+     procedure for pointer objects.
+   - If the objects are added using the placement new then the Clear must
+     deallocate the memory.
+   - If the objects are added using TClonesArray::ConstructedAt then the
+     heap-based memory can stay allocated and reused as the constructor is
+     not called for already constructed/added object.
+   - To reduce memory fragmentation, please make sure that the
+     TClonesArrays are not destroyed and created on every event. They
+     must only be constructed/destructed at the beginning/end of the
+     run.
+*/
 
 #include <stdlib.h>
 #include "TClonesArray.h"
@@ -148,7 +145,7 @@ TClonesArray::TClonesArray() : TObjArray()
 /// Create an array of clone objects of classname. The class must inherit from
 /// TObject. If the class defines its own operator delete(), make sure that
 /// it looks like this:
-///
+/// ~~~ {.cpp}
 ///    void MyClass::operator delete(void *vp)
 ///    {
 ///       if ((Long_t) vp != TObject::GetDtorOnly())
@@ -156,7 +153,7 @@ TClonesArray::TClonesArray() : TObjArray()
 ///       else
 ///          TObject::SetDtorOnly(0);
 ///    }
-///
+/// ~~~
 /// The second argument s indicates an approximate number of objects
 /// that will be entered in the array. If more than s objects are entered,
 /// the array will be automatically expanded.
@@ -174,7 +171,7 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
 /// Create an array of clone objects of class cl. The class must inherit from
 /// TObject. If the class defines an own operator delete(), make sure that
 /// it looks like this:
-///
+/// ~~~ {.cpp}
 ///    void MyClass::operator delete(void *vp)
 ///    {
 ///       if ((Long_t) vp != TObject::GetDtorOnly())
@@ -182,7 +179,7 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
 ///       else
 ///          TObject::SetDtorOnly(0);
 ///    }
-///
+/// ~~~
 /// The second argument, s, indicates an approximate number of objects
 /// that will be entered in the array. If more than s objects are entered,
 /// the array will be automatically expanded.
@@ -289,14 +286,14 @@ TClonesArray::~TClonesArray()
 /// the StreamerInfo of the class in the array being optimized,
 /// one cannot use later the TClonesArray with split>0. For example,
 /// there is a problem with the following scenario:
-///  1- A class Foo has a TClonesArray of Bar objects
-///  2- The Foo object is written with split=0 to Tree T1.
+///  1. A class Foo has a TClonesArray of Bar objects
+///  2. The Foo object is written with split=0 to Tree T1.
 ///     In this case the StreamerInfo for the class Bar is created
 ///     in optimized mode in such a way that data members of the same type
 ///     are written as an array improving the I/O performance.
-///  3- In a new program, T1 is read and a new Tree T2 is created
+///  3. In a new program, T1 is read and a new Tree T2 is created
 ///     with the object Foo in split>1
-///  4- When the T2 branch is created, the StreamerInfo for the class Bar
+///  4. When the T2 branch is created, the StreamerInfo for the class Bar
 ///     is created with no optimization (mandatory for the split mode).
 ///     The optimized Bar StreamerInfo is going to be used to read
 ///     the TClonesArray in T1. The result will be Bar objects with
@@ -352,7 +349,7 @@ void TClonesArray::Compress()
 /// Get an object at index 'idx' that is guaranteed to have been constructed.
 /// It might be either a freshly allocated object or one that had already been
 /// allocated (and assumingly used).  In the later case, it is the callers
-/// responsability to insure that the object is returned to a known state,
+/// responsibility to insure that the object is returned to a known state,
 /// usually by calling the Clear method on the TClonesArray.
 ///
 /// Tests to see if the destructor has been called on the object.
@@ -539,7 +536,7 @@ void TClonesArray::ExpandCreate(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Expand or shrink the array to n elements and create the clone
 /// objects by calling their default ctor. If n is less than the current size
-/// the array is shrinked but the allocated space is _not_ freed.
+/// the array is shrunk but the allocated space is _not_ freed.
 /// This routine is typically used to create a clonesarray into which
 /// one can directly copy object data without going via the
 /// "new (arr[i]) MyObj()" (i.e. the vtbl is already set correctly).
@@ -666,7 +663,7 @@ void TClonesArray::RemoveRange(Int_t idx1, Int_t idx2)
 /// Create an array of clone objects of class cl. The class must inherit from
 /// TObject. If the class defines an own operator delete(), make sure that
 /// it looks like this:
-///
+///  ~~~ {.cpp}
 ///    void MyClass::operator delete(void *vp)
 ///    {
 ///       if ((Long_t) vp != TObject::GetDtorOnly())
@@ -674,7 +671,7 @@ void TClonesArray::RemoveRange(Int_t idx1, Int_t idx2)
 ///       else
 ///          TObject::SetDtorOnly(0);
 ///    }
-///
+/// ~~~
 /// The second argument s indicates an approximate number of objects
 /// that will be entered in the array. If more than s objects are entered,
 /// the array will be automatically expanded.

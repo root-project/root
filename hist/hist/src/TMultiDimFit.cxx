@@ -36,7 +36,7 @@
  class can take advantage of MINUIT [4] to improve the errors
  of the fitting, thanks to the class TMinuit.
 
- In [5] and[6] H. Wind demonstrates the utility
+ In [5] and [6] H. Wind demonstrates the utility
  of this procedure in the context of tracking, magnetic field
  parameterisation, and so on. The outline of the method used in this
  class is based on Winds discussion, and I refer these two excellents
@@ -155,7 +155,7 @@
  \f]
  where \f$\mathbf{D} = \left(D_1,\ldots,D_M\right)\f$ is a vector of the
  dependent quantity in the sample. Differentiation with respect to
- \f$ a_j\f$ gives, using [6],
+ \f$ a_j\f$ gives, using [6], <a name="eq:dS2"></a>
  \f[
    \mathbf{D}\bullet\mathbf{w}_l - a_l\mathbf{w}_l^2 = 0
  \f]
@@ -171,13 +171,13 @@
    + \sum^l_{k=1} a_k^2\mathbf{w}_k^2
  \f]
  Using [9], we see that
- \f[
+ \f{eqnarray*}{
    S_l &=& \mathbf{D}^2 - 2 \sum^l_{k=1} a_k^2\mathbf{w}_k^2 +
    \sum^j_{k=1} a_k^2\mathbf{w}_k^2\nonumber\\
    &=& \mathbf{D}^2 - \sum^l_{k=1} a_k^2\mathbf{w}_k^2\nonumber\\
    &=& \mathbf{D}^2 - \sum^l_{k=1} \frac{\left(\mathbf D\bullet \mathbf
    w_k\right)}{\mathbf w_k^2}
- \f]
+ \f}
  So for each new function \f$ F_l\f$ included in the model, we get a
  reduction of the sum of squares of residuals of \f$a_l^2\mathbf{w}_l^2\f$,
  where \f$\mathbf{w}_l\f$ is given by [4] and \f$ a_l\f$ by [9]. Thus, using
@@ -290,7 +290,7 @@
  It's important to realize that the training sample should be
  representive of the problem at hand, in particular along the borders
  of the region of interest. This is because the algorithm presented
- here, is a *interpolation*, rahter then a *extrapolation* [5].
+ here, is a *interpolation*, rather then a *extrapolation* [5].
 
  Also, the independent variables \f$ x_{i}\f$ need to be linear
  independent, since the procedure will perform poorly if they are not
@@ -339,7 +339,7 @@
  ## Testing the parameterization
  The class also provides functionality for testing the, over the
  training sample, found parameterization (TMultiDimFit::Fit). This is done by passing
- the class a test sample of \f$ M_\f$ tuples of the form 
+ the class a test sample of \f$ M_t\f$ tuples of the form 
  \f$(\mathbf{x}_{t,j},D_{t,j}, E_{t,j})\f$, where \f$\mathbf{x}_{t,j}\f$ are the independent
  variables, \f$ D_{t,j}\f$ the known, dependent quantity, and \f$ E_{t,j}\f$ is
  the square error in \f$ D_{t,j}\f$ (TMultiDimFit::AddTestRow).
@@ -366,15 +366,15 @@
  Christian Holm
 
  ## Bibliography
- - Philip R. Bevington and D. Keith Robinson. *Data Reduction and Error Analysis for 
+ - <a name="bevington"></a> Philip R. Bevington and D. Keith Robinson. *Data Reduction and Error Analysis for 
    the Physical Sciences*. McGraw-Hill, 2 edition, 1992.
- - R. Brun et al. *Long writeup DD/75-23*, CERN, 1980.
+ - <a name="mudifi"></a> R. Brun et al. *Long writeup DD/75-23*, CERN, 1980.
  - Gene H. Golub and Charles F. van Loan. *Matrix Computations*.
    John Hopkins Univeristy Press, Baltimore, 3 edition, 1996.
- - F. James. *Minuit*. Long writeup D506, CERN, 1998.
- - H. Wind. *Function parameterization*. Proceedings of the 1972 CERN Computing and Data Processing
+ - <a name="minuit"></a>F. James. *Minuit*. Long writeup D506, CERN, 1998.
+ - <a name="wind72"></a>H. Wind. *Function parameterization*. Proceedings of the 1972 CERN Computing and Data Processing
    School, volume 72-21 of Yellow report. CERN, 1972.
- - H. Wind. 1. principal component analysis, 2. pattern recognition for track
+ - <a name="wind81"></a>H. Wind. 1. principal component analysis, 2. pattern recognition for track
    finding, 3. interpolation and functional representation. Yellow report EP/81-12, CERN, 1981.
 
 [1]: TMultiFimFit.html#bevington

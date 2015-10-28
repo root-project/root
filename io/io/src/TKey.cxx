@@ -9,42 +9,43 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  The TKey class includes functions to book space in a file,          //
-//   to create I/O buffers, to fill these buffers,                      //
-//   to compress/uncompress data buffers.                               //
-//                                                                      //
-//  Before saving (making persistent) an object in a file, a key must   //
-//  be created. The key structure contains all the information to       //
-//  uniquely identify a persistent object in a file.                    //
-//     fNbytes    = Number of bytes for the compressed object+key       //
-//     fObjlen    = Length of uncompressed object                       //
-//     fDatime    = Date/Time when the object was written               //
-//     fKeylen    = Number of bytes for the key structure               //
-//     fCycle     = Cycle number of the object                          //
-//     fSeekKey   = Address of the object on file (points to fNbytes)   //
-//                  This is a redundant information used to cross-check //
-//                  the data base integrity.                            //
-//     fSeekPdir  = Pointer to the directory supporting this object     //
-//     fClassName = Object class name                                   //
-//     fName      = Name of the object                                  //
-//     fTitle     = Title of the object                                 //
-//                                                                      //
-//  In the 16 highest bits of fSeekPdir is encoded a pid offset.  This  //
-//  offset is to be added to the pid index stored in the TRef object    //
-//  and the referenced TObject.                                         //
-//                                                                      //
-//  The TKey class is used by ROOT to:                                  //
-//    - to write an object in the current directory                     //
-//    - to write a new ntuple buffer                                    //
-//                                                                      //
-//  The structure of a file is shown in TFile::TFile.                   //
-//  The structure of a directory is shown in TDirectoryFile ctor.       //
-//  The TKey class is used by the TBasket class.                        //
-//  See also TTree.                                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TKey
+\ingroup IO
+
+ Book space in a file, create I/O buffers, to fill them, (un)compress them.
+
+ The TKey class includes functions to book space in a file, to create I/O 
+ buffers, to fill these buffers, to compress/uncompress data buffers.
+ Before saving (making persistent) an object in a file, a key must
+ be created. The key structure contains all the information to
+ uniquely identify a persistent object in a file.
+ | Data Member | Explanation |
+ |-------------|-------------|
+ |  fNbytes    | Number of bytes for the compressed object and key. |
+ |  fObjlen    | Length of uncompressed object. |
+ |  fDatime    | Date/Time when the object was written. |
+ |  fKeylen    | Number of bytes for the key structure. |
+ |  fCycle     | Cycle number of the object. |
+ |  fSeekKey   | Address of the object on file (points to fNbytes). This is a redundant information used to cross-check the data base integrity. |
+ |  fSeekPdir  | Pointer to the directory supporting this object.|
+ |  fClassName | Object class name. |  
+ |  fName      | Name of the object. |                               
+ |  fTitle     | Title of the object. |                              
+                                                                   
+ In the 16 highest bits of fSeekPdir is encoded a pid offset.  This 
+ offset is to be added to the pid index stored in the TRef object   
+ and the referenced TObject.                                        
+                                                                   
+ The TKey class is used by ROOT to:                                 
+   - Write an object in the current directory                    
+   - Write a new ntuple buffer                                   
+                                                                   
+ The structure of a file is shown in TFile::TFile.                  
+ The structure of a directory is shown in TDirectoryFile::TDirectoryFile.      
+ The TKey class is used by the TBasket class.                       
+ See also TTree.
+*/
 
 #include <atomic>
 
@@ -382,9 +383,10 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// method used in all TKey constructor to initialize basic data fields
-/// filepos is used to calculate correct version number of key
-/// if filepos==-1, end of file position is used
+/// Method used in all TKey constructor to initialize basic data fields.
+///
+/// The member filepos is used to calculate correct version number of key
+/// if filepos==-1, end of file position is used.
 
 void TKey::Build(TDirectory* motherDir, const char* classname, Long64_t filepos)
 {
@@ -415,6 +417,7 @@ void TKey::Build(TDirectory* motherDir, const char* classname, Long64_t filepos)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object from disk and call its Browse() method.
+///
 /// If object with same name already exist in memory delete it (like
 /// TDirectoryFile::Get() is doing), except when the key references a
 /// folder in which case we don't want to re-read the folder object
@@ -447,9 +450,10 @@ void TKey::Browse(TBrowser *b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a TKey object of specified size
-/// if externFile!=0, key will be allocated in specified file,
-/// otherwise file of mother directory will be used
+/// Create a TKey object of specified size.
+///
+/// If externFile!=0, key will be allocated in specified file, otherwise file 
+/// of mother directory will be used.
 
 void TKey::Create(Int_t nbytes, TFile* externFile)
 {
@@ -520,6 +524,7 @@ TKey::~TKey()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete an object from the file.
+///
 /// Note: the key is not deleted. You still have to call "delete key".
 /// This is different from the behaviour of TObject::Delete()!
 
@@ -559,7 +564,7 @@ Short_t TKey::GetCycle() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns file to which key belong
+/// Returns file to which key belong.
 
 TFile *TKey::GetFile() const
 {
@@ -623,6 +628,7 @@ ULong_t TKey::Hash() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment fPidOffset by 'offset'.
+///
 /// This offset is used when a key (or basket) is transfered from one file to
 /// the other.  In this case the TRef and TObject might have stored a pid
 /// index (to retrieve TProcessIDs) which refered to their order on the
@@ -662,6 +668,7 @@ Bool_t TKey::IsFolder() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the "KEEP" status.
+///
 /// When the KEEP flag is set to 1 the object cannot be purged.
 
 void TKey::Keep()
@@ -689,33 +696,33 @@ void TKey::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// To read a TObject* from the file.
 ///
-///  The object associated to this key is read from the file into memory
-///  Once the key structure is read (via Streamer) the class identifier
-///  of the object is known.
-///  Using the class identifier we find the TClass object for this class.
-///  A TClass object contains a full description (i.e. dictionary) of the
-///  associated class. In particular the TClass object can create a new
-///  object of the class type it describes. This new object now calls its
-///  Streamer function to rebuilt itself.
+/// The object associated to this key is read from the file into memory
+/// Once the key structure is read (via Streamer) the class identifier
+/// of the object is known.
+/// Using the class identifier we find the TClass object for this class.
+/// A TClass object contains a full description (i.e. dictionary) of the
+/// associated class. In particular the TClass object can create a new
+/// object of the class type it describes. This new object now calls its
+/// Streamer function to rebuilt itself.
 ///
-///  Use TKey::ReadObjectAny to read any object non-derived from TObject
+/// Use TKey::ReadObjectAny to read any object non-derived from TObject
 ///
-///  Note:
-///  A C style cast can only be used in the case where the final class
-///  of this object derives from TObject as a first inheritance, otherwise
-///  one must use a dynamic_cast.
+/// ### Note
+/// A C style cast can only be used in the case where the final class
+/// of this object derives from TObject as a first inheritance, otherwise
+/// one must use a dynamic_cast.
 ///
-///  Example1: simplified case:
-///      class MyClass : public TObject, public AnotherClass
-///   then on return, one get away with using:
-///    MyClass *obj = (MyClass*)key->ReadObj();
+/// #### Example1: simplified case
+///     class MyClass : public TObject, public AnotherClass
+/// then on return, one get away with using:
+///     MyClass *obj = (MyClass*)key->ReadObj();
 ///
-///  Example2: Usual case (recommended unless performance is critical)
-///    MyClass *obj = dynamic_cast<MyClass*>(key->ReadObj());
-///  which support also the more complex inheritance like:
-///    class MyClass : public AnotherClass, public TObject
+/// #### Example2: Usual case (recommended unless performance is critical)
+///     MyClass *obj = dynamic_cast<MyClass*>(key->ReadObj());
+/// which support also the more complex inheritance like:
+///     class MyClass : public AnotherClass, public TObject
 ///
-///  Of course, dynamic_cast<> can also be used in the example 1.
+/// Of course, dynamic_cast<> can also be used in the example 1.
 
 TObject *TKey::ReadObj()
 {
@@ -843,20 +850,21 @@ CLEAR:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// To read a TObject* from bufferRead.
-/// This function is identical to TKey::ReadObj, but it reads directly
-/// from bufferRead instead of reading from a file.
-///  The object associated to this key is read from the buffer into memory
-///  Using the class identifier we find the TClass object for this class.
-///  A TClass object contains a full description (i.e. dictionary) of the
-///  associated class. In particular the TClass object can create a new
-///  object of the class type it describes. This new object now calls its
-///  Streamer function to rebuilt itself.
 ///
-///  NOTE :
-///  This function is called only internally by ROOT classes.
-///  Although being public it is not supposed to be used outside ROOT.
-///  If used, you must make sure that the bufferRead is large enough to
-///  accomodate the object being read.
+/// This function is identical to TKey::ReadObj, but it reads directly from 
+/// bufferRead instead of reading from a file.
+/// The object associated to this key is read from the buffer into memory
+/// Using the class identifier we find the TClass object for this class.
+/// A TClass object contains a full description (i.e. dictionary) of the
+/// associated class. In particular the TClass object can create a new
+/// object of the class type it describes. This new object now calls its
+/// Streamer function to rebuilt itself.
+///
+/// ### Note
+/// This function is called only internally by ROOT classes.
+/// Although being public it is not supposed to be used outside ROOT.
+/// If used, you must make sure that the bufferRead is large enough to
+/// accomodate the object being read.
 
 TObject *TKey::ReadObjWithBuffer(char *bufferRead)
 {
@@ -970,29 +978,29 @@ CLEAR:
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  To read an object (non deriving from TObject) from the file.
+/// To read an object (non deriving from TObject) from the file.
 ///
-///  If expectedClass is not null, we checked that that actual class of
-///  the object stored is suitable to be stored in a pointer pointing
-///  to an object of class 'expectedClass'.  We also adjust the value
-///  of the returned address so that it is suitable to be cast (C-Style)
-///  a  a pointer pointing to an object of class 'expectedClass'.
+/// If expectedClass is not null, we checked that that actual class of the 
+/// object stored is suitable to be stored in a pointer pointing to an object 
+/// of class 'expectedClass'.  We also adjust the value of the returned address
+/// so that it is suitable to be cast (C-Style)
+/// a pointer pointing to an object of class 'expectedClass'.
 ///
-///  So for example if the class Bottom inherits from Top and the object
-///  stored is of type Bottom you can safely do:
-///
-///     TClass *TopClass = TClass::GetClass("Top");
-///     Top *ptr = (Top*) key->ReadObjectAny( TopClass );
-///     if (ptr==0) printError("the object stored in the key is not of the expected type\n");
-///
-///  The object associated to this key is read from the file into memory
-///  Once the key structure is read (via Streamer) the class identifier
-///  of the object is known.
-///  Using the class identifier we find the TClass object for this class.
-///  A TClass object contains a full description (i.e. dictionary) of the
-///  associated class. In particular the TClass object can create a new
-///  object of the class type it describes. This new object now calls its
-///  Streamer function to rebuilt itself.
+/// So for example if the class Bottom inherits from Top and the object
+/// stored is of type Bottom you can safely do:
+/// ~~~{.cpp}
+/// auto TopClass = TClass::GetClass("Top");
+/// auto ptr = (Top*) key->ReadObjectAny( TopClass );
+/// if (ptr==0) printError("the object stored in the key is not of the expected type\n");
+/// ~~~
+/// The object associated to this key is read from the file into memory.
+/// Once the key structure is read (via Streamer) the class identifier
+/// of the object is known.
+/// Using the class identifier we find the TClass object for this class.
+/// A TClass object contains a full description (i.e. dictionary) of the
+/// associated class. In particular the TClass object can create a new
+/// object of the class type it describes. This new object now calls its
+/// Streamer function to rebuilt itself.
 
 void *TKey::ReadObjectAny(const TClass* expectedClass)
 {
@@ -1127,6 +1135,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// To read an object from the file.
+///
 /// The object associated to this key is read from the file into memory.
 /// Before invoking this function, obj has been created via the
 /// default constructor.
@@ -1188,7 +1197,8 @@ Int_t TKey::Read(TObject *obj)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Decode input buffer.
-/// In some situation will add key to gDirectory ???
+///
+/// In some situation will add key to gDirectory.
 
 void TKey::ReadBuffer(char *&buffer)
 {
@@ -1301,14 +1311,20 @@ void TKey::Reset()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the size in bytes of the key header structure.
-/// Int_t nbytes = sizeof fNbytes;      4
-///             += sizeof(Version_t);   2
-///             += sizeof fObjlen;      4
-///             += sizeof fKeylen;      2
-///             += sizeof fCycle;       2
-///             += sizeof fSeekKey;     4 or 8
-///             += sizeof fSeekPdir;    4 or 8
-///              =                     22
+///
+/// An explaination about the nbytes (Int_t nbytes) variable used in the 
+/// function. The size of fSeekKey and fSeekPdir is 8 instead of 4 if version is 
+/// greater than 1000.
+/// | Component         | Sizeof |
+/// |-------------------|--------|
+/// | fNbytes           | 4      |
+/// | sizeof(Version_t) | 2      |
+/// | fObjlen           | 4      |
+/// | fKeylen           | 2      |
+/// | fCycle            | 2      |
+/// | fSeekKey          | 4 or 8 |
+/// | fSeekPdir         | 4 or 8 |
+/// | **TOTAL**         |   22   |
 
 Int_t TKey::Sizeof() const
 {

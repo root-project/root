@@ -14,12 +14,11 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooArgusBg is a RooAbsPdf implementation describing the ARGUS background shape
-// END_HTML
-//
+/** \class RooArgusBG
+    \ingroup Roofitpdf
+
+RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
+*/
 
 #include "RooFit.h"
 
@@ -41,6 +40,7 @@ ClassImp(RooArgusBG)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 RooArgusBG::RooArgusBG(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c) :
@@ -54,6 +54,7 @@ RooArgusBG::RooArgusBG(const char *name, const char *title,
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 RooArgusBG::RooArgusBG(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p) :
@@ -67,6 +68,7 @@ RooArgusBG::RooArgusBG(const char *name, const char *title,
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
 RooArgusBG::RooArgusBG(const RooArgusBG& other, const char* name) :
   RooAbsPdf(other,name), 

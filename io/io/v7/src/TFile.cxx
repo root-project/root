@@ -72,7 +72,7 @@ fImpl(impl)
 }
 
 
-ROOT::TFilePtr ROOT::TFilePtr::Read(std::string_view name) {
+ROOT::TFilePtr ROOT::TFilePtr::OpenForRead(std::string_view name) {
   // will become delegation to TFileSystemFile, TWebFile etc.
   return TFilePtr(MakeCoop<TFileSystemFile>(name.to_string(), "READ"));
 }
@@ -84,7 +84,7 @@ ROOT::TFilePtr ROOT::TFilePtr::Recreate(std::string_view name) {
   // will become delegation to TFileSystemFile, TWebFile etc.
   return TFilePtr(MakeCoop<TFileSystemFile>(name.to_string(), "RECREATE"));
 }
-ROOT::TFilePtr ROOT::TFilePtr::Update(std::string_view name) {
+ROOT::TFilePtr ROOT::TFilePtr::OpenForUpdate(std::string_view name) {
   // will become delegation to TFileSystemFile, TWebFile etc.
   return TFilePtr(MakeCoop<TFileSystemFile>(name.to_string(), "UPDATE"));
 }

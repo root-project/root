@@ -9,62 +9,63 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TList                                                                //
-//                                                                      //
-// A doubly linked list. All classes inheriting from TObject can be     //
-// inserted in a TList. Before being inserted into the list the object  //
-// pointer is wrapped in a TObjLink object which contains, besides      //
-// the object pointer also a previous and next pointer.                 //
-//                                                                      //
-// There are basically four ways to iterate over a TList (in order      //
-// of preference, if not forced by other constraints):                  //
-//    1) Using the R__FOR_EACH macro:                                   //
-//         GetListOfPrimitives()->R__FOR_EACH(TObject,Paint)(option);   //
-//                                                                      //
-//    2) Using the TList iterator TListIter (via the wrapper class      //
-//       TIter):                                                        //
-//         TIter next(GetListOfPrimitives());                           //
-//         while ((TObject *obj = next()))                              //
-//            obj->Draw(next.GetOption());                              //
-//                                                                      //
-//    3) Using the TList iterator TListIter and std::for_each           //
-//       algorithm:                                                     //
-//         // A function object, which will be applied to each element  //
-//         // of the given range.                                       //
-//         struct STestFunctor {                                        //
-//            bool operator()(TObject *aObj) {                          //
-//               ...                                                    //
-//               return true;                                           //
-//            }                                                         //
-//        }                                                             //
-//        ...                                                           //
-//        ...                                                           //
-//        TIter iter(mylist);                                           //
-//        for_each( iter.Begin(), TIter::End(), STestFunctor() );       //
-//                                                                      //
-//    4) Using the TObjLink list entries (that wrap the TObject*):      //
-//         TObjLink *lnk = GetListOfPrimitives()->FirstLink();          //
-//         while (lnk) {                                                //
-//            lnk->GetObject()->Draw(lnk->GetOption());                 //
-//            lnk = lnk->Next();                                        //
-//         }                                                            //
-//                                                                      //
-//    5) Using the TList's After() and Before() member functions:       //
-//         TFree *idcur = this;                                         //
-//         while (idcur) {                                              //
-//            ...                                                       //
-//            ...                                                       //
-//            idcur = (TFree*)GetListOfFree()->After(idcur);            //
-//         }                                                            //
-//                                                                      //
-//   Methods 2, 3 and 4 can also easily iterate backwards using either  //
-//   a backward TIter (using argument kIterBackward) or by using        //
-//   LastLink() and lnk->Prev() or by using the Before() member.        //
-//Begin_Html <img src=gif/tlist.gif> End_Html                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TList
+A doubly linked list.
+
+All classes inheriting from TObject can be
+inserted in a TList. Before being inserted into the list the object
+pointer is wrapped in a TObjLink object which contains, besides
+the object pointer also a previous and next pointer.
+
+There are basically four ways to iterate over a TList (in order
+of preference, if not forced by other constraints):
+
+  1. Using the R__FOR_EACH macro:
+~~~ {.cpp}
+         GetListOfPrimitives()->R__FOR_EACH(TObject,Paint)(option);
+~~~
+  2. Using the TList iterator TListIter (via the wrapper class TIter):
+~~~ {.cpp}
+         TIter next(GetListOfPrimitives());
+         while ((TObject *obj = next()))
+            obj->Draw(next.GetOption());
+~~~
+  3. Using the TList iterator TListIter and std::for_each algorithm:
+~~~ {.cpp}
+         // A function object, which will be applied to each element
+         // of the given range.
+         struct STestFunctor {
+            bool operator()(TObject *aObj) {
+               ...
+               return true;
+            }
+         }
+         ...
+         ...
+         TIter iter(mylist);
+         for_each( iter.Begin(), TIter::End(), STestFunctor() );
+~~~
+  4. Using the TObjLink list entries (that wrap the TObject*):
+~~~ {.cpp}
+         TObjLink *lnk = GetListOfPrimitives()->FirstLink();
+         while (lnk) {
+            lnk->GetObject()->Draw(lnk->GetOption());
+            lnk = lnk->Next();
+         }
+~~~
+  5. Using the TList's After() and Before() member functions:
+~~~ {.cpp}
+         TFree *idcur = this;
+         while (idcur) {
+            ...
+            ...
+            idcur = (TFree*)GetListOfFree()->After(idcur);
+         }
+~~~
+Methods 2, 3 and 4 can also easily iterate backwards using either
+a backward TIter (using argument kIterBackward) or by using
+LastLink() and lnk->Prev() or by using the Before() member.
+*/
 
 #include "TList.h"
 #include "TClass.h"
@@ -404,7 +405,7 @@ void TList::Delete(Option_t *option)
 {
    Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
 
-   TList removeDirectory; // need to deregistere these from their directory
+   TList removeDirectory; // need to deregister these from their directory
 
    if (slow) {
 
@@ -851,13 +852,9 @@ TObjLink **TList::DoSort(TObjLink **head, Int_t n)
    }
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TObjLink                                                             //
-//                                                                      //
-// Wrapper around a TObject so it can be stored in a TList.             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TObjLink
+Wrapper around a TObject so it can be stored in a TList.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new TObjLink.
@@ -869,13 +866,9 @@ TObjLink::TObjLink(TObject *obj, TObjLink *prev)
    if (fNext) fNext->fPrev = this;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TListIter                                                            //
-//                                                                      //
-// Iterator of linked list.                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TListIter
+Iterator of linked list.
+*/
 
 ClassImp(TListIter)
 

@@ -181,8 +181,9 @@ void BaseSelectionRule::PrintAttributes(std::ostream &out, int level) const
    }
 
    if (!fAttributes.empty()) {
-      for (AttributesMap_t::const_iterator iter = fAttributes.begin(); iter!=fAttributes.end(); ++iter) {
-         out<<tabs<<iter->first<<" = "<<iter->second<<std::endl;
+      std::map<std::string,std::string> orderedAttributes(fAttributes.begin(),fAttributes.end());
+      for (auto&& attr : orderedAttributes) {
+         out<<tabs<<attr.first<<" = "<<attr.second<<std::endl;
       }
    }
    else {
@@ -347,7 +348,8 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          // optimisation.
          if (!patternMatched &&
                D &&
-               ROOT::TMetaUtils::IsStdDropDefaultClass(*D)) {
+               //ROOT::TMetaUtils::IsStdDropDefaultClass(*D)) {
+               0 != TClassEdit::IsSTLCont(name)) {
             TClassEdit::GetNormalizedName(auxName, name.c_str());
             if (name.size() != auxName.size()) {
                auxName = TClassEdit::InsertStd(auxName.c_str());

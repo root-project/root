@@ -19,6 +19,7 @@
 #include "TGLIncludes.h"
 
 /** \class TEveJetConeGL
+\ingroup TEve
 OpenGL renderer class for TEveJetCone.
 */
 
@@ -169,6 +170,7 @@ void TEveJetConeGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 }
 
 /** \class TEveJetConeProjectedGL
+\ingroup TEve
 OpenGL renderer class for TEveJetConeProjected.
 */
 

@@ -11,6 +11,7 @@ endif()
 ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
 ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
 ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread)
+ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 
 if(CMAKE_Fortran_COMPILER)
   ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern)

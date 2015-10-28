@@ -3,22 +3,19 @@
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBits                                                                //
-//                                                                      //
-// Container of bits                                                    //
-//                                                                      //
-// This class provides a simple container of bits.                      //
-// Each bit can be set and tested via the functions SetBitNumber and    //
-// TestBitNumber.                                             .         //
-// The default value of all bits is kFALSE.                             //
-// The size of the container is automatically extended when a bit       //
-// number is either set or tested.  To reduce the memory size of the    //
-// container use the Compact function, this will discard the memory     //
-// occupied by the upper bits that are 0.                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBits
+Container of bits.
+
+This class provides a simple container of bits.
+Each bit can be set and tested via the functions SetBitNumber and
+TestBitNumber.
+                                             .
+The default value of all bits is kFALSE.
+The size of the container is automatically extended when a bit
+number is either set or tested.  To reduce the memory size of the
+container use the Compact function, this will discard the memory
+occupied by the upper bits that are 0.
+*/
 
 #include "TBits.h"
 #include "string.h"
@@ -157,7 +154,7 @@ UInt_t TBits::CountBits(UInt_t startBit) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute (*this) &= rhs;
+/// Execute `(*this) &= rhs;`
 /// Extra bits in rhs are ignored
 /// Missing bits in rhs are assumed to be zero.
 
@@ -173,7 +170,7 @@ void TBits::DoAndEqual(const TBits& rhs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute (*this) &= rhs;
+/// Execute `(*this) &= rhs;`
 /// Extra bits in rhs are ignored
 /// Missing bits in rhs are assumed to be zero.
 
@@ -186,7 +183,7 @@ void TBits::DoOrEqual(const TBits& rhs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute (*this) ^= rhs;
+/// Execute `(*this) ^= rhs;`
 /// Extra bits in rhs are ignored
 /// Missing bits in rhs are assumed to be zero.
 
@@ -199,7 +196,7 @@ void TBits::DoXorEqual(const TBits& rhs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute ~(*this)
+/// Execute `~(*this)`
 
 void TBits::DoFlip()
 {

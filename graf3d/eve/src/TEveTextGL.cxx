@@ -19,6 +19,7 @@
 #include "TGLBoundingBox.h"
 
 /** \class TEveTextGL
+\ingroup TEve
 OpenGL renderer class for TEveText.
 */
 

@@ -22,6 +22,7 @@
 #include "TMath.h"
 
 /** \class TEveProjectionAxesGL
+\ingroup TEve
 OpenGL renderer class for TEveProjectionAxes.
 */
 

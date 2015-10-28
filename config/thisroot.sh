@@ -29,12 +29,15 @@ if [ -n "${ROOTSYS}" ] ; then
 fi
 
 if [ "x${BASH_ARGV[0]}" = "x" ]; then
-    if [ ! -f bin/thisroot.sh ]; then
+    if [ -f bin/thisroot.sh ]; then
+        ROOTSYS="$PWD"; export ROOTSYS
+    elif [ -f ./thisroot.sh ]; then
+        ROOTSYS=$(cd ..; pwd); export ROOTSYS
+    else
         echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of bash!
         ROOTSYS=; export ROOTSYS
         return 1
     fi
-    ROOTSYS="$PWD"; export ROOTSYS
 else
     # get param to "."
     thisroot=$(dirname ${BASH_ARGV[0]})
@@ -122,9 +125,9 @@ else
 fi
 
 if [ -z "${MANPATH}" ]; then
-   MANPATH=`dirname @mandir@`:${default_manpath}; export MANPATH
+   MANPATH=@mandir@:${default_manpath}; export MANPATH
 else
-   MANPATH=`dirname @mandir@`:$MANPATH; export MANPATH
+   MANPATH=@mandir@:$MANPATH; export MANPATH
 fi
 
 if [ -z "${CMAKE_PREFIX_PATH}" ]; then

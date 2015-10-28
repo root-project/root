@@ -9,11 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Persistent version of a TClass.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProtoClass
+Persistent version of a TClass.
+*/
 
 #include "TProtoClass.h"
 
@@ -29,13 +27,14 @@
 #include "TError.h"
 
 #include <cassert>
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a TProtoClass from a TClass.
 
 TProtoClass::TProtoClass(TClass* cl):
-   TNamed(*cl), fBase(cl->GetListOfBases()), 
-   fEnums(cl->GetListOfEnums()), fSizeof(cl->Size()), fCanSplit(cl->fCanSplit),
-   fStreamerType(cl->fStreamerType), fProperty(cl->fProperty),
+   TNamed(*cl), fBase(cl->GetListOfBases()),
+   fEnums(cl->GetListOfEnums()), fSizeof(cl->Size()), fCheckSum(cl->fCheckSum),
+   fCanSplit(cl->fCanSplit), fStreamerType(cl->fStreamerType), fProperty(cl->fProperty),
    fClassProperty(cl->fClassProperty)
 {
    if (cl->Property() & kIsNamespace){
@@ -47,11 +46,11 @@ TProtoClass::TProtoClass(TClass* cl):
    }
    // initialize list of data members (fData)
    TList * dataMembers = cl->GetListOfDataMembers();
-   if (dataMembers && dataMembers->GetSize() > 0) { 
-      fData.reserve(dataMembers->GetSize() ); 
-      for (auto * obj : *dataMembers) { 
-         TDataMember * dm = dynamic_cast<TDataMember*>(obj); 
-         fData.push_back(dm); 
+   if (dataMembers && dataMembers->GetSize() > 0) {
+      fData.reserve(dataMembers->GetSize() );
+      for (auto * obj : *dataMembers) {
+         TDataMember * dm = dynamic_cast<TDataMember*>(obj);
+         fData.push_back(dm);
       }
    }
 
@@ -72,21 +71,21 @@ TProtoClass::TProtoClass(TClass* cl):
          TRealData *rd = (TRealData*)realDataObj;
          if (!precRd) precRd = rd;
          TClass* clRD = rd->GetDataMember()->GetClass();
-         TProtoRealData protoRealData(rd); 
+         TProtoRealData protoRealData(rd);
          if (clRD != clCurrent) {
             // here I have a new class
             fDepClasses.push_back(clRD->GetName() );
             clCurrent = clRD;
             protoRealData.fClassIndex = fDepClasses.size()-1;
-            //protoRealData.fClass = clRD->GetName(); 
+            //protoRealData.fClass = clRD->GetName();
 //TObjString *clstr = new TObjString(clRD->GetName());
             if (precRd->TestBit(TRealData::kTransient)) {
                //clstr->SetBit(TRealData::kTransient);
                protoRealData.SetFlag(TProtoRealData::kIsTransient,true);
             }
-            else 
-               protoRealData.SetFlag(TProtoRealData::kIsTransient,false); 
-               
+            else
+               protoRealData.SetFlag(TProtoRealData::kIsTransient,false);
+
             //      fPRealData->AddLast(clstr);
             precRd = rd;
          }
@@ -100,7 +99,7 @@ TProtoClass::TProtoClass(TClass* cl):
             // const auto dataName = data.fName;
             // const auto dataClass = data.fClass;
             // Info("TProtoClass","Data is a protorealdata: %s - class %s - transient %d", dataName.Data(),dataClass.Data(),data.fIsTransient);
-            //if (!dataClass.IsNull() 
+            //if (!dataClass.IsNull()
             // if (classType == TProtoRealData::Class())
             //    Info("TProtoClass","Data is a protorealdata: %s", dataPtrName);
             // if (classType == TObjString::Class())
@@ -111,7 +110,7 @@ TProtoClass::TProtoClass(TClass* cl):
       }
    }
 
-   // this crashes 
+   // this crashes
    cl->CalculateStreamerOffset();
    fOffsetStreamer = cl->fOffsetStreamer;
 }
@@ -122,7 +121,7 @@ TProtoClass::TProtoClass(TClass* cl):
 // // conversion of a new TProtoClass from an old TProtoClass
 // //______________________________________________________________________________
 // TProtoClass::TProtoClass(TProtoClassOld * pc):
-//    TNamed(pc->GetName(),pc->GetTitle()), fBase(pc->fBase), 
+//    TNamed(pc->GetName(),pc->GetTitle()), fBase(pc->fBase),
 //    fEnums(pc->fEnums), fSizeof(pc->fSizeof), fCanSplit(pc->fCanSplit),
 //    fStreamerType(pc->fStreamerType), fProperty(pc->fProperty),
 //    fClassProperty(pc->fClassProperty), fOffsetStreamer( pc->fOffsetStreamer)
@@ -134,20 +133,20 @@ TProtoClass::TProtoClass(TClass* cl):
 
 //    // initialize list of data members (fData)
 //    TList * dataMembers = pc->fData;
-//    if (dataMembers && dataMembers->GetSize() > 0) { 
-//       fData.reserve(dataMembers->GetSize() ); 
-//       for (auto * obj : *dataMembers) { 
+//    if (dataMembers && dataMembers->GetSize() > 0) {
+//       fData.reserve(dataMembers->GetSize() );
+//       for (auto * obj : *dataMembers) {
 //          TDataMember * dm = dynamic_cast<TDataMember*>(obj);
-//          if (dm) { 
-//             TDataMember * dm2 = (TDataMember *) dm->Clone(); 
-//             if (dm2)   fData.push_back(dm2); 
+//          if (dm) {
+//             TDataMember * dm2 = (TDataMember *) dm->Clone();
+//             if (dm2)   fData.push_back(dm2);
 //          }
 //       }
 //    }
 
 //    fPRealData.reserve(100);
 
-//    TString className; 
+//    TString className;
 //    for (auto dataPtr : *(pc->fPRealData) ) {
 
 //       const auto classType = dataPtr->IsA();
@@ -157,18 +156,18 @@ TProtoClass::TProtoClass(TClass* cl):
 //       else if (classType == TProtoClass::TProtoRealData::Class()) {
 //          TProtoRealData protoRealData;
 //          TProtoClass::TProtoRealData * oldData= ( TProtoClass::TProtoRealData * )dataPtr;
-//          TClass * cl = TClass::GetClass(className); 
+//          TClass * cl = TClass::GetClass(className);
 //          //protoRealData.fName = dataPtr->GetName();
 //          //TObject * obj =  cl->GetListOfDataMembers()->FindObject(  );
 //          protoRealData.fDMIndex = DataMemberIndex(cl, dataPtr->GetName() );
 //          //  protoRealData.fTitle = dataPtr->GetTitle();
-//          //protoRealData.fClass = className; 
+//          //protoRealData.fClass = className;
 //          className.Clear();
 //          protoRealData.fIsTransient = dataPtr->TestBit(TRealData::kTransient);
 //          protoRealData.fOffset = oldData->GetOffset();
 //          protoRealData.fIsObject = dataPtr->TestBit(BIT(15));
 //          fPRealData.push_back(protoRealData);
-//       }      
+//       }
 //    }
 // }
 
@@ -191,7 +190,7 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
 
    if (fEnums) fEnums->Delete(opt);
    delete fEnums; fEnums = 0;
-   
+
    if (gErrorIgnoreLevel==-2) printf("Delete the protoClass %s \n",GetName());
 }
 
@@ -220,7 +219,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
       // one with each other.
       for (auto element: fPRealData) {
          //if (element->IsA() == TObjString::Class()) {
-         if (element.IsAClass() ) { 
+         if (element.IsAClass() ) {
             if (gDebug > 1) Info("","Treating beforehand mother class %s",GetClassName(element.fClassIndex));
 //             int autoloadingOldval=gInterpreter->SetClassAutoloading(false);
             TInterpreter::SuspendAutoParsing autoParseRaii(gInterpreter);
@@ -233,7 +232,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    }
 
 
-   //this->Dump(); 
+   //this->Dump();
 
    // Copy only the TClass bits.
    // not bit 13 and below and not bit 24 and above, just Bits 14 - 23
@@ -247,13 +246,13 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
 
    // fill list of data members in TClass
    //if (cl->fData) { cl->fData->Delete(); delete cl->fData;  }
-   cl->fData = new TListOfDataMembers(fData); 
-   // for (auto * dataMember : fData) { 
+   cl->fData = new TListOfDataMembers(fData);
+   // for (auto * dataMember : fData) {
    //    //printf("add data member for class %s - member %s \n",GetName(), dataMember->GetName() );
-   //    cl->fData->Add(dataMember); 
+   //    cl->fData->Add(dataMember);
    // }
    // // set loaded bit to true to avoid re-loading the data members
-   // cl->fData->SetIsLoaded();* 
+   // cl->fData->SetIsLoaded();*
 
    //cl->fData = (TListOfDataMembers*)fData;
 
@@ -266,8 +265,9 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
       }
       cl->fEnums = temp;
    }
-  
+
    cl->fSizeof = fSizeof;
+   cl->fCheckSum = fCheckSum;
    cl->fCanSplit = fCanSplit;
    cl->fProperty = fProperty;
    cl->fClassProperty = fClassProperty;
@@ -296,11 +296,11 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    TClass* currentRDClass = cl;
    TRealData * prevRealData = 0;
    int prevLevel = 0;
-   bool first = true; 
+   bool first = true;
    if (fPRealData.size()  > 0) {
       for (auto element: fPRealData) {
          //if (element->IsA() == TObjString::Class()) {
-         if (element.IsAClass() ) { 
+         if (element.IsAClass() ) {
             // We now check for the TClass entry, w/o loading. Indeed we did that above.
             // If the class is not found, it means that really it was not selected and we
             // replace it with an empty placeholder with the status of kForwardDeclared.
@@ -323,40 +323,40 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
          //else {
          if (!currentRDClass) continue;
          //TProtoRealData* prd = (TProtoRealData*)element;
-         // pass a previous real data only if depth 
+         // pass a previous real data only if depth
 
          if (TRealData* rd = element.CreateRealData(currentRDClass, cl,prevRealData, prevLevel)) {
-            if (first) { 
-               //LM: need to do here because somehow fRealData is destroyed when calling TClass::GetListOfDataMembers() 
-               if (cl->fRealData) { 
+            if (first) {
+               //LM: need to do here because somehow fRealData is destroyed when calling TClass::GetListOfDataMembers()
+               if (cl->fRealData) {
                   Info("FillTClas","Real data for class %s is not empty - make a new one",cl->GetName() );
                   delete cl->fRealData;
                }
-               cl->fRealData = new TList(); // FIXME: this should really become a THashList!               
-               first = false; 
+               cl->fRealData = new TList(); // FIXME: this should really become a THashList!
+               first = false;
             }
 
             cl->fRealData->AddLast(rd);
-            prevRealData = rd; 
+            prevRealData = rd;
             prevLevel = element.fLevel;
 
          }
             //}
       }
    }
-   else { 
-      if (cl->fRealData) { 
+   else {
+      if (cl->fRealData) {
          Info("FillTClas","Real data for class %s is not empty - make a new one. Class has no Proto-realdata",cl->GetName() );
          delete cl->fRealData;
       }
-      cl->fRealData = new TList(); // FIXME: this should really become a THashList!               
+      cl->fRealData = new TList(); // FIXME: this should really become a THashList!
    }
 
    cl->SetStreamerImpl();
 
    // set to zero in order not to delete when protoclass is deleted
    fBase = 0;
-   //fData = 0; 
+   //fData = 0;
    fEnums = 0;
 
    fPRealData.clear();
@@ -383,15 +383,15 @@ TProtoClass::TProtoRealData::TProtoRealData(const TRealData* rd):
    fClassIndex(-1),
    fStatusFlag(0)
 {
-   TDataMember * dm = rd->GetDataMember(); 
+   TDataMember * dm = rd->GetDataMember();
    TClass * cl = dm->GetClass();
-   assert(cl != NULL); 
+   assert(cl != NULL);
    fDMIndex = DataMemberIndex(cl,dm->GetName());
    //printf("Index of data member %s for class %s is %d \n",dm->GetName(), cl->GetName() , fDMIndex);
    TString fullDataMemberName = rd->GetName(); // full data member name (e.g. fXaxis.fNbins)
    fLevel = fullDataMemberName.CountChar('.');
 
-   if (fullDataMemberName.Contains("*") ) SetFlag(kIsPointer); 
+   if (fullDataMemberName.Contains("*") ) SetFlag(kIsPointer);
 
    // Initialize this from a TRealData object.
    SetFlag(kIsObject, rd->IsObject());
@@ -424,37 +424,37 @@ TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
       return nullptr;
    }
 
-   // here I need to re-construct the realdata full name (e.g. fAxis.fNbins) 
+   // here I need to re-construct the realdata full name (e.g. fAxis.fNbins)
 
    TString realMemberName;
    // keep an empty name if data member is not found
-   if (dm) realMemberName = dm->GetName(); 
-   if (TestFlag(kIsPointer) ) 
-      realMemberName = TString("*")+realMemberName;  
-   else {  
-      if (dm && dm->GetArrayDim() > 0) { 
+   if (dm) realMemberName = dm->GetName();
+   if (TestFlag(kIsPointer) )
+      realMemberName = TString("*")+realMemberName;
+   else {
+      if (dm && dm->GetArrayDim() > 0) {
       // in case of array (like fMatrix[2][2] we need to add max index )
       // this only in case of it os not a pointer
-         for (int idim = 0; idim < dm->GetArrayDim(); ++idim)  
+         for (int idim = 0; idim < dm->GetArrayDim(); ++idim)
             realMemberName += TString::Format("[%d]",dm->GetMaxIndex(idim) );
       }
    }
 
    if (prevData && fLevel > 0 ) {
       if (fLevel-prevLevel == 1) // I am going down 1 level
-         realMemberName = TString::Format("%s.%s",prevData->GetName(), realMemberName.Data() ); 
-      else if (fLevel <= prevLevel) { // I am at the same level 
-         // need to strip out prev name 
-         std::string prevName = prevData->GetName();  
+         realMemberName = TString::Format("%s.%s",prevData->GetName(), realMemberName.Data() );
+      else if (fLevel <= prevLevel) { // I am at the same level
+         // need to strip out prev name
+         std::string prevName = prevData->GetName();
          // we strip the prev data member name from the full name
-         std::string parentName; 
-         for (int i = 0; i < prevLevel-fLevel+1; ++i) { 
+         std::string parentName;
+         for (int i = 0; i < prevLevel-fLevel+1; ++i) {
             parentName = prevName.substr(0, prevName.find_last_of(".") );
-            prevName = parentName; 
+            prevName = parentName;
          }
-         
+
          // now we need to add the current name
-         realMemberName =  TString::Format("%s.%s",parentName.c_str(), realMemberName.Data() ); 
+         realMemberName =  TString::Format("%s.%s",parentName.c_str(), realMemberName.Data() );
       }
    }
 
@@ -469,36 +469,36 @@ TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
 
 Int_t TProtoClass::DataMemberIndex(TClass * cl, const char * name)
 {
-   TList * dmList = cl->GetListOfDataMembers(); 
+   TList * dmList = cl->GetListOfDataMembers();
 
-   // we cannot use IndexOf because order is guranteed only for non-static data member 
-   Int_t index = 0; 
-   for ( auto * obj : *dmList) { 
-      TDataMember * dm = (TDataMember *) obj; 
-      if (!dm ) continue; 
+   // we cannot use IndexOf because order is guaranteed only for non-static data member
+   Int_t index = 0;
+   for ( auto * obj : *dmList) {
+      TDataMember * dm = (TDataMember *) obj;
+      if (!dm ) continue;
       if (dm->Property() & kIsStatic) continue;
-      if ( TString(dm->GetName()) == TString(name) ) 
-         return index; 
+      if ( TString(dm->GetName()) == TString(name) )
+         return index;
       index++;
    }
    ::Error("TProtoClass::DataMemberIndex","data member %s is not found in class %s",name, cl->GetName());
    dmList->ls();
-   return -1; 
+   return -1;
 }
 ////////////////////////////////////////////////////////////////////////////////
 
 TDataMember * TProtoClass::FindDataMember(TClass * cl, Int_t index)
 {
-   TList * dmList = cl->GetListOfDataMembers(false); 
+   TList * dmList = cl->GetListOfDataMembers(false);
 
-   // we cannot use IndexOf because order is guranteed only for non-static data member 
-   Int_t i = 0; 
-   for ( auto * obj : *dmList) { 
-      TDataMember * dm = (TDataMember *) obj; 
-      if (!dm ) continue; 
+   // we cannot use IndexOf because order is guaranteed only for non-static data member
+   Int_t i = 0;
+   for ( auto * obj : *dmList) {
+      TDataMember * dm = (TDataMember *) obj;
+      if (!dm ) continue;
       if (dm->Property() & kIsStatic) continue;
-      if (i == index) 
-         return dm; 
+      if (i == index)
+         return dm;
       i++;
    }
    if (cl->GetState()!=TClass::kForwardDeclared)

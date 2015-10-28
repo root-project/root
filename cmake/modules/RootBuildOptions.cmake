@@ -143,6 +143,7 @@ ROOT_BUILD_OPTION(genvector ON "Build the new libGenVector library")
 ROOT_BUILD_OPTION(gfal ON "GFAL support, requires libgfal")
 ROOT_BUILD_OPTION(glite ON "gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)")
 ROOT_BUILD_OPTION(globus OFF "Globus authentication support, requires Globus toolkit")
+ROOT_BUILD_OPTION(gnuinstall OFF "Perform installation following the GNU guidelines")
 ROOT_BUILD_OPTION(gsl_shared OFF "Enable linking against shared libraries for GSL (default no)")
 ROOT_BUILD_OPTION(hdfs ON "HDFS support; requires libhdfs from HDFS >= 0.19.1")
 ROOT_BUILD_OPTION(http ${http_defvalue} "HTTP Server support")
@@ -153,6 +154,7 @@ ROOT_BUILD_OPTION(mathmore ON "Build the new libMathMore extended math library, 
 ROOT_BUILD_OPTION(memstat ${memstat_defvalue} "A memory statistics utility, helps to detect memory leaks")
 ROOT_BUILD_OPTION(minuit2 ${minuit2_defvalue} "Build the new libMinuit2 minimizer library")
 ROOT_BUILD_OPTION(monalisa ON "Monalisa monitoring support, requires libapmoncpp")
+ROOT_BUILD_OPTION(mt OFF "Multi-threading support")
 ROOT_BUILD_OPTION(mysql ON "MySQL support, requires libmysqlclient")
 ROOT_BUILD_OPTION(odbc ON "ODBC support, requires libiodbc or libodbc")
 ROOT_BUILD_OPTION(opengl ON "OpenGL support, requires libGL and libGLU")
@@ -178,7 +180,6 @@ ROOT_BUILD_OPTION(soversion OFF "Set version number in sonames (recommended)")
 ROOT_BUILD_OPTION(sqlite ON "SQLite support, requires libsqlite3")
 ROOT_BUILD_OPTION(srp ON "SRP support, requires SRP source tree")
 ROOT_BUILD_OPTION(ssl ON "SSL encryption support, requires openssl")
-ROOT_BUILD_OPTION(gnuinstall OFF "Perform installation following the GNU guidelines")
 ROOT_BUILD_OPTION(tbb OFF "TBB multi-threading support, requires TBB")
 ROOT_BUILD_OPTION(table ${table_defvalue} "Build libTable contrib library")
 ROOT_BUILD_OPTION(tcmalloc OFF "Using the tcmalloc allocator")
@@ -211,25 +212,25 @@ foreach(opt ${root_build_options})
   endif()
 endforeach()
 
-#---Avoid creating dependencies to 'non-statndard' header files -------------------------------
+#---Avoid creating dependencies to 'non-standard' header files -------------------------------
 include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
 
 #---Add Installation Variables------------------------------------------------------------------
 include(RootInstallDirs)
 
-#---General Build options----------------------------------------------------------------------
-# use, i.e. don't skip the full RPATH for the build tree
-set(CMAKE_SKIP_BUILD_RPATH  FALSE)
-# when building, don't use the install RPATH already (but later on when installing)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-# add the automatically determined parts of the RPATH
-# which point to directories outside the build tree to the install RPATH
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+#---RPATH options-------------------------------------------------------------------------------
+#  When building, don't use the install RPATH already (but later on when installing)
+set(CMAKE_SKIP_BUILD_RPATH FALSE)         # don't skip the full RPATH for the build tree
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) # use always the build RPATH for the build tree
+set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE) # point to directories outside the build tree to the install RPATH
 
-# the RPATH to be used when installing---------------------------------------------------------
-if(rpath)
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
-  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+# Check whether to add RPATH to the installation (the build tree always has the RPATH enabled)
+if(rpath OR gnuinstall)
+  set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_FULL_LIBDIR}) # install LIBDIR
+  set(CMAKE_SKIP_INSTALL_RPATH FALSE)          # don't skip the full RPATH for the install tree
+else()
+  set(CMAKE_SKIP_INSTALL_RPATH TRUE)           # skip the full RPATH for the install tree
 endif()
 
 

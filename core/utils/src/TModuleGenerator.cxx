@@ -345,7 +345,26 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
       const std::string &headersClassesMapString,
       const std::string &fwdDeclString) const
 {
+
+   std::string fwdDeclStringRAW;
+   if ("nullptr" == fwdDeclString ||
+       "\"\"" == fwdDeclString) {
+      fwdDeclStringRAW = fwdDeclString;
+   }
+   else{
+      fwdDeclStringRAW = "R\"DICTFWDDCLS(\n";
+      fwdDeclStringRAW += "#line 1 \"";
+      fwdDeclStringRAW += fDictionaryName +" dictionary forward declarations' payload\"\n";
+      fwdDeclStringRAW += fwdDeclString;
+      fwdDeclStringRAW += ")DICTFWDDCLS\"";
+   }
+
    std::string payloadCode;
+
+   // Increase the value of the diagnostics pointing out from which
+   // dictionary this payload comes from in case of errors
+   payloadCode += "#line 1 \"";
+   payloadCode += fDictionaryName +" dictionary payload\"\n";
 
    // Add defines and undefines to the payloadCode
    std::ostringstream definesAndUndefines;
@@ -410,7 +429,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
        "    static const char* includePaths[] = {\n";
    WriteIncludePathArray(out) <<
                               "    };\n"
-                              "    static const char* fwdDeclCode = \n" << fwdDeclString << ";\n"
+                              "    static const char* fwdDeclCode = " << fwdDeclStringRAW << ";\n"
                               "    static const char* payloadCode = R\"DICTPAYLOAD(\n" << payloadCode << ")DICTPAYLOAD\";\n"
                               "    " << headersClassesMapString << "\n"
                               "    static bool isInitialized = false;\n"

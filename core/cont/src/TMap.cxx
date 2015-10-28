@@ -9,23 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMap                                                                 //
-//                                                                      //
-// TMap implements an associative array of (key,value) pairs using a    //
-// THashTable for efficient retrieval (therefore TMap does not conserve //
-// the order of the entries). The hash value is calculated              //
-// using the value returned by the keys Hash() function and the         //
-// key comparison is done via the IsEqual() function.                   //
-// Both key and value must inherit from TObject.                        //
-//Begin_Html
-/*
-<img src=gif/tmap.gif>
+/** \class TMap
+TMap implements an associative array of (key,value) pairs using a
+THashTable for efficient retrieval (therefore TMap does not conserve
+the order of the entries). The hash value is calculated
+using the value returned by the keys Hash() function and the
+key comparison is done via the IsEqual() function.
+Both key and value must inherit from TObject.
 */
-//End_Html
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TMap.h"
 #include "THashTable.h"
@@ -441,12 +432,9 @@ Int_t TMap::Write(const char *name, Int_t option, Int_t bsize)
    return ((const TMap*)this)->Write(name,option,bsize);
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPair                                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TPair
+Class used by TMap to store (key,value) pairs.
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse the pair.
@@ -462,13 +450,9 @@ void TPair::Browse(TBrowser *b)
    }
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMapIter                                                             //
-//                                                                      //
-// Iterator of map.                                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMapIter
+Iterator of map.
+*/
 
 ClassImp(TMapIter)
 

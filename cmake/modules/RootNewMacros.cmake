@@ -46,18 +46,6 @@ else()
       IMPORT_PREFIX ${libprefix} )
 endif()
 
-if(APPLE)
-  if(gnuinstall)
-    set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
-         INSTALL_NAME_DIR "${CMAKE_INSTALL_FULL_LIBDIR}"
-         BUILD_WITH_INSTALL_RPATH ON)
-  else()
-    set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
-         INSTALL_NAME_DIR "@rpath"
-         BUILD_WITH_INSTALL_RPATH ON)
-  endif()
-endif()
-
 #---Modify the behaviour for local and non-local builds--------------------------------------------
 
 if(CMAKE_PROJECT_NAME STREQUAL ROOT)

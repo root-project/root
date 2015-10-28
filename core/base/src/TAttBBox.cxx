@@ -15,7 +15,7 @@
 /** \class TAttBBox
 Helper for management of bounding-box information.
 Optionally used by classes that use direct OpenGL rendering
-via <Class>GL class.
+via `<Class>GL class`.
 */
 
 ClassImp(TAttBBox)
@@ -65,4 +65,12 @@ void TAttBBox::AssertBBoxExtents(Float_t epsilon)
          fBBox[i+1] = b + 0.5*epsilon;
       }
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Setup bounding box as cube with given extent and center position.
+
+void TAttBBox::SetupBBoxCube(Float_t extent, Float_t x, Float_t y, Float_t z)
+{
+   BBoxZero(extent, x, y, z);
 }

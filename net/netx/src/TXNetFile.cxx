@@ -1391,7 +1391,7 @@ void TXNetFile::SynchronizeCacheSize()
       TFileCacheRead *cacheRead = GetCacheRead();
       if (cacheRead) {
          newbsz = GetBufferSize() / 2 * 3;
-         newbsz = TMath::Max(newbsz, size);
+         newbsz = std::max(newbsz, size);
       } else {
          newbsz = size;
       }

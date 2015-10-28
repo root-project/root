@@ -357,7 +357,7 @@ TPad::~TPad()
 /// contents are printed.
 ///
 /// ### Example2 of use of exec1.C
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 ///  Root > TFile f("hsimple.root")
 ///  Root > hpxpy.Draw()
 ///  Root > c1.AddExec("ex2",".x exec2.C")
@@ -490,7 +490,7 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 /// Returns the new current pad, or 0 in case of failure.
 ///
 /// For example:
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 ///    c1.Divide(2,3); // create 6 pads (2 divisions along x, 3 along y).
 /// ~~~
 /// To set the current pad to the bottom right pad, do
