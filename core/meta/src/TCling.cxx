@@ -1180,6 +1180,7 @@ TCling::TCling(const char *name, const char *title)
    std::unique_ptr<TClingCallbacks>
       clingCallbacks(new TClingCallbacks(fInterpreter));
    fClingCallbacks = clingCallbacks.get();
+   fClingCallbacks->SetAutoParsingSuspended(fIsAutoParsingSuspended);
    fInterpreter->setCallbacks(std::move(clingCallbacks));
 
    if (!fromRootCling) {
@@ -6187,6 +6188,17 @@ int TCling::SetClassAutoparsing(int autoparse)
    bool oldVal = fHeaderParsingOnDemand;
    fHeaderParsingOnDemand = autoparse;
    return oldVal;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Suspend the Autoparsing of headers.
+/// Returns the old value, i.e whether it was suspended or not.
+
+Bool_t TCling::SetSuspendAutoParsing(Bool_t value) {
+   Bool_t old = fIsAutoParsingSuspended;
+   fIsAutoParsingSuspended = value;
+   if (fClingCallbacks) fClingCallbacks->SetAutoParsingSuspended(value);
+   return old;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

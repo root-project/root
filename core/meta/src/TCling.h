@@ -145,11 +145,7 @@ private: // Data Members
    UInt_t AutoParseImplRecurse(const char *cls, bool topLevel);
 
 protected:
-   Bool_t SetSuspendAutoParsing(Bool_t value) {
-      Bool_t old = fIsAutoParsingSuspended;
-      fIsAutoParsingSuspended = value;
-      return old;
-   }
+   Bool_t SetSuspendAutoParsing(Bool_t value);
 
 public: // Public Interface
 
