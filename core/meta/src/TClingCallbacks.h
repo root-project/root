@@ -40,6 +40,7 @@ private:
    bool fFirstRun;
    bool fIsAutoloading;
    bool fIsAutoloadingRecursively;
+   bool fIsAutoParsingSuspended;
    bool fPPOldFlag;
    bool fPPChanged;
 public:
@@ -51,6 +52,9 @@ public:
 
    void SetAutoloadingEnabled(bool val = true) { fIsAutoloading = val; }
    bool IsAutoloadingEnabled() { return fIsAutoloading; }
+
+   void SetAutoParsingSuspended(bool val = true) { fIsAutoParsingSuspended = val; }
+   bool IsAutoParsingSuspended() { return fIsAutoParsingSuspended; }
 
    virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/,
                                    const clang::Token &/*IncludeTok*/,
