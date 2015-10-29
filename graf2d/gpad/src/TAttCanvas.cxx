@@ -15,6 +15,8 @@
 ClassImp(TAttCanvas)
 
 /** \class TAttCanvas
+\ingroup gpad
+
 Manages canvas attributes. Referenced by TStyle.
 */
 

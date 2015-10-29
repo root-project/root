@@ -66,7 +66,9 @@ Int_t TPad::fgMaxPickDistance = 5;
 ClassImpQ(TPad)
 
 /** \class TPad
-The TPad class is the most important graphics class in the ROOT system.
+\ingroup gpad
+
+The most important graphics class in the ROOT system.
 
 A Pad is contained in a Canvas.
 
@@ -218,15 +220,17 @@ TPad::TPad()
 ///  A pad has attributes. When a pad is created, the attributes
 ///  defined in the current style are copied to the pad attributes.
 ///
+/// \param[in] name        pad name
+/// \param[in] title       pad title
 /// \param[in] xlow [0,1]  is the position of the bottom left point of the pad
 ///             expressed  in the mother pad reference system
 /// \param[in] ylow [0,1]  is the Y position of this point.
 /// \param[in] xup  [0,1]  is the x position of the top right point of the pad
 ///                        expressed in the mother pad reference system
 /// \param[in] yup  [0,1]  is the Y position of this point.
-///
-/// \param[in] bordersize  Border size in pixels
-/// \param[in] bordermode  Border mode
+/// \param[in] color       pad color
+/// \param[in] bordersize  border size in pixels
+/// \param[in] bordermode  border mode
 ///                        - bordermode = -1 box looks as it is behind the screen
 ///                        - bordermode = 0  no special effects
 ///                        - bordermode = 1  box looks as it is in front of the screen
@@ -575,9 +579,9 @@ void TPad::Clear(Option_t *option)
 ///  - If Clip ==1 the segment has one point outside the boundary.
 ///  - If Clip ==0 the segment is inside the boundary.
 ///
-/// \param[in]  x[2],y[2]                     Segment coordinates
+/// \param[in]  x[],y[]                       Segment coordinates (2 points)
 /// \param[in]  xclipl,yclipb,xclipr,yclipt   Clipping boundary
-/// \param[out] x[2],y[2]                     New segment coordinates
+/// \param[out] x[],y[]                       New segment coordinates( 2 points)
 
 Int_t TPad::Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t xclipr, Float_t yclipt)
 {
@@ -646,9 +650,9 @@ Int_t TPad::Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t
 ///  - If Clip ==1 the segment has one point outside the boundary.
 ///  - If Clip ==0 the segment is inside the boundary.
 ///
-/// \param[in]  x[2],y[2]                     Segment coordinates
+/// \param[in]  x[],y[]                       Segment coordinates (2 points)
 /// \param[in]  xclipl,yclipb,xclipr,yclipt   Clipping boundary
-/// \param[out] x[2],y[2]                     New segment coordinates
+/// \param[out] x[],y[]                       New segment coordinates(2 points)
 
 Int_t TPad::Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt)
 {
@@ -6188,8 +6192,8 @@ void TPad::UseCurrentStyle()
 ///  - emode = "Pad","pave", "PaveLabel","PaveText", "PavesText",
 ///  - emode = "PolyLine", "CurlyLine", "CurlyArc", "Text", "Marker", "CutG"
 ///
-/// - if emode is specified and it is not valid, "PolyLine" is assumed.
-/// - if emode is not specified or ="", an attempt is to use pname[1...]
+/// If emode is specified and it is not valid, "PolyLine" is assumed. If emode
+/// is not specified or ="", an attempt is to use pname[1...]
 ///
 /// for example if pname="TArc", emode="Arc" will be assumed.
 /// When this function is called within a macro, the macro execution

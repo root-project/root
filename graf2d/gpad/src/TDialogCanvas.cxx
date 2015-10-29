@@ -18,7 +18,9 @@
 ClassImp(TDialogCanvas)
 
 /** \class TDialogCanvas
-A TDialogCanvas is a canvas specialized to set attributes.
+\ingroup gpad
+
+A canvas specialized to set attributes.
 
 It contains, in general, TGroupButton objects.
 When the APPLY button is executed, the actions corresponding

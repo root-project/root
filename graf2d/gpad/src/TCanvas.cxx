@@ -57,6 +57,8 @@ ClassImpQ(TCanvas)
 
 
 /** \class TCanvas
+\ingroup gpad
+
 The Canvas class.
 
 A Canvas is an area mapped to a window directly under the control of the display
@@ -311,9 +313,11 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new canvas at a random position.
 ///
-/// \param[in] ww  is the canvas size in pixels along X
-///                (if ww < 0  the menubar is not shown)
-/// \param[in] wh  is the canvas size in pixels along Y
+/// \param[in] name    canvas name
+/// \param[in] title   canvas title
+/// \param[in] ww      is the canvas size in pixels along X
+///                    (if ww < 0  the menubar is not shown)
+/// \param[in] wh      is the canvas size in pixels along Y
 ///
 /// If "name" starts with "gl" the canvas is ready to receive GL output.
 
@@ -328,9 +332,11 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new canvas at a random position.
 ///
-/// \param[in] ww  is the canvas size in pixels along X
-///                (if ww < 0  the menubar is not shown)
-/// \param[in] wh  is the canvas size in pixels along Y
+/// \param[in] name    canvas name
+/// \param[in] title   canvas title
+/// \param[in] ww      is the canvas size in pixels along X
+///                    (if ww < 0  the menubar is not shown)
+/// \param[in] wh      is the canvas size in pixels along Y
 
 void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t wh)
 {
@@ -388,8 +394,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new canvas.
 ///
+/// \param[in] name         canvas name
+/// \param[in] title        canvas title
 /// \param[in] wtopx,wtopy  are the pixel coordinates of the top left corner of
-/// \param[in] the          canvas  (if wtopx < 0) the menubar is not shown)
+///                         the canvas  (if wtopx < 0) the menubar is not shown)
 /// \param[in] ww           is the canvas size in pixels along X
 /// \param[in] wh           is the canvas size in pixels along Y
 ///
@@ -407,8 +415,10 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new canvas.
 ///
+/// \param[in] name         canvas name
+/// \param[in] title        canvas title
 /// \param[in] wtopx,wtopy  are the pixel coordinates of the top left corner of
-/// \param[in] the          canvas  (if wtopx < 0) the menubar is not shown)
+///                         the canvas  (if wtopx < 0) the menubar is not shown)
 /// \param[in] ww           is the canvas size in pixels along X
 /// \param[in] wh           is the canvas size in pixels along Y
 
