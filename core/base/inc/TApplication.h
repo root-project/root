@@ -37,6 +37,8 @@
 #include "TApplicationImp.h"
 #endif
 
+#include <atomic>
+
 class TObjArray;
 class TTimer;
 class TSignalHandler;
@@ -86,7 +88,7 @@ private:
 protected:
    TApplication      *fAppRemote;      //Current remote application, if defined
 
-   static TList      *fgApplications;  //List of available applications
+   static std::atomic<TList*> fgApplications;  //List of available applications
 
    TApplication();
 
