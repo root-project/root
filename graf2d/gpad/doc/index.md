@@ -1,4 +1,4 @@
-\defgroup gpad Graphics Pad
+\defgroup gpad Graphics pad
 \brief The TPad related classes
 
 TPad and TPad's related classes' usages are illustrated by the following examples:
