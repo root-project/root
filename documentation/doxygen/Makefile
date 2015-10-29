@@ -23,7 +23,7 @@ doxygen:
 	if [ ! -d $(DOXYGEN_MATHJAX_PATH) ]; then mkdir $(DOXYGEN_MATHJAX_PATH); fi
 	./makehtmlfooter.sh > htmlfooter.html
 	cp images/* $(DOXYGEN_IMAGE_PATH)
-	tar xfz mathjax.tar.gz -C $(DOXYGEN_OUTPUT_DIRECTORY)
+	tar xfz mathjax.tar.gz -C $(DOXYGEN_OUTPUT_DIRECTORY)/html
 	doxygen
 	rm c1* *.root
 	rm stdout.dat
