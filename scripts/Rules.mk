@@ -599,7 +599,7 @@ UNDEFOPT      = suppress
 LD           ?= g++
 endif
 endif
-LDFLAGS       = -m64
+LDFLAGS       = -m64 -Wl,-rpath,@loader_path/. -Wl,-rpath,$(ROOTSYS)/lib
 SOFLAGS       = -m64 -dynamiclib -single_module -undefined $(UNDEFOPT)
 DllSuf        = so
 LibSuf        = dylib
