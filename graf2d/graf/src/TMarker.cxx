@@ -26,6 +26,8 @@ ClassImp(TMarker)
 
 
 /** \class TMarker
+\ingroup graf
+
 Manages Markers. Marker attributes are managed by TAttMarker.
 */
 

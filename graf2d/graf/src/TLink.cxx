@@ -18,6 +18,8 @@
 ClassImp(TLink)
 
 /** \class TLink
+\ingroup graf
+
 Special TText object used to show hyperlinks.
 
 In the example below created by TObject::Inspect, TLinks are used

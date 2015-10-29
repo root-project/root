@@ -26,6 +26,8 @@
 #include "../../../graf2d/mathtext/inc/mathrender.h"
 
 /** \class TMathText
+\ingroup graf
+
 To draw TeX Mathematical Formula
 
 TMathText's purpose is to write mathematical equations, exactly as TeX would
