@@ -1259,9 +1259,8 @@ void TApplication::SetEchoMode(Bool_t)
 
 void TApplication::CreateApplication()
 {
+   R__LOCKGUARD2(gROOTMutex);
    if (!gApplication) {
-      R__LOCKGUARD2(gROOTMutex);
-
       // gApplication is set at the end of 'new TApplication.
       if (!gApplication) {
          char *a = StrDup("RootApp");
