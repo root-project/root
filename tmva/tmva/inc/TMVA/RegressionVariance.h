@@ -82,11 +82,11 @@ namespace TMVA {
 
       // Return the gain in separation of the original sample is splitted in two sub-samples
       // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) 
-      Double_t GetSeparationGain( const Double_t &nLeft, const Double_t &targetLeft, const Double_t &target2Left,
-                                  const Double_t &nTot, const Double_t &targetTot, const Double_t &target2Tot );
+      Double_t GetSeparationGain( const Double_t nLeft, const Double_t targetLeft, const Double_t target2Left,
+                                  const Double_t nTot, const Double_t targetTot, const Double_t target2Tot );
 
       // Return the separation index (a measure for "purity" of the sample")
-      virtual Double_t GetSeparationIndex( const Double_t &n, const Double_t &target, const Double_t &target2 );
+      virtual Double_t GetSeparationIndex( const Double_t n, const Double_t target, const Double_t target2 );
 
       // Return the name of the concrete Index implementation
       TString GetName() { return fName; }

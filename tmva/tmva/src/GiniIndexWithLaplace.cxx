@@ -51,7 +51,7 @@ ClassImp(TMVA::GiniIndexWithLaplace)
 ///               for just Signal and Background classes this then boils down to:   
 ///               Gini(Sample) = 2(s*b+s+b+1)/(s+b+2)^2                               
 
-Double_t TMVA::GiniIndexWithLaplace::GetSeparationIndex( const Double_t &s, const Double_t &b )
+Double_t TMVA::GiniIndexWithLaplace::GetSeparationIndex( const Double_t s, const Double_t b )
 {
    if (s+b <= 0)      return 0;
    if (s<=0 || b <=0) return 0;

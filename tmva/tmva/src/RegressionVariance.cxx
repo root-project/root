@@ -50,10 +50,10 @@ ClassImp(TMVA::RegressionVariance)
 /// which is used as a "separation" index should be as small as possible.
 /// the "figure of merit" here has to be -(rms left+rms-right) or 1/rms...
 
-Double_t TMVA::RegressionVariance::GetSeparationGain(const Double_t &nLeft, 
-                                                     const Double_t& targetLeft , const Double_t& target2Left , 
-                                                     const Double_t &nTot, 
-                                                     const Double_t& targetTot , const Double_t& target2Tot)
+Double_t TMVA::RegressionVariance::GetSeparationGain(const Double_t nLeft,
+                                                     const Double_t targetLeft, const Double_t target2Left,
+                                                     const Double_t nTot,
+                                                     const Double_t targetTot, const Double_t target2Tot)
 {
 
    if  ( nTot==nLeft || nLeft==0 ) return 0.;
@@ -69,8 +69,8 @@ Double_t TMVA::RegressionVariance::GetSeparationGain(const Double_t &nLeft,
 ////////////////////////////////////////////////////////////////////////////////
 /// Separation Index:  a simple Variance
 
-Double_t TMVA::RegressionVariance::GetSeparationIndex(const Double_t& n, 
-                                                      const Double_t& target , const Double_t& target2)
+Double_t TMVA::RegressionVariance::GetSeparationIndex(const Double_t n,
+                                                      const Double_t target , const Double_t target2)
 {
    //   return TMath::Sqrt(( target2 - target*target/n) / n);
    return ( target2 - target*target/n) / n;

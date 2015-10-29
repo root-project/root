@@ -34,7 +34,7 @@ ClassImp(TMVA::SdivSqrtSplusB)
 ////////////////////////////////////////////////////////////////////////////////
 /// Index = S/sqrt(S+B)  (statistical significance)                 
 
-Double_t  TMVA::SdivSqrtSplusB::GetSeparationIndex( const Double_t &s, const Double_t &b )
+Double_t  TMVA::SdivSqrtSplusB::GetSeparationIndex( const Double_t s, const Double_t b )
 {
    if (s+b > 0) return s / TMath::Sqrt(s+b);
    else return 0;
@@ -50,8 +50,8 @@ Double_t  TMVA::SdivSqrtSplusB::GetSeparationIndex( const Double_t &s, const Dou
 /// this is then the quality crition which is optimized for when trying
 /// to increase the information in the system (making the best selection
 
-Double_t TMVA::SdivSqrtSplusB::GetSeparationGain(const Double_t &nSelS, const Double_t& nSelB,
-                                                 const Double_t& nTotS, const Double_t& nTotB)
+Double_t TMVA::SdivSqrtSplusB::GetSeparationGain(const Double_t nSelS, const Double_t nSelB,
+                                                 const Double_t nTotS, const Double_t nTotB)
 {
    if ( (nTotS-nSelS)==nSelS && (nTotB-nSelB)==nSelB) return 0.;
 
