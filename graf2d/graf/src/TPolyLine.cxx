@@ -19,7 +19,9 @@
 ClassImp(TPolyLine)
 
 /** \class TPolyLine
-A PolyLine is defined by an array on N points in a 2-D space.
+\ingroup graf
+
+Defined by an array on N points in a 2-D space.
 
 One can draw the contour of the polyline or/and its fill area.
 Example:

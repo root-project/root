@@ -10,7 +10,9 @@
  *************************************************************************/
 
 /** \class TTF
-\brief Interface to the freetype 2 library.
+\ingroup graf
+
+Interface to the freetype 2 library.
 */
 
 // RConfigure.h is needed for TTFFONTDIR

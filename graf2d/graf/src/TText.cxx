@@ -28,7 +28,9 @@ ClassImp(TText)
 
 
 /** \class TText
-TText is the base class for several text objects.
+\ingroup graf
+
+Base class for several text objects.
 
 See TAttText for a list of text attributes or fonts,
 and also for a discussion on text speed and font quality.
