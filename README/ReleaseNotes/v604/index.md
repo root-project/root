@@ -917,6 +917,7 @@ Changes will be part of the future 6.04/08
 
 ### IO
 - For backward compatibility with ROOT5, allow to define IO constructors with the signature MyClass::MyClass(__void__&) where void is a forward declared type.
+- In TBuffer shrink buffers when requested.
 
 ### Minuit
 - Make function pointer held by TMinuitMinimize thread local
