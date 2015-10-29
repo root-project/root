@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TCutG
+\ingroup graf
+
 Graphical cut class.
 
 A TCutG object is a closed polygon defining a closed region in a x,y plot.

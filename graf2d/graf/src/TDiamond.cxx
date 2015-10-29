@@ -22,6 +22,8 @@
 ClassImp(TDiamond)
 
 /** \class TDiamond
+\ingroup graf
+
 Draw a Diamond.
 
 A diamond is defined by:
