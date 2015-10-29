@@ -19,6 +19,8 @@
 ClassImp(TLegendEntry)
 
 /** \class TLegendEntry
+\ingroup graf
+
 Storage class for one entry of a TLegend.
 */
 
