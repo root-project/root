@@ -1407,28 +1407,28 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
 
 void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& eventSample, Bool_t first)
 {
-   for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
-      if(!first){
-         fWeightedResiduals[*e].first -= fForest.back()->CheckEvent(*e,kFALSE);
+   if (!first) {
+      for (auto e : fEventSample) {
+         fWeightedResiduals[e].first -= fForest.back()->CheckEvent(e, kFALSE);
       }
-      
    }
-   
+
    fSumOfWeights = 0;
    vector< std::pair<Double_t, Double_t> > temp;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++){
-      temp.push_back(make_pair(fabs(fWeightedResiduals[*e].first),fWeightedResiduals[*e].second));
-      fSumOfWeights += (*e)->GetWeight();
+   temp.reserve(eventSample.size());
+   for (auto e : eventSample) {
+      auto &weightedResidualForEvent = fWeightedResiduals[e];
+      temp.emplace_back(fabs(weightedResidualForEvent.first), weightedResidualForEvent.second);
+      fSumOfWeights += e->GetWeight();
    }
-   fTransitionPoint = GetWeightedQuantile(temp,0.7,fSumOfWeights);
+   fTransitionPoint = GetWeightedQuantile(temp, 0.7, fSumOfWeights);
 
-   Int_t i=0;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
- 
-      if(temp[i].first<=fTransitionPoint)
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,fWeightedResiduals[*e].first);
+   Int_t i = 0;
+   for (auto e : eventSample) {
+      if (temp[i].first <= fTransitionPoint)
+         const_cast<TMVA::Event*>(e)->SetTarget(0, fWeightedResiduals[e].first);
       else
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,fTransitionPoint*(fWeightedResiduals[*e].first<0?-1.0:1.0));
+         const_cast<TMVA::Event*>(e)->SetTarget(0, fTransitionPoint*(fWeightedResiduals[e].first < 0 ? -1.0 : 1.0));
       i++;
    }
 }

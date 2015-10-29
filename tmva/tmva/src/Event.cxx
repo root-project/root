@@ -231,8 +231,8 @@ void TMVA::Event::CopyVarValues( const Event& other )
 Float_t TMVA::Event::GetValue( UInt_t ivar ) const
 {
    Float_t retval;
-   if (fVariableArrangement==0) {
-      retval = fDynamic ? ( *((*fValuesDynamic).at(ivar)) ) : fValues.at(ivar); 
+   if (fVariableArrangement == nullptr) {
+      retval = fDynamic ? ( *((*fValuesDynamic).at(ivar)) ) : fValues[ivar];
    } 
    else {
       UInt_t mapIdx = (*fVariableArrangement)[ivar];
@@ -354,7 +354,7 @@ void TMVA::Event::Print( std::ostream& o ) const
 void TMVA::Event::SetTarget( UInt_t itgt, Float_t value ) 
 { 
    if (fTargets.size() <= itgt) fTargets.resize( itgt+1 );
-   fTargets.at(itgt) = value;
+   fTargets[itgt] = value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -363,7 +363,7 @@ void TMVA::Event::SetTarget( UInt_t itgt, Float_t value )
 void TMVA::Event::SetSpectator( UInt_t ivar, Float_t value ) 
 { 
    if (fSpectators.size() <= ivar) fSpectators.resize( ivar+1 );
-   fSpectators.at(ivar) = value;
+   fSpectators[ivar] = value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
