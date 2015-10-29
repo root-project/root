@@ -513,6 +513,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fProofs      = new TList; fProofs->SetName("Proofs");
    fClipboard   = new TList; fClipboard->SetName("Clipboard");
    fDataSets    = new TList; fDataSets->SetName("DataSets");
+   fTypes       = new TListOfTypes;
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();
@@ -1479,12 +1480,6 @@ TCollection *TROOT::GetListOfTypes(Bool_t /* load */)
 {
    if (!fInterpreter)
       Fatal("GetListOfTypes", "fInterpreter not initialized");
-
-   if (!fTypes) {
-      R__LOCKGUARD2(gROOTMutex);
-
-      if (!fTypes) fTypes = new TListOfTypes;
-   }
 
    return fTypes;
 }
