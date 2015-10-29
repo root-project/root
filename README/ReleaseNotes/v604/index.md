@@ -908,7 +908,9 @@ Changes will be part of the future 6.04/08
 - Add /opt/X11 to configure/make search for include files and libraries.
 
 ### Core
-- Add missing protection when creating new StreamerInfo
+- Add missing protection when creating new StreamerInfo.
+- Add accessor functions and functionality needed by CMS event display.
+- Do not delete resource when replaceing default TApplication.
 
 ### Interpreter
 - Prevent crash in expressions which contain use undefined identifier [ROOT-7737]
