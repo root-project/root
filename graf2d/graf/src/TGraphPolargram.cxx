@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TGraphPolargram
+\ingroup graf
+
 To draw polar axis
 
 TGraphPolargram draw the polar axis of the TGraphPolar.

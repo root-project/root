@@ -18,6 +18,8 @@
 ClassImp(TFrame)
 
 /** \class TFrame
+\ingroup graf
+
 Define a Frame.
 
 A `TFrame` is a `TWbox` for drawing histogram frames.
