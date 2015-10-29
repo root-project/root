@@ -1251,9 +1251,8 @@ void TApplication::CreateApplication()
 {
    // Static function used to create a default application environment.
 
+   R__LOCKGUARD2(gROOTMutex);
    if (!gApplication) {
-      R__LOCKGUARD2(gROOTMutex);
-
       // gApplication is set at the end of 'new TApplication.
       if (!gApplication) {
          char *a = StrDup("RootApp");
