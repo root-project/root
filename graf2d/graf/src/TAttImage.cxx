@@ -10,6 +10,8 @@
  *************************************************************************/
 
 /** \class TAttImage
+\ingroup graf
+
 TImage attributes.
 
 Image attributes are:
@@ -31,6 +33,8 @@ by some other classes (image display).
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TImagePalette
+\ingroup graf
+
 A class to define a conversion from pixel values to pixel color.
 
 A Palette is defined by some anchor points. Each anchor point has
@@ -74,6 +78,8 @@ The default palette defines:
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TPaletteEditor
+\ingroup graf
+
 Edit the palette via a GUI.
 
 This class provides a way to edit the palette via a GUI.

@@ -22,6 +22,8 @@ TString TArrow::fgDefaultOption     = ">";
 ClassImp(TArrow)
 
 /** \class TArrow
+\ingroup graf
+
 Draw all kinds of Arrows.
 
 The different arrow's formats are explained in TArrow::TArrow.

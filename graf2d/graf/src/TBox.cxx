@@ -23,6 +23,8 @@
 ClassImp(TBox)
 
 /** \class TBox
+\ingroup graf
+
 Create a Box.
 
 A box is defined by :
