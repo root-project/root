@@ -18,7 +18,9 @@
 ClassImp(TGraphNode)
 
 /** \class TGraphNode
-TGraphNode is a graph node object which can be added in a TGraphStruct.
+\ingroup gviz
+
+A graph node object which can be added in a TGraphStruct.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
