@@ -27,6 +27,8 @@
 ClassImp(TPie)
 
 /** \class TPie
+\ingroup graf
+
 Draw a Pie Chart,
 
 Example:

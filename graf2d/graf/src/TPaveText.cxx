@@ -30,7 +30,9 @@ ClassImp(TPaveText)
 
 
 /** \class TPaveText
-A PaveText is a Pave (see TPave) with text, lines or/and boxes inside.
+\ingroup graf
+
+A Pave (see TPave) with text, lines or/and boxes inside.
 
 Line (and boxes) are positioned in the pave using coordinates relative to
 the pave (%).
