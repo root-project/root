@@ -43,6 +43,8 @@
 #include "TProofQueryResult.h"
 #endif
 
+#include <mutex>
+
 class TDataSetManager;
 class TDataSetManagerFile;
 class TDSet;
@@ -55,7 +57,6 @@ class TList;
 class TMap;
 class TMessage;
 class TMonitor;
-class TMutex;
 class TProof;
 class TProofLockPath;
 class TQueryResultManager;
@@ -139,7 +140,7 @@ private:
 
    TList        *fWaitingQueries;   //list of TProofQueryResult waiting to be processed
    Bool_t        fIdle;             //TRUE if idle
-   TMutex       *fQMtx;             // To protect async msg queue
+   std::recursive_mutex fQMtx;      // To protect async msg queue
 
    TList        *fQueuedMsg;        //list of messages waiting to be processed
 

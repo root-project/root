@@ -57,7 +57,6 @@
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TMonitor.h"
-#include "TMutex.h"
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TParameter.h"
@@ -84,6 +83,8 @@
 #include "TMacro.h"
 #include "TSelector.h"
 #include "TPRegexp.h"
+
+#include <mutex>
 
 TProof *gProof = 0;
 
@@ -584,8 +585,6 @@ void TProof::InitMembers()
    fQueryMode = kSync;
    fDynamicStartup = kFALSE;
 
-   fCloseMutex = 0;
-
    fMergersSet = kFALSE;
    fMergersByHost = kFALSE;
    fMergers = 0;
@@ -687,7 +686,6 @@ TProof::~TProof()
    SafeDelete(fRecvMessages);
    SafeDelete(fInputData);
    SafeDelete(fRunningDSets);
-   SafeDelete(fCloseMutex);
    if (fWrksOutputReady) {
       fWrksOutputReady->SetOwner(kFALSE);
       delete fWrksOutputReady;
@@ -1791,8 +1789,8 @@ Bool_t TProof::StartSlaves(Bool_t attach)
 
 void TProof::Close(Option_t *opt)
 {
-   {  R__LOCKGUARD2(fCloseMutex);
-
+   {  std::lock_guard<std::recursive_mutex> lock(fCloseMutex);
+   
       fValid = kFALSE;
       if (fSlaves) {
          if (fIntHandler)
@@ -1813,8 +1811,7 @@ void TProof::Close(Option_t *opt)
       }
    }
 
-   {
-      R__LOCKGUARD2(gROOTMutex);
+   {  R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
 
       if (fChains) {
@@ -4509,8 +4506,7 @@ Bool_t TProof::CreateMerger(TSlave *sl, Int_t port)
 
 void TProof::MarkBad(TSlave *wrk, const char *reason)
 {
-   R__LOCKGUARD2(fCloseMutex);
-
+   std::lock_guard<std::recursive_mutex> lock(fCloseMutex);
 
    // We may have been invalidated in the meanwhile: nothing to do in such a case
    if (!IsValid()) return;
@@ -4671,7 +4667,7 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
 
 void TProof::MarkBad(TSocket *s, const char *reason)
 {
-   R__LOCKGUARD2(fCloseMutex);
+   std::lock_guard<std::recursive_mutex> lock(fCloseMutex);
 
    // We may have been invalidated in the meanwhile: nothing to do in such a case
    if (!IsValid()) return;

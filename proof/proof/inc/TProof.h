@@ -57,8 +57,12 @@
 #ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
 #endif
+#ifndef ROOT_TVirtualMutex
+#include "TVirtualMutex.h"
+#endif
 
 #include <map>
+#include <mutex>
 
 #ifdef R__GLOBALSTL
 namespace std { using ::map; }
@@ -92,7 +96,6 @@ class TSignalHandler;
 class TSlave;
 class TSocket;
 class TTree;
-class TVirtualMutex;
 class TFileCollection;
 class TMap;
 class TDataSetManager;
@@ -570,7 +573,7 @@ private:
 
    PrintProgress_t fPrintProgress;   //Function function to display progress info in batch mode
 
-   TVirtualMutex  *fCloseMutex;      // Avoid crashes in MarkBad or alike while closing
+   std::recursive_mutex fCloseMutex;      // Avoid crashes in MarkBad or alike while closing
 
    TList          *fLoadedMacros;    // List of loaded macros (just file names)
    static TList   *fgProofEnvList;   // List of TNameds defining environment

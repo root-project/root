@@ -30,11 +30,12 @@
 #include "TError.h"
 #include "TSysEvtHandler.h"
 #include "TVirtualMutex.h"
-#include "TThread.h"
 #include "TXSocket.h"
 #include "TXSocketHandler.h"
 #include "Varargs.h"
 #include "XProofProtocol.h"
+
+#include <mutex>
 
 ClassImp(TXSlave)
 
@@ -438,17 +439,13 @@ void TXSlave::Interrupt(Int_t type)
          Warning("Interrupt", "%p: reference to PROOF missing", this);
       }
 
-      // Post semaphore to wake up anybody waiting; send as many posts as needed
-      if (fSocket) {
-         R__LOCKGUARD(((TXSocket *)fSocket)->fAMtx);
-         TSemaphore *sem = &(((TXSocket *)fSocket)->fASem);
-         while (sem->TryWait() != 1)
-            sem->Post();
-      }
+      // Post semaphore to wake up anybody waiting
+      if (fSocket) ((TXSocket *)fSocket)->PostSemAll();
+
       return;
    }
 
-   ((TXSocket *)fSocket)->SendInterrupt(type);
+   if (fSocket) ((TXSocket *)fSocket)->SendInterrupt(type);
    Info("Interrupt","Interrupt of type %d sent", type);
 }
 

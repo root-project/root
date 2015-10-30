@@ -71,7 +71,6 @@
 #include "TMD5.h"
 #include "TMethodCall.h"
 #include "TObjArray.h"
-#include "TMutex.h"
 #include "TH1.h"
 #include "TVirtualMonitoring.h"
 #include "TParameter.h"
@@ -232,7 +231,7 @@ TProofPlayer::TProofPlayer(TProof *)
      fEvIter(0), fSelStatus(0),
      fTotalEvents(0), fReadBytesRun(0), fReadCallsRun(0), fProcessedRun(0),
      fQueryResults(0), fQuery(0), fPreviousQuery(0), fDrawQueries(0),
-     fMaxDrawQueries(1), fStopTimer(0), fStopTimerMtx(0), fDispatchTimer(0),
+     fMaxDrawQueries(1), fStopTimer(0), fDispatchTimer(0),
      fProcTimeTimer(0), fProcTime(0),
      fOutputFile(0),
      fSaveMemThreshold(-1), fSavePartialResults(kFALSE), fSaveResultsPerPacket(kFALSE)
@@ -325,8 +324,7 @@ void TProofPlayer::SetDispatchTimer(Bool_t on)
 
 void TProofPlayer::SetStopTimer(Bool_t on, Bool_t abort, Int_t timeout)
 {
-   fStopTimerMtx = (fStopTimerMtx) ? fStopTimerMtx : new TMutex(kTRUE);
-   R__LOCKGUARD(fStopTimerMtx);
+   std::lock_guard<std::mutex> lock(fStopTimerMtx);
 
    // Clean-up the timer
    SafeDelete(fStopTimer);
