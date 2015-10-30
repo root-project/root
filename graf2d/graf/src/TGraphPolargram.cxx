@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TGraphPolargram
-\ingroup graf
+\ingroup BasicGraphics
 
 To draw polar axis
 

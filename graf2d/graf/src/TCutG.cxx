@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TCutG
-\ingroup graf
+\ingroup BasicGraphics
 
 Graphical cut class.
 

@@ -23,7 +23,7 @@ const Double_t kPI = TMath::Pi();
 ClassImp(TLatex)
 
 /** \class TLatex
-\ingroup graf
+\ingroup BasicGraphics
 
 To draw Mathematical Formula.
 

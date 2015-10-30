@@ -22,7 +22,7 @@
 ClassImp(TPieSlice)
 
 /** \class TPieSlice
-\ingroup graf
+\ingroup BasicGraphics
 
 A slice of a piechart, see the TPie class.
 

@@ -19,7 +19,7 @@
 ClassImp(TPaveLabel)
 
 /** \class TPaveLabel
-\ingroup graf
+\ingroup BasicGraphics
 
 A Pave (see TPave) with a text centered in the Pave.
 

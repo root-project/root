@@ -20,7 +20,7 @@
 ClassImp(TPave)
 
 /** \class TPave
-\ingroup graf
+\ingroup BasicGraphics
 
 A TBox with a bordersize and a shadow option.
 The corners of a TPave can be rounded (option "arc")

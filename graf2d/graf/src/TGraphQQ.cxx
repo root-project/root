@@ -19,7 +19,7 @@
 ClassImp(TGraphQQ)
 
 /** \class TGraphQQ
-\ingroup graf
+\ingroup BasicGraphics
 
 This class allows to draw quantile-quantile plots
 

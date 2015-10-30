@@ -21,7 +21,7 @@
 ClassImp(TWbox)
 
 /** \class TWbox
-\ingroup graf
+\ingroup BasicGraphics
 
 A TBox with a bordersize and a bordermode.
 Example:

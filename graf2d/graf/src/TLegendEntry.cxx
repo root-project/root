@@ -19,7 +19,7 @@
 ClassImp(TLegendEntry)
 
 /** \class TLegendEntry
-\ingroup graf
+\ingroup BasicGraphics
 
 Storage class for one entry of a TLegend.
 */

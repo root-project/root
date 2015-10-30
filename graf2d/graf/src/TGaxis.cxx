@@ -43,7 +43,7 @@ const Int_t kHori = BIT(9); //defined in TPad
 ClassImp(TGaxis)
 
 /** \class TGaxis
-\ingroup graf
+\ingroup BasicGraphics
 
 The axis painter class.
 

@@ -18,7 +18,7 @@
 ClassImp(TImage)
 
 /** \class TImage
-\ingroup graf
+\ingroup BasicGraphics
 
 An abstract interface to image processing library.
 

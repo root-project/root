@@ -17,7 +17,7 @@
 ClassImp(TArc)
 
 /** \class TArc
-\ingroup graf
+\ingroup BasicGraphics
 
 Create an Arc.
 

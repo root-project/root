@@ -18,7 +18,7 @@
 ClassImp(TFrame)
 
 /** \class TFrame
-\ingroup graf
+\ingroup BasicGraphics
 
 Define a Frame.
 

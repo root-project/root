@@ -25,7 +25,7 @@
 ClassImp(TPaveStats)
 
 /** \class TPaveStats
-\ingroup graf
+\ingroup BasicGraphics
 
 The histogram statistics painter class.
 

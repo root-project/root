@@ -23,7 +23,7 @@
 ClassImp(TBox)
 
 /** \class TBox
-\ingroup graf
+\ingroup BasicGraphics
 
 Create a Box.
 

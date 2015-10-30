@@ -30,7 +30,7 @@ ClassImp(TPaveText)
 
 
 /** \class TPaveText
-\ingroup graf
+\ingroup BasicGraphics
 
 A Pave (see TPave) with text, lines or/and boxes inside.
 

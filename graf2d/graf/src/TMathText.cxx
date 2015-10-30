@@ -26,7 +26,7 @@
 #include "../../../graf2d/mathtext/inc/mathrender.h"
 
 /** \class TMathText
-\ingroup graf
+\ingroup BasicGraphics
 
 To draw TeX Mathematical Formula
 

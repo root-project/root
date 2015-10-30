@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TCurlyLine
-\ingroup graf
+\ingroup BasicGraphics
 
 Implements curly or wavy polylines used to draw Feynman diagrams.
 

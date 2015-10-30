@@ -1,4 +1,4 @@
-\defgroup graf Basic graphics
+\defgroup BasicGraphics Basic graphics
 \brief The low level graphics classes
 
  Several documents describing these classes are listed below:

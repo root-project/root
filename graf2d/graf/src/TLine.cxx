@@ -23,7 +23,7 @@
 ClassImp(TLine)
 
 /** \class TLine
-\ingroup graf
+\ingroup BasicGraphics
 
 A simple line.
 */

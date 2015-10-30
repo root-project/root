@@ -28,7 +28,7 @@ ClassImp(TText)
 
 
 /** \class TText
-\ingroup graf
+\ingroup BasicGraphics
 
 Base class for several text objects.
 

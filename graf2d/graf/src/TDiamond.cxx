@@ -22,7 +22,7 @@
 ClassImp(TDiamond)
 
 /** \class TDiamond
-\ingroup graf
+\ingroup BasicGraphics
 
 Draw a Diamond.
 

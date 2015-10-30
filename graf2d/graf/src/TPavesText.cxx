@@ -20,7 +20,7 @@ ClassImp(TPavesText)
 
 
 /** \class TPavesText
-\ingroup graf
+\ingroup BasicGraphics
 
 A PaveText (see TPaveText) with several stacked paves.
 

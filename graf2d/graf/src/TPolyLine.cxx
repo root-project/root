@@ -19,7 +19,7 @@
 ClassImp(TPolyLine)
 
 /** \class TPolyLine
-\ingroup graf
+\ingroup BasicGraphics
 
 Defined by an array on N points in a 2-D space.
 

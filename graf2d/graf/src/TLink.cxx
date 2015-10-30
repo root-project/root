@@ -18,7 +18,7 @@
 ClassImp(TLink)
 
 /** \class TLink
-\ingroup graf
+\ingroup BasicGraphics
 
 Special TText object used to show hyperlinks.
 

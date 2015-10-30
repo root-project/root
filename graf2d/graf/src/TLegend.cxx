@@ -29,7 +29,7 @@
 ClassImp(TLegend)
 
 /** \class TLegend
-\ingroup graf
+\ingroup BasicGraphics
 
 This class displays a legend box (TPaveText) containing several legend entries.
 

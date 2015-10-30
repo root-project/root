@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TTF
-\ingroup graf
+\ingroup BasicGraphics
 
 Interface to the freetype 2 library.
 */

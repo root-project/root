@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TAttImage
-\ingroup graf
+\ingroup BasicGraphics
 
 TImage attributes.
 
@@ -33,7 +33,7 @@ by some other classes (image display).
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TImagePalette
-\ingroup graf
+\ingroup BasicGraphics
 
 A class to define a conversion from pixel values to pixel color.
 
@@ -78,7 +78,7 @@ The default palette defines:
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TPaletteEditor
-\ingroup graf
+\ingroup BasicGraphics
 
 Edit the palette via a GUI.
 

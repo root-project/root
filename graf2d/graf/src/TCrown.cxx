@@ -18,7 +18,7 @@
 ClassImp(TCrown)
 
 /** \class TCrown
-\ingroup graf
+\ingroup BasicGraphics
 
 To draw a Crown.
 

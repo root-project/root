@@ -22,7 +22,7 @@ TString TArrow::fgDefaultOption     = ">";
 ClassImp(TArrow)
 
 /** \class TArrow
-\ingroup graf
+\ingroup BasicGraphics
 
 Draw all kinds of Arrows.
 
