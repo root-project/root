@@ -642,8 +642,8 @@ check_library() {
         # look first in the lib32 directories
         if test "x$checklib32" = "xyes" ; then
             i32=`echo $i | sed -e 's|lib$|lib32|' -e 's|lib/|lib32/|'`
-            #i="$i32 $i"
-            i="$i32"
+            i="$i32 $i"
+            #i="$i32"
         fi
         # look first in the lib64 directories
         if test "x$checklinux64" = "xyes" ; then
@@ -1906,6 +1906,9 @@ platform=`grep "^PLATFORM *=" ${ac_srcdir}/config/Makefile.$arch | awk '{ print 
 
 case $arch in
 sgicc)
+   logmsg "Will check 32bit libraries"
+   checklib32="yes" ;;
+linux)
    logmsg "Will check 32bit libraries"
    checklib32="yes" ;;
 linuxppc64*|sgicc64)
