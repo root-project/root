@@ -1,4 +1,5 @@
 \defgroup BasicGraphics Basic graphics
+\ingroup Graphics2D
 \brief The low level graphics classes
 
  Several documents describing these classes are listed below:

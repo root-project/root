@@ -1,4 +1,7 @@
+\defgroup Graphics2D 2D Graphics
+\brief The 2D graphics related classes
 \defgroup gpad Graphics pad
+\ingroup Graphics2D
 \brief The TPad related classes
 
 TPad and TPad's related classes' usages are illustrated by the following examples:
