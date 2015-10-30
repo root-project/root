@@ -2500,6 +2500,7 @@ void TH1::Copy(TObject &obj) const
    ((TH1&)obj).fBarOffset = fBarOffset;
    ((TH1&)obj).fBarWidth  = fBarWidth;
    ((TH1&)obj).fOption    = fOption;
+   ((TH1&)obj).fBinStatErrOpt = fBinStatErrOpt;
    ((TH1&)obj).fBufferSize= fBufferSize;
    // copy the Buffer
    // delete first a previously existing buffer
