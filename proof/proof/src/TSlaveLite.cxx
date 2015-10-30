@@ -32,7 +32,6 @@
 #include "TSocket.h"
 #include "TSysEvtHandler.h"
 #include "TVirtualMutex.h"
-#include "TThread.h"
 
 ClassImp(TSlaveLite)
 

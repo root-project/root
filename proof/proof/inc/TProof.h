@@ -48,9 +48,6 @@
 #ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
 #endif
-#ifndef ROOT_TThread
-#include "TThread.h"
-#endif
 #ifndef ROOT_TUrl
 #include "TUrl.h"
 #endif
@@ -93,7 +90,6 @@ class TProofServ;
 class TQueryResult;
 class TSignalHandler;
 class TSlave;
-class TSemaphore;
 class TSocket;
 class TTree;
 class TVirtualMutex;
@@ -181,8 +177,6 @@ const char* const kUNTAR2 = "...";
 const char* const kUNTAR3 = "...";
 const char* const kGUNZIP = "gunzip";
 #endif
-
-R__EXTERN TVirtualMutex *gProofMutex;
 
 typedef void (*PrintProgress_t)(Long64_t tot, Long64_t proc, Float_t proctime, Long64_t bytes);
 
@@ -629,8 +623,6 @@ protected:
 
    TStopwatch      fQuerySTW;       // Stopwatch to measure query times
    Float_t         fPrepTime;       // Preparation time
-
-   static TSemaphore *fgSemaphore;   //semaphore to control no of parallel startup threads
 
 private:
    TProof(const TProof &);           // not implemented
