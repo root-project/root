@@ -332,7 +332,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
       }
 
       for (UInt_t ivar=0; ivar<fNvars; ivar++) {
-         const Double_t val = evt->GetValue(ivar);
+         const Double_t val = evt->GetValueFast(ivar);
          if (iev==0) xmin[ivar]=xmax[ivar]=val;
          if (val < xmin[ivar]) xmin[ivar]=val;
          if (val > xmax[ivar]) xmax[ivar]=val;
@@ -928,7 +928,7 @@ std::vector<Double_t>  TMVA::DecisionTree::GetFisherCoefficients(const EventCons
 
       Double_t* sum = ev->GetClass() == fSigClass ? sumS : sumB;
       for (UInt_t ivar=0; ivar<nFisherVars; ivar++) {
-         sum[ivar] += ev->GetValue( mapVarInFisher[ivar] )*weight;
+         sum[ivar] += ev->GetValueFast( mapVarInFisher[ivar] )*weight;
       }
    }
    for (UInt_t ivar=0; ivar<nFisherVars; ivar++) {
@@ -972,7 +972,7 @@ std::vector<Double_t>  TMVA::DecisionTree::GetFisherCoefficients(const EventCons
       Double_t weight = ev->GetWeight(); // may ignore events with negative weights
 
       for (UInt_t x=0; x<nFisherVars; x++) {
-         xval[x] = ev->GetValue( mapVarInFisher[x] );
+         xval[x] = ev->GetValueFast( mapVarInFisher[x] );
       }
       Int_t k=0;
       for (UInt_t x=0; x<nFisherVars; x++) {
@@ -1516,7 +1516,7 @@ void TMVA::DecisionTree::TrainNodeFastPrepareBinning(vector<TMVA::DecisionTreeVa
             // returns the Fisher value (no fixed range)
             Double_t result = fisherCoeff[fNvars]; // the fisher constant offset
             for (UInt_t jvar=0; jvar<fNvars; jvar++) {
-               result += fisherCoeff[jvar] * event->GetValue(jvar);
+               result += fisherCoeff[jvar] * event->GetValueFast(jvar);
             }
             if (result > var.xmax) var.xmax = result;
             if (result < var.xmin) var.xmin = result;
@@ -1580,12 +1580,12 @@ TMVA::DecisionTree::TrainNodeFastTotalWeights TMVA::DecisionTree::TrainNodeFastC
 
          Double_t eventData;
          if (ivar < fNvars) {
-            eventData = event->GetValue(ivar);
+            eventData = event->GetValueFast(ivar);
          } else {
             // the fisher variable
             eventData = fisherCoeff[fNvars];
             for (UInt_t jvar=0; jvar<fNvars; jvar++) {
-               eventData += fisherCoeff[jvar] * event->GetValue(jvar);
+               eventData += fisherCoeff[jvar] * event->GetValueFast(jvar);
             }
          }
          // "maximum" is nbins-1 (the "-1" because we start counting from 0 !!

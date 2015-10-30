@@ -90,6 +90,7 @@ namespace TMVA {
       UInt_t   GetNSpectators()       const;
 
       Float_t  GetValue( UInt_t ivar) const;
+      inline Float_t GetValueFast(UInt_t ivar) const { return fValues[ivar]; }
       std::vector<Float_t>& GetValues() 
       {
 	  //For a detailed explanation, please see the heading "Avoid Duplication in const and Non-const Member Function," on p. 23, in Item 3 "Use const whenever possible," in Effective C++, 3d ed by Scott Meyers, ISBN-13: 9780321334879.
