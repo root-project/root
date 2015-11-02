@@ -66,6 +66,7 @@ CLDFLAGS := -link $(LDFLAGS) -debug
 SYSLIBS += msvcprt.lib 
 else
 LIBSFORLINK = 
+CLDFLAGS := $(LDFLAGS)
 endif
 
 CXXFLAGS := $(patsubst -O2,-Z7,$(CXXFLAGS))
