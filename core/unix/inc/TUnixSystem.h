@@ -38,10 +38,22 @@ int StackTraceExec(void *);
 
 typedef void (*SigHandler_t)(ESignals);
 
+struct TStackTraceHelper {
+   static const int             stringLength = 255;
+   char                         shellExec[stringLength];
+   char                         pidString[stringLength];
+   char                         pidNum[stringLength];
+   int                          parentToChild[2];
+   int                          childToParent[2];
+   std::unique_ptr<std::thread> helperThread;
+};
 
 class TUnixSystem : public TSystem {
 
    friend int     StackTraceExec(void *);
+
+private:
+   static struct TStackTraceHelper fStackTraceHelper;
 
 protected:
    const char    *FindDynamicLibrary(TString &lib, Bool_t quiet = kFALSE);
@@ -79,13 +91,6 @@ protected:
    static int          UnixSend(int sock, const void *buf, int len, int flag);
 
    // added helper static members for stacktrace
-   static const int                    fPidStringLength = 255;
-   static char                         fShellExec[];
-   static char                         fPidString[fPidStringLength];
-   static char                         fPidNum[11];
-   static int                          fParentToChild[2];
-   static int                          fChildToParent[2];
-   static std::unique_ptr<std::thread> fHelperThread;   
    static char *const                  kStackArgv[];
    static char *const *                GetStackArgv();
    static void                         StackTraceHelperThread();

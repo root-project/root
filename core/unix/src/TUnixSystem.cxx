@@ -651,14 +651,8 @@ TUnixSystem::~TUnixSystem()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize Unix system interface.
 
-std::unique_ptr<std::thread> TUnixSystem::fHelperThread;
-
-char TUnixSystem::fShellExec[] = "/bin/sh";
-char TUnixSystem::fPidString[TUnixSystem::fPidStringLength] = {};
-char TUnixSystem::fPidNum[11]                               = {}; //--- The largest PID number could be converted to 10 characters.
-char * const TUnixSystem::kStackArgv[]                      = {TUnixSystem::fShellExec, TUnixSystem::fPidString, TUnixSystem::fPidNum, nullptr};
-int TUnixSystem::fParentToChild[2]                          = {-1, -1};
-int TUnixSystem::fChildToParent[2]                          = {-1, -1};
+struct TStackTraceHelper TUnixSystem::fStackTraceHelper;
+char * const TUnixSystem::kStackArgv[] = {TUnixSystem::fStackTraceHelper.shellExec, TUnixSystem::fStackTraceHelper.pidString, TUnixSystem::fStackTraceHelper.pidNum, nullptr};
 
 Bool_t TUnixSystem::Init()
 {
@@ -698,6 +692,28 @@ Bool_t TUnixSystem::Init()
 #else
    gRootDir = ROOTPREFIX;
 #endif
+
+   if(snprintf(fStackTraceHelper.shellExec, fStackTraceHelper.stringLength-1, "/bin/sh") >= fStackTraceHelper.stringLength) {
+      SignalSafeErrWrite("Unable to pre-allocate shell command path");
+      return kFALSE;
+   }
+
+#ifdef ROOTETCDIR
+   if(snprintf(fStackTraceHelper.pidString, fStackTraceHelper.stringLength-1, "%s/gdb-backtrace.sh", ROOTETCDIR) >= fStackTraceHelper.stringLength) {
+      SignalSafeErrWrite("Unable to pre-allocate executable information");
+      return kFALSE;
+   }
+#else
+   if(snprintf(fStackTraceHelper.pidString, fStackTraceHelper.stringLength-1, "%s/etc/gdb-backtrace.sh", gSystem->Getenv("ROOTSYS")) >= fStackTraceHelper.stringLength) {
+      SignalSafeErrWrite("Unable to pre-allocate executable information");
+      return kFALSE;
+   }   
+#endif
+
+   fStackTraceHelper.parentToChild[0] = -1;
+   fStackTraceHelper.parentToChild[1] = -1;
+   fStackTraceHelper.childToParent[0] = -1;
+   fStackTraceHelper.childToParent[1] = -1;
 
    CachePidInfo();
 
@@ -5270,8 +5286,8 @@ void SetDefaultSignals() {
 
 void TUnixSystem::StackTraceHelperThread()
 {
-   int toParent = fChildToParent[1];
-   int fromParent = fParentToChild[0];
+   int toParent = fStackTraceHelper.childToParent[1];
+   int fromParent = fStackTraceHelper.parentToChild[0];
    char buf[2]; buf[1] = '\0';
    while(true) {
       int result = SignalSafeRead(fromParent, buf, 1, 5*60);
@@ -5290,8 +5306,8 @@ void TUnixSystem::StackTraceHelperThread()
       } else if (buf[0] == '2') {
           close(toParent);
           close(fromParent);
-          toParent = fChildToParent[1];
-          fromParent = fParentToChild[0];
+          toParent = fStackTraceHelper.childToParent[1];
+          fromParent = fStackTraceHelper.parentToChild[0];
       } else if (buf[0] == '3') {
           break;
       } else {
@@ -5307,7 +5323,7 @@ void TUnixSystem::StackTraceHelperThread()
 
 void TUnixSystem::StackTraceFromThread()
 {
-   int result = SignalSafeWrite(fParentToChild[1], "1"); 
+   int result = SignalSafeWrite(fStackTraceHelper.parentToChild[1], "1"); 
    if (result < 0) {
       SignalSafeErrWrite("\n\nAttempt to request stacktrace failed: ");
       SignalSafeErrWrite(strerror(-result));
@@ -5315,7 +5331,7 @@ void TUnixSystem::StackTraceFromThread()
       return;
     }
     char buf[2]; buf[1] = '\0';
-    if ((result = SignalSafeRead(fChildToParent[0], buf, 1)) < 0) {
+    if ((result = SignalSafeRead(fStackTraceHelper.childToParent[0], buf, 1)) < 0) {
        SignalSafeErrWrite("\n\nWaiting for stacktrace completion failed: ");
        SignalSafeErrWrite(strerror(-result));
        SignalSafeErrWrite("\n");
@@ -5363,40 +5379,29 @@ char *const *TUnixSystem::GetStackArgv() {
 
 void TUnixSystem::CachePidInfo()
 {
-#ifdef ROOTETCDIR
-   if(sprintf(fPidString, "%s/gdb-backtrace.sh", ROOTETCDIR) >= fPidStringLength) {
-      SignalSafeErrWrite("Unable to pre-allocate executable information");
-      return;
-   }
-#else
-   if(sprintf(fPidString, "%s/etc/gdb-backtrace.sh", gSystem->Getenv("ROOTSYS")) >= fPidStringLength) {
-      SignalSafeErrWrite("Unable to pre-allocate executable information");
-      return;
-   }   
-#endif
-   if(sprintf(fPidNum, "%d", GetPid()) >= fPidStringLength) {
+   if(snprintf(fStackTraceHelper.pidNum, fStackTraceHelper.stringLength-1, "%d", GetPid()) >= fStackTraceHelper.stringLength) {
       SignalSafeErrWrite("Unable to pre-allocate process id information");
       return;
    }
 
-   close(fChildToParent[0]);
-   close(fChildToParent[1]);
-   fChildToParent[0] = -1; fChildToParent[1] = -1;
-   close(fParentToChild[0]);
-   close(fParentToChild[1]);
-   fParentToChild[0] = -1; fParentToChild[1] = -1;
+   close(fStackTraceHelper.childToParent[0]);
+   close(fStackTraceHelper.childToParent[1]);
+   fStackTraceHelper.childToParent[0] = -1; fStackTraceHelper.childToParent[1] = -1;
+   close(fStackTraceHelper.parentToChild[0]);
+   close(fStackTraceHelper.parentToChild[1]);
+   fStackTraceHelper.parentToChild[0] = -1; fStackTraceHelper.parentToChild[1] = -1;
 
-   if (-1 == pipe2(fChildToParent, O_CLOEXEC)) {
-      fprintf(stdout, "pipe fChildToParent failed\n");
+   if (-1 == pipe2(fStackTraceHelper.childToParent, O_CLOEXEC)) {
+      fprintf(stdout, "pipe fStackTraceHelper.childToParent failed\n");
       return;
    }
-   if (-1 == pipe2(fParentToChild, O_CLOEXEC)){
-      close(fChildToParent[0]); close(fChildToParent[1]);
-      fChildToParent[0] = -1; fChildToParent[1] = -1;
+   if (-1 == pipe2(fStackTraceHelper.parentToChild, O_CLOEXEC)){
+      close(fStackTraceHelper.childToParent[0]); close(fStackTraceHelper.childToParent[1]);
+      fStackTraceHelper.childToParent[0] = -1; fStackTraceHelper.childToParent[1] = -1;
       fprintf(stdout, "pipe parentToChild failed\n");
       return;
    }
 
-   fHelperThread.reset(new std::thread(StackTraceHelperThread));
-   fHelperThread->detach();
+   fStackTraceHelper.helperThread.reset(new std::thread(StackTraceHelperThread));
+   fStackTraceHelper.helperThread->detach();
 }
