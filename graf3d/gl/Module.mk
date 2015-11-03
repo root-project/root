@@ -35,7 +35,7 @@ endif
 # Excluded from rootcint
 GLH1         := $(MODDIRI)/CsgOps.h \
                 $(MODDIRI)/TGLIncludes.h $(MODDIRI)/TGLWSIncludes.h \
-                $(MODDIRI)/TGLContextPrivate.h $(MODDIRI)/TGLMarchingCubes.h \
+                $(MODDIRI)/TGLMarchingCubes.h \
 		$(MODDIRI)/TKDEAdapter.h $(MODDIRI)/TGL5DPainter.h \
 		$(MODDIRI)/TKDEFGT.h $(MODDIRI)/TGLIsoMesh.h
 
